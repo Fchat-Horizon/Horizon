@@ -1,9 +1,25 @@
 {
     "useTabs": false,
-    "tabWidth": 4,
-    "printWidth": 80,
+    "tabWidth": 2,
+    "printWidth": 140,
     "semi": true,
-    "singleQuote": false,
-    "trailingComma": "all",
-    "overrides": []
+    "singleQuote": true,
+    "trailingComma": "none",
+    "bracketSpacing": true,
+    "arrowParens": "avoid",
+    "vueIndentScriptAndStyle": true,
+    "overrides": [
+        {
+            "files": "*.vue",
+            "options": {
+                "parser": "vue"
+            }
+        },
+        {
+            "files": "*.scss",
+            "options": {
+                "parser": "scss"
+            }
+        }
+    ]
 }
