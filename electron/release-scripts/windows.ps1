@@ -14,7 +14,7 @@ The version string for the release.
 .\windows.ps1 -ReleaseVersion "v1.0.0" -ReleasePath "C:\path\to\release\artifacts\windows\v1.0.0"
 #>
 
-# ! This script requires Git, Node.js, Yarn, and PowerShell Core to be installed.
+# ! This script requires Git, Node.js, pnpm, and PowerShell Core to be installed.
 
 Param(
     [Parameter(Mandatory = $true)]
@@ -45,7 +45,7 @@ git checkout main
 git pull
 
 # Install dependencies
-yarn install
+pnpm install
 
 # Clean previous builds
 # ! This will delete the entire $DistPath directory
@@ -55,7 +55,7 @@ Remove-Item -Recurse -Force $DistPath -ErrorAction SilentlyContinue
 Set-Location electron
 # ! Removing 'app' and 'dist' directories to ensure a clean build
 Remove-Item -Recurse -Force app, dist -ErrorAction SilentlyContinue
-yarn build:dist
+pnpm build:dist
 node pack.js
 
 # Prepare release directory

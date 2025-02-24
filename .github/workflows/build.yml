@@ -44,7 +44,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: 'yarn'
+          cache: 'pnpm'
 
       - name: Install OS-specific Dependencies
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'

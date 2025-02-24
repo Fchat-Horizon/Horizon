@@ -26,7 +26,7 @@ git checkout main
 git pull
 
 # & Install dependencies
-yarn install
+pnpm install
 
 # & Clean previous builds
 rm -rf "$DIST_PATH"
@@ -34,7 +34,7 @@ rm -rf "$DIST_PATH"
 # & Build the project
 cd electron
 rm -rf app dist
-yarn build:dist
+pnpm build:dist
 node pack.js
 
 # & Prepare release directory

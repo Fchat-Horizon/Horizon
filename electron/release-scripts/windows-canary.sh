@@ -7,11 +7,11 @@ export NODE_OPTIONS=--openssl-legacy-provider
 cd "${HOME}/fchat-rising"
 git checkout canary
 git pull
-yarn
+pnpm
 
 rm -rf "${DIST_PATH}"
 
 cd electron
 rm -rf app
-yarn build
+pnpm build
 node pack.js
