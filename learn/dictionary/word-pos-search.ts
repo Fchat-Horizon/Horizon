@@ -6,7 +6,6 @@ export interface FoundWord {
   clickedRect: DOMRect;
 }
 
-
 export class WordPosSearch {
   private listener?: (e: MouseEvent) => void;
 
@@ -15,7 +14,6 @@ export class WordPosSearch {
   constructor() {
     this.start();
   }
-
 
   stop() {
     if (this.listener) {
@@ -30,14 +28,10 @@ export class WordPosSearch {
 
     this.listener = this.generateListener();
 
-    document.addEventListener(
-      'contextmenu',
-      this.listener
-    );
+    document.addEventListener('contextmenu', this.listener);
   }
 
-
-  generateListener(): ((e: MouseEvent) => void) {
+  generateListener(): (e: MouseEvent) => void {
     return (e: MouseEvent): void => {
       try {
         if (!e.target) {
@@ -55,7 +49,6 @@ export class WordPosSearch {
     };
   }
 
-
   findClickedWord(parentElt: Element, x: number, y: number): FoundWord | null {
     if (!parentElt.textContent) {
       return null;
@@ -67,7 +60,7 @@ export class WordPosSearch {
     let start = 0;
     let end = 0;
 
-    for(let i = 0; i < words.length; i++) {
+    for (let i = 0; i < words.length; i++) {
       const word = words[i];
       end = start + word.length;
 
@@ -95,17 +88,16 @@ export class WordPosSearch {
   }
 
   isClickInRects(x: number, y: number, rects: DOMRectList): DOMRect | null {
-    for(let i = 0; i < rects.length; ++i) {
-        const r = rects[i];
+    for (let i = 0; i < rects.length; ++i) {
+      const r = rects[i];
 
-        if ((r.left < x) && (r.right > x) && (r.top < y) && (r.bottom > y)) {
-            return r;
-        }
+      if (r.left < x && r.right > x && r.top < y && r.bottom > y) {
+        return r;
+      }
     }
 
     return null;
   }
-
 
   getLastClickedWord(): string | null {
     return this.lastClicked ? this.lastClicked.word : null;

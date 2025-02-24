@@ -1,103 +1,114 @@
 <template>
-    <modal :action="'Ad Editor'" @submit="submit" ref="dialog" @open="load" dialogClass="w-100"
-        :buttonText="'Save'">
+  <modal :action="'Ad Editor'" @submit="submit" ref="dialog" @open="load" dialogClass="w-100" :buttonText="'Save'">
+    <div class="form-group ad-list" v-for="(ad, index) in ads">
+      <label :for="'adm-content-' + index" class="control-label"
+        >Ad #{{ index + 1 }}
+        <a v-if="index > 0" @click="moveAdUp(index)" title="Move Up"><i class="fa fa-arrow-up"></i></a>
+        <a v-if="index < ads.length - 1" @click="moveAdDown(index)" title="Move Down"><i class="fa fa-arrow-down"></i></a>
+        <a @click="removeAd(index)" title="Remove Ad"><i class="fas fa-times-circle"></i></a>
+      </label>
 
-        <div class="form-group ad-list" v-for="(ad, index) in ads">
-            <label :for="'adm-content-' + index" class="control-label">Ad #{{(index + 1)}}
-                <a v-if="(index > 0)" @click="moveAdUp(index)" title="Move Up"><i class="fa fa-arrow-up"></i></a>
-                <a v-if="(index < ads.length - 1)" @click="moveAdDown(index)" title="Move Down"><i class="fa fa-arrow-down"></i></a>
-                <a @click="removeAd(index)" title="Remove Ad"><i class="fas fa-times-circle"></i></a>
-            </label>
+      <editor
+        :id="'adm-content-' + index"
+        v-model="ad.content"
+        :hasToolbar="true"
+        class="form-control"
+        :maxlength="core.connection.vars.lfrp_max"
+        :disabled="ad.disabled"
+      >
+      </editor>
 
-            <editor :id="'adm-content-' + index" v-model="ad.content" :hasToolbar="true" class="form-control" :maxlength="core.connection.vars.lfrp_max" :disabled="ad.disabled">
-            </editor>
+      <tagEditor
+        :id="'adm-tags-' + index"
+        v-model="ad.tags"
+        placeholder="Enter one or more tags, e.g. 'romantic'"
+        :add-tag-on-keys="[13, 188, 9, 32]"
+        class="form-control"
+        :disabled="ad.disabled"
+        :add-tag-on-blur="true"
+      ></tagEditor>
 
-            <tagEditor :id="'adm-tags-' + index" v-model="ad.tags" placeholder="Enter one or more tags, e.g. 'romantic'" :add-tag-on-keys="[13, 188, 9, 32]" class="form-control" :disabled="ad.disabled" :add-tag-on-blur="true"></tagEditor>
+      <label class="control-label disable" :for="'adm-disabled-' + index">
+        <input type="checkbox" :id="'adm-disabled-' + index" v-model="ad.disabled" />
+        Disable
+      </label>
+    </div>
 
-            <label class="control-label disable" :for="'adm-disabled-' + index">
-              <input type="checkbox" :id="'adm-disabled-' + index" v-model='ad.disabled' />
-              Disable
-            </label>
-        </div>
-
-        <button class="btn btn-outline-secondary" @click="addAd()">Add Another</button>
-
-    </modal>
+    <button class="btn btn-outline-secondary" @click="addAd()">Add Another</button>
+  </modal>
 </template>
 
 <script lang="ts">
-    import {Component} from '@f-list/vue-ts';
-    import CustomDialog from '../../components/custom_dialog';
-    import Modal from '../../components/Modal.vue';
-    import {Conversation} from '../interfaces';
-    import l from '../localize';
-    import {Editor} from '../bbcode';
-    import core from '../core';
-    import { Dialog } from '../../helpers/dialog';
-    import InputTag from 'vue-input-tag';
-    import { Ad } from './ad-center';
-    import _ from 'lodash';
+  import { Component } from '@f-list/vue-ts';
+  import CustomDialog from '../../components/custom_dialog';
+  import Modal from '../../components/Modal.vue';
+  import { Conversation } from '../interfaces';
+  import l from '../localize';
+  import { Editor } from '../bbcode';
+  import core from '../core';
+  import { Dialog } from '../../helpers/dialog';
+  import InputTag from 'vue-input-tag';
+  import { Ad } from './ad-center';
+  import _ from 'lodash';
 
-    @Component({
-        components: {modal: Modal, editor: Editor, tagEditor: InputTag},
-    })
-    export default class AdCenterDialog extends CustomDialog {
-        l = l;
-        setting = Conversation.Setting;
-        ads!: Ad[];
-        core = core;
+  @Component({
+    components: { modal: Modal, editor: Editor, tagEditor: InputTag }
+  })
+  export default class AdCenterDialog extends CustomDialog {
+    l = l;
+    setting = Conversation.Setting;
+    ads!: Ad[];
+    core = core;
 
-        load(): void {
-            this.ads = _.cloneDeep(core.adCenter.get());
+    load(): void {
+      this.ads = _.cloneDeep(core.adCenter.get());
 
-            if (this.ads.length === 0) {
-              this.addAd();
-            }
-        }
-
-        async submit(): Promise<void> {
-          await core.adCenter.set(this.ads);
-        }
-
-        addAd(): void {
-            this.ads.push({
-              content: '',
-              disabled: false,
-              tags: []
-            });
-        }
-
-        removeAd(index: number): void {
-            // if (confirm('Are you sure you wish to remove this ad?')) {
-            if (Dialog.confirmDialog('Are you sure you wish to remove this ad?')) {
-                this.ads.splice(index, 1);
-            }
-        }
-
-        moveAdUp(index: number): void {
-            const ad = this.ads.splice(index, 1);
-
-            this.ads.splice(index - 1, 0, ad[0]);
-        }
-
-
-        moveAdDown(index: number): void {
-            const ad = this.ads.splice(index, 1);
-
-            this.ads.splice(index + 1, 0, ad[0]);
-        }
-
+      if (this.ads.length === 0) {
+        this.addAd();
+      }
     }
+
+    async submit(): Promise<void> {
+      await core.adCenter.set(this.ads);
+    }
+
+    addAd(): void {
+      this.ads.push({
+        content: '',
+        disabled: false,
+        tags: []
+      });
+    }
+
+    removeAd(index: number): void {
+      // if (confirm('Are you sure you wish to remove this ad?')) {
+      if (Dialog.confirmDialog('Are you sure you wish to remove this ad?')) {
+        this.ads.splice(index, 1);
+      }
+    }
+
+    moveAdUp(index: number): void {
+      const ad = this.ads.splice(index, 1);
+
+      this.ads.splice(index - 1, 0, ad[0]);
+    }
+
+    moveAdDown(index: number): void {
+      const ad = this.ads.splice(index, 1);
+
+      this.ads.splice(index + 1, 0, ad[0]);
+    }
+  }
 </script>
 
 <style lang="scss">
   .ad-list .bbcode-toolbar .color-selector {
-      left: 58px !important;
-      top: 30px !important;
+    left: 58px !important;
+    top: 30px !important;
   }
 
   .ad-list .bbcode-toolbar .eicon-selector {
-      top: 30px !important;
+    top: 30px !important;
   }
 
   .w-100 {
@@ -110,11 +121,11 @@
 
       a {
         padding-right: 0.3rem;
-        opacity:0.3;
+        opacity: 0.3;
         font-size: 70%;
 
         &:hover {
-          opacity:0.6
+          opacity: 0.6;
         }
       }
     }
@@ -141,9 +152,9 @@
       }
     }
 
-    .vue-input-tag-wrapper[disabled=disabled],
-    textarea[disabled=disabled],
-    div.bbcode-toolbar[disabled=disabled] {
+    .vue-input-tag-wrapper[disabled='disabled'],
+    textarea[disabled='disabled'],
+    div.bbcode-toolbar[disabled='disabled'] {
       opacity: 0.5;
       pointer-events: none;
     }
@@ -166,6 +177,4 @@
       font-size: 100%;
     }
   }
-
 </style>
-

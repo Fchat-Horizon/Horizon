@@ -15,18 +15,18 @@ $scoreStandoutWeakMatchBorderColor: #006cb7;
 $scoreStandoutWeakMatchBgColor: rgba(2, 91, 153, 0.4);
 $scoreStandoutNeutralBorderColor: rgba(0, 0, 0, 0);
 $scoreStandoutWeakMismatchBorderColor: #888;
-$scoreStandoutWeakMismatchBgColor: rgba(170, 170, 170, 0.0);
+$scoreStandoutWeakMismatchBgColor: rgba(170, 170, 170, 0);
 $scoreStandoutMismatchBorderColor: #ab0000;
 
 $genders: (
-        "shemale": #e2445f,
-        "herm": #d40759,
-        "none": $gray-500,
-        "female": #66ff74,
-        "male": #6699ff,
-        "male-herm": #007fff,
-        "transgender": #ee8822,
-        "cunt-boy": #63ee22,
+  'shemale': #e2445f,
+  'herm': #d40759,
+  'none': $gray-500,
+  'female': #66ff74,
+  'male': #6699ff,
+  'male-herm': #007fff,
+  'transgender': #ee8822,
+  'cunt-boy': #63ee22
 );
 
 @each $gender, $color in $genders {
@@ -35,6 +35,6 @@ $genders: (
   }
 
   .message-event .gender-#{$gender} {
-    color: lighten($color, 5%)
+    color: lighten($color, 5%);
   }
 }

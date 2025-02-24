@@ -1,9 +1,9 @@
 .ticket-reply-well {
-    //@include well();
-    margin-bottom: 0;
+  //@include well();
+  margin-bottom: 0;
 }
 
 .ticket-reply-well.staff {
-    background-color: theme-color-bg("info");
-    border-color: theme-color-border("info");
+  background-color: theme-color-bg('info');
+  border-color: theme-color-border('info');
 }

@@ -1,6 +1,9 @@
 export class SecureStore {
-  constructor(protected storeName: string, protected electronRemote: any, protected settings: any) {
-  }
+  constructor(
+    protected storeName: string,
+    protected electronRemote: any,
+    protected settings: any
+  ) {}
 
   private getKey(domain: string, account: string): string {
     return `${this.storeName}__${domain}__${account}`.replace(/[^a-zA-Z0-9_]/g, '__');

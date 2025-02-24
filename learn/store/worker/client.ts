@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 
-
 import { IndexedRequest, IndexedResponse, ProfileStoreCommand } from './types';
 
 export interface WaiterDef {
@@ -27,20 +26,17 @@ export class WorkerClient {
     this.worker.onmessage = this.generateMessageProcessor();
   }
 
-
   private generateId(): string {
     this.idCounter++;
 
     return `wc-${this.idCounter}`;
   }
 
-
   private when(id: string, resolve: (result?: any) => void, reject: (reason?: any) => void, request: IndexedRequest): void {
     this.waiters.push({ id, resolve, reject, request, initiated: Date.now() });
   }
 
-
-  private generateMessageProcessor(): ((e: Event) => void) {
+  private generateMessageProcessor(): (e: Event) => void {
     return (e: Event) => {
       const res = (e as any).data as IndexedResponse;
 
@@ -51,7 +47,7 @@ export class WorkerClient {
         return;
       }
 
-      const waiter = _.find(this.waiters, (w) => (w.id === res.id));
+      const waiter = _.find(this.waiters, w => w.id === res.id);
 
       if (!waiter) {
         log.error('store.worker.client.msg.unknown', { res });
@@ -75,13 +71,11 @@ export class WorkerClient {
     };
   }
 
-
   private clearWaiter(id: string): void {
-    this.waiters = _.filter(this.waiters, (w) => (w.id !== id));
+    this.waiters = _.filter(this.waiters, w => w.id !== id);
 
     // log.silly('store.worker.waiter.clear', this.waiters.length);
   }
-
 
   async request(cmd: ProfileStoreCommand, params: Record<string, any> = {}): Promise<any> {
     const id = this.generateId();
@@ -92,22 +86,15 @@ export class WorkerClient {
       params
     };
 
-    return new Promise(
-      (resolve, reject) => {
-        try {
-          this.when(
-            id,
-            resolve,
-            reject,
-            request
-          );
+    return new Promise((resolve, reject) => {
+      try {
+        this.when(id, resolve, reject, request);
 
-          this.worker.postMessage(request);
-        } catch (err) {
-          reject(err);
-          this.clearWaiter(id);
-        }
+        this.worker.postMessage(request);
+      } catch (err) {
+        reject(err);
+        this.clearWaiter(id);
       }
-    );
+    });
   }
 }

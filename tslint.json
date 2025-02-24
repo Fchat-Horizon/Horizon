@@ -1,16 +1,8 @@
 {
   "defaultSeverity": "warning",
-  "extends": [
-    "tslint:all"
-  ],
+  "extends": ["tslint:all"],
   "jsRules": {
-    "align": [
-      true,
-      "elements",
-      "members",
-      "parameters",
-      "statements"
-    ],
+    "align": [true, "elements", "members", "parameters", "statements"],
     "comment-format": false,
     "curly": false,
     "eofline": false,
@@ -22,35 +14,14 @@
         "singleline": "never"
       }
     ],
-    "max-line-length": [
-      true,
-      140
-    ],
+    "max-line-length": [true, 140],
     "newline-before-return": false,
-    "quotemark": [
-      true,
-      "single"
-    ],
-    "whitespace": [
-      true,
-      "check-decl",
-      "check-operator",
-      "check-separator",
-      "check-preblock",
-      "check-rest-spread"
-    ]
+    "quotemark": [true, "single"],
+    "whitespace": [true, "check-decl", "check-operator", "check-separator", "check-preblock", "check-rest-spread"]
   },
   "rules": {
-    "align": [
-      true,
-      "members",
-      "parameters",
-      "statements"
-    ],
-    "array-type": [
-      true,
-      "array"
-    ],
+    "align": [true, "members", "parameters", "statements"],
+    "array-type": [true, "array"],
     "await-promise": [true, "AxiosPromise", "Bluebird"],
     "comment-format": false,
     "completed-docs": false,
@@ -65,14 +36,8 @@
     "invalid-void": false,
     "linebreak-style": false,
     "max-classes-per-file": false,
-    "max-line-length": [
-      true,
-      140
-    ],
-    "member-access": [
-      true,
-      "no-public"
-    ],
+    "max-line-length": [true, 140],
+    "member-access": [true, "no-public"],
     "member-ordering": false,
     "newline-before-return": false,
     "newline-per-chained-call": false,
@@ -112,35 +77,16 @@
     //covered by no-require-imports
     "no-var-requires": false,
     "object-literal-sort-keys": false,
-    "object-literal-key-quotes": [
-      true,
-      "as-needed"
-    ],
+    "object-literal-key-quotes": [true, "as-needed"],
     "one-variable-per-declaration": false,
-    "only-arrow-functions": [
-      true,
-      "allow-declarations"
-    ],
+    "only-arrow-functions": [true, "allow-declarations"],
     "ordered-imports": false,
-    "prefer-function-over-method": [
-      true,
-      "allow-public"
-    ],
+    "prefer-function-over-method": [true, "allow-public"],
     "prefer-readonly": false,
-    "quotemark": [
-      true,
-      "single"
-    ],
+    "quotemark": [true, "single"],
     "return-undefined": false,
-    "semicolon": [
-      true,
-      "always",
-      "ignore-interfaces"
-    ],
-    "space-before-function-paren": [
-      true,
-      "never"
-    ],
+    "semicolon": [true, "always", "ignore-interfaces"],
+    "space-before-function-paren": [true, "never"],
     "strict-boolean-expressions": false,
     "strict-comparisons": false,
     "switch-default": false,
@@ -160,11 +106,7 @@
       "parameter",
       "property-declaration"
     ],
-    "variable-name": [
-      true,
-      "ban-keywords",
-      "allow-leading-underscore"
-    ],
+    "variable-name": [true, "ban-keywords", "allow-leading-underscore"],
     "whitespace": [
       true,
       "check-decl",

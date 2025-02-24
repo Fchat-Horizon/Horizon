@@ -1,36 +1,38 @@
 .note-folder {
-    display: flex;
-    width: 100%;
-    .note-folder-total, .note-folder-unread {
-        width: 3.5rem;
-        text-align: center;
-    }
-    .note-folder-unread {
-        font-weight: bold;
-    }
-    .note-folder-name {
-        flex: 1;
-    }
+  display: flex;
+  width: 100%;
+  .note-folder-total,
+  .note-folder-unread {
+    width: 3.5rem;
+    text-align: center;
+  }
+  .note-folder-unread {
+    font-weight: bold;
+  }
+  .note-folder-name {
+    flex: 1;
+  }
 }
 
-.conversation-from-me, .conversation-from-them {
-    margin-bottom: 5px;
-    max-width: percentage((($grid-columns - 4) / $grid-columns));
-    word-wrap: break-word;
+.conversation-from-me,
+.conversation-from-them {
+  margin-bottom: 5px;
+  max-width: percentage((($grid-columns - 4) / $grid-columns));
+  word-wrap: break-word;
 }
 
 .conversation-from-me {
-    margin-right: percentage(( 4 / $grid-columns ));
-    background-color: $note-conversation-you-bg;
-    color: $note-conversation-you-text;
-    border-color: $note-conversation-you-border;
-    //text-align: left;
+  margin-right: percentage((4 / $grid-columns));
+  background-color: $note-conversation-you-bg;
+  color: $note-conversation-you-text;
+  border-color: $note-conversation-you-border;
+  //text-align: left;
 }
 
 .conversation-from-them {
-    margin-left: percentage(( 4 / $grid-columns ));
-    background-color: $note-conversation-them-bg;
-    color: $note-conversation-them-text;
-    border-color: $note-conversation-them-border;
-    //text-align: right;
+  margin-left: percentage((4 / $grid-columns));
+  background-color: $note-conversation-them-bg;
+  color: $note-conversation-them-text;
+  border-color: $note-conversation-them-border;
+  //text-align: right;
 }

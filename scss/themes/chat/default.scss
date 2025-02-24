@@ -1,12 +1,12 @@
-@import "~bootstrap/scss/functions";
-@import "../../functions";
-@import "../variables/default_variables";
-@import "~bootstrap/scss/variables";
-@import "../../flist_derived";
-@import "../variables/default_derived";
+@import '~bootstrap/scss/functions';
+@import '../../functions';
+@import '../variables/default_variables';
+@import '~bootstrap/scss/variables';
+@import '../../flist_derived';
+@import '../variables/default_derived';
 
 // Apply variables to theme.
-@import "../chat";
+@import '../chat';
 
 * {
   &::-webkit-scrollbar-track {
@@ -33,8 +33,8 @@
 }
 
 .colorblindMode {
-  @import "../colorblind";
-  @import "../../rising";
+  @import '../colorblind';
+  @import '../../rising';
 
   @each $varName, $value in $risingVariables {
     --#{$varName}: #{$value};

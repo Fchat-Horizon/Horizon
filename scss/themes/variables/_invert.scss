@@ -6,7 +6,7 @@
   @return hsla(hue($color), saturation($color), lightness($color) + $amount, alpha($color));
 }
 
-@function theme-color-level($color-name: "primary", $level: 0) {
+@function theme-color-level($color-name: 'primary', $level: 0) {
   $color: theme-color($color-name);
   $color-base: if($level < 0, #000, #fff);
   $level: abs($level);

@@ -24,7 +24,10 @@
       cursor: pointer;
     }
   }
-  .badges-block, .contact-block, .quick-info-block, .character-list-block {
+  .badges-block,
+  .contact-block,
+  .quick-info-block,
+  .character-list-block {
     margin-top: 15px;
   }
 }
@@ -34,7 +37,7 @@
     background-color: $character-badge-bg;
     border: 1px solid $character-badge-border;
     border-radius: $border-radius;
-    @include box-shadow(inset 0 1px 1px rgba(0, 0, 0, .05));
+    @include box-shadow(inset 0 1px 1px rgba(0, 0, 0, 0.05));
 
     &.character-badge-subscription-lifetime {
       background-color: $character-badge-subscriber-bg;
@@ -142,7 +145,6 @@
     display: inline-block;
     background: transparent;
     text-align: center;
-
   }
 }
 
@@ -166,7 +168,7 @@
 
   .guestbook-reply {
     &:before {
-      content: "Reply ";
+      content: 'Reply ';
       font-weight: bold;
     }
     .reply-message {

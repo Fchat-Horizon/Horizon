@@ -16,11 +16,13 @@
   z-index: 150;
 }
 
-.flash-message-enter-active, .flash-message-leave-active {
+.flash-message-enter-active,
+.flash-message-leave-active {
   transition: all 0.2s;
 }
 
-.flash-message-enter, .flash-message-leave-to {
+.flash-message-enter,
+.flash-message-leave-to {
   opacity: 0;
   transform: translateX(100px);
 }

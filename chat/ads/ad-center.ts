@@ -21,9 +21,12 @@ export class AdCenter {
 
   async set(ads: Ad[]): Promise<void> {
     const cleanedAds = _.map(
-      _.filter(ads, (ad) => (ad.content.trim().length > 0)),
+      _.filter(ads, ad => ad.content.trim().length > 0),
       (ad): Ad => {
-        const filteredTags = _.map(_.filter(ad.tags, (tag) => tag.trim().length > 0), (tag) => tag.trim());
+        const filteredTags = _.map(
+          _.filter(ad.tags, tag => tag.trim().length > 0),
+          tag => tag.trim()
+        );
 
         return {
           ...ad,
@@ -45,7 +48,7 @@ export class AdCenter {
   }
 
   getTags(ads: Ad[] = this.ads): string[] {
-    return _.uniq(_.flatten(_.map(ads, (ad) => ad.tags)));
+    return _.uniq(_.flatten(_.map(ads, ad => ad.tags)));
   }
 
   getActiveTags(): string[] {
@@ -53,35 +56,35 @@ export class AdCenter {
   }
 
   getActiveAds(): Ad[] {
-    return _.filter(this.ads, (ad) => !ad.disabled);
+    return _.filter(this.ads, ad => !ad.disabled);
   }
 
   getMatchingAds(tags: string[]): Ad[] {
-    return _.filter(this.ads, (ad) => !ad.disabled && _.intersection(ad.tags, tags).length > 0);
+    return _.filter(this.ads, ad => !ad.disabled && _.intersection(ad.tags, tags).length > 0);
   }
 
   schedule(tags: string[], channelIds: string[], order: 'random' | 'ad-center', timeoutMinutes: number): void {
     const ads = this.getMatchingAds(tags);
 
-    _.each(channelIds, (channelId) => this.scheduleForChannel(channelId, ads, order, timeoutMinutes));
+    _.each(channelIds, channelId => this.scheduleForChannel(channelId, ads, order, timeoutMinutes));
   }
 
   adsAreRunning(): boolean {
-    return !_.every(core.conversations.channelConversations, (conv) => !conv.isSendingAutomatedAds());
+    return !_.every(core.conversations.channelConversations, conv => !conv.isSendingAutomatedAds());
   }
 
   stopAllAds(): void {
-    _.each(core.conversations.channelConversations, (conv) => conv.adManager.stop());
+    _.each(core.conversations.channelConversations, conv => conv.adManager.stop());
   }
 
   protected getConversation(channelId: string): Conversation.ChannelConversation | undefined {
-    return core.conversations.channelConversations.find((c) => c.channel.id === channelId);
+    return core.conversations.channelConversations.find(c => c.channel.id === channelId);
   }
 
   isMissingFromAdCenter(adContentToTest: string): boolean {
     const cleaned = adContentToTest.trim().toLowerCase();
 
-    return _.every(this.ads, (ad) => ad.content.trim().toLowerCase() !== cleaned);
+    return _.every(this.ads, ad => ad.content.trim().toLowerCase() !== cleaned);
   }
 
   isSafeToOverride(channelId: string): boolean {
@@ -91,7 +94,7 @@ export class AdCenter {
       return true;
     }
 
-    return _.every(conv.settings.adSettings.ads, (adContent) => !this.isMissingFromAdCenter(adContent));
+    return _.every(conv.settings.adSettings.ads, adContent => !this.isMissingFromAdCenter(adContent));
   }
 
   // tslint:disable-next-line:prefer-function-over-method
@@ -107,7 +110,10 @@ export class AdCenter {
 
       adSettings: {
         ...conv.settings.adSettings,
-        ads: _.map(_.filter(ads, (ad) => !ad.disabled && ad.content.trim().length > 0), (ad) => ad.content.trim()),
+        ads: _.map(
+          _.filter(ads, ad => !ad.disabled && ad.content.trim().length > 0),
+          ad => ad.content.trim()
+        ),
         randomOrder: order === 'random'
       }
     };

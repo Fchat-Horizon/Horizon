@@ -20,8 +20,8 @@
 
       <ul>
         <li v-for="r in recommendations" class="recommendation" :class="r.level">
-          <h3>{{r.title}}</h3>
-          <p>{{r.desc}}</p>
+          <h3>{{ r.title }}</h3>
+          <p>{{ r.desc }}</p>
           <p class="more-info" v-if="r.helpUrl"><a :href="r.helpUrl">Here's how</a></p>
         </li>
       </ul>
@@ -29,73 +29,72 @@
   </div>
 </template>
 <script lang="ts">
-import { Component } from '@f-list/vue-ts';
-import Vue from 'vue';
-import core from '../../chat/core';
-import { ProfileRecommendation, ProfileRecommendationAnalyzer } from './profile-recommendation';
-import { CharacterAnalysis } from '../matcher';
-import { methods } from '../../site/character_page/data_store';
+  import { Component } from '@f-list/vue-ts';
+  import Vue from 'vue';
+  import core from '../../chat/core';
+  import { ProfileRecommendation, ProfileRecommendationAnalyzer } from './profile-recommendation';
+  import { CharacterAnalysis } from '../matcher';
+  import { methods } from '../../site/character_page/data_store';
 
-@Component({})
-export default class ProfileAnalysis extends Vue {
-  recommendations: ProfileRecommendation[] = [];
-  analyzing = false;
+  @Component({})
+  export default class ProfileAnalysis extends Vue {
+    recommendations: ProfileRecommendation[] = [];
+    analyzing = false;
 
-  async analyze() {
-    this.analyzing = true;
-    this.recommendations = [];
+    async analyze() {
+      this.analyzing = true;
+      this.recommendations = [];
 
-    const char = await methods.characterData(core.characters.ownProfile.character.name, core.characters.ownProfile.character.id, true);
-    const profile = new CharacterAnalysis(char.character);
-    const analyzer = new ProfileRecommendationAnalyzer(profile);
+      const char = await methods.characterData(core.characters.ownProfile.character.name, core.characters.ownProfile.character.id, true);
+      const profile = new CharacterAnalysis(char.character);
+      const analyzer = new ProfileRecommendationAnalyzer(profile);
 
-    this.recommendations = await analyzer.analyze();
+      this.recommendations = await analyzer.analyze();
 
-    this.analyzing = false;
+      this.analyzing = false;
+    }
   }
-}
 </script>
 <style lang="scss">
-
-.profile-analysis-wrapper {
-  h3 {
-    font-size: 130%;
-    margin-bottom: 0;
-  }
-
-  p {
-    font-size: 95%;
-    margin: 0;
-  }
-
-  ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  li {
-    padding: 10px;
-    margin: 5px;
-    line-height: 120%;
-    border-radius: 3px;
-
-    &.critical {
-      background-color: var(--scoreMismatchBg);
+  .profile-analysis-wrapper {
+    h3 {
+      font-size: 130%;
+      margin-bottom: 0;
     }
 
-    &.note {
-      background-color: var(--scoreWeakMismatchBg);
+    p {
+      font-size: 95%;
+      margin: 0;
+    }
+
+    ul {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    li {
+      padding: 10px;
+      margin: 5px;
+      line-height: 120%;
+      border-radius: 3px;
+
+      &.critical {
+        background-color: var(--scoreMismatchBg);
+      }
+
+      &.note {
+        background-color: var(--scoreWeakMismatchBg);
+      }
+    }
+
+    .more-info {
+      margin-top: 1em;
+
+      a {
+        color: var(--linkForcedColor) !important;
+        font-weight: bold;
+      }
     }
   }
-
-  .more-info {
-    margin-top: 1em;
-
-    a {
-      color: var(--linkForcedColor) !important;
-      font-weight: bold;
-    }
-  }
-}
 </style>

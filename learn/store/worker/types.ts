@@ -1,4 +1,3 @@
-
 export type ProfileStoreCommand = 'flush' | 'start' | 'stop' | 'update-meta' | 'store' | 'get' | 'init';
 
 export interface IndexedRequest {
@@ -6,7 +5,6 @@ export interface IndexedRequest {
   id: string;
   params: Record<string, any>;
 }
-
 
 export interface IndexedResponse {
   id: string;

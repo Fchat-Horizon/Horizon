@@ -1,3 +1,3 @@
 declare module 'qs' {
-    export function stringify(data: object): string;
+  export function stringify(data: object): string;
 }

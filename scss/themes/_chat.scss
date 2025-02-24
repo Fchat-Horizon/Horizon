@@ -1,46 +1,44 @@
-@import "~bootstrap/scss/mixins";
-@import "~bootstrap/scss/root";
-@import "~bootstrap/scss/reboot";
-@import "~bootstrap/scss/type";
-@import "~bootstrap/scss/images";
-@import "~bootstrap/scss/grid";
-@import "~bootstrap/scss/forms";
-@import "~bootstrap/scss/buttons";
-@import "~bootstrap/scss/transitions";
-@import "~bootstrap/scss/dropdown";
-@import "~bootstrap/scss/button-group";
-@import "~bootstrap/scss/input-group";
-@import "~bootstrap/scss/custom-forms";
-@import "~bootstrap/scss/nav";
-@import "~bootstrap/scss/card";
-@import "~bootstrap/scss/pagination";
-@import "~bootstrap/scss/alert";
-@import "~bootstrap/scss/progress";
-@import "~bootstrap/scss/list-group";
-@import "~bootstrap/scss/close";
-@import "~bootstrap/scss/modal";
-@import "~bootstrap/scss/popover";
-@import "~bootstrap/scss/utilities/background";
-@import "~bootstrap/scss/utilities/display";
-@import "~bootstrap/scss/utilities/flex";
-@import "~bootstrap/scss/utilities/sizing";
+@import '~bootstrap/scss/mixins';
+@import '~bootstrap/scss/root';
+@import '~bootstrap/scss/reboot';
+@import '~bootstrap/scss/type';
+@import '~bootstrap/scss/images';
+@import '~bootstrap/scss/grid';
+@import '~bootstrap/scss/forms';
+@import '~bootstrap/scss/buttons';
+@import '~bootstrap/scss/transitions';
+@import '~bootstrap/scss/dropdown';
+@import '~bootstrap/scss/button-group';
+@import '~bootstrap/scss/input-group';
+@import '~bootstrap/scss/custom-forms';
+@import '~bootstrap/scss/nav';
+@import '~bootstrap/scss/card';
+@import '~bootstrap/scss/pagination';
+@import '~bootstrap/scss/alert';
+@import '~bootstrap/scss/progress';
+@import '~bootstrap/scss/list-group';
+@import '~bootstrap/scss/close';
+@import '~bootstrap/scss/modal';
+@import '~bootstrap/scss/popover';
+@import '~bootstrap/scss/utilities/background';
+@import '~bootstrap/scss/utilities/display';
+@import '~bootstrap/scss/utilities/flex';
+@import '~bootstrap/scss/utilities/sizing';
 
-@import "../core";
-@import "../chat";
-@import "../character_page";
-@import "../eicons_editor";
-@import "../bbcode_editor";
-@import "../bbcode";
-@import "../flist_overrides";
-@import "../rising";
-
+@import '../core';
+@import '../chat';
+@import '../character_page';
+@import '../eicons_editor';
+@import '../bbcode_editor';
+@import '../bbcode';
+@import '../flist_overrides';
+@import '../rising';
 
 :root {
   @each $varName, $value in $risingVariables {
     --#{$varName}: #{$value};
   }
 }
-
 
 * {
   &::-webkit-scrollbar-track {

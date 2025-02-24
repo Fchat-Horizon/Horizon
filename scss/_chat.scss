@@ -1,5 +1,5 @@
 .bg-solid-text {
-  background: $text-background-color
+  background: $text-background-color;
 }
 
 .link-preview {
@@ -25,7 +25,7 @@
 }
 
 .has-new {
-  background-color: theme-color-level("danger", 4) !important;
+  background-color: theme-color-level('danger', 4) !important;
 }
 
 .overlay-disable {
@@ -80,7 +80,7 @@
     display: block;
     position: absolute;
     padding: 3px 4px;
-    border-color: theme-color("secondary");
+    border-color: theme-color('secondary');
     border-top-right-radius: 0;
     border-top-left-radius: 0;
     white-space: nowrap;
@@ -147,8 +147,9 @@
   }
 }
 
-.ads-text-box, .ads-text-box:focus {
-  background-color: theme-color-level("info", -4);
+.ads-text-box,
+.ads-text-box:focus {
+  background-color: theme-color-level('info', -4);
 }
 
 .border-top {
@@ -182,8 +183,8 @@
 }
 
 .message-warn {
-  background-color: theme-color("danger");
-  color: color-yiq(theme-color("danger"));
+  background-color: theme-color('danger');
+  color: color-yiq(theme-color('danger'));
 }
 
 .messages {
@@ -192,7 +193,7 @@
 
 .messages-both {
   .message-ad:not(.message-score) {
-    background-color: theme-color-level("info", -4);
+    background-color: theme-color-level('info', -4);
     padding: 0 2px 2px 2px;
     box-shadow: $gray-500 -2px -2px 2px inset;
   }
@@ -230,39 +231,40 @@
       }
     }
   }
-  >  .expand {
+  > .expand {
     display: none;
   }
 }
 
 .message-highlight {
-  background-color: theme-color-level("success", -8);
+  background-color: theme-color-level('success', -8);
 }
 
 .message-action .bbcode {
   font-style: italic;
-  i, em {
+  i,
+  em {
     font-style: normal;
   }
 }
 
 .last-read {
-  border-bottom: solid 2px theme-color-level("success", -2) !important;
+  border-bottom: solid 2px theme-color-level('success', -2) !important;
 }
 
 .fas.active {
-  color: theme-color("success");
+  color: theme-color('success');
 }
 
 $genders: (
-        "shemale": #CC66FF,
-        "herm": #9B30FF,
-        "none": $gray-500,
-        "female": #FF6699,
-        "male": #6699FF,
-        "male-herm": #007FFF,
-        "transgender": #EE8822,
-        "cunt-boy": #00CC66,
+  'shemale': #cc66ff,
+  'herm': #9b30ff,
+  'none': $gray-500,
+  'female': #ff6699,
+  'male': #6699ff,
+  'male-herm': #007fff,
+  'transgender': #ee8822,
+  'cunt-boy': #00cc66
 );
 
 @each $gender, $color in $genders {
@@ -271,12 +273,13 @@ $genders: (
   }
 
   .message-event .gender-#{$gender} {
-    color: lighten($color, 5%)
+    color: lighten($color, 5%);
   }
 }
 
-.user-bookmark, .message-event .user-bookmark {
-  color: #66CC33;
+.user-bookmark,
+.message-event .user-bookmark {
+  color: #66cc33;
 }
 
 #character-page-sidebar {
@@ -290,11 +293,11 @@ $genders: (
 
 #window-tabs {
   .hasNew {
-    background-color: theme-color-level("warning", -2);
-    border-color: theme-color-level("warning", -4);
-    color: color-yiq(theme-color("warning"));
+    background-color: theme-color-level('warning', -2);
+    border-color: theme-color-level('warning', -4);
+    color: color-yiq(theme-color('warning'));
     &:hover {
-      background-color: theme-color-level("warning", -4);
+      background-color: theme-color-level('warning', -4);
     }
   }
   .tab:not(.active):not(:hover) {

@@ -1,44 +1,45 @@
 <template>
-   <modal :buttons="false" ref="dialog" @open="onOpen" @close="onClose" style="width:98%" dialogClass="ads-dialog">
-        <template slot="title">
-            Channel Ads for <user :character="character">{{character.name}}</user>
-        </template>
+  <modal :buttons="false" ref="dialog" @open="onOpen" @close="onClose" style="width: 98%" dialogClass="ads-dialog">
+    <template slot="title">
+      Channel Ads for <user :character="character">{{ character.name }}</user>
+    </template>
 
-       <div class="row ad-viewer" ref="pageBody" v-if="messages.length > 0">
-            <template v-for="message in messages">
-                <h3>#{{message.channelName}} <span class="message-time">{{formatTime(message.datePosted)}}</span></h3>
-                <div class="border-bottom">
-                    <bbcode :text="message.message"></bbcode>
-                </div>
-            </template>
+    <div class="row ad-viewer" ref="pageBody" v-if="messages.length > 0">
+      <template v-for="message in messages">
+        <h3>
+          #{{ message.channelName }} <span class="message-time">{{ formatTime(message.datePosted) }}</span>
+        </h3>
+        <div class="border-bottom">
+          <bbcode :text="message.message"></bbcode>
         </div>
+      </template>
+    </div>
 
-        <div class="row ad-viewer" ref="pageBody" v-else>
-            <i><user :character="character">{{character.name}}</user> has not posted any ads on the channels you are on.</i>
-        </div>
-
-   </modal>
+    <div class="row ad-viewer" ref="pageBody" v-else>
+      <i
+        ><user :character="character">{{ character.name }}</user> has not posted any ads on the channels you are on.</i
+      >
+    </div>
+  </modal>
 </template>
 
-
 <script lang="ts">
+  import * as _ from 'lodash';
+  import { Component, Hook, Prop, Watch } from '@f-list/vue-ts';
+  import CustomDialog from '../../components/custom_dialog';
+  import Modal from '../../components/Modal.vue';
+  import { Character } from '../../fchat/interfaces';
+  import { AdCachedPosting } from '../../learn/ad-cache';
+  import core from '../core';
+  import { formatTime } from '../common';
+  import UserView from '../UserView.vue';
+  import { BBCodeView } from '../../bbcode/view';
 
-import * as _ from 'lodash';
-import { Component, Hook, Prop, Watch } from '@f-list/vue-ts';
-import CustomDialog from '../../components/custom_dialog';
-import Modal from '../../components/Modal.vue';
-import { Character } from '../../fchat/interfaces';
-import { AdCachedPosting } from '../../learn/ad-cache';
-import core from '../core';
-import {formatTime} from '../common';
-import UserView from '../UserView.vue';
-import { BBCodeView } from '../../bbcode/view';
-
-@Component({
-    components: {modal: Modal, user: UserView, bbcode: BBCodeView(core.bbCodeParser)}
-})
-export default class CharacterAdView extends CustomDialog {
-    @Prop({required: true})
+  @Component({
+    components: { modal: Modal, user: UserView, bbcode: BBCodeView(core.bbCodeParser) }
+  })
+  export default class CharacterAdView extends CustomDialog {
+    @Prop({ required: true })
     readonly character!: Character;
 
     messages: AdCachedPosting[] = [];
@@ -46,37 +47,33 @@ export default class CharacterAdView extends CustomDialog {
 
     @Watch('character')
     onNameUpdate(): void {
-        this.update();
+      this.update();
     }
-
 
     @Hook('mounted')
     onMounted(): void {
-        this.update();
+      this.update();
     }
-
 
     update(): void {
-        if (!this.character) {
-            this.messages = [];
-            return;
-        }
+      if (!this.character) {
+        this.messages = [];
+        return;
+      }
 
-        const cache = core.cache.adCache.get(this.character.name);
+      const cache = core.cache.adCache.get(this.character.name);
 
-        this.messages = ((cache) ? _.takeRight(cache.posts, 10).reverse() : []) as AdCachedPosting[];
+      this.messages = (cache ? _.takeRight(cache.posts, 10).reverse() : []) as AdCachedPosting[];
     }
-
 
     async onOpen(): Promise<void> {
-        // empty
-        return;
+      // empty
+      return;
     }
-
 
     async onClose(): Promise<void> {
-        // empty
-        return;
+      // empty
+      return;
     }
-}
+  }
 </script>

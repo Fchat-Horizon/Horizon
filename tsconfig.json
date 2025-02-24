@@ -12,7 +12,7 @@
     "noUnusedParameters": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "experimentalDecorators": true,
+    "experimentalDecorators": true
   },
   "include": ["./electron/main.ts"]
 }

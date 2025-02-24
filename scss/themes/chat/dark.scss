@@ -1,40 +1,40 @@
-@import "~bootstrap/scss/functions";
-@import "../../functions";
-@import "../variables/dark_variables";
-@import "~bootstrap/scss/variables";
-@import "../../flist_derived";
-@import "../variables/dark_derived";
+@import '~bootstrap/scss/functions';
+@import '../../functions';
+@import '../variables/dark_variables';
+@import '~bootstrap/scss/variables';
+@import '../../flist_derived';
+@import '../variables/dark_derived';
 
 // Apply variables to theme.
-@import "../chat";
+@import '../chat';
 
 * {
-    &::-webkit-scrollbar-track {
-        box-shadow: inset 0 0 2px $card-border-color;
-        border-radius: 10px;
+  &::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 2px $card-border-color;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.8);
+    background-color: $gray-300;
+    &:hover {
+      background-color: $gray-500;
     }
 
-    &::-webkit-scrollbar {
-        width: 12px;
+    &:active {
+      background-color: $gray-700;
     }
-
-    &::-webkit-scrollbar-thumb {
-        border-radius: 10px;
-        box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.8);
-        background-color: $gray-300;
-        &:hover {
-            background-color: $gray-500;
-        }
-
-        &:active {
-            background-color: $gray-700;
-        }
-    }
+  }
 }
 
 .colorblindMode {
-  @import "../colorblind";
-  @import "../../rising";
+  @import '../colorblind';
+  @import '../../rising';
 
   @each $varName, $value in $risingVariables {
     --#{$varName}: #{$value};

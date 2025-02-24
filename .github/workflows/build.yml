@@ -12,7 +12,6 @@ on:
       - 'v[0-9]*'
 
 jobs:
-
   # function: Extract release version from the tag
   set-version:
     runs-on: ubuntu-latest

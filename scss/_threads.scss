@@ -1,32 +1,32 @@
 .threadPost {
-    //@include well();
-    //@include row();
-    margin-bottom: 0;
+  //@include well();
+  //@include row();
+  margin-bottom: 0;
 }
 
 .threadPost.comment {
-    background-color: theme-color-bg("info");
+  background-color: theme-color-bg('info');
 }
 
 .threadPost.setting {
-    background-color: theme-color-bg("success");
+  background-color: theme-color-bg('success');
 }
 
 .threadPost.deleted {
-    background-color: theme-color-bg("warning");
+  background-color: theme-color-bg('warning');
 }
 
 .setting-post {
-    @extend .dropdown;
+  @extend .dropdown;
 }
 
 .setting-post-popout {
-    @extend .dropdown-menu;
-    display: block;
-    top: auto;
-    bottom: 100%;
-    margin-bottom: 2px;
-    max-height: 250px;
-    overflow: scroll;
-    overflow-x: hidden;
+  @extend .dropdown-menu;
+  display: block;
+  top: auto;
+  bottom: 100%;
+  margin-bottom: 2px;
+  max-height: 250px;
+  overflow: scroll;
+  overflow-x: hidden;
 }

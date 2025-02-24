@@ -133,15 +133,13 @@ div.indentText {
   text-shadow: none;
 }
 
-
 .bbcode {
   .fa-link {
-      color: var(--linkForcedColor);
-      margin-right: 2px;
+    color: var(--linkForcedColor);
+    margin-right: 2px;
   }
 
   a.user-link {
-      color: var(--linkForcedColor);
+    color: var(--linkForcedColor);
   }
 }
-

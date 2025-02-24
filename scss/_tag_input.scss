@@ -1,52 +1,52 @@
 .tag-input-control {
-    display: inline-block;
-    margin-bottom: 0;
-    vertical-align: middle;
-    height: $input-height; // Make inputs at least the height of their button counterpart (base line-height + padding + border)
-    width: 100%;
-    padding: $input-padding-y $input-padding-x;
-    font-size: $font-size-base;
-    line-height: $input-line-height;
-    color: $input-color;
-    background-color: $input-bg;
-    background-clip: padding-box;
-    background-image: none; // Reset unusual Firefox-on-Android default style; see https://github.com/necolas/normalize.css/issues/214
-    border: $input-border-width solid $input-border-color;
-    border-radius: $input-border-radius; // Note: This has no effect on <select>s in some browsers, due to the limited stylability of <select>s in CSS.
-    @include box-shadow($input-box-shadow);
-    @include transition($input-transition);
+  display: inline-block;
+  margin-bottom: 0;
+  vertical-align: middle;
+  height: $input-height; // Make inputs at least the height of their button counterpart (base line-height + padding + border)
+  width: 100%;
+  padding: $input-padding-y $input-padding-x;
+  font-size: $font-size-base;
+  line-height: $input-line-height;
+  color: $input-color;
+  background-color: $input-bg;
+  background-clip: padding-box;
+  background-image: none; // Reset unusual Firefox-on-Android default style; see https://github.com/necolas/normalize.css/issues/214
+  border: $input-border-width solid $input-border-color;
+  border-radius: $input-border-radius; // Note: This has no effect on <select>s in some browsers, due to the limited stylability of <select>s in CSS.
+  @include box-shadow($input-box-shadow);
+  @include transition($input-transition);
 
-    .tag-input {
-        background-color: $input-bg;
-        color: $input-color;
-        border: none;
-        width: auto;
-        &:focus {
-            box-shadow: none;
-            outline: none;
-        }
+  .tag-input {
+    background-color: $input-bg;
+    color: $input-color;
+    border: none;
+    width: auto;
+    &:focus {
+      box-shadow: none;
+      outline: none;
     }
+  }
 }
 
 .form-inline .tag-input-control {
-    width: auto;
+  width: auto;
 }
 
 .tag-error {
-    border: 1px solid theme-color-level(danger, $alert-border-level);
+  border: 1px solid theme-color-level(danger, $alert-border-level);
+  background-color: theme-color-level(danger, $alert-bg-level);
+  .tag-input {
+    text-color: theme-color-level(danger, $alert-color-level);
     background-color: theme-color-level(danger, $alert-bg-level);
-    .tag-input {
-        text-color: theme-color-level(danger, $alert-color-level);
-        background-color: theme-color-level(danger, $alert-bg-level);
-    }
+  }
 }
 
 .suggestion-important {
-    font-weight: bold !important;
+  font-weight: bold !important;
 }
 
 .suggestion-description {
-    display: block;
-    font-style: italic;
-    font-size: $font-size-sm;
+  display: block;
+  font-style: italic;
+  font-size: $font-size-sm;
 }

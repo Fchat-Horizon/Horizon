@@ -1,5 +1,5 @@
-import {urlRegex as websitePattern} from '../../bbcode/core';
-import {Infotag} from '../../interfaces';
+import { urlRegex as websitePattern } from '../../bbcode/core';
+import { Infotag } from '../../interfaces';
 
 const daUsernamePattern = /^([a-z0-9_\-]+)$/i;
 const daSitePattern = /^https?:\/\/([a-z0-9_\-]+)\.deviantart\.com\//i;
@@ -19,85 +19,74 @@ const inkbunnyNormalize = normalizeSiteUsernamePair(inkbunnySitePattern, inkbunn
 const twitterNormalize = normalizeSiteUsernamePair(twitterSitePattern, twitterUsernamePattern);
 
 function normalizeSiteUsernamePair(site: RegExp, username: RegExp): (value: string) => string | undefined {
-    return (value: string): string | undefined => {
-        let matches = value.match(site);
-        if(matches !== null && matches.length === 2)
-            return matches[1];
-        matches = value.match(username);
-        if(matches !== null && matches.length === 2)
-            return matches[1];
-        return;
-    };
+  return (value: string): string | undefined => {
+    let matches = value.match(site);
+    if (matches !== null && matches.length === 2) return matches[1];
+    matches = value.match(username);
+    if (matches !== null && matches.length === 2) return matches[1];
+    return;
+  };
 }
 
 export function formatContactValue(infotag: Infotag, value: string): string {
-    const methodName = infotag.name.toLowerCase();
-    const formatters: {[key: string]: (() => string | undefined) | undefined} = {
-        deviantart(): string | undefined {
-            return daNormalize(value);
-        },
-        furaffinity(): string | undefined {
-            return faNormalize(value);
-        },
-        inkbunny(): string | undefined {
-            return inkbunnyNormalize(value);
-        },
-        twitter(): string | undefined {
-            return twitterNormalize(value);
-        }
-    };
-    if(typeof formatters[methodName] === 'function') {
-        const formatted = formatters[methodName]!();
-        return formatted !== undefined ? formatted : value;
+  const methodName = infotag.name.toLowerCase();
+  const formatters: { [key: string]: (() => string | undefined) | undefined } = {
+    deviantart(): string | undefined {
+      return daNormalize(value);
+    },
+    furaffinity(): string | undefined {
+      return faNormalize(value);
+    },
+    inkbunny(): string | undefined {
+      return inkbunnyNormalize(value);
+    },
+    twitter(): string | undefined {
+      return twitterNormalize(value);
     }
-    return value;
+  };
+  if (typeof formatters[methodName] === 'function') {
+    const formatted = formatters[methodName]!();
+    return formatted !== undefined ? formatted : value;
+  }
+  return value;
 }
 
 export function formatContactLink(infotag: Infotag, value: string): string | undefined {
-    const methodName = infotag.name.toLowerCase();
-    const formatters: {[key: string]: (() => string | undefined) | undefined} = {
-        deviantart(): string | undefined {
-            const username = daNormalize(value);
-            if(username !== undefined)
-                return `https://${username}.deviantart.com/`;
-        },
-        'e-mail'(): string | undefined {
-            const matches = value.match(emailPattern);
-            if(matches !== null && matches.length === 2)
-                return `mailto:${value}`;
-        },
-        furaffinity(): string | undefined {
-            const username = faNormalize(value);
-            if(username !== undefined)
-                return `https://www.furaffinity.net/user/${username}`;
-        },
-        inkbunny(): string | undefined {
-            const username = inkbunnyNormalize(value);
-            if(username !== undefined)
-                return `https://inkbunny.net/${username}`;
-        },
-        skype(): string | undefined {
-            const matches = value.match(skypeUsernamePattern);
-            if(matches !== null && matches.length === 2)
-                return `skype:${value}?chat`;
-        },
-        twitter(): string | undefined {
-            const username = twitterNormalize(value);
-            if(username !== undefined)
-                return `https://twitter.com/${username}`;
-        },
-        website(): string | undefined {
-            const matches = value.match(websitePattern);
-            if(matches !== null && matches.length === 2)
-                return value;
-        },
-        yim(): string | undefined {
-            const matches = value.match(yimUsernamePattern);
-            if(matches !== null && matches.length === 2)
-                return `ymsg:sendIM?${value}`;
-        }
-    };
-    if(typeof formatters[methodName] === 'function')
-        return formatters[methodName]!();
-    return;
+  const methodName = infotag.name.toLowerCase();
+  const formatters: { [key: string]: (() => string | undefined) | undefined } = {
+    deviantart(): string | undefined {
+      const username = daNormalize(value);
+      if (username !== undefined) return `https://${username}.deviantart.com/`;
+    },
+    'e-mail'(): string | undefined {
+      const matches = value.match(emailPattern);
+      if (matches !== null && matches.length === 2) return `mailto:${value}`;
+    },
+    furaffinity(): string | undefined {
+      const username = faNormalize(value);
+      if (username !== undefined) return `https://www.furaffinity.net/user/${username}`;
+    },
+    inkbunny(): string | undefined {
+      const username = inkbunnyNormalize(value);
+      if (username !== undefined) return `https://inkbunny.net/${username}`;
+    },
+    skype(): string | undefined {
+      const matches = value.match(skypeUsernamePattern);
+      if (matches !== null && matches.length === 2) return `skype:${value}?chat`;
+    },
+    twitter(): string | undefined {
+      const username = twitterNormalize(value);
+      if (username !== undefined) return `https://twitter.com/${username}`;
+    },
+    website(): string | undefined {
+      const matches = value.match(websitePattern);
+      if (matches !== null && matches.length === 2) return value;
+    },
+    yim(): string | undefined {
+      const matches = value.match(yimUsernamePattern);
+      if (matches !== null && matches.length === 2) return `ymsg:sendIM?${value}`;
+    }
+  };
+  if (typeof formatters[methodName] === 'function') return formatters[methodName]!();
+  return;
 }

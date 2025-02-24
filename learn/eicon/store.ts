@@ -22,10 +22,13 @@ export class EIconStore {
 
     log.info('eicons.save', { records: recordArray.length, asOfTimestamp: this.asOfTimestamp, fn });
 
-    fs.writeFileSync(fn, JSON.stringify({
-      asOfTimestamp: this.asOfTimestamp,
-      records: recordArray
-    }));
+    fs.writeFileSync(
+      fn,
+      JSON.stringify({
+        asOfTimestamp: this.asOfTimestamp,
+        records: recordArray
+      })
+    );
 
     remote.ipcMain.emit('eicons.reload', { asOfTimestamp: this.asOfTimestamp });
   }
@@ -39,7 +42,7 @@ export class EIconStore {
 
       // this.records = data?.records || [];
       this.asOfTimestamp = data?.asOfTimestamp || 0;
-      this.lookup = _.fromPairs(_.map(data?.records || [], (r) => [r.eicon, r]));
+      this.lookup = _.fromPairs(_.map(data?.records || [], r => [r.eicon, r]));
 
       const recordCount = _.keys(this.lookup).length;
 
@@ -69,9 +72,9 @@ export class EIconStore {
 
     const eicons = await this.updater.fetchAll();
 
-    this.lookup = _.fromPairs(_.map(eicons.records, (r) => [r.eicon, r]));
+    this.lookup = _.fromPairs(_.map(eicons.records, r => [r.eicon, r]));
 
-    _.each(eicons.records, (changeRecord) => this.addIcon(changeRecord));
+    _.each(eicons.records, changeRecord => this.addIcon(changeRecord));
 
     this.resortList();
 
@@ -85,11 +88,11 @@ export class EIconStore {
 
     const changes = await this.updater.fetchUpdates(this.asOfTimestamp);
 
-    const removals = _.filter(changes.recordUpdates, (changeRecord) => changeRecord.action === '-');
-    const additions = _.filter(changes.recordUpdates, (changeRecord) => changeRecord.action === '+');
+    const removals = _.filter(changes.recordUpdates, changeRecord => changeRecord.action === '-');
+    const additions = _.filter(changes.recordUpdates, changeRecord => changeRecord.action === '+');
 
-    _.each(removals, (changeRecord) => this.removeIcon(changeRecord));
-    _.each(additions, (changeRecord) => this.addIcon(changeRecord));
+    _.each(removals, changeRecord => this.removeIcon(changeRecord));
+    _.each(additions, changeRecord => this.addIcon(changeRecord));
 
     this.resortList();
 
@@ -130,14 +133,14 @@ export class EIconStore {
 
   search(searchString: string): EIconRecord[] {
     const lcSearch = searchString.trim().toLowerCase();
-    const found = _.filter(this.lookup, (r) => r.eicon.indexOf(lcSearch) >= 0);
+    const found = _.filter(this.lookup, r => r.eicon.indexOf(lcSearch) >= 0);
 
     return found.sort((a, b) => {
-      if ((a.eicon.substr(0, lcSearch.length) === lcSearch) && (b.eicon.substr(0, lcSearch.length) !== lcSearch)) {
+      if (a.eicon.substr(0, lcSearch.length) === lcSearch && b.eicon.substr(0, lcSearch.length) !== lcSearch) {
         return -1;
       }
 
-      if ((b.eicon.substr(0, lcSearch.length) === lcSearch) && (a.eicon.substr(0, lcSearch.length) !== lcSearch)) {
+      if (b.eicon.substr(0, lcSearch.length) === lcSearch && a.eicon.substr(0, lcSearch.length) !== lcSearch) {
         return 1;
       }
 

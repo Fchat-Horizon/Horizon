@@ -1,4 +1,4 @@
-$warning:  #e09d3e;
+$warning: #e09d3e;
 $gray-100: #e5e5e5 !default;
 $gray-200: #cccccc !default;
 $gray-300: #b2b2b2 !default;
@@ -13,22 +13,21 @@ $secondary: $gray-400;
 $body-bg: $gray-100;
 $text-muted: $gray-500;
 
-
 // F-List Rising
 $scoreUnicornMatchBg: rgb(0, 173, 173);
 $scoreUnicornMatchFg: rgb(29, 154, 154);
 $scoreMatchBg: rgba(0, 180, 0, 0.65);
 $scoreMatchFg: rgba(0, 133, 0, 0.4);
 $scoreWeakMatchBg: rgba(0, 180, 0, 0.22);
-$scoreWeakMatchFg: rgba(0, 133, 0, 0.20);
+$scoreWeakMatchFg: rgba(0, 133, 0, 0.2);
 $scoreWeakMismatchBg: rgba(227, 189, 0, 0.5);
 $scoreWeakMismatchFg: rgba(192, 160, 0, 0.5);
 $scoreMismatchBg: rgba(192, 0, 0, 0.35);
 $scoreMismatchFg: rgba(148, 0, 0, 0.3);
 $scoreTitleColor: black;
 $scoreMinimizeButtonFg: rgba(255, 255, 255, 0.6);
-$scoreMinimizeButtonBg: rgba(0,0,0,0.1);
-$scoreReportBg: rgba(0,0,0,0.08);
+$scoreMinimizeButtonBg: rgba(0, 0, 0, 0.1);
+$scoreReportBg: rgba(0, 0, 0, 0.08);
 
 $scoreFadedUnicornMatchBg: adjust-color($scoreUnicornMatchBg, $alpha: -0.6);
 $scoreFadedUnicornMatchFg: adjust-color($scoreUnicornMatchFg, $alpha: -0.6);
@@ -47,13 +46,13 @@ $scoreStandoutWeakMatchBorderColor: #016c01;
 $scoreStandoutWeakMatchBgColor: rgba(85, 191, 85, 0.2);
 $scoreStandoutNeutralBorderColor: #888;
 $scoreStandoutWeakMismatchBorderColor: #c18f02;
-$scoreStandoutWeakMismatchBgColor: rgba(208, 188, 0, 0.0);
+$scoreStandoutWeakMismatchBgColor: rgba(208, 188, 0, 0);
 $scoreStandoutMismatchBorderColor: #a01a1a;
 
-$characterImageWrapperBg: rgba(0,0,0, 0.2);
-$characterGuestbookPostBg: rgba(0,0,0,0.08);
+$characterImageWrapperBg: rgba(0, 0, 0, 0.2);
+$characterGuestbookPostBg: rgba(0, 0, 0, 0.08);
 $characterGuestbookPostBorderColor: rgba(0, 0, 0, 0.06);
-$characterGuestbookReplyBg: rgba(0,0,0, 0.05);
+$characterGuestbookReplyBg: rgba(0, 0, 0, 0.05);
 $characterGuestbookTimestampFg: rgba(0, 0, 0, 0.4);
 $characterKinkCustomColor: #0072ec;
 $characterKinkCustomBorderColor: rgba(0, 0, 0, 0.1);
@@ -68,4 +67,3 @@ $headerBackgroundMaskColor: #e5e5e5;
 
 $linkForcedColor: #007bff;
 $tabSecondaryFgColor: rgba(0, 0, 0, 0.4);
-

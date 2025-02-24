@@ -14,11 +14,22 @@ $risingVariables: (
   scoreMinimizeButtonBg: #{$scoreMinimizeButtonBg},
   scoreReportBg: #{$scoreReportBg},
 
-  scoreMatchBgFaint: change-color($color: $scoreMatchBg, $alpha: 0.25),
-  scoreWeakMatchBgFaint: change-color($color: $scoreWeakMatchBg, $alpha: 0.25),
-  scoreWeakMismatchBgFaint: change-color($color: $scoreWeakMismatchBg, $alpha: 0.25),
-  scoreMismatchBgFaint: change-color($color: $scoreMismatchBg, $alpha: 0.25),
-
+  scoreMatchBgFaint: change-color(
+      $color: $scoreMatchBg,
+      $alpha: 0.25
+    ),
+  scoreWeakMatchBgFaint: change-color(
+      $color: $scoreWeakMatchBg,
+      $alpha: 0.25
+    ),
+  scoreWeakMismatchBgFaint: change-color(
+      $color: $scoreWeakMismatchBg,
+      $alpha: 0.25
+    ),
+  scoreMismatchBgFaint: change-color(
+      $color: $scoreMismatchBg,
+      $alpha: 0.25
+    ),
   scoreFadedUnicornMatchBg: #{$scoreFadedUnicornMatchBg},
   scoreFadedUnicornMatchFg: #{$scoreFadedUnicornMatchFg},
   scoreFadedMatchBg: #{$scoreFadedMatchBg},
@@ -72,5 +83,5 @@ $risingVariables: (
   textBrownColor: #{$brown-color},
   textPinkColor: #{$pink-color},
   textGrayColor: #{$gray-color},
-  textOrangeColor: #{$orange-color},
+  textOrangeColor: #{$orange-color}
 );

@@ -1,11 +1,19 @@
-@function theme-color-bg($color-name: "primary") {
+@function theme-color-bg($color-name: 'primary') {
   @return theme-color-level($color-name, -10);
 }
 
-@function theme-color-border($color-name: "primary") {
+@function theme-color-border($color-name: 'primary') {
   @return theme-color-level($color-name, -9);
 }
 
 @mixin text-outline($color) {
-  text-shadow: $color 1px 0, $color -1px 0, $color 0 1px, $color 0 -1px, $color 1px 1px, $color -1px 1px, $color 1px -1px, $color -1px -1px;
+  text-shadow:
+    $color 1px 0,
+    $color -1px 0,
+    $color 0 1px,
+    $color 0 -1px,
+    $color 1px 1px,
+    $color -1px 1px,
+    $color 1px -1px,
+    $color -1px -1px;
 }

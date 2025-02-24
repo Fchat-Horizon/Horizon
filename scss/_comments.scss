@@ -1,4 +1,4 @@
 $comment-grid-columns: 50 !default;
 .comment-offset-1 {
-    margin-left: percentage((1 / $comment-grid-columns));
+  margin-left: percentage((1 / $comment-grid-columns));
 }

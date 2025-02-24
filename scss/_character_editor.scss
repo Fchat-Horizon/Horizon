@@ -1,78 +1,80 @@
 .bbcodeTextArea {
-    max-width: 100%;
-    min-height: 200px;
+  max-width: 100%;
+  min-height: 200px;
 }
 
 .kinkChoice.selected {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .characterEditorSidebar {
-    position: fixed;
+  position: fixed;
 }
 
 .characterList.characterListSelected {
-    border-width: 2px;
-    border-color: $character-list-selected-border;
+  border-width: 2px;
+  border-color: $character-list-selected-border;
 }
 
 // Character image editor.
 .characterImage {
-    width: 250px;
-    height: 300px;
-    border-radius: 25px;
-    overflow: hidden;
-    border: 2px #111 solid;
-    display: inline-block;
-    margin-left: 10px;
+  width: 250px;
+  height: 300px;
+  border-radius: 25px;
+  overflow: hidden;
+  border: 2px #111 solid;
+  display: inline-block;
+  margin-left: 10px;
 }
 
 .characterImage.characterImageSelected {
-    border-color: $character-image-selected-border;
+  border-color: $character-image-selected-border;
 }
 
 .characterImagePreview {
-    width: 200px;
-    height: 200px;
-    float: left;
-    background-size: contain;
-    background-repeat: no-repeat;
+  width: 200px;
+  height: 200px;
+  float: left;
+  background-size: contain;
+  background-repeat: no-repeat;
 }
 
 .characterImageActions {
-    width: 46px;
-    float: right;
-    padding-top: 10px;
-    text-align: center;
+  width: 46px;
+  float: right;
+  padding-top: 10px;
+  text-align: center;
 }
 
 .characterImageActions a {
-    width: 30px;
-    height: 30px;
-    display: inline-block;
-    padding-bottom: 15px;
+  width: 30px;
+  height: 30px;
+  display: inline-block;
+  padding-bottom: 15px;
 }
 
 .characterImage a img {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 .characterImageDescription {
-    width: 100%;
-    height: 100px;
-    clear: both;
-    box-sizing: border-box;
-    padding: 10px;
-    position: relative;
-    overflow-y: scroll;
+  width: 100%;
+  height: 100px;
+  clear: both;
+  box-sizing: border-box;
+  padding: 10px;
+  position: relative;
+  overflow-y: scroll;
 }
 
-.kink-list-enter-active, .kink-list-leave-active {
-    transition: all 0.2s;
+.kink-list-enter-active,
+.kink-list-leave-active {
+  transition: all 0.2s;
 }
 
-.kink-list-enter, .kink-list-leave-to {
-    opacity: 0;
-    transform: translateX(100px);
+.kink-list-enter,
+.kink-list-leave-to {
+  opacity: 0;
+  transform: translateX(100px);
 }

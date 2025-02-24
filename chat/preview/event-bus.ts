@@ -23,75 +23,65 @@ import { NoteCheckerCount } from '../../site/note-checker';
  * 'character-memo': { character: string, memo: CharacterMemo }
  */
 
-
 export interface EventBusEvent {
-    // tslint:disable: no-any
-    [key: string]: any;
+  // tslint:disable: no-any
+  [key: string]: any;
 }
 
 export interface ChannelMessageEvent extends EventBusEvent {
-    message: Message;
-    channel: ChannelConversation;
+  message: Message;
+  channel: ChannelConversation;
 }
 
 // tslint:disable-next-line no-empty-interface
 export interface ChannelAdEvent extends ChannelMessageEvent {}
 
 export interface CharacterDataEvent {
-    character: Character;
+  character: Character;
 }
 
-
 export interface SelectConversationEvent extends EventBusEvent {
-    conversation: Conversation | null;
+  conversation: Conversation | null;
 }
 
 export type EventCallback = (data: any) => void | Promise<void>;
-
 
 // tslint:disable-next-line no-empty-interface
 export interface NoteCountsUpdate extends EventBusEvent, NoteCheckerCount {}
 
 class EventBusManager {
-    private eventCallbacks: Record<string, EventCallback[]> = {};
+  private eventCallbacks: Record<string, EventCallback[]> = {};
 
-    $on(eventName: string, callback: EventCallback): void {
-        this.$off(eventName, callback);
+  $on(eventName: string, callback: EventCallback): void {
+    this.$off(eventName, callback);
 
-        if (!(eventName in this.eventCallbacks)) {
-            this.eventCallbacks[eventName] = [];
-        }
-
-        this.eventCallbacks[eventName].push(callback);
+    if (!(eventName in this.eventCallbacks)) {
+      this.eventCallbacks[eventName] = [];
     }
 
+    this.eventCallbacks[eventName].push(callback);
+  }
 
-    $off(eventName: string, callback: EventCallback): void {
-        if (!(eventName in this.eventCallbacks)) {
-            return;
-        }
-
-        this.eventCallbacks[eventName] = _.filter(
-          this.eventCallbacks[eventName],
-          (cb) => (cb !== callback)
-        );
+  $off(eventName: string, callback: EventCallback): void {
+    if (!(eventName in this.eventCallbacks)) {
+      return;
     }
 
+    this.eventCallbacks[eventName] = _.filter(this.eventCallbacks[eventName], cb => cb !== callback);
+  }
 
-    $emit(eventName: string, eventData: EventBusEvent): void {
-        // const d = Date.now();
+  $emit(eventName: string, eventData: EventBusEvent): void {
+    // const d = Date.now();
 
-        _.each(this.eventCallbacks[eventName] || [], (cb) => (cb(eventData)));
+    _.each(this.eventCallbacks[eventName] || [], cb => cb(eventData));
 
-        // log.silly('event.bus.emit', { eventName, eventData, time: (Date.now() - d) / 1000 });
-    }
+    // log.silly('event.bus.emit', { eventName, eventData, time: (Date.now() - d) / 1000 });
+  }
 
-
-    clear(): void {
-        this.eventCallbacks = {};
-    }
+  clear(): void {
+    this.eventCallbacks = {};
+  }
 }
 
 export const EventBus = new EventBusManager();
 // export const EventBus = new Vue();
-

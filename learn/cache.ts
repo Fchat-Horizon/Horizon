@@ -1,29 +1,28 @@
 export interface CacheCollection<RecordType> {
-    [key: string]: RecordType
+  [key: string]: RecordType;
 }
 
-
 export abstract class Cache<RecordType> {
-    protected cache: CacheCollection<RecordType> = {};
+  protected cache: CacheCollection<RecordType> = {};
 
-    get(name: string): RecordType | null {
-        const key = Cache.nameKey(name);
+  get(name: string): RecordType | null {
+    const key = Cache.nameKey(name);
 
-        if (key in this.cache) {
-            return this.cache[key];
-        }
-
-        return null;
+    if (key in this.cache) {
+      return this.cache[key];
     }
 
-    // tslint:disable-next-line: no-any
-    abstract register(record: any): void;
+    return null;
+  }
 
-    has(name: string): boolean {
-        return (name in this.cache);
-    }
+  // tslint:disable-next-line: no-any
+  abstract register(record: any): void;
 
-    static nameKey(name: string): string {
-        return name.toLowerCase();
-    }
+  has(name: string): boolean {
+    return name in this.cache;
+  }
+
+  static nameKey(name: string): string {
+    return name.toLowerCase();
+  }
 }

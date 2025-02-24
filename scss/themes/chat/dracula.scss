@@ -1,46 +1,46 @@
-@import "~bootstrap/scss/functions";
-@import "../../functions";
-@import "../variables/dracula_variables";
-@import "~bootstrap/scss/variables";
-@import "../../flist_derived";
-@import "../variables/dracula_derived";
+@import '~bootstrap/scss/functions';
+@import '../../functions';
+@import '../variables/dracula_variables';
+@import '~bootstrap/scss/variables';
+@import '../../flist_derived';
+@import '../variables/dracula_derived';
 
 // Apply variables to theme.
-@import "../chat";
+@import '../chat';
 
 * {
-    &::-webkit-scrollbar-track {
-        box-shadow: inset 0 0 2px $card-border-color;
-        border-radius: 10px;
+  &::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 2px $card-border-color;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.8);
+    background-color: $gray-300;
+    &:hover {
+      background-color: $gray-500;
     }
 
-    &::-webkit-scrollbar {
-        width: 12px;
+    &:active {
+      background-color: $gray-700;
     }
-
-    &::-webkit-scrollbar-thumb {
-        border-radius: 10px;
-        box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.8);
-        background-color: $gray-300;
-        &:hover {
-            background-color: $gray-500;
-        } 
-
-        &:active {
-            background-color: $gray-700;
-        }
-    }
+  }
 }
 
 $genders: (
-        "shemale": $dracula-purple,
-        "herm": lighten(saturate($dracula-purple, 0.36), 10.78),
-        "none": $dracula-comment,
-        "female": $dracula-pink,
-        "male": $dracula-cyan,
-        "male-herm": lighten(saturate($dracula-cyan, 0.45), 36.86),
-        "transgender": $dracula-orange,
-        "cunt-boy": $dracula-green
+  'shemale': $dracula-purple,
+  'herm': lighten(saturate($dracula-purple, 0.36), 10.78),
+  'none': $dracula-comment,
+  'female': $dracula-pink,
+  'male': $dracula-cyan,
+  'male-herm': lighten(saturate($dracula-cyan, 0.45), 36.86),
+  'transgender': $dracula-orange,
+  'cunt-boy': $dracula-green
 );
 
 $red-color: $dracula-red;
@@ -56,7 +56,9 @@ $pink-color: $dracula-pink;
 $gray-color: #ccc;
 $orange-color: $dracula-orange;
 
-.btn-primary, .btn-primary:hover, .list-group-item.active {
+.btn-primary,
+.btn-primary:hover,
+.list-group-item.active {
   color: $dracula-bg;
 }
 
@@ -66,17 +68,15 @@ $orange-color: $dracula-orange;
   }
 
   .message-event .gender-#{$gender} {
-    color: lighten($color, 5%)
+    color: lighten($color, 5%);
   }
 }
 
 .colorblindMode {
-  @import "../colorblind";
-  @import "../../rising";
+  @import '../colorblind';
+  @import '../../rising';
 
   @each $varName, $value in $risingVariables {
     --#{$varName}: #{$value};
   }
 }
-
-

@@ -1,0 +1,17 @@
+node_modules/
+/electron/app
+/electron/dist
+/mobile
+/webchat/dist
+
+/electron/adblocker.bin
+
+.idea/
+
+
+.DS_Store
+
+
+
+test.ts
+

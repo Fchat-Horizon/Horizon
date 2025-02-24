@@ -26,4 +26,3 @@ export function initYiffbot4000Integration() {
     }
   });
 }
-

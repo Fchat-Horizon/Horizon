@@ -31,49 +31,51 @@
  */
 import Axios from 'axios';
 import Chat from '../chat/Chat.vue';
-import {init as initCore} from '../chat/core';
+import { init as initCore } from '../chat/core';
 import l from '../chat/localize';
-import {setupRaven} from '../chat/vue-raven';
+import { setupRaven } from '../chat/vue-raven';
 import Socket from '../chat/WebSocket';
 import Connection from '../fchat/connection';
-import {SimpleCharacter} from '../interfaces';
+import { SimpleCharacter } from '../interfaces';
 import '../scss/fa.scss'; //tslint:disable-line:no-import-side-effect
-import {Logs, SettingsStore} from './logs';
+import { Logs, SettingsStore } from './logs';
 import Notifications from './notifications';
 
-if(typeof (<{Promise?: object}>window).Promise !== 'function') //tslint:disable-line:strict-type-predicates
-    alert('Your browser is too old to be supported by F-Chat 3.0. Please update to a newer version.');
+if (typeof (<{ Promise?: object }>window).Promise !== 'function')
+  //tslint:disable-line:strict-type-predicates
+  alert('Your browser is too old to be supported by F-Chat 3.0. Please update to a newer version.');
 
-const version = (<{version: string}>require('./package.json')).version; //tslint:disable-line:no-require-imports
+const version = (<{ version: string }>require('./package.json')).version; //tslint:disable-line:no-require-imports
 Axios.defaults.params = { __fchat: `web/${version}` };
 
-if(process.env.NODE_ENV === 'production')
-    setupRaven('https://a9239b17b0a14f72ba85e8729b9d1612@sentry.f-list.net/2', `web-${version}`);
+if (process.env.NODE_ENV === 'production') setupRaven('https://a9239b17b0a14f72ba85e8729b9d1612@sentry.f-list.net/2', `web-${version}`);
 
-declare const chatSettings: {account: string, theme: string, characters: ReadonlyArray<SimpleCharacter>, defaultCharacter: number | null};
+declare const chatSettings: { account: string; theme: string; characters: ReadonlyArray<SimpleCharacter>; defaultCharacter: number | null };
 
-const ticketProvider = async() => {
-    console.log('TICK TICK TICK TICK');
+const ticketProvider = async () => {
+  console.log('TICK TICK TICK TICK');
 
-    const data = (await Axios.post<{ticket?: string, error: string}>(
-        '/json/getApiTicket.php?no_friends=true&no_bookmarks=true&no_characters=true')).data;
-    if(data.ticket !== undefined) return data.ticket;
-    throw new Error(data.error);
+  const data = (
+    await Axios.post<{ ticket?: string; error: string }>('/json/getApiTicket.php?no_friends=true&no_bookmarks=true&no_characters=true')
+  ).data;
+  if (data.ticket !== undefined) return data.ticket;
+  throw new Error(data.error);
 };
 
 const connection = new Connection('F-Chat 3.0 (Web)', version, Socket);
 connection.setCredentials(chatSettings.account, ticketProvider);
 initCore(connection, Logs, SettingsStore, Notifications);
 
-window.addEventListener('beforeunload', (e) => {
-    if(!connection.isOpen) return;
-    e.returnValue = l('chat.confirmLeave');
-    return l('chat.confirmLeave');
+window.addEventListener('beforeunload', e => {
+  if (!connection.isOpen) return;
+  e.returnValue = l('chat.confirmLeave');
+  return l('chat.confirmLeave');
 });
 
 require(`!style-loader?{"attrs":{"id":"themeStyle"}}!css-loader!sass-loader!../scss/themes/chat/${chatSettings.theme}.scss`);
 
-new Chat({ //tslint:disable-line:no-unused-expression
-    el: '#app',
-    propsData: {ownCharacters: chatSettings.characters, defaultCharacter: chatSettings.defaultCharacter, version}
+new Chat({
+  //tslint:disable-line:no-unused-expression
+  el: '#app',
+  propsData: { ownCharacters: chatSettings.characters, defaultCharacter: chatSettings.defaultCharacter, version }
 });

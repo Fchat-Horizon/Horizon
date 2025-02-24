@@ -26,7 +26,6 @@ const reply = (req: IndexedRequest, result?: any, err?: string | Error): void =>
   postMessage(res);
 };
 
-
 const generateMessageProcessor = () => {
   const messageMapper: Record<ProfileStoreCommand, IndexedCallback> = {
     flush: (params: Record<string, any>) => indexed.flushProfiles(params.daysToExpire),
@@ -38,12 +37,12 @@ const generateMessageProcessor = () => {
     'update-meta': (params: Record<string, any>) =>
       indexed.updateProfileMeta(params.name, params.images, params.guestbook, params.friends, params.groups),
 
-    init: async(params: Record<string, any>): Promise<void> => {
+    init: async (params: Record<string, any>): Promise<void> => {
       indexed = await IndexedStore.open(params.dbName);
     }
   };
 
-  return async(e: Event) => {
+  return async (e: Event) => {
     // log.silly('store.worker.endpoint.msg', { e });
 
     const req = (e as any).data as IndexedRequest;
@@ -60,11 +59,10 @@ const generateMessageProcessor = () => {
     try {
       const result = await messageMapper[req.cmd](req.params);
       reply(req, result);
-    } catch(err) {
+    } catch (err) {
       reply(req, undefined, err);
     }
   };
 };
-
 
 onmessage = generateMessageProcessor();

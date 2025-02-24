@@ -57,19 +57,23 @@ export class SmartFilter {
       return false;
     }
 
-    const score = _.reduce(this.opts.kinks, (curScore, kinkId) => {
-      const pref = Matcher.getKinkPreference(c, kinkId);
+    const score = _.reduce(
+      this.opts.kinks,
+      (curScore, kinkId) => {
+        const pref = Matcher.getKinkPreference(c, kinkId);
 
-      if (pref) {
-        curScore.matches += 1;
-        curScore.score += pref;
-      }
+        if (pref) {
+          curScore.matches += 1;
+          curScore.score += pref;
+        }
 
-      return curScore;
-    }, { score: 0, matches: 0 });
+        return curScore;
+      },
+      { score: 0, matches: 0 }
+    );
 
     const baseLog = getBaseLog(5, (this.opts.kinks?.length || 0) + 1);
-    const threshold = (baseLog * baseLog) + 1;
+    const threshold = baseLog * baseLog + 1;
 
     return score.matches >= 1 && score.score >= threshold;
   }
@@ -81,7 +85,7 @@ export class SmartFilter {
 
     const build = Matcher.getTagValueList(TagId.Build, c);
 
-    return build !== null && _.findIndex(this.opts.builds || [], (b) => b === build) >= 0;
+    return build !== null && _.findIndex(this.opts.builds || [], b => b === build) >= 0;
   }
 
   testGenders(c: Character): boolean {
@@ -91,7 +95,7 @@ export class SmartFilter {
 
     const gender = Matcher.getTagValueList(TagId.Gender, c);
 
-    return gender !== null && _.findIndex(this.opts.genders || [], (g) => g === gender) >= 0;
+    return gender !== null && _.findIndex(this.opts.genders || [], g => g === gender) >= 0;
   }
 
   testBodyTypes(c: Character): boolean {
@@ -101,7 +105,7 @@ export class SmartFilter {
 
     const bodyType = Matcher.getTagValueList(TagId.BodyType, c);
 
-    return bodyType !== null && _.findIndex(this.opts.bodyTypes || [], (b) => b === bodyType) >= 0;
+    return bodyType !== null && _.findIndex(this.opts.bodyTypes || [], b => b === bodyType) >= 0;
   }
 
   testSpecies(c: Character): boolean {
@@ -111,7 +115,7 @@ export class SmartFilter {
 
     const species = Matcher.species(c);
 
-    return species !== null && _.findIndex(this.opts.species || [], (s) => s === species) >= 0;
+    return species !== null && _.findIndex(this.opts.species || [], s => s === species) >= 0;
   }
 
   testIsHuman(c: Character): boolean {
@@ -126,7 +130,6 @@ export class SmartFilter {
 export type SmartFilterCollection = {
   [key in keyof SmartFilterSelection]: SmartFilter;
 };
-
 
 export const smartFilters: SmartFilterCollection = {
   ageplay: new SmartFilter({
@@ -152,9 +155,22 @@ export const smartFilters: SmartFilterCollection = {
   gore: new SmartFilter({
     name: 'gore',
     kinks: [
-      Kink.Abrasions, Kink.Castration, Kink.Death, Kink.Emasculation, Kink.ExecutionMurder, Kink.Gore, Kink.Impalement, Kink.Mutilation,
-      Kink.Necrophilia, Kink.NonsexualPain, Kink.NonsexualTorture, Kink.Nullification, Kink.ToothRemoval, Kink.WoundFucking,
-      Kink.Cannibalism, Kink.GenitalTorture
+      Kink.Abrasions,
+      Kink.Castration,
+      Kink.Death,
+      Kink.Emasculation,
+      Kink.ExecutionMurder,
+      Kink.Gore,
+      Kink.Impalement,
+      Kink.Mutilation,
+      Kink.Necrophilia,
+      Kink.NonsexualPain,
+      Kink.NonsexualTorture,
+      Kink.Nullification,
+      Kink.ToothRemoval,
+      Kink.WoundFucking,
+      Kink.Cannibalism,
+      Kink.GenitalTorture
     ]
   }),
 
@@ -165,8 +181,21 @@ export const smartFilters: SmartFilterCollection = {
 
   hyper: new SmartFilter({
     name: 'kinks',
-    kinks: [Kink.HyperAsses, Kink.HyperBalls, Kink.HyperBreasts, Kink.HyperCocks, Kink.HyperFat, Kink.HyperMuscle, Kink.HyperVaginas,
-    Kink.HyperVoluptous, Kink.HyperMuscleGrowth, Kink.MacroAsses, Kink.MacroBalls, Kink.MacroBreasts, Kink.MacroCocks]
+    kinks: [
+      Kink.HyperAsses,
+      Kink.HyperBalls,
+      Kink.HyperBreasts,
+      Kink.HyperCocks,
+      Kink.HyperFat,
+      Kink.HyperMuscle,
+      Kink.HyperVaginas,
+      Kink.HyperVoluptous,
+      Kink.HyperMuscleGrowth,
+      Kink.MacroAsses,
+      Kink.MacroBalls,
+      Kink.MacroBreasts,
+      Kink.MacroCocks
+    ]
   }),
 
   incest: new SmartFilter({
@@ -186,8 +215,18 @@ export const smartFilters: SmartFilterCollection = {
 
   microMacro: new SmartFilter({
     name: 'microMacro',
-    kinks: [Kink.MacroAsses, Kink.MacroBalls, Kink.MacroBreasts, Kink.MacroCocks, Kink.Macrophilia, Kink.MegaMacro, Kink.Microphilia,
-    Kink.GrowthMacro, Kink.ShrinkingMicro, Kink.SizeDifferencesMicroMacro]
+    kinks: [
+      Kink.MacroAsses,
+      Kink.MacroBalls,
+      Kink.MacroBreasts,
+      Kink.MacroCocks,
+      Kink.Macrophilia,
+      Kink.MegaMacro,
+      Kink.Microphilia,
+      Kink.GrowthMacro,
+      Kink.ShrinkingMicro,
+      Kink.SizeDifferencesMicroMacro
+    ]
   }),
 
   obesity: new SmartFilter({
@@ -227,15 +266,39 @@ export const smartFilters: SmartFilterCollection = {
 
   unclean: new SmartFilter({
     name: 'unclean',
-    kinks: [Kink.BelchingBurping, Kink.DirtyFeet, Kink.ExtremeMusk, Kink.Farting, Kink.Filth, Kink.Slob, Kink.Smegma, Kink.SwallowingVomit,
-    Kink.UnwashedMusk, Kink.Vomiting]
+    kinks: [
+      Kink.BelchingBurping,
+      Kink.DirtyFeet,
+      Kink.ExtremeMusk,
+      Kink.Farting,
+      Kink.Filth,
+      Kink.Slob,
+      Kink.Smegma,
+      Kink.SwallowingVomit,
+      Kink.UnwashedMusk,
+      Kink.Vomiting
+    ]
   }),
 
   vore: new SmartFilter({
     name: 'vore',
-    kinks: [Kink.Absorption, Kink.AlternativeVore, Kink.AnalVore, Kink.Cannibalism, Kink.CockVore, Kink.CookingVore, Kink.Digestion,
-    Kink.Disposal, Kink.HardVore, Kink.RealisticVore, Kink.SoftVore, Kink.Unbirthing, Kink.UnrealisticVore, Kink.VoreBeingPredator,
-    Kink.VoreBeingPrey]
+    kinks: [
+      Kink.Absorption,
+      Kink.AlternativeVore,
+      Kink.AnalVore,
+      Kink.Cannibalism,
+      Kink.CockVore,
+      Kink.CookingVore,
+      Kink.Digestion,
+      Kink.Disposal,
+      Kink.HardVore,
+      Kink.RealisticVore,
+      Kink.SoftVore,
+      Kink.Unbirthing,
+      Kink.UnrealisticVore,
+      Kink.VoreBeingPredator,
+      Kink.VoreBeingPrey
+    ]
   }),
 
   watersports: new SmartFilter({
@@ -249,9 +312,12 @@ export const smartFilters: SmartFilterCollection = {
   })
 };
 
-export function testSmartFilters(c: Character, opts: SmartFilterSettings): {
+export function testSmartFilters(
+  c: Character,
+  opts: SmartFilterSettings
+): {
   ageCheck: { ageMin: boolean; ageMax: boolean };
-  filters: { [key in keyof SmartFilterCollection]: SmartFilterTestResult }
+  filters: { [key in keyof SmartFilterCollection]: SmartFilterTestResult };
 } | null {
   if (c.name === core.characters.ownCharacter.name) {
     return null;
@@ -303,5 +369,5 @@ export function matchesSmartFilters(c: Character, opts: SmartFilterSettings): bo
     return true;
   }
 
-  return !_.every(match.filters, (filterResult) => !filterResult.isFiltered);
+  return !_.every(match.filters, filterResult => !filterResult.isFiltered);
 }

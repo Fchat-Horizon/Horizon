@@ -1,16 +1,16 @@
 //Dracula colors
-$dracula-purple: #BD93F9;
-$dracula-bg: #282A36;
-$dracula-current-line: #44475A;
-$dracula-foreground: #F8F8F2;
-$dracula-comment: #6272A4;
-$dracula-cyan: #8BE9FD;
-$dracula-green: #50FA7B;
-$dracula-orange: #FFB86C;
-$dracula-pink: #FF79C6;
-$dracula-purple: #BD93F9;
-$dracula-red: #FF5555;
-$dracula-yellow: #F1FA8C;
+$dracula-purple: #bd93f9;
+$dracula-bg: #282a36;
+$dracula-current-line: #44475a;
+$dracula-foreground: #f8f8f2;
+$dracula-comment: #6272a4;
+$dracula-cyan: #8be9fd;
+$dracula-green: #50fa7b;
+$dracula-orange: #ffb86c;
+$dracula-pink: #ff79c6;
+$dracula-purple: #bd93f9;
+$dracula-red: #ff5555;
+$dracula-yellow: #f1fa8c;
 
 // Base colors, used for pretty much everything.
 // On dark based themes these are inverted in order to cooperate with bootstrap which assumes that all themes are light based.
@@ -38,8 +38,6 @@ $light: $gray-200;
 $text-muted: $gray-500;
 $text-dark: $gray-600;
 $component-active-color: $gray-900;
-
-
 
 // Core page element colors
 $body-bg: $gray-100;
@@ -87,9 +85,9 @@ $scoreWeakMismatchFg: rgb(142, 126, 0);
 $scoreMismatchBg: rgb(171, 0, 0);
 $scoreMismatchFg: rgb(128, 0, 0);
 $scoreTitleColor: white;
-$scoreMinimizeButtonFg: set-alpha($dracula-foreground,0.7);
-$scoreMinimizeButtonBg: rgba(0,0,0,0.2);
-$scoreReportBg: rgba(0,0,0,0.2);
+$scoreMinimizeButtonFg: set-alpha($dracula-foreground, 0.7);
+$scoreMinimizeButtonBg: rgba(0, 0, 0, 0.2);
+$scoreReportBg: rgba(0, 0, 0, 0.2);
 
 $scoreFadedUnicornMatchBg: adjust-color($scoreUnicornMatchBg, $alpha: -0.6);
 $scoreFadedUnicornMatchFg: adjust-color($scoreUnicornMatchFg, $alpha: -0.6);
@@ -108,13 +106,13 @@ $scoreStandoutWeakMatchBorderColor: #014a01;
 $scoreStandoutWeakMatchBgColor: rgba(0, 79, 0, 0.4);
 $scoreStandoutNeutralBorderColor: $gray-100;
 $scoreStandoutWeakMismatchBorderColor: #8a7b00;
-$scoreStandoutWeakMismatchBgColor: rgba(208, 188, 0, 0.0);
+$scoreStandoutWeakMismatchBgColor: rgba(208, 188, 0, 0);
 $scoreStandoutMismatchBorderColor: #841a1a;
 
-$characterImageWrapperBg: rgba(0,0,0, 0.2);
-$characterGuestbookPostBg: rgba(0,0,0,0.15);
+$characterImageWrapperBg: rgba(0, 0, 0, 0.2);
+$characterGuestbookPostBg: rgba(0, 0, 0, 0.15);
 $characterGuestbookPostBorderColor: rgba(255, 255, 255, 0.1);
-$characterGuestbookReplyBg: rgba(0,0,0, 0.1);
+$characterGuestbookReplyBg: rgba(0, 0, 0, 0.1);
 $characterGuestbookTimestampFg: rgba(255, 255, 255, 0.3);
 $characterKinkCustomColor: $dracula-yellow;
 $characterKinkCustomBorderColor: rgba(255, 255, 255, 0.1);
@@ -130,5 +128,4 @@ $headerBackgroundMaskColor: $gray-200;
 $linkForcedColor: $dracula-foreground;
 $tabSecondaryFgColor: set-alpha($dracula-foreground, 0.5);
 
-
-@import "invert";
+@import 'invert';

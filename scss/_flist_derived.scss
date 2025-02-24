@@ -17,25 +17,25 @@ $text-dark: $text-muted !default;
 
 // Character page quick kink comparison
 $quick-compare-active-border: $black-color !default;
-$quick-compare-favorite-bg: theme-color-level("info", -6) !default;
-$quick-compare-yes-bg: theme-color-level("success", -6) !default;
-$quick-compare-maybe-bg: theme-color-level("warning", -6) !default;
-$quick-compare-no-bg: theme-color-level("danger", -6) !default;
+$quick-compare-favorite-bg: theme-color-level('info', -6) !default;
+$quick-compare-yes-bg: theme-color-level('success', -6) !default;
+$quick-compare-maybe-bg: theme-color-level('warning', -6) !default;
+$quick-compare-no-bg: theme-color-level('danger', -6) !default;
 
 // character page badges
 $character-badge-bg: darken($card-bg, 10%) !default;
 $character-badge-border: darken($card-border-color, 10%) !default;
-$character-badge-subscriber-bg: theme-color-bg("info") !default;
-$character-badge-subscriber-border: theme-color-border("info") !default;
+$character-badge-subscriber-bg: theme-color-bg('info') !default;
+$character-badge-subscriber-border: theme-color-border('info') !default;
 
 // Character editor
 $character-list-selected-border: $success !default;
 $character-image-selected-border: $success !default;
 
 // Notes conversation view
-$note-conversation-you-bg: theme-color-bg("info") !default;
-$note-conversation-you-text: theme-color-level("info", 6) !default;
-$note-conversation-you-border: theme-color-border("info") !default;
+$note-conversation-you-bg: theme-color-bg('info') !default;
+$note-conversation-you-text: theme-color-level('info', 6) !default;
+$note-conversation-you-border: theme-color-border('info') !default;
 $note-conversation-them-bg: $card-bg !default;
 $note-conversation-them-text: $body-color !default;
 $note-conversation-them-border: $card-border-color !default;

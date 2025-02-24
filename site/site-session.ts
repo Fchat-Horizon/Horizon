@@ -16,7 +16,6 @@ export interface SiteSessionInterfaceCollection extends Record<string, SiteSessi
   notes: NoteChecker;
 }
 
-
 export class SiteSession {
   private readonly sessionThroat = throat(1);
 
@@ -32,12 +31,10 @@ export class SiteSession {
 
   private csrf = '';
 
-
   setCredentials(account: string, password: string): void {
     this.account = account;
     this.password = password;
   }
-
 
   async start(): Promise<void> {
     try {
@@ -47,29 +44,23 @@ export class SiteSession {
 
       this.state = 'active';
 
-      await Promise.all(
-        _.map(this.interfaces, (i) => i.start())
-      );
-    } catch(err) {
+      await Promise.all(_.map(this.interfaces, i => i.start()));
+    } catch (err) {
       this.state = 'inactive';
       log.error('sitesession.start.error', err);
     }
   }
 
-
   async stop(): Promise<void> {
     try {
-      await Promise.all(
-        _.map(this.interfaces, (i) => i.stop())
-      );
-    } catch(err) {
+      await Promise.all(_.map(this.interfaces, i => i.stop()));
+    } catch (err) {
       log.error('sitesession.stop.error', err);
     }
 
     this.csrf = '';
     this.state = 'inactive';
   }
-
 
   private async init(): Promise<void> {
     log.debug('sitesession.init');
@@ -85,24 +76,23 @@ export class SiteSession {
 
     const input = res.body.match(/<input.*?csrf_token.*?>/);
 
-    if ((!input) || (input.length < 1)) {
+    if (!input || input.length < 1) {
       throw new Error('SiteSession.init: Missing csrf token');
     }
 
     const csrf = input[0].match(/value="([a-zA-Z0-9]+)"/);
 
-    if ((!csrf) || (csrf.length < 2)) {
+    if (!csrf || csrf.length < 2) {
       throw new Error('SiteSession.init: Missing csrf token value');
     }
 
     this.csrf = csrf[1];
   }
 
-
   private async login(): Promise<void> {
     log.debug('sitesession.login');
 
-    if ((this.password === '') || (this.account === '')) {
+    if (this.password === '' || this.account === '') {
       throw new Error('User credentials not set');
     }
 
@@ -129,14 +119,12 @@ export class SiteSession {
     log.debug('sitesession.login.success');
   }
 
-
   // tslint:disable-next-line:prefer-function-over-method
   private async ensureLogin(): Promise<void> {
     if (this.state !== 'active') {
       throw new Error('Site session not active');
     }
   }
-
 
   private async prepareRequest(
     method: string,
@@ -158,17 +146,13 @@ export class SiteSession {
     );
   }
 
-
   async get(uri: string, mustBeLoggedIn: boolean = false, config: Partial<request.Options> = {}): Promise<request.RequestPromise> {
-    return this.sessionThroat(
-      async() => {
-          const finalConfig = await this.prepareRequest('get', uri, mustBeLoggedIn, config);
+    return this.sessionThroat(async () => {
+      const finalConfig = await this.prepareRequest('get', uri, mustBeLoggedIn, config);
 
-          return this.request(finalConfig);
-      }
-    );
+      return this.request(finalConfig);
+    });
   }
-
 
   async post(
     uri: string,
@@ -176,20 +160,16 @@ export class SiteSession {
     mustBeLoggedIn: boolean = false,
     config: Partial<request.Options> = {}
   ): Promise<request.RequestPromise> {
-    return this.sessionThroat(
-      async() => {
-        const finalConfig = await this.prepareRequest('post', uri, mustBeLoggedIn, _.merge({ form: data }, config));
+    return this.sessionThroat(async () => {
+      const finalConfig = await this.prepareRequest('post', uri, mustBeLoggedIn, _.merge({ form: data }, config));
 
-        return this.request(finalConfig);
-      }
-    );
+      return this.request(finalConfig);
+    });
   }
-
 
   async onConnectionClosed(): Promise<void> {
     await this.stop();
   }
-
 
   async onConnectionEstablished(): Promise<void> {
     await this.start();
