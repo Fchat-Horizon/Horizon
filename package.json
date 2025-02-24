@@ -38,6 +38,7 @@
     "lodash": "^4.17.20",
     "node-polyfill-webpack-plugin": "^4.1.0",
     "optimize-css-assets-webpack-plugin": "^5.0.4",
+    "prettier": "^3.5.2",
     "qs": "^6.9.4",
     "raven-js": "^3.27.2",
     "raw-loader": "^4.0.2",
