@@ -40,16 +40,14 @@ jobs:
         with:
           fetch-depth: 0
 
-
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 22
           cache: 'pnpm'
-
-      - name: Install PNPM
-        run: npm install -g pnpm
 
       - name: Install OS-specific Dependencies
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
