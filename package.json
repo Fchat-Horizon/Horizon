@@ -1,6 +1,6 @@
 {
   "name": "fchat-horizon",
-  "version": "1.28.3-BETA.5",
+  "version": "1.28.3-BETA.6",
   "author": "The F-List Team and FChat Horizon Cobtributors",
   "description": "A heavily modded FChat 3.0 client for F-List, continued from Rising",
   "license": "MIT",
@@ -36,6 +36,7 @@
     "file-loader": "^6.2.0",
     "install": "^0.13.0",
     "lodash": "^4.17.21",
+    "macos-alias": "^0.2.12",
     "node-polyfill-webpack-plugin": "^4.1.0",
     "optimize-css-assets-webpack-plugin": "^5.0.8",
     "prettier": "^3.5.2",
