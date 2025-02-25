@@ -40,9 +40,10 @@ $DistPath = "$RepoRoot\electron\dist"
 # Navigate to repository root
 Set-Location $RepoRoot
 
-# Ensure we're on the 'main' branch and up-to-date
-git checkout main
-git pull
+# This is handled by our CI.
+# // # & Ensure we're on the 'main' branch and up-to-date
+# // git checkout main
+# // git pull
 
 # Install dependencies
 pnpm install

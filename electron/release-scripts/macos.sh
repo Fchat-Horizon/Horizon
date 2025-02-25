@@ -21,9 +21,10 @@ DIST_PATH="$REPO_ROOT/electron/dist"
 # & Ensure we're at the root of the repo
 cd "$REPO_ROOT"
 
-# & Ensure we're on the 'main' branch and up-to-date
-git checkout main
-git pull
+# This is handled by our CI.
+# // # & Ensure we're on the 'main' branch and up-to-date
+# // git checkout main
+# // git pull
 
 # & Install dependencies
 pnpm install
