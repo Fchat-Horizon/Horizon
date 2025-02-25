@@ -234,6 +234,12 @@ export class Matcher {
     return report;
   }
 
+  // Ohhhkaayyyy....
+  // So admission, Id idn't read any of the code before this, nor do I care to.
+  // Given that this doesn't import ANY of the files
+  // affiliated with yiffbot, I'm going to assume that none
+  // of this actually has to do with yiffbot. God knows, if
+  // I'm wrong, it's whatever at this point.
   static getYiffBot4000MatchReport(you: Character, them: Character): MatchReport {
     const scores: MatchResultScores = {
       [TagId.Orientation]: new Score(Scoring.MATCH, 'Perfect match!'),
@@ -300,6 +306,10 @@ export class Matcher {
     let bestScoreLevelCount = -10000;
     let bestReport: MatchReport;
 
+    // Wait, what the fuck?
+    // kay, so this does have to do with yiffbot. How, I
+    // have no fucking idea. So I'm leaving *this* (and only
+    // this) as is.
     if (you.name === 'YiffBot 4000' || them.name === 'YiffBot 4000') {
       return Matcher.getYiffBot4000MatchReport(you, them);
     }

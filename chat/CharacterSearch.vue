@@ -81,9 +81,20 @@
         </template>
       </div>
     </div>
-    <div class="search-yiffbot-suggestion" v-if="isYiffBot4000Online()" @click.prevent="showYiffBot4000()">
-      <div class="btn">No luck? Try AI play with <span>YiffBot 4000</span></div>
-    </div>
+    <!-- 
+
+    ALERT: YIFFBOT FUNCTIONALITY IS ON THE CHOPPING BLOCK!
+    **     Yiffbot was banned from F-List, and as such, most
+           of it's functionality no longer remains. Given that,  
+           features related to it are SUBJECT FOR DELETION!
+           Sowwwy...
+
+
+    // <div class="search-yiffbot-suggestion" v-if="isYiffBot4000Online()" @click.prevent="showYiffBot4000()">
+    //   <div class="btn">No luck? Try AI play with <span>YiffBot 4000</span></div>
+    // </div> 
+    
+    -->
   </modal>
 </template>
 
@@ -216,29 +227,34 @@
     // tslint:disable-next-line no-any
     scoreWatcher: ((event: any) => void) | null = null;
 
-    isYiffBot4000Online(): boolean {
-      return core.characters.get('YiffBot 4000').status !== 'offline';
-    }
+    // ALERT: YIFFBOT FUNCTIONALITY IS ON THE CHOPPING BLOCK!
+    // **     Yiffbot was banned from F-List, and as such, most
+    //        of it's functionality no longer remains. Given that,
+    //        features related to it are SUBJECT FOR DELETION!
+    //        Sowwwy...
+    // // isYiffBot4000Online(): boolean {
+    // //   return core.characters.get('YiffBot 4000').status !== 'offline';
+    // // }
 
-    showYiffBot4000(): void {
-      const character = core.characters.get('YiffBot 4000');
+    // // showYiffBot4000(): void {
+    // //   const character = core.characters.get('YiffBot 4000');
 
-      if (character.status === 'offline') {
-        return;
-      }
+    // //   if (character.status === 'offline') {
+    // //     return;
+    // //   }
 
-      const conversation = core.conversations.getPrivate(character);
+    // //   const conversation = core.conversations.getPrivate(character);
 
-      conversation.show();
-      this.hide();
+    // //   conversation.show();
+    // //   this.hide();
 
-      const last = _.last(conversation.messages);
+    // //   const last = _.last(conversation.messages);
 
-      if (!last || last.time.getTime() < Date.now() - 1000 * 60 * 30) {
-        conversation.enteredText = 'Hello!';
-        conversation.send();
-      }
-    }
+    // //   if (!last || last.time.getTime() < Date.now() - 1000 * 60 * 30) {
+    // //     conversation.enteredText = 'Hello!';
+    // //     conversation.send();
+    // //   }
+    // // }
 
     @Hook('created')
     async created(): Promise<void> {
@@ -360,15 +376,20 @@
         this.hasReceivedResults = true;
         this.results = results;
 
-        if (this.isYiffBot4000Online()) {
-          const char = core.characters.get('YiffBot 4000');
+        // ALERT: YIFFBOT FUNCTIONALITY IS ON THE CHOPPING BLOCK!
+        // **     Yiffbot was banned from F-List, and as such, most
+        //        of it's functionality no longer remains. Given that,
+        //        features related to it are SUBJECT FOR DELETION!
+        //        Sowwwy...
+        // // if (this.isYiffBot4000Online()) {
+        // //   const char = core.characters.get('YiffBot 4000');
 
-          (char as any).status = 'looking';
-          (char as any).gender = this.getYiffBotCompatibleGender();
-          (char as any).statusText = 'Try AI play with any gender, orientation & kink!';
+        // //   (char as any).status = 'looking';
+        // //   (char as any).gender = this.getYiffBotCompatibleGender();
+        // //   (char as any).statusText = 'Try AI play with any gender, orientation & kink!';
 
-          this.results.push({ character: char, profile: core.cache.profileCache.getSync('YiffBot 4000') });
-        }
+        // //   this.results.push({ character: char, profile: core.cache.profileCache.getSync('YiffBot 4000') });
+        // // }
 
         this.resort(results);
       });

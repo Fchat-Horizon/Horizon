@@ -10,7 +10,9 @@ import { AdCenter } from './ads/ad-center';
 import { GeneralSettings } from '../electron/common';
 import { SiteSession } from '../site/site-session';
 import _ from 'lodash';
-import { initYiffbot4000Integration } from '../learn/yiffbot';
+
+// sucks fur u, yiffbot
+// // import { initYiffbot4000Integration } from '../learn/yiffbot';
 
 function createBBCodeParser(): BBCodeParser {
   const parser = new BBCodeParser();
@@ -122,8 +124,8 @@ export function init(
       if (data.settingsStore !== undefined) await data.settingsStore.set('hiddenUsers', newValue);
     }
   );
-
-  initYiffbot4000Integration();
+  // boom (shotgun reloading sound)
+  // // initYiffbot4000Integration();
 
   connection.onEvent('connecting', async () => {
     await data.reloadSettings();
