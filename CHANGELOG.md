@@ -1,12 +1,12 @@
 # Changelog
 
-## Next?
+## 1.28.3-BETA.1
 
-- Merge Ad Editor and Post Ads?
-- Fix Yiffbot portrait updates
-- Remove broadcasts from logs; maybe into a dialog? where do we store them tho? At least shouldn't orange-highlight all convos
-- Notify when bookmark/friend says something on a channel?
-- Clicking a log entry opens the conversation at that point
+- More NPM package updates
+- Some additional bugs squashed
+- Removed yiffbot integration (Yiffbot is banned.)
+- 
+
 
 ## 1.28.2
 
