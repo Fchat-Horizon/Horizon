@@ -52,7 +52,7 @@ While more features will be added, we aim to not deviate _too_ heavily from the 
 
 # Installing
 
-F-chat Rising can be installed on all _major_ operating systems (Minus BSDs.)
+F-chat Horizon can be installed on all _major_ operating systems (Minus BSDs.)
 
 ## Windows
 
@@ -96,6 +96,13 @@ When you first load F-Chat Horizon, you'll notice its interface is closely simil
 3. **Settings**: Horizon adds additional settings under the settings button.
    - _The Horizon tab_: Contains general settings for Horizon
    - _The Smart Filters tab_: Here you can configure the smart filters. **Be aware that this is a work in progress!**
+
+## Moving over from F-Chat Rising
+1. It is recommended to create a backup of your logs and such.
+2. Deinstall F-Chat Rising, before installing F-Chat Horizon.
+3. Your settings, channels, ads, logs, etc. can easily be moved over by copying or moving the related files:
+   - For Windows users, the files containing this information are saved in `%appdata%\fchat\data` and can be moved or copied to `%appdata%\horizon-electron\data`.
+4. That's it! You are set and can start using F-Chat Horizon.
 
 ## Wiki
 
