@@ -114,7 +114,7 @@
     "build": "node ../webpack development",
     "build:dist": "node ../webpack production && electron-builder",
     "watch": "node ../webpack watch",
-    "start": "electron .",
+    "start": "../node_modules/.bin/electron app",
     "startDebugMain": "ELECTRON_ENABLE_LOGGING=1 electron --serve --inspect-brk=9229 .",
     "startDebugRender": "ELECTRON_ENABLE_LOGGING=1 electron --remote-debugging-port=9229 .",
     "build:win": "node ../webpack production && electron-builder --win",
