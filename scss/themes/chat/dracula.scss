@@ -5,6 +5,19 @@
 @import '../../flist_derived';
 @import '../variables/dracula_derived';
 
+//BBCode colors.
+$red-color: $dracula-red;
+$green-color: $dracula-green;
+$blue-color: #1185fe;
+$yellow-color: $dracula-yellow;
+$purple-color: $dracula-purple;
+$cyan-color: $dracula-cyan;
+$white-color: $dracula-foreground;
+$black-color: #000;
+$brown-color: #8a6d3b;
+$pink-color: $dracula-pink;
+$gray-color: #ccc;
+$orange-color: $dracula-orange;
 // Apply variables to theme.
 @import '../chat';
 
@@ -42,19 +55,6 @@ $genders: (
   'transgender': $dracula-orange,
   'cunt-boy': $dracula-green
 );
-
-$red-color: $dracula-red;
-$green-color: $dracula-green;
-$blue-color: darken(saturate($dracula-cyan, 0.45), 36.86);
-$yellow-color: $dracula-yellow;
-$purple-color: lighten(saturate($dracula-purple, 0.36), 10.78);
-$cyan-color: $dracula-cyan;
-$white-color: $dracula-foreground;
-$black-color: #000;
-$brown-color: #8a6d3b;
-$pink-color: $dracula-pink;
-$gray-color: #ccc;
-$orange-color: $dracula-orange;
 
 .btn-primary,
 .btn-primary:hover,
