@@ -1,7 +1,7 @@
 import { SiteSession, SiteSessionInterface } from './site-session';
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 import { EventBus } from '../chat/preview/event-bus';
-
+import core from '../chat/core';
 /* tslint:disable:no-unsafe-any */
 
 export interface NoteCheckerCount {
@@ -50,7 +50,8 @@ export class NoteChecker implements SiteSessionInterface {
 
   private async check(): Promise<NoteCheckerCount> {
     log.debug('notechecker.check');
-
+    if (!core.state.settings.risingShowUnreadOfflineCount)
+      return this.latestCount;
     const res = await this.session.get('/', true);
     const messagesMatch = res.body.match(
       /NavigationMessages.*?([0-9]+?) Messages/
