@@ -6,8 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). You also read it on our [website](https://fchat-horizon.github.io/docs/changelog.html).
 
 ## [Development]
+> [!CAUTION]
+> Beware of development builds!
+> These are unstable, unreleased, and should **not be used** except for development.
+> You **will** lose data, and you **will** regret it!
+> _You have been warned!_
 
-(none, currently!)
+### Added
+
+- Overhauled build system [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/db43135677cb8e5e57f51bb0ffb417834ccd4103)
+- Deb, tar.gz linux builds [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/db43135677cb8e5e57f51bb0ffb417834ccd4103)
+
+### Fixed
+
+- Fixes #15, Linux Arm64 build are actually x86_64 [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/db43135677cb8e5e57f51bb0ffb417834ccd4103)
+
+### Changed
+
+- Build system now uses electron-builder **Note to self, we need to update CONTRIBUTING.MD**
+- Release scripts are a little more robust
+
+### Removed
+
+- pack.js related build tools
 
 ## [1.29.1] - 2024-03-02
 
