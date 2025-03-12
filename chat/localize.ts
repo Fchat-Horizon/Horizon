@@ -16,7 +16,7 @@ const strings: { [key: string]: string | undefined } = {
   'action.newWindow': 'Open new window',
   'action.newTab': 'Open new tab',
   'action.updateAvailable': 'UPDATE AVAILABLE',
-  'action.update': 'Restart now!',
+  'action.update': 'Quit and download update',
   'action.cancel': 'Cancel',
   'admgr.postingBegins': 'Posting beings in {0}m {1}s',
   'admgr.nextPostDue': 'Next ad in {0}m {1}s',
