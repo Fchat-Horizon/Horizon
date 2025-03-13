@@ -315,6 +315,7 @@
             );
           }
           tab.user = undefined;
+          Vue.set(tab, 'avatarUrl', undefined);
           tab.tray.setToolTip(l('title'));
           tab.tray.setContextMenu(
             remote.Menu.buildFromTemplate(this.createTrayMenu(tab))
