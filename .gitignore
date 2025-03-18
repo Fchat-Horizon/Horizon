@@ -1,6 +1,7 @@
 node_modules/
 /electron/app
 /electron/dist
+/electron/release_artifacts
 /mobile/www
 /webchat/dist
 
