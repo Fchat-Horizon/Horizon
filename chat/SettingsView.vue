@@ -277,7 +277,16 @@
           Show unread note and offline message counts at the bottom right corner
         </label>
       </div>
-
+      <div class="form-group">
+        <label class="control-label" for="horizonNotifyFriendSignIn">
+          <input
+            type="checkbox"
+            id="horizonNotifyFriendSignIn"
+            v-model="horizonNotifyFriendSignIn"
+          />
+          Notify when friends or bookmarks sign in.
+        </label>
+      </div>
       <div class="form-group">
         <label class="control-label" for="risingColorblindMode">
           <input
@@ -631,6 +640,7 @@
     risingShowPortraitInMessage!: boolean;
     risingShowHighQualityPortraits!: boolean;
     horizonShowCustomCharacterColors!: boolean;
+    horizonNotifyFriendSignIn!: boolean;
 
     risingFilter!: SmartFilterSettings = {} as any;
 
@@ -685,6 +695,7 @@
       this.horizonShowCustomCharacterColors =
         settings.horizonShowCustomCharacterColors;
 
+      this.horizonNotifyFriendSignIn = settings.horizonNotifyFriendSignIn;
       this.risingFilter = settings.risingFilter;
 
       this.risingAvailableThemes = fs
@@ -787,6 +798,7 @@
         risingShowPortraitInMessage: this.risingShowPortraitInMessage,
         risingShowHighQualityPortraits: this.risingShowHighQualityPortraits,
         horizonShowCustomCharacterColors: this.horizonShowCustomCharacterColors,
+        horizonNotifyFriendSignIn: this.horizonNotifyFriendSignIn,
 
         risingColorblindMode: this.risingColorblindMode,
         risingFilter: {
