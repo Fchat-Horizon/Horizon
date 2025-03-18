@@ -538,7 +538,7 @@ function onReady(): void {
           for (const win of windows)
             win.webContents.send('update-zoom', zoomLevel);
         },
-        accelerator: 'CmdOrCtrl+Plus'
+        accelerator: 'CmdOrCtrl+='
       },
       {
         // role: 'zoomIn',
@@ -546,7 +546,7 @@ function onReady(): void {
         click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
           // log.info('MENU ZOOM-');
           zoomLevel = Math.max(
-            0,
+            -3,
             zoomLevel - w.webContents.getZoomFactor() / 2
           );
 
