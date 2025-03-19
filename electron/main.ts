@@ -59,9 +59,7 @@ import DownloadItem = electron.DownloadItem;
 import { AdCoordinatorHost } from '../chat/ads/ad-coordinator-host';
 import { IpcMainEvent } from 'electron';
 import { BlockerIntegration } from './blocker/blocker';
-
-//tslint:disable-next-line:no-require-imports
-const pck = require('./package.json');
+import Axios from 'axios';
 
 // Module to control application life.
 const app = electron.app;
@@ -89,6 +87,15 @@ let tabCount = 0;
 const baseDir = app.getPath('userData');
 fs.mkdirSync(baseDir, { recursive: true });
 let shouldImportSettings = false;
+const releasesUrl =
+  'https://api.github.com/repos/Fchat-Horizon/Horizon/releases/latest';
+type ReleaseInfo = {
+  html_url: string;
+  tag_name: string;
+  prerelease: boolean | undefined;
+};
+const updateCheckFirstDelay = 10000;
+const updateCheckInterval = 3600000;
 
 const settingsDir = path.join(baseDir, 'data');
 fs.mkdirSync(settingsDir, { recursive: true });
@@ -190,6 +197,54 @@ async function addSpellcheckerItems(menu: electron.Menu): Promise<void> {
     );
 }
 
+async function checkForGitRelease(
+  semVer: string,
+  releaseUrl: string
+): Promise<void> {
+  try {
+    let release: ReleaseInfo = (await Axios.get<ReleaseInfo>(`${releaseUrl}`))
+      .data;
+
+    if (release && release.tag_name !== semVer) {
+      log.info(
+        `Update available: You're using ${semVer} instead of ${release.tag_name}`
+      );
+      const menu = electron.Menu.getApplicationMenu()!;
+
+      const item = menu.getMenuItemById('update') as MenuItem | null;
+
+      if (item !== null) item.visible = true;
+      else
+        menu.append(
+          new electron.MenuItem({
+            label: l('action.updateAvailable'),
+            submenu: electron.Menu.buildFromTemplate([
+              {
+                label: l('action.update'),
+                click: () => {
+                  for (const w of windows) w.webContents.send('quit');
+                  openURLExternally(
+                    'https://github.com/Fchat-Horizon/Horizon/releases'
+                  );
+                }
+              },
+              {
+                label: l('help.changelog'),
+                click: showPatchNotes
+              }
+            ]),
+            id: 'update'
+          })
+        );
+      electron.Menu.setApplicationMenu(menu);
+      for (const w of windows) w.webContents.send('update-available', true);
+    } else {
+      log.info(`F-Chat Rising up to date: ${semVer}`);
+    }
+  } catch (e) {
+    log.error(`Error checking for update: ${e}`);
+  }
+}
 function openURLExternally(linkUrl: string): void {
   // check if user set a path and whether it exists
   const pathIsValid =
@@ -453,55 +508,16 @@ function onReady(): void {
   //     logger: require('electron-log')
   //   }
   // );
-
-  //tslint:disable-next-line: no-unsafe-any
-  const updaterUrl = `https://update.electronjs.org/Fchat-Horizon/Horizon/${process.platform}-${process.arch}/${pck.version}`;
-  if (process.env.NODE_ENV === 'production' && process.platform !== 'darwin') {
-    electron.autoUpdater.setFeedURL({
-      url: updaterUrl + (settings.beta ? '?channel=beta' : ''),
-      serverType: 'json'
-    });
-    setTimeout(() => electron.autoUpdater.checkForUpdates(), 10000);
-    const updateTimer = setInterval(
-      () => electron.autoUpdater.checkForUpdates(),
-      3600000
+  if (process.env.NODE_ENV === 'production') {
+    setTimeout(
+      () => checkForGitRelease(`v${app.getVersion()}`, releasesUrl),
+      updateCheckFirstDelay
     );
-    electron.autoUpdater.on('update-downloaded', () => {
-      clearInterval(updateTimer);
-      const menu = electron.Menu.getApplicationMenu()!;
-      const item = menu.getMenuItemById('update') as MenuItem | null;
-      if (item !== null) item.visible = true;
-      else
-        menu.append(
-          new electron.MenuItem({
-            label: l('action.updateAvailable'),
-            submenu: electron.Menu.buildFromTemplate([
-              {
-                label: l('action.update'),
-                click: () => {
-                  for (const w of windows) w.webContents.send('quit');
-                  electron.autoUpdater.quitAndInstall();
-                }
-              },
-              {
-                label: l('help.changelog'),
-                click: showPatchNotes
-              }
-            ]),
-            id: 'update'
-          })
-        );
-      electron.Menu.setApplicationMenu(menu);
-      for (const w of windows) w.webContents.send('update-available', true);
-    });
-    electron.autoUpdater.on('update-not-available', () => {
-      for (const w of windows) w.webContents.send('update-available', false);
-      const item = electron.Menu.getApplicationMenu()!.getMenuItemById(
-        'update'
-      ) as MenuItem | null;
-      if (item !== null) item.visible = false;
-    });
-    electron.autoUpdater.on('error', e => log.error(e));
+
+    setInterval(
+      () => checkForGitRelease(`v${app.getVersion()}`, releasesUrl),
+      updateCheckInterval
+    );
   }
 
   const viewItem = {
