@@ -1,5 +1,6 @@
 $blue-color: #06f;
 
-.blackText {
+.blackText,
+.blackNameText {
   @include text-outline($gray-600);
 }
