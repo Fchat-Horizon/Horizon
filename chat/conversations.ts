@@ -843,8 +843,8 @@ export async function testSmartFilterForPrivateMessage(
     // cachedProfile.character.character.name !== 'YiffBot 4000' &&
     cachedProfile.match.isFiltered &&
     core.state.settings.risingFilter.autoReply
-	//	DO NOT FORGET TO RE-ENABLE THIS LINE BEFORE PR
-	//    !cachedProfile.match.autoResponded
+    //	  DO NOT FORGET TO RE-ENABLE THIS LINE BEFORE PR
+    //    !cachedProfile.match.autoResponded
   ) {
     cachedProfile.match.autoResponded = true;
 
@@ -854,7 +854,7 @@ export async function testSmartFilterForPrivateMessage(
       await Conversation.testPostDelay();
 
       // tslint:disable-next-line:prefer-template
-	  if (core.state.settings.risingFilter.useCustomAutoReplyMessage) {
+      if (core.state.settings.risingFilter.useCustomAutoReplyMessage) {
         const message = {
           recipient: fromChar.name,
           message: core.state.settings.risingFilter.autoReplyMessage
@@ -876,7 +876,7 @@ export async function testSmartFilterForPrivateMessage(
             await p.addMessage(logMessage);
           });
         }
-	  } else {
+      } else {
         const message = {
           recipient: fromChar.name,
           message:
@@ -903,7 +903,7 @@ export async function testSmartFilterForPrivateMessage(
             await p.addMessage(logMessage);
           });
         }
-	  }
+      }
     });
   }
 

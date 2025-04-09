@@ -459,7 +459,7 @@
           Increase <b>match scores</b> for non-matching characters
         </label>
       </div>
-	  
+
       <div class="form-group">
         <label class="control-label" for="risingFilter.autoReply">
           <input
@@ -470,7 +470,7 @@
           Send an automatic 'no thank you' response to matching characters if
           they message you
         </label>
-		
+
         <label class="control-label" for="risingFilter.useCustomAutoReplyMessage">
           <input
             type="checkbox"
@@ -479,14 +479,14 @@
           />
           Use a custom message defined below instead of the default message
         </label>
-		
+
         <textarea
           class="form-control"
-		  rows="5"
+          rows="5"
           v-model="risingFilter.autoReplyMessage"
           placeholder="Put custom message for automatic replies here"
         ></textarea>
-	  </div>
+       </div>
 
       <h5>Character Age Match</h5>
       <div class="form-group">Leave empty for no limit.</div>
