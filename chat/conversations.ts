@@ -842,9 +842,8 @@ export async function testSmartFilterForPrivateMessage(
     //        Sowwwy...
     // cachedProfile.character.character.name !== 'YiffBot 4000' &&
     cachedProfile.match.isFiltered &&
-    core.state.settings.risingFilter.autoReply
-    //	  DO NOT FORGET TO RE-ENABLE THIS LINE BEFORE PR
-    //    !cachedProfile.match.autoResponded
+    core.state.settings.risingFilter.autoReply &&
+    !cachedProfile.match.autoResponded
   ) {
     cachedProfile.match.autoResponded = true;
 
@@ -881,7 +880,7 @@ export async function testSmartFilterForPrivateMessage(
           recipient: fromChar.name,
           message:
             '\n[sub][color=orange][b][AUTOMATED MESSAGE][/b][/color][/sub]\n' +
-            'Sorry, the player of this character is not interested in characters matching your profile.' +
+            'Sorry, the player of this character is not interested in characters matching your profile.\n' +
             `${core.state.settings.risingFilter.hidePrivateMessages ? ' They did not see your message. To bypass this warning, send your message again.' : ''}\n` +
             '\n' +
             '🦄 Need a filter for yourself? Try out [url=https://horizn.moe/]F-Chat Horizon[/url]'

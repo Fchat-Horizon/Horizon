@@ -460,34 +460,6 @@
         </label>
       </div>
 
-      <div class="form-group">
-        <label class="control-label" for="risingFilter.autoReply">
-          <input
-            type="checkbox"
-            id="risingFilter.autoReply"
-            v-model="risingFilter.autoReply"
-          />
-          Send an automatic 'no thank you' response to matching characters if
-          they message you
-        </label>
-
-        <label class="control-label" for="risingFilter.useCustomAutoReplyMessage">
-          <input
-            type="checkbox"
-            id="risingFilter.useCustomAutoReplyMessage"
-            v-model="risingFilter.useCustomAutoReplyMessage"
-          />
-          Use a custom message defined below instead of the default message
-        </label>
-
-        <textarea
-          class="form-control"
-          rows="5"
-          v-model="risingFilter.autoReplyMessage"
-          placeholder="Put custom message for automatic replies here"
-        ></textarea>
-       </div>
-
       <h5>Character Age Match</h5>
       <div class="form-group">Leave empty for no limit.</div>
 
@@ -532,11 +504,51 @@
         </label>
       </div>
 
+      <h5>Automatic Replies</h5>
+      <div class="form-group">
+        <label class="control-label" for="risingFilter.autoReply">
+          <input
+            type="checkbox"
+            id="risingFilter.autoReply"
+            v-model="risingFilter.autoReply"
+          />
+          Send an automatic 'no thank you' response to matching characters if
+          they message you
+        </label>
+
+        <label
+          class="control-label"
+          for="risingFilter.useCustomAutoReplyMessage"
+        >
+          <input
+            type="checkbox"
+            id="risingFilter.useCustomAutoReplyMessage"
+            v-model="risingFilter.useCustomAutoReplyMessage"
+          />
+          Use a custom message defined below instead of the default message
+        </label>
+
+        <textarea
+          class="form-control"
+          rows="5"
+          v-model="risingFilter.autoReplyMessage"
+          placeholder="Put custom message for automatic replies here"
+        ></textarea>
+        <div class="form-group">
+          Automatic message respects BBCode, we recommend testing it in a
+          message to yourself first as there isn't a preview here.
+          You will still see messages unless you have the
+          "Hide private channel messages" option above selected.
+          Even then, if they send a second message it will bypass
+          the restriction and show you their message.
+        </div>
+      </div>
+
       <h5>Exception List</h5>
       <div class="form-group">
-        Filters are not applied to these character names. Separate names with a
-        linefeed. Friends and bookmarked characters bypass filtering
-        automatically.
+        Filters and automatic replies are not applied to these character names.
+        Separate names with a linefeed. Friends and bookmarked characters
+        bypass filtering automatically.
       </div>
 
       <div class="form-group">
