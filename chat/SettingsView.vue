@@ -536,19 +536,18 @@
         ></textarea>
         <div class="form-group">
           Automatic message respects BBCode, we recommend testing it in a
-          message to yourself first as there isn't a preview here.
-          You will still see messages unless you have the
-          "Hide private channel messages" option above selected.
-          Even then, if they send a second message it will bypass
-          the restriction and show you their message.
+          message to yourself first as there isn't a preview here. You will
+          still see messages unless you have the "Hide private channel messages"
+          option above selected. Even then, if they send a second message it
+          will bypass the restriction and show you their message.
         </div>
       </div>
 
       <h5>Exception List</h5>
       <div class="form-group">
         Filters and automatic replies are not applied to these character names.
-        Separate names with a linefeed. Friends and bookmarked characters
-        bypass filtering automatically.
+        Separate names with a linefeed. Friends and bookmarked characters bypass
+        filtering automatically.
       </div>
 
       <div class="form-group">
