@@ -441,16 +441,6 @@
       </div>
 
       <div class="form-group filters">
-        <label class="control-label" for="risingFilter.autoReply">
-          <input
-            type="checkbox"
-            id="risingFilter.autoReply"
-            v-model="risingFilter.autoReply"
-          />
-          Send an automatic 'no thank you' response to matching characters if
-          they message you
-        </label>
-
         <label class="control-label" for="risingFilter.penalizeMatches">
           <input
             type="checkbox"
@@ -469,6 +459,34 @@
           Increase <b>match scores</b> for non-matching characters
         </label>
       </div>
+	  
+      <div class="form-group">
+        <label class="control-label" for="risingFilter.autoReply">
+          <input
+            type="checkbox"
+            id="risingFilter.autoReply"
+            v-model="risingFilter.autoReply"
+          />
+          Send an automatic 'no thank you' response to matching characters if
+          they message you
+        </label>
+		
+        <label class="control-label" for="risingFilter.useCustomAutoReplyMessage">
+          <input
+            type="checkbox"
+            id="risingFilter.useCustomAutoReplyMessage"
+            v-model="risingFilter.useCustomAutoReplyMessage"
+          />
+          Use a custom message defined below instead of the default message
+        </label>
+		
+        <textarea
+          class="form-control"
+		  rows="5"
+          v-model="risingFilter.autoReplyMessage"
+          placeholder="Put custom message for automatic replies here"
+        ></textarea>
+	  </div>
 
       <h5>Character Age Match</h5>
       <div class="form-group">Leave empty for no limit.</div>

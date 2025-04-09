@@ -89,6 +89,8 @@ export class Settings implements ISettings {
     penalizeMatches: true,
     rewardNonMatches: false,
     autoReply: true,
+	useCustomAutoReplyMessage: false,
+    autoReplyMessage: '',
     minAge: null,
     maxAge: null,
     smartFilters: {

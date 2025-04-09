@@ -842,8 +842,9 @@ export async function testSmartFilterForPrivateMessage(
     //        Sowwwy...
     // cachedProfile.character.character.name !== 'YiffBot 4000' &&
     cachedProfile.match.isFiltered &&
-    core.state.settings.risingFilter.autoReply &&
-    !cachedProfile.match.autoResponded
+    core.state.settings.risingFilter.autoReply
+	//	DO NOT FORGET TO RE-ENABLE THIS LINE BEFORE PR
+	//    !cachedProfile.match.autoResponded
   ) {
     cachedProfile.match.autoResponded = true;
 
@@ -853,32 +854,56 @@ export async function testSmartFilterForPrivateMessage(
       await Conversation.testPostDelay();
 
       // tslint:disable-next-line:prefer-template
-      const message = {
-        recipient: fromChar.name,
-        message:
-          '\n[sub][color=orange][b][AUTOMATED MESSAGE][/b][/color][/sub]\n' +
-          'Sorry, the player of this character is not interested in characters matching your profile.' +
-          `${core.state.settings.risingFilter.hidePrivateMessages ? ' They did not see your message. To bypass this warning, send your message again.' : ''}\n` +
-          '\n' +
-          '🦄 Need a filter for yourself? Try out [url=https://hearmeneigh.github.io/fchat-rising/]F-Chat Horizon[/url]'
-      };
+	  if (core.state.settings.risingFilter.useCustomAutoReplyMessage) {
+        const message = {
+          recipient: fromChar.name,
+          message: core.state.settings.risingFilter.autoReplyMessage
+        };
 
-      core.connection.send('PRI', message);
-      core.cache.markLastPostTime();
+        core.connection.send('PRI', message);
+        core.cache.markLastPostTime();
 
-      if (core.state.settings.logMessages) {
-        const logMessage = createMessage(
-          Interfaces.Message.Type.Message,
-          core.characters.ownCharacter,
-          message.message,
-          new Date()
-        );
+        if (core.state.settings.logMessages) {
+          const logMessage = createMessage(
+            Interfaces.Message.Type.Message,
+            core.characters.ownCharacter,
+            message.message,
+            new Date()
+          );
 
-        await withNeutralVisibilityPrivateConversation(fromChar, async p => {
-          // core.logs.logMessage(p, logMessage)
-          await p.addMessage(logMessage);
-        });
-      }
+          await withNeutralVisibilityPrivateConversation(fromChar, async p => {
+            // core.logs.logMessage(p, logMessage)
+            await p.addMessage(logMessage);
+          });
+        }
+	  } else {
+        const message = {
+          recipient: fromChar.name,
+          message:
+            '\n[sub][color=orange][b][AUTOMATED MESSAGE][/b][/color][/sub]\n' +
+            'Sorry, the player of this character is not interested in characters matching your profile.' +
+            `${core.state.settings.risingFilter.hidePrivateMessages ? ' They did not see your message. To bypass this warning, send your message again.' : ''}\n` +
+            '\n' +
+            '🦄 Need a filter for yourself? Try out [url=https://horizn.moe/]F-Chat Horizon[/url]'
+        };
+
+        core.connection.send('PRI', message);
+        core.cache.markLastPostTime();
+
+        if (core.state.settings.logMessages) {
+          const logMessage = createMessage(
+            Interfaces.Message.Type.Message,
+            core.characters.ownCharacter,
+            message.message,
+            new Date()
+          );
+
+          await withNeutralVisibilityPrivateConversation(fromChar, async p => {
+            // core.logs.logMessage(p, logMessage)
+            await p.addMessage(logMessage);
+          });
+        }
+	  }
     });
   }
 
