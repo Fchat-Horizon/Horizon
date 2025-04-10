@@ -12,7 +12,10 @@
     @click.right.passive="dismiss(true)"
     @click.left.passive="dismiss(true)"
     ><img v-if="!!avatar" :src="avatarUrl" class="user-avatar" /><span
-    v-if="!!cccDot" :class="cccDot"></span
+      v-if="!!genderClass"
+      :class="genderClass"
+      style="width: 15px; text-align: center;"
+    ></span
     ><span
       v-if="!!statusClass"
       :class="statusClass"
@@ -57,10 +60,31 @@
     }
   }
 
+  export function getGenderIcon(gender: Character.Gender): string {
+    switch (gender) {
+      case 'None':
+        return 'fa fa-genderless';
+      case 'Male':
+        return 'fa fa-mars';
+      case 'Female':
+        return 'fa fa-venus';
+      case 'Shemale':
+        return 'fa fa-mercury';
+      case 'Herm':
+        return 'fa fa-transgender';
+      case 'Male-Herm':
+        return 'fa fa-mars-stroke-v';
+      case 'Cunt-boy':
+        return 'fa fa-mars-stroke-h';
+      case 'Transgender':
+        return 'fa fa-transgender-alt';
+    }
+  }
+
   export interface StatusClasses {
     rankIcon: string | null;
     smartFilterIcon: string | null;
-    cccDot: string | null;
+    genderClass: string | null;
     statusClass: string | null;
     matchClass: string | null;
     matchScore: number | string | null;
@@ -80,7 +104,7 @@
     let matchClass = null;
     let matchScore = null;
     let smartFilterIcon: string | null = null;
-    let cccDot: string | null = null;
+    let genderClass: string | null = null;
 
     if (character.isChatOp) {
       rankIcon = 'far fa-gem';
@@ -134,10 +158,11 @@
     const gender = baseGender !== undefined ? baseGender.toLowerCase() : 'none';
 
     if (
-      core.state.settings.horizonCCCOriginalDot &&
-      character.overrides.characterColor
+      core.state.settings.horizonShowGenderMarker &&
+      character.gender
     ) {
-      cccDot = 'fa fa-genderless' + ` gender-${gender}`;
+      genderClass = `fa ${getGenderIcon(character.gender)}`;
+      //genderClass = 'fa fa-genderless' + ` gender-${gender}`;
     }
 
     const isBookmark =
@@ -155,7 +180,7 @@
     // `user-view gender-${gender}${isBookmark ? ' user-bookmark' : ''}`;
 
     return {
-      cccDot,
+      genderClass: genderClass ? `user-gender ${genderClass}` : null,
       rankIcon: rankIcon ? `user-rank ${rankIcon}` : null,
       statusClass: statusClass ? `user-status ${statusClass}` : null,
       matchClass,
@@ -195,7 +220,7 @@
 
     rankIcon: string | null = null;
     smartFilterIcon: string | null = null;
-    cccDot: string | null = null;
+    genderClass: string | null = null;
     statusClass: string | null = null;
     matchClass: string | null = null;
     matchScore: number | string | null = null;
@@ -282,7 +307,7 @@
 
       this.rankIcon = res.rankIcon;
       this.smartFilterIcon = res.smartFilterIcon;
-      this.cccDot = res.cccDot;
+      this.genderClass = res.genderClass;
       this.statusClass = res.statusClass;
       this.matchClass = res.matchClass;
       this.matchScore = res.matchScore;

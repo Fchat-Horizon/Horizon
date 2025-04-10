@@ -334,13 +334,13 @@
       </div>
 
       <div class="form-group">
-        <label class="control-label" for="horizonCCCOriginalDot">
+        <label class="control-label" for="horizonShowGenderMarker">
           <input
             type="checkbox"
-            id="horizonCCCOriginalDot"
-            v-model="horizonCCCOriginalDot"
+            id="horizonShowGenderMarker"
+            v-model="horizonShowGenderMarker"
           />
-          Show a dot with the original gender colour
+          Show a gender icon on everyone
         </label>
       </div>
 
@@ -642,7 +642,7 @@
     risingShowPortraitInMessage!: boolean;
     risingShowHighQualityPortraits!: boolean;
     horizonShowCustomCharacterColors!: boolean;
-    horizonCCCOriginalDot!: boolean;
+    horizonShowGenderMarker!: boolean;
 
     risingFilter!: SmartFilterSettings = {} as any;
 
@@ -696,7 +696,7 @@
         settings.risingShowHighQualityPortraits;
       this.horizonShowCustomCharacterColors =
         settings.horizonShowCustomCharacterColors;
-      this.horizonCCCOriginalDot = settings.horizonCCCOriginalDot;
+      this.horizonShowGenderMarker = settings.horizonShowGenderMarker;
 
       this.risingFilter = settings.risingFilter;
 
@@ -800,7 +800,7 @@
         risingShowPortraitInMessage: this.risingShowPortraitInMessage,
         risingShowHighQualityPortraits: this.risingShowHighQualityPortraits,
         horizonShowCustomCharacterColors: this.horizonShowCustomCharacterColors,
-        horizonCCCOriginalDot: this.horizonCCCOriginalDot,
+        horizonShowGenderMarker: this.horizonShowGenderMarker,
 
         risingColorblindMode: this.risingColorblindMode,
         risingFilter: {
