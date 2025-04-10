@@ -12,6 +12,8 @@
     @click.right.passive="dismiss(true)"
     @click.left.passive="dismiss(true)"
     ><img v-if="!!avatar" :src="avatarUrl" class="user-avatar" /><span
+    v-if="!!cccDot" :class="cccDot"></span
+    ><span
       v-if="!!statusClass"
       :class="statusClass"
     ></span
@@ -58,6 +60,7 @@
   export interface StatusClasses {
     rankIcon: string | null;
     smartFilterIcon: string | null;
+    cccDot: string | null;
     statusClass: string | null;
     matchClass: string | null;
     matchScore: number | string | null;
@@ -77,6 +80,7 @@
     let matchClass = null;
     let matchScore = null;
     let smartFilterIcon: string | null = null;
+    let cccDot: string | null = null;
 
     if (character.isChatOp) {
       rankIcon = 'far fa-gem';
@@ -129,6 +133,13 @@
     const baseGender = character.overrides.gender || character.gender;
     const gender = baseGender !== undefined ? baseGender.toLowerCase() : 'none';
 
+    if (
+      core.state.settings.horizonCCCOriginalDot &&
+      character.overrides.characterColor
+    ) {
+      cccDot = 'fa fa-genderless' + ` gender-${gender}`;
+    }
+
     const isBookmark =
       showBookmark &&
       core.connection.isOpen &&
@@ -137,14 +148,14 @@
 
     const userClass =
       `user-view` +
-      ` gender-${gender}` +
       (isBookmark ? ' user-bookmark' : '') +
       (character.overrides.characterColor
         ? ` ${character.overrides.characterColor}NameText`
-        : '');
+        : ` gender-${gender}`);
     // `user-view gender-${gender}${isBookmark ? ' user-bookmark' : ''}`;
 
     return {
+      cccDot,
       rankIcon: rankIcon ? `user-rank ${rankIcon}` : null,
       statusClass: statusClass ? `user-status ${statusClass}` : null,
       matchClass,
@@ -184,6 +195,7 @@
 
     rankIcon: string | null = null;
     smartFilterIcon: string | null = null;
+    cccDot: string | null = null;
     statusClass: string | null = null;
     matchClass: string | null = null;
     matchScore: number | string | null = null;
@@ -270,6 +282,7 @@
 
       this.rankIcon = res.rankIcon;
       this.smartFilterIcon = res.smartFilterIcon;
+      this.cccDot = res.cccDot;
       this.statusClass = res.statusClass;
       this.matchClass = res.matchClass;
       this.matchScore = res.matchScore;
