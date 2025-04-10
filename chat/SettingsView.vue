@@ -334,6 +334,17 @@
       </div>
 
       <div class="form-group">
+        <label class="control-label" for="horizonCCCOriginalDot">
+          <input
+            type="checkbox"
+            id="horizonCCCOriginalDot"
+            v-model="horizonCCCOriginalDot"
+          />
+          Show a dot with the original gender colour
+        </label>
+      </div>
+
+      <div class="form-group">
         <label class="control-label" for="risingCharacterTheme">
           Override UI theme (for this character only)
           <select
@@ -631,6 +642,7 @@
     risingShowPortraitInMessage!: boolean;
     risingShowHighQualityPortraits!: boolean;
     horizonShowCustomCharacterColors!: boolean;
+    horizonCCCOriginalDot!: boolean;
 
     risingFilter!: SmartFilterSettings = {} as any;
 
@@ -684,6 +696,8 @@
         settings.risingShowHighQualityPortraits;
       this.horizonShowCustomCharacterColors =
         settings.horizonShowCustomCharacterColors;
+      this.horizonCCCOriginalDot =
+        settings.horizonCCCOriginalDot;
 
       this.risingFilter = settings.risingFilter;
 
@@ -787,6 +801,7 @@
         risingShowPortraitInMessage: this.risingShowPortraitInMessage,
         risingShowHighQualityPortraits: this.risingShowHighQualityPortraits,
         horizonShowCustomCharacterColors: this.horizonShowCustomCharacterColors,
+        horizonCCCOriginalDot: this.horizonCCCOriginalDot,
 
         risingColorblindMode: this.risingColorblindMode,
         risingFilter: {
