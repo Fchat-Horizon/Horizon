@@ -696,8 +696,7 @@
         settings.risingShowHighQualityPortraits;
       this.horizonShowCustomCharacterColors =
         settings.horizonShowCustomCharacterColors;
-      this.horizonCCCOriginalDot =
-        settings.horizonCCCOriginalDot;
+      this.horizonCCCOriginalDot = settings.horizonCCCOriginalDot;
 
       this.risingFilter = settings.risingFilter;
 
