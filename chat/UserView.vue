@@ -60,25 +60,29 @@
     }
   }
 
-  export function getGenderIcon(gender: Character.Gender): string {
-    switch (gender) {
-      case 'None':
-        return 'fa fa-genderless';
-      case 'Male':
-        return 'fa fa-mars';
-      case 'Female':
-        return 'fa fa-venus';
-      case 'Shemale':
-        return 'fa fa-mercury';
-      case 'Herm':
-        return 'fa fa-transgender';
-      case 'Male-Herm':
-        return 'fa fa-mars-stroke-v';
-      case 'Cunt-boy':
-        return 'fa fa-mars-stroke-h';
-      case 'Transgender':
-        return 'fa fa-transgender-alt';
+  export function getGenderIcon(gender: Character.Gender, status: Character.Status): string {
+    if (status !== 'offline') {
+      switch (gender) {
+        case 'None':
+          return 'fa fa-genderless';
+        case 'Male':
+          return 'fa fa-mars';
+        case 'Female':
+          return 'fa fa-venus';
+        case 'Shemale':
+          return 'fa fa-mercury';
+        case 'Herm':
+          return 'fa fa-transgender';
+        case 'Male-Herm':
+          return 'fa fa-mars-stroke-v';
+        case 'Cunt-boy':
+          return 'fa fa-mars-stroke-h';
+        case 'Transgender':
+          return 'fa fa-transgender-alt';
+      }
     }
+
+    return 'fa fa-times';
   }
 
   export interface StatusClasses {
@@ -161,7 +165,7 @@
       core.state.settings.horizonShowGenderMarker &&
       character.gender
     ) {
-      genderClass = `fa ${getGenderIcon(character.gender)}`;
+      genderClass = `fa ${getGenderIcon(character.gender, character.status)}`;
       //genderClass = 'fa fa-genderless' + ` gender-${gender}`;
     }
 
