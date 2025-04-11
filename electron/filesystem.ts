@@ -22,15 +22,15 @@ declare module '../chat/interfaces' {
 const dayMs = 86400000;
 const read = promisify(fs.read);
 
-function writeFile(
-  p: fs.PathLike | number,
+async function writeFile(
+  p: fs.PathLike,
   data: string | NodeJS.ArrayBufferView,
   options?: fs.WriteFileOptions
-): void {
+): Promise<void> {
   try {
-    fs.writeFileSync(p, data, options);
+    await fs.promises.writeFile(p, data, options);
   } catch (e) {
-    remote.dialog.showErrorBox(l('fs.error'), (<Error>e).message);
+    remote.dialog.showErrorBox(l('fs.error'), (e as Error).message);
   }
 }
 
