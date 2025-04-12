@@ -24,6 +24,7 @@
           :character="character"
           :showStatus="true"
           :bookmark="false"
+          :genderMarker="true"
         ></user>
       </div>
       <h4>{{ l('users.bookmarks') }}</h4>
@@ -32,6 +33,7 @@
           :character="character"
           :showStatus="true"
           :bookmark="false"
+          :genderMarker="true"
         ></user>
       </div>
     </div>
@@ -50,6 +52,7 @@
             :character="member.character"
             :channel="channel"
             :showStatus="true"
+            :genderMarker="true"
           ></user>
         </div>
       </div>

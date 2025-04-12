@@ -12,7 +12,7 @@
     @click.right.passive="dismiss(true)"
     @click.left.passive="dismiss(true)"
     ><img v-if="!!avatar" :src="avatarUrl" class="user-avatar" /><span
-      v-if="!!genderClass"
+      v-if="!!genderMarker || !!genderClass"
       :class="genderClass"
       style="width: 15px; text-align: center;"
     ></span
@@ -108,7 +108,7 @@
     let matchClass = null;
     let matchScore = null;
     let smartFilterIcon: string | null = null;
-    let genderClass: string | null = null;
+    let genderClass = null;
 
     if (character.isChatOp) {
       rankIcon = 'far fa-gem';
@@ -166,7 +166,6 @@
       character.gender
     ) {
       genderClass = `fa ${getGenderIcon(character.gender, character.status)}`;
-      //genderClass = 'fa fa-genderless' + ` gender-${gender}`;
     }
 
     const isBookmark =
@@ -219,6 +218,9 @@
 
     @Prop({ default: false })
     readonly avatar: boolean = false;
+
+    @Prop({ default: false })
+    readonly genderMarker?: boolean = false;
 
     userClass = '';
 
