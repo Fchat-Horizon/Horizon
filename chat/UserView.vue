@@ -14,12 +14,9 @@
     ><img v-if="!!avatar" :src="avatarUrl" class="user-avatar" /><span
       v-if="!!genderMarker || !!genderClass"
       :class="genderClass"
-      style="width: 15px; text-align: center;"
+      style="width: 15px; text-align: center"
     ></span
-    ><span
-      v-if="!!statusClass"
-      :class="statusClass"
-    ></span
+    ><span v-if="!!statusClass" :class="statusClass"></span
     ><span v-if="!!rankIcon" :class="rankIcon"></span
     ><span v-if="!!smartFilterIcon" :class="smartFilterIcon"></span
     >{{ character.name
@@ -60,7 +57,10 @@
     }
   }
 
-  export function getGenderIcon(gender: Character.Gender, status: Character.Status): string {
+  export function getGenderIcon(
+    gender: Character.Gender,
+    status: Character.Status
+  ): string {
     if (status !== 'offline') {
       switch (gender) {
         case 'None':
@@ -161,10 +161,7 @@
     const baseGender = character.overrides.gender || character.gender;
     const gender = baseGender !== undefined ? baseGender.toLowerCase() : 'none';
 
-    if (
-      core.state.settings.horizonShowGenderMarker &&
-      character.gender
-    ) {
+    if (core.state.settings.horizonShowGenderMarker && character.gender) {
       genderClass = `fa ${getGenderIcon(character.gender, character.status)}`;
     }
 
