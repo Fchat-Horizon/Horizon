@@ -70,9 +70,9 @@
         case 'Female':
           return 'fa fa-venus';
         case 'Shemale':
-          return 'fa fa-mercury';
-        case 'Herm':
           return 'fa fa-transgender';
+        case 'Herm':
+          return 'fa fa-mercury';
         case 'Male-Herm':
           return 'fa fa-mars-stroke-v';
         case 'Cunt-boy':
