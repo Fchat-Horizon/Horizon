@@ -60,7 +60,6 @@ const userPostfix: { [key: number]: string | undefined } = {
         createElement(UserView, {
           props: {
             avatar: core.state.settings.risingShowPortraitInMessage,
-            genderMarker: core.state.settings.horizonShowGenderMarker,
             character: message.sender,
             channel: this.channel
           }

@@ -345,6 +345,17 @@
       </div>
 
       <div class="form-group">
+        <label class="control-label" for="horizonChangeOfflineColor">
+          <input
+            type="checkbox"
+            id="horizonChangeOfflineColor"
+            v-model="horizonChangeOfflineColor"
+          />
+          Make color in chat change to grey when a user goes offline
+        </label>
+      </div>
+
+      <div class="form-group">
         <label class="control-label" for="risingCharacterTheme">
           Override UI theme (for this character only)
           <select
@@ -643,6 +654,7 @@
     risingShowHighQualityPortraits!: boolean;
     horizonShowCustomCharacterColors!: boolean;
     horizonShowGenderMarker!: boolean;
+    horizonChangeOfflineColor!: boolean;
 
     risingFilter!: SmartFilterSettings = {} as any;
 
@@ -697,6 +709,7 @@
       this.horizonShowCustomCharacterColors =
         settings.horizonShowCustomCharacterColors;
       this.horizonShowGenderMarker = settings.horizonShowGenderMarker;
+      this.horizonChangeOfflineColor = settings.horizonChangeOfflineColor;
 
       this.risingFilter = settings.risingFilter;
 
@@ -801,6 +814,7 @@
         risingShowHighQualityPortraits: this.risingShowHighQualityPortraits,
         horizonShowCustomCharacterColors: this.horizonShowCustomCharacterColors,
         horizonShowGenderMarker: this.horizonShowGenderMarker,
+        horizonChangeOfflineColor: this.horizonChangeOfflineColor,
 
         risingColorblindMode: this.risingColorblindMode,
         risingFilter: {

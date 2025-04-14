@@ -78,6 +78,7 @@ export class Settings implements ISettings {
   risingShowHighQualityPortraits = true;
   horizonShowCustomCharacterColors = true;
   horizonShowGenderMarker = false;
+  horizonChangeOfflineColor = false;
 
   risingFilter = {
     hideAds: false,

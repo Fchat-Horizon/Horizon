@@ -12,7 +12,7 @@
     @click.right.passive="dismiss(true)"
     @click.left.passive="dismiss(true)"
     ><img v-if="!!avatar" :src="avatarUrl" class="user-avatar" /><span
-      v-if="!!genderMarker || !!genderClass"
+      v-if="!!genderClass && isMarkerShown"
       :class="genderClass"
       style="width: 15px; text-align: center"
     ></span
@@ -158,10 +158,16 @@
       smartFilterIcon = 'user-filter fas fa-filter';
     }
 
-    const baseGender = character.overrides.gender || character.gender;
-    const gender = baseGender !== undefined ? baseGender.toLowerCase() : 'none';
+    const useOfflineColor = 
+      core.state.settings.horizonChangeOfflineColor &&
+      character.status == 'offline';
 
-    if (core.state.settings.horizonShowGenderMarker && character.gender) {
+    const baseGender = character.overrides.gender || character.gender;
+    const gender = baseGender !== undefined && !useOfflineColor
+      ? baseGender.toLowerCase() 
+      : 'none';
+
+    if (character.gender) {
       genderClass = `fa ${getGenderIcon(character.gender, character.status)}`;
     }
 
@@ -174,7 +180,7 @@
     const userClass =
       `user-view` +
       (isBookmark ? ' user-bookmark' : '') +
-      (character.overrides.characterColor
+      (character.overrides.characterColor && !useOfflineColor
         ? ` ${character.overrides.characterColor}NameText`
         : ` gender-${gender}`);
     // `user-view gender-${gender}${isBookmark ? ' user-bookmark' : ''}`;
@@ -216,9 +222,6 @@
     @Prop({ default: false })
     readonly avatar: boolean = false;
 
-    @Prop({ default: false })
-    readonly genderMarker?: boolean = false;
-
     userClass = '';
 
     rankIcon: string | null = null;
@@ -228,6 +231,10 @@
     matchClass: string | null = null;
     matchScore: number | string | null = null;
     avatarUrl: string | null = null;
+
+    get isMarkerShown(): boolean {
+      return core.state.settings.horizonShowGenderMarker;
+    }
 
     // tslint:disable-next-line no-any
     scoreWatcher: ((event: any) => void) | null = null;
