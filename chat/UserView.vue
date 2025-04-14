@@ -158,14 +158,15 @@
       smartFilterIcon = 'user-filter fas fa-filter';
     }
 
-    const useOfflineColor = 
+    const useOfflineColor =
       core.state.settings.horizonChangeOfflineColor &&
       character.status == 'offline';
 
     const baseGender = character.overrides.gender || character.gender;
-    const gender = baseGender !== undefined && !useOfflineColor
-      ? baseGender.toLowerCase() 
-      : 'none';
+    const gender =
+      baseGender !== undefined && !useOfflineColor
+        ? baseGender.toLowerCase()
+        : 'none';
 
     if (character.gender) {
       genderClass = `fa ${getGenderIcon(character.gender, character.status)}`;
