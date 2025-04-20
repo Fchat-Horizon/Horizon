@@ -236,12 +236,6 @@
     matchScore: number | string | null = null;
     avatarUrl: string | null = null;
 
-/*
-    get isMarkerShown(): boolean {
-      return core.state.settings.horizonShowGenderMarker;
-    }
-*/
-
     // tslint:disable-next-line no-any
     scoreWatcher: ((event: any) => void) | null = null;
 
