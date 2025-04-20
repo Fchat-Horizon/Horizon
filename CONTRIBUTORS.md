@@ -4,6 +4,7 @@
 
 - **CodingWithAnxiety**, As the project maintainer
 - [freenutsxd](https://github.com/freenutsxd)
+- [FatcatClient](https://github.com/FatCatClient)
 
 As well, **Rising** received contributions from the following:
 

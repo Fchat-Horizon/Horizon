@@ -274,10 +274,9 @@
 </template>
 
 <script lang="ts">
-  import { Component } from '@f-list/vue-ts';
-
   import Sortable from 'sortablejs';
 
+  import { Component, Hook } from '@f-list/vue-ts';
   import Vue from 'vue';
   import { Keys } from '../keys';
   import ChannelList from './ChannelList.vue';
@@ -351,7 +350,8 @@
     privateCanGlow = !this.channelConversations?.length;
     channelCanGlow = !this.privateConversations?.length;
 
-    mounted(): void {
+    @Hook('mounted')
+    onMounted(): void {
       this.keydownListener = (e: KeyboardEvent) => this.onKeyDown(e);
       window.addEventListener('keydown', this.keydownListener);
       this.setFontSize(core.state.settings.fontSize);
