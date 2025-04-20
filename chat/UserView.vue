@@ -223,6 +223,9 @@
     @Prop({ default: false })
     readonly avatar: boolean = false;
 
+    @Prop({ default: false })
+    readonly isMarkerShown: boolean = false;
+
     userClass = '';
 
     rankIcon: string | null = null;
@@ -233,9 +236,11 @@
     matchScore: number | string | null = null;
     avatarUrl: string | null = null;
 
+/*
     get isMarkerShown(): boolean {
       return core.state.settings.horizonShowGenderMarker;
     }
+*/
 
     // tslint:disable-next-line no-any
     scoreWatcher: ((event: any) => void) | null = null;
