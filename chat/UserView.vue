@@ -224,7 +224,8 @@
     readonly avatar: boolean = false;
 
     @Prop({ default: false })
-    readonly isMarkerShown: boolean = core.state.settings.horizonShowGenderMarker;
+    readonly isMarkerShown: boolean =
+      core.state.settings.horizonShowGenderMarker;
 
     userClass = '';
 

@@ -7,15 +7,13 @@
 
       <div class="col-10">
         <h1 class="user-view">
-          <span
-            class="character-name"
-            :class="(statusClasses || {}).userClass"
+          <span class="character-name" :class="(statusClasses || {}).userClass"
             ><span
               v-if="shouldShowMarker"
               class="gender-marker"
               :class="(statusClasses || {}).genderClass"
             ></span
-          >{{ character.character.name }}</span
+            >{{ character.character.name }}</span
           >
           <span
             v-if="statusClasses && statusClasses.matchScore === 'unicorn'"

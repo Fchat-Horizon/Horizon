@@ -8,10 +8,10 @@
     dialogClass="ads-dialog"
   >
     <template slot="title">
-      Channel Ads for <user
-        :character="character"
-        :isMarkerShown="false"
-      >{{ character.name }}</user>
+      Channel Ads for
+      <user :character="character" :isMarkerShown="false">{{
+        character.name
+      }}</user>
     </template>
 
     <div class="row ad-viewer" ref="pageBody" v-if="messages.length > 0">
@@ -28,11 +28,10 @@
 
     <div class="row ad-viewer" ref="pageBody" v-else>
       <i
-        ><user 
-          :character="character"
-          :isMarkerShown="false"
-        >{{ character.name }}</user> has not posted
-        any ads on the channels you are on.</i
+        ><user :character="character" :isMarkerShown="false">{{
+          character.name
+        }}</user>
+        has not posted any ads on the channels you are on.</i
       >
     </div>
   </modal>
