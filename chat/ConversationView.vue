@@ -26,8 +26,8 @@
         "
       >
         <div>
-          <user 
-            :character="conversation.character" 
+          <user
+            :character="conversation.character"
             :match="true"
             :isMarkerShown="shouldShowMarker"
           ></user>
