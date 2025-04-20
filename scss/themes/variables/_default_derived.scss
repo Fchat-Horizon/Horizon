@@ -1,8 +1,10 @@
-.purpleText {
+.purpleText,
+.purpleNameText {
   @include text-outline(#306);
 }
 
-.blackText {
+.blackText,
+.blackNameText {
   @include text-outline($gray-600);
 }
 

@@ -5,12 +5,9 @@
     :disabled="channel && channel.isJoined"
   >
     <span class="fa fa-hashtag"></span>
-    <template v-if="channel"
-      >{{ channel.name
-      }}<span class="bbcode-pseudo">
-        ({{ channel.memberCount }})</span
-      ></template
-    >
+    <!-- This doesn't look particularly nice, but Prettier breaks the formatting of the actual tag component. -->
+    <!-- prettier-ignore -->
+    <template v-if="channel">{{ channel.name }}<span class="bbcode-pseudo"> ({{ channel.memberCount }})</span></template>
     <template v-else>{{ text }}</template>
   </a>
 </template>

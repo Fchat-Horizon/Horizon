@@ -16,7 +16,7 @@ $dracula-yellow: #f1fa8c;
 
 // Base colors, used for pretty much everything.
 // On dark based themes these are inverted in order to cooperate with bootstrap which assumes that all themes are light based.
-$gray-base: color.scale($dracula-bg, $lightness: -10%);
+$gray-base: $dracula-bg;
 $white: $gray-base;
 $gray-100: color.scale($gray-base, $lightness: 10%);
 $gray-200: color.scale($gray-base, $lightness: 20%);
@@ -36,22 +36,22 @@ $success: $dracula-green;
 $info: $dracula-comment;
 $warning: $dracula-orange;
 $danger: $dracula-red;
-$light: $gray-200;
+$light: $gray-100;
 $text-muted: $gray-500;
 $text-dark: $gray-600;
 $component-active-color: $gray-900;
 
 // Core page element colors
-$body-bg: $gray-100;
+$body-bg: $gray-base;
 $link-color: $black;
 $link-hover-color: color.scale($link-color, $lightness: 15%);
-$dropdown-bg: $gray-200;
-$dropdown-divider-bg: $gray-300;
+$dropdown-bg: $gray-base;
+$dropdown-divider-bg: $gray-100;
 
 // Modal Dialogs
 $modal-backdrop-bg: $white;
-$modal-content-bg: $gray-100;
-$modal-header-border-color: $gray-300;
+$modal-content-bg: $gray-base;
+$modal-header-border-color: $gray-200;
 
 // Fix YIQ(automatic text contrast) preferring black over white on dark themes.
 $yiq-text-light: $black;
@@ -60,20 +60,20 @@ $yiq-text-light: $black;
 $grid-gutter-width: 20px;
 
 // Form Elements
-$input-bg: $gray-200;
+$input-bg: $gray-100;
 $input-color: $black;
-$custom-select-bg: $gray-200;
+$custom-select-bg: $gray-100;
 $form-check-input-checked-bg-color: $primary;
 
 // List groups
-$list-group-bg: $gray-200;
+$list-group-bg: $gray-100;
 
 // Pagination
 $pagination-active-color: $link-color;
 
 // F-List specific color helpers to help make monochromatic themes easier to deal with.
-$text-background-color: $gray-200;
-$text-background-color-disabled: $gray-100;
+$text-background-color: $gray-100;
+$text-background-color-disabled: $gray-base;
 
 // F-List Rising
 $scoreUnicornMatchBg: rgb(0, 173, 173);
@@ -128,7 +128,7 @@ $characterInfotagColor: rgba(255, 255, 255, 0.7);
 $messageTimeBgColor: $dracula-current-line;
 $messageTimeFgColor: $dracula-foreground;
 
-$headerBackgroundMaskColor: $gray-200;
+$headerBackgroundMaskColor: $gray-100;
 
 $linkForcedColor: $dracula-foreground;
 $tabSecondaryFgColor: set-alpha($dracula-foreground, 0.5);
