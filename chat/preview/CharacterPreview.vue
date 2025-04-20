@@ -10,7 +10,12 @@
           <span
             class="character-name"
             :class="(statusClasses || {}).userClass"
-            >{{ character.character.name }}</span
+            ><span
+              v-if="shouldShowMarker"
+              class="gender-marker"
+              :class="(statusClasses || {}).genderClass"
+            ></span
+          >{{ character.character.name }}</span
           >
           <span
             v-if="statusClasses && statusClasses.matchScore === 'unicorn'"
@@ -201,6 +206,10 @@
       return Utils.avatarURL(
         this.characterName || this.character?.character.name || ''
       );
+    }
+
+    get shouldShowMarker(): boolean {
+      return core.state.settings.horizonShowGenderMarker;
     }
 
     @Hook('mounted')

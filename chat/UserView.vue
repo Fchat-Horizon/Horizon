@@ -12,7 +12,7 @@
     @click.right.passive="dismiss(true)"
     @click.left.passive="dismiss(true)"
     ><img v-if="!!avatar" :src="avatarUrl" class="user-avatar" /><span
-      v-if="!!genderClass && isMarkerShown"
+      v-if="isMarkerShown"
       :class="genderClass"
       style="width: 15px; text-align: center"
     ></span
@@ -224,7 +224,7 @@
     readonly avatar: boolean = false;
 
     @Prop({ default: false })
-    readonly isMarkerShown: boolean = false;
+    readonly isMarkerShown: boolean = core.state.settings.horizonShowGenderMarker;
 
     userClass = '';
 
