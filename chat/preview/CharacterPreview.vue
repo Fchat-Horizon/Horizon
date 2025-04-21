@@ -7,8 +7,10 @@
 
       <div class="col-10">
         <h1 class="user-view">
-          <span class="character-name" :class="(statusClasses || {}).userClass"
-          >{{ character.character.name }}</span
+          <span
+            class="character-name"
+            :class="(statusClasses || {}).userClass"
+            >{{ character.character.name }}</span
           >
           <span
             v-if="statusClasses && statusClasses.matchScore === 'unicorn'"
