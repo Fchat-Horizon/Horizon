@@ -28,6 +28,7 @@
           v-for="(tab, index) in tabs"
           :key="'tab-' + index"
           class="nav-item"
+          :data-id="index"
           @click.middle="remove(tab)"
         >
           <a
@@ -315,6 +316,7 @@
             );
           }
           tab.user = undefined;
+          Vue.set(tab, 'avatarUrl', undefined);
           tab.tray.setToolTip(l('title'));
           tab.tray.setContextMenu(
             remote.Menu.buildFromTemplate(this.createTrayMenu(tab))
@@ -366,20 +368,18 @@
 
       log.debug('init.window.tab');
 
-      // console.log('SORTABLE', Sortable);
-
-      Sortable.create(<HTMLElement>this.$refs['tabs'], {
+      let tabsorder: string[];
+      const sortable = Sortable.create(<HTMLElement>this.$refs['tabs'], {
         animation: 50,
+        onStart: () => {
+          tabsorder = sortable.toArray();
+        },
         onEnd: e => {
-          // log.debug('ONEND', e);
           if (e.oldIndex === e.newIndex) return;
-
-          // log.debug('PRE', this.tabs);
-          //
-          // const tab = this.tabs.splice(e.oldIndex!, 1)[0];
-          // this.tabs.splice(e.newIndex!, 0, tab);
-          //
-          // log.debug('POST', this.tabs);
+          const elem = this.tabs[e.oldIndex!];
+          this.tabs.splice(e.oldIndex!, 1);
+          this.tabs.splice(e.newIndex!, 0, elem);
+          sortable.sort(tabsorder, false);
         },
         onMove: (e: { related: HTMLElement }) => e.related.id !== 'addTab',
         filter: '.addTab'
