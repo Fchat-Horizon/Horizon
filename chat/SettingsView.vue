@@ -505,7 +505,7 @@
       </div>
 
       <h5>Automatic Replies</h5>
-      <div class="form-group">
+      <div class="form-group filters">
         <label class="control-label" for="risingFilter.autoReply">
           <input
             type="checkbox"
