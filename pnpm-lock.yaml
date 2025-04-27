@@ -30,10 +30,10 @@ importers:
         version: 1.26.16
       '@cliqz/adblocker-electron':
         specifier: 1.26.16
-        version: 1.26.16(electron@35.0.0(supports-color@10.0.0))
+        version: 1.26.16(electron@35.2.0(supports-color@10.0.0))
       '@cliqz/adblocker-electron-preload':
         specifier: 1.26.16
-        version: 1.26.16(electron@35.0.0(supports-color@10.0.0))
+        version: 1.26.16(electron@35.2.0(supports-color@10.0.0))
       '@cliqz/adblocker-extended-selectors':
         specifier: 1.26.16
         version: 1.26.16
@@ -52,7 +52,7 @@ importers:
     devDependencies:
       '@electron/remote':
         specifier: ^2.1.2
-        version: 2.1.2(electron@35.0.0(supports-color@10.0.0))
+        version: 2.1.2(electron@35.2.0(supports-color@10.0.0))
       '@f-list/fork-ts-checker-webpack-plugin':
         specifier: ^3.1.1
         version: 3.1.1(supports-color@10.0.0)
@@ -117,8 +117,8 @@ importers:
         specifier: 2.29.3
         version: 2.29.3
       electron:
-        specifier: ^35.0.0
-        version: 35.0.0(supports-color@10.0.0)
+        specifier: ^35.2.0
+        version: 35.2.0(supports-color@10.0.0)
       electron-builder:
         specifier: ^25.1.8
         version: 25.1.8(bluebird@3.7.2)(electron-builder-squirrel-windows@25.1.8)(supports-color@10.0.0)
@@ -133,7 +133,7 @@ importers:
         version: 3.2.9(bluebird@3.7.2)(supports-color@10.0.0)
       electron-settings:
         specifier: ~4.0.4
-        version: 4.0.4(electron@35.0.0(supports-color@10.0.0))
+        version: 4.0.4(electron@35.2.0(supports-color@10.0.0))
       extract-loader:
         specifier: ^5.1.0
         version: 5.1.0(supports-color@10.0.0)
@@ -2106,8 +2106,8 @@ packages:
     engines: {node: '>= 10.17.0'}
     hasBin: true
 
-  electron@35.0.0:
-    resolution: {integrity: sha512-mwNQNktYLPnUWZVR8iNkfWCBjmM5e2/CmB1rhACwE9ASDbVU7CYPgp/jLUB3bj/LyQsfSuubD82OUite6SN8Uw==}
+  electron@35.2.0:
+    resolution: {integrity: sha512-GHda7oCkN0pA23qzah735DEbRa06IPwlzP3uvjAmf9af8gxdj5i93JEHeQVGVmSVpd7sSb1pfecs9nz7B1q5ag==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -2788,6 +2788,9 @@ packages:
 
   immutable@5.0.3:
     resolution: {integrity: sha512-P8IdPQHq3lA1xVeBRi5VPqUm5HDgKnx0Ru51wZz5mjxHr5n3RWhjIpOFU7ybkUxfB+5IToy+OLaHYDBIWsv+uw==}
+
+  immutable@5.1.1:
+    resolution: {integrity: sha512-3jatXi9ObIsPGr3N5hGw/vWWcTkq6hUYhpQz4k0wLC+owqWi/LiugIw9x0EdNZ2yGedKN/HzePiBvaJRXa0Ujg==}
 
   import-fresh@2.0.0:
     resolution: {integrity: sha512-eZ5H8rcgYazHbKC3PG4ClHNykCSxtAhxSSEM+2mb+7evD2CKF5V7c0dNum7AdpDh0ZdICwZY9sRSn8f+KH96sg==}
@@ -5501,16 +5504,16 @@ snapshots:
     dependencies:
       '@cliqz/adblocker-extended-selectors': 1.26.16
 
-  '@cliqz/adblocker-electron-preload@1.26.16(electron@35.0.0(supports-color@10.0.0))':
+  '@cliqz/adblocker-electron-preload@1.26.16(electron@35.2.0(supports-color@10.0.0))':
     dependencies:
       '@cliqz/adblocker-content': 1.26.16
-      electron: 35.0.0(supports-color@10.0.0)
+      electron: 35.2.0(supports-color@10.0.0)
 
-  '@cliqz/adblocker-electron@1.26.16(electron@35.0.0(supports-color@10.0.0))':
+  '@cliqz/adblocker-electron@1.26.16(electron@35.2.0(supports-color@10.0.0))':
     dependencies:
       '@cliqz/adblocker': 1.26.16
-      '@cliqz/adblocker-electron-preload': 1.26.16(electron@35.0.0(supports-color@10.0.0))
-      electron: 35.0.0(supports-color@10.0.0)
+      '@cliqz/adblocker-electron-preload': 1.26.16(electron@35.2.0(supports-color@10.0.0))
+      electron: 35.2.0(supports-color@10.0.0)
       tldts-experimental: 6.1.78
 
   '@cliqz/adblocker-extended-selectors@1.26.16': {}
@@ -5605,9 +5608,9 @@ snapshots:
       - bluebird
       - supports-color
 
-  '@electron/remote@2.1.2(electron@35.0.0(supports-color@10.0.0))':
+  '@electron/remote@2.1.2(electron@35.2.0(supports-color@10.0.0))':
     dependencies:
-      electron: 35.0.0(supports-color@10.0.0)
+      electron: 35.2.0(supports-color@10.0.0)
 
   '@electron/universal@1.5.1(supports-color@10.0.0)':
     dependencies:
@@ -7933,9 +7936,9 @@ snapshots:
       - bluebird
       - supports-color
 
-  electron-settings@4.0.4(electron@35.0.0(supports-color@10.0.0)):
+  electron-settings@4.0.4(electron@35.2.0(supports-color@10.0.0)):
     dependencies:
-      electron: 35.0.0(supports-color@10.0.0)
+      electron: 35.2.0(supports-color@10.0.0)
       lodash: 4.17.21
       mkdirp: 1.0.4
       write-file-atomic: 3.0.3
@@ -7970,7 +7973,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron@35.0.0(supports-color@10.0.0):
+  electron@35.2.0(supports-color@10.0.0):
     dependencies:
       '@electron/get': 2.0.3(supports-color@10.0.0)
       '@types/node': 16.18.32
@@ -8880,6 +8883,9 @@ snapshots:
     optional: true
 
   immutable@5.0.3: {}
+
+  immutable@5.1.1:
+    optional: true
 
   import-fresh@2.0.0:
     dependencies:
@@ -10714,7 +10720,7 @@ snapshots:
   sass@1.85.0:
     dependencies:
       chokidar: 4.0.3
-      immutable: 5.0.3
+      immutable: 5.1.1
       source-map-js: 1.2.1
     optionalDependencies:
       '@parcel/watcher': 2.5.1

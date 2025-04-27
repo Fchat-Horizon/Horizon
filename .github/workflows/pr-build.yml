@@ -11,7 +11,7 @@ on:
   pull_request:
     branches:
       - main
-      - dev
+      - development
 
 jobs:
   set-version:
@@ -98,32 +98,3 @@ jobs:
           name: PR-${{ github.event.pull_request.number }}-${{ matrix.os }}-build
           path: release_artifacts/**
           retention-days: 14 # Keep PR builds for 14 days instead of the default 90 days
-
-  notify:
-    name: Comment on PR
-    needs: [build, set-version]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Add PR Comment
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const buildVersion = '${{ needs.set-version.outputs.version }}';
-            const prNumber = context.issue.number;
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              body: `✅ Build validation completed for PR #${prNumber}!
-              
-              This PR was built as version: \`${buildVersion}\`
-              
-              Build artifacts have been created for all supported platforms:
-              - Windows
-              - macOS
-              - Linux
-              
-              The build artifacts are available as workflow artifacts in the Actions tab.
-              `
-            });

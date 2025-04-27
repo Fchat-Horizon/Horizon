@@ -853,6 +853,7 @@ export async function testSmartFilterForPrivateMessage(
       await Conversation.testPostDelay();
 
       // tslint:disable-next-line:prefer-template
+
       if (core.state.settings.risingFilter.useCustomAutoReplyMessage) {
         const message = {
           recipient: fromChar.name,

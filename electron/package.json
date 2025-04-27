@@ -1,8 +1,8 @@
 {
   "name": "horizon-electron",
-  "version": "1.30.1",
-  "author": "The F-List Team and Mister Stallion (Esq.)",
-  "description": "F-List.net Chat Client",
+  "version": "1.30.3",
+  "author": "The F-List Team and FChat Horizon Contributors",
+  "description": "A heavily modded FChat 3.0 client for F-List, continued from Rising",
   "homepage": "https://horizn.moe",
   "main": "main.js",
   "license": "MIT",
@@ -64,21 +64,21 @@
     }
   },
   "scripts": {
-    "webpack:dev": "node ../webpack development",
-    "webpack:prod": "node ../webpack production",
+    "webpack:dev": "mkdir -p dist && node ../webpack development | tee dist/build.log",
+    "webpack:prod": "mkdir -p dist && node ../webpack production | tee dist/build.log",
     "build": "pnpm run webpack:dev",
     "build:dist": "pnpm run webpack:prod",
     "watch": "node ../webpack watch",
     "start": "../node_modules/.bin/electron app",
     "startDebugMain": "ELECTRON_ENABLE_LOGGING=1 electron --serve --inspect-brk=9229 .",
     "startDebugRender": "ELECTRON_ENABLE_LOGGING=1 electron --remote-debugging-port=9229 .",
-    "build:win": "node ../webpack production && electron-builder --win nsis --arm64 --x64 ",
-    "build:mac": "node ../webpack production && electron-builder --mac dmg --universal",
-    "build:linux": "node ../webpack production && electron-builder --linux deb tar.gz AppImage --arm64 --x64"
+    "build:win": "mkdir -p dist && (node ../webpack production && electron-builder --win nsis --arm64 --x64) | tee dist/build.log",
+    "build:mac": "mkdir -p dist && (node ../webpack production && electron-builder --mac dmg --universal) | tee dist/build.log",
+    "build:linux": "mkdir -p dist && (node ../webpack production && electron-builder --linux deb tar.gz AppImage --arm64 --x64) | tee dist/build.log"
   },
   "devDependencies": {
     "commander": "^13.1.0",
-    "electron": "35.0.0",
+    "electron": "35.2.0",
     "electron-builder": "^25.1.8"
   },
   "pnpm": {

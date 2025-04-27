@@ -24,7 +24,7 @@
 [Windows x64](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-win-x64.exe) |
 [Windows arm64](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-win-arm64.exe) |
 [MacOS (Universal)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-universal.dmg) |
-[Linux x64](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x64.AppImage) |
+[Linux x64](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x86_64.AppImage) |
 [Linux arm64](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-arm64.AppImage)
 
 # F-Chat Horizon
@@ -74,9 +74,30 @@ F-chat Rising can be installed on all _major_ operating systems (Minus BSDs.)
 > [!WARNING]
 > Due to that nature of Mac, MacOS builds are **experimental**. Please [contact me](https://horizn.moe/contact.html) if you have any issues.
 
+Since we currently don't have a paid developer license (and MacOS by default blocks unsigned apps downloaded from the internet), you may need to manually allow the app in your command line or System Settings.
+
 1. Download the installer. This _should_ work for M1 / Intel based systems
    - [MacOS (Universal)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-universal.dmg)
 2. Open the downloaded .dmg file and drag the application to your Applications folder.
+   If you get a warning saying `"F-Chat" is damaged and can't be opened. You should move it to the Bin.` while attempting to open F-Chat, continue past step 2:
+3. Open your Terminal app
+4. Type the following command and press Enter:
+
+```bash
+xattr -d com.apple.quarantine /Applications/F-Chat\ Horizon.app
+```
+
+Or if you don't like using the Terminal
+
+3. Open the Applications folder in your finder, and hold the Ctrl key while clicking the F-Chat Horizon icon, and select "Open".
+4. The warning should appear like normal, but if you then go to System Settings > Privacy and Security, F-Chat Horizon should appear as a blocked app. Clicking "Open Anyway" should add it to the whitelist and let you use it as normal.
+
+![MacOS Ctrl-Open](https://raw.githubusercontent.com/Fchat-Horizon/Horizon/refs/heads/main/docs/imgages/macos-whitelist-ctrl-open.png)
+![MacOS System Settings Whitelist](https://raw.githubusercontent.com/Fchat-Horizon/Horizon/refs/heads/main/docs/imgages/macos-whitelist-settings.png)
+
+5. Now the app should open as expected.
+
+This is unfortunately unresolvable unless we either get a paid developer license from Apple, or if users disable the Gatekeeper whitelist from their system altogether– which we do not recommend you do.
 
 ## Linux
 
@@ -85,7 +106,7 @@ Select the correct package for your distribution and architecture:
 ### Debian/Ubuntu (deb)
 
 1. Download the `.deb` file for your architecture.
-   - [Linux x64 .deb](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x64.deb)
+   - [Linux x64 .deb](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-amd64.deb)
    - [Linux arm64 .deb](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-arm64.deb)
 2. Install:
    ```bash
@@ -95,7 +116,7 @@ Select the correct package for your distribution and architecture:
 ### AppImage
 
 1. Download the AppImage for your architecture:
-   - [Linux x64 .AppImage](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x64.AppImage)
+   - [Linux x64 .AppImage](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x86_64.AppImage)
    - [Linux arm64 .AppImage](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-arm64.AppImage)
 2. Make it executable, then run:
    ```bash
@@ -115,20 +136,20 @@ Select the correct package for your distribution and architecture:
    ./F-Chat.Horizon
    ```
 
-### Arch-based (pacman)
+### Arch-based (AUR)
 
 > [!NOTE]
-> There is currently no offical support for arch.
-> You will have you build the .pacman file yourself. `cd electron` and run `pnpm build:linux:arch`
->
-> You need to have pacman available on your system to build the arch builds. Duh.
+> The AUR package currently doesn't support ARM.
 
-1. Download the `.pacman` file for your architecture.
-   - [Linux x64 .pacman](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x64.pacman)
-   - [Linux arm64 .pacman](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-arm64.pacman)
-2. Install:
+- With an AUR helper:
    ```bash
-   sudo pacman -U F-Chat.Horizon-linux-<arch>.pacman
+   yay|paru|etc -S fchat-horizon-bin
+   ```
+- Manually:
+   ```bash
+   git clone https://aur.archlinux.org/fchat-horizon-bin.git
+   cd fchat-horizon-bin
+   makepkg -si
    ```
 
 # Usage
