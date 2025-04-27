@@ -30,7 +30,10 @@ export default class BBCodeParser extends CoreBBCodeParser {
         parent.appendChild(el);
         const view = new UserView({
           el,
-          propsData: { character: core.characters.get(content) }
+          propsData: {
+            character: core.characters.get(content),
+            isMarkerShown: core.state.settings.horizonShowGenderMarker
+          }
         });
         this.cleanup.push(view);
         return el;
