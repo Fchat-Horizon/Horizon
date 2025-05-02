@@ -24,6 +24,7 @@
           :character="character"
           :showStatus="true"
           :bookmark="false"
+          :isMarkerShown="shouldShowMarker"
         ></user>
       </div>
       <h4>{{ l('users.bookmarks') }}</h4>
@@ -32,6 +33,7 @@
           :character="character"
           :showStatus="true"
           :bookmark="false"
+          :isMarkerShown="shouldShowMarker"
         ></user>
       </div>
     </div>
@@ -50,6 +52,7 @@
             :character="member.character"
             :channel="channel"
             :showStatus="true"
+            :isMarkerShown="shouldShowMarker"
           ></user>
         </div>
       </div>
@@ -256,6 +259,10 @@
       const nextSortIndex = _.indexOf(availableSorts, this.sortType) + 1;
 
       this.sortType = availableSorts[nextSortIndex % availableSorts.length];
+    }
+
+    get shouldShowMarker(): boolean {
+      return core.state.settings.horizonShowGenderMarker;
     }
   }
 </script>

@@ -1,7 +1,10 @@
 <template>
   <modal :buttons="false" ref="dialog" style="width: 98%" dialogClass="">
     <template slot="title">
-      Channels for <user :character="character">{{ character.name }}</user>
+      Channels for
+      <user :character="character" :isMarkerShown="false">{{
+        character.name
+      }}</user>
     </template>
 
     <div class="user-channel-list" ref="pageBody" v-if="channels.length > 0">
@@ -16,8 +19,10 @@
 
     <div class="user-channel-list" ref="pageBody" v-else>
       <i
-        ><user :character="character">{{ character.name }}</user> is not on any
-        of the channels you are on.</i
+        ><user :character="character" :isMarkerShown="false">{{
+          character.name
+        }}</user>
+        is not on any of the channels you are on.</i
       >
     </div>
   </modal>
