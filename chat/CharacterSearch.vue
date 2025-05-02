@@ -100,7 +100,6 @@
             :showStatus="true"
             :match="shouldShowMatch"
             :avatar="false"
-            :isMarkerShown="shouldShowMarker"
           ></user>
           <bbcode
             :text="record.character.statusText"
@@ -113,7 +112,6 @@
             :showStatus="true"
             :match="shouldShowMatch"
             :avatar="shouldShowAvatar"
-            :isMarkerShown="shouldShowMarker"
           ></user>
           <bbcode
             :text="record.character.statusText"
@@ -245,7 +243,6 @@
     state = 'search';
     hasReceivedResults = false;
     shouldShowAvatar = false;
-    shouldShowMarker = false;
 
     debugSearchJson = JSON.stringify(
       {
@@ -744,7 +741,6 @@
 
       this.shouldShowMatch = core.state.settings.risingComparisonInSearch;
       this.shouldShowAvatar = core.state.settings.risingShowPortraitInMessage;
-      this.shouldShowMarker = core.state.settings.horizonShowGenderMarker;
 
       this.results = [];
 

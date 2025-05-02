@@ -16,7 +16,6 @@
           v-if="recent.character"
           :key="recent.character"
           :character="getCharacter(recent.character)"
-          :isMarkerShown="shouldShowMarker"
         ></user-view>
       </div>
       <div v-show="selectedTab === '1'" class="recent-conversations">
@@ -64,10 +63,6 @@
 
     getCharacter(name: string): Character {
       return core.characters.get(name);
-    }
-
-    get shouldShowMarker(): boolean {
-      return core.state.settings.horizonShowGenderMarker;
     }
   }
 </script>

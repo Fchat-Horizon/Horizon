@@ -61,8 +61,7 @@ const userPostfix: { [key: number]: string | undefined } = {
           props: {
             avatar: core.state.settings.risingShowPortraitInMessage,
             character: message.sender,
-            channel: this.channel,
-            isMarkerShown: core.state.settings.horizonShowGenderMarker
+            channel: this.channel
           }
         }),
         userPostfix[message.type] !== undefined

@@ -26,11 +26,7 @@
         "
       >
         <div>
-          <user
-            :character="conversation.character"
-            :match="true"
-            :isMarkerShown="shouldShowMarker"
-          ></user>
+          <user :character="conversation.character" :match="true"></user>
           <a href="#" @click.prevent="showLogs()" class="btn">
             <span class="fa fa-file-alt"></span>
             <span class="btn-text">{{ l('logs.title') }}</span>
@@ -363,7 +359,6 @@
           :character="conversation.character"
           :match="false"
           :bookmark="false"
-          :isMarkerShown="shouldShowMarker"
         ></user
         >&nbsp;{{ l('chat.typing.' + conversation.typingStatus, '').trim() }}
       </span>
@@ -719,10 +714,6 @@
 
     get conversation(): Conversation {
       return core.conversations.selectedConversation;
-    }
-
-    get shouldShowMarker(): boolean {
-      return core.state.settings.horizonShowGenderMarker;
     }
 
     get messages(): ReadonlyArray<
