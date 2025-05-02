@@ -21,6 +21,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # [Releases]
 
+## [1.30.3] - 2024-04-25
+
+### Fixed
+
+- Fixed issues with performance tanking when receiving lots of channel messages. If you were experiencing larger CPU loads or just slow responsiveness under 1.30.2, this should fix that. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9ed4dc9a05eeac05acef5cb25ba8463362166adc)
+  - Thanks @astrayblackcat for the fix, and @0lm for their very helpful reproduction steps!
+- Fixed a typo and inconsistency with the app's copyright info. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a225cf9483da28ed9f9a96c158536f3dc8ed79c7)
+
+### Changed
+
+- Removed a stray Rising reference in the automated smart filter message. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c10a7a5639d68d51897247e0447e79c5cc48dfa7)
+
+### Security
+
+- Updated to Electron 35.2.0. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0c56349da45e6d380ba1085297bca8dd13d03644)
+
+
+### Merged pull requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/107 from @CodingWithAnxiety 
+- https://github.com/Fchat-Horizon/Horizon/pull/106 from @astrayblackcat 
+- https://github.com/Fchat-Horizon/Horizon/pull/91 from @FatCatClient 
+- https://github.com/Fchat-Horizon/Horizon/pull/83 from @FatCatClient 
+- https://github.com/Fchat-Horizon/Horizon/pull/79 from @astrayblackcat 
+- https://github.com/Fchat-Horizon/Horizon/pull/63 from @FatCatClient 
+- https://github.com/Fchat-Horizon/Horizon/pull/42 from @FatCatClient 
+
+
+## [1.30.2] [04.20.25]
+### Fixed
+- Channel tags spanning more than one line (#44)
+- High quality avatars remaining as the tab icon after disconnecting (#46)
+- Zoom in hotkey (Ctrl-+) not working as intended (#55)
+- Restored Dracula theme colors to original values (#51)
+- Multiple issues related to chat view component initialization (#66):
+  - Notifications not showing up for the active conversation when window was minimized/out of focus
+  - Saved ads in the ad editor not loading
+  - Inability to reorder channels and conversations
+  - Hotkey to switch between conversations (Alt-Up/Alt-Down) not working
+  - Idle timer never starting
+  - Font size settings not being initialized when connecting
+- Fix ctrl-tab falling out of sync after dragging a tab (#74)
+- Fix lack of shadows in black (and other) user names (#61)
+
+
+### Changed
+- Updated contributor information (#77)
+
 ## [1.30.1] - 2024-03-25
 
 > [!WARNING]
