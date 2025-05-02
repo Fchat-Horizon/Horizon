@@ -334,28 +334,6 @@
       </div>
 
       <div class="form-group">
-        <label class="control-label" for="horizonShowGenderMarker">
-          <input
-            type="checkbox"
-            id="horizonShowGenderMarker"
-            v-model="horizonShowGenderMarker"
-          />
-          Show a gender icon on everyone
-        </label>
-      </div>
-
-      <div class="form-group">
-        <label class="control-label" for="horizonChangeOfflineColor">
-          <input
-            type="checkbox"
-            id="horizonChangeOfflineColor"
-            v-model="horizonChangeOfflineColor"
-          />
-          Make color in chat change to grey when a user goes offline
-        </label>
-      </div>
-
-      <div class="form-group">
         <label class="control-label" for="risingCharacterTheme">
           Override UI theme (for this character only)
           <select
@@ -682,8 +660,6 @@
     risingShowPortraitInMessage!: boolean;
     risingShowHighQualityPortraits!: boolean;
     horizonShowCustomCharacterColors!: boolean;
-    horizonShowGenderMarker!: boolean;
-    horizonChangeOfflineColor!: boolean;
 
     risingFilter!: SmartFilterSettings = {} as any;
 
@@ -737,8 +713,6 @@
         settings.risingShowHighQualityPortraits;
       this.horizonShowCustomCharacterColors =
         settings.horizonShowCustomCharacterColors;
-      this.horizonShowGenderMarker = settings.horizonShowGenderMarker;
-      this.horizonChangeOfflineColor = settings.horizonChangeOfflineColor;
 
       this.risingFilter = settings.risingFilter;
 
@@ -842,8 +816,6 @@
         risingShowPortraitInMessage: this.risingShowPortraitInMessage,
         risingShowHighQualityPortraits: this.risingShowHighQualityPortraits,
         horizonShowCustomCharacterColors: this.horizonShowCustomCharacterColors,
-        horizonShowGenderMarker: this.horizonShowGenderMarker,
-        horizonChangeOfflineColor: this.horizonChangeOfflineColor,
 
         risingColorblindMode: this.risingColorblindMode,
         risingFilter: {
