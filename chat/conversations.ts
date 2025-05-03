@@ -854,10 +854,10 @@ export async function testSmartFilterForPrivateMessage(
 
       // tslint:disable-next-line:prefer-template
 
-      if (core.state.settings.risingFilter.useCustomAutoReplyMessage) {
+      if (core.state.settings.risingFilter.autoReplyCustom) {
         const message = {
           recipient: fromChar.name,
-          message: core.state.settings.risingFilter.autoReplyMessage
+          message: core.state.settings.risingFilter.autoReplyCustomMessage
         };
 
         core.connection.send('PRI', message);

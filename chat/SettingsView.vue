@@ -518,23 +518,23 @@
 
         <label
           class="control-label"
-          for="risingFilter.useCustomAutoReplyMessage"
+          for="risingFilter.autoReplyCustom"
         >
           <input
             type="checkbox"
-            id="risingFilter.useCustomAutoReplyMessage"
-            v-model="risingFilter.useCustomAutoReplyMessage"
+            id="risingFilter.autoReplyCustom"
+            v-model="risingFilter.autoReplyCustom"
             :disabled="!risingFilter.autoReply"
           />
           Use a custom message defined below instead of the default message
         </label>
 
         <editor
-          v-model="risingFilter.autoReplyMessage"
+          v-model="risingFilter.autoReplyCustomMessage"
           :hasToolbar="true"
           class="form-control"
           rows="5"
-          :disabled="!risingFilter.autoReply"
+          :disabled="!risingFilter.autoReplyCustom || !risingFilter.autoReply"
           placeholder="Put your custom message for automatic replies here"
           maxlength="10000"
         >

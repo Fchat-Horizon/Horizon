@@ -89,8 +89,8 @@ export class Settings implements ISettings {
     penalizeMatches: true,
     rewardNonMatches: false,
     autoReply: true,
-    useCustomAutoReplyMessage: false,
-    autoReplyMessage:
+    autoReplyCustom: false,
+    autoReplyCustomMessage:
       '\n' +
       '[sub][color=orange][b][AUTOMATED MESSAGE][/b][/color][/sub]\n' +
       'Sorry, the player of this character is not interested in characters matching your profile.\n' +
