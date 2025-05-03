@@ -524,22 +524,29 @@
             type="checkbox"
             id="risingFilter.useCustomAutoReplyMessage"
             v-model="risingFilter.useCustomAutoReplyMessage"
+            :disabled="!risingFilter.autoReply"
           />
           Use a custom message defined below instead of the default message
         </label>
 
-        <textarea
+
+        <editor
+          v-model="risingFilter.autoReplyMessage"
+          :hasToolbar="true"
           class="form-control"
           rows="5"
-          v-model="risingFilter.autoReplyMessage"
-          placeholder="Put custom message for automatic replies here"
-        ></textarea>
+          :disabled="!risingFilter.autoReply"
+          placeholder="Put your custom message for automatic replies here"
+          maxlength="10000"
+        >
+        </editor>
+
         <div class="form-group">
-          Automatic message respects BBCode, we recommend testing it in a
-          message to yourself first as there isn't a preview here. You will
-          still see messages unless you have the "Hide private channel messages"
-          option above selected. Even then, if they send a second message it
-          will bypass the restriction and show you their message.
+          You will still see messages unless you have the 
+          "Hide private channel messages" option above selected.
+          Even then, if they send a second message it will
+          bypass the restriction and show you their message.
+          These messages are limited to 10000 characters.
         </div>
       </div>
 
@@ -602,6 +609,7 @@
   import { Component } from '@f-list/vue-ts';
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
+  import { Editor } from './bbcode';
   import Tabs from '../components/tabs';
   import core from './core';
   import { Settings as SettingsInterface } from './interfaces';
@@ -616,7 +624,7 @@
   import { EventBus } from './preview/event-bus';
 
   @Component({
-    components: { modal: Modal, tabs: Tabs }
+    components: { modal: Modal, editor: Editor, tabs: Tabs }
   })
   export default class SettingsView extends CustomDialog {
     l = l;
@@ -921,6 +929,28 @@
 
     div {
       margin-top: 10px;
+    }
+  }
+
+  #settings .bbcode-preview {
+    margin-top: 0;
+    border: 1px solid;
+    padding: 5px;
+    border-radius: 0 5px 5px 5px;
+    background: var(--input-bg);
+    border-color: var(--secondary);
+  }
+
+  #settings .bbcode-editor {
+    border: none;
+    background: none;
+    height: auto;
+
+    textarea {
+      width: 100%;
+      color: var(--input-color);
+      background-color: var(--input-bg);
+      border-radius: 0 5px 5px 5px;
     }
   }
 
