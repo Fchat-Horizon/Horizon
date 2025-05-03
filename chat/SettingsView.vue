@@ -529,7 +529,6 @@
           Use a custom message defined below instead of the default message
         </label>
 
-
         <editor
           v-model="risingFilter.autoReplyMessage"
           :hasToolbar="true"
@@ -542,10 +541,9 @@
         </editor>
 
         <div class="form-group">
-          You will still see messages unless you have the 
-          "Hide private channel messages" option above selected.
-          Even then, if they send a second message it will
-          bypass the restriction and show you their message.
+          You will still see messages unless you have the "Hide private channel
+          messages" option above selected. Even then, if they send a second
+          message it will bypass the restriction and show you their message.
           These messages are limited to 10000 characters.
         </div>
       </div>
