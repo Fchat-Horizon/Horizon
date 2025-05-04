@@ -319,6 +319,7 @@ Once this process has started, do not interrupt it or your logs will get corrupt
     'The value for the parameter {0} is invalid. Please use the Help (click the ? button) if you need further information.',
   'commands.invalidCharacter':
     'The character you entered is not online. Put the name in double quotes if you want to override. Please use the Help (click the ? button) if you need further information.',
+  'commands.emptyCharacter': 'Enter a character name.',
   'commands.help': 'Command Help',
   'commands.help.syntax': 'Syntax: {0}',
   'commands.help.contextChannel':

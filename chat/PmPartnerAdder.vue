@@ -39,6 +39,8 @@
     }
 
     submit(): void {
+      if (!this.name) return;
+
       const c = core.characters.get(this.name);
 
       if (c) {

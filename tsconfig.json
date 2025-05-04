@@ -3,7 +3,7 @@
     "target": "es2017",
     "module": "commonjs",
     "sourceMap": true,
-    "allowJs": true,
+    "allowJs": false,
     "noEmitHelpers": true,
     "importHelpers": true,
     "forceConsistentCasingInFileNames": true,
@@ -14,5 +14,5 @@
     "esModuleInterop": true,
     "experimentalDecorators": true
   },
-  "include": ["./electron/main.ts"]
+  "exclude": ["./node_modules/**", "./electron/node_modules/**"]
 }

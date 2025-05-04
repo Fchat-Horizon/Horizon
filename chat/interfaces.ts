@@ -289,6 +289,7 @@ export namespace Settings {
     readonly horizonShowCustomCharacterColors: boolean;
     readonly horizonShowGenderMarker: boolean;
     readonly horizonChangeOfflineColor: boolean;
+    readonly horizonNotifyFriendSignIn: boolean;
 
     readonly risingFilter: SmartFilterSettings;
 

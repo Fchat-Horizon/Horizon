@@ -320,7 +320,8 @@
         'login',
         'logout',
         'modalert',
-        'newnote'
+        'newnote',
+        'silence'
       ]);
 
       core.connection.connect(this.selectedCharacter.name);

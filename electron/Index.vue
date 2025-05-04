@@ -384,11 +384,6 @@
         this.shouldShowSpinner = true;
       }, 250);
 
-      // tslint:disable-next-line no-floating-promises
-      await core.cache.start(this.settings, this.hasCompletedUpgrades);
-
-      log.debug('init.chat.cache.done');
-
       void EIconStore.getSharedStore(); // intentionally background
 
       log.debug('init.eicons.update.done');

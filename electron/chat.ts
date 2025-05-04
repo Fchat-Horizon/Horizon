@@ -64,10 +64,18 @@ import { WordPosSearch } from '../learn/dictionary/word-pos-search';
 
 log.debug('init.chat');
 
-document.addEventListener('keydown', (e: KeyboardEvent) => {
-  if (e.ctrlKey && e.shiftKey && getKey(e) === Keys.KeyI)
-    remote.getCurrentWebContents().toggleDevTools();
-});
+document.addEventListener(
+  'keydown',
+  process.platform !== 'darwin'
+    ? (e: KeyboardEvent) => {
+        if (e.ctrlKey && e.shiftKey && getKey(e) === Keys.KeyI)
+          remote.getCurrentWebContents().toggleDevTools();
+      }
+    : (e: KeyboardEvent) => {
+        if (e.metaKey && e.altKey && getKey(e) === Keys.KeyI)
+          remote.getCurrentWebContents().toggleDevTools();
+      }
+);
 
 /* process.env.SPELLCHECKER_PREFER_HUNSPELL = '1';
 const sc = nativeRequire<{

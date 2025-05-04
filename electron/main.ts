@@ -435,7 +435,7 @@ function onReady(): void {
 
   log.info('Starting application.');
 
-  app.setAppUserModelId('com.squirrel.fchat.F-Chat');
+  app.setAppUserModelId('net.flist.fchat');
   app.on('open-file', createWindow);
 
   if (settings.version !== app.getVersion()) {

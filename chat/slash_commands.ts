@@ -94,6 +94,7 @@ export function parse(
             value.charAt(value.length - 1) === '"'
           ) {
             values[i] = value.substring(1, value.length - 1);
+            if (!values[i]) return l('commands.emptyCharacter');
             break;
           }
           const char = core.characters.get(value);

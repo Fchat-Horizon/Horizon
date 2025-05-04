@@ -37,20 +37,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated to Electron 35.2.0. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0c56349da45e6d380ba1085297bca8dd13d03644)
 
-
 ### Merged pull requests
 
-- https://github.com/Fchat-Horizon/Horizon/pull/107 from @CodingWithAnxiety 
-- https://github.com/Fchat-Horizon/Horizon/pull/106 from @astrayblackcat 
-- https://github.com/Fchat-Horizon/Horizon/pull/91 from @FatCatClient 
-- https://github.com/Fchat-Horizon/Horizon/pull/83 from @FatCatClient 
-- https://github.com/Fchat-Horizon/Horizon/pull/79 from @astrayblackcat 
-- https://github.com/Fchat-Horizon/Horizon/pull/63 from @FatCatClient 
-- https://github.com/Fchat-Horizon/Horizon/pull/42 from @FatCatClient 
-
+- https://github.com/Fchat-Horizon/Horizon/pull/107 from @CodingWithAnxiety
+- https://github.com/Fchat-Horizon/Horizon/pull/106 from @astrayblackcat
+- https://github.com/Fchat-Horizon/Horizon/pull/91 from @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/83 from @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/79 from @astrayblackcat
+- https://github.com/Fchat-Horizon/Horizon/pull/63 from @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/42 from @FatCatClient
 
 ## [1.30.2] [04.20.25]
+
 ### Fixed
+
 - Channel tags spanning more than one line (#44)
 - High quality avatars remaining as the tab icon after disconnecting (#46)
 - Zoom in hotkey (Ctrl-+) not working as intended (#55)
@@ -65,8 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix ctrl-tab falling out of sync after dragging a tab (#74)
 - Fix lack of shadows in black (and other) user names (#61)
 
-
 ### Changed
+
 - Updated contributor information (#77)
 
 ## [1.30.1] - 2024-03-25

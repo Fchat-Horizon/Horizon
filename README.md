@@ -11,7 +11,7 @@
     - [Debian/Ubuntu (deb)](#debianubuntu-deb)
     - [AppImage](#appimage)
     - [Tarball (tar.gz)](#tarball-targz)
-    - [Arch-based (pacman)](#arch-based-pacman)
+    - [Arch-based (AUR)](#arch-based-aur)
 - [Usage](#usage)
   - [Getting started](#getting-started)
   - [Wiki](#wiki)
@@ -142,15 +142,15 @@ Select the correct package for your distribution and architecture:
 > The AUR package currently doesn't support ARM.
 
 - With an AUR helper:
-   ```bash
-   yay|paru|etc -S fchat-horizon-bin
-   ```
+  ```bash
+  yay|paru|etc -S fchat-horizon-bin
+  ```
 - Manually:
-   ```bash
-   git clone https://aur.archlinux.org/fchat-horizon-bin.git
-   cd fchat-horizon-bin
-   makepkg -si
-   ```
+  ```bash
+  git clone https://aur.archlinux.org/fchat-horizon-bin.git
+  cd fchat-horizon-bin
+  makepkg -si
+  ```
 
 # Usage
 

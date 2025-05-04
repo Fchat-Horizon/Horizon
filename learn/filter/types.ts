@@ -37,6 +37,8 @@ export interface SmartFilterSettings {
   penalizeMatches: boolean;
   rewardNonMatches: boolean;
   autoReply: boolean;
+  autoReplyCustom: boolean;
+  autoReplyCustomMessage: string;
   showFilterIcon: boolean;
 
   minAge: number | null;

@@ -1,8 +1,8 @@
 {
   "name": "horizon-electron",
-  "version": "1.30.3",
+  "version": "1.31.0",
   "author": "The F-List Team and FChat Horizon Contributors",
-  "description": "A heavily modded FChat 3.0 client for F-List, continued from Rising",
+  "description": "FChat Horizon",
   "homepage": "https://horizn.moe",
   "main": "main.js",
   "license": "MIT",
@@ -42,19 +42,19 @@
       "background": "build/dmg.png",
       "contents": [
         {
-          "x": 130,
-          "y": 220
+          "x": 554,
+          "y": 110
         },
         {
-          "x": 410,
-          "y": 220,
+          "x": 554,
+          "y": 344,
           "type": "link",
           "path": "/Applications"
         }
       ],
       "window": {
-        "width": 540,
-        "height": 380
+        "width": 658,
+        "height": 498
       }
     },
     "linux": {

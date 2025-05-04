@@ -19,7 +19,11 @@
     ></tabs>
     <div class="users" style="padding-left: 10px" v-show="tab === '0'">
       <h4>{{ l('users.friends') }}</h4>
-      <div v-for="character in friends" :key="character.name">
+      <div
+        v-for="character in friends"
+        :key="character.name"
+        class="userlist-item"
+      >
         <user
           :character="character"
           :showStatus="true"
@@ -28,7 +32,11 @@
         ></user>
       </div>
       <h4>{{ l('users.bookmarks') }}</h4>
-      <div v-for="character in bookmarks" :key="character.name">
+      <div
+        v-for="character in bookmarks"
+        :key="character.name"
+        class="userlist-item"
+      >
         <user
           :character="character"
           :showStatus="true"
@@ -47,7 +55,11 @@
           {{ l('users.memberCount', channel.sortedMembers.length) }}
           <a class="btn sort" @click="switchSort"><i class="fa fa-sort"></i></a>
         </h4>
-        <div v-for="member in filteredMembers" :key="member.character.name">
+        <div
+          v-for="member in filteredMembers"
+          :key="member.character.name"
+          class="userlist-item"
+        >
           <user
             :character="member.character"
             :channel="channel"
@@ -292,6 +304,12 @@
       .body {
         overflow-x: hidden;
       }
+    }
+
+    .userlist-item {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     @media (min-width: breakpoint-min(md)) {

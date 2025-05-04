@@ -77,6 +77,10 @@ $genders: (
   }
 }
 
+.message-own {
+  background-color: $gray-100;
+}
+
 .colorblindMode {
   @import '../colorblind';
   @import '../../rising';

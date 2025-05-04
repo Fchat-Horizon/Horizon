@@ -334,8 +334,16 @@
           );
         }
       );
-      browserWindow.on('maximize', () => (this.isMaximized = true));
-      browserWindow.on('unmaximize', () => (this.isMaximized = false));
+      browserWindow.on('maximize', () => {
+        this.isMaximized = true;
+        if (this.activeTab !== undefined)
+          this.activeTab.view.setBounds(getWindowBounds());
+      });
+      browserWindow.on('unmaximize', () => {
+        this.isMaximized = false;
+        if (this.activeTab !== undefined)
+          this.activeTab.view.setBounds(getWindowBounds());
+      });
       electron.ipcRenderer.on('switch-tab', (_e: Electron.IpcRendererEvent) => {
         const index = this.tabs.indexOf(this.activeTab!);
         this.show(this.tabs[index + 1 === this.tabs.length ? 0 : index + 1]);
