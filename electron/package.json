@@ -76,10 +76,16 @@
     "build:mac": "mkdir -p dist && (node ../webpack production && electron-builder --mac dmg --universal) | tee dist/build.log",
     "build:linux": "mkdir -p dist && (node ../webpack production && electron-builder --linux deb tar.gz AppImage --arm64 --x64) | tee dist/build.log"
   },
+  "dependencies": {
+    "vue": "^3.1.0",
+    "@vue/compat": "^3.1.0"
+  },
   "devDependencies": {
     "commander": "^13.1.0",
     "electron": "35.2.0",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "@vue/compiler-sfc": "^3.1.0",
+    "vue-loader": "^16.0.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
