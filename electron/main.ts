@@ -861,9 +861,10 @@ function onReady(): void {
   });
   electron.ipcMain.on(
     'save-login',
-    (_event: IpcMainEvent, account: string, host: string) => {
+    (_event: IpcMainEvent, account: string, host: string, proxy: string) => {
       settings.account = account;
       settings.host = host;
+      settings.proxy = proxy;
       setGeneralSettings(settings);
     }
   );

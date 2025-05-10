@@ -98,6 +98,23 @@
                 </button>
               </div>
             </div>
+            <div style="height: 8px"></div>
+            <label class="control-label" for="proxy">{{
+              l('login.proxy')
+            }}</label>
+            <div class="input-group">
+              <input
+                class="form-control"
+                id="proxy"
+                v-model="settings.proxy"
+                @keypress.enter="login()"
+              />
+              <div class="input-group-append">
+                <button class="btn btn-outline-secondary" @click="resetProxy()">
+                  <span class="fas fa-undo-alt"></span>
+                </button>
+              </div>
+            </div>
           </div>
           <div class="form-group">
             <label for="advanced"
@@ -534,6 +551,34 @@
     async login(): Promise<void> {
       if (this.loggingIn) return;
       this.loggingIn = true;
+
+      // set proxy inside from the advanced option
+      if (!!this.settings.proxy) {
+        try {
+          // Get the current BrowserWindow's session
+          const currentWindow = remote.getCurrentWindow();
+          await currentWindow.webContents.session.setProxy({
+            proxyRules: this.settings.proxy, // Update dynamically if needed,
+            proxyBypassRules: 'localhost,127.0.0.1',
+            mode: 'fixed_servers'
+          });
+        } catch (e) {
+          this.error = l('login.error.proxy');
+          log.error('login.error.proxy', e);
+          return;
+        }
+      } else {
+        // deactivate the proxy
+        try {
+          const currentWindow = remote.getCurrentWindow();
+          await currentWindow.webContents.session.setProxy({
+            mode: 'direct'
+          });
+        } catch (_) {
+          // Ignore error
+        }
+      }
+
       try {
         if (!this.saveLogin) {
           await keyStore.deletePassword('f-list.net', this.settings.account);
@@ -649,6 +694,10 @@
 
     resetHost(): void {
       this.settings.host = defaultHost;
+    }
+
+    resetProxy(): void {
+      this.settings.proxy = '';
     }
 
     onMouseOver(e: MouseEvent): void {

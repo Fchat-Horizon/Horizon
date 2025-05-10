@@ -26,6 +26,7 @@ export class GeneralSettings {
   account = '';
   closeToTray = true;
   profileViewer = true;
+  proxy: string = '';
   host = defaultHost;
   logDirectory = path.join(electron.app.getPath('userData'), 'data');
   spellcheckLang: string[] | string | undefined = [getDefaultLanguage()];
