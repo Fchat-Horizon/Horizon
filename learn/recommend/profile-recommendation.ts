@@ -104,7 +104,7 @@ export class ProfileRecommendationAnalyzer {
         `ADD_HQ_AVATAR_SAFE_DOMAIN`,
         ProfileRecommendationLevel.CRITICAL,
         'Unsupported high-quality portrait URL',
-        'High-quality portraits can only point to f-list.net, freeimages.host, e621.net, iili.io, imgur.com, or redgifs.com domains.',
+        'High-quality portraits can only point to f-list.net, freeimages.host, e621.net, iili.io, imgur.com, imgchest.com, or redgifs.com domains.',
         'https://github.com/Fchat-Horizon/Horizon/wiki/High%E2%80%90Quality-Portraits'
       );
     }

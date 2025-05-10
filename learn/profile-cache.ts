@@ -184,6 +184,10 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
       return true;
     }
 
+    if (url.match(/^https?:\/\/([a-z0-9\-.]+\.)?imgchest\.com\//i)) {
+      return true;
+    }
+
     return false;
   }
 

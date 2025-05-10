@@ -38,6 +38,7 @@ When 'High-Quality Portraits' feature is used, F-Chat Horizon may connect to the
 - imgur.com
 - freeimage.host
 - redgifs.com
+- imgchest.com
 
 If you are concerned about your security or privacy, consider disabling the high quality portraits feature in F-Chat Horizon settings.
 
