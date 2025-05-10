@@ -10,7 +10,7 @@
       class="border-bottom"
       id="window-tabs"
     >
-      <h4 style="padding: 2px 0">F-Chat</h4>
+      <h4 style="padding: 2px 0">{{ l('title') }}</h4>
       <div
         class="btn"
         :class="'btn-' + (hasUpdate ? 'warning' : 'light')"

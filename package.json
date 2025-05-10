@@ -1,7 +1,7 @@
 {
   "name": "fchat-horizon",
   "version": "1.31.0",
-  "author": "The F-List Team and FChat Horizon Contributors",
+  "author": "The F-List Team and Horizon Contributors",
   "description": "A heavily modded FChat 3.0 client for F-List, continued from Rising",
   "license": "MIT",
   "main": "main.js",

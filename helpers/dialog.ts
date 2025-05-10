@@ -4,7 +4,7 @@ export class Dialog {
   static confirmDialog(message: string): boolean {
     const result = remote.dialog.showMessageBoxSync({
       message,
-      title: 'F-Chat Horizon',
+      title: 'Horizon',
       type: 'question',
       buttons: ['Yes', 'No'],
       defaultId: 1,

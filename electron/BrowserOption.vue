@@ -53,7 +53,7 @@
                   <div>
                     This is an advanced setting. By changing this setting to an
                     unsupported program (i.e. not a browser), you might not be
-                    able to open links from F-Chat anymore.
+                    able to open links from Horizon anymore.
                   </div>
 
                   <div v-if="isMac">

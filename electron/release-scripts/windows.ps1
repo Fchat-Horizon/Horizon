@@ -2,7 +2,7 @@
 
 <#
 .SYNOPSIS
-Windows build script for F-Chat Horizon.
+Windows build script for Horizon.
 
 .PARAMETER ReleaseVersion
 The version string for the release.

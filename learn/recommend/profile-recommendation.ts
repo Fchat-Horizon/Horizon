@@ -96,7 +96,7 @@ export class ProfileRecommendationAnalyzer {
         `ADD_HQ_AVATAR`,
         ProfileRecommendationLevel.CRITICAL,
         'Add a high-quality portrait',
-        'Profiles with a high-quality portraits stand out in chats with other F-Chat Horizon players.',
+        'Profiles with a high-quality portraits stand out in chats with other Horizon users.',
         'https://github.com/Fchat-Horizon/Horizon/wiki/High%E2%80%90Quality-Portraits'
       );
     } else if (!ProfileCache.isSafeRisingPortraitURL(profileUrl)) {

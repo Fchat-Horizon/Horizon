@@ -313,7 +313,7 @@ onSettings(settings);
 log.debug('init.chat.core');
 
 const connection = new Connection(
-  `F-Chat 3.0 (${process.platform})`,
+  `Horizon (${process.platform})`,
   remote.app.getVersion(),
   Socket
 );
