@@ -1,9 +1,9 @@
 const _ = require('lodash');
 const path = require('path');
 const fs = require('fs');
-const ForkTsCheckerWebpackPlugin = require('@f-list/fork-ts-checker-webpack-plugin');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const { VueLoaderPlugin } = require('vue-loader');
 const vueTransformer = require('@f-list/vue-ts/transform').default;
 const CopyPlugin = require('copy-webpack-plugin');
 
@@ -48,14 +48,21 @@ const mainConfig = {
     },
     plugins: [
       new ForkTsCheckerWebpackPlugin({
-        async: false,
-        tslint: path.join(__dirname, '../tslint.json'),
-        tsconfig: './tsconfig-main.json',
-        ignoreLintWarnings: true
+        typescript: {
+          configFile: path.join(__dirname, 'tsconfig-main.json'),
+          diagnosticOptions: {
+            semantic: true,
+            syntactic: true
+          }
+        },
+        async: false
       })
     ],
     resolve: {
-      extensions: ['.ts', '.js']
+      extensions: ['.ts', '.js'],
+      alias: {
+        vue: '@vue/compat'
+      }
     },
     optimization: {
       minimize: false,
@@ -99,7 +106,10 @@ const mainConfig = {
           loader: 'vue-loader',
           options: {
             compilerOptions: {
-              preserveWhitespace: false
+              preserveWhitespace: false,
+              compatConfig: {
+                MODE: 2 // Enable Vue 2 compatibility mode
+              }
             }
           }
         },
@@ -129,11 +139,21 @@ const mainConfig = {
         },
         {
           test: /\.vue\.scss/,
-          // loader: ['vue-style-loader', {loader: 'css-loader', options: {esModule: false}},'sass-loader']
           use: [
             'vue-style-loader',
-            { loader: 'css-loader', options: { esModule: false } },
-            { loader: 'sass-loader', options: { warnRuleAsWarning: false } }
+            {
+              loader: 'css-loader',
+              options: {
+                esModule: false,
+                importLoaders: 1
+              }
+            },
+            {
+              loader: 'sass-loader',
+              options: {
+                implementation: require('sass-embedded')
+              }
+            }
           ]
         },
         {
@@ -153,11 +173,16 @@ const mainConfig = {
     },
     plugins: [
       new ForkTsCheckerWebpackPlugin({
-        async: false,
-        tslint: path.join(__dirname, '../tslint.json'),
-        tsconfig: './tsconfig-renderer.json',
-        vue: true,
-        ignoreLintWarnings: true
+        typescript: {
+          configFile: path.join(__dirname, 'tsconfig-renderer.json'),
+          extensions: {
+            vue: {
+              enabled: true,
+              compiler: '@vue/compiler-sfc'
+            }
+          }
+        },
+        async: false
       }),
       new VueLoaderPlugin(),
       new CopyPlugin({
@@ -235,7 +260,10 @@ const mainConfig = {
       })
     ],
     resolve: {
-      extensions: ['.ts', '.js', '.vue', '.css']
+      extensions: ['.ts', '.js', '.vue', '.css'],
+      alias: {
+        vue: '@vue/compat'
+      }
       // alias: {qs: 'querystring'}
     },
     optimization: {
@@ -291,14 +319,50 @@ const storeWorkerEndpointConfig = _.assign(_.cloneDeep(mainConfig), {
 
   plugins: [
     new ForkTsCheckerWebpackPlugin({
-      async: false,
-      tslint: path.join(__dirname, '../tslint.json'),
-      tsconfig: './tsconfig-renderer.json',
-      vue: true,
-      ignoreLintWarnings: true
+      typescript: {
+        configFile: path.join(__dirname, 'tsconfig-renderer.json'),
+        diagnosticOptions: {
+          semantic: true,
+          syntactic: true
+        },
+        extensions: {
+          vue: {
+            enabled: true,
+            compiler: '@vue/compiler-sfc'
+          }
+        }
+      },
+      async: false
     })
-  ]
+  ],
+  resolve: {
+    extensions: ['.ts', '.js', '.vue'],
+    alias: {
+      vue: '@vue/compat'
+    }
+  }
 });
+
+mainConfig.resolve = {
+  ...mainConfig.resolve,
+  alias: {
+    vue: '@vue/compat'
+  }
+};
+
+rendererConfig.resolve = {
+  ...rendererConfig.resolve,
+  alias: {
+    vue: '@vue/compat'
+  }
+};
+
+storeWorkerEndpointConfig.resolve = {
+  ...storeWorkerEndpointConfig.resolve,
+  alias: {
+    vue: '@vue/compat'
+  }
+};
 
 module.exports = function (mode) {
   const themesDir = path.join(__dirname, '../scss/themes/chat');
