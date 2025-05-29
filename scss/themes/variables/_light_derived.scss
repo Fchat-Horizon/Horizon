@@ -2,3 +2,7 @@
 .whiteNameText {
   @include text-outline($gray-600);
 }
+
+:root {
+  color-scheme: light;
+}
