@@ -115,7 +115,6 @@
         <!-- <infotag-item v-for="infotag in quickInfoItems" :infotag="infotag" :key="infotag.id" :characterMatch="characterMatch"></infotag-item> -->
         <infotag-item
           v-for="id in quickInfoIds"
-          v-if="character.character.infotags[id]"
           :infotag="getInfotag(id)"
           :data="character.character.infotags[id]"
           :key="id"
