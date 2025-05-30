@@ -4,3 +4,7 @@ $blue-color: $blue-color;
 .blackNameText {
   @include text-outline($gray-600);
 }
+
+:root {
+  color-scheme: dark;
+}
