@@ -8,7 +8,9 @@ import { openURLExternally } from './main';
 import { DownloadItem } from 'electron';
 import { getSafeLanguages, updateSupportedLanguages } from './language';
 import { BlockerIntegration } from './blocker/blocker';
-const maxTabCount = 3;
+//In non-production modes we might want to connect to development servers too.
+//This won't change the amount of allowed connections to the live server.
+const maxTabCount = process.env.NODE_ENV === 'production' ? 3 : 5;
 
 // tslint:disable-next-line:no-require-imports
 const pngIcon = path.join(
@@ -289,7 +291,7 @@ export function tabAddHandler(
 ) {
   setUpWebContents(webContents, settings);
   ++tabCount;
-  if (tabCount === 5) {
+  if (tabCount === maxTabCount) {
     for (const w of windows) {
       w.webContents.send('allow-new-tabs', false);
     }
