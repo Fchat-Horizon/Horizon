@@ -76,7 +76,7 @@ export class BlockerIntegration {
       log.warn(
         'adblock.init.error',
         'Adblocker failed to initialize.' +
-          'This does not break F-Chat Horizon, but may produce slower image previews',
+          'This does not break Horizon, but may produce slower image previews',
         err
       );
 

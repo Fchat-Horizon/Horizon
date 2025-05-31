@@ -1,7 +1,7 @@
 # Table of Contents <!-- omit in toc -->
 
 - [Download](#download)
-- [F-Chat Horizon](#f-chat-horizon)
+- [Horizon](#f-chat-horizon)
   - [Features](#features)
   - [Goals](#goals)
 - [Installing](#installing)
@@ -27,7 +27,7 @@
 [Linux x64](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x86_64.AppImage) |
 [Linux arm64](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-arm64.AppImage)
 
-# F-Chat Horizon
+# Horizon
 
 This repository contains a continuation of the heavily customized F-Chat Rising, a version of the mainline F-Chat 3.0 client.
 
@@ -43,7 +43,7 @@ In a non-exhaustive list, F-Chat Horizon has these features!
 
 ## Goals
 
-F-Chat Horizon aims to be an opinionated fork of F-Chat Rising. Instead of aiming solely to be a more customized fork of the original client, we aim to:
+Horizon aims to be an opinionated fork of F-Chat Rising. Instead of aiming solely to be a more customized fork of the original client, we aim to:
 
 - **Maintain Cross-Platform Compatibility**  
   Ensure full functionality across Linux, Windows, and macOS without bias toward any specific platform.

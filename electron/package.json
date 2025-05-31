@@ -1,14 +1,14 @@
 {
   "name": "horizon-electron",
   "version": "1.31.1",
-  "author": "The F-List Team and FChat Horizon Contributors",
-  "description": "FChat Horizon",
+  "author": "The F-List Team and Horizon Contributors",
+  "description": "Horizon",
   "homepage": "https://horizn.moe",
   "main": "main.js",
   "license": "MIT",
   "build": {
     "appId": "net.flist.fchat",
-    "productName": "F-Chat Horizon",
+    "productName": "Horizon",
     "artifactName": "${productName}-${os}-${arch}.${ext}",
     "directories": {
       "app": "app"
@@ -29,7 +29,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "F-Chat Horizon"
+      "shortcutName": "Horizon"
     },
     "mac": {
       "icon": "build/icon.icns",
