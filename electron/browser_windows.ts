@@ -63,7 +63,13 @@ export function createMainWindow(
     windowProperties.titleBarStyle = 'hiddenInset';
     // windowProperties.frame = true;
   } else {
-    windowProperties.frame = false;
+    //windowProperties.frame = false;
+    windowProperties.titleBarStyle = 'hidden';
+    windowProperties.titleBarOverlay = {
+      color: '#00000000',
+      symbolColor: '#ffffff',
+      height: 32
+    };
   }
 
   const window = new electron.BrowserWindow(windowProperties);
