@@ -14,7 +14,6 @@
     ><img v-if="!!avatar" :src="avatarUrl" class="user-avatar" /><span
       v-if="isMarkerShown"
       :class="genderClass"
-      style="width: 15px; text-align: center"
     ></span
     ><span v-if="!!statusClass" :class="statusClass"></span
     ><span v-if="!!rankIcon" :class="rankIcon"></span
@@ -64,25 +63,25 @@
     if (status !== 'offline') {
       switch (gender) {
         case 'None':
-          return 'fa fa-genderless';
+          return 'fa-fw fa-genderless';
         case 'Male':
-          return 'fa fa-mars';
+          return 'fa-fw fa-mars';
         case 'Female':
-          return 'fa fa-venus';
+          return 'fa-fw fa-venus';
         case 'Shemale':
-          return 'fa fa-transgender';
+          return 'fa-fw fa-transgender';
         case 'Herm':
-          return 'fa fa-mercury';
+          return 'fa-fw fa-mercury';
         case 'Male-Herm':
-          return 'fa fa-mars-stroke-v';
+          return 'fa-fw fa-mars-stroke-v';
         case 'Cunt-boy':
-          return 'fa fa-mars-stroke-h';
+          return 'fa-fw fa-mars-stroke-h';
         case 'Transgender':
-          return 'fa fa-transgender-alt';
+          return 'fa-fw fa-transgender-alt';
       }
     }
 
-    return 'fa fa-times';
+    return 'fa-fw fa-times';
   }
 
   export interface StatusClasses {

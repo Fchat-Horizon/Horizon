@@ -51,11 +51,13 @@
               <i
                 class="fa fa-fw"
                 :class="{
-                  'fa-minus': character.bookmarked,
-                  'fa-plus': !character.bookmarked
+                  'fa-bookmark': character.bookmarked,
+                  'far fa-bookmark': !character.bookmarked
                 }"
               ></i
-              >Bookmark
+              >{{
+                l('user.' + (character.bookmarked ? 'unbookmark' : 'bookmark'))
+              }}
             </a>
             <span
               v-if="character.settings.block_bookmarks"
@@ -113,7 +115,6 @@
         <!-- <infotag-item v-for="infotag in quickInfoItems" :infotag="infotag" :key="infotag.id" :characterMatch="characterMatch"></infotag-item> -->
         <infotag-item
           v-for="id in quickInfoIds"
-          v-if="character.character.infotags[id]"
           :infotag="getInfotag(id)"
           :data="character.character.infotags[id]"
           :key="id"
@@ -197,6 +198,7 @@
 
 <script lang="ts">
   import { Component, Prop } from '@f-list/vue-ts';
+  import l from '../../chat/localize';
   import Vue, {
     Component as VueComponent,
     ComponentOptions,
@@ -263,6 +265,7 @@
     readonly oldApi?: true;
     @Prop({ required: true })
     readonly characterMatch!: MatchReport;
+    l = l;
 
     readonly shared: SharedStore = Store;
     readonly quickInfoIds: ReadonlyArray<number> = [

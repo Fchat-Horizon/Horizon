@@ -2,7 +2,7 @@
 
 <#
 .SYNOPSIS
-Windows build script for Horizon.
+Windows build script for F-Chat Horizon.
 
 .PARAMETER ReleaseVersion
 The version string for the release.
@@ -57,7 +57,7 @@ Set-Location electron
 # ! Removing 'app' and 'dist' directories to ensure a clean build
 Remove-Item -Recurse -Force app, dist -ErrorAction SilentlyContinue
 pnpm install
-pnpm build:win
+pnpm build:dev:win
 
 # Prepare release directory
 # * Create release directory if it doesn't exist

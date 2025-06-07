@@ -1157,8 +1157,9 @@ export default function (this: any): Interfaces.State {
       time
     );
 
-    const p = await core.cache.resolvePScore(
-      core.conversations.selectedConversation !== conv,
+    const p = await core.cache.resolveProfileScore(
+      core.conversations.selectedConversation !== conv ||
+        char === core.characters.ownCharacter,
       char,
       conv,
       msg

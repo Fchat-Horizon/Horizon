@@ -33,6 +33,7 @@ export class GeneralSettings {
   theme = 'default';
   version = electron.app.getVersion();
   beta = false;
+  updateCheck = true;
   customDictionary: string[] = [];
   hwAcceleration = true;
   risingCacheExpiryDays = 30;

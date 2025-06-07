@@ -21,6 +21,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # [Releases]
 
+## [1.32.0] - 2025-06-09
+
+> [!IMPORTANT]
+> If you want to _downgrade_ from 1.32.0 or later to an earlier version, you will need to manually delete the `eicon.json` file in your Horizon data folder, or the EIcon search window might not show all results anymore.
+> Please consult [this](https://github.com/Fchat-Horizon/Horizon/blob/main/PRIVACY.md) file on where to find this folder.
+> For regular users, this should be no concern though.
+
+### Added
+
+- New EIcon Selector and Store update, significantly improving the EIcon selection UI and handling. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2439abc9253ca87a510d3ac5bc8abded9f1b5d68)
+  - You should see a **_massive_** decrease in memory per tab now, and searching for eicons is now a lot snappier.
+  - Special thanks to @FireUnderTheMountain for helping investigate this, and subsequently writing the PR.
+- Experimental gender matcher rework (community feedback appreciated). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7b35203e4e77245ff1864fcf505646bd55855b00)
+  - Read more about it [here](https://github.com/Fchat-Horizon/Horizon/pull/173).
+  - TL;DR: Gender and orientation are now a single score, determined primarily by your default kink gender preferences, while your orientation is used as a fallback. Orientation matching for nonbinary characters is also less dogmatic now.
+  - More changes to the matcher are planned, including reassessing how species are determined.
+- Consistency applied to most instances of the app name. We are now just "Horizon". [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8f6abc30ffcfd6cfd1b1e4f64e494b56efbff1da)
+  - We have a _temporary_ new logo to go with this change. If you don't like it, don't worry: We'll replace it with something better and less temporary soon enough. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/937182c1e30c5a99e0e5ace5f574cba22ba61662) [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3a54fae7bff6da9af9e11a82d2b2adc04c57758e)
+
+### Fixed
+
+- Fixed an issue with minimizing the main window under some versions of Linux using KDE Plasma [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e4d02cab494a3a7a14baf8227a1c4cb51bb1109d)
+- Fixed another issue where the "Open Conversation" and "Join Channel" buttons could be rearranged by dragging items around them. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/489f3c4feff053abed6585170cd7382530579ab2)
+- Fixed a 3.0-era issue where the text box wouldn't properly resize once the line count increased. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a5bc4495253fc6e58d27e66c2dec9e10e2868e92)
+- Your own ads should no longer be marked as compatible/ incompatible when returning to a channel after having posted one. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/205560abc43ccc850aa1a5bd6ec7cd825de45e64)
+
+### Changed
+
+- General UI/UX improvements for some icons. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9e3520a906798e1f4b295e2167576c38ad9406c3) [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit//08b775bc696bf4c78c0bce1a7035789c2b566149)
+- Installing a specific version now shows the changelog for that version, rather than the main branch. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8b349bd6279f73558edf1290c0f371063d6106ce)
+- The automatic update check can be toggled in the settings wheel. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/fed136f0169fe8d4c10af45042a6759cd6f9c867)
+
+### Development
+
+- Running a development version— either locally through `pnpm build` or from a Pull Request, now displays this in the version info. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/35b283e9f5a9c2e462d9552348e33bccb9131e62)
+- App window related functions have been moved to their own file, to debloat the over bloated `electron/main.ts` file. [[Commit]
+  ](https://github.com/Fchat-Horizon/Horizon/commit/6bb95d95039d177ecfb0652f8b5ff942aaff84b6)
+
+### Merged pull requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/135 from @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/173 from @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/192 from @FireUnderTheMountain
+- https://github.com/Fchat-Horizon/Horizon/pull/198 from @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/201 from @FireUnderTheMountain
+- https://github.com/Fchat-Horizon/Horizon/pull/204 from @FatCatClient
+
 ## [1.31.1] - 2024-05-25
 
 ### Added

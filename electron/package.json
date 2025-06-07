@@ -1,15 +1,15 @@
 {
   "name": "horizon-electron",
-  "version": "1.31.1",
-  "author": "The F-List Team and FChat Horizon Contributors",
-  "description": "FChat Horizon",
+  "version": "1.32.0",
+  "author": "The F-List Team and Horizon Contributors",
+  "description": "Horizon",
   "homepage": "https://horizn.moe",
   "main": "main.js",
   "license": "MIT",
   "build": {
     "appId": "net.flist.fchat",
-    "productName": "F-Chat Horizon",
-    "artifactName": "${productName}-${os}-${arch}.${ext}",
+    "productName": "Horizon",
+    "artifactName": "F-Chat.${productName}-${os}-${arch}.${ext}",
     "directories": {
       "app": "app"
     },
@@ -29,7 +29,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "F-Chat Horizon"
+      "shortcutName": "Horizon"
     },
     "mac": {
       "icon": "build/icon.icns",
@@ -73,8 +73,11 @@
     "startDebugMain": "ELECTRON_ENABLE_LOGGING=1 electron --serve --inspect-brk=9229 .",
     "startDebugRender": "ELECTRON_ENABLE_LOGGING=1 electron --remote-debugging-port=9229 .",
     "build:win": "mkdir -p dist && (node ../webpack production && electron-builder --win nsis --arm64 --x64) | tee dist/build.log",
+    "build:dev:win": "mkdir -p dist && (node ../webpack development && electron-builder --win nsis --arm64 --x64) | tee dist/build.log",
     "build:mac": "mkdir -p dist && (node ../webpack production && electron-builder --mac dmg --universal) | tee dist/build.log",
-    "build:linux": "mkdir -p dist && (node ../webpack production && electron-builder --linux deb tar.gz AppImage --arm64 --x64) | tee dist/build.log"
+    "build:dev:mac": "mkdir -p dist && (node ../webpack development && electron-builder --mac dmg --universal) | tee dist/build.log",
+    "build:linux": "mkdir -p dist && (node ../webpack production && electron-builder --linux deb tar.gz AppImage --arm64 --x64) | tee dist/build.log",
+    "build:dev:linux": "mkdir -p dist && (node ../webpack development && electron-builder --linux deb tar.gz AppImage --arm64 --x64) | tee dist/build.log"
   },
   "devDependencies": {
     "commander": "^13.1.0",

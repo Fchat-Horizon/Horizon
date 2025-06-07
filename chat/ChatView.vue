@@ -94,7 +94,10 @@
         </a>
       </div>
 
-      <a href="#" @click.prevent="showAddPmPartner()" class="btn"
+      <a
+        href="#"
+        @click.prevent="showAddPmPartner()"
+        class="btn btn-new-conversation"
         ><span class="fas fa-comment"></span> {{ l('chat.pms') }}</a
       >
 
@@ -140,20 +143,21 @@
             </div>
           </div>
         </a>
-
-        <a
-          href="#"
-          @click.prevent="showAddPmPartner()"
-          class="new-conversation"
-          :class="{
-            glowing:
-              conversations.privateConversations.length === 0 && privateCanGlow
-          }"
-          >Open Conversation</a
-        >
       </div>
-
-      <a href="#" @click.prevent="showChannels()" class="btn"
+      <a
+        href="#"
+        @click.prevent="showAddPmPartner()"
+        class="new-conversation"
+        :class="{
+          glowing:
+            conversations.privateConversations.length === 0 && privateCanGlow
+        }"
+        >Open Conversation</a
+      >
+      <a
+        href="#"
+        @click.prevent="showChannels()"
+        class="btn btn-new-conversation"
         ><span class="fas fa-list"></span> {{ l('chat.channels') }}</a
       >
 
@@ -190,18 +194,17 @@
             ></span>
           </span>
         </a>
-
-        <a
-          href="#"
-          @click.prevent="showChannels()"
-          class="join-channel"
-          :class="{
-            glowing:
-              conversations.channelConversations.length === 0 && channelCanGlow
-          }"
-          >Join Channel</a
-        >
       </div>
+      <a
+        href="#"
+        @click.prevent="showChannels()"
+        class="join-channel"
+        :class="{
+          glowing:
+            conversations.channelConversations.length === 0 && channelCanGlow
+        }"
+        >Join Channel</a
+      >
     </sidebar>
     <div style="display: flex; flex-direction: column; flex: 1; min-width: 0">
       <div id="quick-switcher" class="list-group">
@@ -766,7 +769,6 @@
       color: #02a002;
     }
 
-    margin-bottom: 10px;
     .list-group-item {
       padding: 5px;
       display: flex;
@@ -897,6 +899,10 @@
     .body a.btn {
       padding: 2px 0;
       text-align: left;
+    }
+    .btn-new-conversation {
+      display: block;
+      margin-top: 10px;
     }
     @media (min-width: breakpoint-min(md)) {
       .sidebar {

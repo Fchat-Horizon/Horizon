@@ -3,11 +3,12 @@
     action="Select EIcon"
     ref="dialog"
     :buttons="false"
+    @close="close"
     dialogClass="eicon-selector big"
   >
     <div class="eicon-selector-ui">
       <div
-        v-if="!store || refreshing"
+        v-if="!storeLoaded || refreshing"
         class="d-flex align-items-center loading"
       >
         <strong>Loading...</strong>
@@ -27,6 +28,7 @@
               v-model="search"
               ref="search"
               placeholder="Search eicons..."
+              @input="searchUpdateDebounce()"
               tabindex="0"
               @click.prevent.stop="setFocus()"
               @mousedown.prevent.stop
@@ -35,7 +37,7 @@
             <div class="btn-group search-buttons">
               <div
                 class="btn expressions"
-                @click.prevent.stop="runSearch('category:favorites')"
+                @click.prevent.stop="searchWithString('category:favorites')"
                 title="Favorites"
                 role="button"
                 tabindex="0"
@@ -45,7 +47,7 @@
 
               <div
                 class="btn expressions"
-                @click.prevent.stop="runSearch('category:expressions')"
+                @click.prevent.stop="searchWithString('category:expressions')"
                 title="Expressions"
                 role="button"
                 tabindex="0"
@@ -55,7 +57,7 @@
 
               <div
                 class="btn sexual"
-                @click.prevent.stop="runSearch('category:sexual')"
+                @click.prevent.stop="searchWithString('category:sexual')"
                 title="Sexual"
                 role="button"
                 tabindex="0"
@@ -65,7 +67,7 @@
 
               <div
                 class="btn bubbles"
-                @click.prevent.stop="runSearch('category:bubbles')"
+                @click.prevent.stop="searchWithString('category:bubbles')"
                 title="Speech bubbles"
                 role="button"
                 tabindex="0"
@@ -75,7 +77,7 @@
 
               <div
                 class="btn actions"
-                @click.prevent.stop="runSearch('category:symbols')"
+                @click.prevent.stop="searchWithString('category:symbols')"
                 title="Symbols"
                 role="button"
                 tabindex="0"
@@ -85,7 +87,7 @@
 
               <div
                 class="btn memes"
-                @click.prevent.stop="runSearch('category:memes')"
+                @click.prevent.stop="searchWithString('category:memes')"
                 title="Memes"
                 role="button"
                 tabindex="0"
@@ -95,7 +97,7 @@
 
               <div
                 class="btn random"
-                @click.prevent.stop="runSearch('category:random')"
+                @click.prevent.stop="searchWithString('category:random')"
                 title="Random"
                 role="button"
                 tabindex="0"
@@ -167,14 +169,27 @@
 </template>
 
 <script lang="ts">
-  import _ from 'lodash';
-  import { Component, Hook, Prop, Watch } from '@f-list/vue-ts';
+  import { Component, Hook, Prop } from '@f-list/vue-ts';
   // import Vue from 'vue';
-  import log from 'electron-log'; //tslint:disable-line:match-default-export-name
   import { EIconStore } from '../learn/eicon/store';
   import core from '../chat/core';
   import modal from '../components/Modal.vue';
   import CustomDialog from '../components/custom_dialog';
+
+  function debounce<T>(
+    func: (this: T, ...args: any) => void,
+    wait: number = 330
+  ): () => void {
+    let timer: ReturnType<typeof setTimeout>;
+    return function (this: T, ...args: any) {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        func.apply(this, args);
+      }, wait);
+    };
+  }
+
+  let store: EIconStore | undefined;
 
   @Component({
     components: { modal }
@@ -183,56 +198,45 @@
     @Prop
     readonly onSelect?: (eicon: string, shift: boolean) => void;
 
-    store: EIconStore | undefined;
+    storeLoaded: boolean = false;
+
     results: string[] = [];
 
     search: string = '';
 
     refreshing = false;
 
-    searchUpdateDebounce = _.debounce(() => this.runSearch(), 350, {
-      maxWait: 2000
-    });
+    searchUpdateDebounce = debounce(() => this.runSearch(), 350);
 
     @Hook('mounted')
     async mounted(): Promise<void> {
-      try {
-        this.store = await EIconStore.getSharedStore();
-        this.runSearch('');
-      } catch (err) {
-        // don't break the client in case service is down
-        log.error('eiconSelector.load.error', { err });
-      }
+      store = await EIconStore.getSharedStore();
+      this.storeLoaded = true;
+
+      this.searchWithString('category:favorites');
     }
 
-    @Watch('search')
-    searchUpdate() {
-      this.searchUpdateDebounce();
+    searchWithString(s: string) {
+      this.search = s;
+      this.runSearch();
     }
 
-    runSearch(search?: string) {
-      if (search) {
-        this.search = search;
-      }
-
+    runSearch() {
       const s = this.search.toLowerCase().trim();
 
-      if (s.substring(0, 9) === 'category:') {
+      if (s.startsWith('category:')) {
         const category = s.substring(9).trim();
 
         if (category === 'random') {
-          this.results = _.map(this.store?.random(250), e => e.eicon);
+          this.results = store?.nextPage() || [];
         } else {
           this.results = this.getCategoryResults(category);
         }
       } else {
         if (s.length === 0) {
-          this.results = _.map(this.store?.random(250), e => e.eicon);
+          this.results = store?.nextPage() || [];
         } else {
-          this.results = _.map(
-            _.take(this.store?.search(s), 250),
-            e => e.eicon
-          );
+          this.results = store?.search(s).slice(0, 301) || [];
         }
       }
     }
@@ -574,7 +578,7 @@
           ];
 
         case 'favorites':
-          return _.keys(core.state.favoriteEIcons);
+          return Object.keys(core.state.favoriteEIcons);
       }
 
       return [];
@@ -591,8 +595,8 @@
     async refreshIcons(): Promise<void> {
       this.refreshing = true;
 
-      await this.store?.update();
-      await this.runSearch();
+      await store?.checkForUpdates();
+      this.runSearch();
 
       this.refreshing = false;
     }
@@ -617,6 +621,10 @@
 
       this.$forceUpdate();
     }
+
+    close(): void {
+      store?.shuffle();
+    }
   }
 </script>
 
@@ -632,9 +640,6 @@
     }
 
     .eicon-selector-ui {
-      .loading {
-      }
-
       .search-bar {
         display: flex;
 
@@ -654,9 +659,6 @@
           .expressions {
             border-top-left-radius: 0;
             border-top-right-radius: 0;
-          }
-
-          .refresh {
           }
         }
       }

@@ -466,9 +466,14 @@
     }
 
     resize(): void {
+      const styles = getComputedStyle(this.element);
+      const paddingLeft = parseFloat(styles.paddingLeft) || 0;
+      const paddingRight = parseFloat(styles.paddingRight) || 0;
+      const contentWidth =
+        this.element.clientWidth - paddingLeft - paddingRight;
       this.sizer.style.fontSize = this.element.style.fontSize;
       this.sizer.style.lineHeight = this.element.style.lineHeight;
-      this.sizer.style.width = `${this.element.offsetWidth}px`;
+      this.sizer.style.width = `${contentWidth}px`;
       this.sizer.value = this.element.value;
       this.element.style.height = `${Math.max(Math.min(this.sizer.scrollHeight, this.maxHeight), this.minHeight)}px`;
       this.sizer.style.width = '0';

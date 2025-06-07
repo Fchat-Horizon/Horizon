@@ -454,11 +454,14 @@ export class CacheManager {
         async (m: Message) => {
           const chatMessage: ChatMessage = m as unknown as ChatMessage;
 
-          if (chatMessage.score) {
+          if (
+            chatMessage.score ||
+            chatMessage.sender.name === core.characters.ownCharacter.name
+          ) {
             return;
           }
 
-          const p = await this.resolvePScore(
+          const p = await this.resolveProfileScore(
             false,
             chatMessage.sender,
             conversation as ChannelConversation,
@@ -478,7 +481,7 @@ export class CacheManager {
     }
   }
 
-  async resolvePScore(
+  async resolveProfileScore(
     skipStore: boolean,
     char: Character.Character,
     conv: ChannelConversation,
@@ -538,7 +541,8 @@ export class CacheManager {
           if (
             m.type === Message.Type.Ad &&
             m.sender &&
-            m.sender.name === characterName
+            m.sender.name === characterName &&
+            m.sender.name !== core.characters.ownCharacter.name
           ) {
             // console.log('Update score', score, ch.name, m.sender.name, m.text, m.id);
 
