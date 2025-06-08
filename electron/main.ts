@@ -34,10 +34,7 @@
 // // @ts-ignore
 // const dl = new DebugLogger('main');
 
-import { createAboutWindow } from './about';
-
 import * as electron from 'electron';
-import * as remoteMain from '@electron/remote/main';
 
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 import * as fs from 'fs';
@@ -45,44 +42,23 @@ import * as path from 'path';
 // import * as url from 'url';
 import l from '../chat/localize';
 import { defaultHost, GeneralSettings } from './common';
-import {
-  getSafeLanguages,
-  knownLanguageNames,
-  updateSupportedLanguages
-} from './language';
-import * as windowState from './window_state';
+import { getSafeLanguages, knownLanguageNames } from './language';
 // import BrowserWindow = electron.BrowserWindow;
 import MenuItem = electron.MenuItem;
 import MenuItemConstructorOptions = electron.MenuItemConstructorOptions;
 import * as _ from 'lodash';
-import DownloadItem = electron.DownloadItem;
 import { AdCoordinatorHost } from '../chat/ads/ad-coordinator-host';
 import { IpcMainEvent } from 'electron';
-import { BlockerIntegration } from './blocker/blocker';
 import Axios from 'axios';
+import * as browserWindows from './browser_windows';
+import * as remoteMain from '@electron/remote/main';
 
 // Module to control application life.
 const app = electron.app;
 
-// tslint:disable-next-line:no-require-imports
-const pngIcon = path.join(
-  __dirname,
-  <string>require('./build/icon.png').default
-);
-
-// tslint:disable-next-line:no-require-imports
-const winIcon = path.join(
-  __dirname,
-  <string>require('./build/icon.ico').default
-);
-
 remoteMain.initialize();
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-const windows: electron.BrowserWindow[] = [];
 const characters: string[] = [];
-let tabCount = 0;
 
 const baseDir = app.getPath('userData');
 fs.mkdirSync(baseDir, { recursive: true });
@@ -129,12 +105,7 @@ export function updateSpellCheckerLanguages(langs: string[]): void {
 
   // console.log('Language support:', langs);
   electron.session.defaultSession.setSpellCheckerLanguages(langs);
-
-  for (const w of windows) {
-    // console.log('LANG SEND');
-    w.webContents.session.setSpellCheckerLanguages(langs);
-    w.webContents.send('update-dictionaries', langs);
-  }
+  browserWindows.setSpellCheckerLanguages(langs);
 }
 
 async function toggleDictionary(lang: string): Promise<void> {
@@ -161,6 +132,7 @@ async function toggleDictionary(lang: string): Promise<void> {
 }
 
 function setGeneralSettings(value: GeneralSettings): void {
+  log.debug('settings.save', value);
   fs.writeFileSync(path.join(settingsDir, 'settings'), JSON.stringify(value));
   for (const w of electron.webContents.getAllWebContents())
     w.send('settings', settings);
@@ -201,6 +173,9 @@ async function checkForGitRelease(
   semVer: string,
   releaseUrl: string
 ): Promise<void> {
+  if (!settings.updateCheck) {
+    return;
+  }
   try {
     let releases: ReleaseInfo[] = (
       await Axios.get<ReleaseInfo[]>(`${releaseUrl}`)
@@ -233,7 +208,7 @@ async function checkForGitRelease(
               {
                 label: l('action.update'),
                 click: () => {
-                  for (const w of windows) w.webContents.send('quit');
+                  browserWindows.quitAllWindows();
                   openURLExternally(
                     'https://github.com/Fchat-Horizon/Horizon/releases'
                   );
@@ -248,14 +223,14 @@ async function checkForGitRelease(
           })
         );
       electron.Menu.setApplicationMenu(menu);
-      for (const w of windows) w.webContents.send('update-available', true);
+      browserWindows.toggleUpdateNotice(true);
       return;
     }
   } catch (e) {
     log.error(`Error checking for update: ${e}`);
   }
 }
-function openURLExternally(linkUrl: string): void {
+export function openURLExternally(linkUrl: string): void {
   // check if user set a path and whether it exists
   const pathIsValid =
     settings.browserPath !== '' && fs.existsSync(settings.browserPath);
@@ -308,133 +283,6 @@ function openURLExternally(linkUrl: string): void {
   electron.shell.openExternal(linkUrl);
 }
 
-function setUpWebContents(webContents: electron.WebContents): void {
-  remoteMain.enable(webContents);
-
-  const openLinkExternally = (e: Event, linkUrl: string) => {
-    e.preventDefault();
-    const profileMatch = linkUrl.match(
-      /^https?:\/\/(www\.)?f-list.net\/c\/([^/#]+)\/?#?/
-    );
-    if (profileMatch !== null && settings.profileViewer) {
-      webContents.send('open-profile', decodeURIComponent(profileMatch[2]));
-      return;
-    }
-
-    // otherwise, try to open externally
-    openURLExternally(linkUrl);
-  };
-
-  webContents.setVisualZoomLevelLimits(1, 5);
-
-  (webContents as any).on('will-navigate', openLinkExternally);
-
-  webContents.setWindowOpenHandler(({ url }) => {
-    openLinkExternally(new Event('link'), url);
-    return { action: 'deny' };
-  });
-}
-
-function createWindow(): electron.BrowserWindow | undefined {
-  if (tabCount >= 3) return;
-  const lastState = windowState.getSavedWindowState();
-
-  const windowProperties: electron.BrowserWindowConstructorOptions & {
-    maximized: boolean;
-  } = {
-    ...lastState,
-    center: lastState.x === undefined,
-    show: false,
-    icon: process.platform === 'win32' ? winIcon : pngIcon,
-    webPreferences: {
-      webviewTag: true,
-      nodeIntegration: true,
-      nodeIntegrationInWorker: true,
-      spellcheck: true,
-      enableRemoteModule: true,
-      contextIsolation: false,
-      partition: 'persist:fchat'
-    } as any
-  };
-
-  if (process.platform === 'darwin') {
-    windowProperties.titleBarStyle = 'hiddenInset';
-    // windowProperties.frame = true;
-  } else {
-    windowProperties.frame = false;
-  }
-
-  const window = new electron.BrowserWindow(windowProperties);
-
-  remoteMain.enable(window.webContents);
-
-  windows.push(window);
-
-  // window.setIcon(process.platform === 'win32' ? winIcon : pngIcon);
-
-  window.webContents.on('will-attach-webview', () => {
-    const all = electron.webContents.getAllWebContents();
-    all.forEach(item => {
-      remoteMain.enable(item);
-    });
-  });
-
-  updateSupportedLanguages(
-    electron.session.defaultSession.availableSpellCheckerLanguages
-  );
-
-  const safeLanguages = getSafeLanguages(settings.spellcheckLang);
-
-  // console.log('CREATEWINDOW', safeLanguages);
-  electron.session.defaultSession.setSpellCheckerLanguages(safeLanguages);
-  window.webContents.session.setSpellCheckerLanguages(safeLanguages);
-
-  // Set up ad blocker
-  BlockerIntegration.factory(baseDir);
-
-  // This prevents automatic download prompts on certain webview URLs without
-  // stopping conversation logs from being downloaded
-  electron.session.defaultSession.on(
-    'will-download',
-    (
-      e: { preventDefault: () => void; readonly defaultPrevented: boolean },
-      item: DownloadItem
-    ) => {
-      if (!item.getURL().match(/^blob:file:/)) {
-        log.info('download.prevent', { item, event: e });
-        e.preventDefault();
-      }
-    }
-  );
-
-  // tslint:disable-next-line:no-floating-promises
-  window.loadFile(path.join(__dirname, 'window.html'), {
-    query: {
-      settings: JSON.stringify(settings),
-      import: shouldImportSettings ? 'true' : ''
-    }
-  });
-
-  // window.loadURL(url.format({ //tslint:disable-line:no-floating-promises
-  //     pathname: path.join(__dirname, 'window.html'),
-  //     protocol: 'file:',
-  //     slashes: true,
-  //     query: {settings: JSON.stringify(settings), import: shouldImportSettings ? 'true' : []}
-  // }));
-
-  setUpWebContents(window.webContents);
-
-  // Save window state when it is being closed.
-  window.on('close', () => windowState.setSavedWindowState(window));
-  window.on('closed', () => windows.splice(windows.indexOf(window), 1));
-  window.once('ready-to-show', () => {
-    window.show();
-    if (lastState.maximized) window.maximize();
-  });
-
-  return window;
-}
-
 function showPatchNotes(): void {
   //tslint:disable-next-line: no-floating-promises
   openURLExternally(
@@ -451,51 +299,6 @@ function showCurrentPatchNotes(): void {
   );
 }
 
-function openBrowserSettings(): electron.BrowserWindow | undefined {
-  let desiredHeight = 520;
-  if (process.platform === 'darwin') {
-    desiredHeight = 750;
-  }
-
-  const windowProperties: electron.BrowserWindowConstructorOptions = {
-    center: true,
-    show: false,
-    icon: process.platform === 'win32' ? winIcon : pngIcon,
-    frame: false,
-    width: 650,
-    height: desiredHeight,
-    minWidth: 650,
-    minHeight: desiredHeight,
-    maxWidth: 650,
-    maxHeight: desiredHeight,
-    maximizable: false,
-    webPreferences: {
-      webviewTag: true,
-      nodeIntegration: true,
-      nodeIntegrationInWorker: true,
-      spellcheck: true,
-      enableRemoteModule: true,
-      contextIsolation: false,
-      partition: 'persist:fchat'
-    } as any
-  };
-
-  const browserWindow = new electron.BrowserWindow(windowProperties);
-  remoteMain.enable(browserWindow.webContents);
-  browserWindow.loadFile(path.join(__dirname, 'browser_option.html'), {
-    query: {
-      settings: JSON.stringify(settings),
-      import: shouldImportSettings ? 'true' : ''
-    }
-  });
-
-  browserWindow.once('ready-to-show', () => {
-    browserWindow.show();
-  });
-
-  return browserWindow;
-}
-
 let zoomLevel = 0;
 
 function onReady(): void {
@@ -510,10 +313,15 @@ function onReady(): void {
   log.info('Starting application.');
 
   app.setAppUserModelId('net.flist.fchat');
-  app.on('open-file', createWindow);
+  app.on('open-file', () => {
+    browserWindows.createMainWindow(settings, shouldImportSettings, baseDir);
+  });
 
-  if (settings.version !== app.getVersion()) {
-    showPatchNotes();
+  if (
+    settings.version !== app.getVersion() &&
+    process.env.NODE_ENV !== 'development'
+  ) {
+    showCurrentPatchNotes();
     if (settings.host === 'wss://chat.f-list.net:9799')
       settings.host = defaultHost;
     settings.version = app.getVersion();
@@ -553,7 +361,7 @@ function onReady(): void {
 
           for (const win of electron.webContents.getAllWebContents())
             win.send('update-zoom', 0);
-          for (const win of windows) win.webContents.send('update-zoom', 0);
+          browserWindows.updateZoomLevel(0);
         },
         accelerator: 'CmdOrCtrl+0'
       },
@@ -570,8 +378,7 @@ function onReady(): void {
 
           for (const win of electron.webContents.getAllWebContents())
             win.send('update-zoom', zoomLevel);
-          for (const win of windows)
-            win.webContents.send('update-zoom', zoomLevel);
+          browserWindows.updateZoomLevel(zoomLevel);
         },
         accelerator: 'CmdOrCtrl+='
       },
@@ -589,8 +396,7 @@ function onReady(): void {
 
           for (const win of electron.webContents.getAllWebContents())
             win.send('update-zoom', zoomLevel);
-          for (const win of windows)
-            win.webContents.send('update-zoom', zoomLevel);
+          browserWindows.updateZoomLevel(zoomLevel);
         },
         accelerator: 'CmdOrCtrl+-'
       },
@@ -631,21 +437,27 @@ function onReady(): void {
         submenu: [
           {
             label: l('action.about'),
-            click: createAboutWindow
+            click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
+              browserWindows.createAboutWindow(w);
+            }
           },
           { type: 'separator' },
           {
             label: l('action.newWindow'),
             click: () => {
-              if (hasCompletedUpgrades) createWindow();
+              if (hasCompletedUpgrades)
+                browserWindows.createMainWindow(
+                  settings,
+                  shouldImportSettings,
+                  baseDir
+                );
             },
             accelerator: 'CmdOrCtrl+n'
           },
           {
             label: l('action.newTab'),
             click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
-              if (hasCompletedUpgrades && tabCount < 3)
-                w.webContents.send('open-tab');
+              if (hasCompletedUpgrades) browserWindows.openTab(w);
             },
             accelerator: 'CmdOrCtrl+t'
           },
@@ -672,7 +484,7 @@ function onReady(): void {
                   cancelId: 1
                 });
                 if (button === 0) {
-                  for (const w of windows) w.webContents.send('quit');
+                  browserWindows.quitAllWindows();
                   settings.logDirectory = dir[0];
                   setGeneralSettings(settings);
                   app.quit();
@@ -717,7 +529,15 @@ function onReady(): void {
               setGeneralSettings(settings);
             }
           },
-
+          {
+            label: l('settings.updateCheck'),
+            type: 'checkbox',
+            checked: settings.updateCheck,
+            click: async (item: electron.MenuItem) => {
+              settings.updateCheck = item.checked;
+              setGeneralSettings(settings);
+            }
+          },
           {
             label: l('settings.beta'),
             type: 'checkbox',
@@ -766,8 +586,12 @@ function onReady(): void {
               },
               {
                 label: l('settings.browserOption'),
-                click: () => {
-                  openBrowserSettings();
+                click: (_m, window: electron.BrowserWindow) => {
+                  browserWindows.createBrowserSettings(
+                    settings,
+                    shouldImportSettings,
+                    window
+                  );
                 }
               }
             ]
@@ -793,7 +617,7 @@ function onReady(): void {
                 cancelId: 1
               });
               if (button === 0) {
-                for (const w of windows) w.webContents.send('quit');
+                browserWindows.quitAllWindows();
                 app.quit();
               }
             }
@@ -846,7 +670,12 @@ function onReady(): void {
               )
           },
           {
-            label: l('version', app.getVersion()),
+            label: l(
+              process.env.NODE_ENV !== 'development'
+                ? 'version'
+                : 'developmentVersion',
+              process.env.APP_VERSION || app.getVersion()
+            ),
             click: showCurrentPatchNotes
           }
         ]
@@ -858,18 +687,11 @@ function onReady(): void {
     const webContents = electron.webContents.fromId(id);
 
     if (webContents) {
-      setUpWebContents(webContents);
-      ++tabCount;
-      if (tabCount === 5) {
-        for (const w of windows) {
-          w.webContents.send('allow-new-tabs', false);
-        }
-      }
+      browserWindows.tabAddHandler(webContents, settings);
     }
   });
   electron.ipcMain.on('tab-closed', () => {
-    --tabCount;
-    for (const w of windows) w.webContents.send('allow-new-tabs', true);
+    browserWindows.tabClosedHandler();
   });
   electron.ipcMain.on(
     'save-login',
@@ -894,8 +716,7 @@ function onReady(): void {
       // if(settings.customDictionary.indexOf(word) !== -1) return;
       // settings.customDictionary.push(word);
       // setGeneralSettings(settings);
-      for (const w of windows)
-        w.webContents.session.addWordToSpellCheckerDictionary(word);
+      browserWindows.addWordToSpellCheckerDictionary(word);
     }
   );
   electron.ipcMain.on(
@@ -993,7 +814,7 @@ function onReady(): void {
     openURLExternally(_url);
   });
 
-  createWindow();
+  browserWindows.createMainWindow(settings, shouldImportSettings, baseDir);
 }
 
 // Twitter fix
@@ -1006,5 +827,7 @@ if (
 )
   app.quit();
 else app.on('ready', onReady);
-app.on('second-instance', createWindow);
+app.on('second-instance', () => {
+  browserWindows.createMainWindow(settings, shouldImportSettings, baseDir);
+});
 app.on('window-all-closed', () => app.quit());

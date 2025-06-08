@@ -1,12 +1,8 @@
 import Axios from 'axios';
 import _ from 'lodash';
 
-export interface EIconRecord {
+export interface EIconRecordUpdate {
   eicon: string;
-  timestamp: number;
-}
-
-export interface EIconRecordUpdate extends EIconRecord {
   action: '+' | '-';
 }
 
@@ -17,30 +13,20 @@ export class EIconUpdater {
   static readonly DATA_UPDATE_URL =
     'https://xariah.net/eicons/Home/EiconsDataDeltaSince';
 
-  async fetchAll(): Promise<{ records: EIconRecord[]; asOfTimestamp: number }> {
+  async fetchAll(): Promise<{ eicons: string[]; asOfTimestamp: number }> {
     const result = await Axios.get(EIconUpdater.FULL_DATA_URL);
     const lines = _.split(result.data, '\n');
 
-    const records = _.map(
-      _.filter(
-        lines,
-        line => line.trim().substr(0, 1) !== '#' && line.trim() !== ''
-      ),
-      line => {
-        const [eicon, timestamp] = _.split(line, '\t', 2);
-        return {
-          eicon: eicon.toLowerCase(),
-          timestamp: parseInt(timestamp, 10)
-        };
-      }
-    );
+    const eicons = lines
+      .filter(line => line.trim() !== '' && !line.trim().startsWith('#'))
+      .map(line => line.split('\t', 2)[0].toLowerCase());
 
     const asOfLine = _.first(
       _.filter(lines, (line: string) => line.substring(0, 9) === '# As Of: ')
     );
     const asOfTimestamp = asOfLine ? parseInt(asOfLine.substring(9), 10) : 0;
 
-    return { records, asOfTimestamp };
+    return { eicons, asOfTimestamp };
   }
 
   async fetchUpdates(
@@ -51,20 +37,12 @@ export class EIconUpdater {
     );
     const lines = _.split(result.data, '\n');
 
-    const recordUpdates = _.map(
-      _.filter(
-        lines,
-        line => line.trim().substr(0, 1) !== '#' && line.trim() !== ''
-      ),
-      line => {
-        const [action, eicon, timestamp] = _.split(line, '\t', 3);
-        return {
-          action: action as '+' | '-',
-          eicon: eicon.toLowerCase(),
-          timestamp: parseInt(timestamp, 10)
-        };
-      }
-    );
+    const recordUpdates = lines
+      .filter(line => line.trim() !== '' && !line.trim().startsWith('#'))
+      .map(line => {
+        const [action, eicon] = line.split('\t', 3);
+        return { action: action as '+' | '-', eicon: eicon.toLowerCase() };
+      });
 
     const asOfLine = _.first(
       _.filter(lines, (line: string) => line.substring(0, 9) === '# As Of: ')

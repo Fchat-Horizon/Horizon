@@ -54,6 +54,7 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     env:
       PR_VERSION: ${{ needs.set-version.outputs.version }}
+      APP_VERSION: PR_${{ needs.set-version.outputs.version }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -94,21 +95,21 @@ jobs:
         run: |
           # Execute Linux build script
           chmod +x electron/release-scripts/linux.sh
-          electron/release-scripts/linux.sh "$PR_VERSION" "$GITHUB_WORKSPACE/release_artifacts/linux/$PR_VERSION"
+          electron/release-scripts/linux-dev.sh "$PR_VERSION" "$GITHUB_WORKSPACE/release_artifacts/linux/$PR_VERSION"
 
       - name: Run Build Script (macOS)
         if: matrix.os == 'macos-latest'
         run: |
           # Execute macOS build script
           chmod +x electron/release-scripts/macos.sh
-          electron/release-scripts/macos.sh "$PR_VERSION" "$GITHUB_WORKSPACE/release_artifacts/macos/$PR_VERSION"
+          electron/release-scripts/macos-dev.sh "$PR_VERSION" "$GITHUB_WORKSPACE/release_artifacts/macos/$PR_VERSION"
 
       - name: Run Build Script (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
           # Execute Windows build script
-          .\electron\release-scripts\windows.ps1 -ReleaseVersion "$env:PR_VERSION" -ReleasePath "$env:GITHUB_WORKSPACE\release_artifacts\windows\$env:PR_VERSION"
+          .\electron\release-scripts\windows-dev.ps1 -ReleaseVersion "$env:PR_VERSION" -ReleasePath "$env:GITHUB_WORKSPACE\release_artifacts\windows\$env:PR_VERSION"
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4

@@ -10,7 +10,7 @@
       class="border-bottom"
       id="window-tabs"
     >
-      <h4 style="padding: 2px 0">F-Chat</h4>
+      <h4 style="padding: 2px 0">{{ l('title') }}</h4>
       <div
         class="btn"
         :class="'btn-' + (hasUpdate ? 'warning' : 'light')"
@@ -192,7 +192,13 @@
   //tslint:disable-next-line:no-require-imports no-unsafe-any
   const trayIcon = path.join(
     __dirname,
-    <string>require('./build/tray.png').default
+    <string>(
+      require(
+        process.platform !== 'darwin'
+          ? './build/tray.png'
+          : './build/trayTemplate.png'
+      ).default
+    )
   );
   //path.join(__dirname, <string>require('./build/tray.png').default);
 
@@ -374,9 +380,10 @@
       document.addEventListener('click', () =>
         this.activeTab!.view.webContents.focus()
       );
-      window.addEventListener('focus', () =>
-        this.activeTab!.view.webContents.focus()
-      );
+      window.addEventListener('focus', () => {
+        if (!browserWindow.isMinimized())
+          this.activeTab!.view.webContents.focus();
+      });
 
       log.debug('init.window.listeners');
 
