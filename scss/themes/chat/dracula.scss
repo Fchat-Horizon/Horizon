@@ -89,3 +89,13 @@ $genders: (
     --#{$varName}: #{$value};
   }
 }
+
+.user-bookmark,
+.message-event .user-bookmark {
+  color: $dracula-green;
+}
+
+.character-friend,
+.friend-item {
+  color: $dracula-cyan !important;
+}
