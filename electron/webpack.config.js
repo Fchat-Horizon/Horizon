@@ -1,9 +1,8 @@
 const _ = require('lodash');
 const path = require('path');
 const fs = require('fs');
-const ForkTsCheckerWebpackPlugin = require('@f-list/fork-ts-checker-webpack-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const { VueLoaderPlugin } = require('vue-loader');
 const vueTransformer = require('@f-list/vue-ts/transform').default;
 const CopyPlugin = require('copy-webpack-plugin');
 const packageJson = require('./package.json');
@@ -50,18 +49,15 @@ const mainConfig = {
       __filename: false
     },
     plugins: [
-      new ForkTsCheckerWebpackPlugin({
-        async: false,
-        tslint: path.join(__dirname, '../tslint.json'),
-        tsconfig: './tsconfig-main.json',
-        ignoreLintWarnings: true
-      }),
       new DefinePlugin({
         'process.env.APP_VERSION': JSON.stringify(APP_VERSION)
       })
     ],
     resolve: {
-      extensions: ['.ts', '.js']
+      extensions: ['.ts', '.js'],
+      alias: {
+        vue: '@vue/compat'
+      }
     },
     optimization: {
       minimize: false,
@@ -158,13 +154,6 @@ const mainConfig = {
       __filename: false
     },
     plugins: [
-      new ForkTsCheckerWebpackPlugin({
-        async: false,
-        tslint: path.join(__dirname, '../tslint.json'),
-        tsconfig: './tsconfig-renderer.json',
-        vue: true,
-        ignoreLintWarnings: true
-      }),
       new DefinePlugin({
         'process.env.APP_VERSION': JSON.stringify(APP_VERSION)
       }),
@@ -244,8 +233,8 @@ const mainConfig = {
       })
     ],
     resolve: {
-      extensions: ['.ts', '.js', '.vue', '.css']
-      // alias: {qs: 'querystring'}
+      extensions: ['.ts', '.js', '.vue', '.css'],
+      alias: { vue: '@vue/compat' }
     },
     optimization: {
       splitChunks: { chunks: 'all', minChunks: 2, name: 'common' },
@@ -299,13 +288,6 @@ const storeWorkerEndpointConfig = _.assign(_.cloneDeep(mainConfig), {
   },
 
   plugins: [
-    new ForkTsCheckerWebpackPlugin({
-      async: false,
-      tslint: path.join(__dirname, '../tslint.json'),
-      tsconfig: './tsconfig-renderer.json',
-      vue: true,
-      ignoreLintWarnings: true
-    }),
     new DefinePlugin({
       'process.env.APP_VERSION': JSON.stringify(APP_VERSION)
     })

@@ -79,6 +79,26 @@ const config = {
 config.plugins.push(new nodepolyfillplugin());
 
 module.exports = function (mode) {
+  resolve: {
+    alias: {
+      vue: '@vue/compat'
+    }
+  },
+  module: {
+    rules: [
+      {
+        test: /\.vue$/,
+        loader: 'vue-loader',
+        options: {
+          compilerOptions: {
+            compatConfig: {
+              MODE: 2
+            }
+          }
+        }
+      }
+    ]
+  }
   if (mode === "production") {
     process.env.NODE_ENV = "production";
     config.devtool = "source-map";

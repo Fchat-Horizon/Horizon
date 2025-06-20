@@ -1,7 +1,7 @@
 <template>
   <div
     style="display: flex; flex-direction: column; height: 100%"
-    :class="getThemeClass()"
+    class="platform-linux"
     @auxclick.prevent
   >
     <div v-html="styling"></div>
@@ -10,7 +10,7 @@
       class="border-bottom"
       id="window-tabs"
     >
-      <h4 style="padding: 2px 0">{{ l('title') }}</h4>
+      <h4 style="padding: 2px 0">no title</h4>
       <div
         class="btn"
         :class="'btn-' + (hasUpdate ? 'warning' : 'light')"

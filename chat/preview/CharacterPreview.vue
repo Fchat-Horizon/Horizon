@@ -83,8 +83,8 @@
         >
           <h4>Latest Messages</h4>
 
-          <template v-for="message in conversation">
-            <message-view :message="message" :key="message.id"> </message-view>
+          <template v-for="message in conversation" :key="message.id">
+            <message-view :message="message"> </message-view>
           </template>
         </div>
 
