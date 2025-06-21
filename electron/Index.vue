@@ -43,7 +43,7 @@
 
           <a
             href="#"
-            @click.prevent="showLogs()"
+            @click.prevent="showLogs"
             class="btn"
             style="flex: 1; text-align: right"
           >
@@ -63,7 +63,7 @@
               class="form-control"
               id="account"
               v-model="settings.account"
-              @keypress.enter="login()"
+              @keypress.enter="login"
               :disabled="loggingIn"
             />
           </div>
@@ -76,7 +76,7 @@
               type="password"
               id="password"
               v-model="password"
-              @keypress.enter="login()"
+              @keypress.enter="login"
               :disabled="loggingIn"
             />
           </div>
@@ -89,11 +89,11 @@
                 class="form-control"
                 id="host"
                 v-model="settings.host"
-                @keypress.enter="login()"
+                @keypress.enter="login"
                 :disabled="loggingIn"
               />
               <div class="input-group-append">
-                <button class="btn btn-outline-secondary" @click="resetHost()">
+                <button class="btn btn-outline-secondary" @click="resetHost">
                   <span class="fas fa-undo-alt"></span>
                 </button>
               </div>
@@ -107,10 +107,10 @@
                 class="form-control"
                 id="proxy"
                 v-model="settings.proxy"
-                @keypress.enter="login()"
+                @keypress.enter="login"
               />
               <div class="input-group-append">
-                <button class="btn btn-outline-secondary" @click="resetProxy()">
+                <button class="btn btn-outline-secondary" @click="resetProxy">
                   <span class="fas fa-undo-alt"></span>
                 </button>
               </div>
@@ -166,7 +166,7 @@
         :image-preview="true"
         ref="characterPage"
       ></character-page>
-      <template slot="title">
+      <template #title>
         {{ profileName }}
         <a class="btn" @click="openProfileInBrowser"
           ><i class="fa fa-external-link-alt"
@@ -178,7 +178,7 @@
 
         <i
           class="fas fa-circle-notch fa-spin profileRefreshSpinner"
-          v-show="isRefreshingProfile()"
+          v-show="isRefreshingProfile"
         ></i>
 
         <bbcode
@@ -191,14 +191,14 @@
           <button
             class="btn"
             @click="prevProfile"
-            :disabled="!prevProfileAvailable()"
+            :disabled="!prevProfileAvailable"
           >
             <i class="fas fa-arrow-left"></i>
           </button>
           <button
             class="btn"
             @click="nextProfile"
-            :disabled="!nextProfileAvailable()"
+            :disabled="!nextProfileAvailable"
           >
             <i class="fas fa-arrow-right"></i>
           </button>
@@ -230,7 +230,7 @@
         :expression="wordDefinitionLookup"
         ref="wordDefinitionLookup"
       ></word-definition>
-      <template slot="title">
+      <template #title>
         {{ wordDefinitionLookup }}
         <a
           class="btn wordDefBtn dictionary"
@@ -260,66 +260,52 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Watch } from '@f-list/vue-ts';
+  import {
+    defineComponent,
+    ref,
+    reactive,
+    computed,
+    watch,
+    onMounted,
+    nextTick
+  } from 'vue';
   import Axios from 'axios';
   import * as electron from 'electron';
   import * as remote from '@electron/remote';
   import settings from 'electron-settings';
-  import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+  import log from 'electron-log';
   import * as fs from 'fs';
   import * as path from 'path';
   import * as qs from 'querystring';
-  import Raven from 'raven-js';
-  // import {promisify} from 'util';
-  import Vue from 'vue';
+  import l from '../chat/localize';
   import Chat from '../chat/Chat.vue';
   import { getKey, Settings } from '../chat/common';
-  import core /*, { init as initCore }*/ from '../chat/core';
-  import l from '../chat/localize';
+  import core from '../chat/core';
   import Logs from '../chat/Logs.vue';
   import Socket from '../chat/WebSocket';
   import Modal from '../components/Modal.vue';
   import { SimpleCharacter } from '../interfaces';
   import { Keys } from '../keys';
-  // import { BetterSqliteStore } from '../learn/store/better-sqlite3';
-  // import { Sqlite3Store } from '../learn/store/sqlite3';
   import CharacterPage from '../site/character_page/character_page.vue';
   import WordDefinition from '../learn/dictionary/WordDefinition.vue';
   import ProfileAnalysis from '../learn/recommend/ProfileAnalysis.vue';
   import { defaultHost, GeneralSettings } from './common';
-  import { fixLogs /*SettingsStore, Logs as FSLogs*/ } from './filesystem';
+  import { fixLogs as fixLogsUtil } from './filesystem';
   import * as SlimcatImporter from './importer';
   import _ from 'lodash';
   import { EventBus } from '../chat/preview/event-bus';
-
   import BBCodeTester from '../bbcode/Tester.vue';
   import { BBCodeView } from '../bbcode/view';
   import { EIconStore } from '../learn/eicon/store';
   import { SecureStore } from './secure-store';
 
-  // import ImagePreview from '../chat/preview/ImagePreview.vue';
-  // import Bluebird from 'bluebird';
-  // import Connection from '../fchat/connection';
-  // import Notifications from './notifications';
-
-  // import VueLazyload from 'vue-lazyload';
-  //
-  // Vue.use(VueLazyload, {
-  //   observer: true,
-  //
-  //   observerOptions: {
-  //     rootMargin: '0px',
-  //     threshold: 0,
-  //   }
-  // });
-
   const webContents = remote.getCurrentWebContents();
   const parent = remote.getCurrentWindow().webContents;
-
-  // Allow requests to imgur.com
   const session = remote.session;
 
-  /* tslint:disable:no-unsafe-any no-any no-unnecessary-type-assertion */
+  settings.configure({ electron: remote as any });
+  const keyStore = new SecureStore('fchat-rising-accounts', remote, settings);
+
   session!.defaultSession!.webRequest!.onBeforeSendHeaders(
     {
       urls: ['*://api.imgur.com/*', '*://i.imgur.com/*']
@@ -327,37 +313,12 @@
     (details: any, callback: any) => {
       details.requestHeaders['Origin'] = null;
       details.headers['Origin'] = null;
-
       callback({ requestHeaders: details.requestHeaders });
     }
   );
-  // log.info('init.chat.keytar.load.start');
-  //
-  /* tslint:disable: no-any no-unsafe-any */ //because this is hacky
-  //
 
-  // const keyStore = nativeRequire<
-  //   {
-  //     getPassword(service: string, account: string): Promise<string>
-  //     setPassword(service: string, account: string, password: string): Promise<void>
-  //     deletePassword(service: string, account: string): Promise<void>
-  //     findCredentials(service: string): Promise<{ account: string, password: string }>
-  //     findPassword(service: string): Promise<string>
-  //     [key: string]: (...args: any[]) => Promise<any>
-  //   }
-  // >('keytar/build/Release/keytar.node');
-
-  settings.configure({ electron: remote as any });
-  const keyStore = new SecureStore('fchat-rising-accounts', remote, settings);
-
-  // const keyStore = import('keytar');
-  //
-  // for(const key in keyStore) keyStore[key] = promisify(<(...args: any[]) => any>keyStore[key].bind(keyStore, 'fchat'));
-  //tslint:enable
-
-  // log.info('init.chat.keytar.load.done');
-
-  @Component({
+  export default defineComponent({
+    name: 'Index',
     components: {
       chat: Chat,
       modal: Modal,
@@ -367,528 +328,538 @@
       BBCodeTester: BBCodeTester,
       bbcode: BBCodeView(core.bbCodeParser),
       'profile-analysis': ProfileAnalysis
-    }
-  })
-  export default class Index extends Vue {
-    showAdvanced = false;
-    saveLogin = false;
-    loggingIn = false;
-    password = '';
-    character?: string;
-    characters?: SimpleCharacter[];
-    error = '';
-    defaultCharacter?: number;
-    l = l;
-    settings!: GeneralSettings;
-    hasCompletedUpgrades!: boolean;
-    importProgress = 0;
-    profileName = '';
-    profileStatus = '';
-    adName = '';
-    fixCharacters: ReadonlyArray<string> = [];
-    fixCharacter = '';
-    wordDefinitionLookup = '';
+    },
+    props: {
+      settings: { type: Object as () => GeneralSettings, required: true },
+      hasCompletedUpgrades: { type: Boolean, required: true }
+    },
+    setup(props) {
+      // State
+      const showAdvanced = ref(false);
+      const saveLogin = ref(false);
+      const loggingIn = ref(false);
+      const password = ref('');
+      const character = ref<string | undefined>();
+      const characters = ref<SimpleCharacter[] | undefined>();
+      const error = ref('');
+      const defaultCharacter = ref<number | undefined>();
+      const importProgress = ref(0);
+      const profileName = ref('');
+      const profileStatus = ref('');
+      const adName = ref('');
+      const fixCharacters = ref<ReadonlyArray<string>>([]);
+      const fixCharacter = ref('');
+      const wordDefinitionLookup = ref('');
+      const shouldShowSpinner = ref(false);
+      const profileNameHistory = ref<string[]>([]);
+      const profilePointer = ref(0);
 
-    shouldShowSpinner = false;
+      // Refs for modals and components
+      const chatRef = ref();
+      const linkPreview = ref();
+      const importModal = ref();
+      const profileViewer = ref();
+      const characterPage = ref();
+      const fixLogsModal = ref();
+      const wordDefinitionViewer = ref();
+      const wordDefinitionLookupRef = ref();
+      const logsDialog = ref();
 
-    profileNameHistory: string[] = [];
-    profilePointer = 0;
+      // Local settings state
+      const settingsState = ref<GeneralSettings>({ ...props.settings });
+      const hasCompletedUpgrades = ref(props.hasCompletedUpgrades);
 
-    async startAndUpgradeCache(): Promise<void> {
-      log.debug('init.chat.cache.start');
+      // Methods
+      async function startAndUpgradeCache() {
+        log.debug('init.chat.cache.start');
+        const timer = setTimeout(() => {
+          shouldShowSpinner.value = true;
+        }, 250);
 
-      const timer = setTimeout(() => {
-        this.shouldShowSpinner = true;
-      }, 250);
+        void EIconStore.getSharedStore();
 
-      void EIconStore.getSharedStore(); // intentionally background
+        log.debug('init.eicons.update.done');
+        clearTimeout(timer);
 
-      log.debug('init.eicons.update.done');
+        parent.send('rising-upgrade-complete');
+        electron.ipcRenderer.send('rising-upgrade-complete');
+        hasCompletedUpgrades.value = true;
+      }
 
-      clearTimeout(timer);
+      watch(profileName, newName => {
+        if (profileNameHistory.value[profilePointer.value] !== newName) {
+          profileNameHistory.value = _.takeRight(
+            _.filter(
+              _.take(profileNameHistory.value, profilePointer.value + 1),
+              n => n !== newName
+            ),
+            30
+          );
+          profileNameHistory.value.push(newName);
+          profilePointer.value = profileNameHistory.value.length - 1;
+        }
+      });
 
-      parent.send('rising-upgrade-complete');
-      electron.ipcRenderer.send('rising-upgrade-complete');
+      onMounted(() => {
+        log.debug('init.chat.mounted');
+        EventBus.$on('word-definition', (data: any) => {
+          wordDefinitionLookup.value = data.lookupWord;
+          if (!!data.lookupWord) {
+            wordDefinitionViewer.value?.show();
+          }
+        });
+      });
 
-      this.hasCompletedUpgrades = true;
-    }
+      // Created hook logic
+      (async () => {
+        await startAndUpgradeCache();
 
-    @Watch('profileName')
-    onProfileNameChange(newName: string): void {
-      if (this.profileNameHistory[this.profilePointer] !== newName) {
-        this.profileNameHistory = _.takeRight(
-          _.filter(
-            _.take(this.profileNameHistory, this.profilePointer + 1),
-            n => n !== newName
-          ),
-          30
+        if (settingsState.value.account.length > 0) saveLogin.value = true;
+
+        password.value =
+          (await keyStore.getPassword(
+            'f-list.net',
+            settingsState.value.account
+          )) || '';
+
+        log.debug('init.chat.keystore.get.done');
+
+        core.state.generalSettings = settingsState.value;
+        webContents.setZoomLevel(settingsState.value.zoomLevel);
+
+        electron.ipcRenderer.on(
+          'settings',
+          (_e: Electron.IpcRendererEvent, newSettings: GeneralSettings) => {
+            log.debug('settings.update.index');
+            core.state.generalSettings = settingsState.value = newSettings;
+          }
         );
 
-        this.profileNameHistory.push(newName);
+        electron.ipcRenderer.on(
+          'open-profile',
+          (_e: Electron.IpcRendererEvent, name: string) => {
+            openProfile(name);
+            nextTick(() => profileViewer.value?.show());
+          }
+        );
 
-        this.profilePointer = this.profileNameHistory.length - 1;
-      }
-    }
-
-    @Hook('mounted')
-    onMounted(): void {
-      log.debug('init.chat.mounted');
-
-      EventBus.$on('word-definition', (data: any) => {
-        this.wordDefinitionLookup = data.lookupWord;
-
-        if (!!data.lookupWord) {
-          (<Modal>this.$refs.wordDefinitionViewer).show();
-        }
-      });
-    }
-
-    @Hook('created')
-    async created(): Promise<void> {
-      await this.startAndUpgradeCache();
-
-      if (this.settings.account.length > 0) this.saveLogin = true;
-
-      this.password =
-        (await keyStore.getPassword('f-list.net', this.settings.account)) || '';
-
-      log.debug('init.chat.keystore.get.done');
-
-      Vue.set(core.state, 'generalSettings', this.settings);
-      webContents.setZoomLevel(this.settings.zoomLevel);
-
-      electron.ipcRenderer.on(
-        'settings',
-        (_e: Electron.IpcRendererEvent, settings: GeneralSettings) => {
-          log.debug('settings.update.index');
-          core.state.generalSettings = this.settings = settings;
-        }
-      );
-
-      electron.ipcRenderer.on(
-        'open-profile',
-        (_e: Electron.IpcRendererEvent, name: string) => {
-          const profileViewer = <Modal>this.$refs['profileViewer'];
-
-          this.openProfile(name);
-
-          profileViewer.show();
-        }
-      );
-
-      electron.ipcRenderer.on(
-        'reopen-profile',
-        (_e: Electron.IpcRendererEvent) => {
-          if (
-            this.profileNameHistory.length > 0 &&
-            this.profilePointer < this.profileNameHistory.length &&
-            this.profilePointer >= 0
-          ) {
-            const name = this.profileNameHistory[this.profilePointer];
-            const profileViewer = <Modal>this.$refs['profileViewer'];
-
-            if (this.profileName === name && profileViewer.isShown) {
-              profileViewer.hide();
-              return;
+        electron.ipcRenderer.on(
+          'reopen-profile',
+          (_e: Electron.IpcRendererEvent) => {
+            if (
+              profileNameHistory.value.length > 0 &&
+              profilePointer.value < profileNameHistory.value.length &&
+              profilePointer.value >= 0
+            ) {
+              const name = profileNameHistory.value[profilePointer.value];
+              if (profileName.value === name && profileViewer.value?.isShown) {
+                profileViewer.value.hide();
+                return;
+              }
+              openProfile(name);
+              nextTick(() => profileViewer.value?.show());
             }
-
-            this.openProfile(name);
-            profileViewer.show();
           }
-        }
-      );
+        );
 
-      electron.ipcRenderer.on('fix-logs', async () => {
-        this.fixCharacters = await core.settingsStore.getAvailableCharacters();
-        this.fixCharacter = this.fixCharacters[0];
-        (<Modal>this.$refs['fixLogsModal']).show();
-      });
+        electron.ipcRenderer.on('fix-logs', async () => {
+          fixCharacters.value =
+            await core.settingsStore.getAvailableCharacters();
+          fixCharacter.value = fixCharacters.value[0];
+          nextTick(() => fixLogsModal.value?.show());
+        });
 
-      electron.ipcRenderer.on('update-zoom', (_e, zoomLevel) => {
-        webContents.setZoomLevel(zoomLevel);
-        // log.info('INDEXVUE ZOOM UPDATE', zoomLevel);
-      });
+        electron.ipcRenderer.on('update-zoom', (_e, zoomLevel) => {
+          webContents.setZoomLevel(zoomLevel);
+        });
 
-      electron.ipcRenderer.on('active-tab', () => {
-        core.cache.setTabActive(true);
-      });
+        electron.ipcRenderer.on('active-tab', () => {
+          core.cache.setTabActive(true);
+        });
 
-      electron.ipcRenderer.on('inactive-tab', () => {
-        core.cache.setTabActive(false);
-      });
+        electron.ipcRenderer.on('inactive-tab', () => {
+          core.cache.setTabActive(false);
+        });
 
-      window.addEventListener('keydown', e => {
-        const key = getKey(e);
-
-        if (key === Keys.Tab && e.ctrlKey && !e.altKey) {
-          parent.send(
-            `${e.shiftKey ? 'previous' : 'switch'}-tab`,
-            this.character
-          );
-        }
-
-        if (
-          (key === Keys.PageDown || key === Keys.PageUp) &&
-          e.ctrlKey &&
-          !e.altKey &&
-          !e.shiftKey
-        ) {
-          parent.send(
-            `${key === Keys.PageUp ? 'previous' : 'switch'}-tab`,
-            this.character
-          );
-        }
-      });
-
-      log.debug('init.chat.listeners.done');
-
-      /*if (process.env.NODE_ENV !== 'production') {
-                const dt = require('@vue/devtools');
-
-                dt.connect();
-            }*/
-    }
-
-    async login(): Promise<void> {
-      if (this.loggingIn) return;
-      this.loggingIn = true;
-
-      // set proxy inside from the advanced option
-      if (!!this.settings.proxy) {
-        try {
-          // Get the current BrowserWindow's session
-          const currentWindow = remote.getCurrentWindow();
-          await currentWindow.webContents.session.setProxy({
-            proxyRules: this.settings.proxy, // Update dynamically if needed,
-            proxyBypassRules: 'localhost,127.0.0.1',
-            mode: 'fixed_servers'
-          });
-        } catch (e) {
-          this.error = l('login.error.proxy');
-          log.error('login.error.proxy', e);
-          return;
-        }
-      } else {
-        // deactivate the proxy
-        try {
-          const currentWindow = remote.getCurrentWindow();
-          await currentWindow.webContents.session.setProxy({
-            mode: 'direct'
-          });
-        } catch (_) {
-          // Ignore error
-        }
-      }
-
-      try {
-        if (!this.saveLogin) {
-          await keyStore.deletePassword('f-list.net', this.settings.account);
-        }
-
-        core.siteSession.setCredentials(this.settings.account, this.password);
-
-        const data = <
-          {
-            ticket?: string;
-            error: string;
-            characters: { [key: string]: number };
-            default_character: number;
-          }
-        >(
-          await Axios.post(
-            'https://www.f-list.net/json/getApiTicket.php',
-            qs.stringify({
-              account: this.settings.account,
-              password: this.password,
-              no_friends: true,
-              no_bookmarks: true,
-              new_character_list: true
-            })
-          )
-        ).data;
-        if (data.error !== '') {
-          this.error = data.error;
-          return;
-        }
-        if (this.saveLogin) {
-          electron.ipcRenderer.send(
-            'save-login',
-            this.settings.account,
-            this.settings.host,
-            this.settings.proxy
-          );
-          await keyStore.setPassword(
-            'f-list.net',
-            this.settings.account,
-            this.password
-          );
-        }
-        Socket.host = this.settings.host;
-
-        core.connection.onEvent('connecting', async () => {
-          if (
-            !electron.ipcRenderer.sendSync(
-              'connect',
-              core.connection.character
-            ) &&
-            process.env.NODE_ENV === 'production'
-          ) {
-            alert(l('login.alreadyLoggedIn'));
-            return core.connection.close();
-          }
-          parent.send('connect', webContents.id, core.connection.character);
-          this.character = core.connection.character;
-          if (
-            (await core.settingsStore.get('settings')) === undefined &&
-            SlimcatImporter.canImportCharacter(core.connection.character)
-          ) {
-            if (!confirm(l('importer.importGeneral')))
-              return core.settingsStore.set('settings', new Settings());
-            (<Modal>this.$refs['importModal']).show(true);
-            await SlimcatImporter.importCharacter(
-              core.connection.character,
-              progress => (this.importProgress = progress)
+        window.addEventListener('keydown', e => {
+          const key = getKey(e);
+          if (key === Keys.Tab && e.ctrlKey && !e.altKey) {
+            parent.send(
+              `${e.shiftKey ? 'previous' : 'switch'}-tab`,
+              character.value
             );
-            (<Modal>this.$refs['importModal']).hide();
+          }
+          if (
+            (key === Keys.PageDown || key === Keys.PageUp) &&
+            e.ctrlKey &&
+            !e.altKey &&
+            !e.shiftKey
+          ) {
+            parent.send(
+              `${key === Keys.PageUp ? 'previous' : 'switch'}-tab`,
+              character.value
+            );
           }
         });
-        core.connection.onEvent('connected', () => {
-          core.watch(
-            () => core.conversations.hasNew,
-            newValue => parent.send('has-new', webContents.id, newValue)
+
+        log.debug('init.chat.listeners.done');
+      })();
+
+      async function login() {
+        if (loggingIn.value) return;
+        loggingIn.value = true;
+
+        // set proxy inside from the advanced option
+        if (!!settingsState.value.proxy) {
+          try {
+            const currentWindow = remote.getCurrentWindow();
+            await currentWindow.webContents.session.setProxy({
+              proxyRules: settingsState.value.proxy,
+              proxyBypassRules: 'localhost,127.0.0.1',
+              mode: 'fixed_servers'
+            });
+          } catch (e) {
+            error.value = l('login.error.proxy');
+            log.error('login.error.proxy', e);
+            return;
+          }
+        } else {
+          try {
+            const currentWindow = remote.getCurrentWindow();
+            await currentWindow.webContents.session.setProxy({
+              mode: 'direct'
+            });
+          } catch (_) {
+            // Ignore error
+          }
+        }
+
+        try {
+          if (!saveLogin.value) {
+            await keyStore.deletePassword(
+              'f-list.net',
+              settingsState.value.account
+            );
+          }
+
+          core.siteSession.setCredentials(
+            settingsState.value.account,
+            password.value
           );
-          Raven.setUserContext({ username: core.connection.character });
-        });
-        core.connection.onEvent('closed', () => {
-          if (this.character === undefined) return;
-          electron.ipcRenderer.send('disconnect', this.character);
-          this.character = undefined;
-          parent.send('disconnect', webContents.id);
-          Raven.setUserContext();
-        });
-        core.connection.setCredentials(this.settings.account, this.password);
-        this.characters = Object.keys(data.characters)
-          .map(name => ({ name, id: data.characters[name], deleted: false }))
-          .sort((x, y) => x.name.localeCompare(y.name));
-        this.defaultCharacter = data.default_character;
-      } catch (e) {
-        this.error = l('login.error');
-        log.error('connect.error', e);
-        if (process.env.NODE_ENV !== 'production') throw e;
-      } finally {
-        this.loggingIn = false;
-      }
-    }
 
-    fixLogs(): void {
-      if (!electron.ipcRenderer.sendSync('connect', this.fixCharacter))
-        return alert(l('login.alreadyLoggedIn'));
-      try {
-        fixLogs(this.fixCharacter);
-        alert(l('fixLogs.success'));
-      } catch (e) {
-        alert(l('fixLogs.error'));
-        throw e;
-      } finally {
-        electron.ipcRenderer.send('disconnect', this.fixCharacter);
-      }
-    }
+          const data = (
+            await Axios.post(
+              'https://www.f-list.net/json/getApiTicket.php',
+              qs.stringify({
+                account: settingsState.value.account,
+                password: password.value,
+                no_friends: true,
+                no_bookmarks: true,
+                new_character_list: true
+              })
+            )
+          ).data;
+          if (data.error !== '') {
+            error.value = data.error;
+            return;
+          }
+          if (saveLogin.value) {
+            electron.ipcRenderer.send(
+              'save-login',
+              settingsState.value.account,
+              settingsState.value.host,
+              settingsState.value.proxy
+            );
+            await keyStore.setPassword(
+              'f-list.net',
+              settingsState.value.account,
+              password.value
+            );
+          }
+          Socket.host = settingsState.value.host;
 
-    resetHost(): void {
-      this.settings.host = defaultHost;
-    }
-
-    resetProxy(): void {
-      this.settings.proxy = '';
-    }
-
-    onMouseOver(e: MouseEvent): void {
-      const preview = <HTMLDivElement>this.$refs.linkPreview;
-      if ((<HTMLElement>e.target).tagName === 'A') {
-        const target = <HTMLAnchorElement>e.target;
-        if (target.hostname !== '') {
-          //tslint:disable-next-line:prefer-template
-          preview.className =
-            'link-preview ' +
-            (e.clientX < window.innerWidth / 2 &&
-            e.clientY > window.innerHeight - 150
-              ? ' right'
-              : '');
-          preview.textContent = target.href;
-          preview.style.display = 'block';
-          return;
+          core.connection.onEvent('connecting', async () => {
+            if (
+              !electron.ipcRenderer.sendSync(
+                'connect',
+                core.connection.character
+              ) &&
+              process.env.NODE_ENV === 'production'
+            ) {
+              alert(l('login.alreadyLoggedIn'));
+              return core.connection.close();
+            }
+            parent.send('connect', webContents.id, core.connection.character);
+            character.value = core.connection.character;
+            if (
+              (await core.settingsStore.get('settings')) === undefined &&
+              SlimcatImporter.canImportCharacter(core.connection.character)
+            ) {
+              if (!confirm(l('importer.importGeneral')))
+                return core.settingsStore.set('settings', new Settings());
+              importModal.value?.show(true);
+              await SlimcatImporter.importCharacter(
+                core.connection.character,
+                progress => (importProgress.value = progress)
+              );
+              importModal.value?.hide();
+            }
+          });
+          core.connection.onEvent('connected', () => {
+            core.watch(
+              () => core.conversations.hasNew,
+              newValue => parent.send('has-new', webContents.id, newValue)
+            );
+          });
+          core.connection.onEvent('closed', () => {
+            if (character.value === undefined) return;
+            electron.ipcRenderer.send('disconnect', character.value);
+            character.value = undefined;
+            parent.send('disconnect', webContents.id);
+          });
+          core.connection.setCredentials(
+            settingsState.value.account,
+            password.value
+          );
+          characters.value = Object.keys(data.characters)
+            .map(name => ({ name, id: data.characters[name], deleted: false }))
+            .sort((x, y) => x.name.localeCompare(y.name));
+          defaultCharacter.value = data.default_character;
+        } catch (e) {
+          error.value = l('login.error');
+          log.error('connect.error', e);
+          if (process.env.NODE_ENV !== 'production') throw e;
+        } finally {
+          loggingIn.value = false;
         }
       }
-      preview.textContent = '';
-      preview.style.display = 'none';
-    }
 
-    async openProfileInBrowser(): Promise<void> {
-      electron.ipcRenderer.send(
-        'open-url-externally',
-        `https://www.f-list.net/c/${this.profileName}`
-      );
-      //await remote.shell.openExternal(`https://www.f-list.net/c/${this.profileName}`);
+      function fixLogs() {
+        if (!electron.ipcRenderer.sendSync('connect', fixCharacter.value))
+          return alert(l('login.alreadyLoggedIn'));
+        try {
+          fixLogsUtil(fixCharacter.value);
+          alert(l('fixLogs.success'));
+        } catch (e) {
+          alert(l('fixLogs.error'));
+          throw e;
+        } finally {
+          electron.ipcRenderer.send('disconnect', fixCharacter.value);
+        }
+      }
 
-      // tslint:disable-next-line: no-any no-unsafe-any
-      (this.$refs.profileViewer as any).hide();
-    }
+      function resetHost() {
+        settingsState.value.host = defaultHost;
+      }
 
-    openConversation(): void {
-      //this.
-      // this.profileName
-      const character = core.characters.get(this.profileName);
-      const conversation = core.conversations.getPrivate(character);
+      function resetProxy() {
+        settingsState.value.proxy = '';
+      }
 
-      conversation.show();
-
-      // tslint:disable-next-line: no-any no-unsafe-any
-      (this.$refs.profileViewer as any).hide();
-    }
-
-    isRefreshingProfile(): boolean {
-      const cp = this.$refs.characterPage as CharacterPage;
-
-      return cp && cp.refreshing;
-    }
-
-    reloadCharacter(): void {
-      // tslint:disable-next-line: no-any no-unsafe-any
-      (this.$refs.characterPage as any).reload();
-    }
-
-    getThemeClass(): Record<string, boolean> {
-      // console.log('getThemeClassIndex', core.state.generalSettings?.risingDisableWindowsHighContrast);
-
-      try {
-        // Hack!
-        if (process.platform === 'win32') {
-          if (core.state.generalSettings?.risingDisableWindowsHighContrast) {
-            document
-              .querySelector('html')
-              ?.classList.add('disableWindowsHighContrast');
-          } else {
-            document
-              .querySelector('html')
-              ?.classList.remove('disableWindowsHighContrast');
+      function onMouseOver(e: MouseEvent) {
+        const preview = linkPreview.value as HTMLDivElement;
+        if ((e.target as HTMLElement).tagName === 'A') {
+          const target = e.target as HTMLAnchorElement;
+          if (target.hostname !== '') {
+            preview.className =
+              'link-preview ' +
+              (e.clientX < window.innerWidth / 2 &&
+              e.clientY > window.innerHeight - 150
+                ? ' right'
+                : '');
+            preview.textContent = target.href;
+            preview.style.display = 'block';
+            return;
           }
         }
-
-        return {
-          [`theme-${core.state.settings.risingCharacterTheme || this.settings.theme}`]:
-            true,
-          colorblindMode: core.state.settings.risingColorblindMode,
-          disableWindowsHighContrast:
-            core.state.generalSettings?.risingDisableWindowsHighContrast ||
-            false
-        };
-      } catch (err) {
-        return { [`theme-${this.settings.theme}`]: true };
-      }
-    }
-
-    nextProfile(): void {
-      if (!this.nextProfileAvailable()) {
-        return;
+        preview.textContent = '';
+        preview.style.display = 'none';
       }
 
-      this.profilePointer++;
-
-      this.openProfile(this.profileNameHistory[this.profilePointer]);
-    }
-
-    nextProfileAvailable(): boolean {
-      return this.profilePointer < this.profileNameHistory.length - 1;
-    }
-
-    prevProfile(): void {
-      if (!this.prevProfileAvailable()) {
-        return;
+      async function openProfileInBrowser() {
+        electron.ipcRenderer.send(
+          'open-url-externally',
+          `https://www.f-list.net/c/${profileName.value}`
+        );
+        profileViewer.value?.hide();
       }
 
-      this.profilePointer--;
+      function openConversation() {
+        const characterObj = core.characters.get(profileName.value);
+        const conversation = core.conversations.getPrivate(characterObj);
+        conversation.show();
+        profileViewer.value?.hide();
+      }
 
-      this.openProfile(this.profileNameHistory[this.profilePointer]);
-    }
+      const isRefreshingProfile = computed(() => {
+        const cp = characterPage.value as any;
+        return cp && cp.refreshing;
+      });
 
-    prevProfileAvailable(): boolean {
-      return this.profilePointer > 0;
-    }
+      function reloadCharacter() {
+        (characterPage.value as any)?.reload();
+      }
 
-    openProfile(name: string) {
-      this.profileName = name;
-
-      const character = core.characters.get(name);
-
-      this.profileStatus = character.statusText || '';
-    }
-
-    get styling(): string {
-      try {
-        return `<style id="themeStyle">${fs.readFileSync(path.join(__dirname, `themes/${(this.character != undefined && core.state.settings.risingCharacterTheme) || this.settings.theme}.css`), 'utf8').toString()}</style>`;
-      } catch (e) {
-        if (
-          (<Error & { code: string }>e).code === 'ENOENT' &&
-          this.settings.theme !== 'default'
-        ) {
-          this.settings.theme = 'default';
-          return this.styling;
+      function getThemeClass() {
+        try {
+          if (process.platform === 'win32') {
+            if (core.state.generalSettings?.risingDisableWindowsHighContrast) {
+              document
+                .querySelector('html')
+                ?.classList.add('disableWindowsHighContrast');
+            } else {
+              document
+                .querySelector('html')
+                ?.classList.remove('disableWindowsHighContrast');
+            }
+          }
+          return {
+            [`theme-${core.state.settings.risingCharacterTheme || settingsState.value.theme}`]:
+              true,
+            colorblindMode: core.state.settings.risingColorblindMode,
+            disableWindowsHighContrast:
+              core.state.generalSettings?.risingDisableWindowsHighContrast ||
+              false
+          };
+        } catch (err) {
+          return { [`theme-${settingsState.value.theme}`]: true };
         }
-        throw e;
       }
-    }
 
-    showLogs(): void {
-      (<Logs>this.$refs['logsDialog']).show();
-    }
-
-    async openDefinitionWithDictionary(): Promise<void> {
-      (this.$refs.wordDefinitionLookup as any).setMode('dictionary');
-    }
-
-    async openDefinitionWithThesaurus(): Promise<void> {
-      (this.$refs.wordDefinitionLookup as any).setMode('thesaurus');
-    }
-
-    async openDefinitionWithUrbanDictionary(): Promise<void> {
-      (this.$refs.wordDefinitionLookup as any).setMode('urbandictionary');
-    }
-
-    async openDefinitionWithWikipedia(): Promise<void> {
-      (this.$refs.wordDefinitionLookup as any).setMode('wikipedia');
-    }
-
-    async openWordDefinitionInBrowser(): Promise<void> {
-      electron.ipcRenderer.send(
-        'open-url-externally',
-        (this.$refs.wordDefinitionLookup as any).getWebUrl()
-      );
-      //await remote.shell.openExternal((this.$refs.wordDefinitionLookup as any).getWebUrl());
-
-      // tslint:disable-next-line: no-any no-unsafe-any
-      (this.$refs.wordDefinitionViewer as any).hide();
-    }
-
-    unpinUrlPreview(e: Event): void {
-      const imagePreview = (this.$refs['chat'] as Chat)
-        ?.getChatView()
-        ?.getImagePreview();
-
-      // const imagePreview = this.$refs['imagePreview'] as ImagePreview;
-
-      if (imagePreview && imagePreview.isVisible() && imagePreview.sticky) {
-        e.stopPropagation();
-        e.preventDefault();
-
-        EventBus.$emit('imagepreview-toggle-stickyness', { force: true });
+      function nextProfile() {
+        if (!nextProfileAvailable.value) return;
+        profilePointer.value++;
+        openProfile(profileNameHistory.value[profilePointer.value]);
       }
+
+      const nextProfileAvailable = computed(() => {
+        return profilePointer.value < profileNameHistory.value.length - 1;
+      });
+
+      function prevProfile() {
+        if (!prevProfileAvailable.value) return;
+        profilePointer.value--;
+        openProfile(profileNameHistory.value[profilePointer.value]);
+      }
+
+      const prevProfileAvailable = computed(() => {
+        return profilePointer.value > 0;
+      });
+
+      function openProfile(name: string) {
+        profileName.value = name;
+        const characterObj = core.characters.get(name);
+        profileStatus.value = characterObj.statusText || '';
+      }
+
+      const styling = computed(() => {
+        try {
+          return `<style id="themeStyle">${fs.readFileSync(path.join(__dirname, `themes/${(character.value != undefined && core.state.settings.risingCharacterTheme) || settingsState.value.theme}.css`), 'utf8').toString()}</style>`;
+        } catch (e: any) {
+          if (e.code === 'ENOENT' && settingsState.value.theme !== 'default') {
+            settingsState.value.theme = 'default';
+            return styling.value;
+          }
+          throw e;
+        }
+      });
+
+      function showLogs() {
+        logsDialog.value?.show();
+      }
+
+      async function openDefinitionWithDictionary() {
+        (wordDefinitionLookupRef.value as any)?.setMode('dictionary');
+      }
+      async function openDefinitionWithThesaurus() {
+        (wordDefinitionLookupRef.value as any)?.setMode('thesaurus');
+      }
+      async function openDefinitionWithUrbanDictionary() {
+        (wordDefinitionLookupRef.value as any)?.setMode('urbandictionary');
+      }
+      async function openDefinitionWithWikipedia() {
+        (wordDefinitionLookupRef.value as any)?.setMode('wikipedia');
+      }
+      async function openWordDefinitionInBrowser() {
+        electron.ipcRenderer.send(
+          'open-url-externally',
+          (wordDefinitionLookupRef.value as any)?.getWebUrl()
+        );
+        wordDefinitionViewer.value?.hide();
+      }
+
+      function unpinUrlPreview(e: Event) {
+        const imagePreview = chatRef.value?.getChatView()?.getImagePreview();
+        if (imagePreview && imagePreview.isVisible() && imagePreview.sticky) {
+          e.stopPropagation();
+          e.preventDefault();
+          EventBus.$emit('imagepreview-toggle-stickyness', { force: true });
+        }
+      }
+
+      return {
+        l,
+        showAdvanced,
+        saveLogin,
+        loggingIn,
+        password,
+        character,
+        characters,
+        error,
+        defaultCharacter,
+        settings: settingsState.value,
+        hasCompletedUpgrades,
+        importProgress,
+        profileName,
+        profileStatus,
+        adName,
+        fixCharacters,
+        fixCharacter,
+        wordDefinitionLookup,
+        shouldShowSpinner,
+        profileNameHistory,
+        profilePointer,
+        chatRef,
+        linkPreview,
+        importModal,
+        profileViewer,
+        characterPage,
+        fixLogsModal,
+        wordDefinitionViewer,
+        wordDefinitionLookupRef,
+        logsDialog,
+        login,
+        fixLogs,
+        resetHost,
+        resetProxy,
+        onMouseOver,
+        openProfileInBrowser,
+        openConversation,
+        isRefreshingProfile,
+        reloadCharacter,
+        getThemeClass,
+        nextProfile,
+        nextProfileAvailable,
+        prevProfile,
+        prevProfileAvailable,
+        openProfile,
+        styling,
+        showLogs,
+        openDefinitionWithDictionary,
+        openDefinitionWithThesaurus,
+        openDefinitionWithUrbanDictionary,
+        openDefinitionWithWikipedia,
+        openWordDefinitionInBrowser,
+        unpinUrlPreview
+      };
     }
-  }
+  });
 </script>
 
 <style lang="scss">
   html,
   body,
+  #app,
   #page {
     height: 100%;
   }
