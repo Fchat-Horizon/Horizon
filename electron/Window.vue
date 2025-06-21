@@ -30,7 +30,7 @@
       <ul
         class="nav nav-tabs"
         style="border-bottom: 0; margin-bottom: -1px; margin-top: 1px"
-        ref="tabs"
+        ref="tabsElement"
       >
         <li
           v-for="(tab, index) in tabs"
@@ -104,7 +104,15 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, reactive, onMounted } from 'vue';
+  import Sortable from 'sortablejs';
+  import _ from 'lodash';
+  import {
+    defineComponent,
+    ref,
+    reactive,
+    useTemplateRef,
+    onMounted
+  } from 'vue';
   import * as electron from 'electron';
   import * as remote from '@electron/remote';
   import * as fs from 'fs';
@@ -121,24 +129,23 @@
     name: 'Window',
     props: {
       settings: {
-        type: Object as () =>  GeneralSettings,
+        type: Object as () => GeneralSettings,
         required: true
       }
     },
     setup(props) {
-      // All your data as refs or reactive
-      const settings! = ref(props.settings);
-      const tabs = ref<any[]>([]);
+      const settings = ref(props.settings);
+      let tabs = reactive<Tab[]>([]);
       const activeTab = ref<any>();
       const tabMap = reactive<{ [key: number]: any }>({});
       const isMaximized = ref(false);
       const canOpenTab = ref(true);
       const hasUpdate = ref(false);
       const platform = process.platform;
-      const lockTab = ref(false);
+      let lockTab = false;
       const hasCompletedUpgrades = ref(false);
+      const tabsElement = useTemplateRef('tabsElement');
 
-      // All your methods as functions
       function minimize() {
         browserWindow.minimize();
       }
@@ -159,7 +166,214 @@
         );
       }
 
-      function getThemeClass(): string {
+      const trayIcon = path.join(
+        __dirname,
+        <string>(
+          require(
+            process.platform !== 'darwin'
+              ? './build/tray.png'
+              : './build/trayTemplate.png'
+          ).default
+        )
+      );
+      async function addTab(): Promise<void> {
+        log.debug('init.window.tab.add.start');
+
+        if (lockTab) return;
+        //We're commenting this tray stuff out because it's due to be replaced in the dev branch anyway-- but this process was started before the branch feature/single-tray-icon was merged
+        const tray = new remote.Tray(trayIcon);
+        tray.setToolTip(l('title'));
+        //tray.on('click', _e => trayClicked(tab));
+
+        log.debug('init.window.tab.add.tray');
+
+        const view = new remote.BrowserView({
+          webPreferences: {
+            webviewTag: true,
+            nodeIntegration: true,
+            nodeIntegrationInWorker: true,
+            spellcheck: true,
+            contextIsolation: false,
+            partition: 'persist:fchat'
+          }
+        });
+
+        log.debug('init.window.tab.add.view');
+
+        const remoteMain = require('@electron/remote/main');
+        remoteMain.enable(view.webContents);
+
+        log.debug('init.window.tab.add.remote');
+
+        // tab devtools
+        // view.webContents.openDevTools();
+
+        if (remote.process.argv.includes('--devtools')) {
+          view.webContents.openDevTools({ mode: 'detach' });
+        }
+
+        log.debug('init.window.tab.add.devtools');
+
+        // console.log('ADD TAB LANGUAGES', getSafeLanguages(this.settings.spellcheckLang), this.settings.spellcheckLang);
+        view.webContents.session.setSpellCheckerLanguages(
+          getSafeLanguages(settings.value.spellcheckLang)
+        );
+
+        log.debug('init.window.tab.add.spellcheck');
+
+        view.setAutoResize({ width: true, height: true });
+        electron.ipcRenderer.send('tab-added', view.webContents.id);
+
+        log.debug('init.window.tab.add.notify');
+
+        //TODO: Fix this once feature/single-tray-icon is merged to development!!!
+        const tab = {
+          active: false,
+          view,
+          user: undefined,
+          hasNew: false,
+          tray
+        };
+        //tray.setContextMenu(
+        //remote.Menu.buildFromTemplate(this.createTrayMenu(tab))
+        //);
+        tabs.push(tab);
+        tabMap[view.webContents.id] = tab;
+
+        log.debug('init.window.tab.add.context');
+
+        show(tab);
+        lockTab = true;
+
+        log.debug('init.window.tab.add.show');
+
+        const indexUrl = url.format({
+          pathname: path.join(__dirname, 'index.html'),
+          protocol: 'file:',
+          slashes: true,
+          query: {
+            settings: JSON.stringify(settings.value),
+            hasCompletedUpgrades: JSON.stringify(hasCompletedUpgrades.value)
+          }
+        });
+
+        log.debug('init.window.tab.add.load-index.start', indexUrl);
+
+        await view.webContents.loadURL(indexUrl);
+
+        log.debug('init.window.tab.add.load-index.complete', indexUrl);
+
+        tab.view.setBounds(getWindowBounds());
+        lockTab = false;
+
+        log.debug('init.window.tab.add.done');
+      }
+      function getWindowBounds(): Electron.Rectangle {
+        const bounds = browserWindow.getContentBounds();
+        const height = document.body.offsetHeight;
+        return {
+          x: 0,
+          y: height,
+          width: bounds.width,
+          height: bounds.height - height
+        };
+      }
+
+      function destroyTab(tab: Tab): void {
+        if (tab.user !== undefined)
+          electron.ipcRenderer.send('disconnect', tab.user);
+        tab.tray.destroy();
+
+        tab.view.webContents.stop();
+        tab.view.webContents.stopPainting();
+
+        try {
+          if ((tab.view.webContents as any).destroy) {
+            (tab.view.webContents as any).destroy();
+          }
+        } catch (err) {
+          console.log(err);
+        }
+
+        try {
+          if ((tab.view.webContents as any).close) {
+            (tab.view.webContents as any).close();
+          }
+        } catch (err) {
+          console.log(err);
+        }
+
+        try {
+          if ((tab.view as any).destroy) {
+            (tab.view as any).destroy();
+          }
+        } catch (err) {
+          console.log(err);
+        }
+
+        try {
+          if ((tab.view as any).close) {
+            (tab.view as any).close();
+          }
+        } catch (err) {
+          console.log(err);
+        }
+
+        // tab.view.destroy();
+        electron.ipcRenderer.send('tab-closed');
+      }
+
+      function destroyAllTabs(): void {
+        browserWindow.setBrowserView(null!); //tslint:disable-line:no-null-keyword
+        tabs.forEach(destroyTab);
+        tabs = [];
+      }
+
+      interface Tab {
+        user: string | undefined;
+        view: Electron.BrowserView;
+        hasNew: boolean;
+        tray: Electron.Tray;
+        avatarUrl?: string;
+      }
+
+      function show(tab: Tab): void {
+        if (lockTab) return;
+        activeTab.value = tab;
+        browserWindow.setBrowserView(tab.view);
+        tab.view.setBounds(getWindowBounds());
+        tab.view.webContents.focus();
+
+        // tab.view.webContents.send('active-tab', { webContentsId: tab.view.webContents.id });
+        _.each(tabs, t =>
+          t.view.webContents.send(t === tab ? 'active-tab' : 'inactive-tab')
+        );
+
+        // electron.ipcRenderer.send('active-tab', { webContentsId: tab.view.webContents.id });
+      }
+
+      function remove(tab: Tab, shouldConfirm: boolean = true): void {
+        if (
+          lockTab ||
+          (shouldConfirm &&
+            tab.user !== undefined &&
+            !confirm(l('chat.confirmLeave')))
+        )
+          return;
+        tabs.splice(tabs.indexOf(tab), 1);
+        electron.ipcRenderer.send(
+          'has-new',
+          tabs.reduce((cur, t) => cur || t.hasNew, false)
+        );
+        delete tabMap[tab.view.webContents.id];
+        if (tabs.length === 0) {
+          browserWindow.setBrowserView(null!); //tslint:disable-line:no-null-keyword
+          if (process.env.NODE_ENV === 'production') browserWindow.close();
+        } else if (activeTab.value === tab) show(tabs[0]);
+        destroyTab(tab);
+      }
+
+      function getThemeClass() {
         try {
           if (process.platform === 'win32') {
             if (settings.value?.risingDisableWindowsHighContrast) {
@@ -258,7 +472,7 @@
           (_e: Electron.IpcRendererEvent, langs: string[]) => {
             browserWindow.webContents.session.setSpellCheckerLanguages(langs);
 
-            for (const t of tabs.value) {
+            for (const t of tabs) {
               t.view.webContents.session.setSpellCheckerLanguages(langs);
             }
           }
@@ -270,18 +484,22 @@
             const tab = tabMap[id];
             tab.user = name;
             tab.tray.setToolTip(`${l('title')} - ${tab.user}`);
-            const menu = createTrayMenu(tab);
-            menu.unshift(
-              { label: tab.user, enabled: false },
-              { type: 'separator' }
-            );
-            tab.tray.setContextMenu(remote.Menu.buildFromTemplate(menu));
+            //const menu = createTrayMenu(tab);
+            //menu.unshift(
+            //{ label: tab.user, enabled: false },
+            //{ type: 'separator' }
+            //);
+            //tab.tray.setContextMenu(remote.Menu.buildFromTemplate(menu));
           }
         );
         electron.ipcRenderer.on(
           'update-avatar-url',
-          (_e: Electron.IpcRendererEvent, characterName: string, url: string) => {
-            const tab = tabs.value.find(tab => tab.user === characterName);
+          (
+            _e: Electron.IpcRendererEvent,
+            characterName: string,
+            url: string
+          ) => {
+            const tab = tabs.find(tab => tab.user === characterName);
 
             if (!tab) {
               return;
@@ -298,15 +516,15 @@
               tab.hasNew = false;
               electron.ipcRenderer.send(
                 'has-new',
-                tabs.value.reduce((cur, t) => cur || t.hasNew, false)
+                tabs.reduce((cur, t) => cur || t.hasNew, false)
               );
             }
             tab.user = undefined;
             tab.avatarUrl = undefined;
             tab.tray.setToolTip(l('title'));
-            tab.tray.setContextMenu(
-              remote.Menu.buildFromTemplate(createTrayMenu(tab))
-            );
+            //tab.tray.setContextMenu(
+            //remote.Menu.buildFromTemplate(createTrayMenu(tab))
+            //);
           }
         );
         electron.ipcRenderer.on(
@@ -316,7 +534,7 @@
             tab.hasNew = hasNew;
             electron.ipcRenderer.send(
               'has-new',
-              tabs.value.reduce((cur, t) => cur || t.hasNew, false)
+              tabs.reduce((cur, t) => cur || t.hasNew, false)
             );
           }
         );
@@ -330,17 +548,18 @@
           if (activeTab.value !== undefined)
             activeTab.value.view.setBounds(getWindowBounds());
         });
-        electron.ipcRenderer.on('switch-tab', (_e: Electron.IpcRendererEvent) => {
-          const index = tabs.value.indexOf(activeTab.value!);
-          show(tabs.value[index + 1 === tabs.value.length ? 0 : index + 1]);
-        });
+        electron.ipcRenderer.on(
+          'switch-tab',
+          (_e: Electron.IpcRendererEvent) => {
+            const index = tabs.indexOf(activeTab.value!);
+            show(tabs[index + 1 === tabs.length ? 0 : index + 1]);
+          }
+        );
         electron.ipcRenderer.on(
           'previous-tab',
           (_e: Electron.IpcRendererEvent) => {
-            const index = tabs.value.indexOf(activeTab.value!);
-            show(
-              tabs.value[index - 1 < 0 ? tabs.value.length - 1 : index - 1]
-            );
+            const index = tabs.indexOf(activeTab.value!);
+            show(tabs[index - 1 < 0 ? tabs.length - 1 : index - 1]);
           }
         );
         electron.ipcRenderer.on(
@@ -364,16 +583,16 @@
         log.debug('init.window.tab');
 
         let tabsorder: string[];
-        const sortable = Sortable.create(<HTMLElement>this.$refs['tabs'], {
+        const sortable = Sortable.create(<HTMLElement>tabsElement.value, {
           animation: 50,
           onStart: () => {
             tabsorder = sortable.toArray();
           },
           onEnd: e => {
             if (e.oldIndex === e.newIndex) return;
-            const elem = tabs.value[e.oldIndex!];
-            tabs.value.splice(e.oldIndex!, 1);
-            tabs.value.splice(e.newIndex!, 0, elem);
+            const elem = tabs[e.oldIndex!];
+            tabs.splice(e.oldIndex!, 1);
+            tabs.splice(e.newIndex!, 0, elem);
             sortable.sort(tabsorder, false);
           },
           onMove: (e: { related: HTMLElement }) => e.related.id !== 'addTab',
@@ -381,7 +600,7 @@
         });
 
         window.onbeforeunload = () => {
-          const isConnected = tabs.value.reduce(
+          const isConnected = tabs.reduce(
             (cur, tab) => cur || tab.user !== undefined,
             false
           );
@@ -415,6 +634,9 @@
         platform,
         lockTab,
         hasCompletedUpgrades,
+        addTab,
+        remove,
+        show,
         minimize,
         maximize,
         close,
