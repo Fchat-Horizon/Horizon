@@ -111,7 +111,8 @@
     ref,
     reactive,
     useTemplateRef,
-    onMounted
+    onMounted,
+    toRaw
   } from 'vue';
   import * as electron from 'electron';
   import * as remote from '@electron/remote';
@@ -135,9 +136,9 @@
     },
     setup(props) {
       const settings = ref(props.settings);
-      let tabs = reactive<Tab[]>([]);
+      let tabs = ref<Tab[]>([]);
       const activeTab = ref<any>();
-      const tabMap = reactive<{ [key: number]: any }>({});
+      const tabMap = reactive<{ [key: number]: Tab }>({});
       const isMaximized = ref(false);
       const canOpenTab = ref(true);
       const hasUpdate = ref(false);
@@ -198,8 +199,6 @@
           }
         });
 
-        log.debug('init.window.tab.add.view');
-
         const remoteMain = require('@electron/remote/main');
         remoteMain.enable(view.webContents);
 
@@ -227,17 +226,18 @@
         log.debug('init.window.tab.add.notify');
 
         //TODO: Fix this once feature/single-tray-icon is merged to development!!!
-        const tab = {
-          active: false,
-          view,
+        let tab: Tab = {
+          view: view,
           user: undefined,
           hasNew: false,
-          tray
+          tray: tray
         };
+
+        log.debug('init.window.tab.add.created');
         //tray.setContextMenu(
         //remote.Menu.buildFromTemplate(this.createTrayMenu(tab))
         //);
-        tabs.push(tab);
+        tabs.value.push(tab);
         tabMap[view.webContents.id] = tab;
 
         log.debug('init.window.tab.add.context');
@@ -325,8 +325,8 @@
 
       function destroyAllTabs(): void {
         browserWindow.setBrowserView(null!); //tslint:disable-line:no-null-keyword
-        tabs.forEach(destroyTab);
-        tabs = [];
+        tabs.value.forEach(destroyTab);
+        tabs.value = [];
       }
 
       interface Tab {
@@ -339,13 +339,18 @@
 
       function show(tab: Tab): void {
         if (lockTab) return;
-        activeTab.value = tab;
-        browserWindow.setBrowserView(tab.view);
+
+        // Ensure we are working with the raw object, not a reactive one.
+        // Electron does not play nice with reactive objects like that.
+        let rawTab = toRaw(tab);
+
+        activeTab.value = rawTab;
+        browserWindow.setBrowserView(rawTab.view);
         tab.view.setBounds(getWindowBounds());
         tab.view.webContents.focus();
 
         // tab.view.webContents.send('active-tab', { webContentsId: tab.view.webContents.id });
-        _.each(tabs, t =>
+        _.each(tabs.value, t =>
           t.view.webContents.send(t === tab ? 'active-tab' : 'inactive-tab')
         );
 
@@ -353,6 +358,8 @@
       }
 
       function remove(tab: Tab, shouldConfirm: boolean = true): void {
+        //tab = toRaw(tab); // Ensure we are working with the raw object, not a reactive one.
+        log.debug('window.tab.remove');
         if (
           lockTab ||
           (shouldConfirm &&
@@ -360,16 +367,16 @@
             !confirm(l('chat.confirmLeave')))
         )
           return;
-        tabs.splice(tabs.indexOf(tab), 1);
+        tabs.value.splice(tabs.value.indexOf(tab), 1);
         electron.ipcRenderer.send(
           'has-new',
-          tabs.reduce((cur, t) => cur || t.hasNew, false)
+          tabs.value.reduce((cur, t) => cur || t.hasNew, false)
         );
         delete tabMap[tab.view.webContents.id];
-        if (tabs.length === 0) {
+        if (tabs.value.length === 0) {
           browserWindow.setBrowserView(null!); //tslint:disable-line:no-null-keyword
           if (process.env.NODE_ENV === 'production') browserWindow.close();
-        } else if (activeTab.value === tab) show(tabs[0]);
+        } else if (activeTab.value === tab) show(tabs.value[0]);
         destroyTab(tab);
       }
 
@@ -413,6 +420,17 @@
           }
           throw e;
         }
+      }
+      function getAvatarImage(tab: Tab) {
+        if (tab.avatarUrl) {
+          return tab.avatarUrl;
+        }
+
+        return (
+          'https://static.f-list.net/images/avatar/' +
+          (tab.user || '').toLowerCase() +
+          '.png'
+        );
       }
 
       onMounted(async () => {
@@ -472,7 +490,7 @@
           (_e: Electron.IpcRendererEvent, langs: string[]) => {
             browserWindow.webContents.session.setSpellCheckerLanguages(langs);
 
-            for (const t of tabs) {
+            for (const t of tabs.value) {
               t.view.webContents.session.setSpellCheckerLanguages(langs);
             }
           }
@@ -499,7 +517,7 @@
             characterName: string,
             url: string
           ) => {
-            const tab = tabs.find(tab => tab.user === characterName);
+            const tab = tabs.value.find(tab => tab.user === characterName);
 
             if (!tab) {
               return;
@@ -516,7 +534,7 @@
               tab.hasNew = false;
               electron.ipcRenderer.send(
                 'has-new',
-                tabs.reduce((cur, t) => cur || t.hasNew, false)
+                tabs.value.reduce((cur, t) => cur || t.hasNew, false)
               );
             }
             tab.user = undefined;
@@ -534,7 +552,7 @@
             tab.hasNew = hasNew;
             electron.ipcRenderer.send(
               'has-new',
-              tabs.reduce((cur, t) => cur || t.hasNew, false)
+              tabs.value.reduce((cur, t) => cur || t.hasNew, false)
             );
           }
         );
@@ -551,15 +569,15 @@
         electron.ipcRenderer.on(
           'switch-tab',
           (_e: Electron.IpcRendererEvent) => {
-            const index = tabs.indexOf(activeTab.value!);
-            show(tabs[index + 1 === tabs.length ? 0 : index + 1]);
+            const index = tabs.value.indexOf(activeTab.value!);
+            show(tabs.value[index + 1 === tabs.value.length ? 0 : index + 1]);
           }
         );
         electron.ipcRenderer.on(
           'previous-tab',
           (_e: Electron.IpcRendererEvent) => {
-            const index = tabs.indexOf(activeTab.value!);
-            show(tabs[index - 1 < 0 ? tabs.length - 1 : index - 1]);
+            const index = tabs.value.indexOf(activeTab.value!);
+            show(tabs.value[index - 1 < 0 ? tabs.value.length - 1 : index - 1]);
           }
         );
         electron.ipcRenderer.on(
@@ -590,9 +608,9 @@
           },
           onEnd: e => {
             if (e.oldIndex === e.newIndex) return;
-            const elem = tabs[e.oldIndex!];
-            tabs.splice(e.oldIndex!, 1);
-            tabs.splice(e.newIndex!, 0, elem);
+            const elem = tabs.value[e.oldIndex!];
+            tabs.value.splice(e.oldIndex!, 1);
+            tabs.value.splice(e.newIndex!, 0, elem);
             sortable.sort(tabsorder, false);
           },
           onMove: (e: { related: HTMLElement }) => e.related.id !== 'addTab',
@@ -600,7 +618,7 @@
         });
 
         window.onbeforeunload = () => {
-          const isConnected = tabs.reduce(
+          const isConnected = tabs.value.reduce(
             (cur, tab) => cur || tab.user !== undefined,
             false
           );
@@ -644,6 +662,7 @@
         openUpdatePage,
         l,
         getThemeClass,
+        getAvatarImage,
         styling
       };
     }
