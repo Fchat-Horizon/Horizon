@@ -2,6 +2,7 @@ import * as qs from 'querystring';
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 import { createApp } from 'vue';
 
+import Window from './Window.vue';
 import { GeneralSettings } from './common';
 
 log.info('init.window');
@@ -19,15 +20,13 @@ log.transports.file.maxSize = 5 * 1024 * 1024;
 
 log.info('init.window.vue');
 
-import Window from './Window.vue';
 //tslint:disable-next-line:no-unused-expression
-const app = createApp({
-  ...Window
-});
-export default new Window({
-  el: '#app',
-  data: { settings }
-});
+const app = createApp(
+  {
+    ...Window
+  },
+  { settings: settings }
+);
 
 app.mount('#app');
 

@@ -101,7 +101,10 @@ const mainConfig = {
           loader: 'vue-loader',
           options: {
             compilerOptions: {
-              preserveWhitespace: false
+              preserveWhitespace: false,
+              compatConfig: {
+                MODE: 2
+              }
             }
           }
         },
