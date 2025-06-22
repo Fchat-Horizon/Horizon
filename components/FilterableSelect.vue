@@ -4,8 +4,10 @@
     linkClass="custom-select"
     :keepOpen="true"
   >
-    <template slot="title" v-if="multiple">{{ label }}</template>
-    <slot v-else slot="title" :option="selected">{{ label }}</slot>
+    <template #title v-if="multiple">{{ label }}</template>
+    <template v-else #title>
+      <slot :option="selected">{{ label }}</slot>
+    </template>
 
     <div style="padding: 10px">
       <input
@@ -21,6 +23,7 @@
           href="#"
           @click.stop="select(option)"
           v-for="option in filtered"
+          :key="optionKey(option)"
           class="dropdown-item"
         >
           <input type="checkbox" :checked="isSelected(option)" />
@@ -32,6 +35,7 @@
           href="#"
           @click="select(option)"
           v-for="option in filtered"
+          :key="optionKey(option)"
           class="dropdown-item"
         >
           <slot :option="option">{{ option }}</slot>
@@ -42,73 +46,105 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop, Watch } from '@f-list/vue-ts';
-  import Vue from 'vue';
+  import { defineComponent, ref, computed, watch } from 'vue';
   import Dropdown from '../components/Dropdown.vue';
 
-  @Component({
-    components: { dropdown: Dropdown }
-  })
-  export default class FilterableSelect extends Vue {
-    @Prop
-    readonly placeholder?: string;
-    @Prop({ required: true })
-    readonly options!: object[];
-    @Prop({
-      default: () => (filter: RegExp, value: string) => filter.test(value)
-    })
-    readonly filterFunc!: (filter: RegExp, value: object) => boolean;
-    @Prop
-    readonly multiple?: true = undefined;
-    @Prop
-    readonly value?: object | object[] = undefined;
-    @Prop
-    readonly title?: string;
-    filter = '';
-    // noinspection TypeScriptValidateTypes
-    selected: object | object[] | undefined =
-      this.value !== undefined
-        ? this.value
-        : this.multiple !== undefined
-          ? []
-          : undefined;
+  export default defineComponent({
+    name: 'FilterableSelect',
+    components: { dropdown: Dropdown },
+    props: {
+      placeholder: String,
+      options: {
+        type: Array as () => object[]
+      },
+      filterFunc: {
+        type: Function as unknown as () => (
+          filter: RegExp,
+          value: object
+        ) => boolean,
+        default: () => (filter: RegExp, value: any) =>
+          filter.test(value.toString())
+      },
+      multiple: Boolean,
+      value: {
+        type: [Object, Array] as () => object | object[] | undefined,
+        default: undefined
+      },
+      title: String
+    },
+    emits: ['input'],
+    setup(props, { emit, slots }) {
+      const filter = ref('');
+      const selected = ref<object | object[] | undefined>(
+        props.value !== undefined
+          ? props.value
+          : props.multiple
+            ? []
+            : undefined
+      );
 
-    @Watch('value')
-    watchValue(newValue: object | object[] | undefined): void {
-      this.selected = newValue;
-    }
+      watch(
+        () => props.value,
+        newValue => {
+          selected.value = newValue;
+        }
+      );
 
-    select(item: object): void {
-      if (this.multiple !== undefined) {
-        const selected = <object[]>this.selected;
-        const index = selected.indexOf(item);
-        if (index === -1) selected.push(item);
-        else selected.splice(index, 1);
-      } else this.selected = item;
-      this.$emit('input', this.selected);
-    }
+      function select(item: object): void {
+        if (props.multiple) {
+          const arr = Array.isArray(selected.value) ? [...selected.value] : [];
+          const index = arr.indexOf(item);
+          if (index === -1) arr.push(item);
+          else arr.splice(index, 1);
+          selected.value = arr;
+        } else {
+          selected.value = item;
+        }
+        emit('input', selected.value);
+      }
 
-    isSelected(option: object): boolean {
-      return (<object[]>this.selected).indexOf(option) !== -1;
-    }
+      function isSelected(option: object): boolean {
+        return Array.isArray(selected.value)
+          ? selected.value.indexOf(option) !== -1
+          : false;
+      }
 
-    get filtered(): object[] {
-      // tslint:disable-next-line:no-unsafe-any
-      return this.options.filter(x => this.filterFunc(this.filterRegex, x));
-    }
+      const filterRegex = computed(
+        () => new RegExp(filter.value.replace(/[^\w]/gi, '\\$&'), 'i')
+      );
 
-    get label(): string | undefined {
-      return this.multiple !== undefined
-        ? `${this.title} - ${(<object[]>this.selected).length}`
-        : this.selected !== undefined
-          ? this.selected.toString()
-          : this.title;
-    }
+      const filtered = computed(() =>
+        props.options.filter(x => props.filterFunc(filterRegex.value, x))
+      );
 
-    get filterRegex(): RegExp {
-      return new RegExp(this.filter.replace(/[^\w]/gi, '\\$&'), 'i');
+      const label = computed(() => {
+        if (props.multiple) {
+          return `${props.title} - ${Array.isArray(selected.value) ? selected.value.length : 0}`;
+        } else {
+          return selected.value !== undefined
+            ? selected.value.toString()
+            : props.title;
+        }
+      });
+
+      // Helper for v-for key
+      function optionKey(option: object) {
+        // Try to use a unique property if available, fallback to string
+        return (option as any).id ?? option.toString();
+      }
+
+      return {
+        filter,
+        selected,
+        select,
+        isSelected,
+        filtered,
+        label,
+        filterRegex,
+        optionKey
+      };
     }
-  }
+  });
 </script>
 
 <style lang="scss">

@@ -51,7 +51,7 @@
               class="btn"
               :class="buttonClass"
               @click="submit"
-              :disabled="shouldBeDisabled()"
+              :disabled="shouldBeDisabled"
             >
               {{ submitText }}
             </button>
@@ -64,97 +64,138 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
-  import Vue from 'vue';
+  import {
+    defineComponent,
+    ref,
+    computed,
+    onMounted,
+    onBeforeUnmount,
+    watch,
+    nextTick
+  } from 'vue';
   import { getKey } from '../chat/common';
   import { Keys } from '../keys';
 
-  const dialogStack: Modal[] = [];
-  window.addEventListener('keydown', e => {
-    if (getKey(e) === Keys.Escape && dialogStack.length > 0)
-      dialogStack[dialogStack.length - 1].hideWithCheck();
-  });
-  window.addEventListener(
-    'backbutton',
-    e => {
-      if (dialogStack.length > 0) {
-        e.stopPropagation();
-        e.preventDefault();
-        dialogStack[dialogStack.length - 1].hide();
-      }
+  const dialogStack: any[] = [];
+  let isShowing = false;
+
+  export default defineComponent({
+    name: 'Modal',
+    props: {
+      action: {
+        type: String,
+        default: ''
+      },
+      dialogClass: Object,
+      buttons: {
+        type: Boolean,
+        default: true
+      },
+      buttonClass: {
+        type: Object,
+        default: () => ({ 'btn-primary': true })
+      },
+      disabled: Boolean,
+      showCancel: {
+        type: Boolean,
+        default: true
+      },
+      buttonText: String
     },
-    true
-  );
+    emits: ['submit', 'open', 'close', 'reopen'],
+    setup(props, { emit }) {
+      const isShown = ref(false);
+      const keepOpen = ref(false);
+      const forcedDisabled = ref(false);
 
-  export let isShowing = false;
-
-  @Component
-  export default class Modal extends Vue {
-    @Prop({ default: '' })
-    readonly action!: string;
-    @Prop
-    readonly dialogClass?: { string: boolean };
-    @Prop({ default: true })
-    readonly buttons!: boolean;
-    @Prop({ default: () => ({ 'btn-primary': true }) })
-    readonly buttonClass!: { string: boolean };
-    @Prop
-    readonly disabled?: boolean;
-    @Prop({ default: true })
-    readonly showCancel!: boolean;
-    @Prop
-    readonly buttonText?: string;
-    isShown = false;
-
-    keepOpen = false;
-    forcedDisabled = false;
-
-    get submitText(): string {
-      return this.buttonText !== undefined ? this.buttonText : this.action;
-    }
-
-    forceDisabled(disabled: boolean): void {
-      this.forcedDisabled = disabled;
-    }
-
-    shouldBeDisabled(): boolean {
-      return this.disabled || this.forcedDisabled;
-    }
-
-    submit(e: Event): void {
-      this.$emit('submit', e);
-      if (!e.defaultPrevented) this.hideWithCheck();
-    }
-
-    show(keepOpen: boolean = false): void {
-      this.keepOpen = keepOpen;
-      if (this.isShown) {
-        this.$emit('reopen');
-        return;
+      function submit(e: Event) {
+        emit('submit', e);
+        if (!e.defaultPrevented) hideWithCheck();
       }
-      this.isShown = true;
-      dialogStack.push(this);
-      this.$emit('open');
-      isShowing = true;
-    }
 
-    hide(): void {
-      this.isShown = false;
-      this.$emit('close');
-      dialogStack.pop();
-      if (dialogStack.length === 0) isShowing = false;
-    }
+      function show(keep = false) {
+        keepOpen.value = keep;
+        if (isShown.value) {
+          emit('reopen');
+          return;
+        }
+        isShown.value = true;
+        dialogStack.push(api);
+        emit('open');
+        isShowing = true;
+      }
 
-    hideWithCheck(): void {
-      if (this.keepOpen) return;
-      this.hide();
-    }
+      function hide() {
+        isShown.value = false;
+        emit('close');
+        dialogStack.pop();
+        if (dialogStack.length === 0) isShowing = false;
+      }
 
-    @Hook('beforeDestroy')
-    beforeDestroy(): void {
-      if (this.isShown) this.hide();
+      function hideWithCheck() {
+        if (keepOpen.value) return;
+        hide();
+      }
+
+      function forceDisabled(disabled: boolean) {
+        forcedDisabled.value = disabled;
+      }
+
+      const shouldBeDisabled = computed(() => {
+        return props.disabled || forcedDisabled.value;
+      });
+
+      const submitText = computed(() => {
+        return props.buttonText !== undefined ? props.buttonText : props.action;
+      });
+
+      // Keyboard and backbutton listeners (global, only once)
+      function keydownListener(e: KeyboardEvent) {
+        if (getKey(e) === Keys.Escape && dialogStack.length > 0) {
+          dialogStack[dialogStack.length - 1].hideWithCheck();
+        }
+      }
+      function backbuttonListener(e: Event) {
+        if (dialogStack.length > 0) {
+          e.stopPropagation();
+          e.preventDefault();
+          dialogStack[dialogStack.length - 1].hide();
+        }
+      }
+
+      onMounted(() => {
+        window.addEventListener('keydown', keydownListener);
+        window.addEventListener('backbutton', backbuttonListener, true);
+      });
+
+      onBeforeUnmount(() => {
+        window.removeEventListener('keydown', keydownListener);
+        window.removeEventListener('backbutton', backbuttonListener, true);
+        if (isShown.value) hide();
+      });
+
+      // Expose API for dialogStack
+      const api = {
+        hideWithCheck,
+        hide,
+        show,
+        isShown
+      };
+
+      return {
+        isShown,
+        keepOpen,
+        forcedDisabled,
+        submit,
+        show,
+        hide,
+        hideWithCheck,
+        forceDisabled,
+        shouldBeDisabled,
+        submitText
+      };
     }
-  }
+  });
 </script>
 
 <style>
