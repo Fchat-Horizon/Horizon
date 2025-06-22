@@ -109,7 +109,7 @@
     <div
       class="messages messages-both"
       style="overflow: auto; overscroll-behavior: none"
-      ref="messages"
+      ref="messagesRef"
       tabindex="-1"
       @scroll="onMessagesScroll"
     >
@@ -247,7 +247,6 @@
       });
 
       const displayedMessages = computed(() => {
-        log.debug('logs.display.message', filteredMessages.value);
         if (selectedDate.value !== undefined) return filteredMessages.value;
         return filteredMessages.value.slice(windowStart.value, windowEnd.value);
       });
