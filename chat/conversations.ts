@@ -1300,6 +1300,7 @@ export default function (this: any): Interfaces.State {
         time
       );
       await state.consoleTab.addMessage(message);
+      state.consoleTab.unread = Interfaces.UnreadState.Mention;
       await core.notifications.notify(
         state.consoleTab,
         l('events.broadcast.notification', data.character),
@@ -1307,10 +1308,6 @@ export default function (this: any): Interfaces.State {
         characterImage(data.character),
         'attention'
       );
-      for (const conv of (<Conversation[]>state.channelConversations).concat(
-        state.privateConversations
-      ))
-        await conv.addMessage(message);
     } else
       return addEventMessage(new EventMessage(decodeHTML(data.message), time));
   });

@@ -167,26 +167,10 @@
         );
       }
 
-      const trayIcon = path.join(
-        __dirname,
-        <string>(
-          require(
-            process.platform !== 'darwin'
-              ? './build/tray.png'
-              : './build/trayTemplate.png'
-          ).default
-        )
-      );
       async function addTab(): Promise<void> {
         log.debug('init.window.tab.add.start');
 
         if (lockTab) return;
-        //We're commenting this tray stuff out because it's due to be replaced in the dev branch anyway-- but this process was started before the branch feature/single-tray-icon was merged
-        const tray = new remote.Tray(trayIcon);
-        tray.setToolTip(l('title'));
-        //tray.on('click', _e => trayClicked(tab));
-
-        log.debug('init.window.tab.add.tray');
 
         const view = new remote.BrowserView({
           webPreferences: {
@@ -225,18 +209,13 @@
 
         log.debug('init.window.tab.add.notify');
 
-        //TODO: Fix this once feature/single-tray-icon is merged to development!!!
         let tab: Tab = {
           view: view,
           user: undefined,
-          hasNew: false,
-          tray: tray
+          hasNew: false
         };
 
         log.debug('init.window.tab.add.created');
-        //tray.setContextMenu(
-        //remote.Menu.buildFromTemplate(this.createTrayMenu(tab))
-        //);
         tabs.value.push(tab);
         tabMap[view.webContents.id] = tab;
 
@@ -282,7 +261,6 @@
       function destroyTab(tab: Tab): void {
         if (tab.user !== undefined)
           electron.ipcRenderer.send('disconnect', tab.user);
-        tab.tray.destroy();
 
         tab.view.webContents.stop();
         tab.view.webContents.stopPainting();
@@ -333,7 +311,6 @@
         user: string | undefined;
         view: Electron.BrowserView;
         hasNew: boolean;
-        tray: Electron.Tray;
         avatarUrl?: string;
       }
 
@@ -501,13 +478,6 @@
           (_e: Electron.IpcRendererEvent, id: number, name: string) => {
             const tab = tabMap[id];
             tab.user = name;
-            tab.tray.setToolTip(`${l('title')} - ${tab.user}`);
-            //const menu = createTrayMenu(tab);
-            //menu.unshift(
-            //{ label: tab.user, enabled: false },
-            //{ type: 'separator' }
-            //);
-            //tab.tray.setContextMenu(remote.Menu.buildFromTemplate(menu));
           }
         );
         electron.ipcRenderer.on(
@@ -539,10 +509,6 @@
             }
             tab.user = undefined;
             tab.avatarUrl = undefined;
-            tab.tray.setToolTip(l('title'));
-            //tab.tray.setContextMenu(
-            //remote.Menu.buildFromTemplate(createTrayMenu(tab))
-            //);
           }
         );
         electron.ipcRenderer.on(

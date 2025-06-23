@@ -5,13 +5,27 @@ import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 import path from 'path';
 import { GeneralSettings } from './common';
 import { openURLExternally } from './main';
-import { DownloadItem } from 'electron';
+import { DownloadItem, IpcMainEvent } from 'electron';
 import { getSafeLanguages, updateSupportedLanguages } from './language';
 import { BlockerIntegration } from './blocker/blocker';
+import l from '../chat/localize';
 //In non-production modes we might want to connect to development servers too.
 //This won't change the amount of allowed connections to the live server.
 const maxTabCount = process.env.NODE_ENV === 'production' ? 3 : 5;
 
+const tabMap: { [key: string]: electron.WebContents } = {};
+const trayIcon = path.join(
+  __dirname,
+  <string>(
+    require(
+      process.platform !== 'darwin'
+        ? './build/tray.png'
+        : './build/trayTemplate.png'
+    ).default
+  )
+);
+
+let tray: electron.Tray;
 // tslint:disable-next-line:no-require-imports
 const pngIcon = path.join(
   __dirname,
@@ -29,6 +43,20 @@ const winIcon = path.join(
 const windows: electron.BrowserWindow[] = [];
 let tabCount = 0;
 
+electron.ipcMain.on(
+  'connect',
+  (e: IpcMainEvent & { sender: electron.WebContents }, character: string) => {
+    if (e.sender) {
+      //browserWindows.tabAddHandler(webContents, settings);
+      tabMap[character] = e.sender;
+      tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
+    }
+  }
+);
+electron.ipcMain.on('disconnect', (_event: IpcMainEvent, character: string) => {
+  delete tabMap[character];
+  tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
+});
 export function openTab(w: electron.BrowserWindow) {
   if (tabCount <= maxTabCount) w.webContents.send('open-tab');
 }
@@ -126,6 +154,12 @@ export function createMainWindow(
     window.show();
     if (lastState.maximized) window.maximize();
   });
+  tray = new electron.Tray(trayIcon);
+  tray.setToolTip(l('title'));
+  tray.on('click', _e => tray.popUpContextMenu());
+
+  tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
+  log.debug('init.window.add.tray');
 
   return window;
 }
@@ -157,6 +191,28 @@ export function setUpWebContents(
     openLinkExternally(new Event('link'), url);
     return { action: 'deny' };
   });
+}
+
+function createTrayMenu(): electron.MenuItemConstructorOptions[] {
+  const tabItems: electron.MenuItemConstructorOptions[] = Object.entries(
+    tabMap
+  ).map(([tabId, webContents]) => ({
+    label: tabId,
+    click: () => {
+      // Example: focus this tab, or any action you want
+      windows.forEach(winow => {
+        winow.webContents.focus();
+        winow.show();
+        winow.webContents.send('show-tab', webContents.id);
+      });
+      webContents.focus();
+    }
+  }));
+  return [
+    { label: l('title'), enabled: false },
+    ...tabItems,
+    { label: l('action.quit'), click: () => electron.app.quit() }
+  ];
 }
 
 export function setSpellCheckerLanguages(langs: string[]): void {
@@ -245,6 +301,7 @@ export function createAboutWindow(
     center: true,
     resizable: false,
     minimizable: false,
+    useContentSize: process.platform === 'win32',
     alwaysOnTop: true,
     modal: false,
     parent: parentWindow,

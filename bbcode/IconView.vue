@@ -1,6 +1,6 @@
 <template>
   <a
-    :href="`${Utils.siteDomain}c/${character}`"
+    :href="`${Utils.siteDomain}c/${character.name}`"
     target="_blank"
     @mouseover.prevent="show()"
     @mouseenter.prevent="show()"
@@ -9,10 +9,10 @@
     @click.right.passive="dismiss(true)"
     @click.left.passive="dismiss(true)"
     ><img
-      :src="getAvatarUrl()"
+      :src="characterImage(character.name)"
       class="character-avatar icon"
-      :title="character"
-      :alt="character"
+      :title="character.name"
+      :alt="character.name"
       v-once
   /></a>
 </template>
@@ -23,13 +23,15 @@
   import { EventBus } from '../chat/preview/event-bus';
   import * as Utils from '../site/utils';
   import { characterImage } from '../chat/common';
+  import { Character } from '../fchat';
 
   @Component
   export default class IconView extends Vue {
     Utils = Utils;
+    characterImage = characterImage;
 
     @Prop({ required: true })
-    readonly character!: string;
+    readonly character!: Character;
 
     @Hook('mounted')
     mounted(): void {
@@ -47,11 +49,7 @@
     }
 
     getCharacterUrl(): string {
-      return `flist-character://${this.character}`;
-    }
-
-    getAvatarUrl(): string {
-      return characterImage(this.character);
+      return `flist-character://${this.character.name}`;
     }
 
     dismiss(force: boolean = false): void {

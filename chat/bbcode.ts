@@ -52,7 +52,12 @@ export default class BBCodeParser extends CoreBBCodeParser {
         const el = parser.createElement('span');
         parent.appendChild(root);
         root.appendChild(el);
-        const view = new IconView({ el, propsData: { character: content } });
+        const view = new IconView({
+          el,
+          propsData: {
+            character: core.characters.get(content)
+          }
+        });
 
         this.cleanup.push(view);
         return root;

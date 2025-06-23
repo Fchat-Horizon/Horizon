@@ -126,6 +126,7 @@
   import { default as IconView } from './IconView.vue';
   import { default as EIconSelector } from './EIconSelector.vue';
   import Modal from '../components/Modal.vue';
+  import { Character } from '../fchat';
 
   @Component({
     components: {
@@ -160,7 +161,7 @@
     readonly invalid!: boolean;
 
     @Prop({ default: null })
-    readonly characterName: string | null = null;
+    readonly characterName: Character | null = null;
 
     @Prop({ default: 'normal' })
     readonly type: 'normal' | 'big' = 'normal';
