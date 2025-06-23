@@ -228,7 +228,7 @@
     >
       <word-definition
         :expression="wordDefinitionLookup"
-        ref="wordDefinitionLookup"
+        ref="wordDefinitionLookupElement"
       ></word-definition>
       <template #title>
         {{ wordDefinitionLookup }}

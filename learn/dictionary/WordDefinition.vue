@@ -13,119 +13,116 @@
     ></webview>
   </div>
 </template>
+
 <script lang="ts">
-  import Vue from 'vue';
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
-  import { EventBusEvent } from '../../chat/preview/event-bus';
-
+  import { defineComponent, ref, onMounted, PropType } from 'vue';
   import anyAscii from 'any-ascii';
-  import log from 'electron-log'; //tslint:disable-line:match-default-export-name
-
-  // tslint:disable-next-line:ban-ts-ignore
-  // @ts-ignore
-  // tslint:disable-next-line:no-submodule-imports ban-ts-ignore match-default-export-name
+  import log from 'electron-log';
   import mutatorScript from '!!raw-loader!./assets/mutator.raw.js';
+  import type { EventBusEvent } from '../../chat/preview/event-bus';
 
   const scripts: Record<string, string> = {
     mutator: mutatorScript
   };
 
-  @Component({})
-  export default class WordDefinition extends Vue {
-    mode: 'dictionary' | 'thesaurus' | 'urbandictionary' | 'wikipedia' =
-      'dictionary';
+  export default defineComponent({
+    name: 'WordDefinition',
+    props: {
+      expression: String as PropType<string | undefined>
+    },
+    setup(props) {
+      const mode = ref<
+        'dictionary' | 'thesaurus' | 'urbandictionary' | 'wikipedia'
+      >('dictionary');
+      const definitionPreview = ref<Electron.WebviewTag | null>(null);
 
-    @Prop
-    readonly expression?: string;
+      function setMode(
+        newMode: 'dictionary' | 'thesaurus' | 'urbandictionary' | 'wikipedia'
+      ) {
+        mode.value = newMode;
+      }
 
-    @Hook('mounted')
-    async mounted(): Promise<void> {
-      const webview = this.getWebview();
+      function getCleanedWordDefinition(expression = props.expression): string {
+        return anyAscii(expression || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9\-]/g, ' ')
+          .replace(/  +/g, ' ')
+          .trim();
+      }
 
-      const eventProcessor = async (event: EventBusEvent): Promise<void> => {
-        const js = this.wrapJs(this.getMutator(this.mode));
+      function getWebUrl(): string {
+        if (!props.expression) {
+          return 'about:blank';
+        }
+        switch (mode.value) {
+          case 'dictionary':
+            return `https://www.dictionary.com/browse/${encodeURI(getCleanedWordDefinition())}`;
+          case 'thesaurus':
+            return `https://www.thesaurus.com/browse/${encodeURI(getCleanedWordDefinition())}`;
+          case 'urbandictionary':
+            return `https://www.urbandictionary.com/define.php?term=${encodeURIComponent(getCleanedWordDefinition())}`;
+          case 'wikipedia':
+            return `https://en.m.wikipedia.org/wiki/${encodeURI(getCleanedWordDefinition())}`;
+        }
+      }
 
-        return this.executeJavaScript(js, event);
+      function getWebview(): Electron.WebviewTag | null {
+        return definitionPreview.value;
+      }
+
+      async function executeJavaScript(
+        js: string | undefined,
+        logDetails?: any
+      ): Promise<any> {
+        const webview = getWebview();
+        if (!webview || !js) {
+          log.debug('word-definition.execute-js.missing', { logDetails });
+          return;
+        }
+        try {
+          const result = await (webview.executeJavaScript(
+            js
+          ) as unknown as Promise<any>);
+          log.debug('word-definition.execute-js.result', result);
+          return result;
+        } catch (err) {
+          log.debug('word-definition.execute-js.error', err);
+        }
+      }
+
+      function wrapJs(mutatorJs: string): string {
+        return `(() => { try { ${mutatorJs} } catch (err) { console.error('Mutator error', err); } })();`;
+      }
+
+      function getMutator(mode: string): string {
+        const js = scripts.mutator;
+        return js.replace(/## SITE ##/g, mode);
+      }
+
+      onMounted(() => {
+        const webview = getWebview();
+        if (!webview) return;
+
+        const eventProcessor = async (event: EventBusEvent): Promise<void> => {
+          const js = wrapJs(getMutator(mode.value));
+          return executeJavaScript(js, event);
+        };
+
+        webview.addEventListener('update-target-url', eventProcessor as any);
+        webview.addEventListener('dom-ready', eventProcessor as any);
+
+        // await remote.webContents.fromId(webview.getWebContentsId()).session.clearStorageData({storages: ['cookies', 'indexdb']});
+      });
+
+      return {
+        mode,
+        definitionPreview,
+        setMode,
+        getWebUrl,
+        getCleanedWordDefinition
       };
-
-      webview.addEventListener('update-target-url', eventProcessor);
-      webview.addEventListener('dom-ready', eventProcessor);
-
-      // await remote.webContents.fromId(webview.getWebContentsId()).session.clearStorageData({storages: ['cookies', 'indexdb']});
     }
-
-    setMode(
-      mode: 'dictionary' | 'thesaurus' | 'urbandictionary' | 'wikipedia'
-    ): void {
-      this.mode = mode;
-    }
-
-    getWebUrl(): string {
-      if (!this.expression) {
-        return 'about:blank';
-      }
-
-      switch (this.mode) {
-        case 'dictionary':
-          return `https://www.dictionary.com/browse/${encodeURI(this.getCleanedWordDefinition())}`;
-
-        case 'thesaurus':
-          return `https://www.thesaurus.com/browse/${encodeURI(this.getCleanedWordDefinition())}`;
-
-        case 'urbandictionary':
-          return `https://www.urbandictionary.com/define.php?term=${encodeURIComponent(this.getCleanedWordDefinition())}`;
-
-        case 'wikipedia':
-          return `https://en.m.wikipedia.org/wiki/${encodeURI(this.getCleanedWordDefinition())}`;
-      }
-    }
-
-    getCleanedWordDefinition(expression = this.expression): string {
-      return anyAscii(expression || '')
-        .toLowerCase()
-        .replace(/[^a-z0-9\-]/g, ' ')
-        .replace(/  +/g, ' ')
-        .trim();
-    }
-
-    protected getWebview(): Electron.WebviewTag {
-      return this.$refs.definitionPreview as Electron.WebviewTag;
-    }
-
-    protected async executeJavaScript(
-      js: string | undefined,
-      logDetails?: any
-    ): Promise<any> {
-      const webview = this.getWebview();
-
-      if (!js) {
-        log.debug('word-definition.execute-js.missing', { logDetails });
-        return;
-      }
-
-      try {
-        const result = await (webview.executeJavaScript(
-          js
-        ) as unknown as Promise<any>);
-
-        log.debug('word-definition.execute-js.result', result);
-
-        return result;
-      } catch (err) {
-        log.debug('word-definition.execute-js.error', err);
-      }
-    }
-
-    protected wrapJs(mutatorJs: string): string {
-      return `(() => { try { ${mutatorJs} } catch (err) { console.error('Mutator error', err); } })();`;
-    }
-
-    protected getMutator(mode: string): string {
-      const js = scripts.mutator; // ./assets/mutator.raw.js
-
-      return js.replace(/## SITE ##/g, mode);
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

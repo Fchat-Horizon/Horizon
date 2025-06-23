@@ -86,7 +86,7 @@
         type: String,
         default: ''
       },
-      dialogClass: Object,
+      dialogClass: { type: String, default: 'modal-dialog' },
       buttons: {
         type: Boolean,
         default: true
