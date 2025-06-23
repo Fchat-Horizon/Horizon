@@ -16,7 +16,7 @@
         :filterFunc="filterKink"
         :options="options.kinks"
       >
-        <template slot-scope="s">{{ s.option.name }}</template>
+        <template #default="{ option }">{{ option.name }}</template>
       </filterable-select>
       <filterable-select
         v-for="item in listItems"
@@ -38,9 +38,8 @@
         :title="l('characterSearch.species')"
         :options="options.species"
       >
-        <template slot-scope="s"
-          >{{ s.option.shortName }}
-          <small>{{ s.option.details }}</small></template
+        <template #default="{ option }"
+          >{{ option.shortName }} <small>{{ option.details }}</small></template
         >
       </filterable-select>
 
