@@ -714,8 +714,7 @@
             }
           }
           return {
-            [`theme-${core.state.settings.risingCharacterTheme || settingsState.value.theme}`]:
-              true,
+            [`theme-${core.state.settings.risingCharacterTheme || settingsState.value.theme}`]: true,
             colorblindMode: core.state.settings.risingColorblindMode,
             disableWindowsHighContrast:
               core.state.generalSettings?.risingDisableWindowsHighContrast ||
