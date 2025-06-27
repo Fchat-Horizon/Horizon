@@ -309,7 +309,6 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
     z-index: 9999;
     display: flex;
     align-items: flex-start;
@@ -319,11 +318,15 @@
     .quick-jump-container {
       background-color: var(--backgroundColor);
       border: 1px solid var(--borderColor);
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      border-radius: 12px;
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 8px 25px rgba(0, 0, 0, 0.15);
       width: 90%;
       max-width: 600px;
       overflow: hidden;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
 
       .quick-jump-header {
         background-color: var(--primaryColor);
@@ -361,11 +364,20 @@
           gap: 12px;
           cursor: pointer;
           border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.2s ease;
+          position: relative;
 
-          &:hover,
+          &:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--textColor);
+          }
+
           &.selected {
             background-color: var(--primaryColor);
             color: var(--primaryTextColor);
+            border-left: 4px solid var(--primaryTextColor);
+            padding-left: 12px;
+            font-weight: 600;
           }
 
           .result-icon {
@@ -415,14 +427,19 @@
           border-radius: 4px;
           background-color: var(--primaryColor);
           color: var(--primaryTextColor);
-          transition: background-color 0.2s ease;
+          transition: all 0.2s ease;
+          position: relative;
 
-          &:hover,
-          &.selected {
-            background-color: var(--primaryColor);
+          &:hover {
             opacity: 0.9;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          }
+
+          &.selected {
+            border-left: 4px solid var(--primaryTextColor);
+            padding-left: 12px;
+            font-weight: 600;
+            background-color: var(--primaryColor);
+            opacity: 1;
           }
 
           .result-icon {
