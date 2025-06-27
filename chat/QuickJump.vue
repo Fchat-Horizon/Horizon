@@ -43,6 +43,19 @@
         v-show="filteredResults.length === 0 && searchQuery.length > 0"
       >
         <span>{{ l('quickJump.noResults') }}</span>
+        <div
+          class="quick-jump-new-conversation"
+          :class="{ selected: selectedIndex === -1 }"
+          @click="openNewConversation"
+          @mouseenter="selectedIndex = -1"
+        >
+          <span class="result-icon">
+            <span class="fas fa-plus"></span>
+          </span>
+          <span class="result-name">{{
+            l('quickJump.openNewConversation', searchQuery)
+          }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -180,6 +193,12 @@
 
     onInput(): void {
       this.selectedIndex = 0;
+      // Auto-focus the "open new conversation" option when it's the only option
+      this.$nextTick(() => {
+        if (this.filteredResults.length === 0 && this.searchQuery.length > 0) {
+          this.selectedIndex = -1;
+        }
+      });
     }
 
     onKeyDown(e: KeyboardEvent): void {
@@ -193,25 +212,60 @@
 
         case Keys.ArrowUp:
           e.preventDefault();
-          if (this.selectedIndex > 0) {
+          if (
+            this.filteredResults.length === 0 &&
+            this.searchQuery.length > 0
+          ) {
+            // Only the "open new conversation" option is available
+            this.selectedIndex = -1;
+          } else if (this.selectedIndex === -1) {
+            // From "open new conversation" to last result
+            this.selectedIndex = this.filteredResults.length - 1;
+          } else if (this.selectedIndex > 0) {
             this.selectedIndex--;
           } else {
-            this.selectedIndex = this.filteredResults.length - 1;
+            // From first result, go to "open new conversation" if available, otherwise wrap to last
+            if (this.searchQuery.length > 0) {
+              this.selectedIndex = -1;
+            } else {
+              this.selectedIndex = this.filteredResults.length - 1;
+            }
           }
           break;
 
         case Keys.ArrowDown:
           e.preventDefault();
-          if (this.selectedIndex < this.filteredResults.length - 1) {
+          if (
+            this.filteredResults.length === 0 &&
+            this.searchQuery.length > 0
+          ) {
+            // Only the "open new conversation" option is available
+            this.selectedIndex = -1;
+          } else if (this.selectedIndex === -1) {
+            // From "open new conversation" to first result
+            this.selectedIndex = 0;
+          } else if (this.selectedIndex < this.filteredResults.length - 1) {
             this.selectedIndex++;
           } else {
-            this.selectedIndex = 0;
+            // From last result, go to "open new conversation" if available, otherwise wrap to first
+            if (this.searchQuery.length > 0) {
+              this.selectedIndex = -1;
+            } else {
+              this.selectedIndex = 0;
+            }
           }
           break;
 
         case Keys.Enter:
           e.preventDefault();
-          if (this.filteredResults.length > 0) {
+          if (
+            this.selectedIndex === -1 &&
+            this.filteredResults.length === 0 &&
+            this.searchQuery.length > 0
+          ) {
+            // Open new conversation
+            this.openNewConversation();
+          } else if (this.filteredResults.length > 0) {
             this.selectResult(this.filteredResults[this.selectedIndex]);
           }
           break;
@@ -222,6 +276,19 @@
       if (result.conversation) {
         result.conversation.show();
       }
+      this.hide();
+    }
+
+    openNewConversation(): void {
+      if (this.searchQuery.trim().length === 0) return;
+
+      // Create a character object for the username
+      const character = core.characters.get(this.searchQuery.trim());
+
+      // Create and show the conversation
+      const conversation = core.conversations.getPrivate(character);
+      conversation.show();
+
       this.hide();
     }
 
@@ -336,6 +403,39 @@
         text-align: center;
         color: var(--gray);
         border-top: 1px solid var(--borderColor);
+
+        .quick-jump-new-conversation {
+          margin-top: 12px;
+          padding: 12px 16px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          cursor: pointer;
+          border: 1px solid var(--borderColor);
+          border-radius: 4px;
+          background-color: var(--primaryColor);
+          color: var(--primaryTextColor);
+          transition: background-color 0.2s ease;
+
+          &:hover,
+          &.selected {
+            background-color: var(--primaryColor);
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          }
+
+          .result-icon {
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+          }
+
+          .result-name {
+            font-weight: bold;
+            flex-shrink: 0;
+          }
+        }
       }
     }
   }
