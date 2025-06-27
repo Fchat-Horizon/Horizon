@@ -127,7 +127,7 @@
           name: conversation.name,
           type: 'private',
           conversation,
-          description: `${l('quickJump.privateWith')} ${conversation.character.name}`
+          description: l('quickJump.privateConversation')
         });
       }
 
@@ -138,7 +138,7 @@
           name: conversation.name,
           type: 'channel',
           conversation,
-          description: `${l('quickJump.channel')} - ${conversation.channel.sortedMembers.length} ${l('quickJump.members')}`
+          description: `${conversation.channel.sortedMembers.length} ${l('quickJump.members')}`
         });
       }
 

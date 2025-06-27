@@ -557,7 +557,7 @@ Any existing FChat 3.0 data for this character will be overwritten.`,
   'quickJump.placeholder': 'Search channels and conversations...',
   'quickJump.noResults': 'No results found',
   'quickJump.consoleDescription': 'Console tab',
-  'quickJump.privateWith': 'Private conversation with',
+  'quickJump.privateConversation': 'Private conversation',
   'quickJump.channel': 'Channel',
   'quickJump.members': 'members'
 };
