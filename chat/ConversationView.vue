@@ -643,6 +643,25 @@
             this.$nextTick(() =>
               (<HTMLElement>this.$refs['searchField']).focus()
             );
+          } else if (
+            getKey(e) === Keys.KeyP &&
+            (e.ctrlKey || e.metaKey) &&
+            e.shiftKey &&
+            !e.altKey
+          ) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            let parent = this.$parent;
+            while (
+              parent &&
+              typeof (parent as any).showQuickJump !== 'function'
+            ) {
+              parent = parent.$parent;
+            }
+            if (parent && typeof (parent as any).showQuickJump === 'function') {
+              (parent as any).showQuickJump();
+            }
           }
         }) as EventListener)
       );

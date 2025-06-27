@@ -273,6 +273,7 @@
         <a class="btn" @click="showProfileAnalyzer"><i class="fa fa-sync" /></a>
       </template>
     </modal>
+    <quick-jump ref="quickJump"></quick-jump>
   </div>
 </template>
 
@@ -308,6 +309,7 @@
   import AdLauncherDialog from './ads/AdLauncher.vue';
   import Modal from '../components/Modal.vue';
   import ProfileAnalysis from '../learn/recommend/ProfileAnalysis.vue';
+  import QuickJump from './QuickJump.vue';
 
   const unreadClasses = {
     [Conversation.UnreadState.None]: '',
@@ -333,7 +335,8 @@
       adCenter: AdCenterDialog,
       adLauncher: AdLauncherDialog,
       modal: Modal,
-      'profile-analysis': ProfileAnalysis
+      'profile-analysis': ProfileAnalysis,
+      'quick-jump': QuickJump
     }
   })
   export default class ChatView extends Vue {
@@ -552,6 +555,25 @@
             )
           );
         }
+      } else if (
+        getKey(e) === Keys.KeyP &&
+        this.isControlOrCommand(e) &&
+        e.shiftKey &&
+        !e.altKey
+      ) {
+        const activeElement = document.activeElement;
+        if (
+          activeElement &&
+          (activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.getAttribute('contenteditable') === 'true')
+        ) {
+          return; // Don't intercept if user is typing in an input field
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+        this.showQuickJump();
       }
     }
 
@@ -701,6 +723,10 @@
 
     showAddPmPartner(): void {
       (<PmPartnerAdder>this.$refs['addPmPartnerDialog']).show();
+    }
+
+    showQuickJump(): void {
+      (<QuickJump>this.$refs['quickJump']).show();
     }
 
     userMenuHandle(e: MouseEvent | TouchEvent): void {
