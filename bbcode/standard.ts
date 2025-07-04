@@ -6,6 +6,7 @@ import { analyzeUrlTag, CoreBBCodeParser } from './core';
 import { BBCodeCustomTag, BBCodeSimpleTag, BBCodeTextTag } from './parser';
 import UrlTagView from './UrlTagView.vue';
 import { default as IconView } from '../bbcode/IconView.vue';
+import core from '../chat/core';
 
 const usernameRegex = /^[a-zA-Z0-9_\-\s]+$/;
 
@@ -188,7 +189,12 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
         const el = parser.createElement('span');
         parent.appendChild(root);
         root.appendChild(el);
-        const view = new IconView({ el, propsData: { character: content } });
+        const view = new IconView({
+          el,
+          propsData: {
+            character: core.characters.get(content)
+          }
+        });
 
         this.cleanup.push(view);
         return root;
