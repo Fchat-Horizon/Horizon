@@ -10,6 +10,7 @@ import {
   Message,
   messageToString
 } from './common';
+import { reactive } from 'vue';
 import core from './core';
 import { Channel, Character, Conversation as Interfaces } from './interfaces';
 import l from './localize';
@@ -415,7 +416,7 @@ class ChannelConversation
     );
     core.watch<Channel.Mode | undefined>(
       function (): Channel.Mode | undefined {
-        const c = this.channels.getChannel(channel.id);
+        const c = core.channels.getChannel(channel.id);
         return c !== undefined ? c.mode : undefined;
       },
       (value: Channel.Mode | undefined) => {
@@ -956,7 +957,7 @@ async function testSmartFilterForChannel(
 }
 
 export default function (this: any): Interfaces.State {
-  state = new State();
+  state = reactive(new State());
   window.addEventListener('focus', () => {
     state.windowFocused = true;
     if (state.selectedConversation !== undefined!)
@@ -1072,6 +1073,7 @@ export default function (this: any): Interfaces.State {
 
     const conv = state.getPrivate(char);
     await conv.addMessage(message);
+    state.privateConversations = [...state.privateConversations];
   });
   connection.onMessage('MSG', async (data, time) => {
     const char = core.characters.get(data.character);

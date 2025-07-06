@@ -101,7 +101,7 @@
         ><span class="fas fa-comment"></span> {{ l('chat.pms') }}</a
       >
 
-      <div class="list-group conversation-nav" ref="privateConversations">
+      <div class="list-group conversation-nav" ref="privateConversationsRef">
         <a
           v-for="conversation in conversations.privateConversations"
           href="#"
@@ -161,7 +161,7 @@
         ><span class="fas fa-list"></span> {{ l('chat.channels') }}</a
       >
 
-      <div class="list-group conversation-nav" ref="channelConversations">
+      <div class="list-group conversation-nav" ref="channelConversationsRef">
         <a
           v-for="conversation in conversations.channelConversations"
           href="#"
@@ -244,31 +244,37 @@
           <div class="name">{{ conversation.name }}</div>
         </a>
       </div>
-      <conversation :reportDialog="$refs['reportDialog']"></conversation>
+      <div>
+        {{
+          conversations.selectedConversation.name || 'no selected conversation'
+        }}
+      </div>
+      <!-- This one has issues right now, so it is commented out. -->
+      <!-- <conversation :reportDialog="reportDialogRef"></conversation> -->
     </div>
     <user-list></user-list>
-    <channels ref="channelsDialog"></channels>
-    <status-switcher ref="statusDialog"></status-switcher>
-    <character-search ref="searchDialog"></character-search>
-    <adLauncher ref="adLauncher"></adLauncher>
-    <adCenter ref="adCenter"></adCenter>
-    <settings ref="settingsDialog"></settings>
-    <report-dialog ref="reportDialog"></report-dialog>
-    <user-menu ref="userMenu" :reportDialog="$refs['reportDialog']"></user-menu>
-    <recent-conversations ref="recentDialog"></recent-conversations>
-    <image-preview ref="imagePreview"></image-preview>
-    <add-pm-partner ref="addPmPartnerDialog"></add-pm-partner>
+    <channels ref="channelsDialogRef"></channels>
+    <status-switcher ref="statusDialogRef"></status-switcher>
+    <character-search ref="searchDialogRef"></character-search>
+    <adLauncher ref="adLauncherRef"></adLauncher>
+    <adCenter ref="adCenterRef"></adCenter>
+    <settings ref="settingsDialogRef"></settings>
+    <report-dialog ref="reportDialogRef"></report-dialog>
+    <user-menu ref="userMenuRef" :reportDialog="reportDialogRef"></user-menu>
+    <recent-conversations ref="recentDialogRef"></recent-conversations>
+    <image-preview ref="imagePreviewRef"></image-preview>
+    <add-pm-partner ref="addPmPartnerDialogRef"></add-pm-partner>
     <note-status
       v-if="coreState.settings.risingShowUnreadOfflineCount"
     ></note-status>
 
     <modal
       :buttons="false"
-      ref="profileAnalysis"
+      ref="profileAnalysisRef"
       dialogClass="profile-analysis"
     >
       <profile-analysis></profile-analysis>
-      <template slot="title">
+      <template #title>
         {{ ownCharacter.name }}
         <a class="btn" @click="showProfileAnalyzer"><i class="fa fa-sync" /></a>
       </template>
@@ -277,11 +283,16 @@
 </template>
 
 <script lang="ts">
+  import {
+    defineComponent,
+    ref,
+    computed,
+    onMounted,
+    onBeforeUnmount,
+    watch
+  } from 'vue';
   import Sortable from 'sortablejs';
 
-  import { Component, Hook } from '@f-list/vue-ts';
-  import Vue from 'vue';
-  import { Keys } from '../keys';
   import ChannelList from './ChannelList.vue';
   import CharacterSearch from './CharacterSearch.vue';
   import { characterImage, getKey, profileLink } from './common';
@@ -299,15 +310,16 @@
   import UserList from './UserList.vue';
   import UserMenu from './UserMenu.vue';
   import ImagePreview from './preview/ImagePreview.vue';
-  import PrivateConversation = Conversation.PrivateConversation;
-  import * as _ from 'lodash';
   import NoteStatus from '../site/NoteStatus.vue';
   import { Dialog } from '../helpers/dialog';
-  // import { EventBus } from './preview/event-bus';
   import AdCenterDialog from './ads/AdCenter.vue';
   import AdLauncherDialog from './ads/AdLauncher.vue';
   import Modal from '../components/Modal.vue';
   import ProfileAnalysis from '../learn/recommend/ProfileAnalysis.vue';
+  import * as _ from 'lodash';
+  import { Keys } from '../keys';
+  import conversations from './conversations';
+  import { StatusCodeError } from 'request-promise/errors';
 
   const unreadClasses = {
     [Conversation.UnreadState.None]: '',
@@ -315,14 +327,15 @@
     [Conversation.UnreadState.Unread]: 'list-group-item-danger'
   };
 
-  @Component({
+  export default defineComponent({
+    name: 'ChatView',
     components: {
       'user-list': UserList,
       channels: ChannelList,
       'status-switcher': StatusSwitcher,
       'character-search': CharacterSearch,
       settings: SettingsView,
-      conversation: ConversationView,
+      conversationView: ConversationView,
       'report-dialog': ReportDialog,
       sidebar: Sidebar,
       'user-menu': UserMenu,
@@ -334,71 +347,91 @@
       adLauncher: AdLauncherDialog,
       modal: Modal,
       'profile-analysis': ProfileAnalysis
-    }
-  })
-  export default class ChatView extends Vue {
-    l = l;
-    sidebarExpanded = false;
-    characterImage = characterImage;
-    conversations = core.conversations;
-    getStatusIcon = getStatusIcon;
-    coreState = core.state;
-    keydownListener!: (e: KeyboardEvent) => void;
-    focusListener!: () => void;
-    blurListener!: () => void;
-    readonly isMac = process.platform === 'darwin';
+    },
+    setup() {
+      // --- Reactive State ---
+      const sidebarExpanded = false;
+      const conversations = core.conversations; // now reactive!
+      const coreState = core.state; // now reactive!
 
-    channelConversations = core.conversations.channelConversations;
-    privateConversations = core.conversations.privateConversations;
+      // Glow logic as computed
+      const privateCanGlow = computed(
+        () => conversations.privateConversations.length === 0
+      );
+      const channelCanGlow = computed(
+        () => conversations.channelConversations.length === 0
+      );
 
-    privateCanGlow = !this.channelConversations?.length;
-    channelCanGlow = !this.privateConversations?.length;
+      // --- Refs for dialogs ---
+      const channelsDialogRef = ref();
+      const statusDialogRef = ref();
+      const searchDialogRef = ref();
+      const adLauncherRef = ref();
+      const adCenterRef = ref();
+      const settingsDialogRef = ref();
+      const reportDialogRef = ref();
+      const userMenuRef = ref();
+      const recentDialogRef = ref();
+      const imagePreviewRef = ref();
+      const addPmPartnerDialogRef = ref();
+      const profileAnalysisRef = ref();
+      const privateConversationsRef = ref();
+      const channelConversationsRef = ref();
 
-    @Hook('mounted')
-    onMounted(): void {
-      this.keydownListener = (e: KeyboardEvent) => this.onKeyDown(e);
-      window.addEventListener('keydown', this.keydownListener);
-      this.setFontSize(core.state.settings.fontSize);
+      // --- Computed ---
+      const isMac = computed(() => process.platform === 'darwin');
+      const showAvatars = computed(() => core.state.settings.showAvatars);
+      const ownCharacter = computed(() => core.characters.ownCharacter);
+      const ownCharacterLink = computed(() =>
+        profileLink(core.characters.ownCharacter.name)
+      );
 
-      this.$watch('conversations.channelConversations', newVal => {
-        if (newVal?.length) {
-          this.channelCanGlow = false;
+      // --- Keyboard/Focus Listeners ---
+      let keydownListener: ((e: KeyboardEvent) => void) | undefined;
+      let focusListener: (() => void) | undefined;
+      let blurListener: (() => void) | undefined;
+
+      // --- Sortable Setup ---
+      onMounted(() => {
+        // Keyboard navigation
+        keydownListener = (e: KeyboardEvent) => onKeyDown(e);
+        window.addEventListener('keydown', keydownListener);
+
+        setFontSize(core.state.settings.fontSize);
+
+        // Sortable for private conversations
+        if (privateConversationsRef.value) {
+          Sortable.create(privateConversationsRef.value, {
+            animation: 50,
+            fallbackTolerance: 5,
+            onEnd: async e => {
+              if (e.oldIndex === e.newIndex) return;
+              return conversations.privateConversations[e.oldIndex!].sort(
+                e.newIndex!
+              );
+            }
+          });
         }
-      });
 
-      this.$watch('conversations.privateConversations', newVal => {
-        if (newVal?.length) {
-          this.privateCanGlow = false;
+        // Sortable for channel conversations
+        if (channelConversationsRef.value) {
+          Sortable.create(channelConversationsRef.value, {
+            animation: 50,
+            fallbackTolerance: 5,
+            onEnd: async e => {
+              if (e.oldIndex === e.newIndex) return;
+              return conversations.channelConversations[e.oldIndex!].sort(
+                e.newIndex!
+              );
+            }
+          });
         }
-      });
 
-      Sortable.create(<HTMLElement>this.$refs['privateConversations'], {
-        animation: 50,
-        fallbackTolerance: 5,
-        onEnd: async e => {
-          if (e.oldIndex === e.newIndex) return;
-          return core.conversations.privateConversations[e.oldIndex!].sort(
-            e.newIndex!
-          );
-        }
-      });
-      Sortable.create(<HTMLElement>this.$refs['channelConversations'], {
-        animation: 50,
-        fallbackTolerance: 5,
-        onEnd: async e => {
-          if (e.oldIndex === e.newIndex) return;
-          return core.conversations.channelConversations[e.oldIndex!].sort(
-            e.newIndex!
-          );
-        }
-      });
-      const ownCharacter = core.characters.ownCharacter;
-      let idleTimer: number | undefined,
-        idleStatus: Connection.ClientCommands['STA'] | undefined,
-        lastUpdate = 0;
-      window.addEventListener(
-        'focus',
-        (this.focusListener = () => {
+        // Focus/blur listeners for idle status
+        let idleTimer: number | undefined,
+          idleStatus: Connection.ClientCommands['STA'] | undefined,
+          lastUpdate = 0;
+        focusListener = () => {
           core.notifications.isInBackground = false;
           if (idleTimer !== undefined) {
             clearTimeout(idleTimer);
@@ -418,11 +451,8 @@
             );
             idleStatus = undefined;
           }
-        })
-      );
-      window.addEventListener(
-        'blur',
-        (this.blurListener = () => {
+        };
+        blurListener = () => {
           core.notifications.isInBackground = true;
           if (idleTimer !== undefined) clearTimeout(idleTimer);
           if (
@@ -432,315 +462,354 @@
             idleTimer = window.setTimeout(() => {
               lastUpdate = Date.now();
               idleStatus = {
-                status: ownCharacter.status,
-                statusmsg: ownCharacter.statusText
+                status: core.characters.ownCharacter.status,
+                statusmsg: core.characters.ownCharacter.statusText
               };
               core.connection.send('STA', {
                 status: 'idle',
-                statusmsg: ownCharacter.statusText
+                statusmsg: core.characters.ownCharacter.statusText
               });
             }, core.state.settings.idleTimer * 60000);
-        })
-      );
-      core.connection.onEvent('closed', () => {
-        if (idleTimer !== undefined) {
-          window.clearTimeout(idleTimer);
-          idleTimer = undefined;
-        }
-      });
-      core.watch<number>(
-        function (): number {
-          return this.state.settings.fontSize;
-        },
-        value => {
-          this.setFontSize(value);
-        }
-      );
-
-      void core.adCenter.load();
-    }
-
-    @Hook('destroyed')
-    destroyed(): void {
-      window.removeEventListener('keydown', this.keydownListener);
-      window.removeEventListener('focus', this.focusListener);
-      window.removeEventListener('blur', this.blurListener);
-    }
-
-    needsReply(conversation: Conversation): boolean {
-      if (!core.state.settings.showNeedsReply) return false;
-      for (let i = conversation.messages.length - 1; i >= 0; --i) {
-        const sender = (<Partial<Conversation.ChatMessage>>(
-          conversation.messages[i]
-        )).sender;
-
-        // noinspection TypeScriptValidateTypes
-        if (sender !== undefined)
-          return sender !== core.characters.ownCharacter;
-      }
-      return false;
-    }
-
-    onKeyDown(e: KeyboardEvent): void {
-      const selected = this.conversations.selectedConversation;
-      const pms = this.conversations.privateConversations;
-      const channels = this.conversations.channelConversations;
-      const console = this.conversations.consoleTab;
-      if (getKey(e) === Keys.ArrowUp) {
-        if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-          this.navigateChannelUpward(selected, console, channels, pms);
-        } else if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey) {
-          this.navigateChannelUpward(
-            selected,
-            console,
-            channels.filter(
-              channel =>
-                channel.unread != Conversation.UnreadState.None ||
-                channel === selected
-            ),
-            pms.filter(
-              pm =>
-                pm.unread != Conversation.UnreadState.None || pm === selected
-            )
-          );
-        } else if (e.altKey && e.shiftKey && this.isControlOrCommand(e)) {
-          this.navigateChannelUpward(
-            selected,
-            console,
-            channels.filter(
-              channel =>
-                channel.unread === Conversation.UnreadState.Mention ||
-                channel === selected
-            ),
-            pms.filter(
-              pm =>
-                pm.unread === Conversation.UnreadState.Mention ||
-                pm === selected
-            )
-          );
-        }
-      } else if (getKey(e) === Keys.ArrowDown) {
-        if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-          this.navigateChannelDownward(selected, console, channels, pms);
-        } else if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey) {
-          this.navigateChannelDownward(
-            selected,
-            console,
-            channels.filter(
-              channel =>
-                channel.unread != Conversation.UnreadState.None ||
-                channel === selected
-            ),
-            pms.filter(
-              pm =>
-                pm.unread != Conversation.UnreadState.None || pm === selected
-            )
-          );
-        } else if (e.altKey && e.shiftKey && this.isControlOrCommand(e)) {
-          this.navigateChannelDownward(
-            selected,
-            console,
-            channels.filter(
-              channel =>
-                channel.unread === Conversation.UnreadState.Mention ||
-                channel === selected
-            ),
-            pms.filter(
-              pm =>
-                pm.unread === Conversation.UnreadState.Mention ||
-                pm === selected
-            )
-          );
-        }
-      }
-    }
-
-    navigateChannelUpward(
-      selected: Conversation,
-      console: Conversation,
-      channels: readonly Conversation.ChannelConversation[],
-      pms: readonly Conversation.PrivateConversation[]
-    ): void {
-      if (selected === console) {
-        //tslint:disable-line:curly
-        if (channels.length > 0) channels[channels.length - 1].show();
-        else if (pms.length > 0) pms[pms.length - 1].show();
-      } else if (Conversation.isPrivate(selected)) {
-        const index = pms.indexOf(selected);
-        if (index === 0) console.show();
-        else pms[index - 1].show();
-      } else {
-        const index = channels.indexOf(
-          <Conversation.ChannelConversation>selected
-        );
-        if (index === 0)
-          if (pms.length > 0) pms[pms.length - 1].show();
-          else console.show();
-        else channels[index - 1].show();
-      }
-    }
-
-    navigateChannelDownward(
-      selected: Conversation,
-      console: Conversation,
-      channels: readonly Conversation.ChannelConversation[],
-      pms: readonly Conversation.PrivateConversation[]
-    ): void {
-      if (selected === console) {
-        //tslint:disable-line:curly - false positive
-        if (pms.length > 0) pms[0].show();
-        else if (channels.length > 0) channels[0].show();
-      } else if (Conversation.isPrivate(selected)) {
-        const index = pms.indexOf(selected);
-        if (index === pms.length - 1) {
-          if (channels.length > 0) channels[0].show();
-        } else pms[index + 1].show();
-      } else {
-        const index = channels.indexOf(
-          <Conversation.ChannelConversation>selected
-        );
-        if (index < channels.length - 1) channels[index + 1].show();
-        else console.show();
-      }
-    }
-
-    //Should this be a generic helper function that other components can use too?
-    //Right now they indiscriminately use the Ctrl or Meta key, even though it should ideally only be one.
-    isControlOrCommand(e: KeyboardEvent): boolean {
-      return this.isMac ? e.metaKey : e.ctrlKey;
-    }
-    setFontSize(fontSize: number): void {
-      let overrideEl = <HTMLStyleElement | null>(
-        document.getElementById('overrideFontSize')
-      );
-      if (overrideEl !== null) document.body.removeChild(overrideEl);
-      overrideEl = document.createElement('style');
-      overrideEl.id = 'overrideFontSize';
-      document.body.appendChild(overrideEl);
-      const sheet = <CSSStyleSheet>overrideEl.sheet;
-      sheet.insertRule(
-        `#chatView, .btn, .form-control, .custom-select { font-size: ${fontSize}px; }`,
-        sheet.cssRules.length
-      );
-      sheet.insertRule(
-        `.form-control, select.form-control { line-height: 1.428571429 }`,
-        sheet.cssRules.length
-      );
-    }
-
-    getOnlineStatusIconClasses(
-      conversation: PrivateConversation
-    ): Record<string, any> {
-      const status = conversation.character.status;
-
-      if (
-        conversation.typingStatus === 'typing' ||
-        conversation.typingStatus === 'paused'
-      ) {
-        return {
-          fas: true,
-          'fa-comment-dots': conversation.typingStatus === 'typing',
-          'fa-comment': conversation.typingStatus === 'paused'
         };
+        window.addEventListener('focus', focusListener);
+        window.addEventListener('blur', blurListener);
+
+        core.connection.onEvent('closed', () => {
+          if (idleTimer !== undefined) {
+            window.clearTimeout(idleTimer);
+            idleTimer = undefined;
+          }
+        });
+
+        core.watch<number>(
+          function (): number {
+            return coreState.settings.fontSize;
+          },
+          value => {
+            setFontSize(value);
+          }
+        );
+
+        void core.adCenter.load();
+      });
+
+      onBeforeUnmount(() => {
+        if (keydownListener)
+          window.removeEventListener('keydown', keydownListener);
+        if (focusListener) window.removeEventListener('focus', focusListener);
+        if (blurListener) window.removeEventListener('blur', blurListener);
+      });
+
+      // --- Methods ---
+      function needsReply(conversation: Conversation): boolean {
+        if (!core.state.settings.showNeedsReply) return false;
+        for (let i = conversation.messages.length - 1; i >= 0; --i) {
+          const sender = (<Partial<Conversation.ChatMessage>>(
+            conversation.messages[i]
+          )).sender;
+          if (sender !== undefined)
+            return sender !== core.characters.ownCharacter;
+        }
+        return false;
       }
 
-      const styling = {
-        crown: { color: 'online', icon: ['fas', 'fa-crown'] },
-        online: { color: 'online', icon: ['fas', 'fa-circle'] },
-        looking: { color: 'online', icon: ['fa', 'fa-eye'] },
-        offline: { color: 'offline', icon: ['fa', 'fa-ban'] },
-        busy: { color: 'away', icon: ['fa', 'fa-cog'] },
-        idle: { color: 'away', icon: ['far', 'fa-clock'] },
-        dnd: { color: 'dnd', icon: ['fa', 'fa-minus-circle'] },
-        away: { color: 'away', icon: ['far', 'fa-circle'] }
+      function onKeyDown(e: KeyboardEvent): void {
+        const selected = conversations.selectedConversation;
+        const pms = conversations.privateConversations;
+        const channels = conversations.channelConversations;
+        const console = conversations.consoleTab;
+        if (getKey(e) === Keys.ArrowUp) {
+          if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            navigateChannelUpward(selected, console, channels, pms);
+          } else if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            navigateChannelUpward(
+              selected,
+              console,
+              channels.filter(
+                channel =>
+                  channel.unread != Conversation.UnreadState.None ||
+                  channel === selected
+              ),
+              pms.filter(
+                pm =>
+                  pm.unread != Conversation.UnreadState.None || pm === selected
+              )
+            );
+          } else if (e.altKey && e.shiftKey && isControlOrCommand(e)) {
+            navigateChannelUpward(
+              selected,
+              console,
+              channels.filter(
+                channel =>
+                  channel.unread === Conversation.UnreadState.Mention ||
+                  channel === selected
+              ),
+              pms.filter(
+                pm =>
+                  pm.unread === Conversation.UnreadState.Mention ||
+                  pm === selected
+              )
+            );
+          }
+        } else if (getKey(e) === Keys.ArrowDown) {
+          if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            navigateChannelDownward(selected, console, channels, pms);
+          } else if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            navigateChannelDownward(
+              selected,
+              console,
+              channels.filter(
+                channel =>
+                  channel.unread != Conversation.UnreadState.None ||
+                  channel === selected
+              ),
+              pms.filter(
+                pm =>
+                  pm.unread != Conversation.UnreadState.None || pm === selected
+              )
+            );
+          } else if (e.altKey && e.shiftKey && isControlOrCommand(e)) {
+            navigateChannelDownward(
+              selected,
+              console,
+              channels.filter(
+                channel =>
+                  channel.unread === Conversation.UnreadState.Mention ||
+                  channel === selected
+              ),
+              pms.filter(
+                pm =>
+                  pm.unread === Conversation.UnreadState.Mention ||
+                  pm === selected
+              )
+            );
+          }
+        }
+      }
+
+      function navigateChannelUpward(
+        selected: Conversation,
+        console: Conversation,
+        channels: readonly Conversation.ChannelConversation[],
+        pms: readonly Conversation.PrivateConversation[]
+      ): void {
+        if (selected === console) {
+          if (channels.length > 0) channels[channels.length - 1].show();
+          else if (pms.length > 0) pms[pms.length - 1].show();
+        } else if (Conversation.isPrivate(selected)) {
+          const index = pms.indexOf(selected);
+          if (index === 0) console.show();
+          else pms[index - 1].show();
+        } else {
+          const index = channels.indexOf(
+            <Conversation.ChannelConversation>selected
+          );
+          if (index === 0)
+            if (pms.length > 0) pms[pms.length - 1].show();
+            else console.show();
+          else channels[index - 1].show();
+        }
+      }
+
+      function navigateChannelDownward(
+        selected: Conversation,
+        console: Conversation,
+        channels: readonly Conversation.ChannelConversation[],
+        pms: readonly Conversation.PrivateConversation[]
+      ): void {
+        if (selected === console) {
+          if (pms.length > 0) pms[0].show();
+          else if (channels.length > 0) channels[0].show();
+        } else if (Conversation.isPrivate(selected)) {
+          const index = pms.indexOf(selected);
+          if (index === pms.length - 1) {
+            if (channels.length > 0) channels[0].show();
+          } else pms[index + 1].show();
+        } else {
+          const index = channels.indexOf(
+            <Conversation.ChannelConversation>selected
+          );
+          if (index < channels.length - 1) channels[index + 1].show();
+          else console.show();
+        }
+      }
+
+      function isControlOrCommand(e: KeyboardEvent): boolean {
+        return isMac.value ? e.metaKey : e.ctrlKey;
+      }
+
+      function setFontSize(fontSize: number): void {
+        let overrideEl = <HTMLStyleElement | null>(
+          document.getElementById('overrideFontSize')
+        );
+        if (overrideEl !== null) document.body.removeChild(overrideEl);
+        overrideEl = document.createElement('style');
+        overrideEl.id = 'overrideFontSize';
+        document.body.appendChild(overrideEl);
+        const sheet = <CSSStyleSheet>overrideEl.sheet;
+        sheet.insertRule(
+          `#chatView, .btn, .form-control, .custom-select { font-size: ${fontSize}px; }`,
+          sheet.cssRules.length
+        );
+        sheet.insertRule(
+          `.form-control, select.form-control { line-height: 1.428571429 }`,
+          sheet.cssRules.length
+        );
+      }
+
+      function getOnlineStatusIconClasses(
+        conversation: Conversation.PrivateConversation
+      ): Record<string, any> {
+        const status = conversation.character.status;
+
+        if (
+          conversation.typingStatus === 'typing' ||
+          conversation.typingStatus === 'paused'
+        ) {
+          return {
+            fas: true,
+            'fa-comment-dots': conversation.typingStatus === 'typing',
+            'fa-comment': conversation.typingStatus === 'paused'
+          };
+        }
+
+        const styling = {
+          crown: { color: 'online', icon: ['fas', 'fa-crown'] },
+          online: { color: 'online', icon: ['fas', 'fa-circle'] },
+          looking: { color: 'online', icon: ['fa', 'fa-eye'] },
+          offline: { color: 'offline', icon: ['fa', 'fa-ban'] },
+          busy: { color: 'away', icon: ['fa', 'fa-cog'] },
+          idle: { color: 'away', icon: ['far', 'fa-clock'] },
+          dnd: { color: 'dnd', icon: ['fa', 'fa-minus-circle'] },
+          away: { color: 'away', icon: ['far', 'fa-circle'] }
+        };
+
+        const cls = { [styling[status].color]: true };
+
+        _.forEach(styling[status].icon, (name: string) => (cls[name] = true));
+
+        return cls;
+      }
+
+      function logOut(): void {
+        if (Dialog.confirmDialog(l('chat.confirmLeave')))
+          core.connection.close();
+      }
+
+      function showSettings(): void {
+        settingsDialogRef.value?.show();
+      }
+
+      function showSearch(): void {
+        searchDialogRef.value?.show();
+      }
+
+      function showRecent(): void {
+        recentDialogRef.value?.show();
+      }
+
+      function showChannels(): void {
+        channelsDialogRef.value?.show();
+      }
+
+      function showStatus(): void {
+        statusDialogRef.value?.show();
+      }
+
+      function showAdCenter(): void {
+        adCenterRef.value?.show();
+      }
+
+      function showAdLauncher(): void {
+        adLauncherRef.value?.show();
+      }
+
+      function showProfileAnalyzer(): void {
+        profileAnalysisRef.value?.show();
+        void profileAnalysisRef.value?.$children[0]?.analyze();
+      }
+
+      function showAddPmPartner(): void {
+        addPmPartnerDialogRef.value?.show();
+      }
+
+      function userMenuHandle(e: MouseEvent | TouchEvent): void {
+        userMenuRef.value?.handleEvent(e);
+      }
+
+      function getClasses(conversation: Conversation): string {
+        return conversation === conversations.selectedConversation
+          ? ' active'
+          : unreadClasses[conversation.unread];
+      }
+
+      function isColorblindModeActive(): boolean {
+        return core.state.settings.risingColorblindMode;
+      }
+
+      function getImagePreview():
+        | InstanceType<typeof ImagePreview>
+        | undefined {
+        return imagePreviewRef.value;
+      }
+
+      function adsAreRunning(): boolean {
+        return core.adCenter.adsAreRunning();
+      }
+
+      function stopAllAds(): void {
+        core.adCenter.stopAllAds();
+      }
+
+      // --- Expose for template ---
+      return {
+        l,
+        sidebarExpanded,
+        characterImage,
+        conversations,
+        getStatusIcon,
+        coreState,
+        privateCanGlow,
+        channelCanGlow,
+        showAvatars,
+        ownCharacter,
+        ownCharacterLink,
+        needsReply,
+        getOnlineStatusIconClasses,
+        logOut,
+        showSettings,
+        showSearch,
+        showRecent,
+        showChannels,
+        showStatus,
+        showAdCenter,
+        showAdLauncher,
+        showProfileAnalyzer,
+        showAddPmPartner,
+        userMenuHandle,
+        getClasses,
+        isColorblindModeActive,
+        getImagePreview,
+        adsAreRunning,
+        stopAllAds,
+        // dialog refs
+        channelsDialogRef,
+        statusDialogRef,
+        searchDialogRef,
+        adLauncherRef,
+        adCenterRef,
+        settingsDialogRef,
+        reportDialogRef,
+        userMenuRef,
+        recentDialogRef,
+        imagePreviewRef,
+        addPmPartnerDialogRef,
+        profileAnalysisRef,
+        privateConversationsRef,
+        channelConversationsRef
       };
-
-      const cls = { [styling[status].color]: true };
-
-      _.forEach(styling[status].icon, (name: string) => (cls[name] = true));
-
-      return cls;
     }
-
-    logOut(): void {
-      if (Dialog.confirmDialog(l('chat.confirmLeave'))) core.connection.close();
-    }
-
-    showSettings(): void {
-      (<SettingsView>this.$refs['settingsDialog']).show();
-    }
-
-    showSearch(): void {
-      (<CharacterSearch>this.$refs['searchDialog']).show();
-    }
-
-    showRecent(): void {
-      (<RecentConversations>this.$refs['recentDialog']).show();
-    }
-
-    showChannels(): void {
-      (<ChannelList>this.$refs['channelsDialog']).show();
-    }
-
-    showStatus(): void {
-      (<StatusSwitcher>this.$refs['statusDialog']).show();
-    }
-
-    showAdCenter(): void {
-      (<AdCenterDialog>this.$refs['adCenter']).show();
-    }
-
-    showAdLauncher(): void {
-      (<AdLauncherDialog>this.$refs['adLauncher']).show();
-    }
-
-    showProfileAnalyzer(): void {
-      (this.$refs.profileAnalysis as any).show();
-      void (this.$refs.profileAnalysis as any).$children[0].analyze();
-    }
-
-    showAddPmPartner(): void {
-      (<PmPartnerAdder>this.$refs['addPmPartnerDialog']).show();
-    }
-
-    userMenuHandle(e: MouseEvent | TouchEvent): void {
-      (<UserMenu>this.$refs['userMenu']).handleEvent(e);
-    }
-
-    get showAvatars(): boolean {
-      return core.state.settings.showAvatars;
-    }
-
-    get ownCharacter(): Character {
-      return core.characters.ownCharacter;
-    }
-
-    get ownCharacterLink(): string {
-      return profileLink(core.characters.ownCharacter.name);
-    }
-
-    getClasses(conversation: Conversation): string {
-      return conversation === core.conversations.selectedConversation
-        ? ' active'
-        : unreadClasses[conversation.unread];
-    }
-
-    isColorblindModeActive(): boolean {
-      return core.state.settings.risingColorblindMode;
-    }
-
-    getImagePreview(): ImagePreview | undefined {
-      return this.$refs['imagePreview'] as ImagePreview;
-    }
-
-    adsAreRunning(): boolean {
-      return core.adCenter.adsAreRunning();
-    }
-
-    stopAllAds(): void {
-      core.adCenter.stopAllAds();
-    }
-  }
+  });
 </script>
 
 <style lang="scss">
