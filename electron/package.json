@@ -89,5 +89,8 @@
     "onlyBuiltDependencies": [
       "electron"
     ]
+  },
+  "dependencies": {
+    "husky": "^9.1.7"
   }
 }
