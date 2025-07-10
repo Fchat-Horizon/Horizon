@@ -38,7 +38,7 @@
       "gatekeeperAssess": false
     },
     "dmg": {
-      "icon": "build/icon.icns",
+      "icon": "build/disk.icns",
       "background": "build/dmg.png",
       "contents": [
         {
