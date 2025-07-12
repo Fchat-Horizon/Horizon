@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Horizon
+Comment=The F-Chat Horizon Client
+Exec=/opt/horizon/horizon-electron %U
+Terminal=false
+Type=Application
+Icon=horizon-electron
+StartupWMClass=Horizon
+Categories=Network;InstantMessaging;

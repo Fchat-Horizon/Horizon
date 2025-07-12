@@ -3,9 +3,8 @@
     <div
       id="userMenu"
       class="list-group"
-      v-show="showContextMenu"
       :style="position"
-      v-if="character"
+      v-if="character && showContextMenu"
       style="
         position: fixed;
         padding: 10px 10px 5px;

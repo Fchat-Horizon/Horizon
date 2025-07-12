@@ -17,7 +17,7 @@
       "
       v-model="tab"
     ></tabs>
-    <div class="users" style="padding-left: 10px" v-show="tab === '0'">
+    <div class="users" style="padding-left: 10px" v-if="tab === '0'">
       <h4>{{ l('users.friends') }}</h4>
       <div
         v-for="character in friends"
@@ -46,9 +46,8 @@
       </div>
     </div>
     <div
-      v-if="channel"
+      v-if="channel && tab === '1'"
       style="padding-left: 5px; flex: 1; display: flex; flex-direction: column"
-      v-show="tab === '1'"
     >
       <div class="users" style="flex: 1; padding-left: 5px">
         <h4>
@@ -83,10 +82,9 @@
       </div>
     </div>
     <div
-      v-if="!channel && !isConsoleTab"
+      v-if="!channel && !isConsoleTab && tab === '1'"
       style="flex: 1; display: flex; flex-direction: column"
       class="profile"
-      v-show="tab === '1'"
     >
       <a :href="profileUrl" target="_blank" class="btn profile-button">
         <span class="fa fa-fw fa-user"></span>

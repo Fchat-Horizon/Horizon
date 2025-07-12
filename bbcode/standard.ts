@@ -29,7 +29,28 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
 
   constructor() {
     super();
-    const hrTag = new BBCodeSimpleTag('hr', 'hr', [], []);
+    const hrTag = new BBCodeSimpleTag(
+      'hr',
+      'hr',
+      [],
+      [
+        'collapse',
+        'justify',
+        'center',
+        'left',
+        'right',
+        'url',
+        'i',
+        'u',
+        'b',
+        'color',
+        's',
+        'big',
+        'sub',
+        'hr',
+        'img'
+      ]
+    );
     hrTag.noClosingTag = true;
     this.addTag(hrTag);
     this.addTag(
@@ -49,11 +70,28 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
     this.addTag(new BBCodeSimpleTag('center', 'span', ['centerText']));
     this.addTag(new BBCodeSimpleTag('justify', 'span', ['justifyText']));
     this.addTag(
+      new BBCodeCustomTag('color', (parser, parent, param) => {
+        const cregex =
+          /^(red|blue|white|yellow|pink|gray|green|orange|purple|black|brown|cyan)$/;
+        if (!cregex.test(param)) {
+          parser.warning('Invalid color parameter provided.');
+          const el = parser.createElement('span');
+          el.className = `Text`;
+          parent.appendChild(el);
+          return el;
+        }
+        const el = parser.createElement('span');
+        el.className = `${param}Text`;
+        parent.appendChild(el);
+        return el;
+      })
+    );
+    this.addTag(
       new BBCodeSimpleTag(
         'big',
         'span',
         ['bigText'],
-        ['url', 'i', 'u', 'b', 'color', 's']
+        ['url', 'i', 'u', 'b', 'color', 's', 'hr', 'img']
       )
     );
     this.addTag(
@@ -61,15 +99,23 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
         'small',
         'span',
         ['smallText'],
-        ['url', 'i', 'u', 'b', 'color', 's']
+        ['url', 'i', 'u', 'b', 'color', 's', 'hr', 'img']
       )
     );
     this.addTag(
       new BBCodeSimpleTag(
         'sub',
-        'span',
+        'sub',
         ['smallText'],
-        ['url', 'i', 'u', 'b', 'color', 's']
+        ['url', 'i', 'u', 'b', 'color', 's', 'hr', 'img']
+      )
+    );
+    this.addTag(
+      new BBCodeSimpleTag(
+        'sup',
+        'sup',
+        ['smallText'],
+        ['url', 'i', 'u', 'b', 'color', 's', 'hr', 'img']
       )
     );
     this.addTag(new BBCodeSimpleTag('indent', 'div', ['indentText']));
@@ -91,7 +137,9 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
           'color',
           's',
           'big',
-          'sub'
+          'sub',
+          'hr',
+          'img'
         ]
       )
     );

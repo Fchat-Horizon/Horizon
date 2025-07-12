@@ -25,10 +25,11 @@ export function characterURL(name: string): string {
 }
 
 //tslint:disable-next-line:no-any
-export function isJSONError(error: any): error is Error & {
+export function isJSONError(error: any): error is AxiosError & {
   response: AxiosResponse<{ [key: string]: object | string | number }>;
 } {
   return (
+    error instanceof Error &&
     (<AxiosError>error).response !== undefined &&
     typeof (<AxiosError>error).response!.data === 'object'
   );
@@ -45,16 +46,21 @@ export function ajaxError(
     if (axios.isCancel(error)) return;
 
     if (isJSONError(error)) {
-      const data = <{ error?: string | string[] }>error.response.data;
+      const axiosError = error as AxiosError & {
+        response: AxiosResponse<{ [key: string]: object | string | number }>;
+      };
+      const data = <{ error?: string | string[] }>axiosError.response.data;
       if (typeof data.error === 'string') message = data.error;
       else if (typeof data.error === 'object' && data.error.length > 0)
         message = data.error[0];
     }
-    if (message === undefined)
+    if (message === undefined) {
+      const errorWithResponse = error as Error & { response?: AxiosResponse };
       message =
-        (<Error & { response?: AxiosResponse }>error).response !== undefined
-          ? (<Error & { response: AxiosResponse }>error).response.statusText
-          : error.name;
+        errorWithResponse.response !== undefined
+          ? errorWithResponse.response.statusText
+          : (error as Error).name;
+    }
   } else message = <string>error;
   console.error(error);
   if (showFlashMessage) flashError(`[ERROR] ${prefix}: ${message}`);

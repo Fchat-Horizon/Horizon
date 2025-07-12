@@ -1,2 +1,2 @@
-git diff --cached --name-only | xargs pnpm prettier --write
-git diff --cached --name-only | xargs git add 
+git diff --cached --name-only --diff-filter=d | xargs -r pnpm prettier --write
+git diff --cached --name-only --diff-filter=d | xargs -r git add

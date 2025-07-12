@@ -18,3 +18,4 @@ electron/release_artifacts/**
 test.ts
 
 **/pnpm-lock.yaml
+*.desktop

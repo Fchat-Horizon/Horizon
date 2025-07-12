@@ -8,10 +8,12 @@
   - [Windows](#windows)
   - [MacOS](#macos)
   - [Linux](#linux)
-    - [Debian/Ubuntu (deb)](#debianubuntu-deb)
-    - [AppImage](#appimage)
-    - [Tarball (tar.gz)](#tarball-targz)
-    - [Arch-based (AUR)](#arch-based-aur)
+    - [Supported distros](#supported-distros)
+    - [Additional installation instructions](#additional-installation-instructions)
+      - [Debian/Ubuntu (deb)](#debianubuntu-deb)
+      - [AppImage](#appimage)
+      - [Tarball (tar.gz)](#tarball-targz)
+      - [Arch-based (AUR)](#arch-based-aur)
 - [Usage](#usage)
   - [Getting started](#getting-started)
   - [Wiki](#wiki)
@@ -21,11 +23,11 @@
 
 # Download
 
-[Windows x64](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-win-x64.exe) |
-[Windows arm64](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-win-arm64.exe) |
-[MacOS (Universal)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-universal.dmg) |
-[Linux x64](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x86_64.AppImage) |
-[Linux arm64](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-arm64.AppImage)
+[![Windows x64](https://img.shields.io/badge/Windows%20x64-%230079d5.svg?style=for-the-badge&logo=Windows%2011&logoColor=white)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-win-x64.exe)
+[![Windows ARM64](https://img.shields.io/badge/Windows%20arm64-%230079d5.svg?style=for-the-badge&logo=Windows%2011&logoColor=white)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-win-arm64.exe)
+[![MacOS (Universal)](https://img.shields.io/badge/macOS%20Universal-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-universal.dmg)
+[![Linux x64](https://img.shields.io/badge/Linux%20x64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x86_64.AppImage)
+[![Linux arm64](https://img.shields.io/badge/Linux%20arm64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-arm64.AppImage)
 
 # Horizon
 
@@ -117,9 +119,19 @@ This is unfortunately unresolvable unless we either get a paid developer license
 
 ## Linux
 
-Select the correct package for your distribution and architecture:
+Horizon has excellent Linux support. Read more at [horizon-packages](https://github.com/Fchat-Horizon/horizon-packages)
 
-### Debian/Ubuntu (deb)
+### Supported distros
+
+| Distro                                                                                                      | Info                                                                                                                                     | Maintainer(s)              |
+| ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| ![Gentoo](https://img.shields.io/badge/Gentoo-54487A?style=for-the-badge&logo=gentoo&logoColor=white)       | [link](https://github.com/Fchat-Horizon/gentoo/tree/0dbb49c0a2010d9a1813b5495fb78e1178494b14)                                            | @CodingWithAnxiety         |
+| ![Arch](https://img.shields.io/badge/Arch%20Linux-1793D1?logo=arch-linux&logoColor=fff&style=for-the-badge) | [![AUR package](https://repology.org/badge/version-for-repo/aur/fchat-horizon.svg)](https://repology.org/project/fchat-horizon/versions) | astrayblackcat, KenwoodFox |
+| ![Debian](https://img.shields.io/badge/Debian-D70A53?style=for-the-badge&logo=debian&logoColor=white)       | [Available under releases](https://github.com/Fchat-Horizon/Horizon/releases/latest)                                                     | The Horizon Developers     |
+
+### Additional installation instructions
+
+#### Debian/Ubuntu (deb)
 
 1. Download the `.deb` file for your architecture.
    - [Linux x64 .deb](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-amd64.deb)
@@ -129,7 +141,7 @@ Select the correct package for your distribution and architecture:
    sudo dpkg -i F-Chat.Horizon-linux-<arch>.deb
    ```
 
-### AppImage
+#### AppImage
 
 1. Download the AppImage for your architecture:
    - [Linux x64 .AppImage](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x86_64.AppImage)
@@ -140,7 +152,7 @@ Select the correct package for your distribution and architecture:
    ./F-Chat.Horizon-linux-<arch>.AppImage
    ```
 
-### Tarball (tar.gz)
+#### Tarball (tar.gz)
 
 1. Download the `.tar.gz` for your architecture:
    - [Linux x64 .tar.gz](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x64.tar.gz)
@@ -152,7 +164,7 @@ Select the correct package for your distribution and architecture:
    ./F-Chat.Horizon
    ```
 
-### Arch-based (AUR)
+#### Arch-based (AUR)
 
 > [!NOTE]
 > The AUR package currently doesn't support ARM.

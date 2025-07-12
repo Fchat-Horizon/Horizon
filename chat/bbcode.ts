@@ -2,7 +2,7 @@ import Vue from 'vue';
 import { BBCodeElement, CoreBBCodeParser, analyzeUrlTag } from '../bbcode/core';
 //tslint:disable-next-line:match-default-export-name
 import BaseEditor from '../bbcode/Editor.vue';
-import { BBCodeTextTag } from '../bbcode/parser';
+import { BBCodeTextTag, BBCodeCustomTag } from '../bbcode/parser';
 import ChannelView from './ChannelTagView.vue';
 // import {characterImage} from './common';
 import core from './core';
@@ -20,6 +20,20 @@ export default class BBCodeParser extends CoreBBCodeParser {
 
   constructor() {
     super();
+    this.addTag(
+      new BBCodeCustomTag('color', (parser, parent, param) => {
+        const cregex =
+          /^(red|blue|white|yellow|pink|gray|green|orange|purple|black|brown|cyan)$/;
+        if (!cregex.test(param)) {
+          parser.warning('Invalid color parameter provided.');
+          return undefined;
+        }
+        const el = parser.createElement('span');
+        el.className = `${param}Text`;
+        parent.appendChild(el);
+        return el;
+      })
+    );
     this.addTag(
       new BBCodeTextTag('user', (parser, parent, param, content) => {
         if (param.length > 0)

@@ -39,6 +39,7 @@ When 'High-Quality Portraits' feature is used, Horizon may connect to the follow
 - freeimage.host
 - redgifs.com
 - imgchest.com
+- toyhou.se
 
 If you are concerned about your security or privacy, consider disabling the high quality portraits feature in Horizon settings.
 

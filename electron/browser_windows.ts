@@ -1,3 +1,8 @@
+/**
+ * @module browser_windows
+ * Handles the creation and management of browser windows in the Electron application.
+ */
+
 import * as electron from 'electron';
 import * as windowState from './window_state';
 import * as remoteMain from '@electron/remote/main';
@@ -9,15 +14,33 @@ import { app, DownloadItem, IpcMainEvent } from 'electron';
 import { getSafeLanguages, updateSupportedLanguages } from './language';
 import { BlockerIntegration } from './blocker/blocker';
 import l from '../chat/localize';
-//In non-production modes we might want to connect to development servers too.
-//This won't change the amount of allowed connections to the live server.
+
+/**
+ * @constant
+ * The maximum number of tabs that can be opened in the application. In production, this is set to 3, while in development it is set to 5.
+ * This does not change tha amount of connections to the live server, it's used so that we can connect more sessions to the test server during development.
+ */
 const maxTabCount = process.env.NODE_ENV === 'production' ? 3 : 5;
 
+/**
+ * Used to store the mapping of character names to their respective web contents from a tab.
+ * This allows for quick access to the web contents associated with a specific character.
+ * @internal
+ */
 const tabMap: { [key: string]: electron.WebContents } = {};
 
-//Our ID is the Window ID tracked by electron. The boolean dictates whether or not we have new messages on this tab.
+/**
+ * Used to track whether a window has new messages.
+ * This is a map where the key is the window ID and the value is a boolean indicating whether there are new messages.
+ * @internal
+ */
 const newMessagesMap: { [id: number]: boolean } = {};
-const trayIcon = path.join(
+
+/**
+ * Tray icon path.
+ * @internal
+ */
+const trayIcon: string = path.join(
   __dirname,
   <string>(
     require(
@@ -28,29 +51,55 @@ const trayIcon = path.join(
   )
 );
 
+/**
+ * @internal
+ */
 let tray: electron.Tray;
-// tslint:disable-next-line:no-require-imports
-const pngIcon = path.join(
+
+/**
+ * PNG icon path.
+ * This is used for the application icon on platforms that support PNG icons.
+ * @internal
+ */
+const pngIcon: string = path.join(
   __dirname,
   <string>require('./build/icon.png').default
 );
 
-// tslint:disable-next-line:no-require-imports
-const winIcon = path.join(
+/**
+ * Windows icon path.
+ * @internal
+ */
+const winIcon: string = path.join(
   __dirname,
   <string>require('./build/icon.ico').default
 );
 
+/**
+ * Empty badge icon for the overlay.
+ * @internal
+ */
 const emptyBadge = electron.nativeImage.createEmpty();
 
+/**
+ * Badge icon for the overlay, indicating new messages.
+ * @internal
+ */
 const badge = electron.nativeImage.createFromPath(
-  //tslint:disable-next-line:no-require-imports no-unsafe-any
   path.join(__dirname, <string>require('./build/badge.png').default)
 );
 
+/**
+ * Handles the 'has-new' IPC event.
+ * This event is triggered when there are new messages in the application.
+ * It updates the dock badge on macOS and applies an overlay icon to the window that sent the event on Window and Linux.
+ * @event
+ * @param {IpcMainEvent} e
+ * @param {boolean} hasNew
+ */
 electron.ipcMain.on('has-new', (e: IpcMainEvent, hasNew: boolean) => {
   if (process.platform === 'darwin' && app.dock !== undefined)
-    app.dock.setBadge(hasNew ? '!' : '');
+    app.dock.setBadge(hasNew ? '•' : '');
   const window = electron.BrowserWindow.fromWebContents(e.sender);
   if (window !== undefined && window !== null) {
     applyOverlayIcon(window, hasNew);
@@ -58,8 +107,15 @@ electron.ipcMain.on('has-new', (e: IpcMainEvent, hasNew: boolean) => {
   }
 });
 
-//We're making this a seperate function now because we'll add more logic to this later
-//We'll want to track the amount of new messages eventually, so it's best to have it point to this specific function
+/**
+ * Apply an overlay icon to the given window based on whether there are new messages.
+ * @function
+ * @param {electron.BrowserWindow} window
+ * The window to apply the overlay icon to.
+ * @param {boolean} hasNew
+ * Whether or not the window has new messages.
+ * @internal
+ */
 function applyOverlayIcon(window: electron.BrowserWindow, hasNew: boolean) {
   window.setOverlayIcon(
     hasNew ? badge : emptyBadge,
@@ -67,11 +123,29 @@ function applyOverlayIcon(window: electron.BrowserWindow, hasNew: boolean) {
   );
 }
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
+/**
+ * @internal
+ * Keep a global reference to all browser windows.
+ * This prevents the windows from being garbage collected.
+ */
 const windows: electron.BrowserWindow[] = [];
+
+/**
+ * Used to count the number of tabs currently open.
+ * @internal
+ */
 let tabCount = 0;
 
+/**
+ * Handles the 'connect' IPC event.
+ * This event is triggered when tab connects to F-Chat.
+ * It adds the tab's web contents to the `tabMap` and updates the tray context menu.
+ * @event
+ * @param {IpcMainEvent & { sender: electron.WebContents }} e
+ * The IPC main event that contains the sender's web contents.
+ * @param {string} character
+ * The character name associated with the tab.
+ */
 electron.ipcMain.on(
   'connect',
   (e: IpcMainEvent & { sender: electron.WebContents }, character: string) => {
@@ -82,14 +156,41 @@ electron.ipcMain.on(
     }
   }
 );
+/**
+ * Handles the 'disconnect' IPC event.
+ * This event is triggered when a tab disconnects from F-Chat.
+ * It removes the tab's web contents from the `tabMap` and updates the tray context menu.
+ * @event
+ * @param {IpcMainEvent} _event
+ * The IPC main event that is triggered when a tab disconnects.
+ * @param {string} character
+ * The character name associated with the tab that is disconnecting.
+ */
 electron.ipcMain.on('disconnect', (_event: IpcMainEvent, character: string) => {
   delete tabMap[character];
   tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
 });
+/**
+ * Opens a new tab in the specified browser window.
+ * @function
+ * @param {electron.BrowserWindow} w
+ * The browser window in which to open the new tab.
+ */
 export function openTab(w: electron.BrowserWindow) {
   if (tabCount < maxTabCount) w.webContents.send('open-tab');
 }
 
+/**
+ * Creates a new main window for the application.
+ * @function
+ * @param {GeneralSettings} settings
+ * This contains the general settings for the application.
+ * @param {boolean} shouldImportSettings
+ * Seemingly unreferenced outside of creating the window.
+ * @param {string} baseDir
+ * Base directory for the application, used for the ad blocker.
+ * @returns {electron.BrowserWindow | undefined}
+ */
 export function createMainWindow(
   settings: GeneralSettings,
   shouldImportSettings: boolean,
@@ -216,6 +317,15 @@ export function createMainWindow(
   return window;
 }
 
+/**
+ * Toggles the enabled state of specific menu items in the application menu.
+ * This is used to enable or disable menu items that are specific to the current window, but are not supposed to be available when all windows are closed or hidden.
+ * This is particularly useful on macOS, where the application menu is always present.
+ * @function
+ * @param {boolean} active
+ * Indicates whether the menu items should be enabled or disabled.
+ * @internal
+ */
 function toggleWindowSpecificMenuItems(active: boolean) {
   let appMenu = app.applicationMenu;
   if (appMenu) {
@@ -227,6 +337,16 @@ function toggleWindowSpecificMenuItems(active: boolean) {
     );
   }
 }
+
+/**
+ * Sets up the web contents for a browser window.
+ * This function enables remote module support, sets visual zoom limits, and handles link clicks.
+ * @function
+ * @param {electron.WebContents} webContents
+ * The web contents to set up.
+ * @param {GeneralSettings} settings
+ * The general settings for the application, used to determine how links should be handled.
+ */
 export function setUpWebContents(
   webContents: electron.WebContents,
   settings: GeneralSettings
@@ -257,6 +377,14 @@ export function setUpWebContents(
   });
 }
 
+/**
+ * Creates the context menu for the system tray.
+ * @function
+ * @returns {electron.MenuItemConstructorOptions[]}
+ * An array of menu item options for the tray context menu.
+ * Each item represents a tab in the application, allowing the user to switch between tabs.
+ * @internal
+ */
 function createTrayMenu(): electron.MenuItemConstructorOptions[] {
   const tabItems: electron.MenuItemConstructorOptions[] = Object.entries(
     tabMap
@@ -274,11 +402,24 @@ function createTrayMenu(): electron.MenuItemConstructorOptions[] {
   }));
   return [
     { label: l('title'), enabled: false },
+    { type: 'separator' },
     ...tabItems,
-    { label: l('action.quit'), click: () => electron.app.quit() }
+    {
+      label: l('action.quit'),
+      click: () => {
+        quitAllWindows();
+        electron.app.quit();
+      }
+    }
   ];
 }
 
+/**
+ * Sets the spell checker languages for all browser windows.
+ * @function
+ * @param {string[]} langs
+ * An array of language codes to set for the spell checker. For example, ['en-US', 'fr-FR'].
+ */
 export function setSpellCheckerLanguages(langs: string[]): void {
   for (const w of windows) {
     // console.log('LANG SEND');
@@ -287,29 +428,69 @@ export function setSpellCheckerLanguages(langs: string[]): void {
   }
 }
 
+/**
+ * Adds a word to the spell checker dictionary for all browser windows.
+ * @function
+ * @param {string} word
+ * The word to add to the spell checker dictionary.
+ */
 export function addWordToSpellCheckerDictionary(word: string) {
   for (const w of windows)
     w.webContents.session.addWordToSpellCheckerDictionary(word);
 }
 
+/**
+ * Updates the zoom level for all browser windows.
+ * This function sends an IPC message to all windows to update their zoom level.
+ * @function
+ * @param {number} zoomLevel
+ * The new zoom level to set for all windows. This is a multiplier for the default zoom level between 0 and 5.
+ */
 export function updateZoomLevel(zoomLevel: number) {
   for (const win of windows) win.webContents.send('update-zoom', zoomLevel);
 }
 
+/**
+ * Quits all browser windows.
+ * @function
+ */
 export function quitAllWindows() {
   for (const w of windows) w.webContents.send('quit');
 }
 
+/**
+ * Shows all browser windows.
+ * @function
+ */
 export function showAllWindows() {
   for (const w of windows) w.show();
 }
-
-export function toggleUpdateNotice(updateAvailable: boolean) {
+/**
+ * Toggles the update notice in all browser windows through an IPC message.
+ * @function
+ * @param {boolean} updateAvailable
+ * Whether an update is available or not.
+ * @param {string} [version]
+ * The version of the update, if available. This is optional and can be undefined.
+ */
+export function toggleUpdateNotice(updateAvailable: boolean, version?: string) {
   for (const w of windows)
-    w.webContents.send('update-available', updateAvailable);
+    w.webContents.send('update-available', updateAvailable, version);
 }
 
-export function createBrowserSettings(
+/**
+ * Creates a new settings window.
+ * @function
+ * @param {GeneralSettings} settings
+ * The general settings for the application, modified by the user in the settings window.
+ * @param {boolean} shouldImportSettings
+ * Seemingly unreferenced outside of creating the window.
+ * @param {electron.BrowserWindow} parentWindow
+ * The parent window for the settings window. This is used to create a modal dialog.
+ * @returns {electron.BrowserWindow | undefined}
+ * Returns the newly created settings window or undefined if creation failed.
+ */
+export function createSettingsWindow(
   settings: GeneralSettings,
   shouldImportSettings: boolean,
   parentWindow: electron.BrowserWindow
@@ -360,6 +541,82 @@ export function createBrowserSettings(
   return browserWindow;
 }
 
+/**
+ * Creates and configures a modal changelog window as a child of the specified parent Electron BrowserWindow.
+ *
+ * @param settings
+ * The general application settings to be passed to the changelog window.
+ * @param shouldImportSettings
+ * Seemingly unreferenced outside of creating the window.
+ * @param parentWindow
+ * The parent window for the settings window. This is used to create a modal dialog.
+ * @param updateVer
+ * @optional
+ * The update version string to display in the changelog window. If not defined, the window will be a regular changelog window for the current application version. If defined, it will be treated as a changelog for a new update.
+ * @returns
+ * The created Electron BrowserWindow instance for the changelog, or `undefined` if creation fails.
+ */
+export function createChangelogWindow(
+  settings: GeneralSettings,
+  shouldImportSettings: boolean,
+  parentWindow: electron.BrowserWindow,
+  updateVer?: string
+): electron.BrowserWindow | undefined {
+  let desiredHeight = 700;
+  let desiredWidth = 600;
+
+  const windowProperties: electron.BrowserWindowConstructorOptions = {
+    center: true,
+    show: false,
+    icon: process.platform === 'win32' ? winIcon : pngIcon,
+    frame: false,
+    width: desiredWidth,
+    minWidth: desiredWidth,
+    height: desiredHeight,
+    minHeight: desiredHeight,
+    resizable: true,
+    modal: true,
+    parent: parentWindow,
+    maximizable: false,
+    webPreferences: {
+      webviewTag: true,
+      nodeIntegration: true,
+      nodeIntegrationInWorker: true,
+      spellcheck: true,
+      enableRemoteModule: true,
+      contextIsolation: false,
+      partition: 'persist:fchat'
+    } as any
+  };
+
+  if (process.platform === 'darwin') {
+    windowProperties.titleBarStyle = 'hiddenInset';
+  }
+  const browserWindow = new electron.BrowserWindow(windowProperties);
+  remoteMain.enable(browserWindow.webContents);
+  browserWindow.loadFile(path.join(__dirname, 'changelog.html'), {
+    query: {
+      settings: JSON.stringify(settings),
+      import: shouldImportSettings ? 'true' : '',
+      updateVer: updateVer ? updateVer : ''
+    }
+  });
+
+  browserWindow.once('ready-to-show', () => {
+    browserWindow.show();
+  });
+
+  return browserWindow;
+}
+
+/**
+ * Creates a new about window.
+ * @function
+ * @param {electron.BrowserWindow} parentWindow
+ * The parent window for the about window. This is used to create a modal dialog.
+ * @returns {electron.BrowserWindow}
+ * Returns the newly created about window.
+ */
 export function createAboutWindow(
   parentWindow: electron.BrowserWindow
 ): electron.BrowserWindow {
@@ -412,6 +669,11 @@ export function createAboutWindow(
   return about;
 }
 
+/**
+ * @function
+ * @param {electron.WebContents} webContents
+ * @param {GeneralSettings} settings
+ */
 export function tabAddHandler(
   webContents: electron.WebContents,
   settings: GeneralSettings
@@ -425,6 +687,12 @@ export function tabAddHandler(
   }
 }
 
+/**
+ * Handles the event when a tab is closed.
+ * Decreases the tab count and allows new tabs to be opened if the count is below the maximum.
+ * This function is called when a tab is closed in the application.
+ * @function
+ */
 export function tabClosedHandler() {
   --tabCount;
   if (tabCount < maxTabCount)

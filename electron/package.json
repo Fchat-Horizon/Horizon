@@ -1,6 +1,6 @@
 {
   "name": "horizon-electron",
-  "version": "1.32.2",
+  "version": "1.32.3-dev3",
   "author": "The F-List Team and Horizon Contributors",
   "description": "Horizon",
   "homepage": "https://horizn.moe",
@@ -38,7 +38,7 @@
       "gatekeeperAssess": false
     },
     "dmg": {
-      "icon": "build/icon.icns",
+      "icon": "build/disk.icns",
       "background": "build/dmg.png",
       "contents": [
         {
@@ -60,7 +60,8 @@
     "linux": {
       "icon": "build/icon.png",
       "category": "Network",
-      "maintainer": "The F-List Team"
+      "maintainer": "The Horizon Maintainers",
+      "desktop": "build/horizon.desktop"
     }
   },
   "scripts": {
@@ -81,12 +82,16 @@
   },
   "devDependencies": {
     "commander": "^13.1.0",
-    "electron": "35.2.0",
+    "electron": "37.2.0",
     "electron-builder": "^25.1.8"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
       "electron"
     ]
+  },
+  "dependencies": {
+    "@mdit/plugin-alert": "^0.22.2",
+    "markdown-it": "^14.1.0"
   }
 }

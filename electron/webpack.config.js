@@ -1,11 +1,11 @@
 const _ = require('lodash');
 const path = require('path');
 const fs = require('fs');
-const ForkTsCheckerWebpackPlugin = require('@f-list/fork-ts-checker-webpack-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const vueTransformer = require('@f-list/vue-ts/transform').default;
 const CopyPlugin = require('copy-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const packageJson = require('./package.json');
 const { DefinePlugin } = require('webpack');
 const APP_VERSION = process.env.APP_VERSION || packageJson.version;
@@ -50,12 +50,6 @@ const mainConfig = {
       __filename: false
     },
     plugins: [
-      new ForkTsCheckerWebpackPlugin({
-        async: false,
-        tslint: path.join(__dirname, '../tslint.json'),
-        tsconfig: './tsconfig-main.json',
-        ignoreLintWarnings: true
-      }),
       new DefinePlugin({
         'process.env.APP_VERSION': JSON.stringify(APP_VERSION)
       })
@@ -83,6 +77,11 @@ const mainConfig = {
       settings: [
         path.join(__dirname, 'settings.ts'),
         path.join(__dirname, 'settings.html'),
+        path.join(__dirname, 'build', 'tray@2x.png')
+      ],
+      changelog: [
+        path.join(__dirname, 'changelog.ts'),
+        path.join(__dirname, 'changelog.html'),
         path.join(__dirname, 'build', 'tray@2x.png')
       ],
       about: [
@@ -150,6 +149,15 @@ const mainConfig = {
             { loader: 'css-loader', options: { esModule: false } }
           ]
         },
+        {
+          test: /\.scss$/,
+          exclude: /\.vue$/,
+          use: [
+            MiniCssExtractPlugin.loader,
+            { loader: 'css-loader', options: { esModule: false } },
+            { loader: 'sass-loader', options: { warnRuleAsWarning: false } }
+          ]
+        },
         { test: /\.raw\.js$/, loader: 'raw-loader' }
       ]
     },
@@ -158,17 +166,13 @@ const mainConfig = {
       __filename: false
     },
     plugins: [
-      new ForkTsCheckerWebpackPlugin({
-        async: false,
-        tslint: path.join(__dirname, '../tslint.json'),
-        tsconfig: './tsconfig-renderer.json',
-        vue: true,
-        ignoreLintWarnings: true
-      }),
       new DefinePlugin({
         'process.env.APP_VERSION': JSON.stringify(APP_VERSION)
       }),
       new VueLoaderPlugin(),
+      new MiniCssExtractPlugin({
+        filename: '[name].css'
+      }),
       new CopyPlugin({
         patterns: [
           {
@@ -299,13 +303,6 @@ const storeWorkerEndpointConfig = _.assign(_.cloneDeep(mainConfig), {
   },
 
   plugins: [
-    new ForkTsCheckerWebpackPlugin({
-      async: false,
-      tslint: path.join(__dirname, '../tslint.json'),
-      tsconfig: './tsconfig-renderer.json',
-      vue: true,
-      ignoreLintWarnings: true
-    }),
     new DefinePlugin({
       'process.env.APP_VERSION': JSON.stringify(APP_VERSION)
     })
@@ -315,34 +312,25 @@ const storeWorkerEndpointConfig = _.assign(_.cloneDeep(mainConfig), {
 module.exports = function (mode) {
   const themesDir = path.join(__dirname, '../scss/themes/chat');
   const themes = fs.readdirSync(themesDir);
+
+  // Create entry points for themes
+  const themeEntries = {};
   for (const theme of themes) {
     if (!theme.endsWith('.scss')) continue;
     const absPath = path.join(themesDir, theme);
-    rendererConfig.entry.chat.push(absPath);
-
-    rendererConfig.module.rules.unshift({
-      test: absPath,
-      use: [
-        { loader: 'file-loader', options: { name: 'themes/[name].css' } },
-        'extract-loader',
-        { loader: 'css-loader', options: { esModule: false } },
-        { loader: 'sass-loader', options: { warnRuleAsWarning: false } }
-      ]
-    });
+    const themeName = theme.replace('.scss', '');
+    themeEntries[`themes/${themeName}`] = absPath;
   }
 
+  // Add fa.scss entry
   const faPath = path.join(themesDir, '../../fa.scss');
-  rendererConfig.entry.chat.push(faPath);
+  themeEntries['fa'] = faPath;
 
-  rendererConfig.module.rules.unshift({
-    test: faPath,
-    use: [
-      { loader: 'file-loader', options: { name: 'fa.css' } },
-      'extract-loader',
-      { loader: 'css-loader', options: { esModule: false } },
-      { loader: 'sass-loader', options: { warnRuleAsWarning: false } }
-    ]
-  });
+  // Update rendererConfig entry
+  rendererConfig.entry = {
+    ...rendererConfig.entry,
+    ...themeEntries
+  };
 
   if (mode === 'production') {
     process.env.NODE_ENV = 'production';

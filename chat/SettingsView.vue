@@ -632,25 +632,27 @@
       </template>
       <template v-else>{{ l('settings.hideAds.empty') }}</template>
     </div>
-    <div v-show="selectedTab === '5'" style="display: flex; padding-top: 10px">
-      <select
-        id="import"
-        class="form-control"
-        v-model="importCharacter"
-        style="flex: 1; margin-right: 10px"
-      >
-        <option value="">{{ l('settings.import.selectCharacter') }}</option>
-        <option v-for="character in availableImports" :value="character">
-          {{ character }}
-        </option>
-      </select>
-      <button
-        class="btn btn-secondary"
-        @click="doImport"
-        :disabled="!importCharacter"
-      >
-        {{ l('settings.import') }}
-      </button>
+    <div v-show="selectedTab === '5'">
+      <div style="display: flex; padding-top: 10px">
+        <select
+          id="import"
+          class="form-control"
+          v-model="importCharacter"
+          style="flex: 1; margin-right: 10px"
+        >
+          <option value="">{{ l('settings.import.selectCharacter') }}</option>
+          <option v-for="character in availableImports" :value="character">
+            {{ character }}
+          </option>
+        </select>
+        <button
+          class="btn btn-secondary"
+          @click="doImport"
+          :disabled="!importCharacter"
+        >
+          {{ l('settings.import') }}
+        </button>
+      </div>
     </div>
   </modal>
 </template>

@@ -57,7 +57,7 @@ export class ImageUrlMutator {
     );
 
     this.add(
-      /^https?:\/\/.*twitter.com\/(.*)/,
+      /^https?:\/\/(?:.*twitter.com|x.com)\/(.*)/,
       async (url: string, match: RegExpMatchArray): Promise<string> => {
         const path = match[1];
 

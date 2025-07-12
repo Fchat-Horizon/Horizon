@@ -69,7 +69,7 @@
         case 'Female':
           return 'fa-fw fa-venus';
         case 'Shemale':
-          return 'fa-fw fa-transgender';
+          return 'fa-fw fa-mars-and-venus';
         case 'Herm':
           return 'fa-fw fa-mercury';
         case 'Male-Herm':
@@ -77,7 +77,7 @@
         case 'Cunt-boy':
           return 'fa-fw fa-mars-stroke-h';
         case 'Transgender':
-          return 'fa-fw fa-transgender-alt';
+          return 'fa-fw fa-transgender';
       }
     }
 

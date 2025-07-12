@@ -82,16 +82,24 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop } from '@f-list/vue-ts';
+  import { Component, Hook, Prop } from '@f-list/vue-ts';
   import Vue from 'vue';
   import CharacterLink from '../../components/character_link.vue';
   import DateDisplay from '../../components/date_display.vue';
   import * as Utils from '../utils';
   import { methods } from './data_store';
   import { Character, GuestbookPost } from './interfaces';
+  import { StandardBBCodeParser } from '../../bbcode/standard';
+  import { BBCodeView } from '../../bbcode/view';
+
+  const standardParser = new StandardBBCodeParser();
 
   @Component({
-    components: { 'date-display': DateDisplay, 'character-link': CharacterLink }
+    components: {
+      'date-display': DateDisplay,
+      'character-link': CharacterLink,
+      bbcode: BBCodeView(standardParser)
+    }
   })
   export default class GuestbookPostView extends Vue {
     @Prop({ required: true })
@@ -110,6 +118,13 @@
 
     get avatarUrl(): string {
       return Utils.avatarURL(this.post.character.name);
+    }
+
+    @Hook('beforeMount')
+    beforeMount(): void {
+      standardParser.inlines = this.character.character.inlines;
+
+      // console.log('mounted');
     }
 
     async deletePost(): Promise<void> {

@@ -11,18 +11,12 @@
       id="window-tabs"
     >
       <h4 style="padding: 2px 0">{{ l('title') }}</h4>
-      <div
-        class="btn"
-        :class="'btn-' + (hasUpdate ? 'warning' : 'light')"
-        @click="openMenu"
-        id="settings"
-      >
+      <div class="btn btn-light" @click="openMenu" id="settings">
         <i class="fa fa-cog"></i>
       </div>
       <div
         class="btn btn-outline-success"
-        :class="'btn-snowflake-' + (hasUpdate ? 'ready' : 'unavailable')"
-        id="update-darwin"
+        :class="'btn-download-' + (hasUpdate ? 'ready' : 'unavailable')"
         @click="openUpdatePage"
       >
         <i class="fa fa-arrow-down"></i>
@@ -199,6 +193,7 @@
     canOpenTab = true;
     l = l;
     hasUpdate = false;
+    updateVersion = '';
     platform = process.platform;
     lockTab = false;
     hasCompletedUpgrades = false;
@@ -250,8 +245,14 @@
       electron.ipcRenderer.on('open-tab', () => this.addTab());
       electron.ipcRenderer.on(
         'update-available',
-        (_e: Electron.IpcRendererEvent, available: boolean) =>
-          (this.hasUpdate = available)
+        (
+          _e: Electron.IpcRendererEvent,
+          updateAvailable: boolean,
+          version?: string
+        ) => {
+          this.hasUpdate = updateAvailable;
+          if (version) this.updateVersion = version;
+        }
       );
       electron.ipcRenderer.on('fix-logs', () =>
         this.activeTab!.view.webContents.send('fix-logs')
@@ -592,10 +593,7 @@
     }
 
     openUpdatePage(): void {
-      electron.ipcRenderer.send(
-        'open-url-externally',
-        'https://github.com/Fchat-Horizon/Horizon/releases'
-      );
+      electron.ipcRenderer.send('open-update-changelog', this.updateVersion);
     }
 
     getThemeClass() {
@@ -684,19 +682,17 @@
     font-size: 14px;
   }
 
-  #window-tabs .btn-snowflake-ready,
-  #window-tabs .btn-snowflake-unavailable {
-    display: none;
+  #window-tabs .btn-download-ready {
+    display: flex;
   }
 
+  #window-tabs .btn-download-unavailable {
+    display: none;
+  }
   .platform-darwin {
     #windowButtons .btn,
     #settings {
       display: none;
-    }
-
-    #window-tabs .btn-snowflake-ready {
-      display: flex;
     }
 
     #window-tabs {

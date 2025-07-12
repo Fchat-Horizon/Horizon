@@ -806,23 +806,23 @@
         /*}*/
 
         .offline {
-          color: #5c5c84;
+          color: var(--text-muted);
         }
 
         .online {
-          color: #02a002;
+          color: var(--success);
         }
 
         .away {
-          color: #c7894f;
+          color: var(--warning);
         }
         .dnd {
-          color: #ce2d4f;
+          color: var(--danger);
         }
 
         .fa-comment,
         .fa-comment-dots {
-          color: #cbcbe5;
+          color: var(--black);
         }
 
         /*.fa-eye {*/

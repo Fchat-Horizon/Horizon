@@ -32,7 +32,7 @@ const strings: { [key: string]: string | undefined } = {
   'consoleWarning.head': 'THIS IS THE DANGER ZONE.',
   'consoleWarning.body': `ANYTHING YOU WRITE OR PASTE IN HERE COULD BE USED TO STEAL YOUR PASSWORDS OR TAKE OVER YOUR ENTIRE COMPUTER. This is where happiness goes to die. If you aren't a developer or a special kind of daredevil, please get out of here!`,
   help: 'Help',
-  'help.fchat': 'Horizon Help and Changelog',
+  'help.fchat': 'Horizon Help',
   'help.feedback': 'Report a Bug / Suggest Something',
   'help.rules': 'F-List Rules',
   'help.faq': 'F-List FAQ',
@@ -157,7 +157,7 @@ SELECT THE TAB YOU WISH TO REPORT, LOGS ARE AUTOMATICALLY ATTACHED[/color]`,
   'chat.report.general':
     'No one in particular. If you wish to report a specific user, please right-click them and select "Report".',
   'chat.report.text': 'Report text',
-  'chat.recentConversations': 'Recent conversations',
+  'chat.recentConversations': 'Recent Conversations',
   'settings.tabs.general': 'General',
   'settings.tabs.look': 'Look and feel',
   'settings.tabs.notifications': 'Notifications',
@@ -542,6 +542,12 @@ Once this process has started, do not interrupt it or your logs will get corrupt
   'status.idle': 'Idle',
   'status.offline': 'Offline',
   'status.crown': 'Rewarded',
+  'changelog.version': 'Changelog for {0}',
+  'changelog.compare': 'Horizon {0} is available, you are using {1}.',
+  'changelog.quitAndDownload': 'Quit and download',
+  'changelog.quitAndDownload.confirm':
+    'You are still connected to chat. \nAre you sure you want to exit and download the update right now?',
+  'changelog.download': 'Download',
   'importer.importGeneral':
     'slimCat data has been detected on your computer.\nWould you like to import general settings?',
   'importer.importCharacter': `slimCat data for this character has been detected on your computer.

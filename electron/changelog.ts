@@ -2,15 +2,16 @@ import * as qs from 'querystring';
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 
 import { GeneralSettings } from './common';
-import Window from './Window.vue';
-import Vue from 'vue';
+import Changelog from './Changelog.vue';
 
-log.info('init.window');
+log.info('init.changelog');
 
 const params = <{ [key: string]: string | undefined }>(
   qs.parse(window.location.search.substr(1))
 );
 const settings = <GeneralSettings>JSON.parse(params['settings']!);
+
+const updateVersion = params['updateVer'];
 
 const logLevel = process.env.NODE_ENV === 'production' ? 'info' : 'silly';
 
@@ -18,12 +19,11 @@ log.transports.file.level = settings.risingSystemLogLevel || logLevel;
 log.transports.console.level = settings.risingSystemLogLevel || logLevel;
 log.transports.file.maxSize = 5 * 1024 * 1024;
 
-log.info('init.window.vue', Vue.version);
+log.info('init.changelog.vue');
 
-//tslint:disable-next-line:no-unused-expression
-export default new Window({
-  el: '#app',
-  data: { settings }
+new Changelog({
+  el: '#changelog',
+  data: { settings, updateVersion }
 });
 
-log.debug('init.window.vue.done');
+log.debug('init.changelog.vue.done');
