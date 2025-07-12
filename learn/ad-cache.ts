@@ -58,4 +58,10 @@ export class AdCache<
 
     this.cache[k] = new AdCacheRecord(ad.name, ad) as RecordType;
   }
+
+  deregister(adName: string): void {
+    const k = Cache.nameKey(adName);
+
+    delete this.cache[k];
+  }
 }

@@ -69,6 +69,8 @@ abstract class Conversation implements Interfaces.Conversation {
   private lastSent = '';
   // private loadedMore = false;
   adManager: AdManager;
+  cacheActive = false;
+  protected cacheInterval: NodeJS.Timer | undefined;
 
   public static readonly conversationThroat = throat(1); // make sure user posting and ad posting won't get in each others' way
 
@@ -77,6 +79,7 @@ abstract class Conversation implements Interfaces.Conversation {
     public _isPinned: boolean
   ) {
     this.adManager = new AdManager(this);
+    core.cache.conversationDraftCache.loadCache();
   }
 
   get settings(): Interfaces.Settings {
@@ -103,7 +106,10 @@ abstract class Conversation implements Interfaces.Conversation {
   }
 
   clearText(): void {
-    setImmediate(() => (this.enteredText = ''));
+    setImmediate(() => {
+      this.enteredText = '';
+      core.cache.conversationDraftCache.deregister(this.name);
+    });
   }
 
   async send(): Promise<void> {
@@ -245,6 +251,8 @@ class PrivateConversation
       state.pinned.private.indexOf(character.name) !== -1
     );
     this.lastRead = this.messages[this.messages.length - 1];
+
+    initConversationCache.call(this);
   }
 
   get enteredText(): string {
@@ -294,6 +302,7 @@ class PrivateConversation
     delete state.privateMap[this.character.name.toLowerCase()];
     await state.savePinned();
     if (state.selectedConversation === this) state.show(state.consoleTab);
+    clearInterval(this.cacheInterval);
   }
 
   async sort(newIndex: number): Promise<void> {
@@ -428,6 +437,8 @@ class ChannelConversation
       channel.mode === 'both' && channel.id in state.modes
         ? state.modes[channel.id]!
         : channel.mode;
+
+    initConversationCache.call(this);
   }
 
   get maxMessageLength(): number {
@@ -524,6 +535,7 @@ class ChannelConversation
 
   close(): void {
     core.connection.send('LCH', { channel: this.channel.id });
+    clearInterval(this.cacheInterval);
   }
 
   async sort(newIndex: number): Promise<void> {
@@ -654,10 +666,13 @@ class ConsoleConversation extends Conversation {
   constructor() {
     super('_', false);
     this.allMessages = [];
+
+    initConversationCache.call(this);
   }
 
-  //tslint:disable-next-line:no-empty
-  close(): void {}
+  close(): void {
+    clearInterval(this.cacheInterval);
+  }
 
   async addMessage(message: Interfaces.Message): Promise<void> {
     this.safeAddMessage(message);
@@ -953,6 +968,36 @@ async function testSmartFilterForChannel(
   }
 
   return false;
+}
+
+async function initConversationCache(this: Conversation): Promise<void> {
+  // Restore message draft if it exists (e.g. accidentally closing the tab). Be sure the cache is reset for a new character if needed.
+  await core.cache.conversationDraftCache.resetCacheIfNeeded();
+
+  const draft = core.cache.getConversationDraft(this.name);
+  this.enteredText = draft;
+
+  if (!this.cacheActive) {
+    const cachedCharacter = core.connection.character;
+
+    this.cacheActive = true;
+    this.cacheInterval = setInterval(() => {
+      // A single tab may maintain state to preserve resources, say if you log out and back into the same character. "Pause" the interval
+      // while the connection is inactive to save resources and prevent cache cross-talk when switching characters in the same tab.
+      if (!core.connection.isOpen) return;
+
+      // If the character has swapped, completely kill the interval, as new ones have been created.
+      if (cachedCharacter !== core.connection.character) {
+        this.cacheActive = false;
+        clearInterval(this.cacheInterval);
+        return;
+      }
+
+      this.enteredText
+        ? core.cache.registerConversationDraft(this.name, this.enteredText)
+        : core.cache.deregisterConversationDraft(this.name);
+    }, 1000);
+  }
 }
 
 export default function (this: any): Interfaces.State {

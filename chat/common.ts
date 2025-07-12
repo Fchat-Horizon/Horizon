@@ -82,6 +82,9 @@ export class Settings implements ISettings {
   horizonChangeOfflineColor = false;
   horizonNotifyFriendSignIn = false;
 
+  horizonCacheDraftMessages = true;
+  horizonSaveDraftMessagesToDiskTimer = 60;
+
   risingFilter = {
     hideAds: false,
     hideSearchResults: false,

@@ -27,4 +27,10 @@ export class ChannelConversationCache extends AdCache<ChannelCacheRecord> {
 
     this.cache[k] = new ChannelCacheRecord(ad.name, ad);
   }
+
+  deregister(adName: string): void {
+    const k = Cache.nameKey(adName);
+
+    delete this.cache[k];
+  }
 }

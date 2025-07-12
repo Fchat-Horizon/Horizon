@@ -292,6 +292,9 @@ export namespace Settings {
     readonly horizonChangeOfflineColor: boolean;
     readonly horizonNotifyFriendSignIn: boolean;
 
+    readonly horizonCacheDraftMessages: boolean;
+    readonly horizonSaveDraftMessagesToDiskTimer: number;
+
     readonly risingFilter: SmartFilterSettings;
 
     readonly risingCharacterTheme: string | undefined;

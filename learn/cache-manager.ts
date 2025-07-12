@@ -14,6 +14,10 @@ import { AdCache } from './ad-cache';
 import { ChannelConversationCache } from './channel-conversation-cache';
 import { CharacterProfiler } from './character-profiler';
 import { CharacterCacheRecord, ProfileCache } from './profile-cache';
+import {
+  ConversationDraftCache,
+  ConversationDraftRecord
+} from './conversation-draft-cache';
 import Timer = NodeJS.Timer;
 import ChannelConversation = Conversation.ChannelConversation;
 import Message = Conversation.Message;
@@ -52,6 +56,8 @@ export class CacheManager {
   profileCache: ProfileCache = new ProfileCache();
   channelConversationCache: ChannelConversationCache =
     new ChannelConversationCache();
+
+  conversationDraftCache: ConversationDraftCache = new ConversationDraftCache();
 
   protected queue: ProfileCacheQueueEntry[] = [];
 
@@ -479,6 +485,23 @@ export class CacheManager {
         }
       );
     }
+  }
+
+  public registerConversationDraft(channel: string, message: string): void {
+    this.conversationDraftCache.register({
+      channel,
+      message
+    });
+  }
+
+  public deregisterConversationDraft(channel: string): void {
+    this.conversationDraftCache.deregister(channel);
+  }
+
+  public getConversationDraft(channel: string): string {
+    const draft: ConversationDraftRecord | null =
+      this.conversationDraftCache.get(channel);
+    return draft?.message || '';
   }
 
   async resolveProfileScore(

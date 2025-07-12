@@ -18,6 +18,9 @@ export abstract class Cache<RecordType> {
   // tslint:disable-next-line: no-any
   abstract register(record: any): void;
 
+  // tslint:disable-next-line: no-any
+  abstract deregister(record: any): void;
+
   has(name: string): boolean {
     return name in this.cache;
   }
