@@ -315,10 +315,6 @@ export namespace Character {
     readonly ownCharacter: Character;
     readonly friends: ReadonlyArray<Character>;
     readonly bookmarks: ReadonlyArray<Character>;
-    readonly ignoreList: ReadonlyArray<string>;
-    readonly opList: ReadonlyArray<string>;
-    readonly friendList: ReadonlyArray<string>;
-    readonly bookmarkList: ReadonlyArray<string>;
 
     readonly ownProfile: CharacterProfile;
 
