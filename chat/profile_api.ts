@@ -73,6 +73,7 @@ async function executeCharacterData(
 ): Promise<Character> {
   const data = await core.connection.queryApi<
     CharacterInfo & {
+      is_self: boolean;
       badges: string[];
       customs_first: boolean;
       character_list: { id: number; name: string }[];
@@ -122,7 +123,7 @@ async function executeCharacterData(
   Utils.settings.animateEicons = core.state.settings.animatedEicons;
 
   const charData = {
-    is_self: false,
+    is_self: data.is_self,
     character: {
       id: data.id,
       name: data.name,
