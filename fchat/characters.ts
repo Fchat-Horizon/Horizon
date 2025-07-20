@@ -150,7 +150,7 @@ export default function (this: void, connection: Connection): Interfaces.State {
         state.get(data.character).isIgnored = true;
         break;
       case 'delete':
-        state.ignoreSet.remove(data.character.toLowerCase());
+        state.ignoreSet.delete(data.character.toLowerCase());
         state.get(data.character).isIgnored = false;
     }
   });
@@ -192,7 +192,7 @@ export default function (this: void, connection: Connection): Interfaces.State {
     char.isChatOp = true;
   });
   connection.onMessage('DOP', data => {
-    state.opSet.remove(data.character.toLowerCase());
+    state.opSet.delete(data.character.toLowerCase());
     const char = state.get(data.character);
     char.isChatOp = false;
   });
@@ -212,7 +212,7 @@ export default function (this: void, connection: Connection): Interfaces.State {
         if (character.status !== 'offline') state.bookmarks.push(character);
         break;
       case 'trackrem':
-        state.bookmarkSet.remove(data.name.toLowerCase());
+        state.bookmarkSet.delete(data.name.toLowerCase());
         character.isBookmarked = false;
         if (character.status !== 'offline')
           state.bookmarks.splice(state.bookmarks.indexOf(character), 1);
@@ -224,7 +224,7 @@ export default function (this: void, connection: Connection): Interfaces.State {
         if (character.status !== 'offline') state.friends.push(character);
         break;
       case 'friendremove':
-        state.friendSet.remove(data.name.toLowerCase());
+        state.friendSet.delete(data.name.toLowerCase());
         character.isFriend = false;
         if (character.status !== 'offline')
           state.friends.splice(state.friends.indexOf(character), 1);
