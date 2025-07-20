@@ -474,6 +474,49 @@ function onReady(): void {
               )
           }
         ] as MenuItemConstructorOptions[]
+      },
+      {
+        label: l('navigation'),
+        // This sub-menu is intentionally hidden - we only use it as a way to enable keyboard shortcuts
+        visible: false,
+        submenu: [
+          {
+            accelerator: 'CmdOrCtrl+Tab',
+            acceleratorWorksWhenHidden: true,
+            label: l('navigation.nextTab'),
+            click: (_m, w) => {
+              w instanceof electron.BrowserWindow &&
+                w.webContents.send('switch-tab');
+            }
+          },
+          {
+            accelerator: 'CmdOrCtrl+PageDown',
+            acceleratorWorksWhenHidden: true,
+            label: l('navigation.nextTab'),
+            click: (_m, w) => {
+              w instanceof electron.BrowserWindow &&
+                w.webContents.send('switch-tab');
+            }
+          },
+          {
+            accelerator: 'CmdOrCtrl+Shift+Tab',
+            acceleratorWorksWhenHidden: true,
+            label: l('navigation.previousTab'),
+            click: (_m, w) => {
+              w instanceof electron.BrowserWindow &&
+                w.webContents.send('previous-tab');
+            }
+          },
+          {
+            accelerator: 'CmdOrCtrl+PageUp',
+            acceleratorWorksWhenHidden: true,
+            label: l('navigation.previousTab'),
+            click: (_m, w) => {
+              w instanceof electron.BrowserWindow &&
+                w.webContents.send('previous-tab');
+            }
+          }
+        ]
       }
     ])
   );

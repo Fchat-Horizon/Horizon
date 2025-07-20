@@ -248,24 +248,6 @@ export function createMainWindow(
     delete newMessagesMap[window.id];
   });
 
-  // Activate tab navigation through global shortcuts when main window is focused
-  window.on('focus', () => {
-    electron.globalShortcut.registerAll(
-      ['CmdOrCtrl+Tab', 'CmdOrCtrl+PageDown'],
-      () => window.webContents?.send('switch-tab')
-    );
-
-    electron.globalShortcut.registerAll(
-      ['CmdOrCtrl+Shift+Tab', 'CmdOrCtrl+PageUp'],
-      () => window.webContents?.send('previous-tab')
-    );
-  });
-
-  // Release global shortcuts when we lose focus
-  window.on('blur', () => {
-    electron.globalShortcut.unregisterAll();
-  });
-
   updateSupportedLanguages(
     electron.session.defaultSession.availableSpellCheckerLanguages
   );
