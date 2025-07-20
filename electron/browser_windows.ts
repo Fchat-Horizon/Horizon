@@ -248,6 +248,24 @@ export function createMainWindow(
     delete newMessagesMap[window.id];
   });
 
+  // Activate tab navigation through global shortcuts when main window is focused
+  window.on('focus', () => {
+    electron.globalShortcut.registerAll(
+      ['CmdOrCtrl+Tab', 'CmdOrCtrl+PageDown'],
+      () => window.webContents?.send('switch-tab')
+    );
+
+    electron.globalShortcut.registerAll(
+      ['CmdOrCtrl+Shift+Tab', 'CmdOrCtrl+PageUp'],
+      () => window.webContents?.send('previous-tab')
+    );
+  });
+
+  // Release global shortcuts when we lose focus
+  window.on('blur', () => {
+    electron.globalShortcut.unregisterAll();
+  });
+
   updateSupportedLanguages(
     electron.session.defaultSession.availableSpellCheckerLanguages
   );
@@ -291,7 +309,9 @@ export function createMainWindow(
   window.on('closed', () => windows.splice(windows.indexOf(window), 1));
   window.once('ready-to-show', () => {
     window.show();
-    if (lastState.maximized) window.maximize();
+    if (lastState.maximized) {
+      window.maximize();
+    }
   });
 
   //On MacOS, the app menu is not bound to any windows, so some options need to be manually toggled. An app can be "active" without any focused windows.

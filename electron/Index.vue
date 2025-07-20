@@ -517,29 +517,6 @@
         core.cache.setTabActive(false);
       });
 
-      window.addEventListener('keydown', e => {
-        const key = getKey(e);
-
-        if (key === Keys.Tab && e.ctrlKey && !e.altKey) {
-          parent.send(
-            `${e.shiftKey ? 'previous' : 'switch'}-tab`,
-            this.character
-          );
-        }
-
-        if (
-          (key === Keys.PageDown || key === Keys.PageUp) &&
-          e.ctrlKey &&
-          !e.altKey &&
-          !e.shiftKey
-        ) {
-          parent.send(
-            `${key === Keys.PageUp ? 'previous' : 'switch'}-tab`,
-            this.character
-          );
-        }
-      });
-
       log.debug('init.chat.listeners.done');
 
       /*if (process.env.NODE_ENV !== 'production') {
