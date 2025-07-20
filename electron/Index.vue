@@ -280,7 +280,6 @@
   import Socket from '../chat/WebSocket';
   import Modal from '../components/Modal.vue';
   import { SimpleCharacter } from '../interfaces';
-  import { Keys } from '../keys';
   // import { BetterSqliteStore } from '../learn/store/better-sqlite3';
   // import { Sqlite3Store } from '../learn/store/sqlite3';
   import CharacterPage from '../site/character_page/character_page.vue';
