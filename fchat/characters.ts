@@ -33,20 +33,20 @@ class State implements Interfaces.State {
 
   friends: Character[] = [];
   bookmarks: Character[] = [];
-  ignoreSet: Set<string> = new Set<string>();
-  opSet: Set<string> = new Set<string>();
-  friendSet: Set<string> = new Set<string>();
-  bookmarkSet: Set<string> = new Set<string>();
+  ignoreList: Set<string> = new Set<string>();
+  opList: Set<string> = new Set<string>();
+  friendList: Set<string> = new Set<string>();
+  bookmarkList: Set<string> = new Set<string>();
 
   get(name: string): Character {
     const key = name.toLowerCase();
     let char = this.characters[key];
     if (char === undefined) {
       char = new Character(name);
-      char.isFriend = this.friendSet.has(key);
-      char.isBookmarked = this.bookmarkSet.has(key);
-      char.isChatOp = this.opSet.has(key);
-      char.isIgnored = this.ignoreSet.has(key);
+      char.isFriend = this.friendList.has(key);
+      char.isBookmarked = this.bookmarkList.has(key);
+      char.isChatOp = this.opList.has(key);
+      char.isIgnored = this.ignoreList.has(key);
       this.characters[key] = char;
     }
     return char;
@@ -106,12 +106,12 @@ export default function (this: void, connection: Connection): Interfaces.State {
   connection.onEvent('connecting', async isReconnect => {
     state.friends = [];
     state.bookmarks = [];
-    state.bookmarkSet = new Set(
+    state.bookmarkList = new Set(
       (
         await connection.queryApi<{ characters: string[] }>('bookmark-list.php')
       ).characters.map(c => c.toLowerCase())
     );
-    state.friendSet = new Set(
+    state.friendList = new Set(
       (
         await connection.queryApi<{
           friends: { source: string; dest: string; last_online: number }[];
@@ -125,8 +125,8 @@ export default function (this: void, connection: Connection): Interfaces.State {
       };
     for (const key in state.characters) {
       const character = state.characters[key]!;
-      character.isFriend = state.friendSet.has(key);
-      character.isBookmarked = state.bookmarkSet.has(key);
+      character.isFriend = state.friendList.has(key);
+      character.isBookmarked = state.bookmarkList.has(key);
       character.status = 'offline';
       character.statusText = '';
     }
@@ -136,26 +136,26 @@ export default function (this: void, connection: Connection): Interfaces.State {
     connection.send('STA', reconnectStatus);
     for (const key in state.characters) {
       const char = state.characters[key]!;
-      char.isIgnored = state.ignoreSet.has(key);
-      char.isChatOp = state.opSet.has(key);
+      char.isIgnored = state.ignoreList.has(key);
+      char.isChatOp = state.opList.has(key);
     }
   });
   connection.onMessage('IGN', data => {
     switch (data.action) {
       case 'init':
-        state.ignoreSet = new Set(data.characters);
+        state.ignoreList = new Set(data.characters);
         break;
       case 'add':
-        state.ignoreSet.add(data.character.toLowerCase());
+        state.ignoreList.add(data.character.toLowerCase());
         state.get(data.character).isIgnored = true;
         break;
       case 'delete':
-        state.ignoreSet.delete(data.character.toLowerCase());
+        state.ignoreList.delete(data.character.toLowerCase());
         state.get(data.character).isIgnored = false;
     }
   });
   connection.onMessage('ADL', data => {
-    state.opSet = new Set(data.ops.map(op => op.toLowerCase()));
+    state.opList = new Set(data.ops.map(op => op.toLowerCase()));
   });
   connection.onMessage('LIS', data => {
     for (const char of data.characters) {
@@ -187,12 +187,12 @@ export default function (this: void, connection: Connection): Interfaces.State {
     state.setStatus(state.get(data.character), data.status, data.statusmsg);
   });
   connection.onMessage('AOP', data => {
-    state.opSet.add(data.character.toLowerCase());
+    state.opList.add(data.character.toLowerCase());
     const char = state.get(data.character);
     char.isChatOp = true;
   });
   connection.onMessage('DOP', data => {
-    state.opSet.delete(data.character.toLowerCase());
+    state.opList.delete(data.character.toLowerCase());
     const char = state.get(data.character);
     char.isChatOp = false;
   });
@@ -207,24 +207,24 @@ export default function (this: void, connection: Connection): Interfaces.State {
     const character = state.get(data.name);
     switch (data.type) {
       case 'trackadd':
-        state.bookmarkSet.add(data.name.toLowerCase());
+        state.bookmarkList.add(data.name.toLowerCase());
         character.isBookmarked = true;
         if (character.status !== 'offline') state.bookmarks.push(character);
         break;
       case 'trackrem':
-        state.bookmarkSet.delete(data.name.toLowerCase());
+        state.bookmarkList.delete(data.name.toLowerCase());
         character.isBookmarked = false;
         if (character.status !== 'offline')
           state.bookmarks.splice(state.bookmarks.indexOf(character), 1);
         break;
       case 'friendadd':
         if (character.isFriend) return;
-        state.friendSet.add(data.name.toLowerCase());
+        state.friendList.add(data.name.toLowerCase());
         character.isFriend = true;
         if (character.status !== 'offline') state.friends.push(character);
         break;
       case 'friendremove':
-        state.friendSet.delete(data.name.toLowerCase());
+        state.friendList.delete(data.name.toLowerCase());
         character.isFriend = false;
         if (character.status !== 'offline')
           state.friends.splice(state.friends.indexOf(character), 1);
