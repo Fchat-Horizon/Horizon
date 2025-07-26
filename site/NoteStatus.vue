@@ -1,20 +1,35 @@
 <template>
-  <div id="note-status" :class="{ active: hasReports() }">
-    <div
-      v-for="(report, index) in reports"
-      :key="`report-${index}`"
-      :class="`status-report ${report.type} ${report.count > 0 && report.count !== report.dismissedCount ? 'active' : ''}`"
-    >
-      <a :href="report.url" @click="dismissReport(report)">
-        <span class="count">{{ report.count }}</span>
-        {{
-          `${report.count !== 1 ? report.title : report.title.substr(0, report.title.length - 1)}`
-        }}
+  <div class="userInfo-buttons-container">
+    <template v-for="(report, index) in reports">
+      <a
+        class="userInfo-button-item userInfo-pager-button"
+        :href="report.url"
+        :key="`report-${index}`"
+        @click="dismissReport(report)"
+        :title="
+          report.count + ' ' + report.count !== 1
+            ? report.title
+            : report.title.substr(0, report.title.length - 1)
+        "
+        :class="`status-report ${report.type} ${report.count > 0 && report.count !== report.dismissedCount ? 'active' : ''}`"
+      >
+        <i :class="getIconClass(report)"></i>
+        <span class="badge badge-primary badge-pill">{{ report.count }}</span>
       </a>
-      <a @click="dismissReport(report)" class="dismiss"
+
+      <!--This was part of the original design, where the NoteStatus component floated on the bottom left
+          But in this new design, where it's part of the lefthand sidebar it's just too visually busy to have dismissal buttons too."
+-->
+      <!--
+      <a
+        :key="`report-${index}`"
+        :class="`status-report ${report.type} ${report.count > 0 && report.count !== report.dismissedCount ? 'active' : ''}`"
+        @click="dismissReport(report)"
+        class="dismiss"
         ><i class="fas fa-times-circle"></i
       ></a>
-    </div>
+      -->
+    </template>
   </div>
 </template>
 <script lang="ts">
@@ -104,6 +119,17 @@
         report.count = count;
       });
     }
+
+    getIconClass(report: ReportState) {
+      switch (report.type) {
+        case 'note':
+          return 'fas fa-envelope fa-fw';
+        case 'message':
+          return 'fas fa-bell fa-fw';
+        default:
+          return 'fa-solid fa-circle-exclamation';
+      }
+    }
   }
 </script>
 <style lang="scss">
@@ -124,46 +150,27 @@
       opacity: 1;
       right: 0;
     }
-
-    .status-report {
+  }
+  .userInfo-buttons-container {
+    .userInfo-button-item.userInfo-pager-button {
       display: none;
-      text-align: center;
-      text-transform: uppercase;
-      font-size: 10pt;
-      padding: 0;
+      .badge {
+        margin-left: 4px;
+        vertical-align: text-top;
+      }
+      & + .dismiss {
+        display: none;
+        opacity: 0.6;
+        &:hover {
+          opacity: 1;
+        }
+        &.active {
+          display: initial;
+        }
+      }
 
       &.active {
-        display: block;
-      }
-
-      a {
-        padding: 5px;
-        padding-bottom: 3px;
-        display: block;
-      }
-
-      a:hover {
-        text-decoration: none;
-        background-color: var(--secondary);
-      }
-
-      .count {
-        font-size: 30pt;
-        display: block;
-        line-height: 80%;
-        padding: 0;
-        margin: 0;
-      }
-
-      .dismiss {
-        position: absolute;
-        top: -0.4rem;
-        right: -0.4rem;
-        background-color: var(--input-bg);
-        border-radius: 8px;
-        margin: 0;
-        padding: 0;
-        line-height: 0;
+        display: inline-block;
       }
     }
   }

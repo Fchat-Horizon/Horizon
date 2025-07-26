@@ -17,7 +17,11 @@
       "
       v-model="tab"
     ></tabs>
-    <div class="users" style="padding-left: 10px" v-if="tab === '0'">
+    <div
+      class="users hidden-scrollbar"
+      style="padding-left: 10px"
+      v-if="tab === '0'"
+    >
       <h4>{{ l('users.friends') }}</h4>
       <div
         v-for="character in friends"
@@ -49,7 +53,7 @@
       v-if="channel && tab === '1'"
       style="padding-left: 5px; flex: 1; display: flex; flex-direction: column"
     >
-      <div class="users" style="flex: 1; padding-left: 5px">
+      <div class="users hidden-scrollbar" style="flex: 1; padding-left: 5px">
         <h4>
           {{ l('users.memberCount', channel.sortedMembers.length) }}
           <a class="btn sort" @click="switchSort"><i class="fa fa-sort"></i></a>
@@ -84,7 +88,7 @@
     <div
       v-if="!channel && !isConsoleTab && tab === '1'"
       style="flex: 1; display: flex; flex-direction: column"
-      class="profile"
+      class="profile hidden-scrollbar"
     >
       <a :href="profileUrl" target="_blank" class="btn profile-button">
         <span class="fa fa-fw fa-user"></span>
@@ -290,7 +294,7 @@
     }
 
     .users {
-      overflow: auto;
+      height: 100%;
     }
 
     .nav li:first-child a {

@@ -1,46 +1,50 @@
 <template>
-  <div>
+  <div class="shadow-sm">
     <div
       id="userMenu"
-      class="list-group"
+      class="list-group bg-solid-text"
       :style="position"
       v-if="character && showContextMenu"
-      style="
-        position: fixed;
-        padding: 10px 10px 5px;
-        display: block;
-        width: 220px;
-        z-index: 1100;
-      "
+      style="position: fixed; display: block; min-width: 220px; z-index: 1100"
       ref="menu"
     >
       <div
-        style="min-height: 65px; padding: 5px; overflow: auto"
+        style="min-height: 65px; overflow: auto"
+        id="userMenuUser"
         class="list-group-item"
         @click.stop
       >
         <img
           :src="characterImage"
+          id="userMenu-avatar"
           style="width: 60px; height: 60px; margin-right: 5px; float: left"
           v-if="showAvatars"
         />
-        <h5 style="margin: 0; line-height: 1">{{ character.name }}</h5>
-        {{ l('status.' + character.status) }}
+        <div id="userMenu-userInfo">
+          <h4 style="margin: 0; line-height: 1" class="userInfo-name">
+            {{ character.name }}
+          </h4>
+          <span class="userInfo-status">{{
+            l('status.' + character.status)
+          }}</span>
+        </div>
       </div>
-      <bbcode
-        id="userMenuStatus"
-        :text="character.statusText"
-        v-show="character.statusText"
-        class="list-group-item"
-        style="max-height: 200px; overflow: auto; clear: both"
-      ></bbcode>
+      <div class="userMenuInner">
+        <bbcode
+          id="userMenuStatus"
+          :text="character.statusText"
+          v-show="character.statusText"
+          class="list-group-item"
+          style="max-height: 200px; overflow: auto; clear: both"
+        ></bbcode>
 
-      <match-tags
-        v-if="match"
-        :match="match"
-        class="list-group-item"
-      ></match-tags>
-
+        <match-tags
+          v-if="match"
+          id="userMenuMatch"
+          :match="match"
+          class="list-group-item"
+        ></match-tags>
+      </div>
       <a
         tabindex="-1"
         :href="profileLink"
@@ -48,7 +52,8 @@
         v-if="showProfileFirst"
         class="list-group-item list-group-item-action"
       >
-        <span class="fa fa-fw fa-user"></span>{{ l('user.profile') }}</a
+        <span class="fa fa-fw fa-user"></span
+        ><span class="action-label">{{ l('user.profile') }}</span></a
       >
       <a
         tabindex="-1"
@@ -56,16 +61,10 @@
         @click.prevent="openConversation(true)"
         class="list-group-item list-group-item-action"
       >
-        <span class="fa fa-fw fa-comment"></span>{{ l('user.messageJump') }}</a
+        <span class="fa fa-fw fa-comment"></span
+        ><span class="action-label">{{ l('user.messageJump') }}</span></a
       >
-      <a
-        tabindex="-1"
-        href="#"
-        @click.prevent="openConversation(false)"
-        class="list-group-item list-group-item-action"
-      >
-        <span class="fa fa-fw fa-plus"></span>{{ l('user.message') }}</a
-      >
+
       <a
         tabindex="-1"
         :href="profileLink"
@@ -73,7 +72,8 @@
         v-if="!showProfileFirst"
         class="list-group-item list-group-item-action"
       >
-        <span class="fa fa-fw fa-user"></span>{{ l('user.profile') }}</a
+        <span class="fas fa-fw fa-address-card"></span
+        ><span class="action-label">{{ l('user.profile') }}</span></a
       >
       <a
         tabindex="-1"
@@ -81,7 +81,8 @@
         @click.prevent="showMemo()"
         class="list-group-item list-group-item-action"
       >
-        <span class="far fa-fw fa-sticky-note"></span>{{ l('user.memo') }}</a
+        <span class="fas fa-fw fa-sticky-note"></span
+        ><span class="action-label">{{ l('user.memo') }}</span></a
       >
       <a
         tabindex="-1"
@@ -96,9 +97,9 @@
               : 'far fa-fw fa-bookmark'
           "
         ></span
-        >{{
+        ><span class="action-label">{{
           l('user.' + (character.isBookmarked ? 'unbookmark' : 'bookmark'))
-        }}</a
+        }}</span></a
       >
       <a
         tabindex="-1"
@@ -107,7 +108,8 @@
         class="list-group-item list-group-item-action"
         :class="{ disabled: !hasAdLogs() }"
       >
-        <span class="fa fa-fw fa-ad"></span>Show ad log
+        <span class="fa fa-fw fa-ad"></span
+        ><span class="action-label">Show ad log</span>
       </a>
       <a
         tabindex="-1"
@@ -117,7 +119,9 @@
         v-show="!isChatOp"
       >
         <span class="fa fa-fw fa-eye-slash"></span
-        >{{ l('user.' + (isHidden ? 'unhide' : 'hide')) }}</a
+        ><span class="action-label">{{
+          l('user.' + (isHidden ? 'unhide' : 'hide'))
+        }}</span></a
       >
       <a
         tabindex="-1"
@@ -127,7 +131,7 @@
         style="border-top-width: 1px"
       >
         <span class="fa fa-fw fa-exclamation-triangle"></span
-        >{{ l('user.report') }}</a
+        ><span class="action-label">{{ l('user.report') }}</span></a
       >
       <a
         tabindex="-1"
@@ -136,16 +140,19 @@
         class="list-group-item list-group-item-action"
       >
         <span class="fa fa-fw fa-minus-circle"></span
-        >{{ l('user.' + (character.isIgnored ? 'unignore' : 'ignore')) }}</a
+        ><span class="action-label">{{
+          l('user.' + (character.isIgnored ? 'unignore' : 'ignore'))
+        }}</span></a
       >
       <a
         tabindex="-1"
         href="#"
         @click.prevent="channelKick()"
         class="list-group-item list-group-item-action"
-        v-show="isChannelMod"
+        v-if="isChannelMod"
       >
-        <span class="fa fa-fw fa-ban"></span>{{ l('user.channelKick') }}</a
+        <span class="fa fa-fw fa-ban"></span
+        ><span class="action-label">{{ l('user.channelKick') }}</span></a
       >
       <a
         tabindex="-1"
@@ -153,8 +160,9 @@
         @click.prevent="chatKick()"
         style="color: #f00"
         class="list-group-item list-group-item-action"
-        v-show="isChatOp"
-        ><span class="fas fa-fw fa-trash"></span>{{ l('user.chatKick') }}</a
+        v-if="isChatOp"
+        ><span class="fas fa-fw fa-trash"></span
+        ><span class="action-label">{{ l('user.chatKick') }}</span></a
       >
     </div>
     <modal
@@ -453,8 +461,63 @@
 </script>
 
 <style lang="scss">
+  @import '~bootstrap/scss/functions';
+  @import '~bootstrap/scss/variables';
+  @import '~bootstrap/scss/mixins/breakpoints';
+
   #userMenu .list-group-item {
-    padding: 3px;
+    padding: 3px 5px 3px 5px;
+  }
+
+  #userMenu-userInfo {
+    max-width: 70%;
+    overflow-x: hidden;
+  }
+
+  #userMenu-userInfo,
+  #userMenu-avatar {
+    //display: inline-block;
+  }
+
+  #userMenu-userInfo {
+    //width: 140px;
+  }
+
+  .userInfo-status {
+    opacity: 0.7;
+  }
+
+  .userInfo-name {
+    font-size: 1.3em;
+    font-weight: bold;
+  }
+
+  #userMenu .list-group-item-action {
+    font-size: 1.04em;
+  }
+
+  #userMenu .list-group-item .fa-fw,
+  #userMenu .list-group-item .action-label {
+    margin-left: 0.4rem;
+  }
+
+  #userMenu {
+    border-radius: 15px;
+    max-width: 265px;
+  }
+
+  #userMenu #userMenuUser {
+    padding: 7px 10px 5px 10px;
+  }
+
+  #userMenuMatch,
+  #userMenuStatus {
+    max-width: 220px;
+    background: none;
+  }
+
+  .userMenuInner {
+    background-color: var(--scoreReportBg);
   }
 
   #userMenu .list-group-item-action {

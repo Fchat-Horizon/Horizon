@@ -15,7 +15,7 @@
         @mousedown.stop
       />
     </div>
-    <div class="dropdown-items">
+    <div class="hidden-scrollbar dropdown-items">
       <template v-if="multiple">
         <a
           href="#"

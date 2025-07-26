@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 $warning: #e09d3e;
 $gray-100: #e5e5e5 !default;
 $gray-200: #cccccc !default;
@@ -8,11 +10,17 @@ $gray-600: #666666 !default;
 $gray-700: #4c4c4c !default;
 $gray-800: #333333 !default;
 $gray-900: #191919 !default;
+$black: #000000 !default;
 $secondary: $gray-400;
 
 $body-bg: $gray-100;
 $text-muted: $gray-500;
+$modal-content-bg: color.adjust($gray-100, $lightness: 5%);
 
+$primary: #e26f2e;
+
+$link-color: $gray-800;
+$link-hover-color: $black;
 // F-List Rising
 $scoreUnicornMatchBg: rgb(0, 173, 173);
 $scoreUnicornMatchFg: rgb(29, 154, 154);

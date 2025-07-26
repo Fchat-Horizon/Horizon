@@ -38,7 +38,7 @@
                 l('settings.tabs.advanced')
               ]"
             ></tabs>
-            <div class="tab-content">
+            <div class="tab-content hidden-scrollbar">
               <!--General -->
               <div
                 v-show="selectedTab === '0'"

@@ -43,14 +43,14 @@ $component-active-color: $gray-900;
 
 // Core page element colors
 $body-bg: $gray-base;
-$link-color: $black;
-$link-hover-color: color.scale($link-color, $lightness: 15%);
+$link-color: $gray-800;
+$link-hover-color: $black;
 $dropdown-bg: $gray-base;
 $dropdown-divider-bg: $gray-100;
 
 // Modal Dialogs
 $modal-backdrop-bg: $white;
-$modal-content-bg: $gray-base;
+$modal-content-bg: $gray-100;
 $modal-header-border-color: $gray-200;
 
 // Fix YIQ(automatic text contrast) preferring black over white on dark themes.

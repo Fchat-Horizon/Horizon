@@ -26,6 +26,7 @@
 @import '~bootstrap/scss/utilities/display';
 @import '~bootstrap/scss/utilities/flex';
 @import '~bootstrap/scss/utilities/sizing';
+@import '~bootstrap/scss/utilities/shadows';
 
 @import '../core';
 @import '../chat';
@@ -67,5 +68,26 @@
 
   .badge-warning {
     color: black;
+  }
+}
+
+.hidden-scrollbar {
+  $scrollbar-width: 8px;
+  overflow-y: scroll;
+  &::-webkit-scrollbar-thumb {
+    display: none;
+  }
+
+  &::-webkit-scrollbar-track {
+    box-shadow: none;
+  }
+  &::-webkit-scrollbar {
+    width: $scrollbar-width;
+  }
+}
+
+.hidden-scrollbar:hover {
+  &::-webkit-scrollbar-thumb {
+    display: initial;
   }
 }

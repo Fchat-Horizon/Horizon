@@ -7,6 +7,28 @@ hr {
   max-width: 95%;
 }
 
+.quick-jump-overlay .quick-jump-container,
+.modal-content {
+  box-shadow: 6px 9px 19px 0px rgba(16, 16, 16, 0.25);
+  border-radius: 1em;
+  border: none;
+  overflow: hidden;
+}
+
+.modal-body {
+  background-color: $scoreReportBg;
+}
+
+.modal-header {
+  padding: 0.5rem 1rem 0.5rem 1rem;
+  border-bottom: none;
+}
+
+.modal-footer {
+  border-top: none;
+  padding: 0.5rem 0.75rem 0.5rem 0.75rem;
+}
+
 .card-title {
   font-weight: bold;
 }

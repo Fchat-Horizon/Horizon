@@ -217,7 +217,7 @@
           overflow: auto;
         "
         :style="{ display: descriptionExpanded ? 'block' : 'none' }"
-        class="bg-solid-text border-bottom"
+        class="bg-solid-text border-bottom hidden-scrollbar"
       >
         <bbcode :text="conversation.channel.description"></bbcode>
       </div>
@@ -293,7 +293,7 @@
       >
     </div>
     <div
-      class="border-top messages"
+      class="border-top messages hidden-scrollbar"
       :class="getMessageWrapperClasses()"
       ref="messages"
       @scroll="onMessagesScroll"

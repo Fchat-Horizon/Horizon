@@ -84,7 +84,10 @@
         &times;
       </button>
     </div>
-    <div class="bbcode-editor-text-area" style="order: 100; width: 100%">
+    <div
+      class="bbcode-editor-text-area bg-light"
+      style="order: 100; width: 100%"
+    >
       <textarea
         ref="input"
         v-model="text"
@@ -93,6 +96,7 @@
         :maxlength="maxlength"
         :placeholder="placeholder"
         :class="finalClasses"
+        class="hidden-scrollbar"
         @keyup="onKeyUp"
         :disabled="disabled"
         @paste="onPaste"
@@ -100,7 +104,7 @@
         :style="hasToolbar ? { 'border-top-left-radius': 0 } : undefined"
         @keydown="onKeyDown"
       ></textarea>
-      <textarea ref="sizer"></textarea>
+      <textarea ref="sizer" class="hidden-scrollbar"></textarea>
       <div class="bbcode-preview" v-show="preview">
         <div class="bbcode-preview-warnings">
           <div class="alert alert-danger" v-show="previewWarnings.length">

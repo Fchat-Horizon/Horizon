@@ -1,6 +1,7 @@
 <template>
   <modal
     :buttons="false"
+    iconClass="fa-solid fa-book"
     ref="dialog"
     @open="onOpen"
     @close="onClose"
@@ -103,7 +104,7 @@
       </div>
     </div>
     <div
-      class="messages messages-both"
+      class="messages messages-both hidden-scrollbar"
       style="overflow: auto; overscroll-behavior: none"
       ref="messages"
       tabindex="-1"

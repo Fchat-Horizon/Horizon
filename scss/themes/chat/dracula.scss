@@ -71,7 +71,8 @@ $genders: (
 .badge-warning,
 .list-group.conversation-nav
   .list-group-item.item-private.active
-  .online-status {
+  .online-status,
+.badge-primary {
   color: $dracula-bg;
 }
 @each $gender, $color in $genders {

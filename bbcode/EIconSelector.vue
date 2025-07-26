@@ -127,7 +127,7 @@
         </div>
 
         <div class="carousel slide w-100 results">
-          <div class="carousel-inner w-100" role="listbox">
+          <div class="carousel-inner w-100 hidden-scrollbar" role="listbox">
             <div
               class="carousel-item"
               v-for="eicon in results"
