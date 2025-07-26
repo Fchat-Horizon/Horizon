@@ -46,13 +46,12 @@
   color: $black-color;
 }
 
-/* Tweak these to be consistent with how bootstrap does sizing. */
 span.bigText {
-  font-size: $font-size-lg;
+  font-size: 1.4em;
 }
 
 span.smallText {
-  font-size: $font-size-sm;
+  font-size: 0.8em;
 }
 
 span.leftText {
@@ -141,5 +140,11 @@ div.indentText {
 
   a.user-link {
     color: var(--linkForcedColor);
+  }
+
+  // [heading] tags are rendered as h2
+  h2 {
+    font-weight: $font-weight-bold;
+    font-size: 1.17rem;
   }
 }

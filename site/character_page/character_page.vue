@@ -1056,6 +1056,20 @@
   .character-description .bbcode {
     white-space: pre-line !important;
 
+    // [sub] and [sup] tags behave slightly differently on profiles and in chat
+    sub {
+      vertical-align: baseline;
+    }
+
+    sup {
+      vertical-align: top;
+    }
+
+    sub,
+    sup {
+      line-height: 1.5;
+    }
+
     blockquote {
       margin: 0;
       background-color: var(--characterImageWrapperBg);

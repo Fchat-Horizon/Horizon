@@ -118,7 +118,9 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
           'color',
           's',
           'big',
+          'small',
           'sub',
+          'sup',
           'hr',
           'img',
           'eicon'
