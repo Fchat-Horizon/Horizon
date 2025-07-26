@@ -280,7 +280,6 @@
   import Socket from '../chat/WebSocket';
   import Modal from '../components/Modal.vue';
   import { SimpleCharacter } from '../interfaces';
-  import { Keys } from '../keys';
   // import { BetterSqliteStore } from '../learn/store/better-sqlite3';
   // import { Sqlite3Store } from '../learn/store/sqlite3';
   import CharacterPage from '../site/character_page/character_page.vue';
@@ -515,29 +514,6 @@
 
       electron.ipcRenderer.on('inactive-tab', () => {
         core.cache.setTabActive(false);
-      });
-
-      window.addEventListener('keydown', e => {
-        const key = getKey(e);
-
-        if (key === Keys.Tab && e.ctrlKey && !e.altKey) {
-          parent.send(
-            `${e.shiftKey ? 'previous' : 'switch'}-tab`,
-            this.character
-          );
-        }
-
-        if (
-          (key === Keys.PageDown || key === Keys.PageUp) &&
-          e.ctrlKey &&
-          !e.altKey &&
-          !e.shiftKey
-        ) {
-          parent.send(
-            `${key === Keys.PageUp ? 'previous' : 'switch'}-tab`,
-            this.character
-          );
-        }
       });
 
       log.debug('init.chat.listeners.done');

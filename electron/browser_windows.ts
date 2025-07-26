@@ -291,7 +291,9 @@ export function createMainWindow(
   window.on('closed', () => windows.splice(windows.indexOf(window), 1));
   window.once('ready-to-show', () => {
     window.show();
-    if (lastState.maximized) window.maximize();
+    if (lastState.maximized) {
+      window.maximize();
+    }
   });
 
   //On MacOS, the app menu is not bound to any windows, so some options need to be manually toggled. An app can be "active" without any focused windows.
