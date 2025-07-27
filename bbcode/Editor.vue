@@ -69,7 +69,7 @@
           @click="previewBBCode"
           class="btn btn-light btn-sm"
           :class="preview ? 'active' : ''"
-          :title="preview ? 'Close Preview' : 'Preview'"
+          :title="preview ? 'Close Preview (Ctrl + P)' : 'Preview (Ctrl + P)'"
         >
           <i class="fa fa-eye"></i>
         </div>
@@ -241,6 +241,7 @@
       this.sizer.style.visibility = 'hidden';
       this.resize();
       window.addEventListener('resize', this.resizeListener);
+      window.addEventListener('keydown', this.onPreviewKeyDown);
     }
 
     //tslint:enable
@@ -459,6 +460,15 @@
           }
       } else if (e.shiftKey) this.isShiftPressed = true;
       this.$emit('keydown', e);
+    }
+
+    onPreviewKeyDown(e: KeyboardEvent): void {
+      const key = getKey(e);
+      if (e.ctrlKey && e.shiftKey && key === Keys.KeyP) {
+        e.stopPropagation();
+        e.preventDefault();
+        this.previewBBCode();
+      }
     }
 
     onKeyUp(e: KeyboardEvent): void {
