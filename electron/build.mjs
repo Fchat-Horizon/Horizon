@@ -241,9 +241,6 @@ function runDockerBuild(opts, targetKey) {
 async function runNativeBuild(opts, targetKey) {
   console.log('Starting native build...');
 
-  // * Clean previous build artifacts
-  fs.rmSync(path.join(process.cwd(), 'dist'), { recursive: true, force: true });
-
   const outDir = path.resolve(opts.output || 'dist');
   fs.mkdirSync(outDir, { recursive: true });
 
