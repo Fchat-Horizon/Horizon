@@ -219,15 +219,13 @@ async function runNativeBuild(opts, targetKey) {
 
   const targets = opts.format.map(format => `${format}:${opts.arch.join(',')}`);
 
-  // Merge package.json config with our runtime settings
   const config = {
-    ...buildConfig, // Start with package.json build config
-    [platformMap[targetKey]]: targets, // Override with our specific targets
-    dir: false,
+    ...buildConfig,
+    [platformMap[targetKey]]: targets,
     ...(opts.output && {
       directories: {
-        ...buildConfig.directories, // Preserve existing directory config
-        output: opts.output // Override output directory if specified
+        ...buildConfig.directories,
+        output: opts.output
       }
     })
   };
