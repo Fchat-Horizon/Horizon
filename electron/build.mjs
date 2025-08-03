@@ -221,7 +221,10 @@ async function runNativeBuild(opts, targetKey) {
 
   const config = {
     ...buildConfig,
-    [platformMap[targetKey]]: targets,
+    [platformMap[targetKey]]: {
+      ...buildConfig[platformMap[targetKey]],
+      target: targets
+    },
     ...(opts.output && {
       directories: {
         ...buildConfig.directories,
