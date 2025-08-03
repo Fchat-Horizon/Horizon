@@ -74,20 +74,20 @@
     }
   },
   "scripts": {
-    "webpack:dev": "mkdir -p dist && node ../webpack development | tee dist/build.log",
-    "webpack:prod": "mkdir -p dist && node ../webpack production | tee dist/build.log",
+    "webpack:dev": "node -e \"require('fs').mkdirSync('dist', {recursive: true})\" && node ../webpack development | tee dist/build.log",
+    "webpack:prod": "node -e \"require('fs').mkdirSync('dist', {recursive: true})\" && node ../webpack production | tee dist/build.log",
     "build": "pnpm run webpack:dev",
     "build:dist": "pnpm run webpack:prod",
     "watch": "node ../webpack watch",
     "start": "../node_modules/.bin/electron app",
     "startDebugMain": "ELECTRON_ENABLE_LOGGING=1 electron --serve --inspect-brk=9229 .",
     "startDebugRender": "ELECTRON_ENABLE_LOGGING=1 electron --remote-debugging-port=9229 .",
-    "build:win": "mkdir -p dist && (node ../webpack production && electron-builder --win nsis --arm64 --x64) | tee dist/build.log",
-    "build:dev:win": "mkdir -p dist && (node ../webpack development && electron-builder --win nsis --arm64 --x64) | tee dist/build.log",
-    "build:mac": "mkdir -p dist && (node ../webpack production && electron-builder --mac dmg --universal) | tee dist/build.log",
-    "build:dev:mac": "mkdir -p dist && (node ../webpack development && electron-builder --mac dmg --universal) | tee dist/build.log",
-    "build:linux": "mkdir -p dist && (node ../webpack production && electron-builder --linux deb tar.gz AppImage --arm64 --x64) | tee dist/build.log",
-    "build:dev:linux": "mkdir -p dist && (node ../webpack development && electron-builder --linux deb tar.gz AppImage --arm64 --x64) | tee dist/build.log"
+    "build:win": "pnpm run webpack:prod && node build.mjs --os windows --format nsis | tee -a dist/build.log",
+    "build:dev:win": "pnpm run webpack:dev && node build.mjs --os windows --format nsis | tee -a dist/build.log",
+    "build:mac": "pnpm run webpack:prod && node build.mjs --os macos --format dmg zip | tee -a dist/build.log",
+    "build:dev:mac": "pnpm run webpack:dev && node build.mjs --os macos --format dmg zip | tee -a dist/build.log",
+    "build:linux": "pnpm run webpack:prod && node build.mjs --os linux --format deb tar.gz AppImage | tee -a dist/build.log",
+    "build:dev:linux": "pnpm run webpack:dev && node build.mjs --os linux --format deb tar.gz AppImage | tee -a dist/build.log"
   },
   "devDependencies": {
     "commander": "^14.0.0",
