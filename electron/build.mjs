@@ -7,6 +7,7 @@ import { arch as systemArch } from 'os';
 import { build } from 'electron-builder';
 import { execSync } from 'child_process';
 import path from 'path';
+import fs from 'fs';
 
 const COLORS = {
   reset: '\u001b[0m',
@@ -205,6 +206,11 @@ function runDockerBuild(opts, targetKey) {
 async function runNativeBuild(opts, targetKey) {
   console.log('Starting native build...');
 
+  // Read the existing electron-builder config from package.json
+  const packageJsonPath = path.join(process.cwd(), 'package.json');
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+  const buildConfig = packageJson.build || {};
+
   const platformMap = {
     linux: 'linux',
     macos: 'mac',
@@ -212,17 +218,21 @@ async function runNativeBuild(opts, targetKey) {
   };
 
   const targets = opts.format.map(format => `${format}:${opts.arch.join(',')}`);
+
+  // Merge package.json config with our runtime settings
   const config = {
-    [platformMap[targetKey]]: targets,
+    ...buildConfig, // Start with package.json build config
+    [platformMap[targetKey]]: targets, // Override with our specific targets
     dir: false,
     ...(opts.output && {
       directories: {
-        output: opts.output
+        ...buildConfig.directories, // Preserve existing directory config
+        output: opts.output // Override output directory if specified
       }
     })
   };
 
-  await build(config);
+  await build({ config });
   console.log('Build completed successfully!');
 }
 
