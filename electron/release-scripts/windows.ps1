@@ -52,7 +52,7 @@ Set-Location electron
 Remove-Item -Recurse -Force app, dist -ErrorAction SilentlyContinue
 pnpm install
 node ..\webpack production
-node build.mjs --os windows --format nsis msi --arch x64 arm64
+node build\build.mjs --os windows --format nsis msi --arch x64 arm64
 
 # Prepare release directory
 # * Create release directory if it doesn't exist

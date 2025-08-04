@@ -36,9 +36,7 @@ rm -rf "$DIST_PATH"
 cd electron
 rm -rf app dist
 pnpm install
-node ../webpack production
-node build.mjs --os macos --format dmg --arch universal
-
+pnpm build:mac:dev
 # & Prepare release directory
 mkdir -p "$RELEASE_PATH"
 

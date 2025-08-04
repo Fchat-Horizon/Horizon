@@ -11,7 +11,8 @@
     "productName": "Horizon",
     "artifactName": "F-Chat.${productName}-${os}-${arch}.${ext}",
     "directories": {
-      "app": "app"
+      "app": "app",
+      "output": "dist"
     },
     "files": [
       "**/*"
@@ -82,12 +83,12 @@
     "start": "../node_modules/.bin/electron app",
     "startDebugMain": "ELECTRON_ENABLE_LOGGING=1 electron --serve --inspect-brk=9229 .",
     "startDebugRender": "ELECTRON_ENABLE_LOGGING=1 electron --remote-debugging-port=9229 .",
-    "build:win": "powershell -Command \"pnpm run webpack:prod; node build.mjs --os windows --format nsis | Tee-Object -FilePath dist/build.log\"",
-    "build:dev:win": "powershell -Command \"pnpm run webpack:dev; node build.mjs --os windows --format nsis | Tee-Object -FilePath dist/build.log\"",
-    "build:mac": "(pnpm run webpack:prod && node build.mjs --os macos --format dmg zip) | tee dist/build.log",
-    "build:dev:mac": "(pnpm run webpack:dev && node build.mjs --os macos --format dmg zip) | tee dist/build.log",
-    "build:linux": "(pnpm run webpack:prod && node build.mjs --os linux --format deb tar.gz AppImage) | tee dist/build.log",
-    "build:dev:linux": "(pnpm run webpack:dev && node build.mjs --os linux --format deb tar.gz AppImage) | tee dist/build.log"
+    "build:win": "powershell -Command \"pnpm run webpack:prod; node build/build.mjs --os windows --format nsis | Tee-Object -FilePath dist/build.log\"",
+    "build:dev:win": "powershell -Command \"pnpm run webpack:dev; node build/build.mjs --os windows --format nsis | Tee-Object -FilePath dist/build.log\"",
+    "build:mac": "(pnpm run webpack:prod && node build/build.mjs --os macos --format dmg zip) | tee dist/build.log",
+    "build:dev:mac": "(pnpm run webpack:dev && node build/build.mjs --os macos --format dmg zip) | tee dist/build.log",
+    "build:linux": "(pnpm run webpack:prod && node build/build.mjs --os linux --format deb tar.gz AppImage) | tee dist/build.log",
+    "build:dev:linux": "(pnpm run webpack:dev && node build/build.mjs --os linux --format deb tar.gz AppImage) | tee dist/build.log"
   },
   "devDependencies": {
     "commander": "^14.0.0",

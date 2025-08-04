@@ -37,7 +37,7 @@ cd electron
 rm -rf app dist
 pnpm install
 node ../webpack production
-node build.mjs --os mac --format dmg --arch universal
+node build.mjs --os mac --format dmg --arch universal arm64 x64
 
 # & Prepare release directory
 mkdir -p "$RELEASE_PATH"
