@@ -35,10 +35,14 @@ rm -rf "$DIST_PATH"
 # & Build the project
 cd electron
 rm -rf app dist
+# Create dist directory for logging before build
+mkdir -p "$DIST_PATH"
 pnpm install
 pnpm build:dev:mac
+
 # & Prepare release directory
 mkdir -p "$RELEASE_PATH"
 
-# & Copy artifacts
+# & Copy artifacts (both dmg and zip files)
 cp "$DIST_PATH"/*.dmg "$RELEASE_PATH"/ 2>/dev/null || true
+cp "$DIST_PATH"/*.zip "$RELEASE_PATH"/ 2>/dev/null || true

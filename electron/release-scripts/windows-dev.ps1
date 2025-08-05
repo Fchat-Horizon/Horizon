@@ -48,10 +48,6 @@ Set-Location $RepoRoot
 # Install dependencies
 pnpm install
 
-# Clean previous builds
-# ! This will delete the entire $DistPath directory
-Remove-Item -Recurse -Force $DistPath -ErrorAction SilentlyContinue
-
 # Build the project
 Set-Location electron
 # ! Removing 'app' and 'dist' directories to ensure a clean build

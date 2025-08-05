@@ -35,8 +35,10 @@ rm -rf "$DIST_PATH"
 # & Build the project
 cd electron
 rm -rf app dist
+# Create dist directory for logging before build
+mkdir -p "$DIST_PATH"
 pnpm install
-pnpm build:dev:linux
+pnpm build:dev:mac
 
 # & Prepare release directory
 mkdir -p "$RELEASE_PATH"
