@@ -49,26 +49,6 @@ jobs:
           node-version: 22
           cache: 'pnpm'
 
-      - name: Install OS-specific Dependencies
-        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
-        run: |
-          # * Install dependencies based on the operating system
-          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-            # * Ubuntu-specific dependencies
-            sudo apt-get update
-            sudo apt-get install -y libsecret-1-dev
-          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-            # * macOS-specific dependencies
-            brew install python-setuptools
-          fi
-
-      - name: Install OS-specific Dependencies (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          # * Windows-specific dependencies
-          npm install --global node-gyp
-
       - name: Run Build Script (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
