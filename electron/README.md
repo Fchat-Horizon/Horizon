@@ -32,7 +32,6 @@ This directory contains the Electron application for F-Chat Horizon and its comp
     - [Configuration Inheritance](#configuration-inheritance)
   - [Notes](#notes)
 
-
 ## Directory Structure
 
 ```
@@ -70,7 +69,7 @@ electron/
 ```bash
 # Development builds
 pnpm run build:dev:linux    # Linux development build
-pnpm run build:dev:mac      # macOS development build  
+pnpm run build:dev:mac      # macOS development build
 pnpm run build:dev:win      # Windows development build
 
 # Production builds
@@ -97,34 +96,35 @@ node build/build.mjs --os macos --no-docker              # Disable Docker
 
 ### Command Line Options
 
-| Option | Description | Example |
-|--------|-------------|---------|
-| `--os <platform>` | **Required.** Target platform: `linux`, `macos`, `windows` | `--os linux` |
-| `-f, --format <formats...>` | Output formats (see supported formats below) | `-f deb rpm` |
-| `-a, --arch <arches...>` | Target architectures | `-a x64 arm64` |
-| `-v, --version <version>` | Override app version | `-v 1.33.0` |
-| `--docker` | Force Docker builds (Linux/Windows only) | `--docker` |
-| `--no-docker` | Disable Docker builds | `--no-docker` |
+| Option                      | Description                                                | Example        |
+| --------------------------- | ---------------------------------------------------------- | -------------- |
+| `--os <platform>`           | **Required.** Target platform: `linux`, `macos`, `windows` | `--os linux`   |
+| `-f, --format <formats...>` | Output formats (see supported formats below)               | `-f deb rpm`   |
+| `-a, --arch <arches...>`    | Target architectures                                       | `-a x64 arm64` |
+| `-v, --version <version>`   | Override app version                                       | `-v 1.33.0`    |
+| `--docker`                  | Force Docker builds (Linux/Windows only)                   | `--docker`     |
+| `--no-docker`               | Disable Docker builds                                      | `--no-docker`  |
 
 ### Supported Formats by Platform
 
-| Platform | Formats |
-|----------|---------|
-| **Linux** | `deb`, `rpm`, `tar.gz`, `AppImage` |
-| **macOS** | `dmg`, `zip` |
-| **Windows** | `nsis`, `msi`, `exe`, `portable` |
+| Platform    | Formats                            |
+| ----------- | ---------------------------------- |
+| **Linux**   | `deb`, `rpm`, `tar.gz`, `AppImage` |
+| **macOS**   | `dmg`, `zip`                       |
+| **Windows** | `nsis`, `msi`, `exe`, `portable`   |
 
 ### Supported Architectures by Platform
 
-| Platform | Architectures |
-|----------|---------------|
-| **Linux** | `x64`, `arm64`, `arm7l`, `ia32` |
-| **macOS** | `x64`, `arm64`, `universal` |
-| **Windows** | `x64`, `ia32`, `arm64` |
+| Platform    | Architectures                   |
+| ----------- | ------------------------------- |
+| **Linux**   | `x64`, `arm64`, `arm7l`, `ia32` |
+| **macOS**   | `x64`, `arm64`, `universal`     |
+| **Windows** | `x64`, `ia32`, `arm64`          |
 
 ## Docker Builds
 
 Docker builds are automatically used when available, except:
+
 - **macOS**: Docker builds are disabled (not supported)
 - **GitHub Actions**: Native builds are preferred for faster execution
 - **Manual override**: Use `--docker` or `--no-docker` flags
@@ -136,6 +136,7 @@ Docker builds are automatically used when available, except:
 - Sufficient disk space for build containers
 
 Docker images used:
+
 - **Linux**: `electronuserland/builder`
 - **Windows**: `electronuserland/builder:wine`
 
@@ -149,7 +150,7 @@ Use the platform-specific release scripts:
 # Linux
 ./release-scripts/linux.sh 1.33.0
 
-# macOS  
+# macOS
 ./release-scripts/macos.sh 1.33.0
 
 # Windows (PowerShell)
@@ -167,8 +168,9 @@ Use the platform-specific release scripts:
 ### Development Builds (PR Testing)
 
 Pull requests automatically trigger builds using the `-dev` scripts:
+
 - `linux-dev.sh`
-- `macos-dev.sh` 
+- `macos-dev.sh`
 - `windows-dev.ps1`
 
 ## Configuration
@@ -195,6 +197,7 @@ Build configuration is centralized in `package.json` under the `build` key:
 ### Docker Configuration
 
 Docker-specific settings are in `build/docker-config.mjs`:
+
 - Environment variable handling
 - Volume mapping
 - Platform-specific container setup
@@ -236,24 +239,25 @@ pnpm run startDebugRender  # Debug renderer process
 
 ### NPM Scripts
 
-| Script | Description |
-|--------|-------------|
-| `webpack:dev` | Build webpack bundle (development) |
-| `webpack:prod` | Build webpack bundle (production) |
-| `build` | Alias for `webpack:dev` |
-| `build:dist` | Alias for `webpack:prod` |
-| `watch` | Watch mode for webpack |
-| `start` | Start Electron application |
-| `build:linux` | Build Linux packages (production) |
-| `build:mac` | Build macOS packages (production) |
-| `build:win` | Build Windows packages (production) |
-| `build:dev:linux` | Build Linux packages (development) |
-| `build:dev:mac` | Build macOS packages (development) |
-| `build:dev:win` | Build Windows packages (development) |
+| Script            | Description                          |
+| ----------------- | ------------------------------------ |
+| `webpack:dev`     | Build webpack bundle (development)   |
+| `webpack:prod`    | Build webpack bundle (production)    |
+| `build`           | Alias for `webpack:dev`              |
+| `build:dist`      | Alias for `webpack:prod`             |
+| `watch`           | Watch mode for webpack               |
+| `start`           | Start Electron application           |
+| `build:linux`     | Build Linux packages (production)    |
+| `build:mac`       | Build macOS packages (production)    |
+| `build:win`       | Build Windows packages (production)  |
+| `build:dev:linux` | Build Linux packages (development)   |
+| `build:dev:mac`   | Build macOS packages (development)   |
+| `build:dev:win`   | Build Windows packages (development) |
 
 ### Release Scripts
 
 All release scripts accept:
+
 - **Required**: Release version (e.g., `1.33.0`)
 - **Optional**: Output path (defaults to `release_artifacts`)
 
@@ -264,7 +268,7 @@ All release scripts accept:
 The build system is designed with separation of concerns:
 
 1. **`build.mjs`**: Core build logic, CLI interface
-2. **`docker-config.mjs`**: Docker-specific functionality  
+2. **`docker-config.mjs`**: Docker-specific functionality
 3. **`package.json`**: Electron Builder configuration
 4. **Release scripts**: Platform-specific packaging and deployment
 

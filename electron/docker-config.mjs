@@ -12,7 +12,8 @@ const DOCKER_IMAGES = {
 };
 
 // * Environment variable patterns to pass through to Docker
-const ENV_VAR_PATTERNS = /^(DEBUG|NODE_|ELECTRON_|YARN_|NPM_|CI|TRAVIS|GITHUB_)/i;
+const ENV_VAR_PATTERNS =
+  /^(DEBUG|NODE_|ELECTRON_|YARN_|NPM_|CI|TRAVIS|GITHUB_)/i;
 
 // * Base environment variables for all Docker builds
 const BASE_ENV_VARS = {
@@ -81,15 +82,14 @@ function generateEnvVars(targetKey) {
     .map(([key, value]) => `--env ${key}="${value}"`)
     .join(' ');
 
-  const platformEnvVars = targetKey === 'windows'
-    ? Object.entries(WINDOWS_ENV_VARS)
-        .map(([key, value]) => `--env ${key}="${value}"`)
-        .join(' ')
-    : '';
+  const platformEnvVars =
+    targetKey === 'windows'
+      ? Object.entries(WINDOWS_ENV_VARS)
+          .map(([key, value]) => `--env ${key}="${value}"`)
+          .join(' ')
+      : '';
 
-  return [hostEnvVars, baseEnvVars, platformEnvVars]
-    .filter(Boolean)
-    .join(' ');
+  return [hostEnvVars, baseEnvVars, platformEnvVars].filter(Boolean).join(' ');
 }
 
 // * Generate volume mappings for Docker command
@@ -135,7 +135,12 @@ export function runDockerBuild(opts, targetKey) {
     ? ` && chown -R ${process.getuid()}:${process.getgid()} /project`
     : '';
 
-  const buildCommand = generateBuildCommand(targetKey, formats, archFlags, ownershipFix);
+  const buildCommand = generateBuildCommand(
+    targetKey,
+    formats,
+    archFlags,
+    ownershipFix
+  );
 
   const dockerCmd = `docker run --rm \\
     ${envVars} \\
@@ -146,7 +151,7 @@ export function runDockerBuild(opts, targetKey) {
   console.log(
     `Running ${isWindowsBuild ? 'Wine-enabled Docker' : 'Docker'} build...`
   );
-  
+
   // * Execute the Docker command and pipe output directly to our terminal
   execSync(dockerCmd, { stdio: 'inherit' });
 }

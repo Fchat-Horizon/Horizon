@@ -1,20 +1,20 @@
 /**
  * NOTE: Hey! Welcome to Rose's build script for the Horizon Project.
- * 
+ *
  *       While a mess, it's actually quite simple in practice.
  *       In short, this script allows you to build the Horizon Electron app
  *       for different operating systems and architectures, with or without Docker.
  *       It uses electron-builder under the hood to handle the actual building process.
- * 
+ *
  *       Usage:
  *         node build.mjs --os <macos|linux|windows> [options]
- * 
+ *
  *       Options:
  *         --format <formats...>  Specify output formats (e.g., dmg, zip, deb, exe)
  *         --arch <arches...>     Specify target architectures (e.g., x64, arm64)
  *         --version <version>    Set app version
  *         --docker               Force Docker builds
- *         --no-docker            Disable Docker builds 
+ *         --no-docker            Disable Docker builds
  */
 
 import { program } from 'commander';
