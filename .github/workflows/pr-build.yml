@@ -94,14 +94,14 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           # Execute Linux build script
-          chmod +x electron/release-scripts/linux.sh
+          chmod +x electron/release-scripts/linux-dev.sh
           electron/release-scripts/linux-dev.sh "$PR_VERSION" "$GITHUB_WORKSPACE/release_artifacts/linux/$PR_VERSION"
 
       - name: Run Build Script (macOS)
         if: matrix.os == 'macos-latest'
         run: |
           # Execute macOS build script
-          chmod +x electron/release-scripts/macos.sh
+          chmod +x electron/release-scripts/macos-dev.sh
           electron/release-scripts/macos-dev.sh "$PR_VERSION" "$GITHUB_WORKSPACE/release_artifacts/macos/$PR_VERSION"
 
       - name: Run Build Script (Windows)
