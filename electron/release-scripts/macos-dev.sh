@@ -36,7 +36,7 @@ rm -rf "$DIST_PATH"
 cd electron
 rm -rf app dist
 pnpm install
-pnpm build:mac:dev
+pnpm build:dev:mac
 # & Prepare release directory
 mkdir -p "$RELEASE_PATH"
 
