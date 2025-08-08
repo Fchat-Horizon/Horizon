@@ -225,6 +225,17 @@ export interface ExtendedSearchData extends SearchData {
   species: SearchSpecies[];
 }
 
+export interface StatusTimeout {
+  label: string;
+  duration: number;
+}
+
+export interface StatusPersistence {
+  status: Character.Status;
+  text: string | undefined;
+  character: string;
+}
+
 export namespace Settings {
   export type Keys = {
     settings: Settings;
