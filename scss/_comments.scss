@@ -1,6 +1,0 @@
-@use 'sass:math';
-
-$comment-grid-columns: 50 !default;
-.comment-offset-1 {
-  margin-left: percentage(math.div(1, $comment-grid-columns));
-}
