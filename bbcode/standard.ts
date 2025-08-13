@@ -220,19 +220,31 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
         const parser = <StandardBBCodeParser>p;
         if (typeof parser.inlines === 'undefined') {
           parser.warning('This page does not support inline images.');
-          return undefined;
+          const el = parser.createElement('span');
+          el.className = `Text`;
+          el.innerText = ``;
+          parent.appendChild(el);
+          return el;
         }
         const displayMode = Utils.settings.inlineDisplayMode;
         if (!/^\d+$/.test(param)) {
           parser.warning('img tag parameters must be numbers.');
-          return undefined;
+          const el = parser.createElement('span');
+          el.className = `Text`;
+          el.innerText = ``;
+          parent.appendChild(el);
+          return el;
         }
         const inline = parser.inlines[param];
         if (typeof inline !== 'object') {
           parser.warning(
             `Could not find an inline image with id ${param} It will not be visible.`
           );
-          return undefined;
+          const el = parser.createElement('span');
+          el.className = `Text`;
+          el.innerText = ``;
+          parent.appendChild(el);
+          return el;
         }
         inline.name = content;
         let element: HTMLElement;
