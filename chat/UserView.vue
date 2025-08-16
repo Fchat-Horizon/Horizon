@@ -145,6 +145,13 @@
 
       // undefined == not interested
       // null == no cache hit
+      if (
+        cache === null &&
+        core.state.settings.horizonShowCustomCharacterColors
+      ) {
+        console.log(`fetching without requesting ${character.name}`);
+        void core.cache.getProfileFromLocalStorageOnly(character.name);
+      }
       if (cache === null && showMatch) {
         void core.cache.addProfile(character.name);
       }

@@ -618,4 +618,21 @@ export class CacheManager {
   setProfile(c: ComplexCharacter): void {
     this.characterProfiler = new CharacterProfiler(c, this.adCache);
   }
+
+  async getProfileFromLocalStorageOnly(
+    name: string
+  ): Promise<CharacterCacheRecord | null> {
+    // First check in-memory cache
+    const inMemoryRecord = this.profileCache.getSync(name);
+    if (inMemoryRecord) {
+      return inMemoryRecord;
+    }
+
+    // Then check IndexedDB if available (passing skipStore=false)
+    if (this.profileStore) {
+      return this.profileCache.get(name, false);
+    }
+
+    return null;
+  }
 }
