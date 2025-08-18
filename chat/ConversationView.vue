@@ -77,11 +77,7 @@
         <div style="flex: 1">
           <span
             class="fa-fw"
-            :class="
-              conversation.channel.id.substr(0, 4) !== 'adh-'
-                ? 'fa fa-star'
-                : 'fas fa-hashtag'
-            "
+            :class="conversation.channel.horizonIcon"
             :title="l('channel.official')"
             style="vertical-align: sub"
           ></span>
