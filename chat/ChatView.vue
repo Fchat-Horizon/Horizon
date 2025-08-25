@@ -935,7 +935,7 @@
     align-items: stretch;
     flex-direction: row;
 
-    @media (max-width: breakpoint-max(sm)) {
+    @media (max-width: breakpoint-max(md)) {
       display: flex;
     }
 

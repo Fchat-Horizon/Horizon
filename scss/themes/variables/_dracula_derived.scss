@@ -6,3 +6,11 @@ $blue-color: $blue-color;
     @include text-outline($gray-600);
   }
 }
+
+.bbcodeGlow {
+  // Dracula is a dark theme: outline black text
+  .blackText,
+  .blackNameText {
+    @include text-outline($gray-600);
+  }
+}

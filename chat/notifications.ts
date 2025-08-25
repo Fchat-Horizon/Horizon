@@ -87,7 +87,11 @@ export default class Notifications implements Interface {
     ) as HTMLAudioElement;
     if (!audio) return;
 
-    audio.volume = 1;
+    // Determine volume override (per-theme per-sound) if present
+    const soundTheme = this.getSoundTheme();
+    const volume = this.getSoundVolume(soundTheme, sound);
+
+    audio.volume = volume;
     audio.muted = false;
     audio.play().catch(e => console.error(e));
   }
@@ -109,6 +113,9 @@ export default class Notifications implements Interface {
       if (!audio) continue;
 
       this.setupAudioSources(audio, theme, soundTheme, sound);
+      // Apply saved volume if available before preloading
+      const volume = this.getSoundVolume(soundTheme, sound);
+      audio.volume = volume;
       document.body.appendChild(audio);
 
       const playPromise = this.preloadAudio(audio);
@@ -199,14 +206,36 @@ export default class Notifications implements Interface {
   }
 
   private preloadAudio(audio: HTMLAudioElement): Promise<void> | null {
-    audio.volume = 0;
+    // Mute briefly to allow preload without audible output. volume is restored when played.
     audio.muted = true;
 
     const promise = audio.play();
     if (promise instanceof Promise) {
-      return promise.catch(e => console.error('Audio preload failed:', e));
+      return promise
+        .catch(e => console.error('Audio preload failed:', e))
+        .finally(() => {
+          // Keep element muted until actual playback to avoid noise during preload
+        });
     }
     return null;
+  }
+
+  private getSoundVolume(themeName: string, sound: string): number {
+    try {
+      const gen = (core.state as any).generalSettings;
+      const perTheme =
+        gen?.soundThemeSoundVolumes ||
+        core.state.settings.soundThemeSoundVolumes;
+      const themeVolumes = perTheme?.[themeName];
+      if (themeVolumes && typeof themeVolumes[sound] === 'number') {
+        const v = themeVolumes[sound];
+        // Clamp between 0 and 1
+        if (isFinite(v)) return Math.max(0, Math.min(1, v));
+      }
+    } catch (err) {
+      // ignore
+    }
+    return 1;
   }
 
   async requestPermission(): Promise<void> {

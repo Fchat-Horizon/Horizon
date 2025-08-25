@@ -31,7 +31,7 @@ body,
 }
 
 .message-own:not(.message-warn) {
-  background-color: rgba($gray-200, 0.3);
+  background-color: rgba($gray-300, 0.7);
 }
 #window-tabs .nav-tabs .nav-link.active {
   background-color: #efddd6;
@@ -112,6 +112,11 @@ $genders: (
 
   .message-event .gender-#{$gender} {
     color: color.scale($color, $lightness: 5%);
+  }
+
+  .gender-#{$gender}.user-bookmark,
+  .message-event .gender-#{$gender}.user-bookmark {
+    color: color.scale($green-color, $lightness: 10%);
   }
 }
 

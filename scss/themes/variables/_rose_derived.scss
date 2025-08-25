@@ -24,3 +24,16 @@ $blue-color: #0a84ff;
 .ads-text-box:focus {
   background-color: #4d23346b !important;
 }
+
+.bbcodeGlow {
+  .purpleText,
+  .purpleNameText {
+    @include text-outline(#61364b);
+  }
+
+  .blackText,
+  .blackNameText {
+    @include text-outline($gray-600);
+  }
+  // Rose is a dark-themed variant; only outline black text for glow
+}

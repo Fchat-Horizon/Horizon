@@ -69,7 +69,7 @@
   &:focus {
     color: color-contrast($danger-bg-subtle);
   }
-  color: color-contrast($danger-bg-subtle);
+  color: inherit;
 }
 
 .list-group-action.list-group-item {

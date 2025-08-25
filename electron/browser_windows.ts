@@ -675,7 +675,7 @@ export function createAboutWindow(
     resizable: false,
     minimizable: false,
     useContentSize: process.platform === 'win32', // Important for Windows
-    modal: true,
+    modal: process.platform !== 'darwin',
     parent: parentWindow,
     autoHideMenuBar: true,
     show: false,

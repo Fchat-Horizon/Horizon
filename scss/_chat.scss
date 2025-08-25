@@ -299,7 +299,7 @@
 }
 
 .message-own {
-  background-color: rgba($gray-200, 0.3);
+  background-color: rgba($gray-300, 0.7);
 }
 
 .message-warn {
@@ -319,7 +319,8 @@
 
 .messages-both {
   .message-ad:not(.message-score) {
-    background-color: theme-color-level('info', -4);
+    --bs-bg-opacity: 0.3;
+    background-color: rgba(var(--bs-info-rgb), var(--bs-bg-opacity)) !important;
     padding: 0 2px 2px 2px;
     box-shadow: $gray-500 -2px -2px 2px inset;
   }
@@ -400,6 +401,24 @@ $genders: (
 
   .message-event .gender-#{$gender} {
     color: color.scale($color, $lightness: 5%);
+  }
+}
+
+// When user requests vanilla gender colours, force the original palette
+.vanillaGenderColors {
+  @each $gender, $color in $genders {
+    .gender-#{$gender} {
+      color: $color !important;
+    }
+
+    .message-event .gender-#{$gender} {
+      color: color.scale($color, $lightness: 5%) !important;
+    }
+
+    .gender-#{$gender}.user-bookmark,
+    .message-event .gender-#{$gender}.user-bookmark {
+      color: #66cc33;
+    }
   }
 }
 

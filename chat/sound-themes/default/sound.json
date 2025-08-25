@@ -14,7 +14,7 @@
     "system": "sounds/system"
   },
   "formats": {
-    "preferred": "ogg",
-    "fallback": ["mp3", "wav"]
+    "preferred": "wav",
+    "fallback": ["mp3", "ogg"]
   }
 }

@@ -37,7 +37,7 @@ body,
 }
 
 .message-own:not(.message-warn) {
-  background-color: rgba($gray-200, 0.75);
+  background-color: rgba($gray-300, 0.75);
 }
 
 * {
@@ -95,6 +95,11 @@ $genders: (
 
   .message-event .gender-#{$gender} {
     color: color.scale($color, $lightness: 5%);
+  }
+
+  .gender-#{$gender}.user-bookmark,
+  .message-event .gender-#{$gender}.user-bookmark {
+    color: color.scale($green-color, $lightness: 20%);
   }
 }
 

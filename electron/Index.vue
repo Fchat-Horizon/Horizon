@@ -142,6 +142,21 @@
               </label>
             </div>
           </div>
+          <div class="mb-3">
+            <div class="form-check">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                id="autoLogin"
+                v-model="autoLogin"
+                :disabled="!saveLogin"
+                @change="onAutoLoginChange"
+              />
+              <label class="form-check-label" for="autoLogin">
+                {{ l('login.auto') }}
+              </label>
+            </div>
+          </div>
           <div class="mb-3" style="margin: 0; text-align: right">
             <button
               class="btn btn-primary"
@@ -389,6 +404,7 @@
   export default class Index extends Vue {
     showAdvanced = false;
     saveLogin = false;
+    autoLogin = false;
     loggingIn = false;
     password = '';
     character?: string;
@@ -466,6 +482,9 @@
       await this.startAndUpgradeCache();
 
       if (this.settings.account.length > 0) this.saveLogin = true;
+
+      // load auto-login flag from global settings
+      if (this.settings.horizonAutoLogin) this.autoLogin = true;
 
       this.password =
         (await keyStore.getPassword('f-list.net', this.settings.account)) || '';
@@ -562,6 +581,21 @@
       });
 
       log.debug('init.chat.listeners.done');
+
+      // If auto-login is enabled globally and we have saved credentials, attempt to login
+      // This will skip the login screen if successful.
+      try {
+        if (
+          this.settings.horizonAutoLogin &&
+          this.saveLogin &&
+          this.settings.account.length > 0 &&
+          this.password.length > 0
+        ) {
+          void this.login();
+        }
+      } catch (e) {
+        // ignore
+      }
 
       /*if (process.env.NODE_ENV !== 'production') {
                 const dt = require('@vue/devtools');
@@ -723,6 +757,17 @@
       this.settings.proxy = '';
     }
 
+    onAutoLoginChange(): void {
+      // Only allow auto-login if saveLogin is enabled
+      if (!this.saveLogin) {
+        this.autoLogin = false;
+      }
+
+      if (this.settings) this.settings.horizonAutoLogin = this.autoLogin;
+      // send updated general settings to main process
+      electron.ipcRenderer.send('general-settings-update', this.settings);
+    }
+
     onMouseOver(e: MouseEvent): void {
       const preview = <HTMLDivElement>this.$refs.linkPreview;
       if ((<HTMLElement>e.target).tagName === 'A') {
@@ -799,6 +844,8 @@
           [`theme-${core.state.settings.risingCharacterTheme || this.settings.theme}`]: true,
           colorblindMode: core.state.settings.risingColorblindMode,
           vanillaTextColors: this.settings.horizonVanillaTextColors,
+          vanillaGenderColors: this.settings.horizonVanillaGenderColors,
+          bbcodeGlow: this.settings.horizonBbcodeGlow,
           disableWindowsHighContrast:
             core.state.generalSettings?.risingDisableWindowsHighContrast ||
             false

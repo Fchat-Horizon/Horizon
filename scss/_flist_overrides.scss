@@ -138,6 +138,7 @@ input:checked {
 .nav-tabs .nav-link.active {
   background: none;
   border-bottom: 1px solid transparent;
+  --bs-nav-tabs-link-active-color: var(--bs-body-color);
 }
 
 .nav-tabs li {

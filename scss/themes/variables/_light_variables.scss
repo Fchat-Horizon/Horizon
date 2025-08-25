@@ -26,12 +26,11 @@ $cyan-color: #209898;
 $yellow-color: #bcab17;
 $pink-color: #da1677;
 $green-color: #036603;
-$primary: #e26f2e;
 
 // Bootstrap 5 contrast colors
 $light-color: $black;
 $dark-color: $gray-base;
-$component-active-color: $light-color;
+$component-active-color: $dark-color;
 
 $link-color: $gray-800;
 $link-hover-color: $black;

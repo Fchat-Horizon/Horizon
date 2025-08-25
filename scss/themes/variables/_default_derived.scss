@@ -9,4 +9,16 @@
     @include text-outline($gray-600);
   }
 }
+.bbcodeGlow {
+  .purpleText,
+  .purpleNameText {
+    @include text-outline(#306);
+  }
+
+  // Default (dark-ish) themes: outline black-coloured BBCode text
+  .blackText,
+  .blackNameText {
+    @include text-outline($gray-600);
+  }
+}
 $blue-color: #06f;

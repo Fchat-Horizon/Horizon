@@ -48,6 +48,23 @@
                 style="height: 100%; width: 100%"
               >
                 <h5>
+                  {{ l('settings.tabs.general') }}
+                </h5>
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input
+                      type="checkbox"
+                      id="autoLogin"
+                      v-model="settings.horizonAutoLogin"
+                      class="form-check-input"
+                    />
+                    <label class="form-check-label" for="autoLogin">
+                      {{ l('login.auto') }}
+                    </label>
+                  </div>
+                </div>
+
+                <h5>
                   {{ l('settings.updates') }}
                 </h5>
                 <div class="mb-3">
@@ -125,6 +142,9 @@
                     </filterable-select>
                   </label>
                 </div>
+                <h5>
+                  {{ l('settings.theme.textColors') }}
+                </h5>
 
                 <div class="mb-3">
                   <label class="control-label" for="themeVanillaBbcode">
@@ -145,6 +165,46 @@
                       class="form-text text-muted"
                     >
                       {{ l('settings.theme.vanillaBbcode.legibilityNote') }}
+                    </div>
+                  </label>
+                </div>
+
+                <div class="mb-3">
+                  <label class="control-label" for="themeVanillaGenders">
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        v-model="settings.horizonVanillaGenderColors"
+                        type="checkbox"
+                        id="themeVanillaGenders"
+                        aria-describedby="vanillaGendersNote"
+                      />
+                      <label class="form-check-label" for="themeVanillaGenders">
+                        {{ l('settings.theme.vanillaGenders') }}
+                      </label>
+                    </div>
+                    <div id="vanillaGendersNote" class="form-text text-muted">
+                      {{ l('settings.theme.vanillaGenders.note') }}
+                    </div>
+                  </label>
+                </div>
+
+                <div class="mb-3">
+                  <label class="control-label" for="themeBbcodeGlow">
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        v-model="settings.horizonBbcodeGlow"
+                        type="checkbox"
+                        id="themeBbcodeGlow"
+                        aria-describedby="bbcodeGlowNote"
+                      />
+                      <label class="form-check-label" for="themeBbcodeGlow">
+                        {{ l('settings.theme.bbcodeGlow') }}
+                      </label>
+                    </div>
+                    <div id="bbcodeGlowNote" class="form-text text-muted">
+                      {{ l('settings.theme.bbcodeGlow.note') }}
                     </div>
                   </label>
                 </div>
@@ -220,10 +280,101 @@
                   </label>
                 </div>
 
-                <div class="warning">
-                  <h5>{{ l('settings.comingsoon') }}</h5>
-                  <hr />
-                  <p>{{ l('settings.charactersToGeneral.generalInfo') }}</p>
+                <div class="sound-theme-details">
+                  <div
+                    class="d-flex"
+                    style="justify-content: space-between; align-items: center"
+                  >
+                    <div>
+                      <h5 style="margin: 0">
+                        {{ capitalizeSoundThemeName(settings.soundTheme) }}
+                      </h5>
+                      <div class="text-muted" v-if="currentSoundThemeDetails">
+                        <div>{{ currentSoundThemeDetails.description }}</div>
+                        <div v-if="currentSoundThemeDetails.author">
+                          By {{ currentSoundThemeDetails.author }}
+                        </div>
+                        <div class="small">
+                          Version: {{ currentSoundThemeDetails.version }}
+                        </div>
+                      </div>
+                      <div v-else class="text-muted small">
+                        No metadata available
+                      </div>
+                    </div>
+                    <div>
+                      <div style="display: flex; gap: 8px; align-items: center">
+                        <button
+                          class="btn btn-outline-primary"
+                          @click.prevent.stop="
+                            soundListCollapsed = !soundListCollapsed
+                          "
+                          title="Toggle sound list"
+                        >
+                          {{ soundListCollapsed ? 'Show' : 'Hide' }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    v-if="
+                      currentSoundThemeDetails &&
+                      currentSoundThemeDetails.sounds
+                    "
+                    class="mt-3"
+                  >
+                    <div v-if="!soundListCollapsed" class="mt-2">
+                      <div
+                        v-for="(path, sound) in currentSoundThemeDetails.sounds"
+                        :key="sound"
+                        class="sound-row"
+                        style="
+                          display: flex;
+                          align-items: center;
+                          gap: 8px;
+                          margin-bottom: 8px;
+                        "
+                      >
+                        <div style="width: 14ch; text-transform: capitalize">
+                          {{ sound }}
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          v-model.number="liveVolumeMap[sound]"
+                          @input="onVolumeChange(sound)"
+                          style="flex: 1"
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="1"
+                          style="
+                            width: 7ch;
+                            text-align: right;
+                            margin-left: 8px;
+                          "
+                          :value="Math.round((liveVolumeMap[sound] ?? 1) * 100)"
+                          @input="handlePercentInput($event, sound)"
+                        />
+                        <button
+                          class="btn btn-sm btn-outline-primary"
+                          @click.prevent.stop="previewSound(sound)"
+                          title="Preview"
+                          style="margin-left: 8px"
+                        >
+                          Preview
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else class="mt-2 text-muted small">
+                    No sounds listed for this theme
+                  </div>
                 </div>
               </div>
               <!--Behavior-->
@@ -552,6 +703,16 @@
 
       // Load available sound themes
       this.loadAvailableSoundThemes();
+      // Load details for the currently selected sound theme
+      await this.loadSelectedSoundThemeDetails();
+
+      // Watch for sound theme changes
+      this.$watch(
+        () => this.settings.soundTheme,
+        async () => {
+          await this.loadSelectedSoundThemeDetails();
+        }
+      );
 
       this.selectedLang = getSafeLanguages(this.settings.spellcheckLang);
       let availableLanguages = getSafeLanguages(
@@ -605,6 +766,151 @@
         console.error('Error loading sound themes:', error);
         this.availableSoundThemes = ['default'];
       }
+    }
+
+    // Currently selected sound theme metadata and per-sound volumes for the UI
+    currentSoundThemeDetails: any | null = null;
+    // live values driven by the slider (used for immediate UI feedback and persisted)
+    liveVolumeMap: { [sound: string]: number } = {};
+    // collapse the sound list by default so it doesn't take the whole page
+    soundListCollapsed: boolean = true;
+    soundPreviewAudio: HTMLAudioElement | null = null;
+
+    // Watcher-like helper: call this when sound theme changes
+    async loadSelectedSoundThemeDetails(): Promise<void> {
+      const theme = this.settings.soundTheme || 'default';
+      // Load metadata (sound.json) if present
+      try {
+        const themeJsonPath = path.join(
+          __dirname,
+          'sound-themes',
+          theme,
+          'sound.json'
+        );
+        const raw = fs.readFileSync(themeJsonPath, 'utf8');
+        this.currentSoundThemeDetails = JSON.parse(raw);
+      } catch (err) {
+        this.currentSoundThemeDetails = null;
+      }
+
+      // Build a fresh liveVolumeMap from saved settings (or defaults)
+      try {
+        const perTheme = (this.settings as any).soundThemeSoundVolumes || {};
+        const saved = perTheme[this.settings.soundTheme] || {};
+        const newMap: { [k: string]: number } = {};
+        if (this.currentSoundThemeDetails?.sounds) {
+          for (const sound of Object.keys(
+            this.currentSoundThemeDetails.sounds
+          )) {
+            const rawVal = saved[sound];
+            newMap[sound] =
+              typeof rawVal === 'number' ? Math.max(0, Math.min(1, rawVal)) : 1;
+          }
+        }
+        this.liveVolumeMap = newMap;
+      } catch (err) {
+        this.liveVolumeMap = {};
+      }
+    }
+
+    onVolumeChange(sound: any): void {
+      // Persist the changed volume into settings for the current theme
+      const v = Number(this.liveVolumeMap[sound] ?? 1);
+      const container = (this.settings as any).soundThemeSoundVolumes || {};
+      if (!container[this.settings.soundTheme])
+        container[this.settings.soundTheme] = {};
+      container[this.settings.soundTheme][sound] = v;
+      (this.settings as any).soundThemeSoundVolumes = container;
+    }
+
+    // live updates are handled by v-model on liveVolumeMap and persisted by onVolumeChange
+    handlePercentInput(e: Event, sound: any): void {
+      const target = e.target as HTMLInputElement;
+      let pct = parseInt(target.value || '0', 10);
+      if (isNaN(pct)) pct = 0;
+      pct = Math.max(0, Math.min(100, pct));
+      const v = pct / 100;
+      (this as any).$set(this.liveVolumeMap, sound, v);
+      this.onVolumeChange(sound);
+    }
+
+    previewSound(sound: any): void {
+      // stop previous preview
+      if (this.soundPreviewAudio) {
+        try {
+          this.soundPreviewAudio.pause();
+          this.soundPreviewAudio.remove();
+        } catch (e) {}
+        this.soundPreviewAudio = null;
+      }
+
+      const audio = document.createElement('audio');
+      audio.preload = 'auto';
+      audio.volume = this.liveVolumeMap[sound] ?? 1;
+      audio.muted = false;
+      const pushSource = (src: string, mime: string) => {
+        const s = document.createElement('source');
+        s.type = mime;
+        s.src = src;
+        audio.appendChild(s);
+      };
+
+      try {
+        // Prefer themed sound files from the selected sound theme
+        if (this.currentSoundThemeDetails?.sounds?.[sound]) {
+          const soundPath = this.currentSoundThemeDetails.sounds[sound];
+          const formats = [
+            this.currentSoundThemeDetails.formats?.preferred,
+            ...(this.currentSoundThemeDetails.formats?.fallback || [])
+          ].filter(Boolean);
+          for (const format of formats) {
+            const ext = format === 'mpeg' ? 'mp3' : format;
+            const abs = path.join(
+              __dirname,
+              'sound-themes',
+              this.settings.soundTheme,
+              `${soundPath}.${ext}`
+            );
+            pushSource(`file://${abs}`, `audio/${format}`);
+          }
+        } else {
+          // Fallback: look for assets on disk in common locations
+          const codecOrder = ['wav', 'mp3', 'ogg'];
+          for (const ext of codecOrder) {
+            const candidate1 = path.join(
+              __dirname,
+              '..',
+              'chat',
+              'assets',
+              `${sound}.${ext}`
+            );
+            const candidate2 = path.join(
+              __dirname,
+              '..',
+              'assets',
+              `${sound}.${ext}`
+            );
+            if (fs.existsSync(candidate1))
+              pushSource(`file://${candidate1}`, `audio/${ext}`);
+            else if (fs.existsSync(candidate2))
+              pushSource(`file://${candidate2}`, `audio/${ext}`);
+          }
+        }
+      } catch (err) {
+        console.warn('Preview load failed', err);
+      }
+
+      audio.addEventListener('ended', () => {
+        try {
+          audio.remove();
+        } catch (e) {}
+        if (this.soundPreviewAudio === audio) this.soundPreviewAudio = null;
+      });
+
+      document.body.appendChild(audio);
+      this.soundPreviewAudio = audio;
+      // Some browsers require a user gesture; this is an explicit user action (click) so should work.
+      audio.play().catch(e => console.warn('Preview play failed', e));
     }
 
     close(): void {

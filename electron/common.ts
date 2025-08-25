@@ -45,16 +45,11 @@ export class GeneralSettings {
   horizonCustomCss: string = '';
   horizonCustomCssEnabled: boolean = false;
   horizonVanillaTextColors: boolean = false;
+  horizonVanillaGenderColors: boolean = false;
+  horizonBbcodeGlow: boolean = false;
   soundTheme = 'default';
+  soundThemeSoundVolumes: { [theme: string]: { [sound: string]: number } } = {};
+  horizonAutoLogin: boolean = false;
 }
-
-// //tslint:disable
-// const Module = require('module');
-//
-// export function nativeRequire<T>(module: string): T {
-//     return Module.prototype.require.call({paths: Module._nodeModulePaths(__dirname)}, module);
-// }
-//
-// //tslint:enable
 
 log.debug('init.common.done');

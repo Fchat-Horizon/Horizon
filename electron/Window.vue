@@ -666,6 +666,7 @@
 
         return {
           ['platform-' + this.platform]: true,
+          bbcodeGlow: this.settings?.horizonBbcodeGlow || false,
           disableWindowsHighContrast:
             this.settings?.risingDisableWindowsHighContrast || false
         };

@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # [Releases]
 
+## [1.33.3] - 2025-08-24
+
+### Fixed
+
+- Fixed background color for ads when both ads and chat are visible being very hard to read. [\[Commit\]](https://github.com/Fchat-Horizon/Horizon/commit/94438bddd0959bdd43a059018e99750ada393a22)
+- The quick switcher on the top for narrow windows now shows up at the proper screen widths again. [\[Commit\]](https://github.com/Fchat-Horizon/Horizon/commit/fa372a179c5872c6aa0a96e538208a28cd8ef6c8)
+- Fixed a MacOS issue where the 'About Horizon' window could not be closed. [\[Commit\]](https://github.com/Fchat-Horizon/Horizon/commit/5a44f12f67a870177c1c6cbaa4e7155e0cd75c73)
+- Readjusted some overly bright text colours after the Bootstrap 5 upgrade: [\[Commit\]](https://github.com/Fchat-Horizon/Horizon/commit/017f4ced877626f69210f7d9faad7c330b2e89a9)
+  - Active tab text color
+  - Unread conversation text color
+  - Own message background color
+- Fixed the "Show friends/ bookmarks in a different color" setting not working for the new 1.33.0 themes. [\[Commit\]](https://github.com/Fchat-Horizon/Horizon/commit/14b9b0ecbf02bad376e6cdb7632503c8bb72d129)
+
+### Changed
+
+- The light theme's primary color has been reverted back to blue for legibility reasons. [\[Commit\]](https://github.com/Fchat-Horizon/Horizon/commit/33ca6e96c6410d3ad2bdedebcea381478eba9474)
+- Regrouped the text color settings into their own header. [\[Commit\]](https://github.com/Fchat-Horizon/Horizon/commit/80aa51dc63857c050f839a60dfb431d94182187b)
+
+## [1.33.2] - 2025-08-24
+
+### Added
+
+- Autologin. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e3e377f)
+
+### Fixed
+
+- Fix regression with the character selector by adding a search bar [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7ff8955)
+
+## [1.33.1] - 2025-08-24
+
+### Added
+
+- Revamp of the character selector. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4d1fa88)
+- New "Vanilla" gender colours setting. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/fa0b508)
+- Sound theme menu revamp (Can now preview sounds and set per-sound volumes). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2f70066)
+- Readded bbcode glow and added settings to toggle it. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/bccc564)
+
+### Fixed
+
+- Fixes for the default sound theme being painful on the ears. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dcca0a4)
+- Fixes Bootstrap-related colour issues on collapsible elements. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/970b58a)
+
 ## [1.33.0] - 2025-08-24
 
 ### Added
