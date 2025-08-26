@@ -299,11 +299,7 @@
         >
           <span
             class="conversation-icon"
-            :class="
-              conversation.channel.id.substr(0, 4) !== 'adh-'
-                ? 'fa fa-star'
-                : 'fas fa-hashtag'
-            "
+            :class="conversation.channel.horizonIcon"
           ></span>
           <div class="name">{{ conversation.name }}</div>
         </a>
