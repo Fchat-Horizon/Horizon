@@ -107,9 +107,9 @@
                   <div class="form-check">
                     <input
                       type="checkbox"
-                      disabled
                       id="themeSystemSync"
                       class="form-check-input"
+                      v-model="settings.themeSync"
                     />
                     <label class="form-check-label" for="themeSystemSync">
                       {{ l('settings.theme.sync') }}
@@ -117,19 +117,9 @@
                   </div>
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-3" v-if="!settings.themeSync">
                   <label class="control-label" for="theme" style="width: 20ch">
-                    {{ l('settings.theme') }}
-                    <!--<select
-                      id="theme"
-                      class="form-select"
-                      v-model="settings.theme"
-                      style="flex: 1; margin-right: 10px"
-                    >
-                      <option v-for="theme in availableThemes" :value="theme">
-                        {{ theme }}
-                      </option>
-                    </select> -->
+                    {{ l('settings.theme.app') }}
                     <filterable-select
                       v-model="settings.theme"
                       :options="availableThemes"
@@ -142,6 +132,44 @@
                     </filterable-select>
                   </label>
                 </div>
+                <div class="mb-3" v-else>
+                  <label
+                    class="control-label"
+                    for="themeSyncLight"
+                    style="width: 20ch"
+                  >
+                    {{ l('settings.theme.app.light') }}
+                    <filterable-select
+                      v-model="settings.themeSyncLight"
+                      :options="availableThemes"
+                      :placeholder="l('filter')"
+                      :title="l('settings.theme')"
+                    >
+                      <template slot-scope="s">
+                        {{ capitalizeThemeName(s.option) }}
+                      </template>
+                    </filterable-select>
+                  </label>
+
+                  <label
+                    class="control-label"
+                    for="themeSyncDark"
+                    style="width: 20ch"
+                  >
+                    {{ l('settings.theme.app.dark') }}
+                    <filterable-select
+                      v-model="settings.themeSyncDark"
+                      :options="availableThemes"
+                      :placeholder="l('filter')"
+                      :title="l('settings.theme')"
+                    >
+                      <template slot-scope="s">
+                        {{ capitalizeThemeName(s.option) }}
+                      </template>
+                    </filterable-select>
+                  </label>
+                </div>
+
                 <h5>
                   {{ l('settings.theme.textColors') }}
                 </h5>
@@ -653,6 +681,7 @@
   export default class BrowserOption extends Vue {
     sortedLangs: string[] = [];
     settings!: GeneralSettings;
+    osIsDark: boolean = remote.nativeTheme.shouldUseDarkColors;
     selectedTab = '0';
     isMaximized = false;
     l = l;
@@ -672,7 +701,7 @@
 
     get styling(): string {
       try {
-        return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.settings.theme}.css`), 'utf8').toString()}</style>`;
+        return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
       } catch (e) {
         if (
           (<Error & { code: string }>e).code === 'ENOENT' &&
@@ -683,6 +712,13 @@
         }
         throw e;
       }
+    }
+
+    getSyncedTheme() {
+      if (!this.settings.themeSync) return this.settings.theme;
+      return this.osIsDark
+        ? this.settings.themeSyncDark
+        : this.settings.themeSyncLight;
     }
 
     @Hook('mounted')
@@ -698,6 +734,10 @@
         .readdirSync(path.join(__dirname, 'themes'))
         .filter(x => x.substr(-4) === '.css')
         .map(x => x.slice(0, -4));
+
+      remote.nativeTheme.on('updated', () => {
+        this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
+      });
 
       // Load available sound themes
       this.loadAvailableSoundThemes();

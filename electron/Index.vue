@@ -413,6 +413,7 @@
     defaultCharacter?: number;
     l = l;
     settings!: GeneralSettings;
+    osIsDark: boolean = remote.nativeTheme.shouldUseDarkColors;
     hasCompletedUpgrades!: boolean;
     importProgress = 0;
     profileName = '';
@@ -578,6 +579,10 @@
 
       electron.ipcRenderer.on('inactive-tab', () => {
         core.cache.setTabActive(false);
+      });
+
+      remote.nativeTheme.on('updated', () => {
+        this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
       });
 
       log.debug('init.chat.listeners.done');
@@ -893,7 +898,7 @@
 
     get styling(): string {
       try {
-        return `<style id="themeStyle">${fs.readFileSync(path.join(__dirname, `themes/${(this.character != undefined && core.state.settings.risingCharacterTheme) || this.settings.theme}.css`), 'utf8').toString()}</style>`;
+        return `<style id="themeStyle">${fs.readFileSync(path.join(__dirname, `themes/${(this.character != undefined && core.state.settings.risingCharacterTheme) || this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
       } catch (e) {
         if (
           (<Error & { code: string }>e).code === 'ENOENT' &&
@@ -904,6 +909,12 @@
         }
         throw e;
       }
+    }
+    getSyncedTheme() {
+      if (!this.settings.themeSync) return this.settings.theme;
+      return this.osIsDark
+        ? this.settings.themeSyncDark
+        : this.settings.themeSyncLight;
     }
 
     showLogs(): void {

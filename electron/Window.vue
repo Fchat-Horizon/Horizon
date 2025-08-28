@@ -117,7 +117,7 @@
   import * as url from 'url';
   import Vue from 'vue';
   import l from '../chat/localize';
-  import { GeneralSettings } from './common';
+  import { GeneralSettings, getSyncedTheme } from './common';
   import { getSafeLanguages, updateSupportedLanguages } from './language';
   import log from 'electron-log';
 
@@ -198,6 +198,7 @@
     activeTab: Tab | undefined;
     tabMap: { [key: number]: Tab } = {};
     isMaximized = false;
+    osIsDark: boolean = remote.nativeTheme.shouldUseDarkColors;
     canOpenTab = true;
     l = l;
     hasUpdate = false;
@@ -365,6 +366,9 @@
           );
         }
       );
+      remote.nativeTheme.on('updated', () => {
+        this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
+      });
       browserWindow.on('maximize', () => {
         this.isMaximized = true;
         if (this.activeTab !== undefined)
@@ -469,7 +473,7 @@
 
     get styling(): string {
       try {
-        return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.settings.theme}.css`), 'utf8').toString()}</style>`;
+        return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
       } catch (e) {
         if (
           (<Error & { code: string }>e).code === 'ENOENT' &&
@@ -480,6 +484,12 @@
         }
         throw e;
       }
+    }
+    getSyncedTheme() {
+      if (!this.settings.themeSync) return this.settings.theme;
+      return this.osIsDark
+        ? this.settings.themeSyncDark
+        : this.settings.themeSyncLight;
     }
 
     trayClicked(tab: Tab): void {
