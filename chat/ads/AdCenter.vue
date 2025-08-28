@@ -70,6 +70,7 @@
   import { Component } from '@f-list/vue-ts';
   import CustomDialog from '../../components/custom_dialog';
   import Modal from '../../components/Modal.vue';
+  import AdLauncherDialog from './AdLauncher.vue';
   import { Conversation } from '../interfaces';
   import l from '../localize';
   import { Editor } from '../bbcode';
@@ -98,6 +99,7 @@
 
     async submit(): Promise<void> {
       await core.adCenter.set(this.ads);
+      (<AdLauncherDialog>this.$parent.$refs['adLauncher'])!.show();
     }
 
     addAd(): void {
@@ -141,8 +143,16 @@
   }
 
   .ad-list .form-control.form-tag {
+    .input-tag {
+      padding: 4px 3px;
+      span,
+      a.remove {
+        line-height: 100%;
+        vertical-align: middle;
+      }
+    }
+    padding-bottom: 0px;
     display: flex;
-    padding: 0px;
   }
 
   .form-group.ad-list {

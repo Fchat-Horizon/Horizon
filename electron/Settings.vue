@@ -328,47 +328,45 @@
                       <div
                         v-for="(path, sound) in currentSoundThemeDetails.sounds"
                         :key="sound"
-                        class="sound-row"
-                        style="
-                          display: flex;
-                          align-items: center;
-                          gap: 8px;
-                          margin-bottom: 8px;
-                        "
+                        class="sound-row d-flex flex-row mb-3 align-items-center"
                       >
-                        <div style="width: 14ch; text-transform: capitalize">
+                        <div
+                          style="width: 14ch; text-transform: capitalize"
+                          class="p-2"
+                        >
                           {{ sound }}
                         </div>
                         <input
                           type="range"
+                          class="form-range p-2 flex-grow-1"
                           min="0"
                           max="1"
                           step="0.01"
                           v-model.number="liveVolumeMap[sound]"
                           @input="onVolumeChange(sound)"
-                          style="flex: 1"
+                          style="width: unset"
                         />
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="1"
-                          style="
-                            width: 7ch;
-                            text-align: right;
-                            margin-left: 8px;
-                          "
-                          :value="Math.round((liveVolumeMap[sound] ?? 1) * 100)"
-                          @input="handlePercentInput($event, sound)"
-                        />
-                        <button
-                          class="btn btn-sm btn-outline-primary"
-                          @click.prevent.stop="previewSound(sound)"
-                          title="Preview"
-                          style="margin-left: 8px"
-                        >
-                          Preview
-                        </button>
+                        <div class="input-group p-2" style="width: unset">
+                          <input
+                            type="number"
+                            class="form-control"
+                            min="0"
+                            max="100"
+                            step="1"
+                            style="text-align: right"
+                            :value="
+                              Math.round((liveVolumeMap[sound] ?? 1) * 100)
+                            "
+                            @input="handlePercentInput($event, sound)"
+                          />
+                          <button
+                            class="btn btn-sm btn-outline-primary p-2"
+                            @click.prevent.stop="previewSound(sound)"
+                            title="Preview"
+                          >
+                            Preview
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

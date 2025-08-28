@@ -49,6 +49,7 @@ export class Settings implements ISettings {
   highlightWords: string[] = [];
   showAvatars = true;
   animatedEicons = true;
+  smoothMosaics = true;
   idleTimer = 0;
   messageSeparators = false;
   eventMessages = true;

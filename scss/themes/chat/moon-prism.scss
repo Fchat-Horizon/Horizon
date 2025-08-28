@@ -1,0 +1,187 @@
+@use 'sass:color';
+@import '../../functions';
+@import '~bootstrap/scss/functions';
+@import '../variables/moon_prism_variables';
+@import '~bootstrap/scss/variables';
+@import '../../flist_derived';
+@import '../variables/default_derived';
+
+$red-color: $moon-prism-red;
+$green-color: $moon-prism-green;
+$blue-color: $moon-prism-blue;
+$yellow-color: $moon-prism-gold;
+$purple-color: $moon-prism-purple;
+$cyan-color: $moon-prism-cyan;
+$white-color: $black;
+$black-color: #b8c2e0;
+$brown-color: $moon-prism-orange;
+$pink-color: $moon-prism-pink;
+$gray-color: $moon-prism-silver;
+$orange-color: $moon-prism-orange;
+
+@import '../chat';
+
+body,
+.modal-body {
+  background: #1a1b2e;
+  background: linear-gradient(
+    135deg,
+    rgba(26, 27, 46, 1) 0%,
+    rgba(10, 11, 20, 1) 40%,
+    rgba(18, 22, 42, 1) 100%
+  );
+}
+
+.sidebar {
+  background-color: rgba($body-bg, 0.4);
+}
+
+.message-own:not(.message-warn) {
+  background-color: rgba($gray-200, 0.65);
+}
+
+$genders: (
+  'shemale': $moon-prism-magenta,
+  'herm': $moon-prism-purple,
+  'none': $black-color,
+  'female': $moon-prism-pink,
+  'male': $moon-prism-blue,
+  'male-herm': $moon-prism-cyan,
+  'transgender': $moon-prism-orange,
+  'cunt-boy': $moon-prism-green
+);
+
+.list-group.conversation-nav
+  .list-group-item-action.item-private.active
+  .online-status {
+  color: color-contrast($primary);
+}
+
+@each $gender, $color in $genders {
+  .gender-#{$gender} {
+    color: $color;
+  }
+
+  .message-event .gender-#{$gender} {
+    color: color.scale($color, $lightness: 5%);
+  }
+}
+
+.message-highlight {
+  .blackText,
+  .blackNameText,
+  .gender-none {
+    color: #d4d9ff;
+  }
+  .redText,
+  .redNameText {
+    color: #ffb3b3;
+  }
+  .gender-cunt-boy,
+  .greenText,
+  .greenNameText {
+    color: #b3ffcc;
+  }
+  .gender-female,
+  .pinkText,
+  .pinkNameText {
+    color: #ffb3e0;
+  }
+  .gender-male,
+  .blueText,
+  .blueNameText {
+    color: #b3ccff;
+  }
+  .grayText,
+  .grayNametext {
+    color: #e6ecff;
+  }
+  .yellowText,
+  .yellowNameText {
+    color: #ffe6b3;
+  }
+  .gender-transgender,
+  .orangeText,
+  .orangeNameText {
+    color: #ffccb3;
+  }
+  .gender-male-herm,
+  .cyanText,
+  .cyanNameText {
+    color: #b3ffff;
+  }
+}
+
+.message-warn {
+  .pinkText,
+  .pinkNameText,
+  .gender-female {
+    color: #ff66c7;
+  }
+  .whiteText,
+  .whiteNameText {
+    color: $white;
+  }
+  .brownText,
+  .brownNameText {
+    color: #332d1a;
+  }
+  .blueText,
+  .blueNameText,
+  .gender-male {
+    color: #4d79ff;
+  }
+  .yellowText,
+  .yellowNameText {
+    color: #ffeb4d;
+  }
+  .greenText,
+  .greenNameText,
+  .gender-cunt-boy {
+    color: #66ff80;
+  }
+  .redText,
+  .redNameText,
+  .gender-herm {
+    color: #ff6666;
+  }
+  .orangeText,
+  .orangeNameText,
+  .brownNameText,
+  .brownText,
+  .gender-transgender {
+    color: #ff9966;
+  }
+  .purpleText,
+  .purpleNameText,
+  .gender-shemale {
+    color: #cc66ff;
+  }
+  .cyanText,
+  .cyanNameText,
+  .gender-male-herm {
+    color: #66ffff;
+  }
+  .grayText,
+  .grayNametext {
+    color: #cccccc;
+  }
+  .blackText,
+  .blackNameText,
+  .gender-none {
+    color: #f0f2ff;
+  }
+}
+
+.colorblindMode {
+  @import '../colorblind';
+  @import '../../rising';
+
+  @each $varName, $value in $risingVariables {
+    --#{$varName}: #{$value};
+  }
+}
+
+:root {
+  color-scheme: dark;
+}

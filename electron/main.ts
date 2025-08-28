@@ -334,6 +334,19 @@ function onReady(): void {
               browserWindows.createAboutWindow(w);
             }
           },
+          {
+            label: l(
+              process.env.NODE_ENV !== 'development'
+                ? 'version'
+                : 'developmentVersion',
+              process.env.APP_VERSION || app.getVersion()
+            ),
+            click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
+              let win = w || electron.BrowserWindow.getFocusedWindow();
+              if (!win) return;
+              browserWindows.createChangelogWindow(settings, false, win);
+            }
+          },
           { type: 'separator' },
           {
             label: l('action.newWindow'),
@@ -424,21 +437,6 @@ function onReady(): void {
           {
             label: l('help.fchat'),
             click: () => openURLExternally('https://horizn.moe/docs')
-          },
-          {
-            label: l(
-              process.env.NODE_ENV !== 'development'
-                ? 'version'
-                : 'developmentVersion',
-              process.env.APP_VERSION || app.getVersion()
-            ),
-            click: (
-              _m: electron.MenuItem,
-              w: electron.BrowserWindow,
-              _e: KeyboardEvent
-            ) => {
-              browserWindows.createChangelogWindow(settings, false, w);
-            }
           },
           // {
           //     label: l('help.feedback'),

@@ -22,30 +22,6 @@ $orange-color: $dracula-orange;
 // Apply variables to theme.
 @import '../chat';
 
-* {
-  &::-webkit-scrollbar-track {
-    box-shadow: inset 0 0 2px $card-border-color;
-    border-radius: 10px;
-  }
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.8);
-    background-color: $gray-300;
-    &:hover {
-      background-color: $gray-500;
-    }
-
-    &:active {
-      background-color: $gray-700;
-    }
-  }
-}
-
 $genders: (
   'shemale': $dracula-purple,
   'herm': color.scale($dracula-purple, $saturation: -0.36%, $lightness: -10.78%),
@@ -83,7 +59,7 @@ $genders: (
 }
 
 .message-own:not(.message-warn) {
-  background-color: rgba($gray-300, 0.7);
+  background-color: rgba($gray-200, 0.7);
 }
 
 .colorblindMode {

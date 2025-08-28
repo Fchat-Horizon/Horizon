@@ -126,6 +126,7 @@ export const enum InlineDisplayMode {
 
 export interface Settings {
   animateEicons: boolean;
+  smoothMosaics: boolean;
   inlineDisplayMode: InlineDisplayMode;
   defaultCharacter: number;
   fuzzyDates: boolean;

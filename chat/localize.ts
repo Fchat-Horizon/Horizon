@@ -215,6 +215,7 @@ Are you sure?`,
     'Notify when the following characters send a message (comma-separated)',
   'settings.showAvatars': 'Show character avatars',
   'settings.animatedEicons': 'Animate [eicon]s',
+  'settings.smoothMosaics': 'Attempt to synchronise [eicon] mosaics',
   'settings.idleTimer': 'Idle timer (minutes, clear to disable)',
   'settings.messageSeparators': 'Display separators between messages',
   'settings.eventMessages':

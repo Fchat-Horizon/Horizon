@@ -39,6 +39,16 @@
               ref="mdContainer"
             ></div>
             <div class="modal-footer">
+              <a
+                class="btn btn-outline-primary"
+                href="https://discord.gg/JYuxqNVNtP"
+                target="_blank"
+                rel="noopener"
+                style="margin-left: 8px"
+              >
+                <span class="fab fa-discord"></span>
+                <span style="margin-left: 6px">Join Our Discord</span>
+              </a>
               <button
                 type="button"
                 class="btn btn-secondary"
@@ -133,7 +143,7 @@
           : 'v' + process.env.APP_VERSION);
       let releaseInfo: ReleaseInfo = (await Axios.get<ReleaseInfo>(apiUrl))
         .data;
-      let md = markdownit();
+      let md = markdownit({ html: true, linkify: true, typographer: true });
       md.use(alert);
 
       const defaultRender =
@@ -313,5 +323,21 @@
   .disableWindowsHighContrast,
   .disableWindowsHighContrast * {
     forced-color-adjust: none;
+  }
+
+  /* Make images and embedded media inside the changelog scale to the window while keeping aspect ratio */
+  .logs-container img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0.5em auto;
+    max-height: calc(100vh - 160px);
+    object-fit: contain;
+  }
+
+  .logs-container iframe,
+  .logs-container video {
+    max-width: 100%;
+    max-height: calc(100vh - 160px);
   }
 </style>

@@ -43,30 +43,6 @@ body,
   background-color: theme-color-level('danger', -7);
 }
 
-* {
-  &::-webkit-scrollbar-track {
-    box-shadow: inset 0 0 2px var(--bs-border-color);
-    border-radius: 10px;
-  }
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.8);
-    background-color: $gray-300;
-    &:hover {
-      background-color: $gray-500;
-    }
-
-    &:active {
-      background-color: $gray-700;
-    }
-  }
-}
-
 .colorblindMode {
   @import '../colorblind';
   @import '../../rising';

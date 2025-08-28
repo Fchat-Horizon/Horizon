@@ -10,8 +10,15 @@
     :buttonText="'Start Posting Ads'"
     iconClass="fas fa-rectangle-ad"
   >
-    <div v-if="hasAds()">
+    <div v-if="hasAds()" style="position: relative">
+      <button
+        class="btn btn-primary position-absolute top-0 end-0"
+        @click="openAdEditor()"
+      >
+        <i class="fa-solid fa-pencil"></i> Edit Ads
+      </button>
       <h5>Ad Tags</h5>
+
       <div style="padding-bottom: 1em">
         <div class="mb-3">
           <p>Serve ads that match any one of these tags:</p>
@@ -28,9 +35,6 @@
             </label>
           </div>
         </div>
-        <button class="btn btn-outline-secondary" @click="openAdEditor()">
-          <i class="fa-solid fa-pencil"></i> Edit Ads
-        </button>
       </div>
 
       <h5>Target Channels</h5>

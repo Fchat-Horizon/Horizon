@@ -213,6 +213,11 @@ div.indentText {
     height: 50px;
     width: 50px;
   }
+  transition: opacity 1s;
+  &.loading {
+    opacity: 0;
+    visibility: hidden;
+  }
 }
 
 .bbcode {

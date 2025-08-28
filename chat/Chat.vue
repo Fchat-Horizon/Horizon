@@ -13,17 +13,39 @@
       v-if="!connected"
     >
       <div class="alert alert-danger" v-show="error">{{ error }}</div>
-      <h3 class="card-header" style="margin-top: 0; display: flex">
+      <h3
+        class="card-header"
+        style="margin-top: 0; display: flex; align-items: center"
+      >
         {{ l('title') }}
-        <a
-          href="#"
-          @click.prevent="showLogs()"
-          class="btn"
-          style="flex: 1; text-align: right"
+        <div
+          style="
+            margin-left: auto;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+          "
         >
-          <span class="fa fa-file-alt"></span>
-          <span class="btn-text">{{ l('logs.title') }}</span>
-        </a>
+          <a
+            href="https://discord.gg/JYuxqNVNtP"
+            target="_blank"
+            rel="noopener"
+            class="btn"
+            title="Join our Discord"
+          >
+            <span class="fab fa-discord"></span>
+          </a>
+
+          <a
+            href="#"
+            @click.prevent="showLogs()"
+            class="btn"
+            style="text-align: right"
+          >
+            <span class="fa fa-file-alt"></span>
+            <span class="btn-text">{{ l('logs.title') }}</span>
+          </a>
+        </div>
       </h3>
       <div class="card-body">
         <h4 class="card-title">{{ l('login.selectCharacter') }}</h4>
@@ -52,14 +74,37 @@
                 selectedCharacter && selectedCharacter.id === character.id
             }"
             @click="selectCharacter(character)"
+            @dblclick="handleCharacterDoubleClick(character)"
             :title="character.name"
           >
+            <!-- Pin toggle (stop click propagation so clicking pin doesn't select)
+                 pinned characters appear before non-pinned in ordering
+                 hide the pin for the default character (star is sufficient) -->
+            <span
+              v-if="character.id !== defaultCharacter"
+              class="char-icon pin-icon"
+              :class="{ pinned: isPinned(character.id) }"
+              @click.stop="togglePin(character)"
+              :title="isPinned(character.id) ? 'Unpin' : 'Pin'"
+            >
+              <i class="fas fa-thumbtack"></i>
+            </span>
+
+            <span
+              v-if="character.id === defaultCharacter"
+              class="char-icon default-star"
+              title="Default character"
+            >
+              <i class="fas fa-star"></i>
+            </span>
+
             <div class="avatar-wrap">
               <img
                 :src="characterImage(character.name)"
                 alt="avatar"
                 class="avatar"
               />
+              <div class="avatar-bg"></div>
             </div>
             <div class="char-name">{{ character.name }}</div>
           </div>
@@ -196,6 +241,8 @@
       this.ownCharacters.find(x => x.id === this.defaultCharacter) ||
       this.ownCharacters[0];
     characterImage = characterImage;
+    // pins persisted in localStorage as array of ids
+    pinnedIds: number[] = [];
     @Prop
     readonly version?: string;
     error = '';
@@ -206,6 +253,16 @@
 
     @Hook('mounted')
     mounted(): void {
+      // load pinned ids from localStorage (gracefully)
+      try {
+        const v = JSON.parse(localStorage.getItem('characterPins') || '[]');
+        this.pinnedIds = Array.isArray(v) ? v : [];
+      } catch (e) {
+        // if parsing fails, leave pinnedIds empty
+        log.debug('characterPins.parseFailed', { error: e });
+        this.pinnedIds = [];
+      }
+
       document.title = l('title', core.connection.character);
       document.addEventListener('copy', ((e: ClipboardEvent) => {
         if (this.copyPlain) {
@@ -285,6 +342,7 @@
           {
             defaultCharacter: this.defaultCharacter,
             animateEicons: core.state.settings.animatedEicons,
+            smoothMosaics: core.state.settings.smoothMosaics,
             fuzzyDates: true,
             inlineDisplayMode: InlineDisplayMode.DISPLAY_ALL
           },
@@ -343,12 +401,64 @@
       this.selectedCharacter = character;
     }
 
+    handleCharacterDoubleClick(character: SimpleCharacter): void {
+      this.selectCharacter(character);
+      //better safe than sorry :^)
+      if (!this.connecting && !this.connected) {
+        this.connect();
+      }
+    }
+
+    isPinned(id: number): boolean {
+      return this.pinnedIds.indexOf(id) !== -1;
+    }
+
+    togglePin(character: SimpleCharacter): void {
+      // don't allow pinning the default character
+      if (character.id === this.defaultCharacter) return;
+      const exists = this.pinnedIds.includes(character.id);
+      this.pinnedIds = exists
+        ? this.pinnedIds.filter(id => id !== character.id)
+        : [...this.pinnedIds, character.id];
+      try {
+        localStorage.setItem('characterPins', JSON.stringify(this.pinnedIds));
+      } catch (e) {
+        log.debug('characterPins.saveFailed', { error: e });
+      }
+    }
+
     filterText: string = '';
 
     get filteredCharacters(): SimpleCharacter[] {
       const q = this.filterText.trim().toLowerCase();
-      if (!q) return this.ownCharacters;
-      return this.ownCharacters.filter(c => c.name.toLowerCase().includes(q));
+      let list = this.ownCharacters.slice();
+      if (q) {
+        list = list.filter(c => c.name.toLowerCase().includes(q));
+      }
+
+      // ensure defaultCharacter appears first
+      const defaultIdx = list.findIndex(x => x.id === this.defaultCharacter);
+      if (defaultIdx !== -1) {
+        const def = list.splice(defaultIdx, 1)[0];
+        list.unshift(def);
+      }
+
+      // move pinned characters (except default which is already first) to the top after default
+      const pinned: SimpleCharacter[] = [];
+      const others: SimpleCharacter[] = [];
+      for (let i = 0; i < list.length; i++) {
+        const c = list[i];
+        if (c.id === this.defaultCharacter) continue; // skip default
+        if (this.isPinned(c.id)) pinned.push(c);
+        else others.push(c);
+      }
+
+      // keep relative order among pinned and others
+      const result: SimpleCharacter[] = [];
+      if (list.length > 0 && list[0].id === this.defaultCharacter)
+        result.push(list[0]);
+      result.push(...pinned, ...others);
+      return result;
     }
 
     // The top input is a simple filter; selecting a tile is done by clicking it.
@@ -390,62 +500,153 @@
     flex-wrap: wrap;
     gap: 12px;
     max-height: 320px;
-    overflow: auto;
-    padding: 6px 2px;
-  }
+    overflow-y: auto;
+    padding: 6px 2px 26px 2px;
+    position: relative;
 
-  .character-tile {
-    width: 96px;
-    min-width: 96px;
-    height: 110px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 8px;
-    padding: 8px;
-    cursor: pointer;
-    transition:
-      box-shadow 0.08s ease,
-      transform 0.08s ease;
-    text-align: center;
-  }
+    .character-tile {
+      width: 96px;
+      min-width: 96px;
+      height: 110px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      background: rgba(var(--bs-black-rgb), 0.02);
+      border-radius: 8px;
+      padding: 8px;
+      cursor: pointer;
+      transition:
+        box-shadow 0.08s,
+        transform 0.08s;
+      text-align: center;
+      position: relative;
 
-  .character-tile:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
-  }
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
 
-  .character-tile.selected {
-    outline: 2px solid rgba(100, 150, 255, 0.9);
-    box-shadow: 0 8px 22px rgba(50, 80, 200, 0.25);
+        .char-icon.pin-icon {
+          opacity: 1;
+          pointer-events: auto;
+        }
+      }
+
+      &.selected {
+        outline: 2px solid var(--bs-primary);
+        box-shadow:
+          0 8px 22px rgba(var(--bs-primary-rgb), 0.25),
+          0 0 8px rgba(var(--bs-primary-rgb), 0.18);
+      }
+
+      // note: the following is from hell.
+      //       and i am so sorry, fatcat.
+      .char-icon {
+        position: absolute;
+        top: 6px;
+        z-index: 10;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+
+        .fas {
+          pointer-events: none;
+        }
+
+        &.default-star {
+          right: 6px;
+          color: var(--bs-warning);
+          font-size: 14px;
+          background: transparent;
+          padding: 0;
+          border-radius: 0;
+        }
+
+        &.pin-icon {
+          right: 6px;
+          cursor: pointer;
+          padding: 0;
+          background: transparent;
+          border: none;
+          opacity: 0;
+          pointer-events: none;
+          color: transparent;
+          -webkit-text-stroke: 1px var(--input-color);
+          -webkit-text-fill-color: transparent;
+          transition:
+            color 0.12s,
+            -webkit-text-stroke 0.12s,
+            opacity 0.12s,
+            transform 0.12s;
+          font-size: 14px;
+          transform: scale(1);
+
+          &.pinned {
+            opacity: 1;
+            pointer-events: auto;
+            color: var(--bs-success);
+            -webkit-text-stroke: 0;
+            -webkit-text-fill-color: var(--bs-success);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+
+            &:hover {
+              color: color-mix(in srgb, var(--bs-success) 85%, black 15%);
+              -webkit-text-fill-color: color-mix(
+                in srgb,
+                var(--bs-success) 85%,
+                black 15%
+              );
+              transform: scale(1.08);
+            }
+          }
+
+          &:not(.pinned):hover {
+            color: var(--bs-primary);
+            -webkit-text-stroke: 0;
+            -webkit-text-fill-color: var(--bs-primary);
+            transform: scale(1.12);
+          }
+        }
+      }
+    }
   }
 
   .avatar-wrap {
     width: 64px;
     height: 64px;
-    border-radius: 8px;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.08);
-  }
+    position: relative;
 
-  .avatar {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+    .avatar-bg {
+      position: absolute;
+      bottom: 0;
+      height: 100%;
+      width: 100%;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    .avatar {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
   }
 
   .char-name {
     margin-top: 6px;
     font-size: 12px;
+    width: 100%;
+    line-height: 1.2;
+    min-height: 2.4em;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    width: 100%;
+    white-space: normal;
+    word-break: break-word;
   }
 </style>

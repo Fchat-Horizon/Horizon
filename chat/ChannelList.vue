@@ -21,13 +21,14 @@
           </span>
           <input
             class="form-control"
-            style="flex: 1; margin-right: 10px"
+            style="flex: 1"
             v-model="filter"
             :placeholder="l('filter')"
           />
           <a
             href="#"
             @click.prevent="sortCount = !sortCount"
+            class="btn btn-outline-secondary"
             style="align-self: center"
           >
             <span
@@ -85,7 +86,7 @@
           </span>
           <input
             class="form-control"
-            style="flex: 1; margin-right: 10px"
+            style="flex: 1"
             v-model="createName"
             :placeholder="l('channelList.createName')"
           />

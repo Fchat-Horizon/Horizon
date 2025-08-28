@@ -83,6 +83,7 @@ export let staticDomain = '';
 
 export let settings: Settings = {
   animateEicons: true,
+  smoothMosaics: true,
   inlineDisplayMode: InlineDisplayMode.DISPLAY_ALL,
   defaultCharacter: -1,
   fuzzyDates: true

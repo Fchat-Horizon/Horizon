@@ -261,6 +261,7 @@ export namespace Settings {
     readonly highlightWords: ReadonlyArray<string>;
     readonly showAvatars: boolean;
     readonly animatedEicons: boolean;
+    readonly smoothMosaics: boolean;
     readonly idleTimer: number;
     readonly messageSeparators: boolean;
     readonly eventMessages: boolean;

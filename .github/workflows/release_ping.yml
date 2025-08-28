@@ -1,0 +1,20 @@
+on:
+  release:
+    types: [released]
+jobs:
+  release-to-discord:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Release to Discord
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_RELEASES }}
+          nodetail: true
+          title: 'New Release (${{ github.event.release.tag_name }})'
+          description: |
+            ${{ github.event.release.body }}
+
+            [Download Here](${{ github.event.release.html_url }})
+          color: 0x00FF00
+          content: '||<@&1409675106900246540>||'
+          username: 'Release Bot'

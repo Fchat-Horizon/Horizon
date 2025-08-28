@@ -294,13 +294,25 @@ export class ProfileRecommendationAnalyzer {
     }
 
     if (p.species === null) {
-      this.add(
-        'SPECIES',
-        ProfileRecommendationLevel.CRITICAL,
-        'Enter species',
-        "Specifying the species of your character – even if it's 'human' – will improve your matches with other players.",
-        'https://wiki.f-list.net/Guide:_Character_Profiles#General_Details'
-      );
+      let isUnparsable =
+        this.profile.character.infotags[TagId.Species]?.string !== undefined;
+      if (isUnparsable) {
+        this.add(
+          'SPECIES',
+          ProfileRecommendationLevel.NOTE,
+          'Hard to parse species',
+          "The matcher couldn't parse your species. Only species that have default kinks can be matched.",
+          'https://wiki.f-list.net/Guide:_Character_Profiles#General_Details'
+        );
+      } else {
+        this.add(
+          'SPECIES',
+          ProfileRecommendationLevel.CRITICAL,
+          'Enter species',
+          "Specifying the species of your character – even if it's 'human' – will improve your matches with other players.",
+          'https://wiki.f-list.net/Guide:_Character_Profiles#General_Details'
+        );
+      }
     } else {
       this.add(
         'SPECIES',

@@ -536,6 +536,14 @@
     }
   }
 
+  .bbcode-preview {
+    max-height: 450px;
+    overflow-y: auto;
+    div.bbcode {
+      padding: 0.2em 0.45em;
+    }
+  }
+
   .bbcode-editor {
     resize: none;
   }

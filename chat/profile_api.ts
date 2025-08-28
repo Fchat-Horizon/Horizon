@@ -138,6 +138,7 @@ async function executeCharacterData(
 
   Utils.settings.inlineDisplayMode = data.current_user.inline_mode;
   Utils.settings.animateEicons = core.state.settings.animatedEicons;
+  Utils.settings.smoothMosaics = core.state.settings.smoothMosaics;
 
   // Add maintainer badge for Horizon developers
   const badges = [...data.badges];

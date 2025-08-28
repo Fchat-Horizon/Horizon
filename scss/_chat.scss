@@ -216,7 +216,7 @@
     }
     flex: auto;
     padding: 5px 3px 5px 3px;
-    min-width: 55px;
+    min-width: 50px;
     text-align: center;
     font-size: 1.15rem;
     display: inline-block;
@@ -364,7 +364,7 @@
 }
 
 .message-highlight {
-  background-color: color.scale($color: $success, $alpha: -50%);
+  background-color: color.scale($color: $success, $alpha: -70%);
 }
 
 .message-action .bbcode {
@@ -408,11 +408,11 @@ $genders: (
 .vanillaGenderColors {
   @each $gender, $color in $genders {
     .gender-#{$gender} {
-      color: $color !important;
+      color: $color;
     }
 
     .message-event .gender-#{$gender} {
-      color: color.scale($color, $lightness: 5%) !important;
+      color: color.scale($color, $lightness: 5%);
     }
 
     .gender-#{$gender}.user-bookmark,

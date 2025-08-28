@@ -40,23 +40,12 @@ body,
 * {
   &::-webkit-scrollbar-track {
     box-shadow: inset 0 0 2px color.scale($gray-base, $lightness: -50%);
-    border-radius: 10px;
-  }
-
-  &::-webkit-scrollbar {
-    width: 8px;
   }
 
   &::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.8);
     background-color: color.scale($gray-base, $lightness: -30%);
     &:hover {
       background-color: color.scale($gray-base, $lightness: -50%);
-    }
-
-    &:active {
-      background-color: $gray-700;
     }
   }
 }
