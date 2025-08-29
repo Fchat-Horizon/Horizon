@@ -70,12 +70,19 @@ export class AdCenter {
     tags: string[],
     channelIds: string[],
     order: 'random' | 'ad-center',
-    timeoutMinutes: number
+    timeoutMinutes: number,
+    minPostDelayMinutes: number
   ): void {
     const ads = this.getMatchingAds(tags);
 
     _.each(channelIds, channelId =>
-      this.scheduleForChannel(channelId, ads, order, timeoutMinutes)
+      this.scheduleForChannel(
+        channelId,
+        ads,
+        order,
+        timeoutMinutes,
+        minPostDelayMinutes
+      )
     );
   }
 
@@ -124,7 +131,8 @@ export class AdCenter {
     channelId: string,
     ads: Ad[],
     order: 'random' | 'ad-center',
-    timeoutMinutes: number
+    timeoutMinutes: number,
+    minPostDelayMinutes: number
   ): void {
     const conv = this.getConversation(channelId);
 
@@ -146,6 +154,6 @@ export class AdCenter {
     };
 
     conv.adManager.stop();
-    conv.adManager.start(timeoutMinutes * 60 * 1000);
+    conv.adManager.start(timeoutMinutes * 60 * 1000, minPostDelayMinutes);
   }
 }

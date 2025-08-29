@@ -190,7 +190,10 @@ export class AdManager {
     return this.firstPost;
   }
 
-  start(timeoutMs = AdManager.POSTING_PERIOD): void {
+  start(
+    timeoutMs = AdManager.POSTING_PERIOD,
+    minPostDelaySeconds = core.connection.vars.lfrp_flood
+  ): void {
     const chanConv = <Conversation.ChannelConversation>this.conversation;
 
     const initialWait = Math.max(
@@ -208,7 +211,7 @@ export class AdManager {
       Math.max(
         Date.now() + initialWait,
         (this.conversation.settings.adSettings.lastAdTimestamp || 0) +
-          core.connection.vars.lfrp_flood * 1000
+          Math.max(minPostDelaySeconds, core.connection.vars.lfrp_flood) * 1000
       )
     );
 
