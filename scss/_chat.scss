@@ -378,6 +378,70 @@
   border-bottom: solid 2px mix($white, $success, 2 * 8%) !important;
 }
 
+.layout-modern {
+  .message.message-modern {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 10px;
+    position: relative;
+    .message-avatar,
+    .message-avatar-spacer {
+      width: 40px;
+      min-width: 40px;
+    }
+    .message-avatar {
+      height: 40px;
+      object-fit: cover;
+      border-radius: 2px;
+    }
+    .message-avatar-spacer {
+      height: 1px;
+    }
+    .message-modern-inner {
+      flex: 1;
+      min-width: 0;
+    }
+    .message-header {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-weight: 600;
+      .message-time {
+        order: 2;
+        font-size: 0.65em;
+        opacity: 0.55;
+        letter-spacing: 0.03em;
+      }
+      .message-post {
+        display: none;
+      }
+    }
+    .user-view {
+      display: inline-flex;
+      align-items: center;
+      .user-avatar {
+        display: none;
+      }
+    }
+    .message-content {
+      margin-top: 2px;
+      min-width: 0;
+      .bbcode {
+        background: transparent;
+        padding: 0;
+        border-radius: 0;
+        border: none;
+        word-break: break-word;
+      }
+    }
+    &.message-own .message-content .bbcode {
+      background: transparent;
+    }
+  }
+}
+
 .fas.active {
   color: theme-color('success');
 }

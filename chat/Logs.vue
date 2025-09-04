@@ -105,6 +105,12 @@
     </div>
     <div
       class="messages messages-both hidden-scrollbar"
+      :class="{
+        'layout-modern':
+          (core.state.settings.chatLayoutMode || 'classic') === 'modern',
+        'layout-classic':
+          (core.state.settings.chatLayoutMode || 'classic') === 'classic'
+      }"
       style="overflow: auto; overscroll-behavior: none"
       ref="messages"
       tabindex="-1"
@@ -192,6 +198,7 @@
   export default class Logs extends CustomDialog {
     @Prop
     readonly conversation?: Conversation;
+    core = core;
     conversations: LogInterface.Conversation[] = [];
     selectedConversation: LogInterface.Conversation | undefined;
     dates: ReadonlyArray<Date> = [];

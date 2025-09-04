@@ -920,6 +920,8 @@
 
       if (this.isPrivate(this.conversation)) {
         classes['filter-channel-messages'] = filter.hidePrivateMessages;
+        const layout = core.state.settings.chatLayoutMode || 'classic';
+        classes['layout-' + layout] = true;
         return classes;
       }
 
@@ -937,6 +939,10 @@
         conv.channel.owner !== ''
           ? filter.hidePrivateChannelMessages
           : filter.hidePublicChannelMessages;
+
+      // Apply chat layout mode class (classic/modern)
+      const layout = core.state.settings.chatLayoutMode || 'classic';
+      classes['layout-' + layout] = true;
 
       return classes;
     }

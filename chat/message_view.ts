@@ -8,7 +8,7 @@ import {
 import { Channel } from '../fchat';
 import { Score } from '../learn/matcher';
 import { BBCodeView } from '../bbcode/view';
-import { formatTime } from './common';
+import { formatTime, characterImage } from './common';
 import core from './core';
 import { Conversation } from './interfaces';
 import UserView from './UserView.vue';
@@ -22,6 +22,8 @@ const userPostfix: { [key: number]: string | undefined } = {
 @Component({
   render(this: MessageView, createElement: CreateElement): VNode {
     const message = this.message;
+    const layoutMode = core.state.settings.chatLayoutMode || 'classic';
+    let modernInner: VNode | null = null; // track modern inner wrapper
 
     // setTimeout(
     //     () => {
@@ -31,13 +33,20 @@ const userPostfix: { [key: number]: string | undefined } = {
     //     5000
     // );
 
-    const children: VNodeChildrenArrayContents = [
-      createElement(
-        'span',
-        { staticClass: 'message-time' },
-        `${formatTime(message.time)}`
-      )
-    ];
+    // Classic layout: existing inline format.
+    // Modern layout: avatar-first with header (name + time) and bubble content.
+    let children: VNodeChildrenArrayContents;
+    if (layoutMode === 'modern') {
+      children = [];
+    } else {
+      children = [
+        createElement(
+          'span',
+          { staticClass: 'message-time' },
+          `${formatTime(message.time)}`
+        )
+      ];
+    }
     const separators = core.connection.isOpen
       ? core.state.settings.messageSeparators
       : false;
@@ -53,56 +62,125 @@ const userPostfix: { [key: number]: string | undefined } = {
       ` ${this.scoreClasses}` +
       ` ${this.filterClasses}`;
     if (message.type !== Conversation.Message.Type.Event) {
-      children.push(
-        message.type === Conversation.Message.Type.Action
-          ? createElement('i', { class: 'message-pre fas fa-star-of-life' })
-          : '',
-        createElement(UserView, {
-          props: {
-            avatar: core.connection.character
-              ? core.state.settings.risingShowPortraitInMessage
-              : false,
-            character: message.sender,
-            channel: this.channel,
-            isMarkerShown: core.connection.character
-              ? core.state.settings.horizonShowGenderMarker
-              : false
-          }
-        }),
-        userPostfix[message.type] !== undefined
-          ? createElement(
-              'span',
-              { class: 'message-post' },
-              userPostfix[message.type]
+      if (layoutMode === 'modern') {
+        // Modern layout: separate avatar column so time can sit directly after name
+        const headerChildren: VNodeChildrenArrayContents = [];
+        if (message.type === Conversation.Message.Type.Action) {
+          headerChildren.push(
+            createElement('i', { class: 'message-pre fas fa-star-of-life' })
+          );
+        }
+        headerChildren.push(
+          createElement(UserView, {
+            props: {
+              avatar: false, // custom avatar element
+              character: message.sender,
+              channel: this.channel,
+              isMarkerShown: core.connection.character
+                ? core.state.settings.horizonShowGenderMarker
+                : false
+            }
+          })
+        );
+        headerChildren.push(
+          createElement(
+            'span',
+            { staticClass: 'message-time' },
+            `${formatTime(message.time)}`
+          )
+        );
+
+        const showAvatar = core.connection.character
+          ? core.state.settings.risingShowPortraitInMessage
+          : false;
+        const avatarNode = showAvatar
+          ? createElement('img', {
+              attrs: {
+                src: characterImage(message.sender.name),
+                alt: message.sender.name,
+                class: 'message-avatar'
+              }
+            })
+          : createElement('div', { staticClass: 'message-avatar-spacer' });
+
+        children.push(avatarNode);
+        modernInner = createElement(
+          'div',
+          { staticClass: 'message-modern-inner' },
+          [
+            createElement(
+              'div',
+              { staticClass: 'message-header' },
+              headerChildren
             )
-          : ' '
-      );
+          ]
+        );
+        children.push(modernInner);
+      } else {
+        children.push(
+          message.type === Conversation.Message.Type.Action
+            ? createElement('i', { class: 'message-pre fas fa-star-of-life' })
+            : '',
+          createElement(UserView, {
+            props: {
+              avatar: core.connection.character
+                ? core.state.settings.risingShowPortraitInMessage
+                : false,
+              character: message.sender,
+              channel: this.channel,
+              isMarkerShown: core.connection.character
+                ? core.state.settings.horizonShowGenderMarker
+                : false
+            }
+          }),
+          userPostfix[message.type] !== undefined
+            ? createElement(
+                'span',
+                { class: 'message-post' },
+                userPostfix[message.type]
+              )
+            : ' '
+        );
+      }
       if ('isHighlight' in message && message.isHighlight)
         classes += ' message-highlight';
     }
     const isAd = message.type === Conversation.Message.Type.Ad && !this.logs;
-    children.push(
-      createElement(BBCodeView(core.bbCodeParser), {
-        props: {
-          unsafeText: message.text,
-          afterInsert: isAd
-            ? (elm: HTMLElement) => {
-                setImmediate(() => {
-                  elm = elm.parentElement!;
-                  if (elm.scrollHeight > elm.offsetHeight) {
-                    const expand = document.createElement('div');
-                    expand.className = 'expand fas fa-caret-down';
-                    expand.addEventListener('click', function (): void {
-                      this.parentElement!.className += ' expanded';
-                    });
-                    elm.appendChild(expand);
-                  }
-                });
-              }
-            : undefined
-        }
-      })
-    );
+    const bbcodeNode = createElement(BBCodeView(core.bbCodeParser), {
+      props: {
+        unsafeText: message.text,
+        afterInsert: isAd
+          ? (elm: HTMLElement) => {
+              setImmediate(() => {
+                elm = elm.parentElement!;
+                if (elm.scrollHeight > elm.offsetHeight) {
+                  const expand = document.createElement('div');
+                  expand.className = 'expand fas fa-caret-down';
+                  expand.addEventListener('click', function (): void {
+                    this.parentElement!.className += ' expanded';
+                  });
+                  elm.appendChild(expand);
+                }
+              });
+            }
+          : undefined
+      }
+    });
+
+    if (layoutMode === 'modern') {
+      if (modernInner && modernInner.children) {
+        (modernInner.children as VNodeChildrenArrayContents).push(
+          createElement('div', { staticClass: 'message-content' }, [bbcodeNode])
+        );
+      } else {
+        // fallback just append bbcode
+        children.push(bbcodeNode);
+      }
+    } else {
+      children.push(bbcodeNode);
+    }
+
+    if (layoutMode === 'modern') classes += ' message-modern';
     const node = createElement('div', { attrs: { class: classes } }, children);
     node.key = message.id;
     return node;

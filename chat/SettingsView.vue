@@ -543,6 +543,24 @@
       </div>
 
       <div class="mb-3">
+        <label class="control-label" for="chatLayoutMode"
+          >Chat layout style</label
+        >
+        <select
+          id="chatLayoutMode"
+          class="form-select"
+          v-model="chatLayoutMode"
+        >
+          <option value="classic">Classic</option>
+          <option value="modern">Modern</option>
+        </select>
+        <small class="form-text text-muted"
+          >Modern layout shows larger avatars and bubble-style messages, similar
+          to Discord.</small
+        >
+      </div>
+
+      <div class="mb-3">
         <div class="form-check">
           <input
             class="form-check-input"
@@ -996,6 +1014,7 @@
     horizonChangeOfflineColor!: boolean;
     horizonNotifyFriendSignIn!: boolean;
     horizonHighlightUsers!: string;
+    chatLayoutMode!: 'classic' | 'modern';
 
     horizonCacheDraftMessages!: boolean;
     horizonSaveDraftMessagesToDiskTimer!: string;
@@ -1057,6 +1076,7 @@
       this.horizonShowGenderMarker = settings.horizonShowGenderMarker;
       this.horizonGenderMarkerOrigColor = settings.horizonGenderMarkerOrigColor;
       this.horizonChangeOfflineColor = settings.horizonChangeOfflineColor;
+      this.chatLayoutMode = settings.chatLayoutMode || 'classic';
 
       this.horizonCacheDraftMessages = settings.horizonCacheDraftMessages;
       this.horizonSaveDraftMessagesToDiskTimer =
@@ -1180,6 +1200,7 @@
           .split(',')
           .map(x => x.trim())
           .filter(x => x.length),
+        chatLayoutMode: this.chatLayoutMode,
         horizonCacheDraftMessages: this.horizonCacheDraftMessages,
         horizonSaveDraftMessagesToDiskTimer:
           diskDraftTimer === null
@@ -1204,7 +1225,8 @@
         risingCharacterTheme:
           this.risingCharacterTheme != 'undefined'
             ? this.risingCharacterTheme
-            : undefined
+            : undefined,
+        soundTheme: core.state.settings.soundTheme
       };
 
       console.log('SETTINGS', minAge, maxAge, core.state.settings);
