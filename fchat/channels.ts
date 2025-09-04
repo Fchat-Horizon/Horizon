@@ -46,6 +46,14 @@ class Channel implements Interfaces.Channel {
   members: { [key: string]: SortableMember | undefined } = {};
   sortedMembers: SortableMember[] = [];
 
+  get horizonIcon(): string {
+    if (this.id.substr(0, 4) !== 'adh-') return 'fa fa-star';
+    const customIconMatch = this.description.match(
+      /(?<=Horizon icon: ")fa[s]? fa-[a-z|-]+(?=")/gm
+    );
+    return customIconMatch ? customIconMatch[0] : 'fas fa-hashtag';
+  }
+
   constructor(
     readonly id: string,
     readonly name: string
