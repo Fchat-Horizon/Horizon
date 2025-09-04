@@ -65,11 +65,6 @@ const userPostfix: { [key: number]: string | undefined } = {
       if (layoutMode === 'modern') {
         // Modern layout: separate avatar column so time can sit directly after name
         const headerChildren: VNodeChildrenArrayContents = [];
-        if (message.type === Conversation.Message.Type.Action) {
-          headerChildren.push(
-            createElement('i', { class: 'message-pre fas fa-star-of-life' })
-          );
-        }
         headerChildren.push(
           createElement(UserView, {
             props: {
@@ -145,10 +140,16 @@ const userPostfix: { [key: number]: string | undefined } = {
       if ('isHighlight' in message && message.isHighlight)
         classes += ' message-highlight';
     }
+
+    const isModernAction =
+      layoutMode === 'modern' &&
+      message.type === Conversation.Message.Type.Action;
     const isAd = message.type === Conversation.Message.Type.Ad && !this.logs;
     const bbcodeNode = createElement(BBCodeView(core.bbCodeParser), {
       props: {
-        unsafeText: message.text,
+        unsafeText: isModernAction
+          ? ' ' + message.sender.name + message.text
+          : message.text,
         afterInsert: isAd
           ? (elm: HTMLElement) => {
               setImmediate(() => {
@@ -169,9 +170,20 @@ const userPostfix: { [key: number]: string | undefined } = {
 
     if (layoutMode === 'modern') {
       if (modernInner && modernInner.children) {
-        (modernInner.children as VNodeChildrenArrayContents).push(
-          createElement('div', { staticClass: 'message-content' }, [bbcodeNode])
-        );
+        if (message.type === Conversation.Message.Type.Action) {
+          (modernInner.children as VNodeChildrenArrayContents).push(
+            createElement('div', { staticClass: 'message-content' }, [
+              createElement('i', { class: 'message-pre fas fa-star-of-life' }),
+              bbcodeNode
+            ])
+          );
+        } else {
+          (modernInner.children as VNodeChildrenArrayContents).push(
+            createElement('div', { staticClass: 'message-content' }, [
+              bbcodeNode
+            ])
+          );
+        }
       } else {
         // fallback just append bbcode
         children.push(bbcodeNode);
