@@ -47,8 +47,14 @@ const userPostfix: { [key: number]: string | undefined } = {
         )
       ];
     }
+
+    const showHeader =
+      this.previous == undefined ||
+      !(this.previous.sender == this.message.sender) ||
+      this.previous.time.getTime() + 120000 < this.message.time.getTime();
+
     const separators = core.connection.isOpen
-      ? core.state.settings.messageSeparators
+      ? core.state.settings.messageSeparators && showHeader
       : false;
     /*tslint:disable-next-line:prefer-template*/ //unreasonable here
     let classes =
@@ -65,40 +71,47 @@ const userPostfix: { [key: number]: string | undefined } = {
       if (layoutMode === 'modern') {
         // Modern layout: separate avatar column so time can sit directly after name
         const headerChildren: VNodeChildrenArrayContents = [];
-        headerChildren.push(
-          createElement(UserView, {
-            props: {
-              avatar: false, // custom avatar element
-              character: message.sender,
-              channel: this.channel,
-              isMarkerShown: core.connection.character
-                ? core.state.settings.horizonShowGenderMarker
-                : false
-            }
-          })
-        );
-        headerChildren.push(
-          createElement(
-            'span',
-            { staticClass: 'message-time' },
-            `${formatTime(message.time)}`
-          )
-        );
-
-        const showAvatar = core.connection.character
-          ? core.state.settings.risingShowPortraitInMessage
-          : false;
-        const avatarNode = showAvatar
-          ? createElement('img', {
-              attrs: {
-                src: characterImage(message.sender.name),
-                alt: message.sender.name,
-                class: 'message-avatar'
+        if (showHeader) {
+          headerChildren.push(
+            createElement(UserView, {
+              props: {
+                avatar: false, // custom avatar element
+                character: message.sender,
+                channel: this.channel,
+                isMarkerShown: core.connection.character
+                  ? core.state.settings.horizonShowGenderMarker
+                  : false
               }
             })
-          : createElement('div', { staticClass: 'message-avatar-spacer' });
+          );
+          headerChildren.push(
+            createElement(
+              'span',
+              { staticClass: 'message-time' },
+              `${formatTime(message.time)}`
+            )
+          );
 
-        children.push(avatarNode);
+          const showAvatar = core.connection.character
+            ? core.state.settings.risingShowPortraitInMessage
+            : false;
+          const avatarNode = showAvatar
+            ? createElement('img', {
+                attrs: {
+                  src: characterImage(message.sender.name),
+                  alt: message.sender.name,
+                  class: 'message-avatar'
+                }
+              })
+            : createElement('div', { staticClass: 'message-avatar-spacer' });
+
+          children.push(avatarNode);
+        } else {
+          const avatarNode = createElement('div', {
+            staticClass: 'message-avatar-spacer'
+          });
+          children.push(avatarNode);
+        }
         modernInner = createElement(
           'div',
           { staticClass: 'message-modern-inner' },
@@ -207,6 +220,8 @@ export default class MessageView extends Vue {
   readonly channel?: Channel;
   @Prop
   readonly logs?: true;
+  @Prop
+  readonly previous?: Conversation.Message;
 
   scoreClasses = this.getMessageScoreClasses(this.message);
   filterClasses = this.getMessageFilterClasses(this.message);

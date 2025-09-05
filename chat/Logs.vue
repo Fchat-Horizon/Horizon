@@ -117,10 +117,11 @@
       @scroll="onMessagesScroll"
     >
       <message-view
-        v-for="message in displayedMessages"
+        v-for="(message, i) in displayedMessages"
         :message="message"
         :key="message.id"
         :logs="true"
+        :previous="messages[i - 1]"
       ></message-view>
     </div>
     <div class="input-group" style="flex-shrink: 0">
