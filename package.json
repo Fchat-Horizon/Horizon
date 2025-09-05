@@ -71,6 +71,7 @@
     "@cliqz/adblocker-electron": "1.34.0",
     "@cliqz/adblocker-electron-preload": "1.34.0",
     "@cliqz/adblocker-extended-selectors": "1.34.0",
+    "adm-zip": "^0.5.16",
     "husky": "^9.1.7",
     "jquery": "^3.7.1",
     "lint-staged": "^15.5.2",
