@@ -187,6 +187,7 @@ const userPostfix: { [key: number]: string | undefined } = {
           ? (elm: HTMLElement) => {
               setImmediate(() => {
                 if (layoutMode === 'modern') {
+                  // Pushes elm up three times rather than one with modern to make it parent to the top level of a message.
                   elm = elm.parentElement!.parentElement!.parentElement!;
                   if (elm.scrollHeight > elm.offsetHeight) {
                     const expand = document.createElement('div');

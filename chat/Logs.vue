@@ -105,12 +105,7 @@
     </div>
     <div
       class="messages messages-both hidden-scrollbar"
-      :class="{
-        'layout-modern':
-          (core.state.settings.chatLayoutMode || 'classic') === 'modern',
-        'layout-classic':
-          (core.state.settings.chatLayoutMode || 'classic') === 'classic'
-      }"
+      :class="layoutClasses"
       style="overflow: auto; overscroll-behavior: none"
       ref="messages"
       tabindex="-1"
@@ -121,7 +116,7 @@
         :message="message"
         :key="message.id"
         :logs="true"
-        :previous="messages[i - 1]"
+        :previous="displayedMessages[i - 1]"
       ></message-view>
     </div>
     <div class="input-group" style="flex-shrink: 0">
@@ -189,6 +184,13 @@
     );
   }
 
+  function getMessageWrapperClasses(): any {
+    const classes: any = {};
+    const layout = core.state.settings.chatLayoutMode || 'classic';
+    classes['layout-' + layout] = true;
+    return classes;
+  }
+
   @Component({
     components: {
       modal: Modal,
@@ -217,6 +219,7 @@
     windowStart = 0;
     windowEnd = 0;
     resizeListener = async () => this.onMessagesScroll();
+    layoutClasses = getMessageWrapperClasses();
 
     get displayedMessages(): ReadonlyArray<Conversation.Message> {
       if (this.selectedDate !== undefined) return this.filteredMessages;
