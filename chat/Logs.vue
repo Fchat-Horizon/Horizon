@@ -186,7 +186,12 @@
 
   function getMessageWrapperClasses(): any {
     const classes: any = {};
-    const layout = core.state.settings.chatLayoutMode || 'classic';
+    let layout: 'classic' | 'modern' = 'classic';
+    try {
+      layout = (core.state as any)._settings?.chatLayoutMode || 'classic';
+    } catch (_) {
+      layout = 'classic';
+    }
     classes['layout-' + layout] = true;
     return classes;
   }
@@ -219,7 +224,9 @@
     windowStart = 0;
     windowEnd = 0;
     resizeListener = async () => this.onMessagesScroll();
-    layoutClasses = getMessageWrapperClasses();
+    get layoutClasses(): any {
+      return getMessageWrapperClasses();
+    }
 
     get displayedMessages(): ReadonlyArray<Conversation.Message> {
       if (this.selectedDate !== undefined) return this.filteredMessages;
