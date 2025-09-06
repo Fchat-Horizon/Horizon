@@ -918,10 +918,10 @@
     getMessageWrapperClasses(): any {
       const filter = core.state.settings.risingFilter;
       const classes: any = {};
+      const layout = core.state.settings.chatLayoutMode || 'classic';
 
       if (this.isPrivate(this.conversation)) {
         classes['filter-channel-messages'] = filter.hidePrivateMessages;
-        const layout = core.state.settings.chatLayoutMode || 'classic';
         classes['layout-' + layout] = true;
         return classes;
       }
@@ -942,9 +942,7 @@
           : filter.hidePublicChannelMessages;
 
       // Apply chat layout mode class (classic/modern)
-      const layout = core.state.settings.chatLayoutMode || 'classic';
       classes['layout-' + layout] = true;
-
       return classes;
     }
 

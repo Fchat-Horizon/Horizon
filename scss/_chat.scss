@@ -387,6 +387,9 @@
     gap: 8px;
     padding: 4px 4px;
     position: relative;
+    .expanded {
+      max-height: none;
+    }
     .message-avatar,
     .message-avatar-spacer {
       width: 40px;
@@ -415,16 +418,16 @@
         opacity: 0.55;
         letter-spacing: 0.03em;
       }
-      .message-post {
-        display: none;
+      .user-view {
+        display: inline-flex;
+        align-items: center;
+        text-align-last: justify;
+        text-indent: 0.5px;
+        .user-avatar {
+          display: none;
+        }
       }
-    }
-    .user-view {
-      display: inline-flex;
-      align-items: center;
-      text-align-last: justify;
-      text-indent: 0.5px;
-      .user-avatar {
+      .message-post {
         display: none;
       }
     }

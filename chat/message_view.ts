@@ -8,7 +8,7 @@ import {
 import { Channel } from '../fchat';
 import { Score } from '../learn/matcher';
 import { BBCodeView } from '../bbcode/view';
-import { formatTime, characterImage } from './common';
+import { formatTime } from './common';
 import core from './core';
 import { Conversation } from './interfaces';
 import UserView from './UserView.vue';
@@ -37,7 +37,10 @@ const userPostfix: { [key: number]: string | undefined } = {
     // Classic layout: existing inline format.
     // Modern layout: avatar-first with header (name + time) and bubble content.
     let children: VNodeChildrenArrayContents;
-    if (layoutMode === 'modern') {
+    if (
+      layoutMode === 'modern' &&
+      message.type !== Conversation.Message.Type.Event
+    ) {
       children = [];
     } else {
       children = [
@@ -132,6 +135,7 @@ const userPostfix: { [key: number]: string | undefined } = {
         }
         children.push(modernInner);
       } else {
+        // Classic Layout: Action Star > UserView (with icon logic) > Post type colon
         children.push(
           message.type === Conversation.Message.Type.Action
             ? createElement('i', { class: 'message-pre fas fa-star-of-life' })
@@ -161,26 +165,47 @@ const userPostfix: { [key: number]: string | undefined } = {
         classes += ' message-highlight';
     }
 
-    const isModernAction =
-      layoutMode === 'modern' &&
-      message.type === Conversation.Message.Type.Action;
-    const isAd = message.type === Conversation.Message.Type.Ad && !this.logs;
+    let messageAdjustment = '';
+    switch (message.type) {
+      case Conversation.Message.Type.Action:
+        messageAdjustment = ' ' + message.sender.name + message.text;
+        break;
+      case Conversation.Message.Type.Roll:
+        messageAdjustment = ' ' + message.sender.name + ' ' + message.text;
+        break;
+      case Conversation.Message.Type.Warn:
+        messageAdjustment = ' ' + message.text;
+        break;
+      default:
+        messageAdjustment = message.text;
+    }
+    const isAd = message.type == Conversation.Message.Type.Ad && !this.logs;
     const bbcodeNode = createElement(BBCodeView(core.bbCodeParser), {
       props: {
-        unsafeText: isModernAction
-          ? ' ' + message.sender.name + message.text
-          : message.text,
+        unsafeText: layoutMode === 'modern' ? messageAdjustment : message.text,
         afterInsert: isAd
           ? (elm: HTMLElement) => {
               setImmediate(() => {
-                elm = elm.parentElement!;
-                if (elm.scrollHeight > elm.offsetHeight) {
-                  const expand = document.createElement('div');
-                  expand.className = 'expand fas fa-caret-down';
-                  expand.addEventListener('click', function (): void {
-                    this.parentElement!.className += ' expanded';
-                  });
-                  elm.appendChild(expand);
+                if (layoutMode === 'modern') {
+                  elm = elm.parentElement!.parentElement!.parentElement!;
+                  if (elm.scrollHeight > elm.offsetHeight) {
+                    const expand = document.createElement('div');
+                    expand.className = 'expand fas fa-caret-down';
+                    expand.addEventListener('click', function (): void {
+                      this.parentElement!.className += ' expanded';
+                    });
+                    elm.appendChild(expand);
+                  }
+                } else {
+                  elm = elm.parentElement!;
+                  if (elm.scrollHeight > elm.offsetHeight) {
+                    const expand = document.createElement('div');
+                    expand.className = 'expand fas fa-caret-down';
+                    expand.addEventListener('click', function (): void {
+                      this.parentElement!.className += ' expanded';
+                    });
+                    elm.appendChild(expand);
+                  }
                 }
               });
             }
@@ -190,22 +215,32 @@ const userPostfix: { [key: number]: string | undefined } = {
 
     if (layoutMode === 'modern') {
       if (modernInner && modernInner.children) {
-        if (message.type === Conversation.Message.Type.Action) {
-          (modernInner.children as VNodeChildrenArrayContents).push(
-            createElement('div', { staticClass: 'message-content' }, [
-              createElement('i', {
-                class: 'message-pre fa fa-fw fa-star-of-life'
-              }),
-              bbcodeNode
-            ])
-          );
-        } else {
-          (modernInner.children as VNodeChildrenArrayContents).push(
-            createElement('div', { staticClass: 'message-content' }, [
-              bbcodeNode
-            ])
-          );
+        let messagePrefix = '';
+        switch (message.type) {
+          case Conversation.Message.Type.Action:
+            messagePrefix = createElement('i', {
+              class: 'message-pre fa fa-fw fa-star-of-life'
+            });
+            break;
+          case Conversation.Message.Type.Roll:
+            messagePrefix = createElement('i', {
+              class: 'message-pre fa fa-fw fa-dice-d6'
+            });
+            break;
+          case Conversation.Message.Type.Warn:
+            messagePrefix = createElement('i', {
+              class: 'message-pre fa fa-fw fa-triangle-exclamation'
+            });
+            break;
+          default:
+            messagePrefix = '';
         }
+        (modernInner.children as VNodeChildrenArrayContents).push(
+          createElement('div', { staticClass: 'message-content' }, [
+            messagePrefix,
+            bbcodeNode
+          ])
+        );
       } else {
         // fallback just append bbcode
         children.push(bbcodeNode);
