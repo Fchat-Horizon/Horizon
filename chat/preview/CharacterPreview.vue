@@ -83,8 +83,13 @@
         >
           <h4>Latest Messages</h4>
 
-          <template v-for="message in conversation">
-            <message-view :message="message" :key="message.id"> </message-view>
+          <template v-for="(message, i) in conversation">
+            <message-view
+              :message="message"
+              :key="message.id"
+              :previous="conversation[i - 1]"
+            >
+            </message-view>
           </template>
         </div>
 
@@ -584,6 +589,87 @@
 
     .filter-matches {
       margin-top: 0.75em;
+    }
+
+    .conversation {
+      .message.message-modern {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 4px 4px;
+        position: relative;
+        .message-avatar,
+        .message-avatar-spacer {
+          width: 40px;
+          min-width: 40px;
+        }
+        .message-avatar {
+          height: 40px;
+          object-fit: contain;
+          .character-avatar {
+            display: inline;
+            height: 100px;
+            width: 100px;
+            &.icon {
+              height: 40px;
+              width: 40px;
+              min-width: 40px;
+              object-fit: contain;
+            }
+            transition: opacity 0.25s;
+            &.loading {
+              opacity: 0;
+              visibility: hidden;
+            }
+          }
+        }
+        .message-avatar-spacer {
+          height: 0px;
+        }
+        .message-modern-inner {
+          flex: 1;
+          min-width: 0;
+        }
+        .message-header {
+          display: flex;
+          align-items: baseline;
+          flex-wrap: wrap;
+          gap: 6px;
+          font-weight: 600;
+          .message-time {
+            order: 2;
+            font-size: 0.65em;
+            opacity: 0.55;
+            letter-spacing: 0.03em;
+          }
+          .message-post {
+            display: none;
+          }
+        }
+        .user-view {
+          display: inline-flex;
+          align-items: center;
+          text-align-last: justify;
+          text-indent: 0.5px;
+          .user-avatar {
+            display: none;
+          }
+        }
+        .message-content {
+          margin-top: 0px;
+          min-width: 0;
+          .bbcode {
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            border: none;
+            word-break: break-word;
+          }
+        }
+        &.message-own .message-content .bbcode {
+          background: transparent;
+        }
+      }
     }
 
     .character-avatar {

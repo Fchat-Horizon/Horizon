@@ -296,6 +296,10 @@
   border-top: solid 1px $card-border-color;
 }
 
+.message-blockless {
+  padding: 1px 0;
+}
+
 .message-own {
   background-color: rgba($gray-300, 0.7);
 }
@@ -381,7 +385,7 @@
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    padding: 6px 10px;
+    padding: 4px 4px;
     position: relative;
     .message-avatar,
     .message-avatar-spacer {
@@ -390,8 +394,7 @@
     }
     .message-avatar {
       height: 40px;
-      object-fit: cover;
-      border-radius: 2px;
+      object-fit: contain;
     }
     .message-avatar-spacer {
       height: 0px;
@@ -419,6 +422,8 @@
     .user-view {
       display: inline-flex;
       align-items: center;
+      text-align-last: justify;
+      text-indent: 0.5px;
       .user-avatar {
         display: none;
       }

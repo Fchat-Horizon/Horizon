@@ -12,6 +12,7 @@ import { formatTime, characterImage } from './common';
 import core from './core';
 import { Conversation } from './interfaces';
 import UserView from './UserView.vue';
+import IconView from '../bbcode/IconView.vue';
 import { Scoring } from '../learn/matcher-types';
 
 const userPostfix: { [key: number]: string | undefined } = {
@@ -49,17 +50,19 @@ const userPostfix: { [key: number]: string | undefined } = {
     }
 
     const showHeader =
+      !core.state.settings.messageGrouping ||
       this.previous == undefined ||
-      !(this.previous.sender == this.message.sender) ||
+      this.previous.sender !== this.message.sender ||
       this.previous.time.getTime() + 120000 < this.message.time.getTime();
 
     const separators = core.connection.isOpen
-      ? core.state.settings.messageSeparators && showHeader
+      ? core.state.settings.messageSeparators &&
+        (showHeader || message.type == Conversation.Message.Type.Event)
       : false;
     /*tslint:disable-next-line:prefer-template*/ //unreasonable here
     let classes =
       `message message-${Conversation.Message.Type[message.type].toLowerCase()}` +
-      (separators ? ' message-block' : '') +
+      (separators ? ' message-block' : ' message-blockless') +
       (message.type !== Conversation.Message.Type.Event &&
       message.sender.name === core.connection.character
         ? ' message-own'
@@ -96,33 +99,37 @@ const userPostfix: { [key: number]: string | undefined } = {
             ? core.state.settings.risingShowPortraitInMessage
             : false;
           const avatarNode = showAvatar
-            ? createElement('img', {
-                attrs: {
-                  src: characterImage(message.sender.name),
-                  alt: message.sender.name,
-                  class: 'message-avatar'
-                }
+            ? createElement(IconView, {
+                props: {
+                  character: message.sender
+                },
+                class: 'message-avatar'
               })
             : createElement('div', { staticClass: 'message-avatar-spacer' });
-
           children.push(avatarNode);
+
+          modernInner = createElement(
+            'div',
+            { staticClass: 'message-modern-inner' },
+            [
+              createElement(
+                'div',
+                { staticClass: 'message-header' },
+                headerChildren
+              )
+            ]
+          );
         } else {
           const avatarNode = createElement('div', {
             staticClass: 'message-avatar-spacer'
           });
           children.push(avatarNode);
+          modernInner = createElement(
+            'div',
+            { staticClass: 'message-modern-inner' },
+            []
+          );
         }
-        modernInner = createElement(
-          'div',
-          { staticClass: 'message-modern-inner' },
-          [
-            createElement(
-              'div',
-              { staticClass: 'message-header' },
-              headerChildren
-            )
-          ]
-        );
         children.push(modernInner);
       } else {
         children.push(
@@ -186,7 +193,9 @@ const userPostfix: { [key: number]: string | undefined } = {
         if (message.type === Conversation.Message.Type.Action) {
           (modernInner.children as VNodeChildrenArrayContents).push(
             createElement('div', { staticClass: 'message-content' }, [
-              createElement('i', { class: 'message-pre fas fa-star-of-life' }),
+              createElement('i', {
+                class: 'message-pre fa fa-fw fa-star-of-life'
+              }),
               bbcodeNode
             ])
           );
