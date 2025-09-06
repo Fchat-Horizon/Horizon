@@ -12,6 +12,7 @@
     ><img
       :src="characterImage(character.name)"
       class="character-avatar icon"
+      id="img"
       :title="character.name"
       :alt="character.name"
       v-once

@@ -83,9 +83,16 @@
         >
           <h4>Latest Messages</h4>
 
-          <template v-for="message in conversation">
-            <message-view :message="message" :key="message.id"> </message-view>
-          </template>
+          <div class="layout-modern">
+            <template v-for="(message, i) in conversation">
+              <message-view
+                :message="message"
+                :key="message.id"
+                :previous="conversation[i - 1]"
+              >
+              </message-view>
+            </template>
+          </div>
         </div>
 
         <div

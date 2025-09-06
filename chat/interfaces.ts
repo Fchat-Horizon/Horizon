@@ -298,6 +298,7 @@ export namespace Settings {
     readonly horizonHighlightUsers: ReadonlyArray<string>;
 
     readonly chatLayoutMode: 'classic' | 'modern';
+    readonly messageGrouping: boolean;
 
     readonly horizonCacheDraftMessages: boolean;
     readonly horizonSaveDraftMessagesToDiskTimer: number;

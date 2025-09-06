@@ -87,6 +87,7 @@ export class Settings implements ISettings {
   horizonHighlightUsers: string[] = [];
 
   chatLayoutMode: 'classic' | 'modern' = 'classic';
+  messageGrouping = false;
 
   horizonCacheDraftMessages = true;
   horizonSaveDraftMessagesToDiskTimer = 60;
