@@ -395,6 +395,7 @@ class PrivateConversation
 
       if (core.state.settings.logMessages)
         await core.logs.logMessage(this, message);
+      this.markRead();
     });
   }
 
@@ -595,7 +596,6 @@ class ChannelConversation
           new Date()
         )
       );
-
       if (isAd) {
         this.nextAd = Date.now() + core.connection.vars.lfrp_flood * 1000;
 
@@ -608,6 +608,7 @@ class ChannelConversation
           }
         };
       }
+      this.markRead();
     });
   }
 

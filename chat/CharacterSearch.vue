@@ -94,6 +94,7 @@
         <template v-if="record.character.status === 'looking'" v-once>
           <img
             :src="characterImage(record.character.name)"
+            class="character-avatar user"
             v-if="showAvatars"
           />
           <user
@@ -775,8 +776,10 @@
       & > .status-crown {
         overflow: hidden;
         width: 100%;
-        height: 2em;
+        min-height: 2em;
+        max-height: 7em;
         padding-top: 5px;
+        display: flex;
 
         .user-avatar {
           max-width: 2em;
@@ -786,17 +789,26 @@
           margin-top: -5px;
         }
 
+        .user-view {
+          flex-shrink: 0;
+        }
+
         .status-text {
           opacity: 0.75;
           padding-left: 4px;
+          max-height: 5.5em;
+          height: 100%;
           display: inline-flex;
+          overflow-y: auto;
+          flex-grow: 1;
         }
       }
 
-      img {
+      .character-avatar.user {
         float: left;
         margin-right: 5px;
         width: 50px;
+        height: auto;
       }
 
       .search-result:nth-child(2n) {

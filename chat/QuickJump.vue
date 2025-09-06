@@ -427,6 +427,11 @@
 
       .quick-jump-results {
         overflow-y: auto;
+        @media (prefers-reduced-motion: reduce) {
+          .quick-jump-result {
+            transition: none !important;
+          }
+        }
 
         .quick-jump-result {
           padding: 12px 16px;
@@ -481,6 +486,11 @@
         text-align: center;
 
         opacity: 0.8;
+        @media (prefers-reduced-motion: reduce) {
+          .quick-jump-new-conversation {
+            transition: none !important;
+          }
+        }
 
         .quick-jump-new-conversation {
           margin-top: 12px;

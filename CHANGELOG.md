@@ -7,7 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # [Unreleased]
 
-_Nothing yet._
+## [1.33.5] - 2025-09-03
+
+### Added
+
+- The dismiss buttons for the note/ site messages checker have been brought back. Dismissed notifications will keep the icon, but will not have the number count visible. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6cd75849f678b6f587093fa6a41017723ef4f304)
+- Added reduced motion accessibility support for our custom animations. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/10c7e46f1dc67e69af8a4aa51fbb67bbbd5b02fe)
+
+### Fixed
+
+- Fixes some cases where using the color picker keybind would make people accidentally overwrite their selected text. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8a7423028520698ad0a111c7bc5e33926c4691c8)
+- Fixes some cases where BBCode would parse correctly where it wouldn't in vanilla 3.0, for consistency with other users. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/08a15531572219dc37be2b4b2601fe0e29e08436)
+- Fixes the user right click menu becoming unnecessarily wide for longer names if those names need multiple lines (and thus won't need the horizontal space anymore). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/96021e74d9568730c4c90205d60c8001fca5999c)
+- Fixes select dropdowns (like those found in the settings menu, or the log viewer) not using the same width as the main element. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b56657f83dd3cb328dc12bda06027ca5f55bf098)
+  - This also fixes those selection dropdowns not having a mouse over colour in light themes.
+- Fixes search results for characters not set to 'Looking' having a broken layout if their status message was considerably tall. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c0407949ea979ee1797cd99a35918faaf3deb1f0)
+
+### Changed
+
+- Profiles without a species no longer default to "human" for the matcher. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7ebaad62e3d7803f7c1ddd9d21812fb4df84e50f)
+- The ping highlight colour has been corrected back to a less bright shade of green. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/29d280df3cf7a3c56b9f43ec6ef5511edc05ecce)
+- Broken inline tags no longer display their bbcode on profiles (which they don't on the website either). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2adb0e6c3dbe6aa08c191bd1281c57da9dddbf50)
+- Sending a message now sets the conversation as read, instead of keeping the 'last read' green line in limbo. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4fc11027f743325cbec641aeb4084c4995f7ee08)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/281 by @BootsieWootsie
+- https://github.com/Fchat-Horizon/Horizon/pull/336 by @BootsieWootsie
 
 # [Releases]
 

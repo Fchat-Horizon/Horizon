@@ -220,7 +220,10 @@
     font-size: 1.15rem;
     display: inline-block;
     border-radius: 6px;
-    transition: 0.2s;
+    transition: $transition-base;
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
     position: relative;
     .userInfo-pager-text {
       font-size: 1rem;
@@ -234,7 +237,10 @@
   overflow-x: hidden;
   padding: 0px 5px 6px 5px;
   border-radius: 8px;
-  transition: 0.2s;
+  transition: $transition-base;
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
   &:hover,
   &:active {
     text-decoration: none;
@@ -260,7 +266,10 @@
     text-decoration: none;
     color: var(--black);
     opacity: 1;
-    transition: 0.2s;
+    transition: $transition-base;
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   }
 }
 .ads-text-box,
@@ -363,7 +372,7 @@
 }
 
 .message-highlight {
-  background-color: mix($white, $success, 4 * 8%);
+  background-color: mix($white, $success, 10 * 8%);
 }
 
 .message-action .bbcode {
@@ -375,7 +384,11 @@
 }
 
 .last-read {
-  border-bottom: solid 2px mix($white, $success, 2 * 8%) !important;
+  border-bottom: solid 2px mix($white, $success, 4 * 8%) !important;
+}
+
+.messages .message:last-of-type.last-read {
+  border-bottom: none !important;
 }
 
 .fas.active {

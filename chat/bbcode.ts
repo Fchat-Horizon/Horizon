@@ -2,7 +2,11 @@ import Vue from 'vue';
 import { BBCodeElement, CoreBBCodeParser } from '../bbcode/core';
 //tslint:disable-next-line:match-default-export-name
 import BaseEditor from '../bbcode/Editor.vue';
-import { BBCodeTextTag, BBCodeCustomTag } from '../bbcode/parser';
+import {
+  BBCodeTextTag,
+  BBCodeCustomTag,
+  BBCodeSimpleTag
+} from '../bbcode/parser';
 import ChannelView from './ChannelTagView.vue';
 // import {characterImage} from './common';
 import core from './core';
@@ -18,6 +22,12 @@ export default class BBCodeParser extends CoreBBCodeParser {
 
   constructor() {
     super();
+    this.addTag(
+      new BBCodeSimpleTag('sub', 'sub', [], ['b', 'i', 'u', 's', 'color'])
+    );
+    this.addTag(
+      new BBCodeSimpleTag('sup', 'sup', [], ['b', 'i', 'u', 's', 'color'])
+    );
     this.addTag(
       new BBCodeCustomTag('color', (parser, parent, param) => {
         const cregex =

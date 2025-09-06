@@ -561,6 +561,9 @@
       transition:
         box-shadow 0.08s,
         transform 0.08s;
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
       text-align: center;
       position: relative;
 
@@ -628,6 +631,9 @@
             -webkit-text-stroke 0.12s,
             opacity 0.12s,
             transform 0.12s;
+          @media (prefers-reduced-motion: reduce) {
+            transition: none;
+          }
           font-size: 14px;
           transform: scale(1);
 

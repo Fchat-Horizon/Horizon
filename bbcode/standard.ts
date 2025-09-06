@@ -31,21 +31,30 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
       'hr',
       [],
       [
-        'collapse',
-        'justify',
-        'center',
-        'left',
-        'right',
         'url',
         'i',
-        'u',
         'b',
-        'color',
+        'u',
         's',
-        'big',
+        'color',
         'sub',
+        'sup',
+        'big',
+        'small',
+        'heading',
         'hr',
-        'img'
+        'icon',
+        'user',
+        'img',
+        'eicon',
+        'quote',
+        'collapse',
+        'left',
+        'center',
+        'right',
+        'justify',
+        'indent',
+        'noparse'
       ]
     );
     hrTag.noClosingTag = true;
@@ -66,6 +75,8 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
     this.addTag(new BBCodeSimpleTag('right', 'span', ['rightText']));
     this.addTag(new BBCodeSimpleTag('center', 'span', ['centerText']));
     this.addTag(new BBCodeSimpleTag('justify', 'span', ['justifyText']));
+    this.addTag(new BBCodeSimpleTag('sub', 'sub', [], ['i', 'u', 'b', 'hr']));
+    this.addTag(new BBCodeSimpleTag('sup', 'sup', [], ['i', 'u', 'b', 'hr']));
     this.addTag(
       new BBCodeCustomTag('color', (parser, parent, param) => {
         const cregex =
@@ -88,7 +99,7 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
         'big',
         'span',
         ['bigText'],
-        ['url', 'i', 'u', 'b', 'color', 's', 'hr', 'img', 'eicon']
+        ['url', 'i', 'u', 'b', 'color', 's', 'hr']
       )
     );
     this.addTag(
@@ -96,7 +107,7 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
         'small',
         'span',
         ['smallText'],
-        ['url', 'i', 'u', 'b', 'color', 's', 'hr', 'img', 'eicon']
+        ['url', 'i', 'u', 'b', 'color', 's', 'hr']
       )
     );
     this.addTag(new BBCodeSimpleTag('indent', 'div', ['indentText']));
@@ -106,24 +117,30 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
         'h2',
         [],
         [
-          'collapse',
-          'justify',
-          'center',
-          'left',
-          'right',
           'url',
           'i',
-          'u',
           'b',
-          'color',
+          'u',
           's',
-          'big',
-          'small',
+          'color',
           'sub',
           'sup',
+          'big',
+          'small',
+          'heading',
           'hr',
+          'icon',
+          'user',
           'img',
-          'eicon'
+          'eicon',
+          'quote',
+          'collapse',
+          'left',
+          'center',
+          'right',
+          'justify',
+          'indent',
+          'noparse'
         ]
       )
     );
@@ -220,19 +237,31 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
         const parser = <StandardBBCodeParser>p;
         if (typeof parser.inlines === 'undefined') {
           parser.warning('This page does not support inline images.');
-          return undefined;
+          const el = parser.createElement('span');
+          el.className = `Text`;
+          el.innerText = ``;
+          parent.appendChild(el);
+          return el;
         }
         const displayMode = Utils.settings.inlineDisplayMode;
         if (!/^\d+$/.test(param)) {
           parser.warning('img tag parameters must be numbers.');
-          return undefined;
+          const el = parser.createElement('span');
+          el.className = `Text`;
+          el.innerText = ``;
+          parent.appendChild(el);
+          return el;
         }
         const inline = parser.inlines[param];
         if (typeof inline !== 'object') {
           parser.warning(
             `Could not find an inline image with id ${param} It will not be visible.`
           );
-          return undefined;
+          const el = parser.createElement('span');
+          el.className = `Text`;
+          el.innerText = ``;
+          parent.appendChild(el);
+          return el;
         }
         inline.name = content;
         let element: HTMLElement;

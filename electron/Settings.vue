@@ -147,7 +147,7 @@
                   </div>
                 </div>
                 <div class="mb-3" v-if="!settings.themeSync">
-                  <label class="control-label" for="theme" style="width: 20ch">
+                  <label class="control-label" for="theme" style="width: 24ch">
                     {{ l('settings.theme.app') }}
                     <filterable-select
                       v-model="settings.theme"
@@ -165,7 +165,7 @@
                   <label
                     class="control-label"
                     for="themeSyncLight"
-                    style="width: 20ch"
+                    style="width: 24ch"
                   >
                     {{ l('settings.theme.app.light') }}
                     <filterable-select
@@ -183,7 +183,7 @@
                   <label
                     class="control-label"
                     for="themeSyncDark"
-                    style="width: 20ch"
+                    style="width: 24ch"
                   >
                     {{ l('settings.theme.app.dark') }}
                     <filterable-select
@@ -274,7 +274,7 @@
                   <label
                     class="control-label"
                     for="spellCheckLang"
-                    style="width: 20ch"
+                    style="width: 24ch"
                   >
                     {{ l('settings.spellcheck') }}
                     <filterable-select
@@ -321,7 +321,7 @@
                   <label
                     class="control-label"
                     for="soundTheme"
-                    style="width: 20ch"
+                    style="width: 24ch"
                   >
                     {{ l('settings.soundTheme') }}
                     <filterable-select
@@ -1153,7 +1153,7 @@
   }
 
   .custom-select {
-    width: 20ch;
+    width: 24ch;
   }
 
   .close {

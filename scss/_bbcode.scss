@@ -214,6 +214,9 @@ div.indentText {
     width: 50px;
   }
   transition: opacity 0.25s;
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
   &.loading {
     opacity: 0;
     visibility: hidden;
@@ -239,6 +242,9 @@ div.indentText {
 .bbcode-collapse-body {
   margin-left: 0.5rem;
   transition: height 0.2s;
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
   overflow-y: hidden;
 
   &.closed {

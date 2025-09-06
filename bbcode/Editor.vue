@@ -376,16 +376,27 @@
       this.element.setSelectionRange(start, end);
     }
 
-    applyText(startText: string, endText: string, withInject?: string): void {
+    applyText(
+      startText: string,
+      endText: string,
+      withInject?: string,
+      collapseAfterWrap: boolean = false
+    ): void {
       const selection = this.getSelection();
       if (selection.length > 0) {
         const replacement =
           startText + (withInject || selection.text) + endText;
         this.text = this.replaceSelection(replacement);
-        this.setSelection(
-          selection.start,
-          selection.start + replacement.length
-        );
+        // If collapsing after wrap, place caret at end; otherwise keep wrapped text selected.
+        if (collapseAfterWrap) {
+          const caretPos = selection.start + replacement.length;
+          this.setSelection(caretPos, caretPos);
+        } else {
+          this.setSelection(
+            selection.start,
+            selection.start + replacement.length
+          );
+        }
       } else {
         const start = this.text.substr(0, selection.start) + startText;
         const end = endText + this.text.substr(selection.start);
@@ -464,15 +475,25 @@
         // tslint:ignore-next-line:no-any
         return button.handler.call(this as any, this);
       }
-      if (button.startText === undefined || withArgument)
-        button.startText = `[${button.tag}${withArgument ? '=' + withArgument : ''}]`;
-      if (button.endText === undefined) button.endText = `[/${button.tag}]`;
+      const startText =
+        button.startText === undefined || withArgument
+          ? `[${button.tag}${withArgument ? '=' + withArgument : ''}]`
+          : button.startText;
+      const endText =
+        button.endText === undefined ? `[/${button.tag}]` : button.endText;
 
-      const ebl = button.endText ? button.endText.length : 0;
-      const sbl = button.startText ? button.startText.length : 0;
+      const ebl = endText ? endText.length : 0;
+      const sbl = startText ? startText.length : 0;
 
       if (this.text.length + sbl + ebl > this.maxlength) return;
-      this.applyText(button.startText || '', button.endText || '', withInject);
+
+      const collapseAfterWrap = button.tag === 'color';
+      this.applyText(
+        startText || '',
+        endText || '',
+        withInject,
+        collapseAfterWrap
+      );
       this.lastInput = Date.now();
     }
 

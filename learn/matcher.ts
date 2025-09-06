@@ -1376,7 +1376,12 @@ export class Matcher {
     const mySpecies = Matcher.getTagValue(TagId.Species, c);
 
     if (!mySpecies || !mySpecies.string) {
-      return Species.Human; // best guess
+      log.debug('matcher.species.empty', {
+        character: c.name
+      });
+
+      return null; // In this case, we won't guess. Just get marked as being specieless.
+      //Fill in your profiles, people!
     }
 
     const s = Matcher.getMappedSpecies(mySpecies.string);

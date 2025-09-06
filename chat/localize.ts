@@ -22,6 +22,7 @@ const strings: { [key: string]: string | undefined } = {
   'action.preferences': 'Preferences',
   'action.markAsRead': 'Mark all as read',
   'action.cancel': 'Cancel',
+  'action.dismiss': 'Dismiss',
   'admgr.open': 'Ad Center',
   'admgr.postingBegins': 'Posting begins in {0}m {1}s',
   'admgr.nextPostDue': 'Next ad in {0}m {1}s',
