@@ -320,6 +320,10 @@
       color: color-contrast($danger);
     }
   }
+  .message-time {
+    background-color: mix($white, $danger, 6 * 8%);
+    color: mix($black, $danger, 10 * 8%);
+  }
 }
 
 .messages {
@@ -331,6 +335,10 @@
     background-color: mix($white, $info, 4 * 8%);
     padding: 0 2px 2px 2px;
     box-shadow: $gray-500 -2px -2px 2px inset;
+    .message-time {
+      background-color: mix($white, $info, 6 * 8%);
+      color: mix($black, $info, 10 * 8%);
+    }
   }
 }
 
@@ -373,6 +381,10 @@
 
 .message-highlight {
   background-color: mix($white, $success, 10 * 8%);
+  .message-time {
+    background-color: mix($white, $success, 6 * 8%);
+    color: mix($black, $success, 10 * 8%);
+  }
 }
 
 .message-action .bbcode {
