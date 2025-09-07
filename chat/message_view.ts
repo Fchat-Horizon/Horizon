@@ -8,10 +8,11 @@ import {
 import { Channel } from '../fchat';
 import { Score } from '../learn/matcher';
 import { BBCodeView } from '../bbcode/view';
-import { formatTime, characterImage } from './common';
+import { formatTime } from './common';
 import core from './core';
 import { Conversation } from './interfaces';
 import UserView from './UserView.vue';
+import IconView from '../bbcode/IconView.vue';
 import { Scoring } from '../learn/matcher-types';
 
 const userPostfix: { [key: number]: string | undefined } = {
@@ -36,7 +37,10 @@ const userPostfix: { [key: number]: string | undefined } = {
     // Classic layout: existing inline format.
     // Modern layout: avatar-first with header (name + time) and bubble content.
     let children: VNodeChildrenArrayContents;
-    if (layoutMode === 'modern') {
+    if (
+      layoutMode === 'modern' &&
+      message.type !== Conversation.Message.Type.Event
+    ) {
       children = [];
     } else {
       children = [
@@ -47,13 +51,23 @@ const userPostfix: { [key: number]: string | undefined } = {
         )
       ];
     }
+
+    const isModern = layoutMode === 'modern';
+    const showHeader =
+      !isModern ||
+      !core.state.settings.messageGrouping ||
+      this.previous == undefined ||
+      this.previous.sender !== this.message.sender ||
+      this.previous.time.getTime() + 120000 < this.message.time.getTime();
+
     const separators = core.connection.isOpen
-      ? core.state.settings.messageSeparators
+      ? core.state.settings.messageSeparators &&
+        (showHeader || message.type == Conversation.Message.Type.Event)
       : false;
     /*tslint:disable-next-line:prefer-template*/ //unreasonable here
     let classes =
       `message message-${Conversation.Message.Type[message.type].toLowerCase()}` +
-      (separators ? ' message-block' : '') +
+      (separators ? ' message-block' : ' message-blockless') +
       (message.type !== Conversation.Message.Type.Event &&
       message.sender.name === core.connection.character
         ? ' message-own'
@@ -65,58 +79,65 @@ const userPostfix: { [key: number]: string | undefined } = {
       if (layoutMode === 'modern') {
         // Modern layout: separate avatar column so time can sit directly after name
         const headerChildren: VNodeChildrenArrayContents = [];
-        if (message.type === Conversation.Message.Type.Action) {
+        if (showHeader) {
           headerChildren.push(
-            createElement('i', { class: 'message-pre fas fa-star-of-life' })
-          );
-        }
-        headerChildren.push(
-          createElement(UserView, {
-            props: {
-              avatar: false, // custom avatar element
-              character: message.sender,
-              channel: this.channel,
-              isMarkerShown: core.connection.character
-                ? core.state.settings.horizonShowGenderMarker
-                : false
-            }
-          })
-        );
-        headerChildren.push(
-          createElement(
-            'span',
-            { staticClass: 'message-time' },
-            `${formatTime(message.time)}`
-          )
-        );
-
-        const showAvatar = core.connection.character
-          ? core.state.settings.risingShowPortraitInMessage
-          : false;
-        const avatarNode = showAvatar
-          ? createElement('img', {
-              attrs: {
-                src: characterImage(message.sender.name),
-                alt: message.sender.name,
-                class: 'message-avatar'
+            createElement(UserView, {
+              props: {
+                avatar: false, // custom avatar element
+                character: message.sender,
+                channel: this.channel,
+                isMarkerShown: core.connection.character
+                  ? core.state.settings.horizonShowGenderMarker
+                  : false
               }
             })
-          : createElement('div', { staticClass: 'message-avatar-spacer' });
-
-        children.push(avatarNode);
-        modernInner = createElement(
-          'div',
-          { staticClass: 'message-modern-inner' },
-          [
+          );
+          headerChildren.push(
             createElement(
-              'div',
-              { staticClass: 'message-header' },
-              headerChildren
+              'span',
+              { staticClass: 'message-time' },
+              `${formatTime(message.time)}`
             )
-          ]
-        );
+          );
+
+          const showAvatar = core.connection.character
+            ? core.state.settings.risingShowPortraitInMessage
+            : false;
+          const avatarNode = showAvatar
+            ? createElement(IconView, {
+                props: {
+                  character: message.sender
+                },
+                class: 'message-avatar'
+              })
+            : createElement('div', { staticClass: 'message-avatar-spacer' });
+          children.push(avatarNode);
+
+          modernInner = createElement(
+            'div',
+            { staticClass: 'message-modern-inner' },
+            [
+              createElement(
+                'div',
+                { staticClass: 'message-header' },
+                headerChildren
+              )
+            ]
+          );
+        } else {
+          const avatarNode = createElement('div', {
+            staticClass: 'message-avatar-spacer'
+          });
+          children.push(avatarNode);
+          modernInner = createElement(
+            'div',
+            { staticClass: 'message-modern-inner' },
+            []
+          );
+        }
         children.push(modernInner);
       } else {
+        // Classic Layout: Action Star > UserView (with icon logic) > Post type colon
         children.push(
           message.type === Conversation.Message.Type.Action
             ? createElement('i', { class: 'message-pre fas fa-star-of-life' })
@@ -145,21 +166,49 @@ const userPostfix: { [key: number]: string | undefined } = {
       if ('isHighlight' in message && message.isHighlight)
         classes += ' message-highlight';
     }
-    const isAd = message.type === Conversation.Message.Type.Ad && !this.logs;
+
+    let messageAdjustment = '';
+    switch (message.type) {
+      case Conversation.Message.Type.Action:
+        messageAdjustment = ' ' + message.sender.name + message.text;
+        break;
+      case Conversation.Message.Type.Roll:
+        messageAdjustment = ' ' + message.sender.name + ' ' + message.text;
+        break;
+      case Conversation.Message.Type.Warn:
+        messageAdjustment = ' ' + message.text;
+        break;
+      default:
+        messageAdjustment = message.text;
+    }
+    const isAd = message.type == Conversation.Message.Type.Ad && !this.logs;
     const bbcodeNode = createElement(BBCodeView(core.bbCodeParser), {
       props: {
-        unsafeText: message.text,
+        unsafeText: layoutMode === 'modern' ? messageAdjustment : message.text,
         afterInsert: isAd
           ? (elm: HTMLElement) => {
               setImmediate(() => {
-                elm = elm.parentElement!;
-                if (elm.scrollHeight > elm.offsetHeight) {
-                  const expand = document.createElement('div');
-                  expand.className = 'expand fas fa-caret-down';
-                  expand.addEventListener('click', function (): void {
-                    this.parentElement!.className += ' expanded';
-                  });
-                  elm.appendChild(expand);
+                if (layoutMode === 'modern') {
+                  // Pushes elm up three times rather than one with modern to make it parent to the top level of a message.
+                  elm = elm.parentElement!.parentElement!.parentElement!;
+                  if (elm.scrollHeight > elm.offsetHeight) {
+                    const expand = document.createElement('div');
+                    expand.className = 'expand fas fa-caret-down';
+                    expand.addEventListener('click', function (): void {
+                      this.parentElement!.className += ' expanded';
+                    });
+                    elm.appendChild(expand);
+                  }
+                } else {
+                  elm = elm.parentElement!;
+                  if (elm.scrollHeight > elm.offsetHeight) {
+                    const expand = document.createElement('div');
+                    expand.className = 'expand fas fa-caret-down';
+                    expand.addEventListener('click', function (): void {
+                      this.parentElement!.className += ' expanded';
+                    });
+                    elm.appendChild(expand);
+                  }
                 }
               });
             }
@@ -169,8 +218,31 @@ const userPostfix: { [key: number]: string | undefined } = {
 
     if (layoutMode === 'modern') {
       if (modernInner && modernInner.children) {
+        let messagePrefix = '';
+        switch (message.type) {
+          case Conversation.Message.Type.Action:
+            messagePrefix = createElement('i', {
+              class: 'message-pre fa fa-fw fa-star-of-life'
+            });
+            break;
+          case Conversation.Message.Type.Roll:
+            messagePrefix = createElement('i', {
+              class: 'message-pre fa fa-fw fa-dice-d6'
+            });
+            break;
+          case Conversation.Message.Type.Warn:
+            messagePrefix = createElement('i', {
+              class: 'message-pre fa fa-fw fa-triangle-exclamation'
+            });
+            break;
+          default:
+            messagePrefix = '';
+        }
         (modernInner.children as VNodeChildrenArrayContents).push(
-          createElement('div', { staticClass: 'message-content' }, [bbcodeNode])
+          createElement('div', { staticClass: 'message-content' }, [
+            messagePrefix,
+            bbcodeNode
+          ])
         );
       } else {
         // fallback just append bbcode
@@ -195,6 +267,8 @@ export default class MessageView extends Vue {
   readonly channel?: Channel;
   @Prop
   readonly logs?: true;
+  @Prop
+  readonly previous?: Conversation.Message;
 
   scoreClasses = this.getMessageScoreClasses(this.message);
   filterClasses = this.getMessageFilterClasses(this.message);

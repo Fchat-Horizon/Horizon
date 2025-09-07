@@ -30,8 +30,11 @@ export const BBCodeView = (
           context.props.afterInsert(node.elm);
       },
       destroy(node: VNode): void {
-        const element = <BBCodeElement>(<Element>node.elm).firstChild;
-        if (element.cleanup !== undefined) element.cleanup();
+        const first = (node.elm as Element).firstChild as BBCodeElement | null;
+        const cleanup: undefined | (() => void) = first
+          ? (first as any).cleanup
+          : undefined;
+        if (typeof cleanup === 'function') cleanup();
       }
     };
     const vnode = createElement('span', context.data);

@@ -559,6 +559,21 @@
           to Discord.</small
         >
       </div>
+      <div class="mb-3">
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            id="messageGrouping"
+            v-model="messageGrouping"
+            :disabled="chatLayoutMode !== 'modern'"
+          />
+          <label class="form-check-label" for="messageGrouping">
+            Group messages together in modern, remove seperators between recent
+            messages from same sender.
+          </label>
+        </div>
+      </div>
 
       <div class="mb-3">
         <div class="form-check">
@@ -1015,6 +1030,7 @@
     horizonNotifyFriendSignIn!: boolean;
     horizonHighlightUsers!: string;
     chatLayoutMode!: 'classic' | 'modern';
+    messageGrouping!: boolean;
 
     horizonCacheDraftMessages!: boolean;
     horizonSaveDraftMessagesToDiskTimer!: string;
@@ -1077,6 +1093,7 @@
       this.horizonGenderMarkerOrigColor = settings.horizonGenderMarkerOrigColor;
       this.horizonChangeOfflineColor = settings.horizonChangeOfflineColor;
       this.chatLayoutMode = settings.chatLayoutMode || 'classic';
+      this.messageGrouping = settings.messageGrouping;
 
       this.horizonCacheDraftMessages = settings.horizonCacheDraftMessages;
       this.horizonSaveDraftMessagesToDiskTimer =
@@ -1201,6 +1218,7 @@
           .map(x => x.trim())
           .filter(x => x.length),
         chatLayoutMode: this.chatLayoutMode,
+        messageGrouping: this.messageGrouping,
         horizonCacheDraftMessages: this.horizonCacheDraftMessages,
         horizonSaveDraftMessagesToDiskTimer:
           diskDraftTimer === null

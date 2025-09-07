@@ -79,13 +79,21 @@
 
         <div
           class="conversation"
+          :class="getMessageWrapperClasses()"
           v-if="conversation && conversation.length > 0"
         >
           <h4>Latest Messages</h4>
 
-          <template v-for="message in conversation">
-            <message-view :message="message" :key="message.id"> </message-view>
-          </template>
+          <div class="getMessageWrapperClasses()">
+            <template v-for="(message, i) in conversation">
+              <message-view
+                :message="message"
+                :key="message.id"
+                :previous="conversation[i - 1]"
+              >
+              </message-view>
+            </template>
+          </div>
         </div>
 
         <div
@@ -493,6 +501,13 @@
       }
 
       return methods.characterData(characterName, this.id, false);
+    }
+
+    getMessageWrapperClasses(): any {
+      const classes: any = {};
+      const layout = core.state.settings.chatLayoutMode || 'classic';
+      classes['layout-' + layout] = true;
+      return classes;
     }
   }
 </script>

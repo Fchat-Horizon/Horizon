@@ -293,9 +293,11 @@
 
 .message-block {
   padding: 1px 0;
-  &:not(:last-child) {
-    border-bottom: solid 1px $card-border-color;
-  }
+  border-top: solid 1px $card-border-color;
+}
+
+.message-blockless {
+  padding: 1px 0;
 }
 
 .message-own {
@@ -383,8 +385,11 @@
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    padding: 6px 10px;
+    padding: 4px 4px;
     position: relative;
+    .expanded {
+      max-height: none;
+    }
     .message-avatar,
     .message-avatar-spacer {
       width: 40px;
@@ -392,11 +397,10 @@
     }
     .message-avatar {
       height: 40px;
-      object-fit: cover;
-      border-radius: 2px;
+      object-fit: contain;
     }
     .message-avatar-spacer {
-      height: 1px;
+      height: 0px;
     }
     .message-modern-inner {
       flex: 1;
@@ -414,19 +418,21 @@
         opacity: 0.55;
         letter-spacing: 0.03em;
       }
+      .user-view {
+        display: inline-flex;
+        align-items: center;
+        text-align-last: justify;
+        text-indent: 0.5px;
+        .user-avatar {
+          display: none;
+        }
+      }
       .message-post {
         display: none;
       }
     }
-    .user-view {
-      display: inline-flex;
-      align-items: center;
-      .user-avatar {
-        display: none;
-      }
-    }
     .message-content {
-      margin-top: 2px;
+      margin-top: 0px;
       min-width: 0;
       .bbcode {
         background: transparent;
