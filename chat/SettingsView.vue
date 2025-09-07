@@ -566,6 +566,7 @@
             type="checkbox"
             id="messageGrouping"
             v-model="messageGrouping"
+            :disabled="chatLayoutMode !== 'modern'"
           />
           <label class="form-check-label" for="messageGrouping">
             Group messages together in modern, remove seperators between recent

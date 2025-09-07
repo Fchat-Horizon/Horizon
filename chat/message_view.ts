@@ -52,7 +52,9 @@ const userPostfix: { [key: number]: string | undefined } = {
       ];
     }
 
+    const isModern = layoutMode === 'modern';
     const showHeader =
+      !isModern ||
       !core.state.settings.messageGrouping ||
       this.previous == undefined ||
       this.previous.sender !== this.message.sender ||
