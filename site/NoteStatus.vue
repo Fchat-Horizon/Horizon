@@ -16,21 +16,22 @@
         <i :class="getIconClass(report)"></i>
         <span class="badge text-bg-primary rounded-pill">{{
           report.count
-        }}</span>
+        }}</span
+        ><a
+          :class="`status-report ${report.type} ${report.count > 0 && report.count !== report.dismissedCount ? 'active' : ''}`"
+          class="dismiss"
+          role="button"
+          :title="l('action.dismiss')"
+          ><i
+            @click.prevent="dismissReport(report)"
+            class="fas fa-times-circle"
+          ></i
+        ></a>
       </a>
 
       <!--This was part of the original design, where the NoteStatus component floated on the bottom left
           But in this new design, where it's part of the lefthand sidebar it's just too visually busy to have dismissal buttons too."
 -->
-      <!--
-      <a
-        :key="`report-${index}`"
-        :class="`status-report ${report.type} ${report.count > 0 && report.count !== report.dismissedCount ? 'active' : ''}`"
-        @click="dismissReport(report)"
-        class="dismiss"
-        ><i class="fas fa-times-circle"></i
-      ></a>
-      -->
     </template>
   </div>
 </template>
@@ -40,6 +41,7 @@
   import Vue from 'vue';
   import core from '../chat/core';
   import { EventBus } from '../chat/preview/event-bus';
+  import l from '../chat/localize';
 
   interface ReportState {
     type: string;
@@ -54,19 +56,20 @@
     reports: ReportState[] = [
       {
         type: 'message',
-        title: 'Messages',
+        title: l('pager.messages'),
         count: 0,
         dismissedCount: 0,
         url: 'https://www.f-list.net/messages.php'
       },
       {
         type: 'note',
-        title: 'Notes',
+        title: l('pager.notes'),
         count: 0,
         dismissedCount: 0,
         url: 'https://www.f-list.net/read_notes.php'
       }
     ];
+    l = l;
 
     callback?: () => void;
 
@@ -155,24 +158,34 @@
   }
   .userInfo-buttons-container {
     .userInfo-button-item.userInfo-pager-button {
-      display: none;
+      display: inline-block;
       .badge {
+        display: none;
         margin-left: 4px;
         vertical-align: text-top;
       }
-      & + .dismiss {
-        display: none;
+      &:hover .dismiss {
         opacity: 0.6;
+      }
+      & .dismiss {
+        display: none;
+        position: absolute;
+        opacity: 0;
+        //color: var(--bs-danger);
+        z-index: 12;
+        top: 0px;
+        right: 0px;
+
         &:hover {
           opacity: 1;
         }
         &.active {
-          display: initial;
+          display: block;
         }
       }
 
-      &.active {
-        display: inline-block;
+      &.active .badge {
+        display: initial;
       }
     }
   }

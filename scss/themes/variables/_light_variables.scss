@@ -39,6 +39,8 @@ $link-hover-color: $black;
 $input-bg: $gray-base;
 $list-group-bg: $gray-base;
 
+$dropdown-link-hover-bg: $gray-200;
+
 // F-List Rising
 $scorePerfectMatchBg: rgb(0, 173, 173);
 $scorePerfectMatchFg: rgb(29, 154, 154);
@@ -86,8 +88,8 @@ $characterKinkStockColor: #444444;
 $characterKinkStockHighlightedColor: #333333;
 $characterInfotagColor: rgba(0, 0, 0, 0.7);
 
-$messageTimeBgColor: #dadada;
-$messageTimeFgColor: #4f4f61;
+$messageTimeBgColor: $gray-200;
+$messageTimeFgColor: $gray-900;
 
 $headerBackgroundMaskColor: #e5e5e5;
 

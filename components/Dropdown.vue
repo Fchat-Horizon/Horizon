@@ -49,6 +49,7 @@
     @Watch('isOpen')
     onToggle(): void {
       const menu = this.$refs['menu'] as HTMLElement;
+      const button = this.$refs['button'] as HTMLElement;
       if (!this.isOpen) {
         menu.style.cssText = '';
         return;
@@ -56,6 +57,7 @@
       menu.style.display = 'block';
       const offset = menu.getBoundingClientRect();
       menu.style.position = 'fixed';
+      menu.style.minWidth = `${button.clientWidth}px`;
       menu.style.left =
         offset.right < window.innerWidth
           ? `${offset.left}px`

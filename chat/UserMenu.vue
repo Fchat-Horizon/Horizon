@@ -486,6 +486,10 @@
   #userMenu-userInfo {
     max-width: 70%;
     overflow-x: hidden;
+    & > .userInfo-name {
+      width: min-content;
+      min-width: 100%;
+    }
   }
 
   /* removed empty rulesets */
@@ -520,6 +524,8 @@
   #userMenuMatch,
   #userMenuStatus {
     background: none;
+    width: min-content;
+    min-width: 100%;
   }
 
   #userMenuMatch {

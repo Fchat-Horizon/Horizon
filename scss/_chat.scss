@@ -220,7 +220,10 @@
     font-size: 1.15rem;
     display: inline-block;
     border-radius: 6px;
-    transition: 0.2s;
+    transition: $transition-base;
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
     position: relative;
     .userInfo-pager-text {
       font-size: 1rem;
@@ -234,7 +237,10 @@
   overflow-x: hidden;
   padding: 0px 5px 6px 5px;
   border-radius: 8px;
-  transition: 0.2s;
+  transition: $transition-base;
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
   &:hover,
   &:active {
     text-decoration: none;
@@ -260,7 +266,10 @@
     text-decoration: none;
     color: var(--black);
     opacity: 1;
-    transition: 0.2s;
+    transition: $transition-base;
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   }
 }
 .ads-text-box,
@@ -293,9 +302,11 @@
 
 .message-block {
   padding: 1px 0;
-  &:not(:last-child) {
-    border-bottom: solid 1px $card-border-color;
-  }
+  border-top: solid 1px $card-border-color;
+}
+
+.message-blockless {
+  padding: 1px 0;
 }
 
 .message-own {
@@ -311,6 +322,10 @@
       color: color-contrast($danger);
     }
   }
+  .message-time {
+    background-color: mix($white, $danger, 6 * 8%);
+    color: mix($black, $danger, 10 * 8%);
+  }
 }
 
 .messages {
@@ -322,6 +337,10 @@
     background-color: mix($white, $info, 4 * 8%);
     padding: 0 2px 2px 2px;
     box-shadow: $gray-500 -2px -2px 2px inset;
+    .message-time {
+      background-color: mix($white, $info, 6 * 8%);
+      color: mix($black, $info, 10 * 8%);
+    }
   }
 }
 
@@ -364,6 +383,10 @@
 
 .message-highlight {
   background-color: mix($white, $success, 10 * 8%);
+  .message-time {
+    background-color: mix($white, $success, 6 * 8%);
+    color: mix($black, $success, 10 * 8%);
+  }
 }
 
 .message-action .bbcode {
@@ -380,6 +403,74 @@
 
 .messages .message:last-of-type.last-read {
   border-bottom: none !important;
+}
+
+.layout-modern {
+  .message.message-modern {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px 4px;
+    position: relative;
+    .expanded {
+      max-height: none;
+    }
+    .message-avatar,
+    .message-avatar-spacer {
+      width: 40px;
+      min-width: 40px;
+    }
+    .message-avatar {
+      height: 40px;
+      object-fit: contain;
+    }
+    .message-avatar-spacer {
+      height: 0px;
+    }
+    .message-modern-inner {
+      flex: 1;
+      min-width: 0;
+    }
+    .message-header {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-weight: 600;
+      .message-time {
+        order: 2;
+        font-size: 0.65em;
+        opacity: 0.55;
+        letter-spacing: 0.03em;
+      }
+      .user-view {
+        display: inline-flex;
+        align-items: center;
+        text-align-last: justify;
+        text-indent: 0.5px;
+        .user-avatar {
+          display: none;
+        }
+      }
+      .message-post {
+        display: none;
+      }
+    }
+    .message-content {
+      margin-top: 0px;
+      min-width: 0;
+      .bbcode {
+        background: transparent;
+        padding: 0;
+        border-radius: 0;
+        border: none;
+        word-break: break-word;
+      }
+    }
+    &.message-own .message-content .bbcode {
+      background: transparent;
+    }
+  }
 }
 
 .fas.active {

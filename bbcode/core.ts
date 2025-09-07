@@ -81,22 +81,6 @@ export class CoreBBCodeParser extends BBCodeParser {
     this.addTag(new BBCodeSimpleTag('s', 'del'));
     this.addTag(new BBCodeSimpleTag('noparse', 'span', [], []));
     this.addTag(
-      new BBCodeSimpleTag(
-        'sub',
-        'sub',
-        [],
-        ['url', 'i', 'u', 'b', 'color', 's', 'hr', 'img', 'eicon']
-      )
-    );
-    this.addTag(
-      new BBCodeSimpleTag(
-        'sup',
-        'sup',
-        [],
-        ['url', 'i', 'u', 'b', 'color', 's', 'hr', 'img', 'eicon']
-      )
-    );
-    this.addTag(
       new BBCodeTextTag('icon', (parser, parent, param, content) => {
         if (param.length > 0)
           parser.warning('Unexpected parameter on icon tag.');

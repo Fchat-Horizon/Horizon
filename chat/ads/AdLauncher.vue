@@ -113,6 +113,14 @@
             {{ timeout.title }}
           </option>
         </select>
+
+        <label class="control-label" for="timeoutMinutes"> Delay </label>
+
+        <select class="form-select" v-model="delayMinutes" id="delayMinutes">
+          <option v-for="delay in delayOptions" :value="delay.value">
+            {{ delay.title }}
+          </option>
+        </select>
       </div>
 
       <p class="matches">
@@ -153,6 +161,8 @@
 
     timeoutMinutes = 180;
 
+    delayMinutes = 10;
+
     tags: { value: boolean; title: string }[] = [];
 
     channels: { value: boolean; title: string; id: string }[] = [];
@@ -162,6 +172,15 @@
       { value: 60, title: '1 hour' },
       { value: 120, title: '2 hours' },
       { value: 180, title: '3 hours' }
+    ];
+
+    delayOptions = [
+      { value: 10, title: '10 minutes' },
+      { value: 15, title: '15 minutes' },
+      { value: 20, title: '20 minutes' },
+      { value: 30, title: '30 minutes' },
+      { value: 45, title: '45 minutes' },
+      { value: 60, title: '1 hour' }
     ];
 
     load() {
@@ -281,7 +300,8 @@
         tags,
         channelIds,
         this.adOrder,
-        this.timeoutMinutes
+        this.timeoutMinutes,
+        this.delayMinutes * 60
       );
 
       this.hide();
