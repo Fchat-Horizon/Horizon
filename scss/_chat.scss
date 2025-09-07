@@ -382,7 +382,10 @@
 }
 
 .message-highlight {
-  background-color: mix($white, $success, 10 * 8%);
+  background-color: color.change(
+    mix($white, $success, 7.5 * 8%),
+    $saturation: 50
+  );
   .message-time {
     background-color: mix($white, $success, 6 * 8%);
     color: mix($black, $success, 10 * 8%);
