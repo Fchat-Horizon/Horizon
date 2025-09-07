@@ -105,16 +105,18 @@
     </div>
     <div
       class="messages messages-both hidden-scrollbar"
+      :class="layoutClasses"
       style="overflow: auto; overscroll-behavior: none"
       ref="messages"
       tabindex="-1"
       @scroll="onMessagesScroll"
     >
       <message-view
-        v-for="message in displayedMessages"
+        v-for="(message, i) in displayedMessages"
         :message="message"
         :key="message.id"
         :logs="true"
+        :previous="displayedMessages[i - 1]"
       ></message-view>
     </div>
     <div class="input-group" style="flex-shrink: 0">
@@ -182,6 +184,18 @@
     );
   }
 
+  function getMessageWrapperClasses(): any {
+    const classes: any = {};
+    let layout: 'classic' | 'modern' = 'classic';
+    try {
+      layout = (core.state as any)._settings?.chatLayoutMode || 'classic';
+    } catch (_) {
+      layout = 'classic';
+    }
+    classes['layout-' + layout] = true;
+    return classes;
+  }
+
   @Component({
     components: {
       modal: Modal,
@@ -192,6 +206,7 @@
   export default class Logs extends CustomDialog {
     @Prop
     readonly conversation?: Conversation;
+    core = core;
     conversations: LogInterface.Conversation[] = [];
     selectedConversation: LogInterface.Conversation | undefined;
     dates: ReadonlyArray<Date> = [];
@@ -209,6 +224,9 @@
     windowStart = 0;
     windowEnd = 0;
     resizeListener = async () => this.onMessagesScroll();
+    get layoutClasses(): any {
+      return getMessageWrapperClasses();
+    }
 
     get displayedMessages(): ReadonlyArray<Conversation.Message> {
       if (this.selectedDate !== undefined) return this.filteredMessages;

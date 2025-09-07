@@ -223,6 +223,29 @@ div.indentText {
   }
 }
 
+.layout-modern {
+  .message.message-modern {
+    .message-avatar {
+      .character-avatar {
+        display: inline;
+        height: 100px;
+        width: 100px;
+        &.icon {
+          height: 40px;
+          width: 40px;
+          min-width: 40px;
+          object-fit: contain;
+        }
+        transition: opacity 0.25s;
+        &.loading {
+          opacity: 0;
+          visibility: hidden;
+        }
+      }
+    }
+  }
+}
+
 .bbcode {
   white-space: pre-wrap;
   .row > * {

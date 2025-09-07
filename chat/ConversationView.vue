@@ -300,12 +300,13 @@
       @scroll="onMessagesScroll"
       style="flex: 1; overflow: auto; margin-top: 2px"
     >
-      <template v-for="message in messages">
+      <template v-for="(message, i) in messages">
         <message-view
           :message="message"
           :channel="isChannel(conversation) ? conversation.channel : undefined"
           :key="message.id"
           :classes="message == conversation.lastRead ? 'last-read' : ''"
+          :previous="messages[i - 1]"
         >
         </message-view>
         <span
@@ -917,9 +918,11 @@
     getMessageWrapperClasses(): any {
       const filter = core.state.settings.risingFilter;
       const classes: any = {};
+      const layout = core.state.settings.chatLayoutMode || 'classic';
 
       if (this.isPrivate(this.conversation)) {
         classes['filter-channel-messages'] = filter.hidePrivateMessages;
+        classes['layout-' + layout] = true;
         return classes;
       }
 
@@ -938,6 +941,8 @@
           ? filter.hidePrivateChannelMessages
           : filter.hidePublicChannelMessages;
 
+      // Apply chat layout mode class (classic/modern)
+      classes['layout-' + layout] = true;
       return classes;
     }
 
