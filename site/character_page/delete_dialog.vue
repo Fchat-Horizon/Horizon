@@ -1,14 +1,14 @@
 <template>
   <modal
     id="deleteDialog"
-    :action="'Delete character ' + name"
+    :action="l('deleteDialog.actionFor', name)"
     :disabled="true"
     @submit.prevent="deleteCharacter()"
     buttonClass="btn-danger"
     iconClass="fas fa-user-slash"
   >
-    Are you sure you want to permanently delete {{ name }}?<br />
-    Character deletion cannot be undone for any reason.
+    {{ l('deleteDialog.confirm1', name) }}<br />
+    {{ l('deleteDialog.confirm2') }}
   </modal>
 </template>
 
@@ -19,11 +19,13 @@
   import * as Utils from '../utils';
   import { methods } from './data_store';
   import { Character } from './interfaces';
+  import l from './../../chat/localize';
 
   @Component({
     components: { modal: Modal }
   })
   export default class DeleteDialog extends CustomDialog {
+    l = l;
     @Prop({ required: true })
     private readonly character!: Character;
 

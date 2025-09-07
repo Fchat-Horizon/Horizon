@@ -25,7 +25,7 @@
               type="button"
               class="btn-close btn"
               @click="hide"
-              aria-label="Close"
+              :aria-label="l('action.close')"
               v-show="!keepOpen"
             >
               <i class="fa fa-times fa-lg"></i>
@@ -45,7 +45,7 @@
               @click="hideWithCheck"
               v-if="showCancel"
             >
-              Cancel
+              {{ l('action.cancel') }}
             </button>
             <button
               type="button"
@@ -69,6 +69,7 @@
   import Vue from 'vue';
   import { getKey } from '../chat/common';
   import { Keys } from '../keys';
+  import l from '../chat/localize';
 
   const dialogStack: Modal[] = [];
   window.addEventListener('keydown', e => {
@@ -91,6 +92,7 @@
 
   @Component
   export default class Modal extends Vue {
+    l = l;
     @Prop({ default: '' })
     readonly action!: string;
     @Prop

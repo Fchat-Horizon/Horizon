@@ -8,7 +8,7 @@
     dialogClass="ads-dialog"
   >
     <template slot="title">
-      Channel Ads for
+      {{ l('characterAd.title') }}
       <user :character="character" :isMarkerShown="false">{{
         character.name
       }}</user>
@@ -27,12 +27,7 @@
     </div>
 
     <div class="row ad-viewer" ref="pageBody" v-else>
-      <i
-        ><user :character="character" :isMarkerShown="false">{{
-          character.name
-        }}</user>
-        has not posted any ads on the channels you are on.</i
-      >
+      <i>{{ l('characterAd.noAds', character.name) }}</i>
     </div>
   </modal>
 </template>
@@ -48,6 +43,7 @@
   import { formatTime } from '../common';
   import UserView from '../UserView.vue';
   import { BBCodeView } from '../../bbcode/view';
+  import l from '../localize';
 
   @Component({
     components: {
@@ -62,6 +58,7 @@
 
     messages: AdCachedPosting[] = [];
     formatTime = formatTime;
+    l = l;
 
     @Watch('character')
     onNameUpdate(): void {

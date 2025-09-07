@@ -45,7 +45,7 @@
               >
             </div>
           </div>
-          <div class="btn-group" role="group" aria-label="Color">
+          <div class="btn-group" role="group" :aria-label="l('common.color')">
             <button
               v-for="btnCol in buttonColors"
               type="button"
@@ -84,7 +84,7 @@
           @click="previewBBCode"
           class="btn btn-light btn-sm"
           :class="preview ? 'active' : ''"
-          :title="preview ? 'Close Preview' : 'Preview'"
+          :title="preview ? l('editor.closePreview') : l('editor.preview')"
         >
           <i class="fa fa-eye"></i>
         </div>
@@ -92,7 +92,7 @@
       <button
         type="button"
         class="btn-close"
-        aria-label="Close"
+        :aria-label="l('action.close')"
         style="margin-left: 10px"
         @click="showToolbar = false"
       ></button>
@@ -144,6 +144,7 @@
   import { default as EIconSelector } from './EIconSelector.vue';
   import Modal from '../components/Modal.vue';
   import { Character } from '../fchat';
+  import l from '../chat/localize';
 
   @Component({
     components: {
@@ -153,6 +154,7 @@
     mixins: [clickaway]
   })
   export default class Editor extends Vue {
+    l = l;
     @Prop
     readonly extras?: EditorButton[];
 

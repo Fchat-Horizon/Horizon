@@ -1,8 +1,8 @@
 <template>
   <modal
     ref="dialog"
-    action="Status message history"
-    buttonText="Select"
+    :action="l('statusHistory.title')"
+    :buttonText="l('action.select')"
     @open="onMounted()"
     @submit="selectStatus"
     dialogClass="w-100 modal-70"
@@ -43,7 +43,7 @@
       </div>
     </form>
     <div v-else>
-      <i>This character has no status message history.</i>
+      <i>{{ l('statusHistory.empty') }}</i>
     </div>
   </modal>
 </template>
@@ -56,11 +56,13 @@
   import { BBCodeView } from '../bbcode/view';
   import * as _ from 'lodash';
   import { Dialog } from '../helpers/dialog';
+  import l from './localize';
 
   @Component({
     components: { modal: Modal, bbcode: BBCodeView(core.bbCodeParser) }
   })
   export default class StatusPicker extends CustomDialog {
+    l = l;
     @Prop({ required: true })
     readonly callback!: (statusMessage: string) => void;
 
@@ -101,11 +103,7 @@
     }
 
     async removeStatusHistoryEntry(index: number): Promise<void> {
-      if (
-        Dialog.confirmDialog(
-          'Are you sure you want to remove this status message?'
-        )
-      ) {
+      if (Dialog.confirmDialog(l('statusHistory.confirmRemove'))) {
         this.history.splice(index, 1);
 
         await core.settingsStore.set('statusHistory', this.history);

@@ -49,6 +49,7 @@
   import { Component, Prop } from '@f-list/vue-ts';
   import cloneDeep = require('lodash/cloneDeep'); //tslint:disable-line:no-require-imports
   import Vue from 'vue';
+  import l from '../chat/localize';
 
   type ParamDictionary = { [key: string]: number | undefined };
   interface RouteParams {
@@ -58,9 +59,10 @@
 
   @Component
   export default class SimplePager extends Vue {
-    @Prop({ default: 'Next Page' })
+    l = l;
+    @Prop({ default: () => l('pager.nextPage') })
     readonly nextLabel!: string;
-    @Prop({ default: 'Previous Page' })
+    @Prop({ default: () => l('pager.previousPage') })
     readonly prevLabel!: string;
     @Prop({ required: true })
     readonly next!: boolean;

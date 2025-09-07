@@ -1,6 +1,6 @@
 <template>
   <modal
-    action="UI Test"
+    :action="l('ui.test')"
     ref="dialog"
     dialogClass="modal-fullscreen"
     iconClass="fas fa-code"
@@ -10,7 +10,7 @@
       style="flex-shrink: 0; margin-bottom: 10px"
       v-model="selectedTab"
       :fullWidth="true"
-      :tabs="['Generic items', 'Messages']"
+      :tabs="[l('ui.genericItems'), l('ui.messages')]"
     ></tabs>
 
     <div v-show="selectedTab === '0'">
@@ -931,11 +931,13 @@
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import Tabs from '../components/tabs';
+  import l from './localize';
 
   @Component({
     components: { modal: Modal, tabs: Tabs }
   })
   export default class UITest extends CustomDialog {
     selectedTab = '0';
+    l = l;
   }
 </script>

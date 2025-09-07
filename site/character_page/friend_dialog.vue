@@ -1,18 +1,18 @@
 <template>
   <Modal
-    :action="'Friends for ' + name"
+    :action="l('friends.titleFor', name)"
     :buttons="false"
     dialog-class="modal-dialog-centered modal-lg"
     iconClass="fas fa-user-group"
   >
     <div v-show="loading" class="alert alert-info">
-      Loading friend information.
+      {{ l('friends.loading') }}
     </div>
     <div v-show="error" class="alert alert-danger">{{ error }}</div>
     <template v-if="!loading">
       <div v-if="existing.length" class="card bg-light">
         <div class="card-header">
-          <h4>Existing Friendships</h4>
+          <h4>{{ l('friends.existing') }}</h4>
         </div>
         <div class="card-body">
           <div v-for="friend in existing" class="friend-item">
@@ -24,21 +24,22 @@
               {{ friend.source.name }}
             </character-link>
             <span class="date"
-              >Since: <date-display :time="friend.createdAt"></date-display
+              >{{ l('friends.since') }}
+              <date-display :time="friend.createdAt"></date-display
             ></span>
             <button
               type="button"
               class="btn btn-danger"
               @click="dissolve(friend)"
             >
-              Remove
+              {{ l('friends.remove') }}
             </button>
           </div>
         </div>
       </div>
       <div v-if="pending.length" class="card bg-light">
         <div class="card-header">
-          <h4>Pending Requests To Character</h4>
+          <h4>{{ l('friends.pendingTo') }}</h4>
         </div>
         <div class="card-body">
           <div v-for="request in pending" class="friend-item">
@@ -50,21 +51,22 @@
               {{ request.source.name }}
             </character-link>
             <span class="date"
-              >Sent: <date-display :time="request.createdAt"></date-display
+              >{{ l('friends.sent') }}
+              <date-display :time="request.createdAt"></date-display
             ></span>
             <button
               type="button"
               class="btn btn-danger"
               @click="cancel(request)"
             >
-              Cancel
+              {{ l('friends.cancel') }}
             </button>
           </div>
         </div>
       </div>
       <div v-if="incoming.length" class="card bg-light">
         <div class="card-header">
-          <h4>Pending Requests From Character</h4>
+          <h4>{{ l('friends.pendingFrom') }}</h4>
         </div>
         <div class="card-body">
           <div v-for="request in incoming" class="friend-item">
@@ -76,33 +78,34 @@
               {{ request.target.name }}
             </character-link>
             <span class="date"
-              >Sent: <date-display :time="request.createdAt"></date-display
+              >{{ l('friends.sent') }}
+              <date-display :time="request.createdAt"></date-display
             ></span>
             <button
               type="button"
               class="btn btn-success acceptFriend"
               @click="accept(request)"
             >
-              Accept
+              {{ l('friends.accept') }}
             </button>
             <button
               type="button"
               class="btn btn-outline-danger ignoreFriend"
               @click="ignore(request)"
             >
-              Ignore
+              {{ l('friends.ignore') }}
             </button>
           </div>
         </div>
       </div>
       <div class="card bg-light">
         <div class="card-header">
-          <h4>Request Friendship</h4>
+          <h4>{{ l('friends.request') }}</h4>
         </div>
         <div class="card-body">
           <div class="input-group mb3">
             <label class="input-group-text" for="friendRequestCharacter"
-              >Character:
+              >{{ l('friends.character') }}
             </label>
             <character-select
               id="friendRequestCharacter"
@@ -113,7 +116,7 @@
               class="btn btn-secondary"
               :disable="requesting || !ourCharacter"
             >
-              Request
+              {{ l('friends.requestButton') }}
             </button>
           </div>
         </div>
@@ -129,11 +132,13 @@
   import * as Utils from '../utils';
   import { methods } from './data_store';
   import { Character, Friend, FriendRequest } from './interfaces';
+  import l from './../../chat/localize';
 
   @Component({
     components: { Modal }
   })
   export default class FriendDialog extends CustomDialog {
+    l = l;
     @Prop({ required: true })
     readonly character!: Character;
 

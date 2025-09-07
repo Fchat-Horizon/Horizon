@@ -1,6 +1,8 @@
 <template>
   <div class="character-groups">
-    <div v-show="loading" class="alert alert-info">Loading groups.</div>
+    <div v-show="loading" class="alert alert-info">
+      {{ l('profile.groups.loading') }}
+    </div>
     <template v-if="!loading">
       <div class="character-group" v-for="group in groups" :key="group.id">
         <a :href="groupUrl(group)"
@@ -9,7 +11,7 @@
       </div>
     </template>
     <div v-if="!loading && !groups.length" class="alert alert-info">
-      No groups.
+      {{ l('profile.groups.none') }}
     </div>
   </div>
 </template>
@@ -21,6 +23,7 @@
   import { methods } from './data_store';
   import { Character, CharacterGroup } from './interfaces';
   import core from '../../chat/core';
+  import l from '../../chat/localize';
 
   @Component
   export default class GroupsView extends Vue {
@@ -30,6 +33,7 @@
     groups: CharacterGroup[] = [];
     loading = true;
     error = '';
+    l = l;
 
     groupUrl(group: CharacterGroup): string {
       return `${Utils.staticDomain}threads/group/${group.id}`;
@@ -45,7 +49,7 @@
       } catch (e) {
         this.shown = false;
         if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
-        Utils.ajaxError(e, 'Unable to load groups.');
+        Utils.ajaxError(e, l('profile.groups.unableLoad'));
       }
       this.loading = false;
     }

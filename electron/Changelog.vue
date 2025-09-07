@@ -12,26 +12,28 @@
           <div class="modal-header">
             <h4 class="modal-title" style="-webkit-app-region: drag">
               {{
-                l(
-                  'changelog.version',
-                  updateVersion ? updateVersion : currentVersion
-                )
+                l('changelog.version', updateVersion || currentVersion || '')
               }}
             </h4>
             <button
               type="button"
               class="btn-close"
-              aria-label="Close"
+              :aria-label="l('action.close')"
               v-if="!isMac"
               @click.stop="close()"
-              z-
             >
               <span class="fas fa-times"></span>
             </button>
           </div>
           <div class="modal-body">
             <div v-if="updateVersion" class="version-compare">
-              {{ l('changelog.compare', updateVersion, currentVersion) }}
+              {{
+                l(
+                  'changelog.compare',
+                  updateVersion || '',
+                  currentVersion || ''
+                )
+              }}
             </div>
             <div
               class="logs-container border bg-light"
@@ -47,7 +49,9 @@
                 style="margin-left: 8px"
               >
                 <span class="fab fa-discord"></span>
-                <span style="margin-left: 6px">Join Our Discord</span>
+                <span style="margin-left: 6px">{{
+                  l('chat.joinDiscord')
+                }}</span>
               </a>
               <button
                 type="button"
@@ -89,8 +93,7 @@
   import { GeneralSettings } from './common';
   import fs from 'fs';
   import path from 'path';
-  import Tabs from '../components/tabs';
-  import FilterableSelect from '../components/FilterableSelect.vue';
+  // Unused imports removed
   import Axios from 'axios';
   import markdownit from 'markdown-it';
   import { alert } from '@mdit/plugin-alert';
@@ -103,7 +106,7 @@
   };
 
   const browserWindow = remote.getCurrentWindow();
-  @Component()
+  @Component({})
   export default class Changelog extends Vue {
     settings!: GeneralSettings;
     osIsDark = remote.nativeTheme.shouldUseDarkColors;
@@ -158,18 +161,24 @@
 
       const defaultRender =
         md.renderer.rules.link_open ||
-        function (tokens, idx, options, env, self) {
+        function (tokens, idx, options, _env, self) {
           return self.renderToken(tokens, idx, options);
         };
 
-      md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+      md.renderer.rules.link_open = function (
+        tokens,
+        idx,
+        options,
+        _env,
+        self
+      ) {
         const token = tokens[idx];
         token.attrPush(['data-action', 'openExternal']);
         // Set href to "#" or "javascript:void(0)"
         //const hrefIndex = token.attrIndex('href');
         //if (hrefIndex >= 0) token.attrs![hrefIndex][1] = '#';
         // Add onclick handler
-        return defaultRender(tokens, idx, options, env, self);
+        return defaultRender(tokens, idx, options, _env, self);
       };
       this.changeLogText = md.render(releaseInfo.body);
     }

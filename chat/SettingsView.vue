@@ -453,12 +453,12 @@
           type="number"
           class="form-control"
           v-model="horizonSaveDraftMessagesToDiskTimer"
-          placeholder="60"
+          :placeholder="'60'"
           min="5"
         />
       </div>
 
-      <h5>Misc</h5>
+      <h5>{{ l('settings.misc') }}</h5>
 
       <div class="mb-3">
         <div class="form-check">
@@ -482,7 +482,7 @@
             v-model="horizonNotifyFriendSignIn"
           />
           <label class="form-check-label" for="horizonNotifyFriendSignIn">
-            Notify when friends or bookmarks sign in.
+            {{ l('settings.notifyFriendSignIn') }}
           </label>
         </div>
       </div>
@@ -495,7 +495,7 @@
             v-model="risingColorblindMode"
           />
           <label class="form-check-label" for="risingColorblindMode">
-            Colorblind mode
+            {{ l('settings.colorblindMode') }}
           </label>
         </div>
       </div>
@@ -509,7 +509,7 @@
             v-model="risingShowPortraitNearInput"
           />
           <label class="form-check-label" for="risingShowPortraitNearInput">
-            Show character portrait by text input
+            {{ l('settings.showPortraitNearInput') }}
           </label>
         </div>
       </div>
@@ -523,7 +523,7 @@
             v-model="risingShowPortraitInMessage"
           />
           <label class="form-check-label" for="risingShowPortraitInMessage">
-            Show character portrait with each message
+            {{ l('settings.showPortraitInMessage') }}
           </label>
         </div>
       </div>
@@ -537,7 +537,7 @@
             v-model="risingShowHighQualityPortraits"
           />
           <label class="form-check-label" for="risingShowHighQualityPortraits">
-            Show high-quality portraits
+            {{ l('settings.showHighQualityPortraits') }}
           </label>
         </div>
       </div>
@@ -587,7 +587,7 @@
             class="form-check-label"
             for="horizonShowCustomCharacterColors"
           >
-            Show custom character name colors
+            {{ l('settings.showCustomCharacterColors') }}
           </label>
         </div>
       </div>
@@ -601,7 +601,7 @@
             v-model="horizonShowDeveloperBadges"
           />
           <label class="form-check-label" for="horizonShowDeveloperBadges">
-            Show Horizon developer / maintainer badges
+            {{ l('settings.showDeveloperBadges') }}
           </label>
         </div>
       </div>
@@ -615,7 +615,7 @@
             v-model="horizonShowGenderMarker"
           />
           <label class="form-check-label" for="horizonShowGenderMarker">
-            Show a gender icon on everyone
+            {{ l('settings.showGenderIcon') }}
           </label>
         </div>
       </div>
@@ -632,8 +632,7 @@
             "
           />
           <label class="form-check-label" for="horizonGenderMarkerOrigColor">
-            Make gender icon use the original gender color instead of the custom
-            name color
+            {{ l('settings.genderIconUseOriginalColor') }}
           </label>
         </div>
       </div>
@@ -647,21 +646,23 @@
             v-model="horizonChangeOfflineColor"
           />
           <label class="form-check-label" for="horizonChangeOfflineColor">
-            Make color in chat change to grey when a user goes offline
+            {{ l('settings.changeOfflineColor') }}
           </label>
         </div>
       </div>
 
       <div class="mb-3">
         <label class="control-label" for="risingCharacterTheme">
-          Override UI theme (for this character only)
+          {{ l('settings.overrideCharacterTheme') }}
           <select
             id="risingCharacterTheme"
             class="form-select"
             v-model="risingCharacterTheme"
             style="flex: 1; margin-right: 10px"
           >
-            <option value="undefined">(Use default theme)</option>
+            <option value="undefined">
+              {{ l('settings.useDefaultTheme') }}
+            </option>
             <option disabled>---</option>
             <option v-for="theme in risingAvailableThemes" :value="theme">
               {{ theme }}
@@ -673,20 +674,17 @@
 
     <div v-show="selectedTab === '3'">
       <div class="warning">
-        <h5>Danger Zone!</h5>
+        <h5>{{ l('settings.dangerZone') }}</h5>
         <div>
-          By activating filtering, you may no longer be able to see or receive
-          all messages from F-Chat. Filters do not apply to friends or
-          bookmarked characters.
+          {{ l('settings.filteringWarning1') }}
         </div>
 
         <div>
-          Beta version. Some of these features and behaviors may be removed or
-          significantly changed in the future.
+          {{ l('settings.filteringWarning2') }}
         </div>
       </div>
 
-      <h5>Visibility</h5>
+      <h5>{{ l('settings.visibility') }}</h5>
 
       <div class="mb-3 filters">
         <div class="form-check">
@@ -697,7 +695,7 @@
             v-model="risingFilter.hideAds"
           />
           <label class="form-check-label" for="risingFilter.hideAds">
-            Hide <b>ads</b> from matching characters
+            {{ l('settings.filter.hideAds') }}
           </label>
         </div>
 
@@ -709,7 +707,7 @@
             v-model="risingFilter.hideSearchResults"
           />
           <label class="form-check-label" for="risingFilter.hideSearchResults">
-            Hide matching characters from <b>search results</b>
+            {{ l('settings.filter.hideSearchResults') }}
           </label>
         </div>
 
@@ -721,7 +719,7 @@
             v-model="risingFilter.hideChannelMembers"
           />
           <label class="form-check-label" for="risingFilter.hideChannelMembers">
-            Hide matching characters from <b>channel members lists</b>
+            {{ l('settings.filter.hideChannelMembers') }}
           </label>
         </div>
 
@@ -736,7 +734,7 @@
             class="form-check-label"
             for="risingFilter.hidePublicChannelMessages"
           >
-            Hide <b>public channel messages</b> from matching characters
+            {{ l('settings.filter.hidePublicChannelMessages') }}
           </label>
         </div>
 
@@ -751,7 +749,7 @@
             class="form-check-label"
             for="risingFilter.hidePrivateChannelMessages"
           >
-            Hide <b>private channel messages</b> from matching characters
+            {{ l('settings.filter.hidePrivateChannelMessages') }}
           </label>
         </div>
 
@@ -766,7 +764,7 @@
             class="form-check-label"
             for="risingFilter.hidePrivateMessages"
           >
-            Hide <b>private messages</b> (PMs) from matching characters
+            {{ l('settings.filter.hidePrivateMessages') }}
           </label>
         </div>
 
@@ -778,7 +776,7 @@
             v-model="risingFilter.showFilterIcon"
           />
           <label class="form-check-label" for="risingFilter.showFilterIcon">
-            Show <b>filter icon</b> on matching characters
+            {{ l('settings.filter.showFilterIcon') }}
           </label>
         </div>
       </div>
@@ -792,7 +790,7 @@
             v-model="risingFilter.penalizeMatches"
           />
           <label class="form-check-label" for="risingFilter.penalizeMatches">
-            Penalize <b>match scores</b> for matching characters
+            {{ l('settings.filter.penalizeMatches') }}
           </label>
         </div>
 
@@ -804,39 +802,39 @@
             v-model="risingFilter.rewardNonMatches"
           />
           <label class="form-check-label" for="risingFilter.rewardNonMatches">
-            Increase <b>match scores</b> for non-matching characters
+            {{ l('settings.filter.rewardNonMatches') }}
           </label>
         </div>
       </div>
 
-      <h5>Character Age Match</h5>
-      <div class="mb-3">Leave empty for no limit.</div>
+      <h5>{{ l('settings.ageMatch') }}</h5>
+      <div class="mb-3">{{ l('settings.leaveEmptyNoLimit') }}</div>
 
       <div class="mb-3">
-        <label class="control-label" for="risingFilter.minAge"
-          >Characters younger than (years)</label
-        >
+        <label class="control-label" for="risingFilter.minAge">{{
+          l('settings.minAge')
+        }}</label>
         <input
           id="risingFilter.minAge"
           type="number"
           class="form-control"
           v-model="risingFilter.minAge"
-          placeholder="Enter age"
+          :placeholder="l('settings.enterAge')"
         />
 
-        <label class="control-label" for="risingFilter.maxAge"
-          >Characters older than (years)</label
-        >
+        <label class="control-label" for="risingFilter.maxAge">{{
+          l('settings.maxAge')
+        }}</label>
         <input
           id="risingFilter.maxAge"
           type="number"
           class="form-control"
           v-model="risingFilter.maxAge"
-          placeholder="Enter age"
+          :placeholder="l('settings.enterAge')"
         />
       </div>
 
-      <h5>Type Match</h5>
+      <h5>{{ l('settings.typeMatch') }}</h5>
       <div class="mb-3 filters">
         <div class="form-check" v-for="(value, key) in smartFilterTypes">
           <input
@@ -855,7 +853,7 @@
         </div>
       </div>
 
-      <h5>Automatic Replies</h5>
+      <h5>{{ l('settings.automaticReplies') }}</h5>
       <div class="mb-3 filters">
         <div class="form-check">
           <input
@@ -865,8 +863,7 @@
             v-model="risingFilter.autoReply"
           />
           <label class="form-check-label" for="risingFilter.autoReply">
-            Send an automatic 'no thank you' response to matching characters if
-            they message you
+            {{ l('settings.autoReply') }}
           </label>
         </div>
 
@@ -879,7 +876,7 @@
             :disabled="!risingFilter.autoReply"
           />
           <label class="form-check-label" for="risingFilter.autoReplyCustom">
-            Use a custom message defined below instead of the default message
+            {{ l('settings.autoReplyCustom') }}
           </label>
         </div>
 
@@ -889,24 +886,19 @@
           :classes="'form-control'"
           rows="5"
           :disabled="!risingFilter.autoReplyCustom || !risingFilter.autoReply"
-          placeholder="Put your custom message for automatic replies here"
+          :placeholder="l('settings.autoReplyPlaceholder')"
           maxlength="10000"
         >
         </editor>
 
         <div class="mb-3">
-          You will still see messages unless you have the "Hide private channel
-          messages" option above selected. Even then, if they send a second
-          message it will bypass the restriction and show you their message.
-          These messages are limited to 10000 characters.
+          {{ l('settings.autoReplyNote') }}
         </div>
       </div>
 
-      <h5>Exception List</h5>
+      <h5>{{ l('settings.exceptionList') }}</h5>
       <div class="mb-3">
-        Filters and automatic replies are not applied to these character names.
-        Separate names with a linefeed. Friends and bookmarked characters bypass
-        filtering automatically.
+        {{ l('settings.exceptionList.help') }}
       </div>
 
       <div class="mb-3">
@@ -914,7 +906,7 @@
           class="form-control"
           :value="getExceptionList()"
           @change="v => setExceptionList(v)"
-          placeholder="Enter names"
+          :placeholder="l('settings.enterNames')"
         ></textarea>
       </div>
     </div>
@@ -1035,9 +1027,9 @@
     horizonCacheDraftMessages!: boolean;
     horizonSaveDraftMessagesToDiskTimer!: string;
 
-    risingFilter!: SmartFilterSettings = {} as any;
+    risingFilter: SmartFilterSettings = {} as any;
 
-    risingAvailableThemes!: ReadonlyArray<string> = [];
+    risingAvailableThemes: ReadonlyArray<string> = [];
     risingCharacterTheme!: string | undefined;
 
     smartFilterTypes = smartFilterTypesOrigin;
@@ -1155,6 +1147,7 @@
       );
 
       core.state.settings = {
+        soundTheme: core.state.settings.soundTheme,
         playSound: this.playSound,
         clickOpensMessage: this.clickOpensMessage,
         disallowedTags: this.disallowedTags

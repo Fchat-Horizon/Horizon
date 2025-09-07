@@ -1,6 +1,6 @@
 <template>
   <modal
-    action="Select EIcon"
+    :action="l('eicon.action')"
     ref="dialog"
     :buttons="false"
     @close="close"
@@ -12,7 +12,7 @@
         v-if="!storeLoaded || refreshing"
         class="d-flex align-items-center loading"
       >
-        <strong>Loading...</strong>
+        <strong>{{ l('common.loading') }}</strong>
         <div
           class="spinner-border ms-auto"
           role="status"
@@ -28,7 +28,7 @@
               id="search"
               v-model="search"
               ref="search"
-              placeholder="Search eicons..."
+              :placeholder="l('eicon.searchPlaceholder')"
               @input="searchUpdateDebounce()"
               tabindex="0"
               @click.prevent.stop="setFocus()"
@@ -40,7 +40,7 @@
                 class="btn btn-light expressions"
                 @click.prevent.stop="searchWithString('category:favorites')"
                 :class="{ active: search === 'category:favorites' }"
-                title="Favorites"
+                :title="l('eicon.category.favorites')"
                 role="button"
                 tabindex="0"
               >
@@ -51,7 +51,7 @@
                 class="btn btn-light expressions"
                 @click.prevent.stop="searchWithString('category:expressions')"
                 :class="{ active: search === 'category:expressions' }"
-                title="Expressions"
+                :title="l('eicon.category.expressions')"
                 role="button"
                 tabindex="0"
               >
@@ -62,7 +62,7 @@
                 class="btn btn-light sexual"
                 @click.prevent.stop="searchWithString('category:sexual')"
                 :class="{ active: search === 'category:sexual' }"
-                title="Sexual"
+                :title="l('eicon.category.sexual')"
                 role="button"
                 tabindex="0"
               >
@@ -73,7 +73,7 @@
                 class="btn btn-light bubbles"
                 @click.prevent.stop="searchWithString('category:bubbles')"
                 :class="{ active: search === 'category:bubbles' }"
-                title="Speech bubbles"
+                :title="l('eicon.category.bubbles')"
                 role="button"
                 tabindex="0"
               >
@@ -84,7 +84,7 @@
                 class="btn btn-light actions"
                 @click.prevent.stop="searchWithString('category:symbols')"
                 :class="{ active: search === 'category:symbols' }"
-                title="Symbols"
+                :title="l('eicon.category.symbols')"
                 role="button"
                 tabindex="0"
               >
@@ -95,7 +95,7 @@
                 class="btn btn-light memes"
                 @click.prevent.stop="searchWithString('category:memes')"
                 :class="{ active: search === 'category:memes' }"
-                title="Memes"
+                :title="l('eicon.category.memes')"
                 role="button"
                 tabindex="0"
               >
@@ -106,7 +106,7 @@
                 class="btn btn-light random"
                 @click.prevent.stop="searchWithString('category:random')"
                 :class="{ active: search === 'category:random' }"
-                title="Random"
+                :title="l('eicon.category.random')"
                 role="button"
                 tabindex="0"
               >
@@ -116,7 +116,7 @@
               <div
                 class="btn btn-light refresh"
                 @click.prevent.stop="refreshIcons()"
-                title="Refresh eicons data"
+                :title="l('eicon.refresh')"
                 role="button"
                 tabindex="0"
               >
@@ -126,11 +126,14 @@
           </div>
 
           <div class="courtesy">
-            Courtesy of <a href="https://xariah.net/eicons">xariah.net</a>
+            {{ l('eicon.courtesy') }}
+            <a href="https://xariah.net/eicons">xariah.net</a>
           </div>
 
           <div class="upload">
-            <a href="https://www.f-list.net/icons.php">Upload eicons</a>
+            <a href="https://www.f-list.net/icons.php">{{
+              l('eicon.upload')
+            }}</a>
           </div>
         </div>
 
@@ -162,8 +165,8 @@
                 role="button"
                 :aria-label="
                   isFavorite(eicon)
-                    ? 'Remove from favorites'
-                    : 'Add to favorites'
+                    ? l('eicon.removeFromFavorites')
+                    : l('eicon.addToFavorites')
                 "
               >
                 <i class="fas fa-thumbtack"></i>
@@ -183,6 +186,7 @@
   import core from '../chat/core';
   import modal from '../components/Modal.vue';
   import CustomDialog from '../components/custom_dialog';
+  import l from '../chat/localize';
 
   function debounce<T>(
     func: (this: T, ...args: any) => void,
@@ -203,6 +207,7 @@
     components: { modal }
   })
   export default class EIconSelector extends CustomDialog {
+    l = l;
     @Prop
     readonly onSelect?: (eicon: string, shift: boolean) => void;
 

@@ -1,13 +1,13 @@
 <template>
   <modal
-    action="Post Ads"
+    :action="l('ads.post')"
     @submit="submit"
     ref="dialog"
     @reopen="load"
     @open="load"
     dialogClass="w-100"
     class="adLauncher"
-    :buttonText="'Start Posting Ads'"
+    :buttonText="l('admgr.setup')"
     iconClass="fas fa-rectangle-ad"
   >
     <div v-if="hasAds()" style="position: relative">
@@ -15,13 +15,13 @@
         class="btn btn-primary position-absolute top-0 end-0"
         @click="openAdEditor()"
       >
-        <i class="fa-solid fa-pencil"></i> Edit Ads
+        <i class="fa-solid fa-pencil"></i> {{ l('admgr.setup') }}
       </button>
-      <h5>Ad Tags</h5>
+      <h5>{{ l('admgr.tags') }}</h5>
 
       <div style="padding-bottom: 1em">
         <div class="mb-3">
-          <p>Serve ads that match any one of these tags:</p>
+          <p>{{ l('admgr.tags.help') }}</p>
 
           <div class="form-check" v-for="(tag, index) in tags">
             <input
@@ -37,13 +37,12 @@
         </div>
       </div>
 
-      <h5>Target Channels</h5>
+      <h5>{{ l('admgr.channels') }}</h5>
       <div class="mb-3">
-        <p>Serve ads on these channels:</p>
+        <p>{{ l('admgr.channels.help') }}</p>
 
         <p v-if="channels.length === 0">
-          You have no channels open that support ad posting. Open some channels
-          first.
+          {{ l('admgr.channels.none') }}
         </p>
 
         <div class="form-check">
@@ -54,7 +53,7 @@
             @change="selectAllChannels($event)"
           />
           <label class="form-check-label" for="ard-all-channels">
-            <i>Select/unselect all</i>
+            <i>{{ l('admgr.channels.selectAll') }}</i>
           </label>
         </div>
 
@@ -71,7 +70,7 @@
         </div>
       </div>
 
-      <h5>Post Order</h5>
+      <h5>{{ l('admgr.order') }}</h5>
       <div class="mb-3">
         <div class="form-check">
           <input
@@ -82,7 +81,7 @@
             id="adOrderRandom"
           />
           <label class="form-check-label" for="adOrderRandom">
-            Random order
+            {{ l('admgr.order.random') }}
           </label>
         </div>
         <div class="form-check">
@@ -94,14 +93,16 @@
             id="adOrderAdCenter"
           />
           <label class="form-check-label" for="adOrderAdCenter">
-            Follow order in Ad Center
+            {{ l('admgr.order.adCenter') }}
           </label>
         </div>
       </div>
 
-      <h5>Campaign</h5>
+      <h5>{{ l('admgr.campaign') }}</h5>
       <div class="mb-3">
-        <label class="control-label" for="timeoutMinutes"> Timeout </label>
+        <label class="control-label" for="timeoutMinutes">
+          {{ l('admgr.timeout') }}
+        </label>
 
         <select
           class="form-select"
@@ -123,18 +124,18 @@
       </div>
 
       <p class="matches">
-        <b>{{ matchCount }}</b> ads will be used.
+        <b>{{ matchCount }}</b> {{ l('admgr.matches') }}
       </p>
     </div>
     <div v-else>
-      <h5>No Ads to Post!</h5>
+      <h5>{{ l('admgr.noAdsToPost') }}</h5>
 
       <p>
-        Use the
+        {{ l('admgr.useEditorPrefix') }}
         <button class="btn btn-outline-secondary" @click="openAdEditor()">
-          <i class="fa-solid fa-pencil"></i> Ad Editor
+          <i class="fa-solid fa-pencil"></i> {{ l('admgr.editor') }}
         </button>
-        to create some ads first, then return here to post them.
+        {{ l('admgr.useEditorSuffix') }}
       </p>
     </div>
   </modal>
@@ -147,11 +148,13 @@
   import core from '../core';
   import _ from 'lodash';
   import AdCenterDialog from './AdCenter.vue';
+  import l from '../localize';
 
   @Component({
     components: { modal: Modal }
   })
   export default class AdLauncherDialog extends CustomDialog {
+    l = l;
     adOrder: 'random' | 'ad-center' = 'random';
 
     matchCount = 0;
@@ -240,7 +243,11 @@
 
     openAdEditor(): void {
       this.hide();
-      (<AdCenterDialog>this.$parent.$refs['adCenter'])!.show();
+      const ref =
+        this.$parent && this.$parent.$refs
+          ? (this.$parent.$refs['adCenter'] as AdCenterDialog | undefined)
+          : undefined;
+      if (ref) ref.show();
     }
 
     selectAllChannels(e: any): void {
@@ -260,13 +267,13 @@
 
       if (tags.length === 0) {
         e.preventDefault();
-        alert('Select at least one tag to post');
+        alert(l('ads.selectTagRequired'));
         return;
       }
 
       if (channelIds.length === 0) {
         e.preventDefault();
-        alert('Select at least one channel to post in');
+        alert(l('ads.selectChannelRequired'));
         return;
       }
 
@@ -282,9 +289,7 @@
             return true;
           }
 
-          return confirm(
-            `Warning: This action will overwrite ads on channel ${chan.name}. Ads that are not stored in the Ad Center will be lost. Are you sure you wish to continue?`
-          );
+          return confirm(l('admgr.overwriteWarning', chan.name));
         })
       ) {
         e.preventDefault();

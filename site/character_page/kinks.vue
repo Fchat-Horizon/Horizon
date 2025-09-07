@@ -16,7 +16,7 @@
             class="fa-solid"
             :class="expandedCustoms ? 'fa-chevron-up' : 'fa-chevron-down'"
           ></i>
-          {{ expandedCustoms ? 'Collapse' : 'Expand' }}
+          {{ expandedCustoms ? l('profile.collapse') : l('profile.expand') }}
         </button>
       </div>
 
@@ -36,7 +36,7 @@
 
       <div class="col-12 col-lg-3 col-xl-2">
         <select v-model="highlightGroup" class="form-select">
-          <option :value="undefined">None</option>
+          <option :value="undefined">{{ l('profile.none') }}</option>
           <option
             v-for="group in kinkGroups"
             v-if="group"
@@ -52,7 +52,7 @@
       <div class="col-sm-6 col-lg-3 kink-block-favorite kink-block">
         <div class="card bg-light">
           <div class="card-header border-bottom border-info">
-            <h5>Favorites</h5>
+            <h5>{{ l('profile.favorites') }}</h5>
           </div>
           <div class="card-body">
             <kink
@@ -69,7 +69,7 @@
       <div class="col-sm-6 col-lg-3 kink-block-yes kink-block">
         <div class="card bg-light">
           <div class="card-header border-bottom border-success">
-            <h5>Yes</h5>
+            <h5>{{ l('profile.yes') }}</h5>
           </div>
           <div class="card-body">
             <kink
@@ -86,7 +86,7 @@
       <div class="col-sm-6 col-lg-3 kink-block-maybe kink-block">
         <div class="card bg-light">
           <div class="card-header border-bottom border-warning">
-            <h5>Maybe</h5>
+            <h5>{{ l('profile.maybe') }}</h5>
           </div>
           <div class="card-body">
             <kink
@@ -103,7 +103,7 @@
       <div class="col-sm-6 col-lg-3 kink-block-no kink-block">
         <div class="card bg-light">
           <div class="card-header border-bottom border-danger">
-            <h5>No</h5>
+            <h5>{{ l('profile.no') }}</h5>
           </div>
           <div class="card-body">
             <kink
@@ -137,6 +137,7 @@
   import { methods, Store } from './data_store';
   import { Character, CharacterKink, DisplayKink } from './interfaces';
   import KinkView from './kink.vue';
+  import l from '../../chat/localize';
 
   @Component({
     components: { 'context-menu': CopyCustomMenu, kink: KinkView }
@@ -161,6 +162,7 @@
     _ = _;
 
     expandedCustoms = false;
+    l = l;
 
     toggleExpandedCustomKinks(): void {
       this.expandedCustoms = !this.expandedCustoms;
@@ -231,7 +233,7 @@
       } catch (e) {
         this.comparing = false;
         this.comparison = {};
-        Utils.ajaxError(e, 'Unable to get kinks for comparison.');
+        Utils.ajaxError(e, l('profile.compareError'));
       }
       this.loading = false;
     }
@@ -279,8 +281,8 @@
     }
 
     get compareButtonText(): string {
-      if (this.loading) return 'Loading...';
-      return this.comparing ? 'Clear' : 'Compare';
+      if (this.loading) return l('common.loading');
+      return this.comparing ? l('common.clear') : l('common.compare');
     }
 
     get groupedKinks(): { [key in KinkChoice]: DisplayKink[] } {
@@ -357,7 +359,7 @@
       return <{ [key in KinkChoice]: DisplayKink[] }>outputKinks;
     }
 
-    contextMenu(event: TouchEvent): void {
+    contextMenu(event: MouseEvent | TouchEvent): void {
       if (this.shared.authenticated && !this.oldApi)
         (<CopyCustomMenu>this.$refs['context-menu']).outerClick(event);
     }

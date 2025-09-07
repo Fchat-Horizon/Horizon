@@ -1,26 +1,26 @@
 <template>
   <modal
-    :action="'Ad Editor'"
+    :action="l('admgr.editor')"
     @submit="submit"
     ref="dialog"
     @open="load"
     dialogClass="modal-70"
-    :buttonText="'Save'"
+    :buttonText="l('conversationSettings.save')"
     iconClass="fas fa-file-pen"
   >
     <div class="mb-3 ad-list" v-for="(ad, index) in ads">
       <label :for="'adm-content-' + index" class="control-label"
-        >Ad #{{ index + 1 }}
-        <a v-if="index > 0" @click="moveAdUp(index)" title="Move Up"
+        >{{ l('admgr.adNumber', index + 1) }}
+        <a v-if="index > 0" @click="moveAdUp(index)" :title="l('admgr.moveUp')"
           ><i class="fa fa-arrow-up"></i
         ></a>
         <a
           v-if="index < ads.length - 1"
           @click="moveAdDown(index)"
-          title="Move Down"
+          :title="l('admgr.moveDown')"
           ><i class="fa fa-arrow-down"></i
         ></a>
-        <a @click="removeAd(index)" title="Remove Ad"
+        <a @click="removeAd(index)" :title="l('admgr.removeAd')"
           ><i class="fas fa-times-circle"></i
         ></a>
       </label>
@@ -38,7 +38,7 @@
       <tagEditor
         :id="'adm-tags-' + index"
         v-model="ad.tags"
-        placeholder="Enter one or more tags, e.g. 'romantic'"
+        :placeholder="l('admgr.tags.placeholder')"
         :add-tag-on-keys="[13, 188, 9, 32]"
         class="form-control form-tag"
         :disabled="ad.disabled"
@@ -54,14 +54,14 @@
             v-model="ad.disabled"
           />
           <label class="form-check-label" :for="'adm-disabled-' + index">
-            Disable
+            {{ l('admgr.disable') }}
           </label>
         </div>
       </label>
     </div>
 
     <button class="btn btn-outline-secondary" @click="addAd()">
-      Add Another
+      {{ l('admgr.addAnother') }}
     </button>
   </modal>
 </template>
@@ -70,7 +70,6 @@
   import { Component } from '@f-list/vue-ts';
   import CustomDialog from '../../components/custom_dialog';
   import Modal from '../../components/Modal.vue';
-  import AdLauncherDialog from './AdLauncher.vue';
   import { Conversation } from '../interfaces';
   import l from '../localize';
   import { Editor } from '../bbcode';
@@ -99,7 +98,9 @@
 
     async submit(): Promise<void> {
       await core.adCenter.set(this.ads);
-      (<AdLauncherDialog>this.$parent.$refs['adLauncher'])!.show();
+      const parent = this.$parent as Vue | null;
+      const refObj = parent && (parent.$refs['adLauncher'] as any);
+      if (refObj && typeof refObj.show === 'function') refObj.show();
     }
 
     addAd(): void {
@@ -111,8 +112,7 @@
     }
 
     removeAd(index: number): void {
-      // if (confirm('Are you sure you wish to remove this ad?')) {
-      if (Dialog.confirmDialog('Are you sure you wish to remove this ad?')) {
+      if (Dialog.confirmDialog(l('admgr.confirmRemoveAd'))) {
         this.ads.splice(index, 1);
       }
     }

@@ -1,7 +1,7 @@
 <template>
   <Modal
     :action="l('user.memo.action')"
-    buttonText="Save and Close"
+    :buttonText="l('action.saveAndClose')"
     @close="onClose"
     @submit="save"
     dialog-class="w-100 modal-dialog-centered"
@@ -43,7 +43,7 @@
     readonly character!: { id: number; name: string };
     @Prop
     readonly memo?: Memo;
-    message: string | null = null;
+    message: string = '';
     l = l;
     editing: boolean = false;
     saving: boolean = false;
@@ -72,12 +72,11 @@
       try {
         this.saving = true;
 
-        if (this.message === '') {
-          this.message = null;
-        }
+        const messageToSave: string | null =
+          this.message === '' ? null : this.message;
 
         const memoManager = new MemoManager(this.character.name);
-        await memoManager.set(this.message);
+        await memoManager.set(messageToSave);
 
         this.$emit('memo', memoManager.get());
         this.hide();

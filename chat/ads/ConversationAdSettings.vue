@@ -1,6 +1,6 @@
 <template>
   <modal
-    :action="`Ads for ${conversation.name}`"
+    :action="l('admgr.actionFor', conversation.name)"
     @submit="submit"
     ref="dialog"
     @open="load()"
@@ -10,23 +10,23 @@
     iconClass="fas fa-rectangle-ad"
   >
     <div class="phased-out-warning">
-      <h4>Prepare to Move</h4>
+      <h4>{{ l('admgr.prepareToMove') }}</h4>
 
       <p>
-        Channel-specific ads are being phased out. Use
+        {{ l('admgr.phasedOutPrefix') }}
         <button class="btn btn-outline-secondary" @click="openAdEditor()">
-          Ad Editor
+          {{ l('admgr.editor') }}
         </button>
-        and
+        {{ l('admgr.and') }}
         <button class="btn btn-outline-secondary" @click="openPostAds()">
-          Post Ads
+          {{ l('ads.post') }}
         </button>
-        instead, always available on the left sidebar.
+        {{ l('admgr.phasedOutSuffix') }}
       </p>
 
       <p>
         <button class="btn btn-outline-secondary" @click="copyAds()">
-          Copy Channel Ads to Ad Editor
+          {{ l('admgr.copyChannelAds') }}
         </button>
       </p>
     </div>
@@ -40,24 +40,24 @@
           class="form-check-input"
         />
         <label class="form-check-label" for="randomOrder">
-          Serve ads in random order
+          {{ l('admgr.randomOrder') }}
         </label>
       </div>
     </div>
 
-    <div class="mb-3 ad-list" v-for="(ad, index) in ads">
+    <div class="mb-3 ad-list" v-for="(_, index) in ads">
       <label :for="'ad' + conversation.key + '-' + index" class="control-label"
-        >Ad #{{ index + 1 }}
-        <a v-if="index > 0" @click="moveAdUp(index)" title="Move Up"
+        >{{ l('admgr.adNumber', index + 1) }}
+        <a v-if="index > 0" @click="moveAdUp(index)" :title="l('admgr.moveUp')"
           ><i class="fa fa-arrow-up"></i
         ></a>
         <a
           v-if="index < ads.length - 1"
           @click="moveAdDown(index)"
-          title="Move Down"
+          :title="l('admgr.moveDown')"
           ><i class="fa fa-arrow-down"></i
         ></a>
-        <a @click="removeAd(index)" title="Remove Ad"
+        <a @click="removeAd(index)" :title="l('admgr.removeAd')"
           ><i class="fas fa-times-circle"></i
         ></a>
       </label>
@@ -72,7 +72,7 @@
       </editor>
     </div>
     <button class="btn btn-outline-secondary" @click="addAd()">
-      Add Another
+      {{ l('admgr.addAnother') }}
     </button>
   </modal>
 </template>
@@ -98,7 +98,7 @@
     l = l;
     setting = Conversation.Setting;
     ads!: string[];
-    randomOrder! = false;
+    randomOrder = false;
     core = core;
 
     load(): void {
@@ -131,8 +131,7 @@
     }
 
     removeAd(index: number): void {
-      // if (confirm('Are you sure you wish to remove this ad?')) {
-      if (Dialog.confirmDialog('Are you sure you wish to remove this ad?')) {
+      if (Dialog.confirmDialog(l('admgr.confirmRemoveAd'))) {
         this.ads.splice(index, 1);
       }
     }
@@ -151,12 +150,24 @@
 
     openAdEditor() {
       this.hide();
-      (<AdCenterDialog>this.$parent.$parent.$refs['adCenter']).show();
+      const r =
+        this.$parent && this.$parent.$parent && this.$parent.$parent.$refs
+          ? (this.$parent.$parent.$refs['adCenter'] as
+              | AdCenterDialog
+              | undefined)
+          : undefined;
+      r?.show();
     }
 
     openPostAds() {
       this.hide();
-      (<AdCenterDialog>this.$parent.$parent.$refs['adLauncher']).show();
+      const r =
+        this.$parent && this.$parent.$parent && this.$parent.$parent.$refs
+          ? (this.$parent.$parent.$refs['adLauncher'] as
+              | AdCenterDialog
+              | undefined)
+          : undefined;
+      r?.show();
     }
 
     async copyAds(): Promise<void> {

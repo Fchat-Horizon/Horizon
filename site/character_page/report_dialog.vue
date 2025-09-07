@@ -1,23 +1,27 @@
 <template>
   <modal
     id="reportDialog"
-    :action="'Report character' + name"
+    :action="l('reportDialog.actionFor', name)"
     :disabled="!dataValid || submitting"
     @submit.prevent="submitReport()"
   >
     <div class="mb-3">
-      <label>Type</label>
+      <label>{{ l('reportDialog.type') }}</label>
       <select v-model="type" class="form-select">
-        <option>None</option>
-        <option value="profile">Profile Violation</option>
-        <option value="name_request">Name Request</option>
-        <option value="takedown">Art Takedown</option>
-        <option value="other">Other</option>
+        <option>{{ l('reportDialog.none') }}</option>
+        <option value="profile">
+          {{ l('reportDialog.profileViolation') }}
+        </option>
+        <option value="name_request">
+          {{ l('reportDialog.nameRequest') }}
+        </option>
+        <option value="takedown">{{ l('reportDialog.takedown') }}</option>
+        <option value="other">{{ l('reportDialog.other') }}</option>
       </select>
     </div>
     <div v-if="type !== 'takedown'">
       <div class="mb-3" v-if="type === 'profile'">
-        <label>Violation Type</label>
+        <label>{{ l('reportDialog.violationType') }}</label>
         <select v-model="violation" class="form-select">
           <option>Real life images on underage character</option>
           <option>Real life animal images on sexual character</option>
@@ -30,11 +34,11 @@
         </select>
       </div>
       <div class="mb-3">
-        <label>Your Character</label>
+        <label>{{ l('reportDialog.yourCharacter') }}</label>
         <character-select v-model="ourCharacter"></character-select>
       </div>
       <div class="mb-3">
-        <label>Reason/Message</label>
+        <label>{{ l('reportDialog.reasonMessage') }}</label>
         <bbcode-editor
           v-model="message"
           :maxlength="45000"
@@ -43,7 +47,8 @@
       </div>
     </div>
     <div v-show="type === 'takedown'" class="alert alert-info">
-      Please file art takedowns from the <a :href="ticketUrl">tickets page.</a>
+      {{ l('reportDialog.takedownInfo') }}
+      <a :href="ticketUrl">{{ l('reportDialog.ticketsPage') }}</a>
     </div>
   </modal>
 </template>
@@ -55,11 +60,13 @@
   import * as Utils from '../utils';
   import { methods } from './data_store';
   import { Character } from './interfaces';
+  import l from './../../chat/localize';
 
   @Component({
     components: { modal: Modal }
   })
   export default class ReportDialog extends CustomDialog {
+    l = l;
     @Prop({ required: true })
     readonly character!: Character;
     ourCharacter = Utils.settings.defaultCharacter;

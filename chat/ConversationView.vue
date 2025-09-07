@@ -45,15 +45,18 @@
           >
 
           <a href="#" @click.prevent="showAds()" class="btn">
-            <span class="fa fa-ad"></span><span class="btn-text">Ads</span>
+            <span class="fa fa-ad"></span
+            ><span class="btn-text">{{ l('conversation.ads') }}</span>
           </a>
 
           <a href="#" @click.prevent="showChannels()" class="btn">
-            <span class="fa fa-tv"></span><span class="btn-text">Channels</span>
+            <span class="fa fa-tv"></span
+            ><span class="btn-text">{{ l('conversation.channels') }}</span>
           </a>
 
           <a href="#" @click.prevent="showMemo()" class="btn">
-            <span class="fas fa-edit"></span><span class="btn-text">Memo</span>
+            <span class="fas fa-edit"></span
+            ><span class="btn-text">{{ l('conversation.memo') }}</span>
           </a>
         </div>
         <div
@@ -68,7 +71,9 @@
           <span v-show="conversation.character.statusText">
             – <bbcode :text="conversation.character.statusText"></bbcode
           ></span>
-          <div v-show="userMemo"><b>Memo:</b> {{ userMemo }}</div>
+          <div v-show="userMemo">
+            <b>{{ l('conversation.memoLabel') }}</b> {{ userMemo }}
+          </div>
         </div>
       </div>
     </div>
@@ -139,7 +144,7 @@
         <div class="btn-toolbar">
           <dropdown
             :keep-open="false"
-            title="View"
+            :title="l('action.view')"
             :icon-class="{
               fas: true,
               'fa-comments': conversation.mode === 'chat',
@@ -176,15 +181,20 @@
               type="button"
               @click="toggleAutoPostAds()"
             >
-              {{ conversation.adManager.isActive() ? 'Pause' : 'Start' }}
-              Posting Ads
+              {{
+                l(
+                  conversation.adManager.isActive()
+                    ? 'admgr.pausePosting'
+                    : 'admgr.startPosting'
+                )
+              }}
             </button>
             <button
               class="dropdown-item"
               type="button"
               @click="showAdSettings()"
             >
-              Edit Channel Ads...
+              {{ l('admgr.editChannelAds') }}
             </button>
             <div class="dropdown-divider"></div>
             <button
@@ -193,7 +203,7 @@
               type="button"
               @click="toggleNonMatchingAds()"
             >
-              Show Incompatible Ads
+              {{ l('admgr.showIncompatibleAds') }}
             </button>
 
             <template v-slot:split>
@@ -205,7 +215,13 @@
                     'fa-play': !conversation.adManager.isActive()
                   }"
                 ></i>
-                {{ conversation.adManager.isActive() ? 'Pause' : 'Start' }} Ads
+                {{
+                  l(
+                    conversation.adManager.isActive()
+                      ? 'admgr.pauseAds'
+                      : 'admgr.startAds'
+                  )
+                }}
               </a>
             </template>
           </dropdown>

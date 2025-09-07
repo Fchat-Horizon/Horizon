@@ -20,6 +20,7 @@ import Connection from '../fchat/connection';
 import { Keys } from '../keys';
 import { GeneralSettings /*, nativeRequire*/ } from './common';
 import { Logs, SettingsStore } from './filesystem';
+import { setLanguage } from '../chat/localize';
 import Notifications from './notifications';
 import * as SlimcatImporter from './importer';
 import Index from './Index.vue';
@@ -149,7 +150,7 @@ webContents.on('context-menu', (_, props) => {
     if (props.mediaType === 'none') {
       menuTemplate.push({
         id: 'toggleStickyness',
-        label: 'Toggle Sticky Preview',
+        label: l('action.toggleStickyPreview'),
         click(): void {
           EventBus.$emit('imagepreview-toggle-stickyness', {
             url: props.linkURL
@@ -261,6 +262,13 @@ function onSettings(s: GeneralSettings): void {
 
   // spellchecker.setDictionary(s.spellcheckLang, dictDir);
   // for(const word of s.customDictionary) spellchecker.add(word);
+
+  // Apply display language live when settings change
+  try {
+    setLanguage(settings.displayLanguage);
+  } catch (e) {
+    console.warn('Failed to apply display language', e);
+  }
 }
 
 electron.ipcRenderer.on(
@@ -288,6 +296,13 @@ if (params['import'] !== undefined)
     alert(l('importer.error'));
   }
 onSettings(settings);
+
+// Apply UI language early (fallback handled in setLanguage)
+try {
+  setLanguage(settings.displayLanguage);
+} catch (e) {
+  console.warn('Failed to apply display language', e);
+}
 
 log.debug('init.chat.core');
 

@@ -27,11 +27,13 @@
   import InfotagView from './infotag.vue';
   import { MatchReport } from '../../learn/matcher';
   import { Character } from './interfaces';
+  import l from '../../chat/localize';
 
   @Component({
     components: { infotag: InfotagView }
   })
   export default class InfotagsView extends Vue {
+    l = l;
     @Prop({ required: true })
     readonly character!: Character;
     @Prop({ required: true })

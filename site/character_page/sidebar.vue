@@ -138,7 +138,7 @@
         @click="showInChat()"
         class="character-page-online-chat"
       >
-        Online In Chat
+        {{ l('user.onlineInChat') }}
       </div>
 
       <div class="quick-info-block">
@@ -159,29 +159,33 @@
         <!--            </div>-->
 
         <div class="quick-info">
-          <span class="quick-info-label">Created</span>
+          <span class="quick-info-label">{{ l('userProfile.created') }}</span>
           <span class="quick-info-value"
             ><date :time="character.character.created_at"></date
           ></span>
         </div>
         <div class="quick-info">
-          <span class="quick-info-label">Last Updated </span>
+          <span class="quick-info-label"
+            >{{ l('userProfile.lastUpdated') }}
+          </span>
           <span class="quick-info-value"
             ><date :time="character.character.updated_at"></date
           ></span>
         </div>
         <div class="quick-info" v-if="character.character.last_online_at">
-          <span class="quick-info-label">Last Online</span>
+          <span class="quick-info-label">{{
+            l('userProfile.lastOnline')
+          }}</span>
           <span class="quick-info-value"
             ><date :time="character.character.last_online_at"></date
           ></span>
         </div>
         <div class="quick-info">
-          <span class="quick-info-label">Views</span>
+          <span class="quick-info-label">{{ l('userProfile.views') }}</span>
           <span class="quick-info-value">{{ character.character.views }}</span>
         </div>
         <div class="quick-info" v-if="character.character.timezone != null">
-          <span class="quick-info-label">Timezone</span>
+          <span class="quick-info-label">{{ l('userProfile.timezone') }}</span>
           <span class="quick-info-value">
             UTC{{ character.character.timezone > 0 ? '+' : ''
             }}{{

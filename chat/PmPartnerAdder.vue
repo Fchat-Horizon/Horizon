@@ -1,10 +1,10 @@
 <template>
   <modal
-    action="Open Conversation"
+    :action="l('user.message')"
     ref="dialog"
     @submit="submit"
     dialogClass="ads-dialog"
-    buttonText="Open"
+    :buttonText="l('action.open')"
     iconClass="fas fa-user-plus"
   >
     <div>
@@ -13,7 +13,7 @@
         id="name"
         class="form-control"
         v-model="name"
-        placeholder="Name"
+        :placeholder="l('common.name')"
         ref="name"
       />
       <div class="error" v-if="error">{{ error }}</div>
@@ -26,6 +26,7 @@
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import core from './core';
+  import l from './localize';
 
   @Component({
     components: { modal: Modal }
@@ -33,6 +34,7 @@
   export default class PmPartnerAdder extends CustomDialog {
     name = '';
     error: string | null = null;
+    l = l;
 
     @Hook('activated')
     async onMounted(): Promise<void> {
@@ -52,7 +54,7 @@
         this.name = '';
         this.error = '';
       } else {
-        this.error = `Unknown character '${this.name}'`;
+        this.error = l('user.unknownCharacter', this.name);
       }
     }
   }

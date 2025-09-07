@@ -1,6 +1,8 @@
 <template>
   <div id="character-friends">
-    <div v-show="loading" class="alert alert-info">Loading friends.</div>
+    <div v-show="loading" class="alert alert-info">
+      {{ l('profile.friends.loading') }}
+    </div>
     <template v-if="!loading">
       <div class="character-friend" v-for="friend in friends" :key="friend.id">
         <a :href="characterUrl(friend.name)"
@@ -12,7 +14,7 @@
       </div>
     </template>
     <div v-if="!loading && !friends.length" class="alert alert-info">
-      No friends to display.
+      {{ l('profile.friends.none') }}
     </div>
   </div>
 </template>
@@ -25,6 +27,7 @@
   import { Character } from './interfaces';
   import { SimpleCharacter } from '../../interfaces';
   import core from '../../chat/core';
+  import l from '../../chat/localize';
 
   @Component
   export default class FriendsView extends Vue {
@@ -34,6 +37,7 @@
     friends: SimpleCharacter[] = [];
     loading = true;
     error = '';
+    l = l;
 
     avatarUrl = Utils.avatarURL;
     characterUrl = Utils.characterURL;
@@ -48,7 +52,7 @@
       } catch (e) {
         this.shown = false;
         if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
-        Utils.ajaxError(e, 'Unable to load friends.');
+        Utils.ajaxError(e, l('profile.friends.unableLoad'));
       }
       this.loading = false;
     }

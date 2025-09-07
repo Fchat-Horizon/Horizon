@@ -1,9 +1,11 @@
 <template>
   <div class="guestbook">
-    <div v-show="loading" class="alert alert-info">Loading guestbook.</div>
+    <div v-show="loading" class="alert alert-info">
+      {{ l('profile.guestbook.loading') }}
+    </div>
     <div class="guestbook-controls">
       <label v-show="canEdit" class="control-label"
-        >Unapproved only:
+        >{{ l('profile.guestbook.unapprovedOnly') }}
         <input type="checkbox" v-model="unapprovedOnly" />
       </label>
       <simple-pager
@@ -15,7 +17,7 @@
     </div>
     <template v-if="!loading">
       <div class="alert alert-info" v-show="posts.length === 0">
-        No guestbook posts.
+        {{ l('profile.guestbook.none') }}
       </div>
       <guestbook-post
         :character="character"
@@ -36,11 +38,12 @@
           id="guestbookPostPrivate"
           v-model="newPost.privatePost"
         />
-        <label class="control-label" for="guestbookPostPrivate"
-          >Private(only visible to owner)</label
+        <label class="control-label" for="guestbookPostPrivate">{{
+          l('profile.guestbook.private')
+        }}</label
         ><br />
         <label class="control-label" for="guestbook-post-character"
-          >Character:
+          >{{ l('common.character') }}
         </label>
         <character-select
           id="guestbook-post-character"
@@ -51,7 +54,7 @@
           class="btn btn-success"
           :disabled="newPost.posting"
         >
-          Post
+          {{ l('common.post') }}
         </button>
       </div>
     </template>
@@ -75,6 +78,7 @@
 
   import GuestbookPostView from './guestbook_post.vue';
   import core from '../../chat/core';
+  import l from '../../chat/localize';
 
   @Component({
     components: { 'guestbook-post': GuestbookPostView }
@@ -98,6 +102,7 @@
       character: Utils.settings.defaultCharacter,
       message: ''
     };
+    l = l;
 
     @Watch('unapprovedOnly')
     @Watch('page')
@@ -112,7 +117,7 @@
         this.hasNextPage = false;
         this.canEdit = false;
         if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
-        Utils.ajaxError(e, 'Unable to load guestbook posts.');
+        Utils.ajaxError(e, l('profile.guestbook.unableLoad'));
       } finally {
         this.loading = false;
       }
@@ -130,7 +135,7 @@
         this.page = 1;
         await this.getPage();
       } catch (e) {
-        Utils.ajaxError(e, 'Unable to post new guestbook post.');
+        Utils.ajaxError(e, l('profile.guestbook.unablePost'));
       } finally {
         this.newPost.posting = false;
       }

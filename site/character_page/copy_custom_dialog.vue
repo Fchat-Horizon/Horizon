@@ -1,75 +1,79 @@
 <template>
   <modal
     id="copyCustomDialog"
-    action="Copy Custom Kink"
+    :action="l('copyCustom.action')"
     :disabled="!valid || submitting"
     @submit.prevent="copyCustom()"
   >
     <form-group
       field="name"
       :errors="formErrors"
-      label="Name"
+      :label="l('common.name')"
       id="copyCustomName"
     >
-      <input
-        type="text"
-        class="form-control"
-        maxlength="30"
-        required
-        v-model="name"
-        slot-scope="props"
-        id="copyCustomName"
-        :class="props.cls"
-      />
+      <template v-slot="slotProps">
+        <input
+          type="text"
+          class="form-control"
+          maxlength="30"
+          required
+          v-model="name"
+          id="copyCustomName"
+          :class="slotProps.cls"
+        />
+      </template>
     </form-group>
     <form-group
       field="description"
       :errors="formErrors"
-      label="Description"
+      :label="l('common.description')"
       id="copyCustomDescription"
     >
-      <input
-        type="text"
-        class="form-control"
-        max-length="250"
-        v-model="description"
-        required
-        id="copyCustomDescription"
-        slot-scope="props"
-        :class="props.cls"
-      />
+      <template v-slot="slotProps">
+        <input
+          type="text"
+          class="form-control"
+          max-length="250"
+          v-model="description"
+          required
+          id="copyCustomDescription"
+          :class="slotProps.cls"
+        />
+      </template>
     </form-group>
     <form-group
       field="choice"
       :errors="formErrors"
-      label="Choice"
+      :label="l('common.choice')"
       id="copyCustomChoice"
     >
-      <select
-        v-model="choice"
-        class="form-select"
-        slot-scope="props"
-        :class="props.cls"
-        id="copyCustomChoice"
-      >
-        <option value="favorite">Favorite</option>
-        <option value="yes">Yes</option>
-        <option value="maybe">Maybe</option>
-        <option value="no">No</option>
-      </select>
+      <template v-slot="slotProps">
+        <select
+          v-model="choice"
+          class="form-select"
+          :class="slotProps.cls"
+          id="copyCustomChoice"
+        >
+          <option value="favorite">{{ l('profile.favorite') }}</option>
+          <option value="yes">{{ l('profile.yes') }}</option>
+          <option value="maybe">{{ l('profile.maybe') }}</option>
+          <option value="no">{{ l('profile.no') }}</option>
+        </select>
+      </template>
     </form-group>
     <form-group
       field="target"
       :errors="formErrors"
-      label="Target Character"
+      :label="l('common.targetCharacter')"
       id="copyCustomTarget"
     >
-      <character-select
-        v-model="target"
-        slot-scope="props"
-        :class="props.cls"
-        id="copyCustomTarget"
-      ></character-select>
+      <template v-slot="slotProps">
+        <character-select
+          v-model="target"
+          :class="slotProps.cls"
+          id="copyCustomTarget"
+        ></character-select>
+      </template>
     </form-group>
   </modal>
 </template>
@@ -82,11 +86,13 @@
   import { KinkChoice } from '../../interfaces';
   import * as Utils from '../utils';
   import { methods } from './data_store';
+  import l from './../../chat/localize';
 
   @Component({
     components: { 'form-group': FormGroup, modal: Modal }
   })
   export default class CopyCustomDialog extends CustomDialog {
+    l = l;
     name = '';
     description = '';
     choice: KinkChoice = 'favorite';

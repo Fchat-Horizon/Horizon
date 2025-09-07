@@ -8,6 +8,26 @@
     @click.middle="unpinUrlPreview"
   >
     <div v-html="styling"></div>
+
+    <!-- Startup/upgrade initializer overlay -->
+    <div
+      class="initializer"
+      :class="{
+        visible: !hasCompletedUpgrades,
+        complete: hasCompletedUpgrades,
+        shouldShow: shouldShowSpinner
+      }"
+    >
+      <div class="title">
+        {{ l('initializer.title') }}
+        <small>{{ l('initializer.subtitle') }}</small>
+      </div>
+      <i class="fas fa-circle-notch fa-spin search-spinner"></i>
+    </div>
+
+    <BBCodeTester v-show="false"></BBCodeTester>
+
+    <!-- Login card -->
     <div
       v-if="!characters"
       style="
@@ -18,26 +38,6 @@
       "
     >
       <div class="card bg-light" style="width: 400px">
-        <div
-          class="initializer"
-          :class="{
-            visible: !hasCompletedUpgrades,
-            complete: hasCompletedUpgrades,
-            shouldShow: shouldShowSpinner
-          }"
-        >
-          <div class="title">
-            Getting ready, please wait...
-            <small
-              >You should only experience this delay once per software
-              update</small
-            >
-          </div>
-          <i class="fas fa-circle-notch fa-spin search-spinner"></i>
-        </div>
-
-        <BBCodeTester v-show="false"></BBCodeTester>
-
         <h3 class="card-header" style="margin-top: 0; display: flex">
           {{ l('title') }}
 
@@ -310,7 +310,7 @@
   // import {promisify} from 'util';
   import Vue from 'vue';
   import Chat from '../chat/Chat.vue';
-  import { getKey, Settings } from '../chat/common';
+  import { Settings } from '../chat/common';
   import core /*, { init as initCore }*/ from '../chat/core';
   import l from '../chat/localize';
   import Logs from '../chat/Logs.vue';
@@ -507,7 +507,8 @@
           log.debug('settings.update.index');
           let soundChanged =
             this.settings.soundTheme !== settings.soundTheme ||
-            core.state.generalSettings.soundTheme !== settings.soundTheme;
+            (core.state.generalSettings &&
+              core.state.generalSettings.soundTheme !== settings.soundTheme);
           core.state.generalSettings = this.settings = settings;
           /*
           We have to do this after the settings change is applied to  this.settings &

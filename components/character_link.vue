@@ -1,6 +1,6 @@
 <template>
   <span :class="linkClasses" v-if="character">
-    <slot v-if="deleted">[Deleted] {{ name }}</slot>
+    <slot v-if="deleted">{{ l('character.deletedLabel') }} {{ name }}</slot>
     <a :href="characterUrl" class="characterLinkLink" v-else :target="target"
       ><slot>{{ name }}</slot></a
     >
@@ -12,9 +12,11 @@
   import Vue from 'vue';
   import { SimpleCharacter } from '../interfaces';
   import * as Utils from '../site/utils';
+  import l from '../chat/localize';
 
   @Component
   export default class CharacterLink extends Vue {
+    l = l;
     @Prop({ required: true })
     readonly character!: SimpleCharacter | string;
     @Prop({ default: '_blank' })

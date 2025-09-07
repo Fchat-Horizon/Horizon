@@ -2,7 +2,7 @@
   <!--    <div class="character-images row">-->
   <div class="character-images">
     <div v-show="loading && images.length === 0" class="alert alert-info">
-      Loading images.
+      {{ l('profile.images.loading') }}
     </div>
     <template v-if="!loading">
       <!-- @click="handleImageClick($event, image)" -->
@@ -20,7 +20,7 @@
       </div>
     </template>
     <div v-if="!loading && !images.length" class="alert alert-info">
-      No images.
+      {{ l('profile.images.none') }}
     </div>
     <div class="image-preview" v-show="previewImage" @click="previewImage = ''">
       <img :src="previewImage" />
@@ -39,6 +39,7 @@
   import { Character } from './interfaces';
   import core from '../../chat/core';
   import _ from 'lodash';
+  import l from '../../chat/localize';
 
   @Component
   export default class ImagesView extends Vue {
@@ -54,6 +55,7 @@
     images: CharacterImage[] = [];
     loading = true;
     error = '';
+    l = l;
 
     imageUrl = (image: CharacterImage) => methods.imageUrl(image);
     thumbUrl = (image: CharacterImage) => methods.imageThumbUrl(image);
@@ -90,7 +92,7 @@
         this.shown = false;
         if (Utils.isJSONError(err))
           this.error = <string>err.response.data.error;
-        Utils.ajaxError(err, 'Unable to refresh images.');
+        Utils.ajaxError(err, l('profile.images.unableRefresh'));
         log.error('profile.images.show.async.error', { err });
       }
       this.loading = false;

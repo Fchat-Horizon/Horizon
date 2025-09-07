@@ -139,8 +139,8 @@ abstract class Conversation implements Interfaces.Conversation {
     }
   }
 
-  //tslint:disable-next-line:no-async-without-await
-  abstract async addMessage(message: Interfaces.Message): Promise<void>;
+  // Method can be async in implementations
+  abstract addMessage(message: Interfaces.Message): Promise<void>;
 
   loadLastSent(): void {
     this.enteredText = this.lastSent;
@@ -562,14 +562,12 @@ class ChannelConversation
     const isAd = this.isSendingAds;
 
     if (isAd && this.adManager.isActive()) {
-      this.errorText =
-        'Cannot post ads manually while ad auto-posting is active';
+      this.errorText = l('admgr.manualPostBlocked');
       return;
     }
 
     if (isAd && Date.now() < this.nextAd) {
-      this.errorText =
-        'You must wait at least ten minutes between ad posts on this channel';
+      this.errorText = l('admgr.waitTenMinutes');
       return;
     }
 
@@ -901,10 +899,10 @@ export async function testSmartFilterForPrivateMessage(
           recipient: fromChar.name,
           message:
             '\n[sub][color=orange][b][AUTOMATED MESSAGE][/b][/color][/sub]\n' +
-            'Sorry, the player of this character is not interested in characters matching your profile.\n' +
-            `${core.state.settings.risingFilter.hidePrivateMessages ? ' They did not see your message. To bypass this warning, send your message again.' : ''}\n` +
+            l('smartFilter.pm.blocked') +
+            `${core.state.settings.risingFilter.hidePrivateMessages ? ' ' + l('smartFilter.pm.notSeen') : ''}\n` +
             '\n' +
-            '✨ Need a filter for yourself? Try out [url=https://horizn.moe/]F-Chat Horizon[/url]'
+            l('smartFilter.pm.tryHorizon')
         };
 
         core.connection.send('PRI', message);

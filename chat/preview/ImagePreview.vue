@@ -5,25 +5,28 @@
     :class="{ interactive: sticky, visible: visible }"
   >
     <div class="image-preview-toolbar" v-show="sticky || debug">
-      <a @click="toggleDevMode()" :class="{ toggled: debug }" title="Debug Mode"
+      <a
+        @click="toggleDevMode()"
+        :class="{ toggled: debug }"
+        :title="l('imagePreview.debug')"
         ><i class="fa fa-terminal"></i
       ></a>
       <a
         @click="toggleJsMode()"
         :class="{ toggled: runJs }"
-        title="Expand Images"
+        :title="l('imagePreview.expand')"
         ><i class="fa fa-magic"></i
       ></a>
-      <a @click="reloadUrl()" title="Reload Image"
+      <a @click="reloadUrl()" :title="l('imagePreview.reload')"
         ><i class="fa fa-redo-alt"></i
       ></a>
-      <a @click="reset()" title="Reset Image Viewer"
+      <a @click="reset()" :title="l('imagePreview.reset')"
         ><i class="fa fa-recycle"></i
       ></a>
       <a
         @click="toggleStickyMode()"
         :class="{ toggled: sticky }"
-        title="Toggle Stickyness"
+        :title="l('imagePreview.toggleSticky')"
         ><i class="fa fa-thumbtack"></i
       ></a>
     </div>
@@ -86,6 +89,7 @@
   import Timer = NodeJS.Timer;
   import IpcMessageEvent = Electron.IpcMessageEvent;
   import CharacterPreview from './CharacterPreview.vue';
+  import l from '../localize';
 
   const screen = remote.screen;
 
@@ -109,6 +113,7 @@
     }
   })
   export default class ImagePreview extends Vue {
+    l = l;
     private readonly MinTimePreviewVisible = 100;
 
     visible = false;
@@ -757,7 +762,7 @@
 
       .image-preview-local,
       .image-preview-auto {
-        // pointer-events: auto;
+        pointer-events: auto;
       }
     }
 
@@ -797,6 +802,7 @@
       height: 3.5rem;
       display: flex;
       -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
       flex-direction: row;
       width: 15rem;
       flex-wrap: nowrap;

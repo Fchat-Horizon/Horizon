@@ -1,8 +1,8 @@
 <template>
   <modal
     ref="dialog"
-    action="Search history"
-    buttonText="Select"
+    :action="l('searchHistory.title')"
+    :buttonText="l('action.select')"
     @open="onMounted()"
     @submit="selectStatus"
     dialogClass="w-100 modal-70"
@@ -42,7 +42,7 @@
       </div>
     </form>
     <div v-else>
-      <i>This character has no search history.</i>
+      <i>{{ l('searchHistory.empty') }}</i>
     </div>
   </modal>
 </template>
@@ -56,6 +56,7 @@
   import { BBCodeView } from '../bbcode/view';
   import * as _ from 'lodash';
   import { ExtendedSearchData, SearchData } from './interfaces';
+  import l from './localize';
 
   @Component({
     components: {
@@ -65,6 +66,7 @@
     }
   })
   export default class CharacterSearchHistory extends CustomDialog {
+    l = l;
     @Prop({ required: true })
     readonly callback!: (searchData: ExtendedSearchData) => void;
 

@@ -1,15 +1,13 @@
 <template>
   <modal
     id="duplicateDialog"
-    :action="'Duplicate character ' + name"
+    :action="l('duplicateDialog.actionFor', name)"
     :disabled="true"
     @submit.prevent="duplicate()"
     iconClass="fas fa-clone"
   >
     <p>
-      This will duplicate the character, kinks, infotags, customs, subkinks and
-      images. Guestbook entries, friends, groups, and bookmarks are not
-      duplicated.
+      {{ l('duplicateDialog.info') }}
     </p>
     <div class="row mb-2">
       <form-group-inputgroup
@@ -17,26 +15,30 @@
         :errors="errors"
         field="name"
         id="characterName"
-        label="Name"
+        :label="l('common.name')"
       >
-        <input
-          class="form-control"
-          type="text"
-          id="characterName"
-          slot-scope="props"
-          :class="props.cls"
-        />
-        <div slot="button">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            @click="checkName"
-            :disabled="newName.length < 2 || checking"
-          >
-            Check Name
-          </button>
-        </div>
-        <div slot="valid" class="valid-feedback">Name valid and unused.</div>
+        <template v-slot="slotProps">
+          <input
+            class="form-control"
+            type="text"
+            id="characterName"
+            v-model="newName"
+            :class="slotProps.cls"
+          />
+          <div slot="button">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              @click="checkName"
+              :disabled="newName.length < 2 || checking"
+            >
+              {{ l('duplicateDialog.checkName') }}
+            </button>
+          </div>
+          <div slot="valid" class="valid-feedback">
+            {{ l('duplicateDialog.nameValid') }}
+          </div>
+        </template>
       </form-group-inputgroup>
     </div>
   </modal>
@@ -50,11 +52,13 @@
   import * as Utils from '../utils';
   import { methods } from './data_store';
   import { Character } from './interfaces';
+  import l from './../../chat/localize';
 
   @Component({
     components: { 'form-group-inputgroup': FormGroupInputgroup, modal: Modal }
   })
   export default class DuplicateDialog extends CustomDialog {
+    l = l;
     @Prop({ required: true })
     readonly character!: Character;
 

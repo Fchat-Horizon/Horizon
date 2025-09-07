@@ -13,7 +13,7 @@
         channel
           ? { 0: l('users.friends'), 1: l('users.members') }
           : !isConsoleTab
-            ? { 0: l('users.friends'), 1: 'Profile' }
+            ? { 0: l('users.friends'), 1: l('user.profile') }
             : { 0: l('users.friends') }
       "
       v-model="tab"
@@ -96,7 +96,7 @@
     >
       <a :href="profileUrl" target="_blank" class="btn profile-button">
         <span class="fa fa-fw fa-user"></span>
-        Full Profile
+        {{ l('user.fullProfile') }}
       </a>
 
       <character-page
