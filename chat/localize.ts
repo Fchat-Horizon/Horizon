@@ -22,7 +22,7 @@ export const availableDisplayLanguages: { code: string; name: string }[] = [
   { code: 'fr', name: 'Français (France)' },
   { code: 'de', name: 'Deutsch (Deutschland)' },
   { code: 'es', name: 'Español (España)' },
-  { code: 'it', name: 'Italiano (Italia)' },
+  { code: 'it', name: 'Italiano (Italia)' }
 ];
 
 export function setLanguage(lang: string | undefined): void {
