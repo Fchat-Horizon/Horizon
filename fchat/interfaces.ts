@@ -390,6 +390,7 @@ export namespace Channel {
     readonly sortedMembers: ReadonlyArray<Member>;
     readonly opList: ReadonlyArray<string>;
     readonly owner: string;
+    readonly horizonIcon: string;
   }
 }
 
