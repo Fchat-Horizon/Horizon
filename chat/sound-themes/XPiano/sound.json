@@ -1,0 +1,21 @@
+{
+  "name": "Windows XPiano",
+  "version": "1.0.0",
+  "description": "A Horizon sound theme based on Windows XP sounds being played on Piano",
+  "author": "Pankake",
+  "license": "MIT",
+  "sounds": {
+    "attention": "sounds/attention",
+    "chat": "sounds/chat",
+    "login": "sounds/login",
+    "logout": "sounds/logout",
+    "modalert": "sounds/modalert",
+    "newnote": "sounds/newnote",
+    "silence": "sounds/silence",
+    "system": "sounds/system"
+  },
+  "formats": {
+    "preferred": "wav",
+    "fallback": ["flac"]
+  }
+}
