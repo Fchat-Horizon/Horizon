@@ -385,7 +385,7 @@
   background-color: color.change(
     mix($white, $success, 7.5 * 8%),
     $saturation: 50
-  );
+  ) !important;
   .message-time {
     background-color: mix($white, $success, 6 * 8%);
     color: mix($black, $success, 10 * 8%);
@@ -413,10 +413,26 @@
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    padding: 4px 4px;
+    padding: 1px 4px;
     position: relative;
+    border-left: solid 2px transparent;
     .expanded {
       max-height: none;
+    }
+    &:hover {
+      /*background-color: rgba($gray-100, 0.7);*/
+      .message-avatar-spacer {
+        .message-time {
+          display: inherit;
+        }
+      }
+    }
+    .message-time {
+      padding: 0px;
+      font-size: 0.7em;
+      opacity: 80%;
+      background: none;
+      letter-spacing: normal;
     }
     .message-avatar,
     .message-avatar-spacer {
@@ -426,9 +442,20 @@
     .message-avatar {
       height: 40px;
       object-fit: contain;
+      padding-top: 1px;
     }
     .message-avatar-spacer {
-      height: 0px;
+      display: flex;
+      align-self: center;
+      align-content: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      .message-time {
+        display: none;
+        text-align: center;
+        overflow: visible;
+        text-wrap-mode: nowrap;
+      }
     }
     .message-modern-inner {
       flex: 1;
@@ -440,12 +467,6 @@
       flex-wrap: wrap;
       gap: 6px;
       font-weight: 600;
-      .message-time {
-        order: 2;
-        font-size: 0.65em;
-        opacity: 0.55;
-        letter-spacing: 0.03em;
-      }
       .user-view {
         display: inline-flex;
         align-items: center;
@@ -470,9 +491,30 @@
         word-break: break-word;
       }
     }
+    .message-own {
+      background: transparent;
+    }
     &.message-own .message-content .bbcode {
       background: transparent;
     }
+  }
+  .message-highlight {
+    border-left: solid 2px
+      color.change(mix($white, $success, 7.5 * 8%), $saturation: 450) !important;
+  }
+  .message-block {
+    border-top: solid 1px $card-border-color;
+    border-bottom: solid 1px transparent;
+  }
+  .message-blockless {
+    border-top: solid 1px transparent;
+    border-bottom: solid 1px transparent;
+  }
+  .last-read {
+    border-bottom: solid 1px mix($white, $success, 4 * 8%) !important;
+  }
+  .message:last-of-type.last-read {
+    border-bottom: solid 1px transparent !important;
   }
 }
 

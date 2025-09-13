@@ -7,10 +7,14 @@ export function profileLink(this: any | never, character: string): string {
   return `https://www.f-list.net/c/${character}`;
 }
 
-export function characterImage(this: any | never, character: string): string {
+export function characterImage(
+  this: any | never,
+  character: string,
+  original: boolean = false
+): string {
   const c = core.characters.get(character);
 
-  if (c.overrides.avatarUrl) {
+  if (c.overrides.avatarUrl && !original) {
     return c.overrides.avatarUrl;
   }
 
@@ -87,7 +91,7 @@ export class Settings implements ISettings {
   horizonHighlightUsers: string[] = [];
 
   chatLayoutMode: 'classic' | 'modern' = 'classic';
-  messageGrouping = false;
+  messageGrouping = true;
 
   horizonCacheDraftMessages = true;
   horizonSaveDraftMessagesToDiskTimer = 60;
@@ -178,7 +182,7 @@ export function formatTime(
     false;
 
   const timeOnlyFormat = use12 ? 'hh:mm a' : 'HH:mm';
-  if (!noDate && isToday(date)) return format(date, timeOnlyFormat);
+  if (noDate || isToday(date)) return format(date, timeOnlyFormat);
   const absoluteFormat = `yyyy-MM-dd ${timeOnlyFormat}`;
   return format(date, absoluteFormat);
 }
