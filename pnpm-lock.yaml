@@ -39,6 +39,9 @@ importers:
       '@cliqz/adblocker-extended-selectors':
         specifier: 1.26.16
         version: 1.26.16
+      adm-zip:
+        specifier: ^0.5.16
+        version: 0.5.16
       husky:
         specifier: ^9.1.7
         version: 9.1.7
@@ -825,6 +828,10 @@ packages:
     resolution: {integrity: sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+
+  adm-zip@0.5.16:
+    resolution: {integrity: sha512-TGw5yVi4saajsSEgz25grObGHEUaDrniwvA2qwSC060KfqGPdglhvPMA2lPIoxs3PQIItj2iag35fONcQqgUaQ==}
+    engines: {node: '>=12.0'}
 
   agent-base@6.0.2:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
@@ -5966,6 +5973,8 @@ snapshots:
       negotiator: 0.6.3
 
   acorn@8.15.0: {}
+
+  adm-zip@0.5.16: {}
 
   agent-base@6.0.2(supports-color@10.0.0):
     dependencies:

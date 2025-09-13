@@ -146,7 +146,7 @@
   import { Conversation, Logs as LogInterface } from './interfaces';
   import l from './localize';
   import MessageView from './message_view';
-  import Zip from './zip';
+  import AdmZip from 'adm-zip';
   import { Dialog } from '../helpers/dialog';
 
   function formatDate(this: void, date: Date): string {
@@ -353,7 +353,7 @@
 
     async downloadConversation(): Promise<void> {
       if (this.selectedConversation === undefined) return;
-      const zip = new Zip();
+      const zip = new AdmZip();
       const html = Dialog.confirmDialog(l('logs.html'));
       for (const date of this.dates) {
         const messages = await core.logs.getLogs(
@@ -363,12 +363,12 @@
         );
         zip.addFile(
           `${formatDate(date)}.${html ? 'html' : 'txt'}`,
-          getLogs(messages, html)
+          Buffer.from(getLogs(messages, html), 'utf-8')
         );
       }
       this.download(
         `${this.selectedConversation.name}.zip`,
-        URL.createObjectURL(zip.build())
+        URL.createObjectURL(new Blob([zip.toBuffer()]))
       );
     }
 
@@ -378,10 +378,9 @@
         !Dialog.confirmDialog(l('logs.confirmExport', this.selectedCharacter))
       )
         return;
-      const zip = new Zip();
+      const zip = new AdmZip();
       const html = Dialog.confirmDialog(l('logs.html'));
       for (const conv of this.conversations) {
-        zip.addFile(`${conv.name}/`, '');
         const dates = await core.logs.getLogDates(
           this.selectedCharacter,
           conv.key
@@ -394,13 +393,13 @@
           );
           zip.addFile(
             `${conv.name}/${formatDate(date)}.${html ? 'html' : 'txt'}`,
-            getLogs(messages, html)
+            Buffer.from(getLogs(messages, html), 'utf-8')
           );
         }
       }
       this.download(
         `${this.selectedCharacter}.zip`,
-        URL.createObjectURL(zip.build())
+        URL.createObjectURL(new Blob([zip.toBuffer()]))
       );
     }
 
