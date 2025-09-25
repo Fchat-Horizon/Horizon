@@ -253,6 +253,44 @@
                 </div>
 
                 <h5>
+                  {{ l('settings.plugins') }}
+                </h5>
+
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input
+                      type="checkbox"
+                      id="pluginsEnable"
+                      class="form-check-input"
+                      v-model="settings.pluginsEnable"
+                    />
+                    <label class="form-check-label" for="pluginsEnable">
+                      {{ l('settings.plugins.enable') }}
+                    </label>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label
+                    class="control-label"
+                    for="plugins"
+                    style="width: 24ch"
+                  >
+                    {{ l('settings.plugins') }}
+                    <filterable-select
+                      v-model="settings.plugins"
+                      :options="availablePlugins"
+                      :placeholder="l('filter')"
+                      :multiple="true"
+                      :title="l('settings.plugins')"
+                    >
+                      <template slot-scope="s">
+                        {{ s.option }}
+                      </template>
+                    </filterable-select>
+                  </label>
+                </div>
+
+                <h5>
                   {{ l('settings.theme.textColors') }}
                 </h5>
 
@@ -808,6 +846,7 @@
     logDirectory = '';
     availableThemes: ReadonlyArray<string> = [];
     availableSoundThemes: ReadonlyArray<string> = [];
+    availablePlugins: ReadonlyArray<string> = [];
     logLevel: log.LevelOption = false;
     selectedLang: string | string[] | undefined;
     availableDisplayLanguages = availableDisplayLanguages;
@@ -870,6 +909,19 @@
           await this.loadSelectedSoundThemeDetails();
         }
       );
+
+      this.availablePlugins = fs
+        .readdirSync(
+          (() => {
+            const dir = path.join(remote.app.getPath('userData'), 'Plugins');
+            fs.mkdirSync(dir, { recursive: true });
+            return dir;
+          })()
+        )
+        .filter(
+          x => x.substr(-4) === '.css'
+          //               || x.substr(-3) === '.js' //Maybe someday.
+        );
 
       this.selectedLang = getSafeLanguages(this.settings.spellcheckLang);
       let availableLanguages = getSafeLanguages(
