@@ -27,7 +27,7 @@ When the 'Link Preview' feature is used, Horizon will connect to the URL being p
 - If you are concerned about your security or privacy, consider disabling the link preview feature in Horizon settings.
 - In some cases Horizon uses 'proxy services' that help formatting Link Previews. For example:
   - Twitter previews are proxied through `api.fxtwitter.com`
-  - YouTube previews are proxied through `yewtu.be`
+  - YouTube previews are proxied through `invidious.f5.si`
 
 ## High-Quality Portraits
 
