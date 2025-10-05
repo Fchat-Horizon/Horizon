@@ -5,6 +5,8 @@ import fs from 'fs';
 import * as _ from 'lodash';
 import * as electron from 'electron';
 
+const packageJson = require('../../package.json');
+
 export class BlockerIntegration {
   protected static readonly adBlockerLists = [
     'https://easylist.to/easylist/easylist.txt',
@@ -86,6 +88,25 @@ export class BlockerIntegration {
     blocker.blockFonts();
 
     log.debug('adblock.preloaders', { loaders: session.getPreloads() });
+
+    // Set custom User-Agent for Invidious and other services to bypass bot checks
+    session.webRequest.onBeforeSendHeaders(
+      {
+        urls: ['*://invidious.f5.si/*']
+      },
+      (details, callback) => {
+        // Remove existing User-Agent headers (case-insensitive)
+        for (const key in details.requestHeaders) {
+          if (key.toLowerCase() === 'user-agent') {
+            delete details.requestHeaders[key];
+          }
+        }
+        // Set new User-Agent with dynamic version from package.json
+        details.requestHeaders['User-Agent'] = `FChat-Horizon/${packageJson.version}`;
+
+        callback({ cancel: false, requestHeaders: details.requestHeaders });
+      }
+    );
 
     blocker.on('request-blocked', (request: Request) => {
       log.debug('adblock.request.blocked', { url: request.url });
