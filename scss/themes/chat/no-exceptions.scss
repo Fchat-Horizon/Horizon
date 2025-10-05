@@ -1,0 +1,107 @@
+@use 'sass:color';
+@import '../../functions';
+@import '~bootstrap/scss/functions';
+@import '../variables/no_exceptions_variables';
+@import '~bootstrap/scss/variables';
+@import '../../flist_derived';
+@import '../variables/no_exceptions_derived';
+
+$red-color: $r34-red;
+$green-color: $r34-green;
+$blue-color: $r34-blue;
+$yellow-color: $r34-yellow;
+$purple-color: $r34-purple;
+$cyan-color: $r34-cyan;
+$white-color: color.scale($gray-400, $lightness: -20%);
+$black-color: $black;
+$brown-color: $r34-brown;
+$pink-color: $r34-pink;
+$gray-color: color.scale($r34-gray, $lightness: -20%);
+$orange-color: $r34-orange;
+
+@import '../chat';
+
+body,
+.modal-body {
+  background: $gray-100;
+  background: linear-gradient(
+    153deg,
+    $gray-100 20%,
+    color.scale($gray-100, $lightness: -5%) 100%
+  );
+}
+
+.sidebar {
+  background-color: color.scale($gray-100, $lightness: -12%, $alpha: -40%);
+}
+
+.message-own:not(.message-warn) {
+  background-color: color.scale($gray-300, $lightness: -5%, $alpha: -30%);
+}
+
+.colorblindMode {
+  @import '../colorblind';
+  @import '../../rising';
+
+  @each $varName, $value in $risingVariables {
+    --#{$varName}: #{$value};
+  }
+}
+
+:root {
+  color-scheme: light;
+}
+
+$genders: (
+  'male': $blue-color,
+  'female': $pink-color,
+  'transgender': $orange-color,
+  'herm': $purple-color,
+  'shemale': color.scale($r34-pink, $lightness: -20%),
+  'male-herm': $cyan-color,
+  'cunt-boy': $green-color,
+  'none': $gray-color
+);
+
+@each $gender, $color in $genders {
+  .gender-#{$gender} {
+    color: $color;
+  }
+
+  .message-event .gender-#{$gender} {
+    color: color.scale($color, $lightness: -5%);
+  }
+
+  .gender-#{$gender}.user-bookmark,
+  .message-event .gender-#{$gender}.user-bookmark {
+    color: color.scale($green-color, $lightness: -20%);
+  }
+}
+
+#conversation .btn-toolbar .btn-group a.btn {
+  background-color: $primary;
+  border-color: color.scale($primary, $lightness: -15%);
+  color: color-contrast($primary);
+
+  &:hover,
+  &:focus {
+    background-color: color.scale($primary, $lightness: 10%);
+    border-color: color.scale($primary, $lightness: -25%);
+  }
+}
+
+.message-highlight {
+  background-color: color.scale($color: $success, $alpha: -70%);
+
+  .message-time {
+    background-color: color.scale(
+      $color: color.adjust($success, $hue: 12deg),
+      $alpha: -50%
+    );
+  }
+}
+
+.message-warn {
+  background-color: color.scale($color: $danger, $alpha: -85%);
+  color: black;
+}

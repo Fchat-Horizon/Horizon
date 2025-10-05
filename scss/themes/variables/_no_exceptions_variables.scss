@@ -1,0 +1,135 @@
+@use 'sass:color';
+
+// No Exceptions Theme - Based on Rule 34 style
+// Green-based light theme with high contrast for F-Chat
+
+$warning: #e09d3e;
+$white: #ffffff !default;
+$gray-base: $white;
+$gray-100: hsl(114, 56%, 77%) !default; // Main green background
+$gray-200: hsl(114, 56%, 72%) !default;
+$gray-300: hsl(114, 56%, 65%) !default;
+$gray-400: hsl(114, 40%, 50%) !default;
+$gray-500: hsl(114, 30%, 40%) !default;
+$gray-600: #666666 !default;
+$gray-700: #4c4c4c !default;
+$gray-800: #333333 !default;
+$gray-900: #191919 !default;
+$black: #000000 !default;
+$secondary: $gray-400;
+
+$body-bg: hsl(114, 56%, 77%);
+$text-muted: $gray-500;
+$modal-content-bg: hsl(114, 56%, 77%);
+
+// Color palette for Rule 34 theme - directly from rule34.css
+$r34-red: #A00;
+$r34-green: #0A0;
+$r34-blue: #009;
+$r34-yellow: #b7b700;
+$r34-purple: #A0A;
+$r34-cyan: #00a5a5;
+$r34-orange: #F80;
+$r34-pink: #ff588b;
+$r34-brown: #aa840c;
+$r34-gray: #888888;
+
+$gray-color: $r34-gray;
+$white-color: $gray-400;
+$black-color: $gray-900;
+$cyan-color: $r34-cyan;
+$yellow-color: $r34-yellow;
+$pink-color: $r34-pink;
+$green-color: $r34-green;
+$orange-color: $r34-orange;
+
+// Bootstrap 5 contrast colors
+$light-color: $black;
+$dark-color: $gray-base;
+$component-active-color: $dark-color;
+
+// Theme and brand colors
+$primary: #5a8a5a; 
+$secondary: $gray-400;
+$success: #198754;
+$info: $r34-blue;
+$warning: $r34-orange;
+$danger: $r34-red;
+$light: $gray-200;
+$text-muted: $gray-500;
+$text-dark: $gray-600;
+
+// Primary link colors - Rule 34 blue
+$link-color: #003399;
+$link-hover-color: #000000;
+
+// Some theme overrides
+$input-bg: hsl(114, 56%, 85%);
+$input-color: $black;
+$list-group-bg: hsl(114, 56%, 80%);
+$custom-select-bg: hsl(114, 56%, 82%);
+
+$dropdown-link-hover-bg: $gray-200;
+$dropdown-bg: hsl(114, 56%, 77%);
+
+// Card and modal elements
+$card-bg: hsl(114, 56%, 80%);
+$card-border-color: hsl(114, 56%, 60%);
+$modal-backdrop-bg: rgba(0, 0, 0, 0.5);
+
+// F-List Rising
+$scorePerfectMatchBg: rgb(0, 173, 173);
+$scorePerfectMatchFg: rgb(29, 154, 154);
+$scoreMatchBg: rgba(0, 180, 0, 0.65);
+$scoreMatchFg: rgba(0, 133, 0, 0.4);
+$scoreWeakMatchBg: rgba(0, 180, 0, 0.22);
+$scoreWeakMatchFg: rgba(0, 133, 0, 0.2);
+$scoreWeakMismatchBg: rgba(227, 189, 0, 0.5);
+$scoreWeakMismatchFg: rgba(192, 160, 0, 0.5);
+$scoreMismatchBg: rgba(192, 0, 0, 0.35);
+$scoreMismatchFg: rgba(148, 0, 0, 0.3);
+$scoreTitleColor: black;
+$scoreMinimizeButtonFg: rgba(255, 255, 255, 0.6);
+$scoreMinimizeButtonBg: rgba(0, 0, 0, 0.1);
+$scoreReportBg: rgba(0, 0, 0, 0.08);
+
+$scoreFadedPerfectMatchBg: adjust-color($scorePerfectMatchBg, $alpha: -0.6);
+$scoreFadedPerfectMatchFg: adjust-color($scorePerfectMatchFg, $alpha: -0.6);
+$scoreFadedMatchBg: adjust-color($scoreMatchBg, $alpha: -0.6);
+$scoreFadedMatchFg: adjust-color($scoreMatchFg, $alpha: -0.6);
+$scoreFadedWeakMatchBg: adjust-color($scoreWeakMatchBg, $alpha: -0.6);
+$scoreFadedWeakMatchFg: adjust-color($scoreWeakMatchFg, $alpha: -0.6);
+$scoreFadedWeakMismatchBg: adjust-color($scoreWeakMismatchBg, $alpha: -0.6);
+$scoreFadedWeakMismatchFg: adjust-color($scoreWeakMismatchFg, $alpha: -0.6);
+$scoreFadedMismatchBg: adjust-color($scoreMismatchBg, $alpha: -0.6);
+$scoreFadedMismatchFg: adjust-color($scoreMismatchFg, $alpha: -0.6);
+
+$scoreStandoutMatchBorderColor: #059e05;
+$scoreStandoutMatchBgColor: rgba(53, 225, 53, 0.4);
+$scoreStandoutWeakMatchBorderColor: #016c01;
+$scoreStandoutWeakMatchBgColor: rgba(85, 191, 85, 0.2);
+$scoreStandoutNeutralBorderColor: #888;
+$scoreStandoutWeakMismatchBorderColor: #c18f02;
+$scoreStandoutWeakMismatchBgColor: rgba(208, 188, 0, 0);
+$scoreStandoutMismatchBorderColor: #a01a1a;
+
+$characterImageWrapperBg: rgba(0, 0, 0, 0.2);
+$characterGuestbookPostBg: rgba(0, 0, 0, 0.08);
+$characterGuestbookPostBorderColor: rgba(0, 0, 0, 0.06);
+$characterGuestbookReplyBg: rgba(0, 0, 0, 0.05);
+$characterGuestbookTimestampFg: rgba(0, 0, 0, 0.4);
+$characterKinkCustomColor: #0072ec;
+$characterKinkCustomBorderColor: rgba(0, 0, 0, 0.1);
+$characterKinkStockColor: #444444;
+$characterKinkStockHighlightedColor: #333333;
+$characterInfotagColor: rgba(0, 0, 0, 0.7);
+
+$messageTimeBgColor: hsl(114, 56%, 60%);
+$messageTimeFgColor: $black;
+
+$headerBackgroundMaskColor: hsl(114, 56%, 77%);
+
+$linkForcedColor: #007bff;
+$tabSecondaryFgColor: rgba(0, 0, 0, 0.4);
+
+@import 'theme_level';
