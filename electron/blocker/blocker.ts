@@ -102,7 +102,8 @@ export class BlockerIntegration {
           }
         }
         // Set new User-Agent with dynamic version from package.json
-        details.requestHeaders['User-Agent'] = `FChat-Horizon/${packageJson.version}`;
+        details.requestHeaders['User-Agent'] =
+          `FChat-Horizon/${packageJson.version}`;
 
         callback({ cancel: false, requestHeaders: details.requestHeaders });
       }
