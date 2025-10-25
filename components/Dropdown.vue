@@ -78,33 +78,52 @@
           return;
         }
 
+        menu.style.visibility = 'hidden';
         menu.style.display = 'block';
-        const menuRect = menu.getBoundingClientRect();
+        menu.style.position = 'fixed';
+        menu.style.left = '0px';
+        menu.style.top = '0px';
+
+        const menuWidth =
+          menu.offsetWidth || menu.getBoundingClientRect().width;
+        const menuHeight =
+          menu.offsetHeight || menu.getBoundingClientRect().height;
         const buttonRect = button.getBoundingClientRect();
 
-        menu.style.position = 'fixed';
         menu.style.minWidth = `${button.clientWidth}px`;
 
-        // Handle horizontal positioning
-        menu.style.left =
-          menuRect.right < window.innerWidth
-            ? `${buttonRect.left}px`
-            : `${window.innerWidth - menuRect.width}px`;
+        const spaceLeft = buttonRect.left;
+        const spaceRight = window.innerWidth - buttonRect.right;
 
-        // Handle vertical positioning based on dropup prop
-        if (props.dropup) {
-          menu.style.top = `${buttonRect.top - menuRect.height}px`;
+        let leftPos: number;
+        if (spaceLeft > spaceRight) {
+          leftPos = Math.round(buttonRect.right - menuWidth);
         } else {
-          // Auto-detect if there's space below, otherwise open upward
+          leftPos = Math.round(buttonRect.left);
+        }
+
+        if (leftPos + menuWidth > window.innerWidth)
+          leftPos = Math.round(window.innerWidth - menuWidth);
+        if (leftPos < 0) leftPos = 0;
+
+        let topPos: number;
+        if (props.dropup) {
+          topPos = Math.round(buttonRect.top - menuHeight);
+        } else {
           const spaceBelow = window.innerHeight - buttonRect.bottom;
           const spaceAbove = buttonRect.top;
 
-          if (spaceBelow >= menuRect.height || spaceBelow > spaceAbove) {
-            menu.style.top = `${buttonRect.bottom}px`;
+          if (spaceBelow >= menuHeight || spaceBelow > spaceAbove) {
+            topPos = Math.round(buttonRect.bottom);
           } else {
-            menu.style.top = `${buttonRect.top - menuRect.height}px`;
+            topPos = Math.round(buttonRect.top - menuHeight);
           }
         }
+
+        menu.style.left = `${leftPos}px`;
+        menu.style.top = `${topPos}px`;
+        menu.style.visibility = '';
+        menu.style.display = 'block';
       };
 
       watch(isOpen, positionMenu);
