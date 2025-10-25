@@ -89,7 +89,7 @@
           :link-class="dropdownLinkClass"
           icon-class="fas fa-filter"
         >
-          <div class="p-2" style="margin: 0px 5px" @click.stop>
+          <div class="filter-popup" @click.stop>
             <div style="margin-bottom: 8px">
               <div
                 style="
@@ -534,6 +534,25 @@
       display: block;
       width: auto;
       margin-bottom: 6px;
+    }
+
+    .filter-popup {
+      margin: 6px !important;
+      padding: 0.5rem !important;
+      background-color: var(--bs-body-bg);
+      border: 1px solid var(--bs-secondary);
+      border-radius: 0.25rem;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+      color: inherit;
+    }
+
+    .dropdown-menu {
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      min-width: unset !important;
+      border-radius: 0 !important;
     }
 
     .nav li:first-child a {
