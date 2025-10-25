@@ -72,9 +72,6 @@
         </div>
       </div>
       <div class="input-group" style="margin-top: 5px; flex-shrink: 0">
-        <!--<span class="input-group-text">
-          <span class="fas fa-search"></span>
-        </span>-->
         <input
           class="form-control"
           v-model="filter"
@@ -537,7 +534,7 @@
     }
 
     .filter-popup {
-      margin: 6px !important;
+      margin-bottom: 6px;
       padding: 0.5rem !important;
       background-color: var(--bs-body-bg);
       border: 1px solid var(--bs-secondary);
@@ -550,6 +547,7 @@
       background: transparent !important;
       border: none !important;
       padding: 0 !important;
+      margin: 0 !important;
       box-shadow: none !important;
       min-width: unset !important;
       border-radius: 0 !important;
