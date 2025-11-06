@@ -56,14 +56,19 @@
           type="button"
           @click="sortByViewerPriorities = !sortByViewerPriorities"
           :class="[
+            'form-control',
             sortByViewerPriorities
-              ? 'btn btn-primary form-control active'
-              : 'btn btn-outline-secondary form-control'
+              ? 'btn btn-primary'
+              : 'btn btn-outline-secondary'
           ]"
-          :aria-pressed="!!sortByViewerPriorities"
+          :aria-pressed="sortByViewerPriorities"
           title="Sort by my priorities"
         >
-          <i class="fa-solid fa-filter" style="margin-right: 8px"></i>
+          <i
+            class="fa-solid"
+            :class="sortByViewerPriorities ? 'fa-filter' : 'fa-filter'"
+            style="margin-right: 8px"
+          ></i>
           {{ l('profile.sortByMyPriorities') || 'Sort by my priorities' }}
         </button>
       </div>
