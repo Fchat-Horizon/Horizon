@@ -1,7 +1,7 @@
 <template>
   <div class="character-kinks-block">
     <div class="compare-highlight-block row justify-content-between">
-      <div class="expand-custom-kinks-block col-12 col-lg-3 col-xl-2">
+      <div class="expand-custom-kinks-block col-12 col-lg-2 col-xl-2">
         <button
           class="btn btn-primary form-control"
           @click="toggleExpandedCustomKinks"
@@ -29,15 +29,24 @@
         </button>
       </div>
 
-      <div class="col-12 col-lg-3 col-xl-2">
+      <div class="col-12 col-lg-2 col-xl-2">
+        <div class="input-group">
+          <span class="input-group-text"
+            ><span class="fas fa-search"></span
+          ></span>
+          <input
+            class="form-control"
+            v-model="search"
+            :placeholder="l('filter')"
+            type="text"
+          />
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-2 col-xl-2">
         <select v-model="highlightGroup" class="form-select">
           <option :value="undefined">{{ l('profile.none') }}</option>
-          <option
-            v-for="group in kinkGroups"
-            v-if="group"
-            :value="group.id"
-            :key="group.id"
-          >
+          <option v-for="group in kinkGroups" :value="group.id" :key="group.id">
             {{ group.name }}
           </option>
         </select>
@@ -172,6 +181,7 @@
       const shared = Store;
       const characterToCompare = ref(Utils.settings.defaultCharacter);
       const highlightGroup = ref<number | undefined>(undefined);
+      const search = ref('');
       const sortByViewerPriorities = ref(false);
       const loading = ref(false);
       const comparing = ref(false);
@@ -400,11 +410,44 @@
             outputKinks[<string>custom.choice].push(custom);
           }
 
+          // If a search is active, filter items (and subkinks) accordingly.
+          const filter = search.value.trim().toLowerCase();
+
           for (const choice in outputKinks) {
             // compute viewer weights for stock items in this bucket
             for (const dk of outputKinks[choice])
               (dk as any).viewerChoiceWeight =
                 (dk as any).viewerChoiceWeight || computeViewerWeight(dk);
+
+            // If filtering, filter custom subkinks and items whose name matches
+            if (filter.length > 0) {
+              outputKinks[choice] = outputKinks[choice].filter(d => {
+                const name = (d.name || '').toLowerCase();
+                if ((d as any).isCustom) {
+                  const custom = d as any;
+                  // keep custom if its name matches
+                  if (name.indexOf(filter) !== -1) return true;
+                  // otherwise, filter its subkinks to only matching ones
+                  if (
+                    Array.isArray(custom.subkinks) &&
+                    custom.subkinks.length
+                  ) {
+                    const matched = custom.subkinks.filter(
+                      (sk: any) =>
+                        (sk.name || '').toLowerCase().indexOf(filter) !== -1
+                    );
+                    // replace subkinks with the matched subset for display
+                    custom.subkinks = matched;
+                    return matched.length > 0;
+                  }
+                  return false;
+                }
+
+                // non-custom kinks, match by name
+                return name.indexOf(filter) !== -1;
+              });
+            }
+
             outputKinks[choice].sort(kinkSorter);
           }
 
@@ -442,6 +485,7 @@
         shared,
         characterToCompare,
         highlightGroup,
+        search,
         sortByViewerPriorities,
         loading,
         comparing,
