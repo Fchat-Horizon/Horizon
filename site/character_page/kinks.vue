@@ -42,6 +42,22 @@
           </option>
         </select>
       </div>
+      <div class="col-12 col-lg-3 col-xl-2 mt-2 mt-lg-0">
+        <button
+          type="button"
+          @click="sortByViewerPriorities = !sortByViewerPriorities"
+          :class="[
+            sortByViewerPriorities
+              ? 'btn btn-primary form-control active'
+              : 'btn btn-outline-secondary form-control'
+          ]"
+          :aria-pressed="!!sortByViewerPriorities"
+          title="Sort by my priorities"
+        >
+          <i class="fa-solid fa-filter" style="margin-right: 8px"></i>
+          {{ l('profile.sortByMyPriorities') || 'Sort by my priorities' }}
+        </button>
+      </div>
     </div>
     <div class="row mt-3" :class="{ highlighting: !!highlightGroup }">
       <div class="col-sm-6 col-lg-3 kink-block-favorite kink-block">
@@ -127,6 +143,7 @@
     PropType
   } from 'vue';
   import core from '../../chat/core';
+  import { kinkComparisonSwaps } from '../../learn/matcher-types';
   import { Kink, KinkChoice, KinkGroup } from '../../interfaces';
   import * as Utils from '../utils';
   import { methods, Store } from './data_store';
@@ -155,6 +172,7 @@
       const shared = Store;
       const characterToCompare = ref(Utils.settings.defaultCharacter);
       const highlightGroup = ref<number | undefined>(undefined);
+      const sortByViewerPriorities = ref(false);
       const loading = ref(false);
       const comparing = ref(false);
       const highlighting = ref<{ [key: string]: boolean }>({});
@@ -279,6 +297,8 @@
             isCustom: false,
             hasSubkinks: false,
             ignore: false,
+            // viewerChoiceWeight is used when sorting by the viewer's priorities
+            viewerChoiceWeight: 0,
             subkinks: [],
             key: kink.id.toString()
           });
@@ -290,8 +310,48 @@
             )
               return a.isCustom < b.isCustom ? 1 : -1;
 
+            // If sorting by viewer priorities, prefer higher viewerChoiceWeight
+            if (sortByViewerPriorities.value) {
+              const wa = (a as any).viewerChoiceWeight || 0;
+              const wb = (b as any).viewerChoiceWeight || 0;
+              if (wa !== wb) return wb - wa; // descending
+            }
+
             if (a.name === b.name) return 0;
             return a.name < b.name ? -1 : 1;
+          };
+
+          // helper to compute viewer choice weight for a display kink (0..3)
+          const computeViewerWeight = (d: DisplayKink) => {
+            try {
+              const own = core.characters.ownProfile;
+              if (!own || !own.character) return 0;
+
+              // For stock kinks, own.character.kinks contains the viewer's choice.
+              // If this kink has a swapped counterpart (giving/receiving), also
+              // check that mapped kink so the viewer's receiving/giving choice
+              // influences ordering for the counterpart.
+              let kinkIdToCheck = d.id;
+              const swap = (kinkComparisonSwaps as any)[d.id];
+              if (typeof swap === 'number') kinkIdToCheck = swap;
+
+              const ownKinkValue =
+                own.character.kinks[kinkIdToCheck as any] ??
+                own.character.kinks[d.id as any];
+              const resolved = resolveKinkChoice(own, ownKinkValue);
+              switch (resolved) {
+                case 'favorite':
+                  return 3;
+                case 'yes':
+                  return 2;
+                case 'maybe':
+                  return 1;
+                default:
+                  return 0;
+              }
+            } catch (e) {
+              return 0;
+            }
           };
 
           for (const id in characterCustoms) {
@@ -315,6 +375,8 @@
             const kink = <Kink | undefined>kinks[kinkId];
             if (kink === undefined) continue;
             const newKink = makeKink(kink);
+            // attach viewer weight for stock kinks
+            (newKink as any).viewerChoiceWeight = computeViewerWeight(newKink);
             if (
               typeof kinkChoice === 'number' &&
               typeof displayCustoms[kinkChoice] !== 'undefined'
@@ -329,12 +391,22 @@
 
           for (const customId in displayCustoms) {
             const custom = displayCustoms[customId]!;
-            if (custom.hasSubkinks) custom.subkinks.sort(kinkSorter);
+            if (custom.hasSubkinks) {
+              // compute viewer weights for subkinks then sort
+              for (const sk of custom.subkinks)
+                (sk as any).viewerChoiceWeight = computeViewerWeight(sk);
+              custom.subkinks.sort(kinkSorter);
+            }
             outputKinks[<string>custom.choice].push(custom);
           }
 
-          for (const choice in outputKinks)
+          for (const choice in outputKinks) {
+            // compute viewer weights for stock items in this bucket
+            for (const dk of outputKinks[choice])
+              (dk as any).viewerChoiceWeight =
+                (dk as any).viewerChoiceWeight || computeViewerWeight(dk);
             outputKinks[choice].sort(kinkSorter);
+          }
 
           return <{ [key in KinkChoice]: DisplayKink[] }>outputKinks;
         }
@@ -370,6 +442,7 @@
         shared,
         characterToCompare,
         highlightGroup,
+        sortByViewerPriorities,
         loading,
         comparing,
         highlighting,

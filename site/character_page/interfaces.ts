@@ -111,6 +111,8 @@ export interface DisplayKink {
   group: number;
   isCustom: boolean;
   hasSubkinks: boolean;
+  // weight of the viewer's own choice for this kink (0..3). Optional.
+  viewerChoiceWeight?: number;
   subkinks: DisplayKink[];
   ignore: boolean;
   key: string;

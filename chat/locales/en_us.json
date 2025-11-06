@@ -497,6 +497,7 @@
   "profile.expand": "Expand",
   "profile.favorite": "Favorite",
   "profile.favorites": "Favorites",
+  "profile.sortByMyPriorities": "Sort by priorities",
   "profile.friends.loading": "Loading friends.",
   "profile.friends.none": "No friends to display.",
   "profile.friends.unableLoad": "Unable to load friends.",

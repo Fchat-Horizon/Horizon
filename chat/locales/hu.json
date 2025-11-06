@@ -497,6 +497,7 @@
   "profile.expand": "Kitárás",
   "profile.favorite": "Kedvenc",
   "profile.favorites": "Kedvencek",
+  "profile.sortByMyPriorities": "Rendezés prioritás szerint",
   "profile.friends.loading": "Barátok betöltése.",
   "profile.friends.none": "Nincsenek bemutatható barátok.",
   "profile.friends.unableLoad": "Barátok betöltése sikertelen.",

@@ -496,6 +496,7 @@
   "profile.expand": "Étendre",
   "profile.favorite": "Favori",
   "profile.favorites": "Favoris",
+  "profile.sortByMyPriorities": "Trier par priorités",
   "profile.friends.loading": "Chargement des amis.",
   "profile.friends.none": "Aucun ami à afficher.",
   "profile.friends.unableLoad": "Impossible de charger les amis.",
