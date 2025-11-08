@@ -356,10 +356,12 @@
               const resolved = resolveKinkChoice(own, ownKinkValue);
               switch (resolved) {
                 case 'favorite':
-                  return 3;
+                  return 4;
                 case 'yes':
-                  return 2;
+                  return 3;
                 case 'maybe':
+                  return 2;
+                case 'no':
                   return 1;
                 default:
                   return 0;
