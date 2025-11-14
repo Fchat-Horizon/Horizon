@@ -312,40 +312,29 @@
             isCustom: false,
             hasSubkinks: false,
             ignore: false,
-            // viewerChoiceWeight is used when sorting by the viewer's priorities
             viewerChoiceWeight: 0,
             subkinks: [],
             key: kink.id.toString()
           });
 
           const kinkSorter = (a: DisplayKink, b: DisplayKink) => {
-            if (
-              props.character.settings.customs_first &&
-              a.isCustom !== b.isCustom
-            )
-              return a.isCustom < b.isCustom ? 1 : -1;
+            if (a.isCustom !== b.isCustom) return a.isCustom ? -1 : 1;
 
-            // If sorting by viewer priorities, prefer higher viewerChoiceWeight
             if (sortByViewerPriorities.value) {
               const wa = (a as any).viewerChoiceWeight || 0;
               const wb = (b as any).viewerChoiceWeight || 0;
-              if (wa !== wb) return wb - wa; // descending
+              if (wa !== wb) return wb - wa;
             }
 
             if (a.name === b.name) return 0;
             return a.name < b.name ? -1 : 1;
           };
 
-          // helper to compute viewer choice weight for a display kink (0..3)
           const computeViewerWeight = (d: DisplayKink) => {
             try {
               const own = core.characters.ownProfile;
               if (!own || !own.character) return 0;
 
-              // For stock kinks, own.character.kinks contains the viewer's choice.
-              // If this kink has a swapped counterpart (giving/receiving), also
-              // check that mapped kink so the viewer's receiving/giving choice
-              // influences ordering for the counterpart.
               let kinkIdToCheck = d.id;
               const swap = (kinkComparisonSwaps as any)[d.id];
               if (typeof swap === 'number') kinkIdToCheck = swap;
@@ -392,7 +381,6 @@
             const kink = <Kink | undefined>kinks[kinkId];
             if (kink === undefined) continue;
             const newKink = makeKink(kink);
-            // attach viewer weight for stock kinks
             (newKink as any).viewerChoiceWeight = computeViewerWeight(newKink);
             if (
               typeof kinkChoice === 'number' &&
@@ -409,7 +397,6 @@
           for (const customId in displayCustoms) {
             const custom = displayCustoms[customId]!;
             if (custom.hasSubkinks) {
-              // compute viewer weights for subkinks then sort
               for (const sk of custom.subkinks)
                 (sk as any).viewerChoiceWeight = computeViewerWeight(sk);
               custom.subkinks.sort(kinkSorter);
@@ -417,24 +404,19 @@
             outputKinks[<string>custom.choice].push(custom);
           }
 
-          // If a search is active, filter items (and subkinks) accordingly.
           const filter = search.value.trim().toLowerCase();
 
           for (const choice in outputKinks) {
-            // compute viewer weights for stock items in this bucket
             for (const dk of outputKinks[choice])
               (dk as any).viewerChoiceWeight =
                 (dk as any).viewerChoiceWeight || computeViewerWeight(dk);
 
-            // If filtering, filter custom subkinks and items whose name matches
             if (filter.length > 0) {
               outputKinks[choice] = outputKinks[choice].filter(d => {
                 const name = (d.name || '').toLowerCase();
                 if ((d as any).isCustom) {
                   const custom = d as any;
-                  // keep custom if its name matches
                   if (name.indexOf(filter) !== -1) return true;
-                  // otherwise, filter its subkinks to only matching ones
                   if (
                     Array.isArray(custom.subkinks) &&
                     custom.subkinks.length
@@ -443,14 +425,12 @@
                       (sk: any) =>
                         (sk.name || '').toLowerCase().indexOf(filter) !== -1
                     );
-                    // replace subkinks with the matched subset for display
                     custom.subkinks = matched;
                     return matched.length > 0;
                   }
                   return false;
                 }
 
-                // non-custom kinks, match by name
                 return name.indexOf(filter) !== -1;
               });
             }
