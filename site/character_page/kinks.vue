@@ -69,7 +69,7 @@
             :class="sortByViewerPriorities ? 'fa-filter' : 'fa-filter'"
             style="margin-right: 8px"
           ></i>
-          {{ l('profile.sortByMyPriorities') || 'Sort by my priorities' }}
+          {{ l('profile.sortByMyPriorities') }}
         </button>
       </div>
     </div>
