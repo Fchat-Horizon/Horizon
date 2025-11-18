@@ -64,11 +64,7 @@
           :aria-pressed="sortByViewerPriorities"
           :title="l('profile.sortByMyPriorities')"
         >
-          <i
-            class="fa-solid"
-            :class="sortByViewerPriorities ? 'fa-filter' : 'fa-filter'"
-            style="margin-right: 8px"
-          ></i>
+          <i class="fa-solid fa-filter" style="margin-right: 8px"></i>
           {{ l('profile.sortByMyPriorities') }}
         </button>
       </div>
