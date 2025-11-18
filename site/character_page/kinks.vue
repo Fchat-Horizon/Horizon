@@ -62,7 +62,7 @@
               : 'btn btn-outline-secondary'
           ]"
           :aria-pressed="sortByViewerPriorities"
-          title="Sort by my priorities"
+          :title="l('profile.sortByMyPriorities')"
         >
           <i
             class="fa-solid"
