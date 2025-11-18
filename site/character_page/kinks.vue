@@ -317,8 +317,8 @@
             if (a.isCustom !== b.isCustom) return a.isCustom ? -1 : 1;
 
             if (sortByViewerPriorities.value) {
-              const wa = (a as any).viewerChoiceWeight || 0;
-              const wb = (b as any).viewerChoiceWeight || 0;
+              const wa = a.viewerChoiceWeight || 0;
+              const wb = b.viewerChoiceWeight || 0;
               if (wa !== wb) return wb - wa;
             }
 
@@ -332,12 +332,11 @@
               if (!own || !own.character) return 0;
 
               let kinkIdToCheck = d.id;
-              const swap = (kinkComparisonSwaps as any)[d.id];
+              const swap = kinkComparisonSwaps[d.id];
               if (typeof swap === 'number') kinkIdToCheck = swap;
 
               const ownKinkValue =
-                own.character.kinks[kinkIdToCheck as any] ??
-                own.character.kinks[d.id as any];
+                own.character.kinks[kinkIdToCheck] ?? own.character.kinks[d.id];
               const resolved = resolveKinkChoice(own, ownKinkValue);
               switch (resolved) {
                 case 'favorite':
@@ -377,7 +376,7 @@
             const kink = <Kink | undefined>kinks[kinkId];
             if (kink === undefined) continue;
             const newKink = makeKink(kink);
-            (newKink as any).viewerChoiceWeight = computeViewerWeight(newKink);
+            newKink.viewerChoiceWeight = computeViewerWeight(newKink);
             if (
               typeof kinkChoice === 'number' &&
               typeof displayCustoms[kinkChoice] !== 'undefined'
@@ -394,7 +393,7 @@
             const custom = displayCustoms[customId]!;
             if (custom.hasSubkinks) {
               for (const sk of custom.subkinks)
-                (sk as any).viewerChoiceWeight = computeViewerWeight(sk);
+                sk.viewerChoiceWeight = computeViewerWeight(sk);
               custom.subkinks.sort(kinkSorter);
             }
             outputKinks[<string>custom.choice].push(custom);
@@ -404,22 +403,21 @@
 
           for (const choice in outputKinks) {
             for (const dk of outputKinks[choice])
-              (dk as any).viewerChoiceWeight =
-                (dk as any).viewerChoiceWeight || computeViewerWeight(dk);
+              dk.viewerChoiceWeight =
+                dk.viewerChoiceWeight ?? computeViewerWeight(dk);
 
             if (filter.length > 0) {
               outputKinks[choice] = outputKinks[choice].filter(d => {
                 const name = (d.name || '').toLowerCase();
-                if ((d as any).isCustom) {
-                  const custom = d as any;
+                if (d.isCustom) {
+                  const custom = d;
                   if (name.indexOf(filter) !== -1) return true;
                   if (
                     Array.isArray(custom.subkinks) &&
                     custom.subkinks.length
                   ) {
                     const matched = custom.subkinks.filter(
-                      (sk: any) =>
-                        (sk.name || '').toLowerCase().indexOf(filter) !== -1
+                      sk => (sk.name || '').toLowerCase().indexOf(filter) !== -1
                     );
                     custom.subkinks = matched;
                     return matched.length > 0;
