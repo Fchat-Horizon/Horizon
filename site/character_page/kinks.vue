@@ -22,6 +22,14 @@
       >
         <character-select v-model="characterToCompare"></character-select>
 
+        <!-- Character avatar: prefer cached override, fall back to static avatar URL -->
+        <img
+          v-if="characterToCompare !== null && characterToCompare !== undefined"
+          :src="getCompareAvatarUrl()"
+          class="character-avatar icon compare-avatar"
+          alt="avatar"
+        />
+
         <!-- small filter icon merged into compare area; highlighted when active -->
         <button
           type="button"
@@ -300,6 +308,29 @@
         await compareKinks();
       };
 
+      const getCompareAvatarUrl = (): string => {
+        try {
+          const id = characterToCompare.value;
+          if (id === undefined || id === null) return '';
+
+          // Try to find the character name from the site characters list
+          const scs = Utils.characters || [];
+          const found = scs.find((c: any) => c.id === id);
+          const name = found ? found.name : undefined;
+
+          if (name) {
+            const c = core.characters.get(name);
+            if (c && c.overrides && c.overrides.avatarUrl)
+              return c.overrides.avatarUrl;
+            return Utils.avatarURL(name);
+          }
+
+          return '';
+        } catch (e) {
+          return '';
+        }
+      };
+
       const groupedKinks = computed(
         (): { [key in KinkChoice]: DisplayKink[] } => {
           const kinks = Store.shared.kinks;
@@ -505,6 +536,7 @@
       return {
         shared,
         characterToCompare,
+        getCompareAvatarUrl,
         highlightGroup,
         search,
         sortByViewerPriorities,
@@ -553,6 +585,7 @@
   .quick-compare-block {
     display: flex;
     width: 100%;
+    align-items: center; /* center children so avatar doesn't stretch the row */
   }
   .quick-compare-block > character-select {
     flex: 1 1 auto;
@@ -560,5 +593,16 @@
   }
   .quick-compare-block > button {
     flex: 0 0 auto;
+  }
+
+  .compare-avatar {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    max-height: 36px;
+    max-width: 36px;
+    object-fit: cover;
+    border-radius: 4px;
+    align-self: center;
   }
 </style>
