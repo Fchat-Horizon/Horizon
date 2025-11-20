@@ -22,13 +22,18 @@
       >
         <character-select v-model="characterToCompare"></character-select>
 
-        <icon-view
+        <a
           v-if="compareCharacter"
-          :key="characterToCompare"
-          :character="compareCharacter"
+          :href="compareHref"
+          target="_blank"
           class="compare-avatar-wrapper"
-          :useOriginalAvatar="false"
-        />
+        >
+          <img
+            :src="getCompareAvatarUrl()"
+            class="character-avatar icon compare-avatar"
+            :alt="compareName || ''"
+          />
+        </a>
 
         <!-- small filter icon merged into compare area; highlighted when active -->
         <button
@@ -167,12 +172,11 @@
   import { methods, Store } from './data_store';
   import { Character, CharacterKink, DisplayKink } from './interfaces';
   import KinkView from './kink.vue';
-  import IconView from '../../bbcode/IconView.vue';
   import l from '../../chat/localize';
 
   export default defineComponent({
     name: 'CharacterKinksView',
-    components: { kink: KinkView, IconView },
+    components: { kink: KinkView },
     props: {
       character: {
         type: Object as PropType<Character>,
@@ -346,6 +350,22 @@
         } catch (e) {
           return undefined;
         }
+      });
+
+      const compareName = computed(() => {
+        try {
+          const cc = compareCharacter.value as any;
+          if (!cc) return undefined;
+          return cc.name || (cc.character && cc.character.name) || undefined;
+        } catch (e) {
+          return undefined;
+        }
+      });
+
+      const compareHref = computed(() => {
+        const name = compareName.value;
+        if (!name) return '#';
+        return Utils.characterURL(name);
       });
 
       const groupedKinks = computed(
@@ -554,6 +574,8 @@
         shared,
         characterToCompare,
         compareCharacter,
+        compareName,
+        compareHref,
         getCompareAvatarUrl,
         highlightGroup,
         search,
@@ -615,12 +637,11 @@
 
   .compare-avatar {
     flex: 0 0 auto;
-    width: 36px;
-    height: 36px;
-    max-height: 36px;
-    max-width: 36px;
+    width: 37px;
+    height: 37px;
+    max-height: 37px;
+    max-width: 37px;
     object-fit: cover;
-    border-radius: 4px;
     align-self: center;
   }
 
@@ -628,21 +649,9 @@
     display: inline-flex;
     align-items: center;
   }
-  /* ensure IconView's internal image matches toolbar control height
-     Use deep selector so scoped styles penetrate child component */
   .compare-avatar-wrapper {
     width: auto;
     height: auto;
     justify-content: center;
-  }
-  .compare-avatar-wrapper ::v-deep img#img,
-  .compare-avatar-wrapper ::v-deep img.character-avatar,
-  .compare-avatar-wrapper ::v-deep img {
-    width: 37px;
-    height: 37px;
-    max-width: 37px;
-    max-height: 37px;
-    object-fit: cover;
-    display: block;
   }
 </style>
