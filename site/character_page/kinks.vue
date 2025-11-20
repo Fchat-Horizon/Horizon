@@ -22,12 +22,12 @@
       >
         <character-select v-model="characterToCompare"></character-select>
 
-        <!-- Character avatar: prefer cached override, fall back to static avatar URL -->
-        <img
-          v-if="characterToCompare !== null && characterToCompare !== undefined"
-          :src="getCompareAvatarUrl()"
-          class="character-avatar icon compare-avatar"
-          alt="avatar"
+        <icon-view
+          v-if="compareCharacter"
+          :key="characterToCompare"
+          :character="compareCharacter"
+          class="compare-avatar-wrapper"
+          :useOriginalAvatar="false"
         />
 
         <!-- small filter icon merged into compare area; highlighted when active -->
@@ -167,11 +167,12 @@
   import { methods, Store } from './data_store';
   import { Character, CharacterKink, DisplayKink } from './interfaces';
   import KinkView from './kink.vue';
+  import IconView from '../../bbcode/IconView.vue';
   import l from '../../chat/localize';
 
   export default defineComponent({
     name: 'CharacterKinksView',
-    components: { kink: KinkView },
+    components: { kink: KinkView, IconView },
     props: {
       character: {
         type: Object as PropType<Character>,
@@ -330,6 +331,22 @@
           return '';
         }
       };
+
+      const compareCharacter = computed(() => {
+        try {
+          const id = characterToCompare.value;
+          if (id === undefined || id === null) return undefined;
+
+          const scs = Utils.characters || [];
+          const found = scs.find((c: any) => c.id === id);
+          const name = found ? found.name : undefined;
+          if (!name) return undefined;
+
+          return core.characters.get(name);
+        } catch (e) {
+          return undefined;
+        }
+      });
 
       const groupedKinks = computed(
         (): { [key in KinkChoice]: DisplayKink[] } => {
@@ -536,6 +553,7 @@
       return {
         shared,
         characterToCompare,
+        compareCharacter,
         getCompareAvatarUrl,
         highlightGroup,
         search,
@@ -604,5 +622,27 @@
     object-fit: cover;
     border-radius: 4px;
     align-self: center;
+  }
+
+  .compare-avatar-wrapper {
+    display: inline-flex;
+    align-items: center;
+  }
+  /* ensure IconView's internal image matches toolbar control height
+     Use deep selector so scoped styles penetrate child component */
+  .compare-avatar-wrapper {
+    width: auto;
+    height: auto;
+    justify-content: center;
+  }
+  .compare-avatar-wrapper ::v-deep img#img,
+  .compare-avatar-wrapper ::v-deep img.character-avatar,
+  .compare-avatar-wrapper ::v-deep img {
+    width: 37px;
+    height: 37px;
+    max-width: 37px;
+    max-height: 37px;
+    object-fit: cover;
+    display: block;
   }
 </style>
