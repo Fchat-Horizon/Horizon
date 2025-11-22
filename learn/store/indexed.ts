@@ -32,9 +32,7 @@ export class IndexedStore implements PermanentIndexedStore {
   static async open(
     dbName: string = 'flist-ascending-profiles'
   ): Promise<IndexedStore> {
-    const desiredVersion = 3;
-
-    const request = indexedDB.open(dbName, desiredVersion);
+    const request = indexedDB.open(dbName, 3);
 
     request.onupgradeneeded = async event => {
       const db = request.result;
@@ -60,22 +58,10 @@ export class IndexedStore implements PermanentIndexedStore {
       }
     };
 
-    try {
-      const db = await promisifyRequest<IDBDatabase>(request);
-      return new IndexedStore(db, dbName);
-    } catch (err: any) {
-      if (
-        err &&
-        (err.name === 'VersionError' ||
-          (err.message && err.message.includes('less than')))
-      ) {
-        const fallbackReq = indexedDB.open(dbName);
-        const db = await promisifyRequest<IDBDatabase>(fallbackReq);
-        return new IndexedStore(db, dbName);
-      }
-
-      throw err;
-    }
+    return new IndexedStore(
+      await promisifyRequest<IDBDatabase>(request),
+      dbName
+    );
   }
 
   // tslint:disable-next-line prefer-function-over-method
