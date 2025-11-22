@@ -22,18 +22,26 @@
       >
         <character-select v-model="characterToCompare"></character-select>
 
-        <a
-          v-if="compareCharacter"
-          :href="compareHref"
-          target="_blank"
-          class="compare-avatar-wrapper"
+        <div
+          class="form-label"
+          :style="`
+            width: 2.4em;
+            height: 2.4em;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-image: url(${getCompareAvatarUrl()});
+            `"
         >
-          <img
-            :src="getCompareAvatarUrl()"
-            class="character-avatar icon compare-avatar"
-            :alt="compareName || ''"
-          />
-        </a>
+          <a
+            v-if="compareCharacter"
+            :href="compareHref"
+            target="_blank"
+            class="compare-avatar-wrapper"
+            style="height: 100%; width: 100%"
+          >
+          </a>
+        </div>
 
         <!-- small filter icon merged into compare area; highlighted when active -->
         <button
@@ -315,26 +323,8 @@
       };
 
       const getCompareAvatarUrl = (): string => {
-        try {
-          const id = characterToCompare.value;
-          if (id === undefined || id === null) return '';
-
-          // Try to find the character name from the site characters list
-          const scs = Utils.characters || [];
-          const found = scs.find((c: any) => c.id === id);
-          const name = found ? found.name : undefined;
-
-          if (name) {
-            const c = core.characters.get(name);
-            if (c && c.overrides && c.overrides.avatarUrl)
-              return c.overrides.avatarUrl;
-            return Utils.avatarURL(name);
-          }
-
-          return '';
-        } catch (e) {
-          return '';
-        }
+        //There should be a site util for sanitizing avatars like this tbqh.
+        return Utils.avatarURL(compareName.value).replace(/ /g, '%20');
       };
 
       const compareCharacter = computed(() => {

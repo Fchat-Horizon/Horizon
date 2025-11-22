@@ -685,7 +685,7 @@
       document.body.appendChild(overrideEl);
       const sheet = <CSSStyleSheet>overrideEl.sheet;
       sheet.insertRule(
-        `#chatView, .btn, .form-control, .custom-select { font-size: ${fontSize}px; }`,
+        `#chatView, .btn, .form-control, .form-label, .custom-select { font-size: ${fontSize}px; }`,
         sheet.cssRules.length
       );
       sheet.insertRule(
