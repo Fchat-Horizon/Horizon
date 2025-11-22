@@ -173,6 +173,7 @@
   import { Character, CharacterKink, DisplayKink } from './interfaces';
   import KinkView from './kink.vue';
   import l from '../../chat/localize';
+  import anyAscii from 'any-ascii';
 
   export default defineComponent({
     name: 'CharacterKinksView',
@@ -496,7 +497,7 @@
             outputKinks[<string>custom.choice].push(custom);
           }
 
-          const filter = search.value.trim().toLowerCase();
+          const filter = anyAscii(search.value.trim().toLowerCase());
 
           for (const choice in outputKinks) {
             for (const dk of outputKinks[choice])
@@ -505,7 +506,7 @@
 
             if (filter.length > 0) {
               outputKinks[choice] = outputKinks[choice].filter(d => {
-                const name = (d.name || '').toLowerCase();
+                const name = anyAscii((d.name || '').toLowerCase());
                 if (d.isCustom) {
                   const custom = d;
                   if (name.indexOf(filter) !== -1) return true;
@@ -514,7 +515,10 @@
                     custom.subkinks.length
                   ) {
                     const matched = custom.subkinks.filter(
-                      sk => (sk.name || '').toLowerCase().indexOf(filter) !== -1
+                      sk =>
+                        anyAscii((sk.name || '').toLowerCase()).indexOf(
+                          filter
+                        ) !== -1
                     );
                     custom.subkinks = matched;
                     return matched.length > 0;
