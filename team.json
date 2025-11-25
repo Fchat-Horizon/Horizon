@@ -1,6 +1,29 @@
 {
-  "updated": "2025-09-25",
+  "updated": "11-25-2025",
   "devs": {
-    "maintainers": ["Zheam Lucewing", "The Horizon Dev", "Claire Kawinski", "FatCat Client"]
+    "maintainers": [
+      "Zheam Lucewing",
+      "The Horizon Dev",
+      "Claire Kawinski",
+      "FatCat Client"
+    ],
+    "contributors": {
+      "Firespark": {
+        "alias": "Firespark",
+        "characters": ["Cinder the Cat", "Vera Io", "J u c i k a"]
+      },
+      "Clovermoth": {
+        "alias": "Clovermoth",
+        "characters": ["Reggie", "Sparky-", "Prefecta"]
+      },
+      "Peel": {
+        "alias": "Peel",
+        "characters": ["Peel", "Inai", "Amaya Shigo"]
+      },
+      "Fragile": {
+        "alias": "French Touch",
+        "characters": ["Suchiru", "Lurking Suchiru"]
+      }
+    }
   }
 }
