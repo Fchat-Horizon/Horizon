@@ -23,6 +23,10 @@
       "Fragile": {
         "alias": "French Touch",
         "characters": ["Suchiru", "Lurking Suchiru"]
+      },
+      "Fops": {
+        "alias": "Fops",
+        "characters": ["3A Levi"]
       }
     }
   }
