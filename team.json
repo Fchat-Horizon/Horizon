@@ -27,6 +27,14 @@
       "Fops": {
         "alias": "Fops",
         "characters": ["3A Levi"]
+      },
+      "Arianna": {
+        "alias": "Arianna",
+        "characters": [
+          "Arianna Altomare",
+          "Arianna the Latias",
+          "Brindle Maycot"
+        ]
       }
     }
   }
