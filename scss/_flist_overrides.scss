@@ -188,6 +188,8 @@ input:checked {
   margin-bottom: 0;
 }
 
+$emoji-size-override: 150%;
+
 @font-face {
   font-family: 'OpenMoji';
   //The url is checked from the theme file, so we have to use this absolutely bonkers relative path.
@@ -229,6 +231,7 @@ input:checked {
     U+1F947-1F9FF, U+1FA70-1FA7C, U+1FA80-1FA88, U+1FA90-1FABD, U+1FABF-1FAC5,
     U+1FACE-1FADB, U+1FAE0-1FAE8, U+1FAF0-1FAF8, U+1FBC5-1FBC9, U+E0061-E0067,
     U+E0069, U+E006C-E006E, U+E0070-E0079, U+E007F;
+  size-adjust: $emoji-size-override;
 }
 
 //Override for the Windows emoji font. It's missing the combined flag glyphs (likely by design),
@@ -236,6 +239,7 @@ input:checked {
 @font-face {
   font-family: 'Segoe UI Emoji';
   src: local('Segoe UI Emoji');
+  size-adjust: $emoji-size-override;
 }
 //So if we define the font 'Segoe UI Emoji' to use the OpenMoji font for a specific range of characters, it will ignore the Windows system font's lack of combined characters.
 @font-face {
@@ -245,8 +249,20 @@ input:checked {
     format('woff2');
   //Unicode range for all 26 regional indicator characters. When valid combinations are next to one another, they render as a flag
   unicode-range: U+1F1E6-1F1FF;
+  size-adjust: $emoji-size-override;
 }
 
+@font-face {
+  font-family: 'Apple Color Emoji';
+  src: local('Apple Color Emoji');
+  size-adjust: $emoji-size-override;
+}
+
+@font-face {
+  font-family: 'Noto Color Emoji';
+  src: local('Noto Color Emoji');
+  size-adjust: $emoji-size-override;
+}
 $font-family-base:
   system-ui,
   -apple-system,
