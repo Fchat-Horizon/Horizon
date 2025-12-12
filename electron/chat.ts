@@ -63,6 +63,7 @@ import Index from './Index.vue';
 import log from 'electron-log'; // tslint:disable-line: match-default-export-name
 import { WordPosSearch } from '../learn/dictionary/word-pos-search';
 import { MenuItemConstructorOptions } from 'electron/main';
+import { match } from 'assert';
 
 log.debug('init.chat');
 
@@ -105,51 +106,83 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 let browser: string | undefined;
+let executablePath: string | undefined;
 
 //If this were available on non-Windows platforms, getting the values for browser and exec would require using $PATH and whereis
 function openIncognito(url: string): void {
-  if (browser === undefined)
-    try {
-      //tslint:disable-next-line:max-line-length
-      browser = execSync(
-        `FOR /F "skip=2 tokens=3" %A IN ('REG QUERY HKCU\\Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice /v ProgId') DO @(echo %A)`
-      )
-        .toString()
-        .trim()
-        .toLowerCase();
-    } catch (e) {
-      console.error(e);
-    }
-  const commands = {
-    chrome: 'chrome.exe',
-    firefox: 'firefox.exe',
-    vivaldi: 'vivaldi.exe',
-    opera: 'opera.exe'
-  };
-  const params = {
-    chrome: '-incognito',
-    firefox: '-private-window',
-    vivaldi: '-incognito',
-    opera: '-private'
-  };
-  let executableName = 'iexplore.exe';
-  let param = '-private';
-  for (const key in commands)
-    if (browser!.indexOf(key) !== -1) {
-      executableName = commands[<keyof typeof commands>key];
-      param = params[<keyof typeof params>key];
-    }
-  let executablePath = execSync(
-    `where.exe /r "%ProgramFiles%" "${executableName}"`,
-    {
-      encoding: 'utf-8',
-      timeout: 3000
-    }
-  )
-    .trim()
-    .split('\n', 2)[0];
+  if (settings.browserPath && settings.browserPath.length > 0) {
+    executablePath = settings.browserPath;
+    log.debug('incognito.open.customPath', executablePath);
+  } else if (executablePath === undefined) {
+    //Default to Edge path
+    executablePath =
+      'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe';
+    if (browser === undefined)
+      try {
+        //tslint:disable-next-line:max-line-length
+        browser = execSync(
+          `FOR /F "skip=2 tokens=3" %A IN ('REG QUERY HKCU\\Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice /v ProgId') DO @(echo %A)`
+        )
+          .toString()
+          .trim();
+      } catch (e) {
+        console.error(e);
+      }
 
-  spawn(executablePath, [param, url]);
+    log.debug('incognito.open.win32.ProgId', browser);
+
+    try {
+      let ftypeAssocmd = execSync(`ftype ${browser}`).toString().trim();
+      log.verbose('incognito.open.win32.ftype', ftypeAssocmd);
+      let match = ftypeAssocmd.match(/"([^"]+\.exe)"/);
+      if (match?.[1]) executablePath = match?.[1];
+    } catch (e) {
+      log.error('incognito.open.win32.ftype.error', e);
+
+      // Fallback: Query registry directly for modern ProgIds (like Vivaldi)
+      try {
+        const regQuery = execSync(
+          `REG QUERY "HKEY_CLASSES_ROOT\\${browser}\\shell\\open\\command" /ve`,
+          { encoding: 'utf8' }
+        ).toString();
+        const regMatch = regQuery.match(/"([^"]+\.exe)"/);
+        if (regMatch?.[1]) {
+          executablePath = regMatch[1];
+          log.debug('incognito.open.win32.registry.fallback', executablePath);
+        }
+      } catch (regError) {
+        log.error('incognito.open.win32.registry.error', regError);
+      }
+    }
+
+    log.debug('incognito.open.exePath', executablePath);
+  }
+  //"Everything is chrome in the future!" -🧽
+  let incognitoArg: string = '-incognito';
+
+  switch (path.basename(executablePath).toLowerCase()) {
+    case 'chrome.exe':
+    case 'chromeapp.exe':
+    case 'brave.exe':
+    case 'vivaldi.exe':
+      incognitoArg = '-incognito';
+      break;
+    case 'msedge.exe':
+      incognitoArg = '-inprivate';
+      break;
+    case 'firefox.exe':
+    case 'librewolf.exe':
+    case 'waterfox.exe':
+    case 'palemoon.exe':
+    case 'zen.exe':
+      incognitoArg = '-private-window';
+      break;
+    case 'opera.exe':
+      incognitoArg = '-private';
+      break;
+  }
+
+  spawn(executablePath, [incognitoArg, url]);
 }
 
 const wordPosSearch = new WordPosSearch();
