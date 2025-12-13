@@ -231,11 +231,13 @@
 
     refreshing = false;
 
+    isLoadingMore = false;
+
     searchUpdateDebounce = debounce(() => this.runSearch(), 350);
 
     handleScroll = debounce(() => {
       const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
-      if (!resultsContainer) return;
+      if (!resultsContainer || this.isLoadingMore) return; // checks if it's already loading to avoid too many calls to load
 
       const scrollTop = resultsContainer.scrollTop;
       const scrollHeight = resultsContainer.scrollHeight;
@@ -277,6 +279,8 @@
     loadMoreResults(): void {
       if (this.displayedCount >= this.allResults.length) return;
 
+      this.isLoadingMore = true;
+
       const newCount = Math.min(
         this.displayedCount + this.loadIncrement,
         this.allResults.length
@@ -284,6 +288,10 @@
 
       this.displayedCount = newCount;
       this.results = this.allResults.slice(0, this.displayedCount);
+
+      this.$nextTick(() => {
+        this.isLoadingMore = false;
+      });
     }
 
     searchWithString(s: string) {
@@ -305,7 +313,7 @@
         const category = s.substring(9).trim();
 
         if (category === 'random') {
-          this.allResults = store?.nextPage(0) || [];
+          this.allResults = [...(store?.nextPage(0) || [])];
         } else {
           this.allResults = this.getCategoryResults(category);
         }
