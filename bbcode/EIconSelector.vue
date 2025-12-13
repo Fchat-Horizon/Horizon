@@ -313,7 +313,7 @@
         const category = s.substring(9).trim();
 
         if (category === 'random') {
-          this.allResults = [...(store?.nextPage(0) || [])];
+          this.allResults = [...(store?.nextPage(2000) || [])]; // pulls up to 2000 results everytime you click the random button. do you *really* need more than this, you degenerate?
         } else {
           this.allResults = this.getCategoryResults(category);
         }
