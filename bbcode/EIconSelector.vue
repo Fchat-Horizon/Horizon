@@ -318,7 +318,7 @@
           this.allResults = this.getCategoryResults(category);
         }
       } else if (s.length === 0) {
-        this.allResults = store?.nextPage(0) || [];
+        this.allResults = [...(store?.nextPage(2000) || [])]; // functionally same as random button
       } else {
         this.allResults = store?.search(s) || [];
       }
