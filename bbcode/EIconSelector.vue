@@ -138,10 +138,15 @@
         </div>
 
         <div class="carousel slide w-100 results">
-          <div class="carousel-inner w-100 hidden-scrollbar" role="listbox">
+          <div
+            class="carousel-inner w-100 hidden-scrollbar"
+            role="listbox"
+            ref="resultsContainer"
+          >
             <div
               class="carousel-item"
               v-for="eicon in results"
+              :key="eicon"
               role="img"
               :aria-label="eicon"
               tabindex="0"
@@ -216,11 +221,31 @@
 
     results: string[] = [];
 
+    allResults: string[] = []; // store all search results
+
+    displayedCount: number = 77; // 77 results is about 1.5 pages
+
+    loadIncrement: number = 77; // initial load count and additional loading increment
+
     search: string = '';
 
     refreshing = false;
 
     searchUpdateDebounce = debounce(() => this.runSearch(), 350);
+
+    handleScroll = debounce(() => {
+      const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
+      if (!resultsContainer) return;
+
+      const scrollTop = resultsContainer.scrollTop;
+      const scrollHeight = resultsContainer.scrollHeight;
+      const clientHeight = resultsContainer.clientHeight;
+
+      // load more when user scrolls to within 200px of the bottom
+      if (scrollTop + clientHeight >= scrollHeight - 200) {
+        this.loadMoreResults();
+      }
+    }, 100);
 
     @Hook('mounted')
     async mounted(): Promise<void> {
@@ -231,6 +256,34 @@
         this.forceAddFavorite(data.eicon);
       });
       this.searchWithString('category:favorites');
+
+      // add scroll listener to the results container
+      this.$nextTick(() => {
+        const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
+        if (resultsContainer) {
+          resultsContainer.addEventListener('scroll', this.handleScroll);
+        }
+      });
+    }
+
+    @Hook('beforeDestroy')
+    beforeDestroy(): void {
+      const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
+      if (resultsContainer) {
+        resultsContainer.removeEventListener('scroll', this.handleScroll);
+      }
+    }
+
+    loadMoreResults(): void {
+      if (this.displayedCount >= this.allResults.length) return;
+
+      const newCount = Math.min(
+        this.displayedCount + this.loadIncrement,
+        this.allResults.length
+      );
+
+      this.displayedCount = newCount;
+      this.results = this.allResults.slice(0, this.displayedCount);
     }
 
     searchWithString(s: string) {
@@ -244,19 +297,33 @@
       if (bbcodeMatch) {
         s = bbcodeMatch[1].trim();
       }
+
+      // reset pagination
+      this.displayedCount = this.loadIncrement;
+
       if (s.startsWith('category:')) {
         const category = s.substring(9).trim();
 
         if (category === 'random') {
-          this.results = store?.nextPage() || [];
+          this.allResults = store?.nextPage() || [];
         } else {
-          this.results = this.getCategoryResults(category);
+          this.allResults = this.getCategoryResults(category);
         }
       } else if (s.length === 0) {
-        this.results = store?.nextPage() || [];
+        this.allResults = store?.nextPage() || [];
       } else {
-        this.results = store?.search(s).slice(0, 301) || [];
+        this.allResults = store?.search(s) || [];
       }
+
+      this.results = this.allResults.slice(0, this.displayedCount);
+
+      this.$nextTick(() => {
+        // returns user to top after changing search
+        const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
+        if (resultsContainer) {
+          resultsContainer.scrollTop = 0;
+        }
+      });
     }
 
     getCategoryResults(category: string): string[] {
@@ -740,10 +807,6 @@
             border-bottom: 1px solid var(--bs-secondary);
           }
 
-          .favorites {
-            border-top-left-radius: 0;
-            border-bottom-left-radius: 0;
-          }
           .expressions {
             border-top-left-radius: 0;
             border-top-right-radius: 0;
