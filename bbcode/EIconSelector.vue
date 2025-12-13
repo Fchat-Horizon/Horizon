@@ -815,6 +815,11 @@
             border-bottom: 1px solid var(--bs-secondary);
           }
 
+          .favorites {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+          }
+
           .expressions {
             border-top-left-radius: 0;
             border-top-right-radius: 0;
