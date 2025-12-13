@@ -305,12 +305,12 @@
         const category = s.substring(9).trim();
 
         if (category === 'random') {
-          this.allResults = store?.nextPage() || [];
+          this.allResults = store?.nextPage(0) || [];
         } else {
           this.allResults = this.getCategoryResults(category);
         }
       } else if (s.length === 0) {
-        this.allResults = store?.nextPage() || [];
+        this.allResults = store?.nextPage(0) || [];
       } else {
         this.allResults = store?.search(s) || [];
       }
