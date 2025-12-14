@@ -227,6 +227,8 @@
 
     loadIncrement: number = 77; // initial load count and additional loading increment
 
+    readonly random_max = 2000; // maximum random results to fetch. do you *really* need more than this, you degenerate?
+
     search: string = '';
 
     refreshing = false;
@@ -313,12 +315,12 @@
         const category = s.substring(9).trim();
 
         if (category === 'random') {
-          this.allResults = [...(store?.nextPage(2000) || [])]; // pulls up to 2000 results everytime you click the random button. do you *really* need more than this, you degenerate?
+          this.allResults = [...(store?.nextPage(this.random_max) || [])];
         } else {
           this.allResults = this.getCategoryResults(category);
         }
       } else if (s.length === 0) {
-        this.allResults = [...(store?.nextPage(2000) || [])]; // functionally same as random button
+        this.allResults = [...(store?.nextPage(this.random_max) || [])];
       } else {
         this.allResults = store?.search(s) || [];
       }
