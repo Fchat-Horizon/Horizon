@@ -249,5 +249,5 @@ Our codebase has received contributions from the following people:
 - **German**: ForgetfulTragedy, Peel
 - **Hungarian**: Firespark
 - **Italian**: Clovermoth
-- **Spanish**: A Day with a Carrot, Dess
+- **Spanish**: A Day with a Carrot, Dess, DannyIW
 - **UWUnglish** (we're so sorry): @CodingWithAnxiety, @FatCatClient
