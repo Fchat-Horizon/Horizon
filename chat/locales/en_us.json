@@ -450,6 +450,7 @@
   "login.error.proxy": "Failed to set proxy",
   "login.filterCharacters": "Filter characters…",
   "login.host": "Host",
+  "login.host.presumedIncorrect": "Are you sure? The default value should be correct for almost every user",
   "login.password": "Password",
   "login.proxy": "Proxy",
   "login.save": "Save login",

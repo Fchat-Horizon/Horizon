@@ -96,6 +96,13 @@
                 <span class="fas fa-undo-alt"></span>
               </button>
             </div>
+            <div
+              id="host-warn"
+              class="form-text text-danger-emphasis"
+              v-if="settings.host.endsWith('chat3')"
+            >
+              {{ l('login.host.presumedIncorrect') }}
+            </div>
             <div style="height: 8px"></div>
             <label class="control-label" for="proxy">{{
               l('login.proxy')
