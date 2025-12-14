@@ -736,6 +736,14 @@
       this.runSearch();
 
       this.refreshing = false;
+
+      this.$nextTick(() => {
+        // reattach scroll listener after refresh
+        const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
+        if (resultsContainer) {
+          resultsContainer.addEventListener('scroll', this.handleScroll);
+        }
+      });
     }
 
     setFocus(): void {
