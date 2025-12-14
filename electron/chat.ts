@@ -44,9 +44,10 @@ const webContents = remote.getCurrentWebContents();
 require('@electron/remote/main').enable(webContents);
 
 import Axios from 'axios';
-import { exec, execSync, spawn } from 'child_process';
+import { exec, execFileSync, execSync, spawn } from 'child_process';
 import * as path from 'path';
 import * as qs from 'querystring';
+import * as fs from 'fs';
 import { getKey } from '../chat/common';
 import { EventBus } from '../chat/preview/event-bus';
 import { init as initCore } from '../chat/core';
@@ -63,7 +64,6 @@ import Index from './Index.vue';
 import log from 'electron-log'; // tslint:disable-line: match-default-export-name
 import { WordPosSearch } from '../learn/dictionary/word-pos-search';
 import { MenuItemConstructorOptions } from 'electron/main';
-import { match } from 'assert';
 
 log.debug('init.chat');
 
@@ -108,8 +108,7 @@ if (process.env.NODE_ENV === 'production') {
 let browser: string | undefined;
 let executablePath: string | undefined;
 
-//If this were available on non-Windows platforms, getting the values for browser and exec would require using $PATH and whereis
-function openIncognito(url: string): void {
+function openIncognitoWindows(url: string): void {
   if (settings.browserPath && settings.browserPath.length > 0) {
     executablePath = settings.browserPath;
     log.debug('incognito.open.customPath', executablePath);
@@ -183,6 +182,150 @@ function openIncognito(url: string): void {
   }
 
   spawn(executablePath, [incognitoArg, url]);
+}
+
+// --- Linux incognito helpers ------------------------------------------------
+// Resolve an executable to an absolute path using PATH; Otherwise, return the
+// original command.
+function resolveExecutable(cmd: string): string {
+  if (path.isAbsolute(cmd)) return cmd;
+  try {
+    const resolved = execFileSync('which', [cmd], { encoding: 'utf8' })
+      .trim()
+      .split('\n')[0];
+    if (resolved) return resolved;
+  } catch {
+    // Ignore: we'll try spawn with the raw token. Oh god.
+  }
+  return cmd;
+}
+
+const LINUX_INCOGNITO_FLAGS: Record<string, string> = {
+  // Chromium family
+  chrome: '--incognito',
+  'google-chrome': '--incognito',
+  'google-chrome-stable': '--incognito',
+  'google-chrome-beta': '--incognito',
+  'google-chrome-unstable': '--incognito',
+  chromium: '--incognito',
+  'chromium-browser': '--incognito',
+  brave: '--incognito',
+  'brave-browser': '--incognito',
+  vivaldi: '--incognito',
+  'vivaldi-stable': '--incognito',
+  'vivaldi-snapshot': '--incognito',
+
+  // why is edge on linux lol
+  'microsoft-edge': '--inprivate',
+  'microsoft-edge-stable': '--inprivate',
+  'microsoft-edge-beta': '--inprivate',
+  'microsoft-edge-dev': '--inprivate',
+
+  // Firefox family (default behaviour, kept explicit)
+  firefox: '-private-window',
+  'firefox-bin': '-private-window',
+  'firefox-esr': '-private-window',
+  librewolf: '-private-window',
+  waterfox: '-private-window',
+  palemoon: '-private-window',
+  zen: '-private-window',
+  icecat: '-private-window',
+  floorp: '-private-window',
+
+  // Opera
+  opera: '--private',
+  'opera-beta': '--private',
+  'opera-developer': '--private'
+};
+
+function extractExecCommand(desktopFilePath: string): string | undefined {
+  try {
+    const desktopFile = fs.readFileSync(desktopFilePath, { encoding: 'utf8' });
+    const match = desktopFile.match(/^\s*Exec\s*=\s*(.+)$/m);
+    if (!match) return undefined;
+
+    // Remove desktop entry field codes (%u, %U, etc.) per spec.
+    const execValue = match[1].replace(/%[a-zA-Z]/g, '').trim();
+    const tokens = execValue.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) ?? [];
+
+    return tokens.find(
+      token =>
+        token !== 'env' &&
+        !/^[A-Za-z_][A-Za-z0-9_]*=/.test(token) &&
+        token.length > 0
+    );
+  } catch (err) {
+    log.error('incognito.open.linux.exec.read.error', desktopFilePath, err);
+    return undefined;
+  }
+}
+
+function openIncognitoLinux(url: string): void {
+  let desktopId: string | undefined;
+  try {
+    desktopId = execFileSync('xdg-settings', ['get', 'default-web-browser'], {
+      encoding: 'utf8'
+    }).trim();
+  } catch (err) {
+    log.error('incognito.open.linux.desktopId.error', err);
+  }
+
+  // & oh my god.
+  const candidatePaths =
+    desktopId === undefined
+      ? []
+      : [
+          // user locations because these files take priority in freedesktop spec
+          path.join(
+            remote.app.getPath('home'),
+            '.local/share/applications',
+            desktopId
+          ),
+          path.join(
+            remote.app.getPath('home'),
+            '.local/share/flatpak/exports/share/applications',
+            desktopId
+          ),
+          // system locations
+          path.join('/usr/local/share/applications', desktopId),
+          path.join('/usr/share/applications', desktopId),
+
+          // flatpak and snap system locations (???)
+          path.join(
+            '/usr/local/share/flatpak/exports/share/applications',
+            desktopId
+          ),
+          path.join('/var/lib/flatpak/exports/share/applications', desktopId),
+          // ? does snap live here or am i fucking pedantic
+          path.join('/var/lib/snapd/desktop/applications', desktopId)
+        ];
+  // okay we're out of hell.
+  const desktopFilePath = candidatePaths.find(p => fs.existsSync(p));
+  let browserCommand = desktopFilePath
+    ? extractExecCommand(desktopFilePath)
+    : undefined;
+
+  if (!browserCommand) {
+    log.warn(
+      'incognito.open.linux.fallback',
+      desktopId,
+      desktopFilePath ?? 'no desktop file found'
+    );
+
+    // ! Last resort:
+    // ! We are in hell. Hope that god has given us Firefox.
+    browserCommand = 'firefox';
+  }
+
+  const resolvedCommand = resolveExecutable(browserCommand);
+
+  log.debug('incognito.open.linux.browserCommand', resolvedCommand);
+
+  const incognitoArg =
+    LINUX_INCOGNITO_FLAGS[path.basename(browserCommand).toLowerCase()] ??
+    '-private-window'; // again, we pray to god we have firefox. :)
+
+  spawn(resolvedCommand, [incognitoArg, url]);
 }
 
 const wordPosSearch = new WordPosSearch();
@@ -262,7 +405,15 @@ webContents.on('context-menu', (_, props) => {
       menuTemplate.push({
         id: 'incognito',
         label: l('action.incognito'),
-        click: () => openIncognito(props.linkURL)
+        click: () => openIncognitoWindows(props.linkURL)
+      });
+    else if (process.platform === 'linux')
+      menuTemplate.push({
+        id: 'incognito',
+        label: l('action.incognito'),
+        click: () => {
+          openIncognitoLinux(props.linkURL);
+        }
       });
   } else if (hasText)
     menuTemplate.push({
