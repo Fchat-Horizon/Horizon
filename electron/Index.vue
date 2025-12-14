@@ -91,6 +91,8 @@
                 v-model="settings.host"
                 @keypress.enter="login()"
                 :disabled="loggingIn"
+                @change="hostChanged = true"
+                @input="hostChanged = true"
               />
               <button class="btn btn-outline-secondary" @click="resetHost()">
                 <span class="fas fa-undo-alt"></span>
@@ -99,7 +101,7 @@
             <div
               id="host-warn"
               class="form-text text-danger-emphasis"
-              v-if="settings.host.endsWith('chat3')"
+              v-if="hostChanged"
             >
               {{ l('login.host.presumedIncorrect') }}
             </div>
@@ -415,6 +417,7 @@
     saveLogin = false;
     autoLogin = false;
     loggingIn = false;
+    hostChanged = false;
     password = '';
     character?: string;
     characters?: SimpleCharacter[];
@@ -767,6 +770,7 @@
 
     resetHost(): void {
       this.settings.host = defaultHost;
+      this.hostChanged = false;
     }
 
     resetProxy(): void {
