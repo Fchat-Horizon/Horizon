@@ -28,7 +28,7 @@
     "copy-webpack-plugin": "^6.4.1",
     "css-loader": "^5.2.7",
     "date-fns": "2.30.0",
-    "electron": "^38.7.0",
+    "electron": "39.2.7",
     "electron-builder": "^26.2.0",
     "electron-log": "^4.4.8",
     "electron-packager": "^15.5.2",
