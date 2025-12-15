@@ -450,6 +450,7 @@
   "login.error.proxy": "Proxy beállítása sikertelen",
   "login.filterCharacters": "Karakterek szűrése…",
   "login.host": "Host",
+  "login.host.presumedIncorrect": "Biztos vagy benne? Az alapértelmezett érték igaz lenne majdnem minden felhasználóra",
   "login.password": "Jelszó",
   "login.proxy": "Proxy",
   "login.save": "Bejelentkezés mentése",
