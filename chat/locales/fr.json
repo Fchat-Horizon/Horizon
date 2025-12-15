@@ -450,6 +450,7 @@
   "login.error.proxy": "Erreur de paramétrage proxy",
   "login.filterCharacters": "Filtrer les personnages…",
   "login.host": "Hôte",
+  "login.host.presumedIncorrect": "Confirmer ? La valeur par défaut devrait être correcte pour presque tous les utilisateurs",
   "login.password": "Mot de passe",
   "login.proxy": "Proxy",
   "login.save": "Sauvegarder les identifiants",
