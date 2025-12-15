@@ -450,6 +450,7 @@
   "login.error.proxy": "Fallo al configurar el proxy",
   "login.filterCharacters": "Filtra personajes…",
   "login.host": "Anfitrión",
+  "login.host.presumedIncorrect": "¿Estás seguro? El valor predeterminado debería ser correcto para casi todos los usuarios",
   "login.password": "Contraseña",
   "login.proxy": "Proxy",
   "login.save": "Recordar mis datos",
