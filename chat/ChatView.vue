@@ -937,9 +937,9 @@
         }
       }
       &.item-private {
-        padding-left: 0;
-        padding-top: 0;
-        padding-bottom: 0;
+        padding-left: 1px;
+        padding-top: 1px;
+        padding-bottom: 1px;
 
         .online-status {
           padding-left: 1px;
