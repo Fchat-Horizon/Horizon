@@ -212,6 +212,7 @@ div.indentText {
   &.icon {
     height: 50px;
     width: 50px;
+    object-fit: contain;
   }
   transition: opacity 0.25s;
   @media (prefers-reduced-motion: reduce) {

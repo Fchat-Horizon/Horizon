@@ -780,6 +780,7 @@
 <style lang="scss">
   #window-tabs {
     user-select: none;
+
     .btn {
       border: 0;
       border-radius: 0;
@@ -798,6 +799,7 @@
 
     li {
       height: 100%;
+
       a {
         display: flex;
         padding: 2px 10px;
@@ -809,6 +811,7 @@
         height: 28px;
         width: 28px;
         margin: -5px 3px -5px -5px;
+        object-fit: contain;
       }
     }
 
@@ -838,6 +841,7 @@
   #window-tabs .btn-download-unavailable {
     display: none;
   }
+
   .platform-darwin {
     #windowButtons .btn,
     #settings {
@@ -846,6 +850,7 @@
 
     #window-tabs {
       padding-left: 77px;
+
       .btn,
       li a {
         padding-top: 6px;
