@@ -186,7 +186,7 @@
 
 <script lang="ts">
   import { Component, Hook, Prop } from '@f-list/vue-ts';
-  // import Vue from 'vue';
+  import Sortable from 'sortablejs';
   import { EIconStore } from '../learn/eicon/store';
   import core from '../chat/core';
   import modal from '../components/Modal.vue';
@@ -208,6 +208,8 @@
   }
 
   let store: EIconStore | undefined;
+
+  let sortable: Sortable | undefined;
 
   @Component({
     components: { modal }
@@ -267,6 +269,7 @@
         if (resultsContainer) {
           resultsContainer.addEventListener('scroll', this.handleScroll);
         }
+        this.initializeSortable(); // Initialize Sortable for favorites view
       });
     }
 
@@ -275,6 +278,50 @@
       const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
       if (resultsContainer) {
         resultsContainer.removeEventListener('scroll', this.handleScroll);
+      }
+      this.destroySortable();
+    }
+
+    initializeSortable(): void {
+      if (sortable || this.search !== 'category:favorites') return;
+
+      const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
+      if (!resultsContainer) return;
+
+      sortable = Sortable.create(resultsContainer, {
+        animation: 150,
+        onEnd: e => {
+          //const itemEl = e.item;
+          const oldIndex = e.oldIndex!;
+          const newIndex = e.newIndex!;
+
+          const eicon = this.results[oldIndex];
+
+          this.results.splice(oldIndex, 1);
+          this.results.splice(newIndex, 0, eicon);
+
+          const favoriteEIcons = Object.keys(core.state.favoriteEIcons);
+          favoriteEIcons.splice(oldIndex, 1);
+          favoriteEIcons.splice(newIndex, 0, eicon);
+
+          const newFavorites: Record<string, boolean> = {};
+          for (const eicon of favoriteEIcons) {
+            newFavorites[eicon] = true;
+          }
+          core.state.favoriteEIcons = newFavorites;
+
+          void core.settingsStore.set(
+            'favoriteEIcons',
+            core.state.favoriteEIcons
+          );
+        }
+      });
+    }
+
+    destroySortable(): void {
+      if (sortable) {
+        sortable.destroy();
+        sortable = undefined;
       }
     }
 
@@ -332,6 +379,12 @@
         const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
         if (resultsContainer) {
           resultsContainer.scrollTop = 0;
+        }
+
+        if (this.search === 'category:favorites') {
+          this.initializeSortable();
+        } else {
+          this.destroySortable();
         }
       });
     }
@@ -866,7 +919,7 @@
             border: solid 1px transparent !important;
             position: relative;
 
-            &:hover {
+            &:hover:not(:active) {
               background-color: var(--bs-light) !important;
               border: solid 1px var(--bs-light) !important;
 

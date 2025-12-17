@@ -913,6 +913,7 @@
   "tips.27": "Don't want to accidentally send an ad as a chat message? Check if the text box is blue, and the little buttons on the right side are set to 'Ad'.",
   "tips.28": "Your manual kink preferences for genders will always take precedence over your orientation.",
   "tips.29": "Press [kbd]Shift[/kbd] + [kbd]Enter[/kbd] while typing a message to insert a newline without sending (or to send the message when \"Enter sends messages\" is turned off).",
+  "tips.30": "You can reorder your pinned EIcons by dragging and dropping them in the EIcon picker.",
   "title": "Horizon",
   "title.beta": "Horizon (Beta)",
   "title.connected": "Horizon ({0})",
