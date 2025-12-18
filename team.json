@@ -42,18 +42,31 @@
         "alias": "Rose As Mod",
         "role": "Moderator",
         "characters": ["Zheam Lucewing"]
+      },
+      "The Horizon Dev": {
+        "alias": "",
+        "role": "Lead Developer",
+        "characters": ["The Horizon Dev"]
       }
     },
     "supporters": {
       "Rose": {
         "alias": "Rose As Supporter",
         "characters": ["Zheam Lucewing"]
+      },
+      "The Horizon Dev": {
+        "alias": "",
+        "characters": ["The Horizon Dev"]
       }
     },
     "sponsors": {
       "Rose": {
         "alias": "Rose As Sponsor",
         "characters": ["Zheam Lucewing"]
+      },
+      "The Horizon Dev": {
+        "alias": "",
+        "characters": ["The Horizon Dev"]
       }
     }
   }
