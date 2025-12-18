@@ -2,6 +2,7 @@ node_modules/
 /electron/app
 /electron/dist
 /electron/release_artifacts
+/mobile/android/app/src/main/assets/www/chat.js
 /mobile/www
 /webchat/dist
 

@@ -27,6 +27,7 @@ import ChatMessage = Conversation.ChatMessage;
 import { GeneralSettings } from '../electron/common';
 import { Gender } from './matcher-types';
 import { WorkerStore } from './store/worker';
+import { IndexedStore } from './store/indexed';
 import { PermanentIndexedStore } from './store/types';
 import * as path from 'path';
 // import * as electron from 'electron';
@@ -331,9 +332,9 @@ export class CacheManager {
   async start(settings: GeneralSettings, skipFlush: boolean): Promise<void> {
     await this.stop();
 
-    this.profileStore = await WorkerStore.open(
-      path.join(/*electron.remote.app.getAppPath(),*/ 'storeWorkerEndpoint.js')
-    ); // await IndexedStore.open();
+    // Use IndexedStore for mobile (IndexedDB) instead of WorkerStore (Web Workers)
+    // Web Workers don't work in WebView file:// protocol
+    this.profileStore = await IndexedStore.open('horizon-profiles');
 
     this.profileCache.setStore(this.profileStore);
 

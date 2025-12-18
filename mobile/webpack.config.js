@@ -1,5 +1,5 @@
 const path = require("path");
-const ForkTsCheckerWebpackPlugin = require("@f-list/fork-ts-checker-webpack-plugin");
+const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 const VueLoaderPlugin = require("vue-loader/lib/plugin");
 const { Stream } = require("stream");
 const { node } = require("webpack");
@@ -15,6 +15,10 @@ const config = {
     filename: "[name].js",
   },
   context: __dirname,
+  externals: {
+    request: 'null',
+    'request-promise-native': 'null',
+  },
   module: {
     rules: [
       {
@@ -50,7 +54,7 @@ const config = {
         loader: "file-loader",
         options: { name: "[name].[ext]" },
       },
-      { test: /(?<!\.vue)\.scss/, use: ["css-loader", "sass-loader"] },
+      { test: /(?<!\.vue)\.scss/, use: ["to-string-loader", "css-loader", "sass-loader"] },
       {
         test: /\.vue\.scss/,
         use: ["vue-style-loader", "css-loader", "sass-loader"],
@@ -59,16 +63,32 @@ const config = {
     ],
   },
   plugins: [
-    new ForkTsCheckerWebpackPlugin({
-      async: false,
-      vue: true,
-      tslint: path.join(__dirname, "../tslint.json"),
-    }),
+    // Type checking disabled for mobile build - vue-template-compiler version mismatch
+    // new ForkTsCheckerWebpackPlugin({
+    //   async: false,
+    //   typescript: {
+    //     configFile: path.join(__dirname, "tsconfig.json"),
+    //   },
+    // }),
     new VueLoaderPlugin(),
+    new (require('webpack').DefinePlugin)({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    }),
+    new (require('webpack').ProvidePlugin)({
+      process: require.resolve('./process-shim.js'),
+    }),
   ],
   resolve: {
+    alias: {
+      electron: require.resolve('./electron-shim.js'),
+      'request-promise': require.resolve('./request-promise-shim.js'),
+      '../learn/store/worker': require.resolve('./worker-store-shim.js'),
+      '../helpers/dialog': require.resolve('./dialog-shim.js'),
+    },
     fallback: {
-      fs: false,
+      fs: require.resolve('./fs-shim.js'),
+      path: require.resolve('./path-shim.js'),
+      os: require.resolve('./os-shim.js'),
       tls: false,
       net: false,
     },
@@ -76,7 +96,9 @@ const config = {
   },
 };
 
-config.plugins.push(new nodepolyfillplugin());
+config.plugins.push(new nodepolyfillplugin({
+  excludeAliases: ['os', 'electron'] // Use our custom shims instead
+}));
 
 module.exports = function (mode) {
   if (mode === "production") {

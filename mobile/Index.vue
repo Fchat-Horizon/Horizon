@@ -39,6 +39,9 @@
                     <div class="mb-3">
                         <label for="save"><input type="checkbox" id="save" v-model="saveLogin"/> {{l('login.save')}}</label>
                     </div>
+                    <div class="mb-3">
+                        <label for="autoLogin"><input type="checkbox" id="autoLogin" v-model="autoLogin" :disabled="!saveLogin" @change="onAutoLoginChange"/> {{l('login.auto')}}</label>
+                    </div>
                     <div class="mb-3" style="text-align:right">
                         <button class="btn btn-primary" @click="login()" :disabled="loggingIn">
                             {{l(loggingIn ? 'login.working' : 'login.submit')}}
@@ -94,6 +97,7 @@
     export default class Index extends Vue {
         showAdvanced = false;
         saveLogin = false;
+        autoLogin = false;
         loggingIn = false;
         characters?: ReadonlyArray<SimpleCharacter>;
         error = '';
@@ -117,11 +121,25 @@
                 await setGeneralSettings(settings);
             }
             if(settings.account.length > 0) this.saveLogin = true;
+            if(settings.horizonAutoLogin) this.autoLogin = true;
             this.settings = settings;
+            
+            // Auto-login if enabled and credentials are saved
+            if(this.autoLogin && this.saveLogin && settings.account.length > 0 && settings.password.length > 0) {
+                await this.login();
+            }
         }
 
         resetHost(): void {
             this.settings.host = new GeneralSettings().host;
+        }
+
+        async onAutoLoginChange(): Promise<void> {
+            if (!this.saveLogin) {
+                this.autoLogin = false;
+            }
+            this.settings.horizonAutoLogin = this.autoLogin;
+            await setGeneralSettings(this.settings);
         }
 
         get styling(): string {
@@ -152,9 +170,12 @@
                     NativeBackground.start();
                 });
                 core.connection.onEvent('closed', () => {
+                    console.log('[Index] connection closed, resetting to login');
                     Raven.setUserContext();
                     document.removeEventListener('backbutton', confirmBack);
                     NativeBackground.stop();
+                    this.characters = undefined;
+                    console.log('[Index] characters reset to:', this.characters);
                 });
                 this.characters = Object.keys(data.characters).map((name) => ({name, id: data.characters[name], deleted: false}))
                     .sort((x, y) => x.name.localeCompare(y.name));

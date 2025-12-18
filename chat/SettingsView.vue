@@ -8,7 +8,9 @@
     dialogClass="modal-70"
     iconClass="fas fa-user-gear"
   >
+    <!-- Desktop: Use tabs -->
     <tabs
+      v-if="!isMobile"
       style="flex-shrink: 0; margin-bottom: 10px"
       v-model="selectedTab"
       :fullWidth="true"
@@ -21,6 +23,15 @@
         l('settings.tabs.import')
       ]"
     ></tabs>
+    <!-- Mobile: Use dropdown, tabs do not fit -->
+    <select v-else class="form-select" v-model="selectedTab" style="flex-shrink: 0; margin-bottom: 10px">
+      <option value="0">{{ l('settings.tabs.chat') }}</option>
+      <option value="1">{{ l('settings.tabs.appearance') }}</option>
+      <option value="2">{{ l('settings.tabs.notifications') }}</option>
+      <option value="3">{{ l('settings.tabs.profiles') }}</option>
+      <option value="4">{{ l('settings.tabs.smartFilters') }}</option>
+      <option value="5">{{ l('settings.tabs.import') }}</option>
+    </select>
     <div class="warning">
       <h5>{{ l('warning.info') }}</h5>
       <div>
@@ -1200,6 +1211,16 @@
     risingCharacterTheme!: string | undefined;
 
     smartFilterTypes = smartFilterTypesOrigin;
+
+    get isMobile(): boolean {
+      const w = window as any;
+      const platformFlag = typeof w.__horizonPlatform === 'string' && w.__horizonPlatform.startsWith('mobile');
+      const hasNativeView = typeof w.NativeView !== 'undefined';
+      const ua = (navigator && navigator.userAgent ? navigator.userAgent : '').toLowerCase();
+      const isAndroidUA = ua.indexOf('android') !== -1;
+      const isAndroidAsset = typeof location !== 'undefined' && location.href.indexOf('android_asset') !== -1;
+      return platformFlag || hasNativeView || isAndroidUA || isAndroidAsset;
+    }
 
     async load(): Promise<void> {
       const settings = core.state.settings;
