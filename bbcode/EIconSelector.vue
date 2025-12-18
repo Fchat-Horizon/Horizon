@@ -919,10 +919,11 @@
             border: solid 1px transparent !important;
             position: relative;
 
-            &:hover:not(:active) {
-              background-color: var(--bs-light) !important;
-              border: solid 1px var(--bs-light) !important;
-
+            &:hover {
+              &:not(:active) {
+                background-color: var(--bs-light) !important;
+                border: solid 1px var(--bs-light) !important;
+              }
               .favorite-toggle {
                 visibility: visible !important;
               }
