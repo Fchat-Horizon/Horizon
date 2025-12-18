@@ -1,20 +1,20 @@
 @use 'sass:color';
 
-$scorePerfectMatchBg: #0093d2;
-$scorePerfectMatchFg: #0093d2;
-$scoreMatchBg: #006cb7;
-$scoreMatchFg: #006cb7;
-$scoreWeakMatchBg: #015486;
-$scoreWeakMatchFg: #015486;
+$scorePerfectMatchBg: #e467b8;
+$scorePerfectMatchFg: #e467b8;
+$scoreMatchBg: #317bd0;
+$scoreMatchFg: #317bd0;
+$scoreWeakMatchBg: #208601;
+$scoreWeakMatchFg: #208601;
 $scoreWeakMismatchBg: #606060;
 $scoreWeakMismatchFg: #606060;
 $scoreMismatchBg: #ab0000;
 $scoreMismatchFg: #ab0000;
 
-$scoreStandoutMatchBorderColor: #049ada;
-$scoreStandoutMatchBgColor: rgba(4, 132, 186, 0.47);
-$scoreStandoutWeakMatchBorderColor: #006cb7;
-$scoreStandoutWeakMatchBgColor: rgba(2, 91, 153, 0.4);
+$scoreStandoutMatchBorderColor: #317bd0;
+$scoreStandoutMatchBgColor: rgba(49, 123, 208, 0.47);
+$scoreStandoutWeakMatchBorderColor: rgb(18, 72, 1);
+$scoreStandoutWeakMatchBgColor: rgba(18, 72, 1, 0.4);
 $scoreStandoutNeutralBorderColor: rgba(0, 0, 0, 0);
 $scoreStandoutWeakMismatchBorderColor: #888;
 $scoreStandoutWeakMismatchBgColor: rgba(170, 170, 170, 0);
@@ -32,11 +32,17 @@ $genders: (
 );
 
 @each $gender, $color in $genders {
-  .gender-#{$gender} {
-    color: $color;
+  .gender-#{$gender},
+  .gender-icon-#{$gender} {
+    --gender-color: #{$color};
   }
 
-  .message-event .gender-#{$gender} {
-    color: color.scale($color, $lightness: 5%);
+  .gender-icon-#{$gender} {
+    color: var(--gender-color);
+  }
+
+  .message-event .gender-#{$gender},
+  .message-event .gender-icon-#{gender} {
+    --gender-color: #{color.scale($color, $lightness: 5%)};
   }
 }
