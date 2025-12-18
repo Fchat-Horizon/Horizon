@@ -1,5 +1,5 @@
 <template>
-  <select :value="modelValue" @change="onSelectChange" class="form-select">
+  <select v-model="value" @change="onSelectChange" class="form-select">
     <option
       v-for="character in characters"
       :key="character.id"
@@ -17,11 +17,11 @@
   import * as Utils from '../site/utils';
 
   const props = defineProps<{
-    modelValue?: number;
+    value: number;
   }>();
 
   const emit = defineEmits<{
-    (e: 'update:modelValue', value: number): void;
+    (e: 'update:value', value: number): void;
   }>();
 
   const characters = computed<SimpleCharacter[]>(() => Utils.characters);
@@ -30,6 +30,6 @@
     const target = evt.target as HTMLSelectElement;
     const newValue = parseInt(target.value, 10);
 
-    emit('update:modelValue', newValue);
+    emit('update:value', newValue);
   };
 </script>
