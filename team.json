@@ -36,6 +36,25 @@
           "Brindle Maycot"
         ]
       }
+    },
+    "staff": {
+      "Rose": {
+        "alias": "Rose As Mod",
+        "role": "Moderator",
+        "characters": ["Zheam Lucewing"]
+      }
+    },
+    "supporters": {
+      "Rose": {
+        "alias": "Rose As Supporter",
+        "characters": ["Zheam Lucewing"]
+      }
+    },
+    "sponsors": {
+      "Rose": {
+        "alias": "Rose As Sponsor",
+        "characters": ["Zheam Lucewing"]
+      }
     }
   }
 }
