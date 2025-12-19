@@ -20,10 +20,6 @@
         "alias": "Peel",
         "characters": ["Peel", "Inai", "Amaya Shigo"]
       },
-      "Fragile": {
-        "alias": "French Touch",
-        "characters": ["Suchiru", "Lurking Suchiru"]
-      },
       "Fops": {
         "alias": "Fops",
         "characters": ["3A Levi"]
@@ -35,38 +31,81 @@
           "Arianna the Latias",
           "Brindle Maycot"
         ]
+      },
+      "Grimokk": {
+        "characters": ["Grimokk", "Greyhoof"]
+      },
+      "Kara": {
+        "characters": ["Kara Ross"]
+      }
+    },
+    "translators": {
+      "Layne Autumnal": {
+        "characters": ["Layne Autumnal"],
+        "languages": ["French"]
+      },
+      "Regi Kaname": {
+        "alias": "Contri-bun-or",
+        "characters": ["Regi Kaname"],
+        "languages": ["Spanish"]
+      },
+      "Oni": {
+        "alias": "Oni",
+        "characters": ["Oni Mistress", "A Youngster Trainer"],
+        "languages": ["Spanish"]
+      },
+      "Fragile": {
+        "alias": "French Touch",
+        "characters": ["Suchiru", "Lurking Suchiru"],
+        "languages": ["French"]
       }
     },
     "staff": {
-      "Rose": {
-        "alias": "Rose As Mod",
-        "role": "Moderator",
-        "characters": ["Zheam Lucewing"]
+      "Snowsune": {
+        "alias": "Snowsune",
+        "characters": ["Vixi Argorrok", "Alice Prairie", "Rhettan"],
+        "roles": ["Contribution Manager"]
       },
-      "The Horizon Dev": {
-        "alias": "The Horizon Dev As Lead",
-        "role": "Lead Developer",
-        "characters": ["The Horizon Dev"]
+      "Shining Venus": {
+        "alias": "Shining Venus",
+        "characters": [
+          "Lillie Soluna",
+          "Heart Of Kalos",
+          "Venusian Blonde",
+          "Usagi-Tsukino",
+          "Morgendorffer Daria"
+        ],
+        "roles": ["Community Lead"]
+      },
+      "Lucirina": {
+        "alias": "Glutton",
+        "characters": [
+          "Callidora Genivee",
+          "Yuno Genivee",
+          "Lady Gluttony",
+          "Callistus Genivee",
+          "Phaedras",
+          "Charity Adelaide"
+        ],
+        "roles": ["Community Lead"]
+      },
+      "Bootsie": {
+        "alias": "Bootsie",
+        "characters": ["BootsieWootsie", "Isla Barnes"],
+        "roles": ["Assistant Development"]
       }
     },
-    "supporters": {
-      "Rose": {
-        "alias": "Rose As Supporter",
-        "characters": ["Zheam Lucewing"]
-      },
-      "The Horizon Dev": {
-        "alias": "",
-        "characters": ["The Horizon Dev"]
-      }
-    },
+    "supporters": {},
     "sponsors": {
-      "Rose": {
-        "alias": "Rose As Sponsor",
-        "characters": ["Zheam Lucewing"]
-      },
-      "The Horizon Dev": {
-        "alias": "",
-        "characters": ["The Horizon Dev"]
+      "Kyanto": {
+        "alias": "Horizon Bweh",
+        "characters": [
+          "Kyanto",
+          "Jesse Corgi",
+          "Aero Wind",
+          "Ashton Moshton",
+          "Kuro Tsukiko"
+        ]
       }
     }
   }
