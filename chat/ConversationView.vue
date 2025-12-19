@@ -1351,6 +1351,27 @@
       margin-right: 2px;
     }
 
+    // eventually we should make these one rule.
+    .user-translator {
+      font-size: 80%;
+      margin-right: 2px;
+    }
+
+    .user-staff {
+      font-size: 80%;
+      margin-right: 2px;
+    }
+
+    .user-supporter {
+      font-size: 80%;
+      margin-right: 2px;
+    }
+
+    .user-sponsor {
+      font-size: 80%;
+      margin-right: 2px;
+    }
+
     .user-gender {
       &.gender-male,
       &.gender-female,

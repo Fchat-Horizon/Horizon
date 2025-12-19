@@ -60,6 +60,34 @@
       color: mix($black, $info, 8 * 8%);
       font-weight: bold;
     }
+
+    &.character-badge-horizon-translator {
+      background-color: mix($white, $secondary, 10 * 8%);
+      border: 1px solid mix($white, $secondary, 9 * 8%);
+      color: mix($black, $secondary, 8 * 8%);
+      font-weight: bold;
+    }
+
+    &.character-badge-horizon-staff {
+      background-color: mix($white, $warning, 10 * 8%);
+      border: 1px solid mix($white, $warning, 9 * 8%);
+      color: mix($black, $warning, 8 * 8%);
+      font-weight: bold;
+    }
+
+    &.character-badge-horizon-supporter {
+      background-color: mix($white, $primary, 10 * 8%);
+      border: 1px solid mix($white, $primary, 9 * 8%);
+      color: mix($black, $primary, 8 * 8%);
+      font-weight: bold;
+    }
+
+    &.character-badge-horizon-sponsor {
+      background-color: mix($white, $purple, 10 * 8%);
+      border: 1px solid mix($white, $purple, 9 * 8%);
+      color: mix($black, $purple, 8 * 8%);
+      font-weight: bold;
+    }
   }
 }
 

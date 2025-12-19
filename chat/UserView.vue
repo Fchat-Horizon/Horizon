@@ -1,5 +1,7 @@
 <!-- Linebreaks inside this template will break BBCode views -->
 <template>
+  <!-- I struggle to see a reality where the horsefucker (you know who you are)
+  makes code worse then this. -->
   <span
     :class="userClass"
     v-bind:bbcodeTag.prop="'user'"
@@ -17,9 +19,29 @@
     ></span
     ><span v-if="!!statusClass" :class="statusClass"></span
     ><span v-if="!!rankIcon" :class="rankIcon"></span
-    ><span v-if="!!devIcon" :class="devIcon"></span
-    ><span v-if="!!contributorIcon" :class="contributorIcon"></span>
-    <span v-if="!!smartFilterIcon" :class="smartFilterIcon"></span
+    ><span v-if="!!devIcon" :class="devIcon" title="Horizon Maintainer"></span
+    ><span
+      v-if="!!contributorIcon"
+      :class="contributorIcon"
+      :title="contributorTitle"
+    ></span
+    ><span
+      v-if="!!translatorIcon"
+      :class="translatorIcon"
+      :title="translatorTitle"
+    ></span
+    ><span v-if="!!staffIcon" :class="staffIcon" :title="staffTitle"></span
+    ><span
+      v-if="!!supporterIcon"
+      :class="supporterIcon"
+      :title="supporterTitle"
+    ></span
+    ><span
+      v-if="!!sponsorIcon"
+      :class="sponsorIcon"
+      :title="sponsorTitle"
+    ></span
+    ><span v-if="!!smartFilterIcon" :class="smartFilterIcon"></span
     >{{ character.name
     }}<span v-if="!!matchClass" :class="matchClass">{{
       getMatchScoreTitle(matchScore)
@@ -36,7 +58,21 @@
   import { EventBus } from './preview/event-bus';
   import { kinkMatchWeights, Scoring } from '../learn/matcher-types';
   import { characterImage } from './common';
-  import { isHorizonDev, isHorizonContributor } from './profile_api';
+  import {
+    getContributorAlias,
+    getTranslatorAlias,
+    getTranslatorLanguages,
+    getSponsorAlias,
+    getStaffAlias,
+    getStaffRole,
+    getSupporterAlias,
+    isHorizonContributor,
+    isHorizonTranslator,
+    isHorizonDev,
+    isHorizonSponsor,
+    isHorizonStaff,
+    isHorizonSupporter
+  } from './profile_api';
   import { CharacterColor } from './../fchat/characters';
 
   export function getStatusIcon(status: Character.Status): string {
@@ -92,6 +128,10 @@
     rankIcon: string | null;
     devIcon: string | null;
     contributorIcon: string | null;
+    translatorIcon: string | null;
+    staffIcon: string | null;
+    supporterIcon: string | null;
+    sponsorIcon: string | null;
     smartFilterIcon: string | null;
     genderClass: string | null;
     statusClass: string | null;
@@ -147,6 +187,40 @@
       core.state.settings.horizonShowDeveloperBadges
     ) {
       contributorIcon = 'fa fa-code';
+    }
+
+    let translatorIcon: string | null = null;
+    if (
+      isHorizonTranslator(character.name) &&
+      core.state.settings.horizonShowDeveloperBadges
+    ) {
+      translatorIcon = 'fa fa-language';
+    }
+
+    let staffIcon: string | null = null;
+    let supporterIcon: string | null = null;
+    let sponsorIcon: string | null = null;
+
+    // should likely change this icon later, lets get the pr out first
+    if (
+      isHorizonStaff(character.name) &&
+      core.state.settings.horizonShowDeveloperBadges
+    ) {
+      staffIcon = 'fa fa-id-badge';
+    }
+
+    if (
+      isHorizonSupporter(character.name) &&
+      core.state.settings.horizonShowDeveloperBadges
+    ) {
+      supporterIcon = 'fa fa-handshake';
+    }
+
+    if (
+      isHorizonSponsor(character.name) &&
+      core.state.settings.horizonShowDeveloperBadges
+    ) {
+      sponsorIcon = 'fa fa-cookie';
     }
 
     if (showStatus || character.status === 'crown')
@@ -238,6 +312,12 @@
       contributorIcon: contributorIcon
         ? `user-contributor ${contributorIcon}`
         : null,
+      translatorIcon: translatorIcon
+        ? `user-translator ${translatorIcon}`
+        : null,
+      staffIcon: staffIcon ? `user-staff ${staffIcon}` : null,
+      supporterIcon: supporterIcon ? `user-supporter ${supporterIcon}` : null,
+      sponsorIcon: sponsorIcon ? `user-sponsor ${sponsorIcon}` : null,
       statusClass: statusClass ? `user-status ${statusClass}` : null,
       matchClass,
       matchScore,
@@ -286,6 +366,10 @@
     rankIcon: string | null = null;
     devIcon: string | null = null;
     contributorIcon: string | null = null;
+    translatorIcon: string | null = null;
+    staffIcon: string | null = null;
+    supporterIcon: string | null = null;
+    sponsorIcon: string | null = null;
     smartFilterIcon: string | null = null;
     genderClass: string | null = null;
     statusClass: string | null = null;
@@ -379,6 +463,10 @@
       this.rankIcon = res.rankIcon;
       this.devIcon = res.devIcon;
       this.contributorIcon = res.contributorIcon;
+      this.translatorIcon = res.translatorIcon;
+      this.staffIcon = res.staffIcon;
+      this.supporterIcon = res.supporterIcon;
+      this.sponsorIcon = res.sponsorIcon;
       this.smartFilterIcon = res.smartFilterIcon;
       this.genderClass = res.genderClass;
       this.statusClass = res.statusClass;
@@ -447,6 +535,37 @@
 
     get safeAvatarUrl(): string {
       return this.avatarUrl || '';
+    }
+
+    get staffTitle(): string {
+      const alias = getStaffAlias(this.character.name);
+      const role = getStaffRole(this.character.name);
+      if (alias && role) return `Horizon Staff (${role}) "${alias}"`;
+      if (alias) return `Horizon Staff "${alias}"`;
+      return role ? `Horizon Staff (${role})` : 'Horizon Staff';
+    }
+
+    get contributorTitle(): string {
+      const alias = getContributorAlias(this.character.name);
+      return alias ? `Horizon Contributor "${alias}"` : 'Horizon Contributor';
+    }
+
+    get translatorTitle(): string {
+      const alias = getTranslatorAlias(this.character.name);
+      const langs = getTranslatorLanguages(this.character.name);
+      const langLabel = langs.length > 0 ? ` (${langs.join(', ')})` : '';
+      if (alias) return `Horizon Translator${langLabel} "${alias}"`;
+      return `Horizon Translator${langLabel}`;
+    }
+
+    get supporterTitle(): string {
+      const alias = getSupporterAlias(this.character.name);
+      return alias ? `Horizon Supporter "${alias}"` : 'Horizon Supporter';
+    }
+
+    get sponsorTitle(): string {
+      const alias = getSponsorAlias(this.character.name);
+      return alias ? `Horizon Sponsor "${alias}"` : 'Horizon Sponsor';
     }
   }
 </script>
