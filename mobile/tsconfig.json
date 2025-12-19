@@ -12,7 +12,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "esModuleInterop": true
-
   },
   "include": ["chat.ts", "../**/*.d.ts"]
 }

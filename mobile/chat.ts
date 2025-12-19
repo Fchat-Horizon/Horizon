@@ -35,53 +35,74 @@
  * @see {@link https://github.com/f-list/exported|GitHub repo}
  */
 import Axios from 'axios';
-import {init as initCore} from '../chat/core';
-import {setupRaven} from '../chat/vue-raven';
+import { init as initCore } from '../chat/core';
+import { setupRaven } from '../chat/vue-raven';
 import Socket from '../chat/WebSocket';
 import Connection from '../fchat/connection';
-import {appVersion, Logs, SettingsStore} from './filesystem';
+import { appVersion, Logs, SettingsStore } from './filesystem';
 import Index from './Index.vue';
 import Notifications from './notifications';
 import { GeneralSettings } from './filesystem'; // Updated import to use GeneralSettings from mobile filesystem
 
-const version = (<{version: string}>require('./package.json')).version; //tslint:disable-line:no-require-imports
+const version = (<{ version: string }>require('./package.json')).version; //tslint:disable-line:no-require-imports
 
 let connection: any;
 let initialized = false;
 
-(<any>window)['setupPlatform'] = (platform: string) => { //tslint:disable-line:no-any
-    if(initialized) return;
-    initialized = true;
+(<any>window)['setupPlatform'] = (platform: string) => {
+  //tslint:disable-line:no-any
+  if (initialized) return;
+  initialized = true;
 
-    (window as any).__horizonPlatform = `mobile-${platform}`;
-    Axios.defaults.params = { __fchat: `mobile-${platform}/${version}` };
+  (window as any).__horizonPlatform = `mobile-${platform}`;
+  Axios.defaults.params = { __fchat: `mobile-${platform}/${version}` };
 
-    if(process.env.NODE_ENV === 'production')
-        setupRaven('https://a9239b17b0a14f72ba85e8729b9d1612@sentry.f-list.net/2', `mobile-${version}`);
+  if (process.env.NODE_ENV === 'production')
+    setupRaven(
+      'https://a9239b17b0a14f72ba85e8729b9d1612@sentry.f-list.net/2',
+      `mobile-${version}`
+    );
 
-    connection = new Connection('F-Chat 3.0 (Mobile)', appVersion, Socket);
-    initCore(connection, new GeneralSettings() as any, Logs, SettingsStore, Notifications); // Using GeneralSettings from mobile filesystem
+  connection = new Connection('F-Chat 3.0 (Mobile)', appVersion, Socket);
+  initCore(
+    connection,
+    new GeneralSettings() as any,
+    Logs,
+    SettingsStore,
+    Notifications
+  ); // Using GeneralSettings from mobile filesystem
 
-    new Index({ //tslint:disable-line:no-unused-expression
-        el: '#app'
-    });
+  new Index({
+    //tslint:disable-line:no-unused-expression
+    el: '#app'
+  });
 };
 function startApp(platform: string) {
-    if(initialized) return;
-    initialized = true;
+  if (initialized) return;
+  initialized = true;
 
-    (window as any).__horizonPlatform = `mobile-${platform}`;
-    Axios.defaults.params = { __fchat: `mobile-${platform}/${version}` };
+  (window as any).__horizonPlatform = `mobile-${platform}`;
+  Axios.defaults.params = { __fchat: `mobile-${platform}/${version}` };
 
-    if(process.env.NODE_ENV === 'production')
-        setupRaven('https://a9239b17b0a14f72ba85e8729b9d1612@sentry.f-list.net/2', `mobile-${version}`);
+  if (process.env.NODE_ENV === 'production')
+    setupRaven(
+      'https://a9239b17b0a14f72ba85e8729b9d1612@sentry.f-list.net/2',
+      `mobile-${version}`
+    );
 
-    connection = new Connection('Horizon Mobile', appVersion, Socket);
-    initCore(connection, new GeneralSettings() as any, Logs, SettingsStore, Notifications);
+  connection = new Connection('Horizon Mobile', appVersion, Socket);
+  initCore(
+    connection,
+    new GeneralSettings() as any,
+    Logs,
+    SettingsStore,
+    Notifications
+  );
 
-    new Index({ //tslint:disable-line:no-unused-expression
-        el: '#app'
-    });
+  new Index({
+    //tslint:disable-line:no-unused-expression
+    el: '#app'
+  });
 }
 
 (<any>window)['setupPlatform'] = (platform: string) => startApp(platform); //tslint:disable-line:no-any

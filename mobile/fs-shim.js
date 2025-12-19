@@ -5,35 +5,35 @@ console.log('[fs-shim] Loading fs shim module');
 
 // Provide stubs that won't crash if called
 module.exports = {
-  read: function() {
+  read: function () {
     console.warn('[fs-shim] fs.read called but not implemented');
   },
-  readFile: function() {
+  readFile: function () {
     console.warn('[fs-shim] fs.readFile called but not implemented');
   },
-  readFileSync: function() {
+  readFileSync: function () {
     console.warn('[fs-shim] fs.readFileSync called but not implemented');
     return '';
   },
-  writeFile: function() {
+  writeFile: function () {
     console.warn('[fs-shim] fs.writeFile called but not implemented');
   },
-  writeFileSync: function() {
+  writeFileSync: function () {
     console.warn('[fs-shim] fs.writeFileSync called but not implemented');
   },
-  existsSync: function() {
+  existsSync: function () {
     return false;
   },
-  mkdirSync: function() {
+  mkdirSync: function () {
     console.warn('[fs-shim] fs.mkdirSync called but not implemented');
   },
-  readdirSync: function() {
+  readdirSync: function () {
     return [];
   },
-  statSync: function() {
+  statSync: function () {
     return { isDirectory: () => false, isFile: () => false };
   },
-  unlinkSync: function() {
+  unlinkSync: function () {
     console.warn('[fs-shim] fs.unlinkSync called but not implemented');
-  },
+  }
 };
