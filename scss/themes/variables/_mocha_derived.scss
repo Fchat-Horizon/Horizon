@@ -1,0 +1,16 @@
+$blue-color: $blue-color;
+
+.vanillaTextColors {
+  .blackText,
+  .blackNameText {
+    @include text-outline($gray-600);
+  }
+}
+
+.bbcodeGlow {
+  // Dark theme, outline black text
+  .blackText,
+  .blackNameText {
+    @include text-outline($gray-600);
+  }
+}
