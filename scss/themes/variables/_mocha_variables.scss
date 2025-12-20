@@ -1,0 +1,139 @@
+@use 'sass:color';
+
+//Mocha colors
+$mocha-bg: #1e1e2e;
+$mocha-current-line: #313244;
+$mocha-foreground: #cdd6f4;
+$mocha-comment: #9399b2;
+$mocha-lavender: #b4befe;
+$mocha-blue: #89b4fa;
+$mocha-cyan: #89dceb;
+$mocha-green: #a6e3a1;
+$mocha-orange: #fab387;
+$mocha-pink: #f5c2e7;
+$mocha-purple: #cba6f7;
+$mocha-red: #f38ba8;
+$mocha-yellow: #f9e2af;
+
+// Base colors, used for pretty much everything.
+// On dark based themes these are inverted in order to cooperate with bootstrap which assumes that all themes are light based.
+$gray-base: $mocha-bg;
+$white: $gray-base;
+$gray-100: #313244;
+$gray-200: #45475a;
+$gray-300: #585b70;
+$gray-400: #6c7086;
+$gray-500: #7f849c;
+$gray-600: #9399b2;
+$gray-700: #a6adc8;
+$gray-800: #bac2de;
+$gray-900: color.scale($gray-800, $lightness: 10%);
+$black: $mocha-foreground;
+
+// Bootstrap 5 contrast colors
+$light-color: $mocha-foreground;
+$dark-color: $mocha-bg;
+$component-active-color: $light-color;
+
+$primary: $mocha-lavender;
+$secondary: $gray-400;
+$success: $mocha-green;
+$info: $mocha-comment;
+$warning: $mocha-orange;
+$danger: $mocha-red;
+$light: $mocha-bg;
+$text-muted: $gray-500;
+$text-dark: $gray-600;
+$component-active-color: $gray-base;
+
+// Core page element colors
+$body-bg: $gray-base;
+$link-color: $primary;
+$link-hover-color: color.scale($primary, $lightness: 50%);
+$dropdown-bg: $gray-100;
+$dropdown-divider-bg: $gray-200;
+
+// Modal Dialogs
+$modal-backdrop-bg: $white;
+$modal-content-bg: #181825;
+$modal-header-border-color: $mocha-bg;
+
+// Reduce default padding slightly between columns in grids.
+$grid-gutter-width: 20px;
+
+// Form Elements
+$input-bg: $gray-100;
+$input-color: $black;
+$custom-select-bg: $gray-600;
+$form-check-input-checked-bg-color: $mocha-lavender;
+
+// List groups
+$list-group-bg: $gray-100;
+$list-group-hover-bg: $gray-200;
+
+// Pagination
+$pagination-active-color: $link-color;
+
+// F-List specific color helpers to help make monochromatic themes easier to deal with.
+$text-background-color: $gray-100;
+$text-background-color-disabled: $gray-base;
+
+// F-List Rising
+$scorePerfectMatchBg: rgb(0, 173, 173);
+$scorePerfectMatchFg: rgb(29, 154, 154);
+$scoreMatchBg: rgb(0, 142, 0);
+$scoreMatchFg: rgb(0, 113, 0);
+$scoreWeakMatchBg: rgb(0, 80, 0);
+$scoreWeakMatchFg: rgb(0, 64, 0);
+$scoreWeakMismatchBg: rgb(152, 134, 0);
+$scoreWeakMismatchFg: rgb(142, 126, 0);
+$scoreMismatchBg: rgb(171, 0, 0);
+$scoreMismatchFg: rgb(128, 0, 0);
+$scoreTitleColor: white;
+$scoreMinimizeButtonFg: set-alpha($mocha-foreground, 0.7);
+$scoreMinimizeButtonBg: rgba(0, 0, 0, 0.2);
+$scoreReportBg: rgba(0, 0, 0, 0.2);
+
+$scoreFadedPerfectMatchBg: color.scale($scorePerfectMatchBg, $alpha: -60%);
+$scoreFadedPerfectMatchFg: color.scale($scorePerfectMatchFg, $alpha: -60%);
+$scoreFadedMatchBg: color.scale($scoreMatchBg, $alpha: -60%);
+$scoreFadedMatchFg: color.scale($scoreMatchFg, $alpha: -60%);
+$scoreFadedWeakMatchBg: color.scale($scoreWeakMatchBg, $alpha: -60%);
+$scoreFadedWeakMatchFg: color.scale($scoreWeakMatchFg, $alpha: -60%);
+$scoreFadedWeakMismatchBg: color.scale($scoreWeakMismatchBg, $alpha: -60%);
+$scoreFadedWeakMismatchFg: color.scale($scoreWeakMismatchFg, $alpha: -60%);
+$scoreFadedMismatchBg: color.scale($scoreMismatchBg, $alpha: -60%);
+$scoreFadedMismatchFg: color.scale($scoreMismatchFg, $alpha: -60%);
+
+$scoreStandoutMatchBorderColor: $mocha-green;
+$scoreStandoutMatchBgColor: set-alpha(
+  color.scale($mocha-green, $saturation: 5.63%, $lightness: -5.88%),
+  0.471
+);
+$scoreStandoutWeakMatchBorderColor: #014a01;
+$scoreStandoutWeakMatchBgColor: rgba(0, 79, 0, 0.4);
+$scoreStandoutNeutralBorderColor: $gray-100;
+$scoreStandoutWeakMismatchBorderColor: #8a7b00;
+$scoreStandoutWeakMismatchBgColor: rgba(208, 188, 0, 0);
+$scoreStandoutMismatchBorderColor: #841a1a;
+
+$characterImageWrapperBg: rgba(0, 0, 0, 0.2);
+$characterGuestbookPostBg: rgba(0, 0, 0, 0.15);
+$characterGuestbookPostBorderColor: rgba(255, 255, 255, 0.1);
+$characterGuestbookReplyBg: rgba(0, 0, 0, 0.1);
+$characterGuestbookTimestampFg: rgba(255, 255, 255, 0.3);
+$characterKinkCustomColor: $mocha-yellow;
+$characterKinkCustomBorderColor: rgba(255, 255, 255, 0.1);
+$characterKinkStockColor: #ededf6;
+$characterKinkStockHighlightedColor: #ffffff;
+$characterInfotagColor: rgba(255, 255, 255, 0.7);
+
+$messageTimeBgColor: $mocha-current-line;
+$messageTimeFgColor: $mocha-foreground;
+
+$headerBackgroundMaskColor: $gray-100;
+
+$linkForcedColor: $mocha-foreground;
+$tabSecondaryFgColor: set-alpha($mocha-foreground, 0.5);
+
+@import 'invert';

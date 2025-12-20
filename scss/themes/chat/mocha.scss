@@ -1,0 +1,84 @@
+@use 'sass:color';
+@import '~bootstrap/scss/functions';
+@import '../../functions';
+@import '../variables/mocha_variables';
+@import '~bootstrap/scss/variables';
+@import '../../flist_derived';
+@import '../variables/mocha_derived';
+
+//BBCode colors.
+$red-color: $mocha-red;
+$green-color: $mocha-green;
+$blue-color: $mocha-blue;
+$yellow-color: $mocha-yellow;
+$purple-color: $mocha-purple;
+$cyan-color: $mocha-cyan;
+$white-color: $mocha-foreground;
+$black-color: $mocha-comment;
+$brown-color: #b89383;
+$pink-color: $mocha-pink;
+$gray-color: $gray-600;
+$orange-color: $mocha-orange;
+
+// Apply variables to theme.
+@import '../chat';
+
+.list-group.conversation-nav
+  .list-group-item-action.item-private.active
+  .online-status {
+  color: color-contrast($primary);
+}
+
+@each $gender, $color in $genders {
+  .gender-#{$gender},
+  .gender-icon-#{$gender} {
+    --gender-color: #{$color};
+  }
+
+  .gender-icon-#{$gender},
+  .message-event .gender-icon-#{gender} {
+    color: var(--gender-color);
+  }
+
+  .message-event .gender-#{$gender} {
+    --gender-color: #{color.scale($color, $lightness: 5%)};
+  }
+}
+
+.message-warn {
+  background-color: rgba($mocha-red, 0.5);
+  color: $mocha-foreground;
+}
+
+.message-highlight {
+  background-color: rgba($mocha-green, 0.25);
+}
+
+.message-own:not(.message-warn) {
+  background-color: rgba($gray-200, 0.7);
+}
+
+.colorblindMode {
+  @import '../colorblind';
+  @import '../../rising';
+
+  @each $varName, $value in $risingVariables {
+    --#{$varName}: #{$value};
+  }
+}
+
+.modal-body {
+  background-color: rgb(0, 0, 0, 0);
+}
+
+.modal-header {
+  background-color: #181825;
+}
+
+.border-bottom {
+  background-color: #181825;
+}
+
+:root {
+  color-scheme: dark;
+}
