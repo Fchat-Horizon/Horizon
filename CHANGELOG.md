@@ -5,9 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). You can also read it on our [website](https://fchat-horizon.github.io/docs/changelog.html).
 
+# [Unreleased]
+
+## [1.35.5] XX-12-2025
+
+### Added
+
+- Search results in the EIcon selector now go well beyond 300, you can scroll down the results to load more. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/18457eda25f91180e1540290e4fa842faebf4859)
+  - Thank you, @freenutsxd
+- Dragging pinned EIcons in the EIcon selector's favorites tab now reorders them. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a3a103080f68f6b28220c7cb7c8cf54af8732d80)
+- Added a Catpuccin "Moccha" theme. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dba8afcdb5957893deab2443432ab4d8cb420dcd)
+
+### Changed
+
+- Drastically improved detection of your browser for the "Open in incognito mode" right click option. Linux is now supported as well [[Improvements]](https://github.com/Fchat-Horizon/Horizon/commit/3737b0ea3ad8039a9faba690256b3c6847095a28) [[Linux]](https://github.com/Fchat-Horizon/Horizon/commit/e82f2b0028801608cf91028346e578f2bd51fcd6)
+  - Due to Safari not supporting Private Mode flags for the command line, MacOS support for this feature has not yet been added.
+- If you try and change the server host, you'll now get a warning asking you if you are _really_ sure. This is an advanced option after all. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8c626f023e42842077574afad81fca4de1537044)
+- Adjusted some matching/ kink-related colors in colorblind mode for better contrast. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/745da3f83cb008067ad310478d9c0db954fa8a82)
+- Updated localization files.
+
+### Fixed
+
+- Fixed user avatars being cut off slightly in the conversation list. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d00f1cdfd1d1d716bd9b4ddc9a1d7bc1db1da6a7)
+- `[icon]` tags will now always use the file's aspect ratio. Useful for when your HQ portrait is vertical or horizontal. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f5225d4d3419a2a973e10ceebf6231c318192124)
+
+### Development
+
+- Updated to Electron v39.2.7 (from v38.7.0) [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ef558d49c653aace1adff0133b1483d9f4b45eb3)
+  - This should fix various issues under Linux, like warped fonts on some desktop compositors.
+- Converted `components/character_select.vue` to the composition API. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b304f49b9d0ec6bd6543bfdb6afbe2fd95cbc281)
+
+### Merged pull requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/541 by @FatCatClient and @CodingWithAnxiety
+- https://github.com/Fchat-Horizon/Horizon/pull/542 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/544 by @min-xy
+  - This is their first contribution! 🎉
+- https://github.com/Fchat-Horizon/Horizon/pull/545 by @CodingWithAnxiety
+- https://github.com/Fchat-Horizon/Horizon/pull/553 by @AriannaAltomare
+- https://github.com/Fchat-Horizon/Horizon/pull/556 by @astrayblackcat
+
 # [Releases]
 
-## [1.35.4] - 04-11-2025
+## [1.35.4] - 11-12-2025
 
 ### Fixed
 
