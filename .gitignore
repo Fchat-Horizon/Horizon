@@ -1,4 +1,6 @@
 node_modules/
+.turbo/
+.pnpm-store/
 /electron/app
 /electron/dist
 /electron/release_artifacts

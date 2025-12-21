@@ -1,0 +1,4 @@
+packages:
+  - 'electron'
+  - 'mobile'
+  - 'scss'
