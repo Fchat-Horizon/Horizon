@@ -260,8 +260,8 @@ importers:
         specifier: ^14.0.0
         version: 14.0.2
       electron:
-        specifier: 39.2.7
-        version: 39.2.7(supports-color@10.0.0)
+        specifier: 38.7.0
+        version: 38.7.0(supports-color@10.0.0)
       electron-builder:
         specifier: ^26.3.2
         version: 26.4.0(electron-builder-squirrel-windows@25.1.8)(supports-color@10.0.0)

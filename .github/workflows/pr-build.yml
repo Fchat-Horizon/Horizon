@@ -46,7 +46,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm install --frozen-lockfile
       - name: Prettier Format Check
         run: |
           pnpm check
