@@ -7,24 +7,27 @@
 </template>
 
 <script lang="ts">
-  import * as _ from 'lodash';
-  import { Component } from '@f-list/vue-ts';
-  import Vue from 'vue';
+  import { defineComponent, ref } from 'vue';
 
   import { BBCodeView } from './view';
   import { StandardBBCodeParser } from './standard';
 
   const standardParser = new StandardBBCodeParser();
 
-  @Component({
+  export default defineComponent({
+    name: 'BBCodeTester',
     components: {
       bbcode: BBCodeView(standardParser)
+    },
+    setup() {
+      const code =
+        ref('[center][heading][collapse=Testing Collapse][url=https://google.com/]This is a link [/url][/collapse][/heading][/center]');
+
+      return {
+        code
+      };
     }
-  })
-  export default class BBCodeTester extends Vue {
-    code =
-      '[center][heading][collapse=Testing Collapse][url=https://google.com/]This is a link [/url][/collapse][/heading][/center]';
-  }
+  });
 </script>
 
 <style lang="scss"></style>
