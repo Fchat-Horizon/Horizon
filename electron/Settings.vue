@@ -1301,8 +1301,12 @@
 
     filterLanguage(
       filter: RegExp,
-      languageEntry: { lang: string; name: string }
+      languageEntry: { lang: string; name: string } | string
     ): boolean {
+      if (typeof languageEntry === 'string') {
+        return filter.test(this.formatLanguage(languageEntry));
+      }
+
       return filter.test(languageEntry.name);
     }
 
