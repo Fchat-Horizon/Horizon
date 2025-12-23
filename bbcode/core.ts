@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import {
   BBCodeCustomTag,
   BBCodeParser,
@@ -8,6 +9,7 @@ import * as Utils from '../site/utils';
 import { default as IconView } from '../bbcode/IconView.vue';
 import UrlTagView from './UrlTagView.vue';
 import core from '../chat/core';
+import { mountComponent } from '../helpers/mount-component';
 
 const urlFormat = '((?:https?|ftps?|irc)://[^\\s/$.?#"\']+\\.[^\\s"]+)';
 export const findUrlRegex = new RegExp(`(\\[url[=\\]]\\s*)?${urlFormat}`, 'gi');
@@ -90,11 +92,8 @@ export class CoreBBCodeParser extends BBCodeParser {
         const el = parser.createElement('span');
         parent.appendChild(root);
         root.appendChild(el);
-        const view = new IconView({
-          el,
-          propsData: {
-            character: core.characters.get(content)
-          }
+        const view = mountComponent(IconView, el, {
+          character: core.characters.get(content)
         });
 
         this.cleanup.push(view);
@@ -147,13 +146,10 @@ export class CoreBBCodeParser extends BBCodeParser {
           return;
         }
 
-        const view = new UrlTagView({
-          el: root,
-          propsData: {
-            url: tagData.url,
-            text: tagData.textContent,
-            domain: tagData.domain
-          }
+        const view = mountComponent(UrlTagView, root, {
+          url: tagData.url,
+          text: tagData.textContent,
+          domain: tagData.domain
         });
         this.cleanup.push(view);
 

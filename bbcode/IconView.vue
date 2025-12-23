@@ -20,74 +20,76 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
-  import Vue from 'vue';
+  import { defineComponent, onBeforeUnmount, onDeactivated, PropType } from 'vue';
   import { EventBus } from '../chat/preview/event-bus';
   import * as Utils from '../site/utils';
   import { characterImage } from '../chat/common';
   import { Character } from '../fchat';
 
-  @Component
-  export default class IconView extends Vue {
-    Utils = Utils;
-    characterImage = characterImage;
+  export default defineComponent({
+    name: 'IconView',
+    props: {
+      character: {
+        type: Object as PropType<Character>,
+        required: true
+      },
+      useOriginalAvatar: {
+        type: Boolean,
+        default: false
+      }
+    },
+    setup(props) {
+      const getCharacterUrl = () => `flist-character://${props.character.name}`;
 
-    @Prop({ required: true })
-    readonly character!: Character;
+      const dismiss = (force = false) => {
+        // if (!this.preview) {
+        //   return;
+        // }
 
-    @Prop()
-    readonly useOriginalAvatar: boolean = false;
+        EventBus.$emit('imagepreview-dismiss', {
+          url: getCharacterUrl(),
+          force
+        });
+      };
 
-    @Hook('mounted')
-    mounted(): void {
-      // do nothing
-    }
+      const show = () => {
+        // if (!this.preview) {
+        //   return;
+        // }
 
-    @Hook('beforeDestroy')
-    beforeDestroy(): void {
-      this.dismiss();
-    }
+        EventBus.$emit('imagepreview-show', { url: getCharacterUrl() });
+      };
 
-    @Hook('deactivated')
-    deactivate(): void {
-      this.dismiss();
-    }
+      const toggleStickyness = () => {
+        // if (!this.preview) {
+        //   return;
+        // }
 
-    getCharacterUrl(): string {
-      return `flist-character://${this.character.name}`;
-    }
+        EventBus.$emit('imagepreview-toggle-stickyness', {
+          url: getCharacterUrl()
+        });
+      };
 
-    dismiss(force: boolean = false): void {
-      // if (!this.preview) {
-      //   return;
-      // }
+      const onImageError = () => {
+        props.character.overrides.avatarUrl = undefined;
+      };
 
-      EventBus.$emit('imagepreview-dismiss', {
-        url: this.getCharacterUrl(),
-        force
+      onBeforeUnmount(() => {
+        dismiss();
       });
-    }
 
-    show(): void {
-      // if (!this.preview) {
-      //   return;
-      // }
-
-      EventBus.$emit('imagepreview-show', { url: this.getCharacterUrl() });
-    }
-
-    toggleStickyness(): void {
-      // if (!this.preview) {
-      //   return;
-      // }
-
-      EventBus.$emit('imagepreview-toggle-stickyness', {
-        url: this.getCharacterUrl()
+      onDeactivated(() => {
+        dismiss();
       });
-    }
 
-    onImageError(): void {
-      this.character.overrides.avatarUrl = undefined;
+      return {
+        Utils,
+        characterImage,
+        dismiss,
+        show,
+        toggleStickyness,
+        onImageError
+      };
     }
-  }
+  });
 </script>

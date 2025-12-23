@@ -12,6 +12,7 @@ import ChannelView from './ChannelTagView.vue';
 import core from './core';
 // import {Character} from './interfaces';
 import UserView from './UserView.vue';
+import { mountComponent } from '../helpers/mount-component';
 
 export class Editor extends BaseEditor {
   parser = core.bbCodeParser;
@@ -50,14 +51,11 @@ export default class BBCodeParser extends CoreBBCodeParser {
         if (!uregex.test(content)) return;
         const el = parser.createElement('span');
         parent.appendChild(el);
-        const view = new UserView({
-          el,
-          propsData: {
-            character: core.characters.get(content),
-            isMarkerShown: core.connection.character
-              ? core.state.settings.horizonShowGenderMarker
-              : false
-          }
+        const view = mountComponent(UserView, el, {
+          character: core.characters.get(content),
+          isMarkerShown: core.connection.character
+            ? core.state.settings.horizonShowGenderMarker
+            : false
         });
         this.cleanup.push(view);
         return el;
@@ -69,10 +67,7 @@ export default class BBCodeParser extends CoreBBCodeParser {
         const el = parser.createElement('span');
         parent.appendChild(root);
         root.appendChild(el);
-        const view = new ChannelView({
-          el,
-          propsData: { id: content, text: param }
-        });
+        const view = mountComponent(ChannelView, el, { id: content, text: param });
         this.cleanup.push(view);
         return root;
       })
@@ -83,9 +78,9 @@ export default class BBCodeParser extends CoreBBCodeParser {
         const el = parser.createElement('span');
         parent.appendChild(root);
         root.appendChild(el);
-        const view = new ChannelView({
-          el,
-          propsData: { id: content, text: content }
+        const view = mountComponent(ChannelView, el, {
+          id: content,
+          text: content
         });
         this.cleanup.push(view);
         return root;
