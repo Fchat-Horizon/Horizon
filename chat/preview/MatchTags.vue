@@ -7,54 +7,38 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
-  import Vue from 'vue';
-  import { MatchReport, MatchResultScores } from '../../learn/matcher';
+  import { computed, defineComponent } from 'vue';
+  import { MatchReport } from '../../learn/matcher';
   import { TagId } from '../../learn/matcher-types';
 
-  @Component({
-    components: {}
-  })
-  export default class MatchTags extends Vue {
-    @Prop({ required: true })
-    readonly match!: MatchReport;
+  export default defineComponent({
+    name: 'MatchTags',
+    props: {
+      match: {
+        type: Object as () => MatchReport,
+        required: true
+      }
+    },
+    setup(props) {
+      const merged = computed(() => props.match.merged);
 
-    merged!: MatchResultScores;
+      const getTagDesc = (key: any) => {
+        // if (key === this.furryPreferenceId) {
+        //   return this.humanized ? 'Humans' : 'Anthros';
+        // }
 
-    // protected humanized: boolean = false;
-    //
-    // protected furryPreferenceId: string = '';
+        return TagId[key]
+          .toString()
+          .replace(/([A-Z])/g, ' $1')
+          .trim();
+      };
 
-    @Hook('mounted')
-    onMounted(): void {
-      this.merged = this.match.merged;
-      // this.humanized = false;
-      // this.furryPreferenceId = TagId.FurryPreference.toString();
-      //
-      // const furryPreference = Matcher.getTagValueList(TagId.FurryPreference, this.match.you.you);
-      //
-      // if (this.match.you.info.species === Species.Human && furryPreference === FurryPreference.HumansOnly) {
-      //   this.humanized = true;
-      // }
+      return {
+        merged,
+        getTagDesc
+      };
     }
-
-    // @Watch('match', { deep: true })
-    // onMatchUpdate(match: MatchReport): void {
-    //   // console.log('ON UPDATED ETA', match);
-    //   this.merged = match.merged;
-    // }
-
-    getTagDesc(key: any): any {
-      // if (key === this.furryPreferenceId) {
-      //   return this.humanized ? 'Humans' : 'Anthros';
-      // }
-
-      return TagId[key]
-        .toString()
-        .replace(/([A-Z])/g, ' $1')
-        .trim();
-    }
-  }
+  });
 </script>
 
 <style lang="scss">
