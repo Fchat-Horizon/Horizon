@@ -20,8 +20,7 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop } from '@f-list/vue-ts';
-  import Vue from 'vue';
+  import { computed, defineComponent } from 'vue';
   import { Infotag, InfotagGroup } from '../../interfaces';
   import { Store } from './data_store';
   import InfotagView from './infotag.vue';
@@ -29,28 +28,40 @@
   import { Character } from './interfaces';
   import l from '../../chat/localize';
 
-  @Component({
-    components: { infotag: InfotagView }
-  })
-  export default class InfotagsView extends Vue {
-    l = l;
-    @Prop({ required: true })
-    readonly character!: Character;
-    @Prop({ required: true })
-    readonly characterMatch!: MatchReport;
+  export default defineComponent({
+    name: 'InfotagsView',
+    components: { infotag: InfotagView },
+    props: {
+      character: {
+        type: Object as () => Character,
+        required: true
+      },
+      characterMatch: {
+        type: Object as () => MatchReport,
+        required: true
+      }
+    },
+    setup(props) {
+      const groups = computed(
+        () => Store.shared.infotagGroups as {
+          readonly [key: string]: Readonly<InfotagGroup>;
+        }
+      );
 
-    get groups(): { readonly [key: string]: Readonly<InfotagGroup> } {
-      return Store.shared.infotagGroups;
-    }
+      const getInfotags = (group: number): Infotag[] =>
+        Object.keys(Store.shared.infotags)
+          .map(x => Store.shared.infotags[x])
+          .filter(
+            x =>
+              x.infotag_group === group &&
+              props.character.character.infotags[x.id] !== undefined
+          );
 
-    getInfotags(group: number): Infotag[] {
-      return Object.keys(Store.shared.infotags)
-        .map(x => Store.shared.infotags[x])
-        .filter(
-          x =>
-            x.infotag_group === group &&
-            this.character.character.infotags[x.id] !== undefined
-        );
+      return {
+        l,
+        groups,
+        getInfotags
+      };
     }
-  }
+  });
 </script>
