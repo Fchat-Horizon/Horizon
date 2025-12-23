@@ -1,5 +1,6 @@
 <template>
   <modal
+    ref="dialogRef"
     id="reportDialog"
     :action="l('reportDialog.actionFor', name)"
     :disabled="!dataValid || submitting"
@@ -59,65 +60,72 @@
   </modal>
 </template>
 
-<script lang="ts">
-  import { Component, Prop } from '@f-list/vue-ts';
-  import CustomDialog from '../../components/custom_dialog';
+<script setup lang="ts">
+  import { computed, ref } from 'vue';
   import Modal from '../../components/Modal.vue';
   import * as Utils from '../utils';
   import { methods } from './data_store';
   import { Character } from './interfaces';
   import l from './../../chat/localize';
 
-  @Component({
-    components: { modal: Modal }
-  })
-  export default class ReportDialog extends CustomDialog {
-    l = l;
-    @Prop({ required: true })
-    readonly character!: Character;
-    ourCharacter = Utils.settings.defaultCharacter;
-    type = '';
-    violation = '';
-    message = '';
-    submitting = false;
-    ticketUrl = `${Utils.siteDomain}tickets/new`;
+  const props = defineProps<{
+    character: Character;
+  }>();
 
-    get name(): string {
-      return this.character.character.name;
-    }
+  const dialogRef = ref<InstanceType<typeof Modal>>();
+  const ourCharacter = ref(Utils.settings.defaultCharacter);
+  const type = ref('');
+  const violation = ref('');
+  const message = ref('');
+  const submitting = ref(false);
+  const ticketUrl = `${Utils.siteDomain}tickets/new`;
 
-    get dataValid(): boolean {
-      if (this.type === '' || this.type === 'takedown') return false;
-      if (this.message === '') return false;
-      if (this.type === 'profile' && this.violation === '') return false;
-      return true;
-    }
+  const name = computed(() => props.character.character.name);
 
-    async submitReport(): Promise<void> {
-      try {
-        this.submitting = true;
-        const message =
-          (this.type === 'profile'
-            ? `Reporting character for violation: ${this.violation}\n\n`
-            : '') + this.message;
-        await methods.characterReport({
-          subject:
-            (this.type === 'name_request'
-              ? 'Requesting name: '
-              : 'Reporting character: ') + this.name,
-          message,
-          character: this.ourCharacter,
-          type: this.type,
-          url: Utils.characterURL(this.name),
-          reported_character: this.character.character.id
-        });
-        this.submitting = false;
-        this.hide();
-        Utils.flashSuccess('Character reported.');
-      } catch (e) {
-        this.submitting = false;
-        Utils.ajaxError(e, 'Unable to report character');
-      }
+  const dataValid = computed(() => {
+    if (type.value === '' || type.value === 'takedown') return false;
+    if (message.value === '') return false;
+    if (type.value === 'profile' && violation.value === '') return false;
+    return true;
+  });
+
+  const show = (keepOpen?: boolean) => {
+    dialogRef.value?.show(keepOpen);
+  };
+
+  const hide = () => {
+    dialogRef.value?.hide();
+  };
+
+  const submitReport = async (): Promise<void> => {
+    try {
+      submitting.value = true;
+      const reportMessage =
+        (type.value === 'profile'
+          ? `Reporting character for violation: ${violation.value}\n\n`
+          : '') + message.value;
+      await methods.characterReport({
+        subject:
+          (type.value === 'name_request'
+            ? 'Requesting name: '
+            : 'Reporting character: ') + name.value,
+        message: reportMessage,
+        character: ourCharacter.value,
+        type: type.value,
+        url: Utils.characterURL(name.value),
+        reported_character: props.character.character.id
+      });
+      submitting.value = false;
+      hide();
+      Utils.flashSuccess('Character reported.');
+    } catch (e) {
+      submitting.value = false;
+      Utils.ajaxError(e, 'Unable to report character');
     }
-  }
+  };
+
+  defineExpose({
+    show,
+    hide
+  });
 </script>
