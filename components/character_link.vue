@@ -8,38 +8,47 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop } from '@f-list/vue-ts';
-  import Vue from 'vue';
+  import { computed, defineComponent, PropType } from 'vue';
   import { SimpleCharacter } from '../interfaces';
   import * as Utils from '../site/utils';
   import l from '../chat/localize';
 
-  @Component
-  export default class CharacterLink extends Vue {
-    l = l;
-    @Prop({ required: true })
-    readonly character!: SimpleCharacter | string;
-    @Prop({ default: '_blank' })
-    readonly target!: string;
+  export default defineComponent({
+    name: 'CharacterLink',
+    props: {
+      character: {
+        type: [Object, String] as PropType<SimpleCharacter | string>,
+        required: true
+      },
+      target: {
+        type: String,
+        default: '_blank'
+      }
+    },
+    setup(props) {
+      const name = computed(() =>
+        typeof props.character === 'string'
+          ? props.character
+          : props.character.name
+      );
 
-    get deleted(): boolean {
-      return typeof this.character === 'string'
-        ? false
-        : this.character.deleted;
-    }
+      const deleted = computed(() =>
+        typeof props.character === 'string' ? false : props.character.deleted
+      );
 
-    get linkClasses(): string {
-      return this.deleted ? 'characterLinkDeleted' : 'characterLink';
-    }
+      const linkClasses = computed(() =>
+        deleted.value ? 'characterLinkDeleted' : 'characterLink'
+      );
 
-    get characterUrl(): string {
-      return Utils.characterURL(this.name);
-    }
+      const characterUrl = computed(() => Utils.characterURL(name.value));
 
-    get name(): string {
-      return typeof this.character === 'string'
-        ? this.character
-        : this.character.name;
+      return {
+        l,
+        name,
+        deleted,
+        linkClasses,
+        characterUrl
+      };
     }
-  }
+  });
 </script>
