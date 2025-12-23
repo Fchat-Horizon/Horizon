@@ -13,32 +13,43 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
-  import Vue from 'vue';
+  import { computed, defineComponent, onMounted } from 'vue';
   import core from './core';
   import { Channel } from './interfaces';
 
-  @Component
-  export default class ChannelView extends Vue {
-    @Prop({ required: true })
-    readonly id!: string;
-    @Prop({ required: true })
-    readonly text!: string;
+  export default defineComponent({
+    name: 'ChannelView',
+    props: {
+      id: {
+        type: String,
+        required: true
+      },
+      text: {
+        type: String,
+        required: true
+      }
+    },
+    setup(props) {
+      const channel = computed<Channel.ListItem | undefined>(() =>
+        core.channels.getChannelItem(props.id)
+      );
 
-    @Hook('mounted')
-    mounted(): void {
-      core.channels.requestChannelsIfNeeded(300000);
-    }
+      const joinChannel = () => {
+        if (!channel.value || !channel.value.isJoined) {
+          core.channels.join(props.id);
+        }
+        const conversation = core.conversations.byKey(`#${props.id}`);
+        if (conversation !== undefined) conversation.show();
+      };
 
-    joinChannel(): void {
-      if (this.channel === undefined || !this.channel.isJoined)
-        core.channels.join(this.id);
-      const channel = core.conversations.byKey(`#${this.id}`);
-      if (channel !== undefined) channel.show();
-    }
+      onMounted(() => {
+        core.channels.requestChannelsIfNeeded(300000);
+      });
 
-    get channel(): Channel.ListItem | undefined {
-      return core.channels.getChannelItem(this.id);
+      return {
+        channel,
+        joinChannel
+      };
     }
-  }
+  });
 </script>
