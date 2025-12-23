@@ -46,9 +46,13 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop } from '@f-list/vue-ts';
+  import {
+    computed,
+    defineComponent,
+    getCurrentInstance,
+    PropType
+  } from 'vue';
   import cloneDeep = require('lodash/cloneDeep'); //tslint:disable-line:no-require-imports
-  import Vue from 'vue';
   import l from '../chat/localize';
 
   type ParamDictionary = { [key: string]: number | undefined };
@@ -57,62 +61,90 @@
     params?: ParamDictionary;
   }
 
-  @Component
-  export default class SimplePager extends Vue {
-    l = l;
-    @Prop({ default: () => l('pager.nextPage') })
-    readonly nextLabel!: string;
-    @Prop({ default: () => l('pager.previousPage') })
-    readonly prevLabel!: string;
-    @Prop({ required: true })
-    readonly next!: boolean;
-    @Prop({ required: true })
-    readonly prev!: boolean;
-    @Prop({ default: false })
-    readonly routed!: boolean;
-    @Prop({
-      default(this: Vue & { $route: RouteParams }): RouteParams {
-        return this.$route;
+  export default defineComponent({
+    name: 'SimplePager',
+    props: {
+      nextLabel: {
+        type: String,
+        default: () => l('pager.nextPage')
+      },
+      prevLabel: {
+        type: String,
+        default: () => l('pager.previousPage')
+      },
+      next: {
+        type: Boolean,
+        required: true
+      },
+      prev: {
+        type: Boolean,
+        required: true
+      },
+      routed: {
+        type: Boolean,
+        default: false
+      },
+      route: {
+        type: Object as PropType<RouteParams>,
+        required: false
+      },
+      paramName: {
+        type: String,
+        default: 'page'
       }
-    })
-    readonly route!: RouteParams;
-    @Prop({ default: 'page' })
-    readonly paramName!: string;
+    },
+    emits: ['next', 'prev'],
+    setup(props, { emit }) {
+      const instance = getCurrentInstance();
+      const currentRoute = computed<RouteParams>(() => {
+        if (props.route) return props.route;
+        return (instance?.proxy as any)?.$route ?? {};
+      });
 
-    nextPage(): void {
-      if (!this.next) return;
-      this.$emit('next');
-    }
+      const nextPage = () => {
+        if (!props.next) return;
+        emit('next');
+      };
 
-    previousPage(): void {
-      if (!this.prev) return;
-      this.$emit('prev');
-    }
+      const previousPage = () => {
+        if (!props.prev) return;
+        emit('prev');
+      };
 
-    get prevRoute(): RouteParams {
-      if (
-        this.route.params !== undefined &&
-        this.route.params[this.paramName] !== undefined
-      ) {
-        const newPage = this.route.params[this.paramName]! - 1;
-        const clone = cloneDeep(this.route) as RouteParams;
-        clone.params![this.paramName] = newPage;
-        return clone;
-      }
-      return {};
-    }
+      const prevRoute = computed<RouteParams>(() => {
+        const route = currentRoute.value;
+        if (
+          route.params !== undefined &&
+          route.params[props.paramName] !== undefined
+        ) {
+          const newPage = route.params[props.paramName]! - 1;
+          const clone = cloneDeep(route) as RouteParams;
+          clone.params![props.paramName] = newPage;
+          return clone;
+        }
+        return {};
+      });
 
-    get nextRoute(): RouteParams {
-      if (
-        this.route.params !== undefined &&
-        this.route.params[this.paramName] !== undefined
-      ) {
-        const newPage = this.route.params[this.paramName]! + 1;
-        const clone = cloneDeep(this.route) as RouteParams;
-        clone.params![this.paramName] = newPage;
-        return clone;
-      }
-      return {};
+      const nextRoute = computed<RouteParams>(() => {
+        const route = currentRoute.value;
+        if (
+          route.params !== undefined &&
+          route.params[props.paramName] !== undefined
+        ) {
+          const newPage = route.params[props.paramName]! + 1;
+          const clone = cloneDeep(route) as RouteParams;
+          clone.params![props.paramName] = newPage;
+          return clone;
+        }
+        return {};
+      });
+
+      return {
+        nextPage,
+        previousPage,
+        prevRoute,
+        nextRoute
+      };
     }
-  }
+  });
 </script>
