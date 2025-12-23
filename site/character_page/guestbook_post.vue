@@ -82,7 +82,7 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
+  import { computed, defineComponent, onBeforeMount, PropType, ref } from 'vue';
   import Vue from 'vue';
   import CharacterLink from '../../components/character_link.vue';
   import DateDisplay from '../../components/date_display.vue';
@@ -94,87 +94,106 @@
 
   const standardParser = new StandardBBCodeParser();
 
-  @Component({
+  export default defineComponent({
+    name: 'GuestbookPostView',
     components: {
       'date-display': DateDisplay,
       'character-link': CharacterLink,
       bbcode: BBCodeView(standardParser)
-    }
-  })
-  export default class GuestbookPostView extends Vue {
-    @Prop({ required: true })
-    readonly character!: Character;
-    @Prop({ required: true })
-    readonly post!: GuestbookPost;
-    @Prop({ required: true })
-    readonly canEdit!: boolean;
-
-    replying = false;
-    replyBox = false;
-    replyMessage = this.post.reply;
-
-    approving = false;
-    deleting = false;
-
-    get avatarUrl(): string {
-      return Utils.avatarURL(this.post.character.name);
-    }
-
-    @Hook('beforeMount')
-    beforeMount(): void {
-      standardParser.inlines = this.character.character.inlines;
-
-      // console.log('mounted');
-    }
-
-    async deletePost(): Promise<void> {
-      try {
-        this.deleting = true;
-        await methods.guestbookPostDelete(
-          this.character.character.id,
-          this.post.id
-        );
-        Vue.set(this.post, 'deleted', true);
-        this.$emit('reload');
-      } catch (e) {
-        Utils.ajaxError(e, 'Unable to delete guestbook post.');
-      } finally {
-        this.deleting = false;
+    },
+    props: {
+      character: {
+        type: Object as PropType<Character>,
+        required: true
+      },
+      post: {
+        type: Object as PropType<GuestbookPost>,
+        required: true
+      },
+      canEdit: {
+        type: Boolean,
+        required: true
       }
-    }
+    },
+    emits: ['reload'],
+    setup(props, { emit }) {
+      const replying = ref(false);
+      const replyBox = ref(false);
+      const replyMessage = ref(props.post.reply);
+      const approving = ref(false);
+      const deleting = ref(false);
 
-    async approve(): Promise<void> {
-      try {
-        this.approving = true;
-        await methods.guestbookPostApprove(
-          this.character.character.id,
-          this.post.id,
-          !this.post.approved
-        );
-        this.post.approved = !this.post.approved;
-      } catch (e) {
-        Utils.ajaxError(e, 'Unable to change post approval.');
-      } finally {
-        this.approving = false;
-      }
-    }
+      const avatarUrl = computed(() =>
+        Utils.avatarURL(props.post.character.name)
+      );
 
-    async postReply(): Promise<void> {
-      try {
-        this.replying = true;
-        await methods.guestbookPostReply(
-          this.character.character.id,
-          this.post.id,
-          this.replyMessage
-        );
-        this.post.reply = this.replyMessage;
-        this.post.repliedAt = Date.now() / 1000;
-        this.replyBox = false;
-      } catch (e) {
-        Utils.ajaxError(e, 'Unable to post guestbook reply.');
-      } finally {
-        this.replying = false;
-      }
+      onBeforeMount(() => {
+        standardParser.inlines = props.character.character.inlines;
+
+        // console.log('mounted');
+      });
+
+      const deletePost = async () => {
+        try {
+          deleting.value = true;
+          await methods.guestbookPostDelete(
+            props.character.character.id,
+            props.post.id
+          );
+          Vue.set(props.post, 'deleted', true);
+          emit('reload');
+        } catch (e) {
+          Utils.ajaxError(e, 'Unable to delete guestbook post.');
+        } finally {
+          deleting.value = false;
+        }
+      };
+
+      const approve = async () => {
+        try {
+          approving.value = true;
+          await methods.guestbookPostApprove(
+            props.character.character.id,
+            props.post.id,
+            !props.post.approved
+          );
+          props.post.approved = !props.post.approved;
+        } catch (e) {
+          Utils.ajaxError(e, 'Unable to change post approval.');
+        } finally {
+          approving.value = false;
+        }
+      };
+
+      const postReply = async () => {
+        try {
+          replying.value = true;
+          await methods.guestbookPostReply(
+            props.character.character.id,
+            props.post.id,
+            replyMessage.value
+          );
+          props.post.reply = replyMessage.value;
+          props.post.repliedAt = Date.now() / 1000;
+          replyBox.value = false;
+        } catch (e) {
+          Utils.ajaxError(e, 'Unable to post guestbook reply.');
+        } finally {
+          replying.value = false;
+        }
+      };
+
+      return {
+        replying,
+        replyBox,
+        replyMessage,
+        approving,
+        deleting,
+        avatarUrl,
+        deletePost,
+        approve,
+        postReply
+      };
     }
-  }
+  });
 </script>
