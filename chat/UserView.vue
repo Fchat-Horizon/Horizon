@@ -28,8 +28,17 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop, Watch } from '@f-list/vue-ts';
-  import Vue from 'vue';
+  import {
+    computed,
+    defineComponent,
+    onBeforeUnmount,
+    onDeactivated,
+    onMounted,
+    PropType,
+    ref,
+    toRefs,
+    watch
+  } from 'vue';
   import { Channel, Character } from '../fchat';
   import { Score } from '../learn/matcher';
   import core from './core';
@@ -247,206 +256,227 @@
     };
   }
 
-  @Component({
-    components: {}
-  })
-  export default class UserView extends Vue {
-    @Prop({ required: true })
-    readonly character!: Character;
+  export default defineComponent({
+    name: 'UserView',
+    props: {
+      character: {
+        type: Object as PropType<Character>,
+        required: true
+      },
+      channel: {
+        type: Object as PropType<Channel>,
+        required: false
+      },
+      showStatus: {
+        type: Boolean,
+        default: true
+      },
+      bookmark: {
+        type: Boolean,
+        default: true
+      },
+      match: {
+        type: Boolean,
+        default: false
+      },
+      preview: {
+        type: Boolean,
+        default: true
+      },
+      avatar: {
+        type: Boolean,
+        default: false
+      },
+      isMarkerShown: {
+        type: Boolean,
+        default: false
+      },
+      useOriginalAvatar: {
+        type: Boolean,
+        default: false
+      },
+      loadColor: {
+        type: Boolean,
+        default: true
+      }
+    },
+    setup(props) {
+      const { character, avatar, isMarkerShown } = toRefs(props);
+      const userClass = ref('');
+      const rankIcon = ref<string | null>(null);
+      const devIcon = ref<string | null>(null);
+      const contributorIcon = ref<string | null>(null);
+      const smartFilterIcon = ref<string | null>(null);
+      const genderClass = ref<string | null>(null);
+      const statusClass = ref<string | null>(null);
+      const matchClass = ref<string | null>(null);
+      const matchScore = ref<number | string | null>(null);
+      const avatarUrl = ref('');
 
-    @Prop()
-    readonly channel?: Channel;
+      const scoreWatcher = ref<((event: any) => void) | null>(null);
 
-    @Prop()
-    readonly showStatus?: boolean = true;
+      const update = () => {
+        const res = getStatusClasses(
+          props.character,
+          props.channel,
+          !!props.showStatus,
+          !!props.bookmark,
+          !!props.match,
+          props.loadColor
+        );
 
-    @Prop({ default: true })
-    readonly bookmark?: boolean = true;
+        rankIcon.value = res.rankIcon;
+        devIcon.value = res.devIcon;
+        contributorIcon.value = res.contributorIcon;
+        smartFilterIcon.value = res.smartFilterIcon;
+        genderClass.value = res.genderClass;
+        statusClass.value = res.statusClass;
+        matchClass.value = res.matchClass;
+        matchScore.value = res.matchScore;
+        userClass.value = res.userClass;
+        avatarUrl.value = characterImage(
+          props.character.name,
+          props.useOriginalAvatar
+        );
+      };
 
-    @Prop()
-    readonly match?: boolean = false;
+      const ensureScoreWatcher = () => {
+        if (!props.match || matchClass.value) return;
+        if (scoreWatcher.value) return;
 
-    @Prop({ default: true })
-    readonly preview: boolean = true;
-
-    @Prop({ default: false })
-    readonly avatar: boolean = false;
-
-    @Prop({ default: false })
-    readonly isMarkerShown: boolean = false;
-
-    @Prop({ default: false })
-    readonly useOriginalAvatar: boolean = false;
-
-    @Prop({ default: true })
-    readonly loadColor: boolean = true;
-
-    userClass = '';
-
-    rankIcon: string | null = null;
-    devIcon: string | null = null;
-    contributorIcon: string | null = null;
-    smartFilterIcon: string | null = null;
-    genderClass: string | null = null;
-    statusClass: string | null = null;
-    matchClass: string | null = null;
-    matchScore: number | string | null = null;
-    avatarUrl: string = '';
-
-    // tslint:disable-next-line no-any
-    scoreWatcher: ((event: any) => void) | null = null;
-
-    @Hook('mounted')
-    onMounted(): void {
-      this.update();
-      // Refresh on global configuration changes (e.g., toggling developer badges)
-      EventBus.$on('configuration-update', this.update);
-
-      if (this.match && !this.matchClass) {
-        if (this.scoreWatcher) {
-          EventBus.$off('character-score', this.scoreWatcher);
-        }
-
-        // tslint:disable-next-line no-unsafe-any no-any
-        this.scoreWatcher = (event: any): void => {
-          // console.log('scoreWatcher', event);
-
-          // tslint:disable-next-line no-unsafe-any no-any
+        scoreWatcher.value = (event: any): void => {
           if (
             event.character &&
-            event.character.character.name === this.character.name
+            event.character.character.name === props.character.name
           ) {
-            this.update();
+            update();
 
-            if (this.scoreWatcher) {
-              EventBus.$off('character-score', this.scoreWatcher);
-
-              this.scoreWatcher = null;
+            if (scoreWatcher.value) {
+              EventBus.$off('character-score', scoreWatcher.value);
+              scoreWatcher.value = null;
             }
           }
         };
 
-        EventBus.$on('character-score', this.scoreWatcher);
-      }
-    }
+        EventBus.$on('character-score', scoreWatcher.value);
+      };
 
-    @Hook('beforeDestroy')
-    onBeforeDestroy(): void {
-      if (this.scoreWatcher)
-        EventBus.$off('character-score', this.scoreWatcher);
-      EventBus.$off('configuration-update', this.update);
-
-      this.dismiss();
-    }
-
-    @Hook('deactivated')
-    deactivate(): void {
-      this.dismiss();
-    }
-
-    @Hook('beforeUpdate')
-    onBeforeUpdate(): void {
-      this.update();
-    }
-
-    @Watch('character.status')
-    onStatusUpdate(): void {
-      this.update();
-    }
-
-    @Watch('character.overrides.avatarUrl')
-    onAvatarUrlUpdate(): void {
-      this.update();
-    }
-
-    @Watch('character.overrides.characterColor')
-    onCharacterColorUpdate(): void {
-      this.update();
-    }
-
-    update(): void {
-      // console.log('user.view.update', this.character.name);
-
-      const res = getStatusClasses(
-        this.character,
-        this.channel,
-        !!this.showStatus,
-        !!this.bookmark,
-        !!this.match,
-        this.loadColor
+      watch(
+        () => [
+          props.character,
+          props.channel,
+          props.showStatus,
+          props.bookmark,
+          props.match,
+          props.loadColor,
+          props.useOriginalAvatar
+        ],
+        () => {
+          update();
+          ensureScoreWatcher();
+        },
+        { immediate: true, deep: true }
       );
 
-      this.rankIcon = res.rankIcon;
-      this.devIcon = res.devIcon;
-      this.contributorIcon = res.contributorIcon;
-      this.smartFilterIcon = res.smartFilterIcon;
-      this.genderClass = res.genderClass;
-      this.statusClass = res.statusClass;
-      this.matchClass = res.matchClass;
-      this.matchScore = res.matchScore;
-      this.userClass = res.userClass;
-      this.avatarUrl = characterImage(
-        this.character.name,
-        this.useOriginalAvatar
+      watch(
+        () => props.match,
+        value => {
+          if (!value && scoreWatcher.value) {
+            EventBus.$off('character-score', scoreWatcher.value);
+            scoreWatcher.value = null;
+          } else if (value) {
+            ensureScoreWatcher();
+          }
+        }
       );
-    }
 
-    getMatchScoreTitle(score: number | string | null): string {
-      switch (score) {
-        case 'perfect':
-          return 'Perfect';
-
-        case Scoring.MATCH:
-          return 'Great';
-
-        case Scoring.WEAK_MATCH:
-          return 'Good';
-
-        case Scoring.WEAK_MISMATCH:
-          return 'Maybe';
-
-        case Scoring.MISMATCH:
-          return 'No';
-      }
-
-      return '';
-    }
-
-    getCharacterUrl(): string {
-      return `flist-character://${this.character.name}`;
-    }
-
-    dismiss(force: boolean = false): void {
-      if (!this.preview) {
-        return;
-      }
-
-      EventBus.$emit('imagepreview-dismiss', {
-        url: this.getCharacterUrl(),
-        force
+      onMounted(() => {
+        EventBus.$on('configuration-update', update);
+        ensureScoreWatcher();
       });
-    }
 
-    show(): void {
-      if (!this.preview) {
-        return;
-      }
-
-      EventBus.$emit('imagepreview-show', { url: this.getCharacterUrl() });
-    }
-
-    toggleStickyness(): void {
-      if (!this.preview) {
-        return;
-      }
-
-      EventBus.$emit('imagepreview-toggle-stickyness', {
-        url: this.getCharacterUrl()
+      onBeforeUnmount(() => {
+        if (scoreWatcher.value) {
+          EventBus.$off('character-score', scoreWatcher.value);
+        }
+        EventBus.$off('configuration-update', update);
+        dismiss();
       });
-    }
 
-    get safeAvatarUrl(): string {
-      return this.avatarUrl || '';
+      onDeactivated(() => {
+        dismiss();
+      });
+
+      const getMatchScoreTitle = (score: number | string | null): string => {
+        switch (score) {
+          case 'perfect':
+            return 'Perfect';
+          case Scoring.MATCH:
+            return 'Great';
+          case Scoring.WEAK_MATCH:
+            return 'Good';
+          case Scoring.WEAK_MISMATCH:
+            return 'Maybe';
+          case Scoring.MISMATCH:
+            return 'No';
+        }
+
+        return '';
+      };
+
+      const getCharacterUrl = (): string =>
+        `flist-character://${props.character.name}`;
+
+      const dismiss = (force: boolean = false): void => {
+        if (!props.preview) {
+          return;
+        }
+
+        EventBus.$emit('imagepreview-dismiss', {
+          url: getCharacterUrl(),
+          force
+        });
+      };
+
+      const show = (): void => {
+        if (!props.preview) {
+          return;
+        }
+
+        EventBus.$emit('imagepreview-show', { url: getCharacterUrl() });
+      };
+
+      const toggleStickyness = (): void => {
+        if (!props.preview) {
+          return;
+        }
+
+        EventBus.$emit('imagepreview-toggle-stickyness', {
+          url: getCharacterUrl()
+        });
+      };
+
+      const safeAvatarUrl = computed(() => avatarUrl.value || '');
+
+      return {
+        character,
+        avatar,
+        isMarkerShown,
+        userClass,
+        rankIcon,
+        devIcon,
+        contributorIcon,
+        smartFilterIcon,
+        genderClass,
+        statusClass,
+        matchClass,
+        matchScore,
+        safeAvatarUrl,
+        show,
+        dismiss,
+        toggleStickyness,
+        getMatchScoreTitle
+      };
     }
-  }
+  });
 </script>
