@@ -37,8 +37,7 @@
 </template>
 <script lang="ts">
   import _ from 'lodash';
-  import { Component, Hook } from '@f-list/vue-ts';
-  import Vue from 'vue';
+  import { defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
   import core from '../chat/core';
   import { EventBus } from '../chat/preview/event-bus';
   import l from '../chat/localize';
@@ -51,91 +50,98 @@
     url: string;
   }
 
-  @Component
-  export default class NoteStatus extends Vue {
-    reports: ReportState[] = [
-      {
-        type: 'message',
-        title: l('pager.messages'),
-        count: 0,
-        dismissedCount: 0,
-        url: 'https://www.f-list.net/messages.php'
-      },
-      {
-        type: 'note',
-        title: l('pager.notes'),
-        count: 0,
-        dismissedCount: 0,
-        url: 'https://www.f-list.net/read_notes.php'
-      }
-    ];
-    l = l;
+  export default defineComponent({
+    name: 'NoteStatus',
+    setup() {
+      const reports = ref<ReportState[]>([
+        {
+          type: 'message',
+          title: l('pager.messages'),
+          count: 0,
+          dismissedCount: 0,
+          url: 'https://www.f-list.net/messages.php'
+        },
+        {
+          type: 'note',
+          title: l('pager.notes'),
+          count: 0,
+          dismissedCount: 0,
+          url: 'https://www.f-list.net/read_notes.php'
+        }
+      ]);
 
-    callback?: () => void;
+      let callback: (() => void) | undefined;
 
-    @Hook('mounted')
-    mounted(): void {
-      this.updateCounts();
-
-      this.callback = () => this.updateCounts();
-
-      EventBus.$on('note-counts-update', this.callback);
-    }
-
-    @Hook('beforeDestroy')
-    destroying(): void {
-      if (this.callback) {
-        EventBus.$off('note-counts-update', this.callback);
-      }
-    }
-
-    dismissReport(report: ReportState): void {
-      report.dismissedCount = report.count;
-    }
-
-    hasReports(): boolean {
-      return !!_.find(
-        this.reports,
-        r => r.count > 0 && r.dismissedCount !== r.count
-      );
-    }
-
-    updateCounts(): void {
-      const v = core.siteSession.interfaces.notes.getCounts();
-
-      const mapper = {
-        message: 'unreadMessages',
-        note: 'unreadNotes'
+      const dismissReport = (report: ReportState) => {
+        report.dismissedCount = report.count;
       };
 
-      _.each(mapper, (field, type) => {
-        const report = _.find(this.reports, r => r.type === type);
+      const hasReports = () =>
+        !!_.find(
+          reports.value,
+          r => r.count > 0 && r.dismissedCount !== r.count
+        );
 
-        if (!report) {
-          throw new Error(`Did not find report ${type}`);
+      const updateCounts = () => {
+        const v = core.siteSession.interfaces.notes.getCounts();
+
+        const mapper = {
+          message: 'unreadMessages',
+          note: 'unreadNotes'
+        };
+
+        _.each(mapper, (field, type) => {
+          const report = _.find(reports.value, r => r.type === type);
+
+          if (!report) {
+            throw new Error(`Did not find report ${type}`);
+          }
+
+          const count = (v as any)[field] as number;
+
+          if (count !== report.dismissedCount) {
+            report.dismissedCount = 0;
+          }
+
+          report.count = count;
+        });
+      };
+
+      const getIconClass = (report: ReportState) => {
+        switch (report.type) {
+          case 'note':
+            return 'fas fa-envelope fa-fw';
+          case 'message':
+            return 'fas fa-bell fa-fw';
+          default:
+            return 'fa-solid fa-circle-exclamation';
         }
+      };
 
-        const count = (v as any)[field] as number;
+      onMounted(() => {
+        updateCounts();
 
-        if (count !== report.dismissedCount) {
-          report.dismissedCount = 0;
-        }
+        callback = () => updateCounts();
 
-        report.count = count;
+        EventBus.$on('note-counts-update', callback);
       });
-    }
 
-    getIconClass(report: ReportState) {
-      switch (report.type) {
-        case 'note':
-          return 'fas fa-envelope fa-fw';
-        case 'message':
-          return 'fas fa-bell fa-fw';
-        default:
-          return 'fa-solid fa-circle-exclamation';
-      }
+      onBeforeUnmount(() => {
+        if (callback) {
+          EventBus.$off('note-counts-update', callback);
+        }
+      });
+
+      return {
+        l,
+        reports,
+        dismissReport,
+        hasReports,
+        updateCounts,
+        getIconClass
+      };
     }
-  }
+  });
 </script>
 <style lang="scss">
   #note-status {
