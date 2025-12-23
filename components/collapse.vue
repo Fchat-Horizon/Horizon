@@ -42,7 +42,10 @@
       const collapsed = ref(true);
       const timeout = ref(0);
       const contentRef = ref<HTMLElement | null>(null);
-      const style = reactive<{ height: string | undefined; transition: string }>({
+      const style = reactive<{
+        height: string | undefined;
+        transition: string;
+      }>({
         height: '0',
         transition: 'height .2s'
       });
