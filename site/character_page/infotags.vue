@@ -43,9 +43,10 @@
     },
     setup(props) {
       const groups = computed(
-        () => Store.shared.infotagGroups as {
-          readonly [key: string]: Readonly<InfotagGroup>;
-        }
+        () =>
+          Store.shared.infotagGroups as {
+            readonly [key: string]: Readonly<InfotagGroup>;
+          }
       );
 
       const getInfotags = (group: number): Infotag[] =>

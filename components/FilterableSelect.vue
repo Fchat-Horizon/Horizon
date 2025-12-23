@@ -84,7 +84,11 @@
       const filter = ref('');
 
       const normalizeSelected = (value: object | object[] | undefined) =>
-        props.multiple !== undefined ? (Array.isArray(value) ? value : []) : value;
+        props.multiple !== undefined
+          ? Array.isArray(value)
+            ? value
+            : []
+          : value;
 
       const selected = ref<object | object[] | undefined>(
         normalizeSelected(props.value)
