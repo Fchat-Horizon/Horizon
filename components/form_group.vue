@@ -18,34 +18,56 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop } from '@f-list/vue-ts';
-  import Vue from 'vue';
+  import { computed, defineComponent, PropType } from 'vue';
 
-  @Component
-  export default class FormGroup extends Vue {
-    @Prop({ required: true })
-    readonly field!: string;
-    @Prop({ required: true })
-    readonly errors!: { [key: string]: ReadonlyArray<string> | undefined };
-    @Prop
-    readonly label?: string;
-    @Prop
-    readonly id?: string;
-    @Prop({ default: false })
-    readonly valid!: boolean;
-    @Prop
-    readonly helptext?: string;
+  export default defineComponent({
+    name: 'FormGroup',
+    props: {
+      field: {
+        type: String,
+        required: true
+      },
+      errors: {
+        type: Object as PropType<
+          Record<string, ReadonlyArray<string> | undefined>
+        >,
+        required: true
+      },
+      label: {
+        type: String,
+        required: false
+      },
+      id: {
+        type: String,
+        required: false
+      },
+      valid: {
+        type: Boolean,
+        default: false
+      },
+      helptext: {
+        type: String,
+        required: false
+      }
+    },
+    setup(props) {
+      const hasErrors = computed(
+        () => typeof props.errors[props.field] !== 'undefined'
+      );
 
-    get hasErrors(): boolean {
-      return typeof this.errors[this.field] !== 'undefined';
+      const errorList = computed<ReadonlyArray<string>>(
+        () => props.errors[props.field] || [] //tslint:disable-line:strict-boolean-expressions
+      );
+
+      const helpId = computed(() =>
+        props.id !== undefined ? `${props.id}Help` : undefined
+      );
+
+      return {
+        hasErrors,
+        errorList,
+        helpId
+      };
     }
-
-    get errorList(): ReadonlyArray<string> {
-      return this.errors[this.field] || []; //tslint:disable-line:strict-boolean-expressions
-    }
-
-    get helpId(): string | undefined {
-      return this.id !== undefined ? `${this.id}Help` : undefined;
-    }
-  }
+  });
 </script>
