@@ -46,12 +46,7 @@
 </template>
 
 <script lang="ts">
-  import {
-    computed,
-    defineComponent,
-    getCurrentInstance,
-    PropType
-  } from 'vue';
+  import { computed, defineComponent, getCurrentInstance, PropType } from 'vue';
   import cloneDeep = require('lodash/cloneDeep'); //tslint:disable-line:no-require-imports
   import l from '../chat/localize';
 
