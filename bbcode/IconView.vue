@@ -20,7 +20,12 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, onBeforeUnmount, onDeactivated, PropType } from 'vue';
+  import {
+    defineComponent,
+    onBeforeUnmount,
+    onDeactivated,
+    PropType
+  } from 'vue';
   import { EventBus } from '../chat/preview/event-bus';
   import * as Utils from '../site/utils';
   import { characterImage } from '../chat/common';

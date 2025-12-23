@@ -67,7 +67,10 @@ export default class BBCodeParser extends CoreBBCodeParser {
         const el = parser.createElement('span');
         parent.appendChild(root);
         root.appendChild(el);
-        const view = mountComponent(ChannelView, el, { id: content, text: param });
+        const view = mountComponent(ChannelView, el, {
+          id: content,
+          text: param
+        });
         this.cleanup.push(view);
         return root;
       })
