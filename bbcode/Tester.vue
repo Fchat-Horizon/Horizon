@@ -20,8 +20,9 @@
       bbcode: BBCodeView(standardParser)
     },
     setup() {
-      const code =
-        ref('[center][heading][collapse=Testing Collapse][url=https://google.com/]This is a link [/url][/collapse][/heading][/center]');
+      const code = ref(
+        '[center][heading][collapse=Testing Collapse][url=https://google.com/]This is a link [/url][/collapse][/heading][/center]'
+      );
 
       return {
         code
