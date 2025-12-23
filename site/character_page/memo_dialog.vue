@@ -1,5 +1,6 @@
 <template>
   <Modal
+    ref="dialogRef"
     :action="l('user.memo.action')"
     :buttonText="l('action.saveAndClose')"
     @close="onClose"
@@ -17,14 +18,12 @@
   </Modal>
 </template>
 
-<script lang="ts">
-  import { Component, Prop, Watch } from '@f-list/vue-ts';
-  import CustomDialog from '../../components/custom_dialog';
+<script setup lang="ts">
+  import { computed, ref, watch } from 'vue';
   import Modal from '../../components/Modal.vue';
   import { SimpleCharacter } from '../../interfaces';
   import * as Utils from '../utils';
   import l from './../../chat/localize';
-  // import {methods} from './data_store';
   import { MemoManager } from '../../chat/character/memo';
 
   export interface Memo {
@@ -35,55 +34,68 @@
     updated_at: number;
   }
 
-  @Component({
-    components: { Modal }
-  })
-  export default class MemoDialog extends CustomDialog {
-    @Prop({ required: true })
-    readonly character!: { id: number; name: string };
-    @Prop
-    readonly memo?: Memo;
-    message: string = '';
-    l = l;
-    editing: boolean = false;
-    saving: boolean = false;
+  const props = defineProps<{
+    character: { id: number; name: string };
+    memo?: Memo;
+  }>();
 
-    get name(): string {
-      return this.character.name;
+  const emit = defineEmits<{
+    (e: 'memo', memo: Memo | null): void;
+  }>();
+
+  const dialogRef = ref<InstanceType<typeof Modal>>();
+  const message = ref('');
+  const editing = ref(false);
+  const saving = ref(false);
+
+  const name = computed(() => props.character.name);
+
+  const setMemo = () => {
+    if (props.memo !== undefined) message.value = props.memo.memo;
+  };
+
+  watch(
+    () => props.memo,
+    () => {
+      setMemo();
     }
+  );
 
-    show(): void {
-      super.show();
-      this.setMemo();
-      this.editing = true;
+  const show = (keepOpen?: boolean) => {
+    dialogRef.value?.show(keepOpen);
+    setMemo();
+    editing.value = true;
+  };
+
+  const hide = () => {
+    dialogRef.value?.hide();
+  };
+
+  const onClose = () => {
+    editing.value = false;
+  };
+
+  const save = async (): Promise<void> => {
+    if (!editing.value) return;
+    try {
+      saving.value = true;
+
+      const messageToSave: string | null =
+        message.value === '' ? null : message.value;
+
+      const memoManager = new MemoManager(name.value);
+      await memoManager.set(messageToSave);
+
+      emit('memo', memoManager.get());
+      hide();
+    } catch (e) {
+      Utils.ajaxError(e, 'Unable to set memo.');
     }
+    saving.value = false;
+  };
 
-    @Watch('memo')
-    setMemo(): void {
-      if (this.memo !== undefined) this.message = this.memo.memo;
-    }
-
-    onClose(): void {
-      this.editing = false;
-    }
-
-    async save(): Promise<void> {
-      if (!this.editing) return;
-      try {
-        this.saving = true;
-
-        const messageToSave: string | null =
-          this.message === '' ? null : this.message;
-
-        const memoManager = new MemoManager(this.character.name);
-        await memoManager.set(messageToSave);
-
-        this.$emit('memo', memoManager.get());
-        this.hide();
-      } catch (e) {
-        Utils.ajaxError(e, 'Unable to set memo.');
-      }
-      this.saving = false;
-    }
-  }
+  defineExpose({
+    show,
+    hide
+  });
 </script>
