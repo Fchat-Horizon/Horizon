@@ -334,13 +334,18 @@ async function imagesGet(id: number): Promise<CharacterImage[]> {
   ).images;
 }
 
-async function guestbookGet(id: number, offset: number): Promise<Guestbook> {
+async function guestbookGet(
+  id: number,
+  offset: number = 0,
+  _limit: number = 10,
+  _unapprovedOnly: boolean = false
+): Promise<Guestbook> {
   const data = await core.connection.queryApi<{
     nextPage: boolean;
     posts: GuestbookPost[];
   }>('character-guestbook.php', {
     id,
-    page: offset / 10
+    page: Math.floor(offset / 10)
   });
   return { posts: data.posts, total: data.nextPage ? offset + 100 : offset };
 }

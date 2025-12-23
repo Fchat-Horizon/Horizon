@@ -4,10 +4,6 @@
       {{ l('profile.guestbook.loading') }}
     </div>
     <div class="guestbook-controls">
-      <label v-show="canEdit" class="control-label"
-        >{{ l('profile.guestbook.unapprovedOnly') }}
-        <input type="checkbox" v-model="unapprovedOnly" />
-      </label>
       <simple-pager
         :next="hasNextPage"
         :prev="page > 1"
@@ -92,10 +88,8 @@
     error = '';
     authenticated = Store.authenticated;
     posts: GuestbookPost[] = [];
-    unapprovedOnly = false;
     page = 1;
     hasNextPage = false;
-    canEdit = false;
     newPost = {
       posting: false,
       privatePost: false,
@@ -104,7 +98,6 @@
     };
     l = l;
 
-    @Watch('unapprovedOnly')
     @Watch('page')
     async getPage(): Promise<void> {
       try {
@@ -115,7 +108,6 @@
       } catch (e) {
         this.posts = [];
         this.hasNextPage = false;
-        this.canEdit = false;
         if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
         Utils.ajaxError(e, l('profile.guestbook.unableLoad'));
       } finally {
@@ -141,8 +133,12 @@
       }
     }
 
+    get canEdit(): boolean {
+      return this.character.is_self || this.character.self_staff;
+    }
+
     async resolvePage(): Promise<Guestbook> {
-      if (this.page === 1) {
+      if (this.page === 1 && !this.canEdit) {
         const c = await core.cache.profileCache.get(
           this.character.character.name
         );
@@ -152,13 +148,13 @@
         }
       }
 
-      return methods.guestbookPageGet(
+      const approved = await methods.guestbookPageGet(
         this.character.character.id,
         (this.page - 1) * 10,
-        10,
-        this.unapprovedOnly
+        10
       );
-      // return methods.guestbookPageGet(this.character.character.id, this.page, this.unapprovedOnly);
+
+      return approved;
     }
 
     async show(): Promise<void> {
