@@ -15,7 +15,7 @@
       </h4>
     </div>
     <div :style="style" style="overflow: hidden">
-      <div class="card-body" ref="content">
+      <div class="card-body" ref="contentRef">
         <slot></slot>
       </div>
     </div>
@@ -23,37 +23,59 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
-  import { Component, Prop } from '@f-list/vue-ts';
+  import { defineComponent, reactive, ref } from 'vue';
 
-  @Component
-  export default class Collapse extends Vue {
-    @Prop({ required: true })
-    readonly title!: string;
-    @Prop
-    readonly headerClass?: string;
-    collapsed = true;
-    timeout = 0;
-    style = { height: <string | undefined>'0', transition: 'height .2s' };
-
-    toggle(state?: boolean) {
-      clearTimeout(this.timeout);
-      this.collapsed = state !== undefined ? state : !this.collapsed;
-      this.$emit(this.collapsed ? 'close' : 'open');
-      if (this.collapsed) {
-        this.style.transition = 'initial';
-        this.style.height = `${(<HTMLElement>this.$refs['content']).scrollHeight}px`;
-        setTimeout(() => {
-          this.style.transition = 'height .2s';
-          this.style.height = '0';
-        }, 0);
-      } else {
-        this.style.height = `${(<HTMLElement>this.$refs['content']).scrollHeight}px`;
-        this.timeout = window.setTimeout(
-          () => (this.style.height = undefined),
-          200
-        );
+  export default defineComponent({
+    name: 'Collapse',
+    props: {
+      title: {
+        type: String,
+        required: true
+      },
+      headerClass: {
+        type: String,
+        required: false
       }
+    },
+    emits: ['open', 'close'],
+    setup(props, { emit }) {
+      const collapsed = ref(true);
+      const timeout = ref(0);
+      const contentRef = ref<HTMLElement | null>(null);
+      const style = reactive<{ height: string | undefined; transition: string }>({
+        height: '0',
+        transition: 'height .2s'
+      });
+
+      const toggle = (state?: boolean) => {
+        clearTimeout(timeout.value);
+        collapsed.value = state !== undefined ? state : !collapsed.value;
+        emit(collapsed.value ? 'close' : 'open');
+
+        const content = contentRef.value;
+        if (!content) return;
+
+        if (collapsed.value) {
+          style.transition = 'initial';
+          style.height = `${content.scrollHeight}px`;
+          setTimeout(() => {
+            style.transition = 'height .2s';
+            style.height = '0';
+          }, 0);
+        } else {
+          style.height = `${content.scrollHeight}px`;
+          timeout.value = window.setTimeout(() => {
+            style.height = undefined;
+          }, 200);
+        }
+      };
+
+      return {
+        collapsed,
+        style,
+        toggle,
+        contentRef
+      };
     }
-  }
+  });
 </script>
