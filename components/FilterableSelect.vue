@@ -48,71 +48,103 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop, Watch } from '@f-list/vue-ts';
-  import Vue from 'vue';
+  import { computed, defineComponent, ref, watch, PropType } from 'vue';
   import Dropdown from '../components/Dropdown.vue';
 
-  @Component({
-    components: { dropdown: Dropdown }
-  })
-  export default class FilterableSelect extends Vue {
-    @Prop
-    readonly placeholder?: string;
-    @Prop({ required: true })
-    readonly options!: object[];
-    @Prop({
-      default: () => (filter: RegExp, value: string) => filter.test(value)
-    })
-    readonly filterFunc!: (filter: RegExp, value: object) => boolean;
-    @Prop
-    readonly multiple?: true = undefined;
-    @Prop
-    readonly value?: object | object[] = undefined;
-    @Prop
-    readonly title?: string;
-    filter = '';
-    selected: object | object[] | undefined =
-      this.value !== undefined
-        ? this.value
-        : this.multiple !== undefined
-          ? []
-          : undefined;
+  export default defineComponent({
+    name: 'FilterableSelect',
+    components: { dropdown: Dropdown },
+    props: {
+      placeholder: {
+        type: String,
+        required: false
+      },
+      options: {
+        type: Array as PropType<object[]>,
+        required: true
+      },
+      filterFunc: {
+        type: Function as PropType<(filter: RegExp, value: object) => boolean>,
+        default: (filter: RegExp, value: object) => filter.test(String(value))
+      },
+      multiple: {
+        type: null as unknown as PropType<true | undefined>,
+        required: false
+      },
+      value: {
+        type: null as unknown as PropType<object | object[] | undefined>,
+        required: false
+      },
+      title: {
+        type: String,
+        required: false
+      }
+    },
+    setup(props, { emit }) {
+      const filter = ref('');
 
-    @Watch('value')
-    watchValue(newValue: object | object[] | undefined): void {
-      this.selected = newValue;
-    }
+      const normalizeSelected = (value: object | object[] | undefined) =>
+        props.multiple !== undefined ? (Array.isArray(value) ? value : []) : value;
 
-    select(item: object): void {
-      if (this.multiple !== undefined) {
-        const selected = <object[]>this.selected;
-        const index = selected.indexOf(item);
-        if (index === -1) selected.push(item);
-        else selected.splice(index, 1);
-      } else this.selected = item;
-      this.$emit('input', this.selected);
-    }
+      const selected = ref<object | object[] | undefined>(
+        normalizeSelected(props.value)
+      );
 
-    isSelected(option: object): boolean {
-      return (<object[]>this.selected).indexOf(option) !== -1;
-    }
+      watch(
+        () => props.value,
+        newValue => {
+          selected.value = normalizeSelected(newValue);
+        }
+      );
 
-    get filtered(): object[] {
-      return this.options.filter(x => this.filterFunc(this.filterRegex, x));
-    }
+      const filterRegex = computed(
+        () => new RegExp(filter.value.replace(/[^\w]/gi, '\\$&'), 'i')
+      );
 
-    get label(): string | undefined {
-      return this.multiple !== undefined
-        ? `${this.title} - ${(<object[]>this.selected).length}`
-        : this.selected !== undefined
-          ? this.selected.toString()
-          : this.title;
-    }
+      const filtered = computed(() =>
+        props.options.filter(x => props.filterFunc(filterRegex.value, x))
+      );
 
-    get filterRegex(): RegExp {
-      return new RegExp(this.filter.replace(/[^\w]/gi, '\\$&'), 'i');
+      const selectedList = computed(() =>
+        Array.isArray(selected.value) ? selected.value : []
+      );
+
+      const label = computed(() => {
+        if (props.multiple !== undefined) {
+          return `${props.title} - ${selectedList.value.length}`;
+        }
+
+        return selected.value !== undefined
+          ? selected.value.toString()
+          : props.title;
+      });
+
+      const select = (item: object) => {
+        if (props.multiple !== undefined) {
+          const list = selectedList.value;
+          const index = list.indexOf(item);
+          if (index === -1) list.push(item);
+          else list.splice(index, 1);
+          selected.value = list;
+        } else {
+          selected.value = item;
+        }
+        emit('input', selected.value);
+      };
+
+      const isSelected = (option: object) =>
+        selectedList.value.indexOf(option) !== -1;
+
+      return {
+        filter,
+        selected,
+        filtered,
+        label,
+        select,
+        isSelected
+      };
     }
-  }
+  });
 </script>
 
 <style lang="scss">
