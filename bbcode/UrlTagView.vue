@@ -19,59 +19,79 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
-  import Vue from 'vue';
+  import {
+    defineComponent,
+    getCurrentInstance,
+    onBeforeUnmount,
+    onDeactivated,
+    onMounted
+  } from 'vue';
   import { EventBus } from '../chat/preview/event-bus';
   // import core from './core';
 
-  @Component
-  export default class UrlTagView extends Vue {
-    @Prop({ required: true })
-    readonly url!: string;
-
-    @Prop({ required: true })
-    readonly text!: string;
-
-    @Prop({ required: true })
-    readonly domain!: string;
-
-    readonly type!: 'UrlTagView';
-
-    @Hook('beforeDestroy')
-    beforeDestroy(): void {
-      this.dismiss();
-    }
-
-    @Hook('mounted')
-    mounted(): void {
-      (this.$el as any).bbcodeTag = 'url';
-      (this.$el as any).bbcodeParam = this.url;
-    }
-
-    @Hook('deactivated')
-    deactivate(): void {
-      this.dismiss();
-    }
-
-    dismiss(force: boolean = false): void {
-      EventBus.$emit('imagepreview-dismiss', { url: this.url, force });
-    }
-
-    show(): void {
-      EventBus.$emit('imagepreview-show', { url: this.url });
-    }
-
-    toggleStickyness(): void {
-      EventBus.$emit('imagepreview-toggle-stickyness', { url: this.url });
-    }
-
-    handleClick(e: MouseEvent): void {
-      if (e.altKey) {
-        this.toggleStickyness();
-        e.preventDefault();
-      } else {
-        this.dismiss(true);
+  export default defineComponent({
+    name: 'UrlTagView',
+    props: {
+      url: {
+        type: String,
+        required: true
+      },
+      text: {
+        type: String,
+        required: true
+      },
+      domain: {
+        type: String,
+        required: true
       }
+    },
+    setup(props) {
+      const type = 'UrlTagView' as const;
+      const instance = getCurrentInstance();
+
+      const dismiss = (force = false) => {
+        EventBus.$emit('imagepreview-dismiss', { url: props.url, force });
+      };
+
+      const show = () => {
+        EventBus.$emit('imagepreview-show', { url: props.url });
+      };
+
+      const toggleStickyness = () => {
+        EventBus.$emit('imagepreview-toggle-stickyness', { url: props.url });
+      };
+
+      const handleClick = (e: MouseEvent) => {
+        if (e.altKey) {
+          toggleStickyness();
+          e.preventDefault();
+        } else {
+          dismiss(true);
+        }
+      };
+
+      onMounted(() => {
+        const el = instance?.proxy?.$el as any;
+        if (!el) return;
+        el.bbcodeTag = 'url';
+        el.bbcodeParam = props.url;
+      });
+
+      onBeforeUnmount(() => {
+        dismiss();
+      });
+
+      onDeactivated(() => {
+        dismiss();
+      });
+
+      return {
+        type,
+        dismiss,
+        show,
+        toggleStickyness,
+        handleClick
+      };
     }
-  }
+  });
 </script>
