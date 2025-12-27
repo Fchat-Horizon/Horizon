@@ -498,7 +498,9 @@
     }
   }
 
-  /* removed empty rulesets */
+  #userMenu-avatar {
+    object-fit: contain;
+  }
 
   .userInfo-status {
     opacity: 0.7;
