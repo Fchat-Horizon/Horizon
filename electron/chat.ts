@@ -170,6 +170,7 @@ function openIncognitoWindows(url: string): void {
       incognitoArg = '-inprivate';
       break;
     case 'firefox.exe':
+    case 'floorp.exe':
     case 'librewolf.exe':
     case 'waterfox.exe':
     case 'palemoon.exe':
