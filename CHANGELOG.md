@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Search results in the EIcon selector now go well beyond 300, you can scroll down the results to load more. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/18457eda25f91180e1540290e4fa842faebf4859)
   - Thank you, @freenutsxd
 - Dragging pinned EIcons in the EIcon selector's favorites tab now reorders them. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a3a103080f68f6b28220c7cb7c8cf54af8732d80)
+- Added mute filters to hide or spoiler specific terms, including matching EIcons in the picker. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a3a103080f68f6b28220c7cb7c8cf54af8732d80)
+- You can now mute EIcons by right clicking them in the picker or in chat. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a3a103080f68f6b28220c7cb7c8cf54af8732d80)
 - Added a Catpuccin "Moccha" theme. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dba8afcdb5957893deab2443432ab4d8cb420dcd)
 
 ### Changed
