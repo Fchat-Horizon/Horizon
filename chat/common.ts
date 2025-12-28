@@ -67,6 +67,11 @@ export class Settings implements ISettings {
   notifications = true;
   highlight = true;
   highlightWords: string[] = [];
+  horizonMutedWords: string[] = [];
+  horizonMutedWordsMode: 'hide' | 'spoiler' | 'blur' | 'hide-message' = 'hide';
+  horizonMutedEicons: string[] = [];
+  horizonMutedEiconsMode: 'hide' | 'spoiler' | 'blur' | 'replace' = 'hide';
+  horizonMutedEiconsReplacement = '';
   showAvatars = true;
   animatedEicons = true;
   smoothMosaics = true;

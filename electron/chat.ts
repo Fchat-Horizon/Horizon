@@ -50,7 +50,7 @@ import * as qs from 'querystring';
 import * as fs from 'fs';
 import { getKey } from '../chat/common';
 import { EventBus } from '../chat/preview/event-bus';
-import { init as initCore } from '../chat/core';
+import core, { init as initCore } from '../chat/core';
 import l, { setLanguage } from '../chat/localize';
 // import {setupRaven} from '../chat/vue-raven';
 import Socket from '../chat/WebSocket';
@@ -477,6 +477,13 @@ webContents.on('context-menu', (_, props) => {
     props.srcURL.startsWith('https://static.f-list.net/images/eicon/')
   ) {
     let eiconName = props.titleText;
+    const normalizedEicon = (eiconName || '').trim();
+    const currentSettings = core.state?.settings as any;
+    const currentMutedEicons =
+      (currentSettings && currentSettings.horizonMutedEicons) || [];
+    const isBlockedEicon = currentMutedEicons.some(
+      (entry: string) => entry.toLowerCase() === normalizedEicon.toLowerCase()
+    );
     //Electron on Mac allows for header context menu items, so we use that instead of a disabled item split of by a seperator.
     menuTemplate.unshift(
       {
@@ -502,6 +509,27 @@ webContents.on('context-menu', (_, props) => {
 
         click: () => {
           electron.clipboard.writeText(`[eicon]${eiconName}[/eicon]`);
+        }
+      },
+      {
+        label: isBlockedEicon
+          ? l('action.eicon.unblock')
+          : l('action.eicon.block'),
+        click: () => {
+          if (!normalizedEicon || !currentSettings) return;
+          const nextMutedEicons = isBlockedEicon
+            ? currentMutedEicons.filter(
+                (entry: string) =>
+                  entry.toLowerCase() !== normalizedEicon.toLowerCase()
+              )
+            : currentMutedEicons.concat(normalizedEicon);
+          core.state.settings = {
+            ...currentSettings,
+            horizonMutedEicons: nextMutedEicons
+          };
+          void core.settingsStore.set('settings', core.state.settings);
+          EventBus.$emit('configuration-update', core.state.settings);
+          EventBus.$emit('muted-words-updated');
         }
       },
       {

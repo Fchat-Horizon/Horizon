@@ -269,6 +269,15 @@ export namespace Settings {
     readonly notifications: boolean;
     readonly highlight: boolean;
     readonly highlightWords: ReadonlyArray<string>;
+    readonly horizonMutedWords: ReadonlyArray<string>;
+    readonly horizonMutedWordsMode:
+      | 'hide'
+      | 'spoiler'
+      | 'blur'
+      | 'hide-message';
+    readonly horizonMutedEicons: ReadonlyArray<string>;
+    readonly horizonMutedEiconsMode: 'hide' | 'spoiler' | 'blur' | 'replace';
+    readonly horizonMutedEiconsReplacement: string;
     readonly showAvatars: boolean;
     readonly animatedEicons: boolean;
     readonly smoothMosaics: boolean;

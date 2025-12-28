@@ -14,12 +14,14 @@ import { Conversation } from './interfaces';
 import UserView from './UserView.vue';
 import IconView from '../bbcode/IconView.vue';
 import { Scoring } from '../learn/matcher-types';
+import { applyMutedWords, getFilterKey } from './muted-filter';
 
 const userPostfix: { [key: number]: string | undefined } = {
   [Conversation.Message.Type.Message]: ': ',
   [Conversation.Message.Type.Ad]: ': ',
   [Conversation.Message.Type.Action]: ''
 };
+
 @Component({
   render(this: MessageView, createElement: CreateElement): VNode {
     const message = this.message;
@@ -204,37 +206,55 @@ const userPostfix: { [key: number]: string | undefined } = {
         break;
     }
     const isAd = message.type == Conversation.Message.Type.Ad && !this.logs;
+    const filterKey = getFilterKey();
     const bbcodeNode = createElement(BBCodeView(core.bbCodeParser), {
+      key: `${message.id}:${filterKey}`,
       props: {
         unsafeText: isModern ? messageAdjustment : message.text,
-        afterInsert: isAd
-          ? (elm: HTMLElement) => {
-              setImmediate(() => {
-                if (isModern) {
-                  // Pushes elm up three times rather than one with modern to make it parent to the top level of a message.
-                  elm = elm.parentElement!.parentElement!.parentElement!;
-                  if (elm.scrollHeight > elm.offsetHeight) {
-                    const expand = document.createElement('div');
-                    expand.className = 'expand fas fa-caret-down';
-                    expand.addEventListener('click', function (): void {
-                      this.parentElement!.className += ' expanded';
-                    });
-                    elm.appendChild(expand);
-                  }
-                } else {
-                  elm = elm.parentElement!;
-                  if (elm.scrollHeight > elm.offsetHeight) {
-                    const expand = document.createElement('div');
-                    expand.className = 'expand fas fa-caret-down';
-                    expand.addEventListener('click', function (): void {
-                      this.parentElement!.className += ' expanded';
-                    });
-                    elm.appendChild(expand);
-                  }
-                }
-              });
+        afterInsert: (elm: HTMLElement) => {
+          const mutedResult = applyMutedWords(elm);
+
+          // Handle message-level filtering
+          if (mutedResult.action === 'hide-message') {
+            // Find the message container and hide it
+            const messageContainer = isModern
+              ? elm.closest('.message')
+              : elm.parentElement;
+            if (messageContainer) {
+              (messageContainer as HTMLElement).style.display = 'none';
+              (messageContainer as HTMLElement).classList.add(
+                'filtered-hidden'
+              );
             }
-          : undefined
+            return;
+          }
+
+          if (!isAd) return;
+          setImmediate(() => {
+            if (isModern) {
+              // Pushes elm up three times rather than one with modern to make it parent to the top level of a message.
+              elm = elm.parentElement!.parentElement!.parentElement!;
+              if (elm.scrollHeight > elm.offsetHeight) {
+                const expand = document.createElement('div');
+                expand.className = 'expand fas fa-caret-down';
+                expand.addEventListener('click', function (): void {
+                  this.parentElement!.className += ' expanded';
+                });
+                elm.appendChild(expand);
+              }
+            } else {
+              elm = elm.parentElement!;
+              if (elm.scrollHeight > elm.offsetHeight) {
+                const expand = document.createElement('div');
+                expand.className = 'expand fas fa-caret-down';
+                expand.addEventListener('click', function (): void {
+                  this.parentElement!.className += ' expanded';
+                });
+                elm.appendChild(expand);
+              }
+            }
+          });
+        }
       }
     });
 
@@ -276,7 +296,7 @@ const userPostfix: { [key: number]: string | undefined } = {
 
     if (isModern) classes += ' message-modern';
     const node = createElement('div', { attrs: { class: classes } }, children);
-    node.key = message.id;
+    node.key = `${message.id}:${filterKey}`;
     return node;
   }
 })

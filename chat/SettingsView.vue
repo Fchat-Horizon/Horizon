@@ -46,6 +46,169 @@
         />
       </div>
 
+      <div class="mb-3 p-2">
+        <label class="control-label" for="horizonMutedWords">{{
+          l('settings.mutedWords')
+        }}</label>
+        <div class="muted-words-input">
+          <input
+            id="horizonMutedWords"
+            ref="horizonMutedWordsInput"
+            class="form-control"
+            v-model="horizonMutedWordsInput"
+            :placeholder="l('settings.mutedWords.placeholder')"
+            @keydown.enter.prevent="commitMutedWord()"
+            @keydown.esc.prevent="cancelMutedWordEdit()"
+          />
+          <button
+            class="btn btn-light"
+            type="button"
+            @click="commitMutedWord()"
+          >
+            {{ l('settings.mutedWords.add') }}
+          </button>
+        </div>
+        <div class="muted-words-list" v-if="horizonMutedWordsList.length">
+          <span
+            class="muted-word"
+            v-for="(word, index) in horizonMutedWordsList"
+            :key="word + ':' + index"
+            @click="startEditMutedWord(index)"
+            role="button"
+            tabindex="0"
+          >
+            <span class="muted-word-label">{{ word }}</span>
+            <button
+              class="btn btn-sm muted-word-remove"
+              type="button"
+              @click.stop="removeMutedWord(index)"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </span>
+        </div>
+        <div class="form-text text-muted">
+          {{ l('settings.mutedWords.note') }}
+          <span v-if="horizonMutedWordsEditIndex !== null">
+            {{ l('settings.mutedWords.editHint') }}
+          </span>
+        </div>
+      </div>
+
+      <div class="mb-3 p-2">
+        <label class="control-label" for="horizonMutedWordsMode">{{
+          l('settings.mutedWordsMode')
+        }}</label>
+        <select
+          id="horizonMutedWordsMode"
+          class="form-select"
+          v-model="horizonMutedWordsMode"
+        >
+          <option value="hide">{{ l('settings.mutedWordsMode.hide') }}</option>
+          <option value="spoiler">
+            {{ l('settings.mutedWordsMode.spoiler') }}
+          </option>
+          <option value="blur">{{ l('settings.mutedWordsMode.blur') }}</option>
+          <option value="hide-message">
+            {{ l('settings.mutedWordsMode.hide-message') }}
+          </option>
+        </select>
+      </div>
+
+      <div class="mb-3 p-2">
+        <label class="control-label" for="horizonMutedEicons">{{
+          l('settings.mutedEicons')
+        }}</label>
+        <div class="muted-words-input">
+          <input
+            id="horizonMutedEicons"
+            ref="horizonMutedEiconsInput"
+            class="form-control"
+            v-model="horizonMutedEiconsInput"
+            :placeholder="l('settings.mutedEicons.placeholder')"
+            @keydown.enter.prevent="commitMutedEicon()"
+            @keydown.esc.prevent="cancelMutedEiconEdit()"
+          />
+          <button
+            class="btn btn-light"
+            type="button"
+            @click="commitMutedEicon()"
+          >
+            {{ l('settings.mutedEicons.add') }}
+          </button>
+        </div>
+        <div class="muted-words-list" v-if="horizonMutedEiconsList.length">
+          <span
+            class="muted-word"
+            v-for="(eicon, index) in horizonMutedEiconsList"
+            :key="eicon + ':' + index"
+            @click="startEditMutedEicon(index)"
+            role="button"
+            tabindex="0"
+          >
+            <span class="muted-word-label">{{ eicon }}</span>
+            <button
+              class="btn btn-sm muted-word-remove"
+              type="button"
+              @click.stop="removeMutedEicon(index)"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </span>
+        </div>
+        <div class="form-text text-muted">
+          {{ l('settings.mutedEicons.note') }}
+          <span v-if="horizonMutedEiconsEditIndex !== null">
+            {{ l('settings.mutedEicons.editHint') }}
+          </span>
+        </div>
+      </div>
+
+      <div class="mb-3 p-2">
+        <label class="control-label" for="horizonMutedEiconsMode">{{
+          l('settings.mutedEiconsMode')
+        }}</label>
+        <select
+          id="horizonMutedEiconsMode"
+          class="form-select"
+          v-model="horizonMutedEiconsMode"
+        >
+          <option value="hide">{{ l('settings.mutedEiconsMode.hide') }}</option>
+          <option value="spoiler">
+            {{ l('settings.mutedEiconsMode.spoiler') }}
+          </option>
+          <option value="blur">{{ l('settings.mutedEiconsMode.blur') }}</option>
+          <option value="replace">
+            {{ l('settings.mutedEiconsMode.replace') }}
+          </option>
+        </select>
+      </div>
+
+      <div class="mb-3 p-2" v-if="horizonMutedEiconsMode === 'replace'">
+        <label class="control-label" for="horizonMutedEiconsReplacement">{{
+          l('settings.mutedEiconsReplacement')
+        }}</label>
+        <div class="d-flex align-items-center gap-2">
+          <input
+            id="horizonMutedEiconsReplacement"
+            class="form-control"
+            v-model="horizonMutedEiconsReplacement"
+            :placeholder="l('settings.mutedEiconsReplacement.placeholder')"
+          />
+          <img
+            v-if="horizonMutedEiconsReplacement"
+            class="eicon-preview"
+            :src="
+              'https://static.f-list.net/images/eicon/' +
+              horizonMutedEiconsReplacement +
+              '.gif'
+            "
+            :alt="horizonMutedEiconsReplacement"
+            style="width: 50px; height: 50px"
+          />
+        </div>
+      </div>
+
       <div class="mb-3">
         <div class="d-flex p-2 justify-content-between align-items-start">
           <div class="w-50">
@@ -1143,6 +1306,15 @@
     notifications!: boolean;
     highlight!: boolean;
     highlightWords!: string;
+    horizonMutedWordsList: string[] = [];
+    horizonMutedWordsInput = '';
+    horizonMutedWordsEditIndex: number | null = null;
+    horizonMutedWordsMode!: 'hide' | 'spoiler' | 'blur' | 'hide-message';
+    horizonMutedEiconsList: string[] = [];
+    horizonMutedEiconsInput = '';
+    horizonMutedEiconsEditIndex: number | null = null;
+    horizonMutedEiconsMode!: 'hide' | 'spoiler' | 'blur' | 'replace';
+    horizonMutedEiconsReplacement = '';
     showAvatars!: boolean;
     animatedEicons!: boolean;
     smoothMosaics!: boolean;
@@ -1201,6 +1373,138 @@
 
     smartFilterTypes = smartFilterTypesOrigin;
 
+    addMutedWord(value: string): void {
+      const trimmed = value.trim();
+      if (!trimmed) return;
+      const normalized = trimmed.toLowerCase();
+      const existingIndex = this.horizonMutedWordsList.findIndex(
+        item => item.toLowerCase() === normalized
+      );
+      if (existingIndex !== -1) return;
+      this.horizonMutedWordsList.push(trimmed);
+    }
+
+    commitMutedWord(): void {
+      const input = this.horizonMutedWordsInput.trim();
+      if (!input) return;
+
+      const parts = input
+        .split(/[,\n]/)
+        .map(part => part.trim())
+        .filter(part => part.length > 0);
+      if (parts.length === 0) return;
+
+      if (this.horizonMutedWordsEditIndex !== null) {
+        this.horizonMutedWordsList.splice(this.horizonMutedWordsEditIndex, 1);
+        this.horizonMutedWordsEditIndex = null;
+      }
+
+      for (const part of parts) {
+        this.addMutedWord(part);
+      }
+
+      this.horizonMutedWordsInput = '';
+    }
+
+    startEditMutedWord(index: number): void {
+      const value = this.horizonMutedWordsList[index];
+      if (value === undefined) return;
+      this.horizonMutedWordsInput = value;
+      this.horizonMutedWordsEditIndex = index;
+      this.$nextTick(() => {
+        const input = this.$refs['horizonMutedWordsInput'] as HTMLInputElement;
+        if (input) input.focus();
+      });
+    }
+
+    cancelMutedWordEdit(): void {
+      this.horizonMutedWordsInput = '';
+      this.horizonMutedWordsEditIndex = null;
+    }
+
+    removeMutedWord(index: number): void {
+      if (index < 0 || index >= this.horizonMutedWordsList.length) return;
+      this.horizonMutedWordsList.splice(index, 1);
+      if (
+        this.horizonMutedWordsEditIndex !== null &&
+        this.horizonMutedWordsEditIndex >= index
+      ) {
+        this.horizonMutedWordsEditIndex =
+          this.horizonMutedWordsEditIndex === index
+            ? null
+            : this.horizonMutedWordsEditIndex - 1;
+      }
+      if (this.horizonMutedWordsEditIndex === null) {
+        this.horizonMutedWordsInput = '';
+      }
+    }
+
+    addMutedEicon(value: string): void {
+      const trimmed = value.trim();
+      if (!trimmed) return;
+      const normalized = trimmed.toLowerCase();
+      const existingIndex = this.horizonMutedEiconsList.findIndex(
+        item => item.toLowerCase() === normalized
+      );
+      if (existingIndex !== -1) return;
+      this.horizonMutedEiconsList.push(trimmed);
+    }
+
+    commitMutedEicon(): void {
+      const input = this.horizonMutedEiconsInput.trim();
+      if (!input) return;
+
+      const parts = input
+        .split(/[,\n]/)
+        .map(part => part.trim())
+        .filter(part => part.length > 0);
+      if (parts.length === 0) return;
+
+      if (this.horizonMutedEiconsEditIndex !== null) {
+        this.horizonMutedEiconsList.splice(this.horizonMutedEiconsEditIndex, 1);
+        this.horizonMutedEiconsEditIndex = null;
+      }
+
+      for (const part of parts) {
+        this.addMutedEicon(part);
+      }
+
+      this.horizonMutedEiconsInput = '';
+    }
+
+    startEditMutedEicon(index: number): void {
+      const value = this.horizonMutedEiconsList[index];
+      if (value === undefined) return;
+      this.horizonMutedEiconsInput = value;
+      this.horizonMutedEiconsEditIndex = index;
+      this.$nextTick(() => {
+        const input = this.$refs['horizonMutedEiconsInput'] as HTMLInputElement;
+        if (input) input.focus();
+      });
+    }
+
+    cancelMutedEiconEdit(): void {
+      this.horizonMutedEiconsInput = '';
+      this.horizonMutedEiconsEditIndex = null;
+    }
+
+    removeMutedEicon(index: number): void {
+      if (index < 0 || index >= this.horizonMutedEiconsList.length) return;
+      this.horizonMutedEiconsList.splice(index, 1);
+      if (
+        this.horizonMutedEiconsEditIndex !== null &&
+        this.horizonMutedEiconsEditIndex >= index
+      ) {
+        this.horizonMutedEiconsEditIndex =
+          this.horizonMutedEiconsEditIndex === index
+            ? null
+            : this.horizonMutedEiconsEditIndex - 1;
+      }
+      if (this.horizonMutedEiconsEditIndex === null) {
+        this.horizonMutedEiconsInput = '';
+      }
+    }
+
     async load(): Promise<void> {
       const settings = core.state.settings;
       this.playSound = settings.playSound;
@@ -1209,6 +1513,19 @@
       this.notifications = settings.notifications;
       this.highlight = settings.highlight;
       this.highlightWords = settings.highlightWords.join(',');
+      this.horizonMutedWordsList = settings.horizonMutedWords.slice();
+      this.horizonMutedWordsInput = '';
+      this.horizonMutedWordsEditIndex = null;
+      this.horizonMutedWordsMode = settings.horizonMutedWordsMode || 'hide';
+      this.horizonMutedEiconsList = (
+        (settings as any).horizonMutedEicons || []
+      ).slice();
+      this.horizonMutedEiconsInput = '';
+      this.horizonMutedEiconsEditIndex = null;
+      this.horizonMutedEiconsMode =
+        (settings as any).horizonMutedEiconsMode || 'hide';
+      this.horizonMutedEiconsReplacement =
+        (settings as any).horizonMutedEiconsReplacement || '';
       this.showAvatars = settings.showAvatars;
       this.animatedEicons = settings.animatedEicons;
       this.smoothMosaics = settings.smoothMosaics;
@@ -1318,6 +1635,9 @@
         JSON.stringify(core.state.settings.risingFilter)
       );
 
+      this.commitMutedWord();
+      this.commitMutedEicon();
+
       const idleTimer = parseInt(this.idleTimer, 10);
       const fontSize = parseFloat(this.fontSize);
 
@@ -1344,6 +1664,11 @@
           .split(',')
           .map(x => x.trim())
           .filter(x => x.length),
+        horizonMutedWords: this.horizonMutedWordsList.slice(),
+        horizonMutedWordsMode: this.horizonMutedWordsMode || 'hide',
+        horizonMutedEicons: this.horizonMutedEiconsList.slice(),
+        horizonMutedEiconsMode: this.horizonMutedEiconsMode || 'hide',
+        horizonMutedEiconsReplacement: this.horizonMutedEiconsReplacement || '',
         showAvatars: this.showAvatars,
         animatedEicons: this.animatedEicons,
         smoothMosaics: this.smoothMosaics,
@@ -1565,5 +1890,50 @@
 
   #settings .form-group.filters.age input {
     margin-left: 5px;
+  }
+
+  #settings .muted-words-input {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  #settings .muted-words-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  #settings .muted-word {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    background: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  #settings .muted-word:hover {
+    background: var(--bs-light);
+  }
+
+  #settings .muted-word-remove {
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    line-height: 1;
+  }
+
+  #settings .muted-word-remove i {
+    opacity: 0.7;
+  }
+
+  #settings .muted-word-remove:hover i {
+    opacity: 1;
   }
 </style>

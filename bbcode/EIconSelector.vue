@@ -193,6 +193,7 @@
   import CustomDialog from '../components/custom_dialog';
   import l from '../chat/localize';
   import { EventBus } from '../chat/preview/event-bus';
+  import { buildMutedMatcher } from '../helpers/muted-matchers';
 
   function debounce<T>(
     func: (this: T, ...args: any) => void,
@@ -253,6 +254,8 @@
       }
     }, 100);
 
+    configurationUpdateHandler: (() => void) | null = null;
+
     @Hook('mounted')
     async mounted(): Promise<void> {
       store = await EIconStore.getSharedStore();
@@ -261,6 +264,11 @@
       EventBus.$on('eicon-pinned', (data: any) => {
         this.forceAddFavorite(data.eicon);
       });
+      this.configurationUpdateHandler = () => {
+        this.runSearch();
+      };
+      EventBus.$on('configuration-update', this.configurationUpdateHandler);
+      EventBus.$on('muted-words-updated', this.configurationUpdateHandler);
       this.searchWithString('category:favorites');
 
       // add scroll listener to the results container
@@ -280,6 +288,11 @@
         resultsContainer.removeEventListener('scroll', this.handleScroll);
       }
       this.destroySortable();
+      if (this.configurationUpdateHandler) {
+        EventBus.$off('configuration-update', this.configurationUpdateHandler);
+        EventBus.$off('muted-words-updated', this.configurationUpdateHandler);
+        this.configurationUpdateHandler = null;
+      }
     }
 
     initializeSortable(): void {
@@ -301,14 +314,32 @@
           this.results.splice(newIndex, 0, eicon);
 
           const favoriteEIcons = Object.keys(core.state.favoriteEIcons);
-          favoriteEIcons.splice(oldIndex, 1);
-          favoriteEIcons.splice(newIndex, 0, eicon);
+          const mutedMatcher = this.getMutedEiconMatcher();
+          if (mutedMatcher) {
+            const visibleFavorites = this.results.slice();
+            const newFavorites: Record<string, boolean> = {};
+            let visibleIndex = 0;
+            for (const favorite of favoriteEIcons) {
+              if (this.isMutedEicon(favorite, mutedMatcher)) {
+                newFavorites[favorite] = true;
+              } else {
+                const nextFavorite = visibleFavorites[visibleIndex++];
+                if (nextFavorite) {
+                  newFavorites[nextFavorite] = true;
+                }
+              }
+            }
+            core.state.favoriteEIcons = newFavorites;
+          } else {
+            favoriteEIcons.splice(oldIndex, 1);
+            favoriteEIcons.splice(newIndex, 0, eicon);
 
-          const newFavorites: Record<string, boolean> = {};
-          for (const eicon of favoriteEIcons) {
-            newFavorites[eicon] = true;
+            const newFavorites: Record<string, boolean> = {};
+            for (const eicon of favoriteEIcons) {
+              newFavorites[eicon] = true;
+            }
+            core.state.favoriteEIcons = newFavorites;
           }
-          core.state.favoriteEIcons = newFavorites;
 
           void core.settingsStore.set(
             'favoriteEIcons',
@@ -372,6 +403,8 @@
         this.allResults = store?.search(s) || [];
       }
 
+      this.allResults = this.filterMutedEicons(this.allResults);
+
       this.results = this.allResults.slice(0, this.displayedCount);
 
       this.$nextTick(() => {
@@ -387,6 +420,23 @@
           this.destroySortable();
         }
       });
+    }
+
+    getMutedEiconMatcher(): RegExp | null {
+      const words = (core.state.settings as any).horizonMutedEicons || [];
+      return buildMutedMatcher(words, 'string');
+    }
+
+    isMutedEicon(eicon: string, matcher: RegExp | null): boolean {
+      if (!matcher) return false;
+      matcher.lastIndex = 0;
+      return matcher.test(eicon);
+    }
+
+    filterMutedEicons(eicons: string[]): string[] {
+      const matcher = this.getMutedEiconMatcher();
+      if (!matcher) return eicons;
+      return eicons.filter(eicon => !this.isMutedEicon(eicon, matcher));
     }
 
     getCategoryResults(category: string): string[] {
