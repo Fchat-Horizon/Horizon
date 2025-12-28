@@ -209,8 +209,6 @@
 
   let store: EIconStore | undefined;
 
-  let sortable: Sortable | undefined;
-
   @Component({
     components: { modal }
   })
@@ -218,6 +216,8 @@
     l = l;
     @Prop
     readonly onSelect?: (eicon: string, shift: boolean) => void;
+
+    private sortable: Sortable | undefined = undefined;
 
     storeLoaded: boolean = false;
 
@@ -269,7 +269,7 @@
         if (resultsContainer) {
           resultsContainer.addEventListener('scroll', this.handleScroll);
         }
-        this.initializeSortable(); // Initialize Sortable for favorites view
+        this.initializeSortable();
       });
     }
 
@@ -283,12 +283,12 @@
     }
 
     initializeSortable(): void {
-      if (sortable || this.search !== 'category:favorites') return;
+      if (this.sortable || this.search !== 'category:favorites') return;
 
       const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
       if (!resultsContainer) return;
 
-      sortable = Sortable.create(resultsContainer, {
+      this.sortable = Sortable.create(resultsContainer, {
         animation: 150,
         onEnd: e => {
           //const itemEl = e.item;
@@ -319,9 +319,9 @@
     }
 
     destroySortable(): void {
-      if (sortable) {
-        sortable.destroy();
-        sortable = undefined;
+      if (this.sortable) {
+        this.sortable.destroy();
+        this.sortable = undefined;
       }
     }
 
@@ -381,11 +381,7 @@
           resultsContainer.scrollTop = 0;
         }
 
-        if (this.search === 'category:favorites') {
-          this.initializeSortable();
-        } else {
-          this.destroySortable();
-        }
+        this.initializeSortable();
       });
     }
 
@@ -791,10 +787,15 @@
       this.refreshing = false;
 
       this.$nextTick(() => {
-        // reattach scroll listener after refresh
         const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
         if (resultsContainer) {
           resultsContainer.addEventListener('scroll', this.handleScroll);
+        }
+
+        this.destroySortable();
+
+        if (this.search === 'category:favorites') {
+          this.initializeSortable();
         }
       });
     }
@@ -918,14 +919,13 @@
             display: table-cell;
             border: solid 1px transparent !important;
             position: relative;
-
             &:hover {
               &:not(:active) {
                 background-color: var(--bs-light) !important;
                 border: solid 1px var(--bs-light) !important;
               }
               .favorite-toggle {
-                visibility: visible !important;
+                visibility: visible;
               }
             }
 
