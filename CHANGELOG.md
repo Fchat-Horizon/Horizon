@@ -5,9 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). You can also read it on our [website](https://fchat-horizon.github.io/docs/changelog.html).
 
-# [Unreleased]
+# [Releases]
 
-## [1.35.5] XX-12-2025
+## [1.35.5] 29-12-2025
 
 ### Added
 
@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Due to Safari not supporting Private Mode flags for the command line, MacOS support for this feature has not yet been added.
 - If you try and change the server host, you'll now get a warning asking you if you are _really_ sure. This is an advanced option after all. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8c626f023e42842077574afad81fca4de1537044)
 - Adjusted some matching/ kink-related colors in colorblind mode for better contrast. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/745da3f83cb008067ad310478d9c0db954fa8a82)
+- "Yes" is once again the default option when prompted to log out or close a tab. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/14c53f141f793e27dee8e74c2d102091829988b5)
+  - Fun fact: This was technically a bug, and "No" was the intended default option, an update in our dependencies unbroke this accidentally. But muscle memory > intent.
 - Updated localization files.
 
 ### Fixed
@@ -45,8 +47,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/545 by @CodingWithAnxiety
 - https://github.com/Fchat-Horizon/Horizon/pull/553 by @AriannaAltomare
 - https://github.com/Fchat-Horizon/Horizon/pull/556 by @astrayblackcat
-
-# [Releases]
 
 ## [1.35.4] - 11-12-2025
 
