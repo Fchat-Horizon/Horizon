@@ -53,6 +53,17 @@
                   l('chat.joinDiscord')
                 }}</span>
               </a>
+              <a
+                class="btn btn-outline-primary"
+                href="https://ko-fi.com/thehorizonteam"
+                target="_blank"
+                rel="noopener"
+                style="margin-left: 8px"
+                title="Support us on Ko-Fi"
+              >
+                <span class="fa fa-coffee"></span>
+                <span style="margin-left: 6px">Ko-Fi</span>
+              </a>
               <button
                 type="button"
                 class="btn btn-secondary"

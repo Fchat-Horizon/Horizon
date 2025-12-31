@@ -39,6 +39,15 @@
             <span class="fab fa-discord"></span>
           </a>
           <a
+            href="https://ko-fi.com/thehorizonteam"
+            target="_blank"
+            rel="noopener"
+            class="btn"
+            title="Support us on Ko-Fi"
+          >
+            <span class="fa fa-coffee"></span>
+          </a>
+          <a
             href="https://chat.f-list.net/stats/"
             target="_blank"
             rel="noopener"
