@@ -920,13 +920,20 @@
 
     get styling(): string {
       try {
-        return `<style id="themeStyle">${fs.readFileSync(path.join(__dirname, `themes/${(this.character != undefined && core.state.settings.risingCharacterTheme) || this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
+        let base = `<style id="themeStyle">${fs.readFileSync(path.join(__dirname, `themes/${(this.character != undefined && core.state.settings.risingCharacterTheme) || this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
+        if (this.settings.pluginsEnable) {
+          let plugins = this.getPluginThemes();
+          base += plugins;
+        }
+        return base;
       } catch (e) {
         if (
           (<Error & { code: string }>e).code === 'ENOENT' &&
-          this.settings.theme !== 'default'
+          (this.settings.theme !== 'default' ||
+            this.settings.plugins !== undefined)
         ) {
           this.settings.theme = 'default';
+          this.settings.plugins = undefined;
           return this.styling;
         }
         throw e;
@@ -937,6 +944,22 @@
       return this.osIsDark
         ? this.settings.themeSyncDark
         : this.settings.themeSyncLight;
+    }
+    getPluginThemes() {
+      let plugins = this.settings.plugins;
+      if (typeof plugins === 'string') plugins = [plugins];
+      if (!Array.isArray(plugins) || plugins.len === 0) return '';
+      let pluginDir = path.join(remote.app.getPath('userData'), 'Plugins');
+      let result = this.settings.plugins
+        .filter(fileName => fileName.substr(-4) === '.css')
+        .map(fileName => [fileName, path.join(pluginDir, fileName)])
+        .filter(([fileName, filePath]) => fs.existsSync(filePath))
+        .map(
+          ([fileName, filePath]) =>
+            `<link rel="stylesheet" href="${filePath}" id="pluginStyle-${fileName}"></style>`
+        )
+        .join('');
+      return result;
     }
 
     showLogs(): void {

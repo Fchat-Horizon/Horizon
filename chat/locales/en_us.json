@@ -765,6 +765,8 @@
   "settings.open": "Settings",
   "settings.overrideCharacterTheme": "Override UI theme (for this character only)",
   "settings.playSound": "Play notification sounds",
+  "settings.plugins": "Plugins",
+  "settings.plugins.enable": "Enable Plugins",
   "settings.preview": "Preview",
   "settings.preview.character": "Show a character preview when the mouse hovers over a character name",
   "settings.preview.link": "Show a link/ image preview when the mouse hovers over a link",

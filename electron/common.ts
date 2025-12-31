@@ -35,6 +35,8 @@ export class GeneralSettings {
   themeSync: boolean = false;
   themeSyncDark: string = 'dark';
   themeSyncLight: string = 'light';
+  plugins: string[] | string | undefined;
+  pluginsEnable: boolean = false;
   version = electron.app.getVersion();
   beta = false;
   updateCheck = true;
