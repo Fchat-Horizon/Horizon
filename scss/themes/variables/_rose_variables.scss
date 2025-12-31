@@ -18,7 +18,7 @@ $light-color: $black;
 $dark-color: $gray-base;
 $component-active-color: $light-color;
 
-$rose-red: #ff3b30;
+$rose-red: #ff3060;
 $rose-green: #91ebaf;
 $rose-blue: #0a84ff;
 $rose-yellow: #fce0a5;
@@ -27,12 +27,12 @@ $rose-orange: #ff9500;
 $rose-magenta: #61364b;
 $rose-cyan: #81ebed;
 $rose-brown: #d2908d;
-$rose-pink: #f8d7da;
+$rose-pink: #f7a0d3;
 
 $primary: #61364b;
-$secondary: #8a7a8a;
+$secondary: #6b5b6b;
 $success: $rose-green;
-$info: color.scale($rose-blue, $lightness: -20%);
+$info: #1f5fb0;
 $warning: #fce0a5;
 $danger: #ffcdd2;
 $light: $gray-200;

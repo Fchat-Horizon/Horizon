@@ -13,10 +13,10 @@ $yellow-color: $rose-yellow;
 $purple-color: $rose-purple;
 $cyan-color: $rose-cyan;
 $white-color: $gray-800;
-$black-color: #94687e;
+$black-color: $gray-400;
 $brown-color: $rose-brown;
 $pink-color: $rose-pink;
-$gray-color: #898689;
+$gray-color: $gray-600;
 $orange-color: $rose-orange;
 $bookmark-color: color.scale($green-color, $lightness: -20%);
 @import '../chat';
@@ -39,6 +39,10 @@ body,
   background-color: rgba($gray-300, 0.7);
 }
 
+.whiteText {
+  text-shadow: 0 0 2px $black;
+}
+
 .list-group-item-danger {
   color: mix($white, $danger, 9 * 8%);
   background-color: mix($white, $danger, 7 * 8%);
@@ -58,7 +62,7 @@ body,
 }
 
 $genders: (
-  'shemale': $rose-magenta,
+  'shemale': $rose-red,
   'herm': $rose-purple,
   'none': $black-color,
   'female': $rose-pink,
@@ -83,7 +87,166 @@ $genders: (
     --gender-color: #{color.scale($color, $lightness: 5%)};
   }
 }
-// Toolbar buttons – finalize contrast handling similar to Dracula theme.
+$highlight-mix-weight: 20%;
+$warn-mix-weight: 30%;
+$warn-bg: color.scale($rose-red, $alpha: -85%);
+$warn-time-bg: color.scale($rose-red, $alpha: -45%);
+
+.message-highlight,
+.message.message-ad.message-score.match {
+  &.message-highlight {
+    background-color: color.scale($success, $alpha: -80%);
+  }
+  color: $black;
+
+  .message-time {
+    background-color: color.scale(
+      $color: color.adjust($success, $hue: 12deg),
+      $alpha: -70%
+    );
+    color: $black;
+  }
+
+  .redText,
+  .redNameText {
+    color: color.mix($black, $red-color, $highlight-mix-weight);
+  }
+
+  .greenText,
+  .greenNameText {
+    color: color.mix($black, $green-color, $highlight-mix-weight);
+  }
+
+  .blueText,
+  .blueNameText {
+    color: color.mix($black, $blue-color, $highlight-mix-weight);
+  }
+
+  .yellowText,
+  .yellowNameText {
+    color: color.mix($black, $yellow-color, $highlight-mix-weight);
+  }
+
+  .purpleText,
+  .purpleNameText {
+    color: color.mix($black, $purple-color, $highlight-mix-weight);
+  }
+
+  .cyanText,
+  .cyanNameText {
+    color: color.mix($black, $cyan-color, $highlight-mix-weight);
+  }
+
+  .orangeText,
+  .orangeNameText {
+    color: color.mix($black, $orange-color, $highlight-mix-weight);
+  }
+
+  .pinkText,
+  .pinkNameText {
+    color: color.mix($black, $pink-color, $highlight-mix-weight);
+  }
+
+  .brownText,
+  .brownNameText {
+    color: color.mix($black, $brown-color, $highlight-mix-weight);
+  }
+
+  .whiteText,
+  .whiteNameText,
+  .grayText,
+  .grayNameText,
+  .gender-none {
+    color: $black;
+  }
+
+  @each $gender, $color in $genders {
+    @if $gender != 'none' {
+      .gender-#{$gender} {
+        color: color.mix($black, $color, $highlight-mix-weight);
+      }
+    }
+  }
+}
+
+.message-warn {
+  background-color: $warn-bg;
+  color: $black;
+
+  .message-time {
+    background-color: $warn-time-bg;
+    color: $black;
+  }
+
+  .whiteText,
+  .whiteNameText,
+  .gender-none {
+    color: $black;
+  }
+
+  .grayText,
+  .grayNameText {
+    color: color.mix($black, $gray-color, $warn-mix-weight);
+  }
+
+  .redText,
+  .redNameText {
+    color: color.mix($black, $red-color, $warn-mix-weight);
+  }
+
+  .pinkText,
+  .pinkNameText {
+    color: color.mix($black, $pink-color, $warn-mix-weight);
+  }
+
+  .blueText,
+  .blueNameText {
+    color: color.mix($black, $blue-color, $warn-mix-weight);
+  }
+
+  .yellowText,
+  .yellowNameText {
+    color: color.mix($black, $yellow-color, $warn-mix-weight);
+  }
+
+  .greenText,
+  .greenNameText {
+    color: color.mix($black, $green-color, $warn-mix-weight);
+  }
+
+  .orangeText,
+  .orangeNameText {
+    color: color.mix($black, $orange-color, $warn-mix-weight);
+  }
+
+  .purpleText,
+  .purpleNameText {
+    color: color.mix($black, $purple-color, $warn-mix-weight);
+  }
+
+  .cyanText,
+  .cyanNameText {
+    color: color.mix($black, $cyan-color, $warn-mix-weight);
+  }
+
+  .brownText,
+  .brownNameText {
+    color: color.mix($black, $brown-color, $warn-mix-weight);
+  }
+
+  @each $gender, $color in $genders {
+    @if $gender != 'none' {
+      .gender-#{$gender} {
+        color: color.mix($black, $color, $warn-mix-weight);
+      }
+    }
+  }
+}
+
+.layout-modern .message.message-modern.message-warn .message-time,
+.layout-modern .message.message-modern.message-warn.message-own .message-time {
+  color: $black;
+}
 #conversation .btn-toolbar .btn-group a.btn {
   background-color: $primary;
   border-color: color.scale($primary, $lightness: -15%);
