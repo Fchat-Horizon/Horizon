@@ -440,6 +440,8 @@
     profileNameHistory: string[] = [];
     profilePointer = 0;
     isDevMode: boolean = process.env.NODE_ENV !== 'production';
+    private themeWatchHandle?: fs.FSWatcher;
+    private themeWatchTimer?: NodeJS.Timeout;
 
     async startAndUpgradeCache(): Promise<void> {
       log.debug('init.chat.cache.start');
@@ -480,6 +482,7 @@
     @Hook('mounted')
     onMounted(): void {
       log.debug('init.chat.mounted');
+      this.setupThemeHotReload();
     }
 
     @Hook('created')
@@ -920,7 +923,8 @@
 
     get styling(): string {
       try {
-        return `<style id="themeStyle">${fs.readFileSync(path.join(__dirname, `themes/${(this.character != undefined && core.state.settings.risingCharacterTheme) || this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
+        const themeName = this.getActiveThemeName();
+        return `<style id="themeStyle">${this.readThemeCss(themeName)}</style>`;
       } catch (e) {
         if (
           (<Error & { code: string }>e).code === 'ENOENT' &&
@@ -932,11 +936,96 @@
         throw e;
       }
     }
+    getActiveThemeName(): string {
+      return (
+        (this.character != undefined &&
+          core.state.settings.risingCharacterTheme) ||
+        this.getSyncedTheme()
+      );
+    }
+    readThemeCss(themeName: string): string {
+      try {
+        return fs
+          .readFileSync(path.join(__dirname, `themes/${themeName}.css`), 'utf8')
+          .toString();
+      } catch (e) {
+        if (
+          (<Error & { code: string }>e).code === 'ENOENT' &&
+          this.settings.theme !== 'default'
+        ) {
+          this.settings.theme = 'default';
+          return this.readThemeCss(this.getSyncedTheme());
+        }
+        throw e;
+      }
+    }
     getSyncedTheme() {
       if (!this.settings.themeSync) return this.settings.theme;
       return this.osIsDark
         ? this.settings.themeSyncDark
         : this.settings.themeSyncLight;
+    }
+
+    setupThemeHotReload(): void {
+      if (process.env.NODE_ENV === 'production') return;
+      this.startThemeWatch();
+      this.$watch(
+        () => this.getActiveThemeName(),
+        () => {
+          this.startThemeWatch();
+          this.queueThemeReload();
+        }
+      );
+    }
+
+    startThemeWatch(): void {
+      if (process.env.NODE_ENV === 'production') return;
+      this.stopThemeWatch();
+
+      const themeFile = `${this.getActiveThemeName()}.css`;
+      const themesDir = path.join(__dirname, 'themes');
+      try {
+        this.themeWatchHandle = fs.watch(
+          themesDir,
+          { persistent: false },
+          (_event, filename) => {
+            if (!filename) return;
+            const changed = filename.toString();
+            if (changed === themeFile) this.queueThemeReload();
+          }
+        );
+      } catch (err) {
+        log.debug('theme.hotReload.watch.fail', err);
+      }
+    }
+
+    queueThemeReload(): void {
+      if (this.themeWatchTimer) clearTimeout(this.themeWatchTimer);
+      this.themeWatchTimer = setTimeout(() => {
+        try {
+          const style = document.getElementById('themeStyle');
+          if (style)
+            style.textContent = this.readThemeCss(this.getActiveThemeName());
+        } catch (err) {
+          log.debug('theme.hotReload.refresh.fail', err);
+        }
+      }, 60);
+    }
+
+    stopThemeWatch(): void {
+      if (this.themeWatchHandle) {
+        this.themeWatchHandle.close();
+        this.themeWatchHandle = undefined;
+      }
+      if (this.themeWatchTimer) {
+        clearTimeout(this.themeWatchTimer);
+        this.themeWatchTimer = undefined;
+      }
+    }
+
+    @Hook('beforeDestroy')
+    beforeDestroy(): void {
+      this.stopThemeWatch();
     }
 
     showLogs(): void {
