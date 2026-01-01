@@ -922,19 +922,8 @@
     }
 
     get styling(): string {
-      try {
-        const themeName = this.getActiveThemeName();
-        return `<style id="themeStyle">${this.readThemeCss(themeName)}</style>`;
-      } catch (e) {
-        if (
-          (<Error & { code: string }>e).code === 'ENOENT' &&
-          this.settings.theme !== 'default'
-        ) {
-          this.settings.theme = 'default';
-          return this.styling;
-        }
-        throw e;
-      }
+      const themeName = this.getActiveThemeName();
+      return `<style id="themeStyle">${this.readThemeCss(themeName, true)}</style>`;
     }
     getActiveThemeName(): string {
       return (
@@ -943,18 +932,20 @@
         this.getSyncedTheme()
       );
     }
-    readThemeCss(themeName: string): string {
+    readThemeCss(themeName: string, allowFallback = true): string {
       try {
         return fs
           .readFileSync(path.join(__dirname, `themes/${themeName}.css`), 'utf8')
           .toString();
       } catch (e) {
+        const error = e as Error & { code?: string };
         if (
-          (<Error & { code: string }>e).code === 'ENOENT' &&
+          error.code === 'ENOENT' &&
+          allowFallback &&
           this.settings.theme !== 'default'
         ) {
           this.settings.theme = 'default';
-          return this.readThemeCss(this.getSyncedTheme());
+          return this.readThemeCss(this.getSyncedTheme(), false);
         }
         throw e;
       }
@@ -989,11 +980,18 @@
           themesDir,
           { persistent: false },
           (_event, filename) => {
-            if (!filename) return;
-            const changed = filename.toString();
+            if (!filename) {
+              this.queueThemeReload();
+              return;
+            }
+            const changed = path.basename(filename.toString());
             if (changed === themeFile) this.queueThemeReload();
           }
         );
+        this.themeWatchHandle.on('error', err => {
+          log.debug('theme.hotReload.watch.error', err);
+          this.stopThemeWatch();
+        });
       } catch (err) {
         log.debug('theme.hotReload.watch.fail', err);
       }
@@ -1005,7 +1003,10 @@
         try {
           const style = document.getElementById('themeStyle');
           if (style)
-            style.textContent = this.readThemeCss(this.getActiveThemeName());
+            style.textContent = this.readThemeCss(
+              this.getActiveThemeName(),
+              false
+            );
         } catch (err) {
           log.debug('theme.hotReload.refresh.fail', err);
         }
