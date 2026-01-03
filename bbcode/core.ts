@@ -112,7 +112,7 @@ export class CoreBBCodeParser extends BBCodeParser {
         const img = parser.createElement('img');
         img.src = `https://static.f-list.net/images/eicon/${content.toLowerCase()}${extension}`;
         img.title = img.alt = content;
-        img.className = 'character-avatar icon';
+        img.className = 'character-avatar eicon';
         if (Utils.settings.animateEicons && Utils.settings.smoothMosaics) {
           img.classList.add('loading');
           img.addEventListener('load', evt => {
