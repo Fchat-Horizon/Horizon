@@ -434,7 +434,7 @@
         this.activeTab!.view.webContents.focus()
       );
       window.addEventListener('focus', () => {
-        if (!browserWindow.isMinimized()) {
+        if (!browserWindow.isMinimized() && browserWindow.isFocused()) {
           this.activeTab!.view.webContents.focus();
           this.activeTab!.view.webContents.send('active-tab');
         }
