@@ -40,6 +40,21 @@ cd Horizon
 pnpm install
 ```
 
+#### Nix
+
+If you're using [Nix](https://nixos.org/)— whether as a package manager or as part of NixOS, a flake has been provided so you don't need to install any NodeJS dependencies yourself. Simply run the following command from the project root:
+
+```bash
+nix develop
+```
+
+Note that as of writing, the package `sass-embedded` is still required and doesn't directly work inside the Nix shell (because it's its own distributed binary). The Nix flake comes with its own patcher method that solve this, though you do need to run it every time you reinstall the PNPM packages:
+
+```bash
+pnpm install
+patch_sass_embed
+```
+
 ### Building
 
 #### Electron
