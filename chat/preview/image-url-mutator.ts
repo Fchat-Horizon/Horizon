@@ -109,7 +109,8 @@ export class ImageUrlMutator {
       async (url: string, match: RegExpMatchArray): Promise<string> => {
         const path = match[1];
 
-        return `https://d.fxbsky.app/${path}`;
+        // https://github.com/Lexedia/VixBluesky/wiki/Features#custom-pds-video-support
+        return `https://r.v.bskx.app/${path}`;
       }
     );
 
