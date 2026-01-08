@@ -105,6 +105,15 @@ export class ImageUrlMutator {
     );
 
     this.add(
+      /^https?:\/\/bsky\.app\/(profile\/[\w\.:]+\/post\/[\w]+)/,
+      async (url: string, match: RegExpMatchArray): Promise<string> => {
+        const path = match[1];
+
+        return `https://d.fxbsky.app/${path}`;
+      }
+    );
+
+    this.add(
       /^https?:\/\/rule34video.com\/videos\/([0-9a-zA-Z-_]+)/,
       async (_url: string, match: RegExpMatchArray): Promise<string> => {
         const videoId = match[1];
