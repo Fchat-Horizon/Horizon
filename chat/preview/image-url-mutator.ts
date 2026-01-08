@@ -105,9 +105,9 @@ export class ImageUrlMutator {
     );
 
     this.add(
-      /^https?:\/\/bsky\.app\/(profile\/[\w\.:]+\/post\/[\w]+)/,
+      /^https?:\/\/([\w-]*bsky|bskye|bskyx|bsyy)\.app\/(profile\/[\w.:]+\/post\/\w+)/,
       async (url: string, match: RegExpMatchArray): Promise<string> => {
-        const path = match[1];
+        const path = match[2];
 
         // https://github.com/Lexedia/VixBluesky/wiki/Features#custom-pds-video-support
         return `https://r.v.bskx.app/${path}`;
