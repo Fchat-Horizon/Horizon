@@ -20,6 +20,8 @@ export class ImageUrlMutator {
   private static readonly IMGUR_IMAGE_URL_REGEX =
     /^https?:\/\/i.imgur.com\/([a-zA-Z0-9]+)(\.[a-z0-9A-Z]+)(.*)$/;
 
+  private static redgifsToken: string | null = null;
+
   private debug: boolean;
 
   private static SUPPRESSOR_DOMAINS = ['vimeo.com', 'gfycat.com'];
@@ -148,8 +150,26 @@ export class ImageUrlMutator {
       /^https?:\/\/(www.|v3.)?redgifs.com\/watch\/([a-z0-9A-Z]+)/,
       async (_url: string, match: RegExpMatchArray): Promise<string> => {
         const redgifId = match[2];
+        try {
+          const token = await this.getRedgifsToken();
+          const response = await Axios.get(
+            `https://api.redgifs.com/v2/gifs/${redgifId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`
+              }
+            }
+          );
+          const hdUrl = _.get(response, 'data.gif.urls.hd');
 
-        return `https://www.redgifs.com/ifr/${redgifId}?controls=0&hd=1`;
+          return (
+            hdUrl || `https://www.redgifs.com/ifr/${redgifId}?controls=0%hd=1`
+          );
+        } catch (err) {
+          if (this.debug) console.error('RedGifs API Failure', redgifId, err);
+          // fallback to iframe if API fails
+          return `https://www.redgifs.com/ifr/${redgifId}?controls=0&hd=1`;
+        }
       }
     );
 
@@ -310,6 +330,28 @@ export class ImageUrlMutator {
       async (_url: string, match: RegExpMatchArray) =>
         this.getOptimizedImgUrlFromMatch(match)
     );*/
+  }
+
+  private async getRedgifsToken(): Promise<string> {
+    if (ImageUrlMutator.redgifsToken) {
+      return ImageUrlMutator.redgifsToken;
+    }
+
+    try {
+      const response = await Axios.get(
+        'https://api.redgifs.com/v2/auth/temporary'
+      );
+      const token = _.get(response, 'data.token');
+
+      if (token) {
+        ImageUrlMutator.redgifsToken = token;
+        return token;
+      }
+    } catch (err) {
+      if (this.debug) console.error('Failed to get RedGifs token', err);
+    }
+
+    return '';
   }
 
   getOptimizedImgUrlFromMatch(match: RegExpMatchArray): string {
