@@ -150,26 +150,31 @@ export class ImageUrlMutator {
       /^https?:\/\/(www.|v3.)?redgifs.com\/watch\/([a-z0-9A-Z]+)/,
       async (_url: string, match: RegExpMatchArray): Promise<string> => {
         const redgifId = match[2];
-        try {
-          const token = await this.getRedgifsToken();
-          const response = await Axios.get(
-            `https://api.redgifs.com/v2/gifs/${redgifId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
-            }
-          );
-          const hdUrl = _.get(response, 'data.gif.urls.hd');
+        const fallback = `https://www.redgifs.com/ifr/${redgifId}?controls=0%hd=1`;
 
-          return (
-            hdUrl || `https://www.redgifs.com/ifr/${redgifId}?controls=0%hd=1`
-          );
-        } catch (err) {
-          if (this.debug) console.error('RedGifs API Failure', redgifId, err);
-          // fallback to iframe if API fails
-          return `https://www.redgifs.com/ifr/${redgifId}?controls=0&hd=1`;
+        for (const refresh of [false, true]) {
+          try {
+            const token = await this.getRedgifsToken(refresh);
+            if (!token) continue;
+
+            const response = await Axios.get(
+              `https://api.redgifs.com/v2/gifs/${redgifId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`
+                }
+              }
+            );
+            const hdUrl = _.get(response, 'data.gif.urls.hd');
+
+            return hdUrl || fallback;
+          } catch (err) {
+            // attempt token refresh, then fallback to iframe if API fails
+            if (refresh && this.debug)
+              console.error('RedGifs API Failure', redgifId, err);
+          }
         }
+        return fallback;
       }
     );
 
@@ -332,8 +337,8 @@ export class ImageUrlMutator {
     );*/
   }
 
-  private async getRedgifsToken(): Promise<string> {
-    if (ImageUrlMutator.redgifsToken) {
+  private async getRedgifsToken(forceRefresh = false): Promise<string> {
+    if (!forceRefresh && ImageUrlMutator.redgifsToken) {
       return ImageUrlMutator.redgifsToken;
     }
 
@@ -342,6 +347,7 @@ export class ImageUrlMutator {
         'https://api.redgifs.com/v2/auth/temporary'
       );
       const token = _.get(response, 'data.token');
+      console.log('Fetching redgifs API token');
 
       if (token) {
         ImageUrlMutator.redgifsToken = token;
