@@ -46,7 +46,7 @@ const OS_CONFIGS = {
   },
   linux: {
     aliases: ['unix', 'linux64', 'linux32'],
-    formats: ['deb', 'rpm', 'tar.gz', 'AppImage'],
+    formats: ['deb', 'rpm', 'tar.gz', 'AppImage', 'dir'],
     arches: ['x64', 'arm64', 'armv7l', 'ia32']
   },
   windows: {

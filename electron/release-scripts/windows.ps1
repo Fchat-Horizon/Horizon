@@ -61,5 +61,7 @@ New-Item -ItemType Directory -Path $ReleasePath -Force | Out-Null
 # Copy artifacts
 # * Copy built executables to the release directory
 Copy-Item "$DistPath\*.exe" -Destination "$ReleasePath\" -ErrorAction SilentlyContinue
+Copy-Item "$DistPath\latest*.yml" -Destination "$ReleasePath\" -ErrorAction SilentlyContinue
+Copy-Item "$DistPath\*.blockmap" -Destination "$ReleasePath\" -ErrorAction SilentlyContinue
 
-# TODO: Allow specifying the branch to build from   
+# TODO: Allow specifying the branch to build from
