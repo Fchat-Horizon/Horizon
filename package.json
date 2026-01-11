@@ -98,6 +98,8 @@
   },
   "scripts": {
     "__removed__postinstall": "electron-rebuild --prebuild-tag-prefix=ignoreprebuilds -f -o keytar",
+    "changelog:split": "node scripts/changelog-tools.mjs split",
+    "changelog:build": "node scripts/changelog-tools.mjs build",
     "watch": "cd electron && pnpm watch",
     "start": "cd electron && pnpm start",
     "lint": "pnpm prettier --write .",
