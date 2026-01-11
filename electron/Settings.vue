@@ -205,6 +205,22 @@
                     </label>
                   </div>
                 </div>
+                <div class="mb-3" v-if="settings.updateCheck">
+                  <div class="form-check">
+                    <input
+                      type="checkbox"
+                      id="hideAutoUpdater"
+                      v-model="settings.horizonHideAutoUpdater"
+                      class="form-check-input"
+                    />
+                    <label class="form-check-label" for="hideAutoUpdater">
+                      {{ l('settings.updateHideAutoUpdater') }}
+                    </label>
+                  </div>
+                  <div class="form-text text-muted">
+                    {{ l('settings.updateHideAutoUpdater.note') }}
+                  </div>
+                </div>
               </div>
               <!--Appearance-->
               <div

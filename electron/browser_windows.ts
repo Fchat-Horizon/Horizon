@@ -644,7 +644,8 @@ export function createChangelogWindow(
   settings: GeneralSettings,
   ImporterHint: ImporterHint,
   parentWindow: electron.BrowserWindow,
-  updateVer?: string
+  updateVer?: string,
+  updateMode?: 'auto' | 'manual'
 ): electron.BrowserWindow | undefined {
   let desiredHeight = 700;
   let desiredWidth = 600;
@@ -682,7 +683,8 @@ export function createChangelogWindow(
     query: {
       settings: JSON.stringify(settings),
       import: ImporterHint === 'none' ? '' : ImporterHint,
-      updateVer: updateVer || ''
+      updateVer: updateVer || '',
+      updateMode: updateMode || ''
     }
   });
 

@@ -288,7 +288,11 @@
           version?: string
         ) => {
           this.hasUpdate = updateAvailable;
-          if (version) this.updateVersion = version;
+          if (updateAvailable) {
+            if (version) this.updateVersion = version;
+          } else {
+            this.updateVersion = '';
+          }
         }
       );
       electron.ipcRenderer.on('fix-logs', () =>
