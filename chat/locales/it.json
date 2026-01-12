@@ -773,6 +773,8 @@
   "settings.profile": "Profilo",
   "settings.profile.autoCompareKinks": "Confronta automaticamente i kink quando visualizzi il profilo di un personaggio",
   "settings.profile.autoExpandCustoms": "Espandi automaticamente i kink personalizzati",
+  "settings.profile.ignoredList": "Personaggi ignorati",
+  "settings.profile.ignoredList.empty": "Non stai ignorando nessun utente al momento.",
   "settings.profile.viewer": "Visualizzazione profilo",
   "settings.profileViewer": "Usa il visualizzatore dei profili",
   "settings.reducedMotion": "Forza movimento ridotto",
