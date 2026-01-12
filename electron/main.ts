@@ -47,7 +47,7 @@ import { defaultHost, GeneralSettings } from './common';
 import MenuItemConstructorOptions = electron.MenuItemConstructorOptions;
 import * as _ from 'lodash';
 import { AdCoordinatorHost } from '../chat/ads/ad-coordinator-host';
-import { IpcMainEvent, session } from 'electron';
+import { IpcMainEvent, IpcMainInvokeEvent, session } from 'electron';
 import Axios from 'axios';
 import * as browserWindows from './browser_windows';
 import * as remoteMain from '@electron/remote/main';
@@ -961,6 +961,19 @@ async function onReady(): Promise<void> {
   electron.ipcMain.handle('get-connected-characters', () => {
     return characters.slice();
   });
+
+  electron.ipcMain.handle(
+    'request-focus',
+    async (event: IpcMainInvokeEvent) => {
+      const window = electron.BrowserWindow.fromWebContents(event.sender);
+      if (window && !window.isMinimized()) {
+        // Send a do-focus event to the window
+        window.webContents.send('do-focus');
+        return { success: true };
+      }
+      return { success: false };
+    }
+  );
 
   const adCoordinator = new AdCoordinatorHost();
   electron.ipcMain.on('request-send-ad', (event: IpcMainEvent, adId: string) =>

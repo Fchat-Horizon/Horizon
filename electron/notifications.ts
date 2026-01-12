@@ -1,4 +1,5 @@
 import * as remote from '@electron/remote';
+import * as electron from 'electron';
 import core from '../chat/core';
 import { Conversation } from '../chat/interfaces';
 //tslint:disable-next-line:match-default-export-name
@@ -27,13 +28,15 @@ export default class Notifications extends BaseNotifications {
         title,
         this.getOptions(conversation, body, icon)
       );
-      notification.onclick = () => {
+      notification.onclick = async () => {
         browserWindow.webContents.send(
           'show-tab',
           remote.getCurrentWebContents().id
         );
         conversation.show();
         if (browserWindow.isMinimized()) browserWindow.restore();
+        // Request focus via IPC handler
+        await electron.ipcRenderer.invoke('request-focus');
         browserWindow.focus();
         notification.close();
       };
