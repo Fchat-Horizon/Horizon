@@ -773,6 +773,8 @@
   "settings.profile": "Profil",
   "settings.profile.autoCompareKinks": "Automatikusan hasonlítsa össze a kinkeket karakterprofil megtekintése közben",
   "settings.profile.autoExpandCustoms": "Személyre szabott kinkek automatikus kitárása",
+  "settings.profile.ignoredList": "Mellőzött karakterek",
+  "settings.profile.ignoredList.empty": "Jelenleg nem mellőzöl egy felhasználót sem.",
   "settings.profile.viewer": "Profilnézegető",
   "settings.profileViewer": "Profilnézegető használata",
   "settings.reducedMotion": "Csökkentett Mozgási Mód kényszerítése",
