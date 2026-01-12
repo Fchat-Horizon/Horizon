@@ -27,7 +27,7 @@ cd "$REPO_ROOT"
 # // git pull
 
 # & Install dependencies
-pnpm install
+pnpm install --frozen-lockfile
 
 # & Clean previous builds
 rm -rf "$DIST_PATH"
@@ -35,7 +35,6 @@ rm -rf "$DIST_PATH"
 # & Build the project
 cd electron
 rm -rf app dist
-pnpm install
 node ../webpack production
 node build/build.mjs --os linux --format deb tar.gz AppImage rpm --arch x64 arm64
 

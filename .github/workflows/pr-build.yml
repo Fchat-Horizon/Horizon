@@ -38,9 +38,15 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Install Prettier
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
         run: |
-          pnpm install prettier
+          pnpm install --frozen-lockfile
       - name: Prettier Format Check
         run: |
           pnpm check

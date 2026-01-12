@@ -27,7 +27,7 @@ cd "$REPO_ROOT"
 # // git pull
 
 # & Install dependencies
-pnpm install
+pnpm install --frozen-lockfile
 
 # & Clean previous builds
 rm -rf "$DIST_PATH"
@@ -37,8 +37,7 @@ cd electron
 rm -rf app dist
 # Create dist directory for logging before build
 mkdir -p "$DIST_PATH"
-pnpm install
-pnpm build:dev:mac
+pnpm build:dev:linux
 
 # & Prepare release directory
 mkdir -p "$RELEASE_PATH"

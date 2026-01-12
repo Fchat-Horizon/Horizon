@@ -26,7 +26,7 @@ You wish to add a new feature to Horizon, or fix that one bug that's been pissin
 
 Horizon is written primarily in _Vue_, _Typescript_, and _Javascript._ You'll need **[Node.js](https://nodejs.org/en/download)**, **[PNPM](https://pnpm.io/installation)**, and **[NVM](https://github.com/nvm-sh/nvm)** (or a similar node version manager, such as fnm). You might also want to consider using VScode to integrate with prettier.
 
-You should use Node.js **v22.13.0**.
+You should use Node.js **v22.18.0**.
 
 If you intend on _packaging_ for MacOS, you need to install **Xcode 26+** or the build will fail with a error when packing into the desired format. **This includes the Xcode CLI tools**.
 
@@ -64,9 +64,16 @@ Run the following commands,
 **For development:**
 
 ```
-cd electron
 pnpm build
 pnpm start
+```
+
+Tip: this repo uses a pnpm workspace, so you can target subprojects with filters:
+
+```
+pnpm --filter horizon-electron build
+pnpm --filter horizon-electron start
+pnpm build:all
 ```
 
 **For distribution:**

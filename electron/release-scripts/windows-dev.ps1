@@ -46,13 +46,12 @@ Set-Location $RepoRoot
 # // git pull
 
 # Install dependencies
-pnpm install
+pnpm install --frozen-lockfile
 
 # Build the project
 Set-Location electron
 # ! Removing 'app' and 'dist' directories to ensure a clean build
 Remove-Item -Recurse -Force app, dist -ErrorAction SilentlyContinue
-pnpm install
 pnpm build:dev:win
 
 # Prepare release directory
