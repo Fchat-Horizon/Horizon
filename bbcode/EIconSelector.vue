@@ -291,7 +291,6 @@
       this.sortable = Sortable.create(resultsContainer, {
         animation: 150,
         onEnd: e => {
-          //const itemEl = e.item;
           const oldIndex = e.oldIndex!;
           const newIndex = e.newIndex!;
 
@@ -300,12 +299,9 @@
           this.results.splice(oldIndex, 1);
           this.results.splice(newIndex, 0, eicon);
 
-          const favoriteEIcons = Object.keys(core.state.favoriteEIcons);
-          favoriteEIcons.splice(oldIndex, 1);
-          favoriteEIcons.splice(newIndex, 0, eicon);
-
           const newFavorites: Record<string, boolean> = {};
-          for (const eicon of favoriteEIcons) {
+          for (const eicon of this.results) {
+            if (!this.isFavorite(eicon)) continue;
             newFavorites[eicon] = true;
           }
           core.state.favoriteEIcons = newFavorites;
