@@ -435,7 +435,13 @@
       );
       window.addEventListener('focus', () => {
         if (!browserWindow.isMinimized()) {
-          this.activeTab!.view.webContents.focus();
+          // This fixes the bug but isn't a good solution
+          if (
+            this._altTabFlag.altDown ||
+            Date.now() - this._altTabFlag.lastAltTime < 300
+          ) {
+            this.activeTab!.view.webContents.focus();
+          }
           this.activeTab!.view.webContents.send('active-tab');
         }
       });
