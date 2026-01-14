@@ -23,6 +23,10 @@
         <button class="btn btn-warning">Warning</button>
         <button class="btn btn-danger">Danger</button>
         <button class="btn btn-success">Success</button>
+        <button class="btn btn-info">Info</button>
+
+        <button class="btn btn-dark">Dark</button>
+        <button class="btn btn-light">Light</button>
       </div>
 
       <div>
@@ -34,6 +38,10 @@
         <button class="btn btn-outline-warning">Warning</button>
         <button class="btn btn-outline-danger">Danger</button>
         <button class="btn btn-outline-success">Success</button>
+        <button class="btn btn-outline-info">Info</button>
+
+        <button class="btn btn-outline-dark">Dark</button>
+        <button class="btn btn-outline-light">Light</button>
       </div>
 
       <div>
