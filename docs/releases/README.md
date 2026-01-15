@@ -4,8 +4,8 @@ Each release lives in its own file named `x.y.z.md`.
 
 Guidelines:
 
-- File name: `docs/releases/1.35.5.md`
-- First line: `## [1.35.5] - YYYY-MM-DD`
+- File name: `docs/releases/x.y.z.md`
+- First line: `## [x.y.Z] - MM-DD-YYYY`
 - Content follows Keep a Changelog sections (Added/Changed/Fixed/etc.)
 
 Useful commands:
