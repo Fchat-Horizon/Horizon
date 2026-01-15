@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const path = require('path');
 const fs = require('fs');
+const { execSync } = require('child_process');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const vueTransformer = require('@f-list/vue-ts/transform').default;
@@ -9,6 +10,20 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const packageJson = require('./package.json');
 const { DefinePlugin } = require('webpack');
 const APP_VERSION = process.env.APP_VERSION || packageJson.version;
+const APP_COMMIT =
+  process.env.APP_COMMIT ||
+  (() => {
+    try {
+      return execSync('git rev-parse --short HEAD', {
+        cwd: path.resolve(__dirname, '..'),
+        stdio: ['ignore', 'pipe', 'ignore']
+      })
+        .toString()
+        .trim();
+    } catch (error) {
+      return 'unknown';
+    }
+  })();
 
 const mainConfig = {
     entry: [
@@ -51,7 +66,8 @@ const mainConfig = {
     },
     plugins: [
       new DefinePlugin({
-        'process.env.APP_VERSION': JSON.stringify(APP_VERSION)
+        'process.env.APP_VERSION': JSON.stringify(APP_VERSION),
+        'process.env.APP_COMMIT': JSON.stringify(APP_COMMIT)
       })
     ],
     resolve: {
@@ -207,7 +223,8 @@ const mainConfig = {
     },
     plugins: [
       new DefinePlugin({
-        'process.env.APP_VERSION': JSON.stringify(APP_VERSION)
+        'process.env.APP_VERSION': JSON.stringify(APP_VERSION),
+        'process.env.APP_COMMIT': JSON.stringify(APP_COMMIT)
       }),
       new VueLoaderPlugin(),
       new MiniCssExtractPlugin({
@@ -303,7 +320,8 @@ const storeWorkerEndpointConfig = _.assign(_.cloneDeep(mainConfig), {
 
   plugins: [
     new DefinePlugin({
-      'process.env.APP_VERSION': JSON.stringify(APP_VERSION)
+      'process.env.APP_VERSION': JSON.stringify(APP_VERSION),
+      'process.env.APP_COMMIT': JSON.stringify(APP_COMMIT)
     })
   ]
 });

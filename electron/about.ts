@@ -1,15 +1,30 @@
-import * as electron from 'electron';
-import * as path from 'path';
-import * as remoteMain from '@electron/remote/main';
+import * as qs from 'querystring';
+import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 
-// tslint:disable-next-line:no-require-imports
-const pngIcon = path.join(
-  __dirname,
-  <string>require('./build/icon.png').default
-);
+import { GeneralSettings } from './common';
+import About from './About.vue';
+import Vue from 'vue';
 
-// tslint:disable-next-line:no-require-imports
-const winIcon = path.join(
-  __dirname,
-  <string>require('./build/icon.ico').default
+log.info('init.about');
+
+const params = <{ [key: string]: string | undefined }>(
+  qs.parse(window.location.search.substr(1))
 );
+const settings = <GeneralSettings>JSON.parse(params['settings'] || '{}');
+const appCommit = params['commit'] || process.env.APP_COMMIT || 'unknown';
+const appVersion = params['version'] || process.env.APP_VERSION || 'unknown';
+
+const logLevel = process.env.NODE_ENV === 'production' ? 'info' : 'silly';
+
+log.transports.file.level = settings.risingSystemLogLevel || logLevel;
+log.transports.console.level = settings.risingSystemLogLevel || logLevel;
+log.transports.file.maxSize = 5 * 1024 * 1024;
+
+log.info('init.about.vue', Vue.version);
+
+new About({
+  el: '#about',
+  data: { settings, appCommit, appVersion }
+});
+
+log.debug('init.about.vue.done');

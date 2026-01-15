@@ -637,7 +637,7 @@ async function onReady(): Promise<void> {
           {
             label: l('action.about'),
             click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
-              browserWindows.createAboutWindow(w);
+              browserWindows.createAboutWindow(settings, w);
             }
           },
           {
