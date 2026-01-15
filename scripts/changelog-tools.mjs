@@ -159,8 +159,8 @@ function semverCompare(a, b) {
   }
   const max = Math.max(aParsed.coreParts.length, bParsed.coreParts.length);
   for (let i = 0; i < max; i += 1) {
-    const aPart = aParsed.coreParts[partIndex] || 0;
-    const bPart = bParsed.coreParts[partIndex] || 0;
+    const aPart = aParsed.coreParts[i] || 0;
+    const bPart = bParsed.coreParts[i] || 0;
     if (aPart !== bPart) return aPart < bPart ? -1 : 1;
   }
   if (!aParsed.preParts && !bParsed.preParts) return 0;
