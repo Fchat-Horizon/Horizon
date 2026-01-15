@@ -779,16 +779,16 @@ export function createAboutWindow(
     show: false,
     icon,
     frame: false,
-    width: 460,
     minWidth: 460,
+    width: 460,
     height: 580,
-    minHeight: 580,
     resizable: false,
     modal: true,
     parent: parentWindow,
     maximizable: false,
+    minimizable: false,
     fullscreenable: false,
-    useContentSize: process.platform === 'win32',
+    useContentSize: true,
     autoHideMenuBar: true,
     webPreferences: {
       webviewTag: true,
@@ -802,7 +802,9 @@ export function createAboutWindow(
   };
 
   if (process.platform === 'darwin') {
-    aboutWindowProperties.titleBarStyle = 'hiddenInset';
+    aboutWindowProperties.frame = true;
+    aboutWindowProperties.height = 520;
+    aboutWindowProperties.modal = false;
   }
 
   const about = new electron.BrowserWindow(aboutWindowProperties);
