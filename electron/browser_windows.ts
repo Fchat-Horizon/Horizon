@@ -766,28 +766,46 @@ export function createExporterWindow(
  * Returns the newly created about window.
  */
 export function createAboutWindow(
+  settings: GeneralSettings,
   parentWindow: electron.BrowserWindow
 ): electron.BrowserWindow {
   const icon = process.platform === 'win32' ? winIcon : pngIcon;
+  const appCommit = process.env.APP_COMMIT || 'unknown';
+  const appVersion =
+    process.env.APP_VERSION || electron.app.getVersion() || 'unknown';
 
-  const about = new electron.BrowserWindow({
-    width: 400,
-    height: 400, // Initial height
+  const aboutWindowProperties: electron.BrowserWindowConstructorOptions = {
     center: true,
-    resizable: false,
-    minimizable: false,
-    fullscreenable: false,
-    useContentSize: process.platform === 'win32', // Important for Windows
-    modal: process.platform !== 'darwin',
-    parent: parentWindow,
-    autoHideMenuBar: true,
     show: false,
     icon,
+    frame: false,
+    width: 460,
+    minWidth: 460,
+    height: 580,
+    minHeight: 580,
+    resizable: false,
+    modal: true,
+    parent: parentWindow,
+    maximizable: false,
+    fullscreenable: false,
+    useContentSize: process.platform === 'win32',
+    autoHideMenuBar: true,
     webPreferences: {
+      webviewTag: true,
       nodeIntegration: true,
-      contextIsolation: false
-    }
-  });
+      nodeIntegrationInWorker: true,
+      spellcheck: true,
+      enableRemoteModule: true,
+      contextIsolation: false,
+      partition: 'persist:fchat'
+    } as any
+  };
+
+  if (process.platform === 'darwin') {
+    aboutWindowProperties.titleBarStyle = 'hiddenInset';
+  }
+
+  const about = new electron.BrowserWindow(aboutWindowProperties);
 
   remoteMain.enable(about.webContents);
 
@@ -797,54 +815,17 @@ export function createAboutWindow(
     return { action: 'deny' };
   });
 
-  // Set package version
-  process.env.npm_package_version = require('../package.json').version;
+  about.loadFile(path.join(__dirname, 'about.html'), {
+    query: {
+      settings: JSON.stringify(settings),
+      commit: appCommit,
+      version: appVersion
+    }
+  });
 
-  // Load the HTML file
-  about.loadFile(path.join(__dirname, 'about.html'));
-
-  // Adjust height to content and show window
-  about.webContents.once('dom-ready', () => {
-    // Set icon path - use the icon directly as it's already a full path
-    const iconPath = 'file://' + icon.replace(/\\/g, '/');
-
-    // Calculate content height and set icon
-    about.webContents
-      .executeJavaScript(
-        `
-      // Sets icon
-      const logo = document.querySelector('.app-logo');
-      if (logo) logo.src = '${iconPath}';
-      
-      // Return height of content for window sizing
-      const container = document.querySelector('.container');
-      container ? container.scrollHeight + 60 : 400;
-    `
-      )
-      .then((height: number) => {
-        // Constrain height to reasonable bounds
-        const finalHeight = Math.min(Math.max(height, 350), 600);
-
-        // Platform-specific sizing
-        if (process.platform === 'win32') {
-          about.setContentSize(400, finalHeight);
-        } else {
-          about.setSize(400, finalHeight);
-        }
-
-        about.center();
-        about.show();
-      })
-      .catch(() => {
-        // Fallback if calculation fails
-        if (process.platform === 'win32') {
-          about.setContentSize(400, 400);
-        } else {
-          about.setSize(400, 400);
-        }
-        about.center();
-        about.show();
-      });
+  about.once('ready-to-show', () => {
+    about.center();
+    about.show();
   });
 
   return about;
