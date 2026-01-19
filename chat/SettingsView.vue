@@ -92,6 +92,29 @@
       <div class="mb-3">
         <div class="d-flex p-2 justify-content-between align-items-start">
           <div class="w-50">
+            <label class="control-label" for="bbCodeBarPosition">
+              {{ l('settings.bbCodeBarPosition') }}
+            </label>
+          </div>
+          <select
+            v-model="bbCodeBarPosition"
+            id="bbCodeBarPosition"
+            class="form-select form-select-sm w-auto"
+            :disabled="!bbCodeBar"
+          >
+            <option value="bottom">
+              {{ l('settings.bbCodeBarPosition.bottom') }}
+            </option>
+            <option value="top">
+              {{ l('settings.bbCodeBarPosition.top') }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <div class="d-flex p-2 justify-content-between align-items-start">
+          <div class="w-50">
             <label class="control-label" for="enterSend">
               {{ l('settings.enterSend') }}
             </label>
@@ -1178,6 +1201,7 @@
     showPerCharacterFriends!: boolean;
     hideNonCharacterFriends!: boolean;
     bbCodeBar!: boolean;
+    bbCodeBarPosition!: 'bottom' | 'top';
 
     risingAdScore!: boolean;
     risingLinkPreview!: boolean;
@@ -1244,6 +1268,7 @@
       this.showPerCharacterFriends = settings.showPerCharacterFriends;
       this.hideNonCharacterFriends = settings.hideNonCharacterFriends;
       this.bbCodeBar = settings.bbCodeBar;
+      this.bbCodeBarPosition = settings.bbCodeBarPosition;
       this.availableImports = (
         await core.settingsStore.getAvailableCharacters()
       ).filter(x => x !== core.connection.character);
@@ -1400,6 +1425,7 @@
         showPerCharacterFriends: this.showPerCharacterFriends,
         hideNonCharacterFriends: this.hideNonCharacterFriends,
         bbCodeBar: this.bbCodeBar,
+        bbCodeBarPosition: this.bbCodeBarPosition,
 
         risingAdScore: this.risingAdScore,
         risingLinkPreview: this.risingLinkPreview,
