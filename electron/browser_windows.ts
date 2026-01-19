@@ -240,6 +240,8 @@ export function createMainWindow(
     ...lastState,
     center: lastState.x === undefined,
     show: false,
+    minWidth: 600,
+    minHeight: 400,
     icon: process.platform === 'win32' ? winIcon : pngIcon,
     backgroundColor: !settings.allowWindowTransparency
       ? windowBackgroundColor
