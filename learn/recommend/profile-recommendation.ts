@@ -104,12 +104,20 @@ export class ProfileRecommendationAnalyzer {
         'Profiles with a high-quality portrait stand out in chats with other Horizon users.',
         'https://horizn.moe/docs/guides/colors-and-avatars.html'
       );
+    } else if (ProfileCache.isImgurURL(portraitUrl)) {
+      this.add(
+        `ADD_HQ_AVATAR_IMGUR_DEPRECATED`,
+        ProfileRecommendationLevel.CRITICAL,
+        'Imgur is no longer supported for high-quality portraits',
+        'Imgur has changed their policies and is no longer a reliable host for high-quality portraits. Please use an alternative host such as f-list.net, freeimage.host, e621.net, iili.io, imgchest.com, toyhou.se, or redgifs.com.',
+        'https://horizn.moe/docs/guides/colors-and-avatars.html'
+      );
     } else if (!ProfileCache.isSafeRisingPortraitURL(portraitUrl)) {
       this.add(
         `ADD_HQ_AVATAR_SAFE_DOMAIN`,
         ProfileRecommendationLevel.CRITICAL,
         'Unsupported high-quality portrait URL',
-        'High-quality portraits can only point to f-list.net, freeimages.host, e621.net, iili.io, imgur.com, imgchest.com, or redgifs.com domains.',
+        'High-quality portraits can only point to f-list.net, freeimage.host, e621.net, iili.io, imgchest.com, toyhou.se, or redgifs.com domains.',
         'https://horizn.moe/docs/guides/colors-and-avatars.html'
       );
     } else if (!(await Axios.get(portraitUrl).catch(() => false))) {

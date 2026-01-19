@@ -310,10 +310,6 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
       return true;
     }
 
-    if (url.match(/^https?:\/\/([a-z0-9\-.]+\.)?imgur\.com\//i)) {
-      return true;
-    }
-
     if (url.match(/^https?:\/\/([a-z0-9\-.]+\.)?freeimage\.host\//i)) {
       return true;
     }
@@ -339,6 +335,10 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
     }
 
     return false;
+  }
+
+  static isImgurURL(url: string): boolean {
+    return !!url.match(/^https?:\/\/([a-z0-9\-.]+\.)?imgur\.com\//i);
   }
 
   static isValidCharacterNameColor(color: string): boolean {
