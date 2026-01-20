@@ -3,6 +3,7 @@
     :action="l('user.message')"
     ref="dialog"
     @submit="submit"
+    @open="open"
     dialogClass="ads-dialog"
     :buttonText="l('action.open')"
     iconClass="fas fa-user-plus"
@@ -14,7 +15,8 @@
         class="form-control"
         v-model="name"
         :placeholder="l('common.name')"
-        ref="name"
+        ref="nameRef"
+        v-on:keyup.enter="onEnter"
       />
       <div class="error" v-if="error">{{ error }}</div>
     </div>
@@ -36,9 +38,10 @@
     error: string | null = null;
     l = l;
 
-    @Hook('activated')
-    async onMounted(): Promise<void> {
-      (this.$refs.name as HTMLInputElement).focus();
+    open(): void {
+      this.$nextTick(() => {
+        (this.$refs['nameRef'] as HTMLInputElement).focus();
+      });
     }
 
     submit(): void {
@@ -56,6 +59,11 @@
       } else {
         this.error = l('user.unknownCharacter', this.name);
       }
+    }
+
+    onEnter(): void {
+      this.submit();
+      this.$refs['dialog'].hide();
     }
   }
 </script>
