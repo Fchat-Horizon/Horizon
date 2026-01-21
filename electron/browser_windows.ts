@@ -258,9 +258,8 @@ export function createMainWindow(
 
   if (process.platform === 'darwin') {
     windowProperties.titleBarStyle = 'hiddenInset';
-    // windowProperties.frame = true;
   } else {
-    windowProperties.frame = false;
+    windowProperties.frame = settings.forceNativeWindowControls;
   }
 
   const window = new electron.BrowserWindow(windowProperties);

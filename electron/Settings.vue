@@ -623,6 +623,28 @@
                     </label>
                   </div>
                 </div>
+
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="forceNativeWindowControls"
+                      v-model="settings.forceNativeWindowControls"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="forceNativeWindowControls"
+                    >
+                      {{
+                        l(
+                          'settings.experimental',
+                          l('settings.forceNativeWindowControls')
+                        )
+                      }}
+                    </label>
+                  </div>
+                </div>
               </div>
               <!--Accessibility-->
               <div

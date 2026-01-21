@@ -679,8 +679,7 @@ async function onReady(): Promise<void> {
                 window
               );
             },
-            accelerator:
-              process.platform === 'darwin' ? 'CmdOrCtrl+,' : undefined
+            accelerator: 'CmdOrCtrl+,'
           },
           {
             label: l('settings.export.title'),
