@@ -411,7 +411,7 @@ function maybePromptRestartAndInstallUpdate(
   });
   if (confirmRestart !== 0) return;
   isUpdateRestarting = true;
-  autoUpdater.quitAndInstall();
+  autoUpdater.quitAndInstall(true, true);
 }
 
 async function checkForGitRelease(
