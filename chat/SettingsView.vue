@@ -809,6 +809,24 @@
           ></settings-checkbox>
         </div>
       </div>
+      <h5>{{ l('settings.profile.ignoredList') }}</h5>
+      <div class="mb-3 p-2">
+        <template v-if="ignored.length">
+          <div v-for="(user, i) in ignored">
+            <span
+              class="fa fa-times"
+              style="cursor: pointer"
+              role="button"
+              :aria-label="l('user.unignore')"
+              @click.stop="unignore(user)"
+            ></span>
+            {{ user }}
+          </div>
+        </template>
+        <template v-else>{{
+          l('settings.profile.ignoredList.empty')
+        }}</template>
+      </div>
     </div>
 
     <div v-show="selectedTab === '4'">
@@ -1311,6 +1329,14 @@
 
     get hidden(): string[] {
       return core.state.hiddenUsers;
+    }
+
+    get ignored(): readonly string[] {
+      return core.characters.ignoreList;
+    }
+
+    unignore(character: string): void {
+      core.connection.send('IGN', { action: 'delete', character });
     }
 
     async submit(): Promise<void> {

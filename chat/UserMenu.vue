@@ -546,10 +546,13 @@
 
   .userMenuInner {
     background-color: var(--scoreReportBg);
+    border-bottom: 1px solid var(--bs-border-color);
   }
 
   #userMenu .list-group-item-action {
     border-top-width: 0;
     z-index: -1;
+    border-color: var(--bs-border-color);
+    border-top-style: solid;
   }
 </style>

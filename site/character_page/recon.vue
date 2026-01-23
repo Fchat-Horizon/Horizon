@@ -54,12 +54,14 @@
   import * as _ from 'lodash';
   import { AdCachedPosting } from '../../learn/ad-cache';
   import MessageView from '../../chat/message_view';
+  import { BBCodeView } from '../../bbcode/view';
 
   import { formatTime } from '../../chat/common';
 
   @Component({
     components: {
-      'message-view': MessageView
+      'message-view': MessageView,
+      bbcode: BBCodeView(core.bbCodeParser)
     }
   })
   export default class ReconView extends Vue {

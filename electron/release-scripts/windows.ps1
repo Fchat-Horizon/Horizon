@@ -40,7 +40,7 @@ $DistPath = "$RepoRoot\electron\dist"
 # Navigate to repository root
 Set-Location $RepoRoot
 # Install dependencies
-pnpm install
+pnpm install --frozen-lockfile
 
 # Clean previous builds
 # ! This will delete the entire $DistPath directory
@@ -50,7 +50,6 @@ Remove-Item -Recurse -Force $DistPath -ErrorAction SilentlyContinue
 Set-Location electron
 # ! Removing 'app' and 'dist' directories to ensure a clean build
 Remove-Item -Recurse -Force app, dist -ErrorAction SilentlyContinue
-pnpm install
 node ..\webpack production
 node build\build.mjs --os windows --format nsis --arch x64 arm64
 

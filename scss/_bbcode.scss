@@ -58,11 +58,11 @@
 
   .blueText,
   .blueNameText {
-    color: #00f;
+    color: #06f;
   }
 
   .bbcode-toolbar .color-selector .btn.text-color.blue {
-    background-color: #00f;
+    background-color: #06f;
   }
 
   .greenText,
@@ -209,9 +209,12 @@ div.indentText {
   display: inline;
   height: 100px;
   width: 100px;
-  &.icon {
+  &.icon,
+  &.eicon {
     height: 50px;
     width: 50px;
+  }
+  &.icon {
     object-fit: contain;
   }
   transition: opacity 0.25s;

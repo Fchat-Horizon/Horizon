@@ -17,6 +17,7 @@ That being said, _Horizon is an opinionated fork_, and as such we enforce strong
       - [Branches](#branches)
       - [Tags](#tags)
   - [Style guidelines](#style-guidelines)
+  - [Packaging and installing](#packaging-and-installing)
 
 ## Where do I start?!
 
@@ -26,7 +27,7 @@ You wish to add a new feature to Horizon, or fix that one bug that's been pissin
 
 Horizon is written primarily in _Vue_, _Typescript_, and _Javascript._ You'll need **[Node.js](https://nodejs.org/en/download)**, **[PNPM](https://pnpm.io/installation)**, and **[NVM](https://github.com/nvm-sh/nvm)** (or a similar node version manager, such as fnm). You might also want to consider using VScode to integrate with prettier.
 
-You should use Node.js **v22.13.0**.
+You should use Node.js **v22.18.0**.
 
 If you intend on _packaging_ for MacOS, you need to install **Xcode 26+** or the build will fail with a error when packing into the desired format. **This includes the Xcode CLI tools**.
 
@@ -40,6 +41,21 @@ cd Horizon
 pnpm install
 ```
 
+#### Nix
+
+If you're using [Nix](https://nixos.org/)— whether as a package manager or as part of NixOS, a flake has been provided so you don't need to install any NodeJS dependencies yourself. Simply run the following command from the project root:
+
+```bash
+nix develop
+```
+
+Note that as of writing, the package `sass-embedded` is still required and doesn't directly work inside the Nix shell (because it's its own distributed binary). The Nix flake comes with its own patcher method that solve this, though you do need to run it every time you reinstall the PNPM packages:
+
+```bash
+pnpm install
+patch_sass_embed
+```
+
 ### Building
 
 #### Electron
@@ -49,9 +65,16 @@ Run the following commands,
 **For development:**
 
 ```
-cd electron
 pnpm build
 pnpm start
+```
+
+Tip: this repo uses a pnpm workspace, so you can target subprojects with filters:
+
+```
+pnpm --filter horizon-electron build
+pnpm --filter horizon-electron start
+pnpm build:all
 ```
 
 **For distribution:**
@@ -126,3 +149,38 @@ We use [Prettier](https://prettier.io/) to enforce a consistent coding style. Pl
    - Follow the [Vue style guide](https://v2.vuejs.org/v2/style-guide) to the best of your ability.
 
 A important part of Horizon is a strict code quality standard. Prettier should do most of the work for you.
+
+## Packaging and installing
+
+> [!NOTE]
+> This section assumes you have already set up the build tools and dependencies from earlier in this document.
+
+1. Install PNPM packages:
+
+```bash
+pnpm install
+```
+
+2. (Optional) Make any changes you need to the code and test.
+
+3. Build a production build of the Electron app:
+
+```bash
+pnpm build:dist
+```
+
+Note that this does not build a distributable or installable release yet, this just leaves the transpiled scripts and compiled binaries in the build output directories. You'll still need the next step if you want to distribute or install it properly.
+
+4. Run the build/ package script:
+
+```bash
+node electron/build/build.mjs --os <linux|windows|macos> <options>
+```
+
+The options for the build script are quite varied, and thus won't be elaborated on here. You can select the kind of package, system architecture, etc. For more details, run the script with the help flag:
+
+```bash
+node electron/build/build.mjs -h
+```
+
+See also the [README](./electron/README.md) file for the Electron sub-project.

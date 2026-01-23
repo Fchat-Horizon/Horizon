@@ -109,11 +109,6 @@
     "electron": "39.2.7",
     "electron-builder": "^26.3.2"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "electron"
-    ]
-  },
   "dependencies": {
     "@mdit/plugin-alert": "^0.22.2",
     "electron-updater": "^6.3.0",

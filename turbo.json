@@ -1,0 +1,28 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["app/**", "dist/**", "www/**", "**/*.css", "**/*.css.map"]
+    },
+    "build:dist": {
+      "dependsOn": ["^build:dist"],
+      "outputs": ["app/**", "dist/**", "www/**", "**/*.css", "**/*.css.map"]
+    },
+    "watch": {
+      "cache": false,
+      "persistent": true
+    },
+    "start": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "outputs": []
+    },
+    "check": {
+      "outputs": []
+    }
+  }
+}

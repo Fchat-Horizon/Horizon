@@ -1,8 +1,10 @@
 import core from '../chat/core';
+import { EventMessage } from '../chat/common';
 import { methods } from '../site/character_page/data_store';
 import { decodeHTML } from './common';
 import { Character as Interfaces, Connection } from './interfaces';
 import { Character as CharacterProfile } from '../site/character_page/interfaces';
+import { ProfileCache } from '../learn/profile-cache';
 import Vue from 'vue';
 
 class Character implements Interfaces.Character {
@@ -259,6 +261,17 @@ export default function (this: void, connection: Connection): Interfaces.State {
 
       // tslint:disable-next-line no-unnecessary-type-assertion
       core.cache.setProfile(state.ownProfile as CharacterProfile);
+
+      const hqPortraitUrl = ProfileCache.extractHighQualityPortraitURL(
+        state.ownProfile.character.description
+      );
+      if (hqPortraitUrl && ProfileCache.isImgurURL(hqPortraitUrl)) {
+        core.conversations.consoleTab.addMessage(
+          new EventMessage(
+            '[color=red][b]Warning:[/b][/color] [i]Your high-quality portrait uses Imgur, which is no longer supported[/i]. [b]We suggest you move your Imgur portrait to F-List itself[/b], but other hosts are also supported (freeimage.host, e621.net, iili.io, imgchest.com, toyhou.se, or redgifs.com.) Once imgur is removed from your profile, this warning will not appear after login.'
+          )
+        );
+      }
     }
 
     character.name = data.identity;

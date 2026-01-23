@@ -23,6 +23,8 @@ export const availableDisplayLanguages: { code: string; name: string }[] = [
   { code: 'de', name: 'Deutsch (Deutschland)' },
   { code: 'es', name: 'Español (España)' },
   { code: 'it', name: 'Italiano (Italia)' },
+  { code: 'hu', name: 'Magyar (Magyarország)' },
+  { code: 'ru', name: 'Русский (Россия)' },
   ...(process.env.NODE_ENV !== 'production'
     ? [{ code: 'test', name: 'Test Language' }]
     : [])

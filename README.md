@@ -15,6 +15,7 @@
       - [AppImage](#appimage)
       - [Tarball (tar.gz)](#tarball-targz)
       - [Arch-based (AUR)](#arch-based-aur)
+  - [From source](#from-source)
 - [Usage](#usage)
   - [Getting started](#getting-started)
   - [Wiki](#wiki)
@@ -204,6 +205,10 @@ Horizon has excellent Linux support. Read more at [horizon-packages](https://git
   cd fchat-horizon-bin
   makepkg -si
   ```
+
+## From Source
+
+If you want to compile and install Horizon from the source code yourself, please see the build and packaging instructions in the [contributing document](./CONTRIBUTING.md).
 
 # Usage
 

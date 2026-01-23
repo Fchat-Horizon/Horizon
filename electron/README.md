@@ -67,16 +67,26 @@ electron/
 
 ### Build Commands
 
-```bash
-# Development builds
-pnpm run build:dev:linux    # Linux development build
-pnpm run build:dev:mac      # macOS development build
-pnpm run build:dev:win      # Windows development build
+From the repo root, you can target this package with pnpm filters (or run the same commands inside `electron/`).
 
-# Production builds
-pnpm run build:linux        # Linux production build
-pnpm run build:mac          # macOS production build
-pnpm run build:win          # Windows production build
+```bash
+# From repo root
+pnpm --filter horizon-electron run build:dev:linux    # Linux development build
+pnpm --filter horizon-electron run build:dev:mac      # macOS development build
+pnpm --filter horizon-electron run build:dev:win      # Windows development build
+
+pnpm --filter horizon-electron run build:linux        # Linux production build
+pnpm --filter horizon-electron run build:mac          # macOS production build
+pnpm --filter horizon-electron run build:win          # Windows production build
+
+# From electron/
+pnpm run build:dev:linux
+pnpm run build:dev:mac
+pnpm run build:dev:win
+
+pnpm run build:linux
+pnpm run build:mac
+pnpm run build:win
 ```
 
 ## Build Script Usage
@@ -208,19 +218,19 @@ Docker-specific settings are in `build/docker-config.mjs`:
 ### Local Development
 
 ```bash
-# Install dependencies
+# Install dependencies (from repo root)
 pnpm install
 
-# Build webpack assets
-pnpm run webpack:dev    # Development build
-pnpm run webpack:prod   # Production build
+# Build webpack assets (from repo root)
+pnpm --filter horizon-electron run webpack:dev    # Development build
+pnpm --filter horizon-electron run webpack:prod   # Production build
 
 # Start Electron
-pnpm start
+pnpm --filter horizon-electron start
 
 # Debug modes
-pnpm run startDebugMain    # Debug main process
-pnpm run startDebugRender  # Debug renderer process
+pnpm --filter horizon-electron run startDebugMain    # Debug main process
+pnpm --filter horizon-electron run startDebugRender  # Debug renderer process
 ```
 
 ### File Organization

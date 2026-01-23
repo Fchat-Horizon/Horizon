@@ -50,6 +50,8 @@
             class="form-check-input"
             type="checkbox"
             id="ard-all-channels"
+            :checked="allChannelsSelected"
+            :indeterminate.prop="someChannelsSelected"
             @change="selectAllChannels($event)"
           />
           <label class="form-check-label" for="ard-all-channels">
@@ -186,6 +188,24 @@
       { value: 60, title: l('time.hour') }
     ];
 
+    get selectedChannelCount(): number {
+      return _.filter(this.channels, channel => channel.value).length;
+    }
+
+    get allChannelsSelected(): boolean {
+      return (
+        this.channels.length > 0 &&
+        this.selectedChannelCount === this.channels.length
+      );
+    }
+
+    get someChannelsSelected(): boolean {
+      return (
+        this.selectedChannelCount > 0 &&
+        this.selectedChannelCount < this.channels.length
+      );
+    }
+
     load() {
       this.channels = _.map(
         _.filter(
@@ -221,10 +241,7 @@
     }
 
     checkCanSubmit() {
-      const channelCount = _.filter(
-        this.channels,
-        channel => channel.value
-      ).length;
+      const channelCount = this.selectedChannelCount;
       const tagCount = _.filter(this.tags, tag => tag.value).length;
 
       this.dialog.forceDisabled(tagCount === 0 || channelCount === 0);

@@ -13,6 +13,7 @@
         :tabs="[l('channelList.public'), l('channelList.private')]"
         :fullWidth="true"
         v-model="tab"
+        @input="focusChannelFilter()"
       ></tabs>
       <div style="display: flex; flex-direction: column">
         <div class="input-group" style="padding: 10px 0; flex-shrink: 0">
@@ -24,6 +25,7 @@
             style="flex: 1"
             v-model="filter"
             :placeholder="l('filter')"
+            ref="channelFilter"
           />
           <a
             href="#"
@@ -153,6 +155,13 @@
 
     opened(): void {
       core.channels.requestChannelsIfNeeded(30000);
+      this.$nextTick(() => {
+        this.focusChannelFilter();
+      });
+    }
+
+    focusChannelFilter(): void {
+      (this.$refs['channelFilter'] as HTMLInputElement).focus();
     }
 
     closed(): void {
