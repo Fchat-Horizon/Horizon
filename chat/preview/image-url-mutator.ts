@@ -105,6 +105,16 @@ export class ImageUrlMutator {
     );
 
     this.add(
+      /^https?:\/\/([\w-]*bsky|bskye|bskyx|bsyy)\.app\/(profile\/[\w.:]+\/post\/\w+)/,
+      async (url: string, match: RegExpMatchArray): Promise<string> => {
+        const path = match[2];
+
+        // https://github.com/Lexedia/VixBluesky/wiki/Features#custom-pds-video-support
+        return `https://r.v.bskx.app/${path}`;
+      }
+    );
+
+    this.add(
       /^https?:\/\/rule34video.com\/videos\/([0-9a-zA-Z-_]+)/,
       async (_url: string, match: RegExpMatchArray): Promise<string> => {
         const videoId = match[1];
