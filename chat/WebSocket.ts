@@ -42,7 +42,13 @@ export default class Socket implements WebSocketConnection {
   }
 
   onError(handler: (error: Error) => void): void {
-    this.socket.addEventListener('error', () => handler(new Error()));
+    //The Socket class itself does not pass its error message back when instantiating it fails and only prints it in the console
+    //So unfortunately you get this hardcoded nonsense
+    this.socket.addEventListener('error', () =>
+      handler(
+        new Error('Unable to create Websocket handler for ' + Socket.host)
+      )
+    );
   }
 
   send(message: string): void {
