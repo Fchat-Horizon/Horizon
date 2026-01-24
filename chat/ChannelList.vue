@@ -141,6 +141,7 @@
     private sortedOpenRooms: ReadonlyArray<Channel.ListItem> = [];
     private sortedOfficialChannels: ReadonlyArray<Channel.ListItem> = [];
     private filterTimer: number | undefined;
+    private sortRaf: number | undefined;
 
     get openRooms(): ReadonlyArray<Channel.ListItem> {
       return this.filteredOpenRooms;
@@ -208,6 +209,14 @@
       this.filterApplied += 1;
     }
 
+    scheduleSortedRebuild(): void {
+      if (this.sortRaf !== undefined) return;
+      this.sortRaf = window.requestAnimationFrame(() => {
+        this.sortRaf = undefined;
+        this.rebuildSortedLists();
+      });
+    }
+
     scheduleFilterUpdate(): void {
       if (this.filterTimer !== undefined) {
         window.clearTimeout(this.filterTimer);
@@ -243,6 +252,9 @@
       if (this.filterTimer !== undefined) {
         window.clearTimeout(this.filterTimer);
       }
+      if (this.sortRaf !== undefined) {
+        window.cancelAnimationFrame(this.sortRaf);
+      }
     }
 
     @Watch('filter')
@@ -252,17 +264,17 @@
 
     @Watch('sortCount')
     onSortChange(): void {
-      this.rebuildSortedLists();
+      this.scheduleSortedRebuild();
     }
 
-    @Watch('officialChannelsSource')
+    @Watch('officialChannelsSource', { deep: true })
     onOfficialChannelsChange(): void {
-      this.rebuildSortedLists();
+      this.scheduleSortedRebuild();
     }
 
-    @Watch('openRoomsSource')
+    @Watch('openRoomsSource', { deep: true })
     onOpenRoomsChange(): void {
-      this.rebuildSortedLists();
+      this.scheduleSortedRebuild();
     }
 
     setJoined(channel: Channel.ListItem): void {
