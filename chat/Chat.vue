@@ -430,7 +430,10 @@
           //catch axios network errors
           this.error = l('login.connectError', errorToString(e));
           this.connecting = false;
-        } else throw e;
+        } else {
+          this.error = l('events.error', errorToString(e));
+          throw e;
+        }
       });
     }
 
