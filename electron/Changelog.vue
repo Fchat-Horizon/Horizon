@@ -26,14 +26,56 @@
             </button>
           </div>
           <div class="modal-body">
-            <div v-if="updateVersion" class="version-compare">
-              {{
-                l(
-                  'changelog.compare',
-                  updateVersion || '',
-                  currentVersion || ''
-                )
-              }}
+            <div v-if="updateVersion" class="update-banner">
+              <div v-if="updateMode === 'manual'" class="update-banner__text">
+                {{
+                  l(
+                    'changelog.manualUpdate',
+                    updateVersion || '',
+                    currentVersion || ''
+                  )
+                }}
+              </div>
+              <div v-else class="update-banner__text">
+                {{
+                  l(
+                    'changelog.compare',
+                    updateVersion || '',
+                    currentVersion || ''
+                  )
+                }}
+              </div>
+              <div
+                v-if="updateMode === 'manual'"
+                class="update-banner__actions"
+              >
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  @click.stop="openLatestRelease()"
+                >
+                  {{ l('changelog.openReleases') }}
+                </button>
+              </div>
+              <div v-else class="update-banner__actions">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  @click.stop="updateNow()"
+                >
+                  {{ l('changelog.updateNow') }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  @click.stop="skipUpdate()"
+                >
+                  {{ l('changelog.skipUpdate') }}
+                </button>
+              </div>
+              <div v-if="updateMode !== 'manual'" class="update-banner__note">
+                {{ l('update.installOnQuit.note') }}
+              </div>
             </div>
             <div
               class="logs-container border bg-light"
@@ -41,52 +83,35 @@
               ref="mdContainer"
             ></div>
             <div class="modal-footer">
-              <a
-                class="btn btn-outline-primary"
-                href="https://discord.gg/JYuxqNVNtP"
-                target="_blank"
-                rel="noopener"
-                style="margin-left: 8px"
-              >
-                <span class="fab fa-discord"></span>
-                <span style="margin-left: 6px">{{
-                  l('chat.joinDiscord')
-                }}</span>
-              </a>
-              <a
-                class="btn btn-outline-primary"
-                href="https://ko-fi.com/thehorizonteam"
-                target="_blank"
-                rel="noopener"
-                style="margin-left: 8px"
-                title="Support us on Ko-Fi"
-              >
-                <span class="fa fa-coffee"></span>
-                <span style="margin-left: 6px">Ko-Fi</span>
-              </a>
+              <div class="footer-links">
+                <a
+                  class="btn btn-outline-primary"
+                  href="https://discord.gg/JYuxqNVNtP"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <span class="fab fa-discord"></span>
+                  <span style="margin-left: 6px">{{
+                    l('chat.joinDiscord')
+                  }}</span>
+                </a>
+                <a
+                  class="btn btn-outline-primary"
+                  href="https://ko-fi.com/thehorizonteam"
+                  target="_blank"
+                  rel="noopener"
+                  title="Support us on Ko-Fi"
+                >
+                  <span class="fa fa-coffee"></span>
+                  <span style="margin-left: 6px">Ko-Fi</span>
+                </a>
+              </div>
               <button
                 type="button"
                 class="btn btn-secondary"
                 @click.stop="close()"
               >
                 {{ l('action.close') }}
-              </button>
-              <button
-                v-if="updateVersion"
-                type="button"
-                class="btn btn-secondary"
-                @click.stop="goToDownload()"
-              >
-                {{ l('changelog.download') }}
-              </button>
-
-              <button
-                v-if="updateVersion"
-                type="button"
-                class="btn btn-primary"
-                @click.stop="closeAndDownload()"
-              >
-                {{ l('changelog.quitAndDownload') }}
               </button>
             </div>
           </div>
@@ -122,6 +147,7 @@
     settings!: GeneralSettings;
     osIsDark = remote.nativeTheme.shouldUseDarkColors;
     updateVersion!: string | undefined;
+    updateMode!: 'auto' | 'manual';
     currentVersion = process.env.APP_VERSION;
     isMaximized = false;
     l = l;
@@ -213,6 +239,12 @@
       }
     }
 
+    openLatestRelease(): void {
+      this.externalUrlHandler(
+        'https://github.com/Fchat-Horizon/Horizon/releases/latest'
+      );
+    }
+
     getThemeClass() {
       // console.log('getThemeClassWindow', this.settings?.risingDisableWindowsHighContrast);
 
@@ -243,14 +275,16 @@
       }
     }
 
-    goToDownload() {
-      this.externalUrlHandler(
-        'https://horizn.moe/download.html?ver=' + this.updateVersion
-      );
+    skipUpdate(): void {
+      if (!this.updateVersion) return;
+      electron.ipcRenderer.send('skip-update-version', this.updateVersion);
+      this.close();
     }
 
-    closeAndDownload(): void {
-      electron.ipcRenderer.send('update-and-exit', this.updateVersion);
+    updateNow(): void {
+      if (!this.updateVersion) return;
+      electron.ipcRenderer.send('update-now', this.updateVersion);
+      this.close();
     }
   }
 </script>
@@ -272,15 +306,18 @@
   .modal-body {
     height: 100%;
     display: flex;
-    flex-flow: column;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .logs-container {
-    height: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
     width: 100%;
+    box-sizing: border-box;
     overflow-y: scroll;
-    margin-top: 1em;
-    margin-bottom: 1em;
     padding: 1em;
     border-radius: 10px;
     a {
@@ -318,10 +355,46 @@
   }
   .markdown-alert-warning {
     border-color: var(--bs-warning);
-  } /*This override exists because we allow the user to resize the window, which potentially resizes the footer otherwise*/
+  }
+
+  .update-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .update-banner__text {
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+  .update-banner__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 0;
+    position: static;
+  }
+  .update-banner__note {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  /*This override exists because we allow the user to resize the window, which potentially resizes the footer otherwise*/
   .modal-body .modal-footer {
     height: 52px;
     min-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 0 0 auto;
+  }
+  .modal-body .modal-footer .footer-links {
+    display: flex;
+    gap: 8px;
+    align-items: center;
   }
 
   .card-full {

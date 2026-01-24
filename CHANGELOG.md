@@ -7,14 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # [Releases]
 
-## [1.35.5] 29-12-2025
+## [1.35.5] - 12-29-2025
 
 ### Added
 
 - Search results in the EIcon selector now go well beyond 300, you can scroll down the results to load more. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/18457eda25f91180e1540290e4fa842faebf4859)
   - Thank you, @freenutsxd
 - Dragging pinned EIcons in the EIcon selector's favorites tab now reorders them. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a3a103080f68f6b28220c7cb7c8cf54af8732d80)
-- Added a Catpuccin "Moccha" theme. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dba8afcdb5957893deab2443432ab4d8cb420dcd)
+- Added a Catpuccin "Mocha" theme. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dba8afcdb5957893deab2443432ab4d8cb420dcd)
 
 ### Changed
 
@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/553 by @AriannaAltomare
 - https://github.com/Fchat-Horizon/Horizon/pull/556 by @astrayblackcat
 
-## [1.35.4] - 11-12-2025
+## [1.35.4] - 12-11-2025
 
 ### Fixed
 
@@ -67,7 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated Ghostery to v2.13.0 (from 2.10.0) [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8c95c9837be4e18dab481445b1e3810287af16ad)
 
-## [1.35.3] - 04-12-2025
+## [1.35.3] - 12-04-2025
 
 ### Security
 
@@ -85,7 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated localization files.
   - Thanks @MJSJyanshi for the typo fix!
 
-## [1.35.2] - 01-12-2025
+## [1.35.2] - 12-01-2025
 
 ### Changed
 
@@ -103,7 +103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgraded Electron Builder to v26.3.2. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/36ad549)
 - Production builds now properly minify code. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/73536fc)
 
-## [1.35.1] - 29-11-2025
+## [1.35.1] - 11-29-2025
 
 ### Added
 
@@ -161,7 +161,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/510 by @Matthew-X
 - https://github.com/Fchat-Horizon/Horizon/pull/512 by @FatCatClient
 
-## [1.35.0] - 05-11-2025
+## [1.35.0] - 11-05-2025
 
 ### Added
 
@@ -206,7 +206,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/461 by @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/462 by @FatCatClient
 
-## [1.34.2] - 19-10-2025
+## [1.34.2] - 10-19-2025
 
 ### Changed
 
@@ -241,14 +241,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - https://github.com/Fchat-Horizon/Horizon/pull/460 by @snowsune
 
-## [1.34.1] - 2025-10-14
+## [1.34.1] - 10-14-2025
 
 ### Fixed
 
 - Fixed the app locking up because of Vue trying to delete some character search results. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/97dff91e82af3f5f2696c188b222a369d883a9f4)
 - Fixes ad campaigns with intervals above 10 minutes not getting timing variance applied. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0a38968b288b583885e131ee9b8f27451c46a563)
 
-## [1.34.0] - 2025-10-13
+## [1.34.0] - 10-13-2025
 
 ### Added
 
@@ -350,24 +350,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/443 by @CodingWithAnxiety
 - https://github.com/Fchat-Horizon/Horizon/pull/444 by @FatCatClient
 
-## [1.33.8] - 2025-09-27
+## [1.33.8] - 09-27-2025
 
 - Hotfix for broken notifications [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e47e37359de1bbba42d9074464a01eae42cb00f4)
   - The previous patch was quickly put out for a security issue that has been a thing since Rising, but we were so strict in blocking off permissions that we also broke the once instance where it was fine to have some permissions: Sending notifications from the chat sandbox.
 
-## [1.33.7] - 2025-09-27
+## [1.33.7] - 09-27-2025
 
 ### Fixed
 
 - Sites no longer get permissions by default. Or at all, for that matter. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1fa0662f062d5507d9eb608f81f3eed02ed314ff)
 
-## [1.33.6] - 2025-09-07
+## [1.33.6] - 09-07-2025
 
 ### Fixed
 
 - Fixes ping highlight color for real this time: highlight color (final) (2) - Copy.docx [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/49f8b16c9e6fcee56da4c6a4e23a4c582b2fa385)
 
-## [1.33.5] - 2025-09-07
+## [1.33.5] - 09-07-2025
 
 ### Added
 
@@ -395,7 +395,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/281 by @BootsieWootsie
 - https://github.com/Fchat-Horizon/Horizon/pull/336 by @BootsieWootsie
 
-## [1.33.4] - 2025-09-01
+## [1.33.4] - 09-01-2025
 
 ### Added
 
@@ -461,7 +461,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/367 by @ShiningVenus
   - This is her first contribution! 🎉
 
-## [1.33.3] - 2025-08-24
+## [1.33.3] - 08-24-2025
 
 ### Fixed
 
@@ -479,7 +479,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The light theme's primary color has been reverted back to blue for legibility reasons. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/33ca6e96c6410d3ad2bdedebcea381478eba9474)
 - Regrouped the text color settings into their own header. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/80aa51dc63857c050f839a60dfb431d94182187b)
 
-## [1.33.2] - 2025-08-24
+## [1.33.2] - 08-24-2025
 
 ### Added
 
@@ -489,7 +489,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix regression with the character selector by adding a search bar [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7ff8955)
 
-## [1.33.1] - 2025-08-24
+## [1.33.1] - 08-24-2025
 
 ### Added
 
@@ -503,7 +503,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixes for the default sound theme being painful on the ears. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dcca0a4)
 - Fixes Bootstrap-related colour issues on collapsible elements. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/970b58a)
 
-## [1.33.0] - 2025-08-24
+## [1.33.0] - 08-24-2025
 
 ### Added
 
@@ -596,7 +596,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/327 by @CodingWithAnxiety
 - https://github.com/Fchat-Horizon/Horizon/pull/331 by @FatCatClient
 
-## [1.32.3] - 2025-07-24
+## [1.32.3] - 07-24-2025
 
 ### Added
 
@@ -663,7 +663,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/280 by @little-voice
   - This is their first contribution! 🎉🎉
 
-## [1.32.2] - 2025-07-05
+## [1.32.2] - 07-05-2025
 
 > [!IMPORTANT]
 > We are hard at work updating Horizon to use Vue 3 instead of Vue 2, [which should have been done well during Rising's lifespan](https://blog.vuejs.org/posts/vue-2-eol).
@@ -699,7 +699,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #233 by @FatCatClient
 - #241 by @FireUnderTheMountain
 
-## [1.32.1] - 2025-06-21
+## [1.32.1] - 06-21-2025
 
 > [!IMPORTANT]
 > This update changes the way global settings are accessed. Backing up your logs is recommended.
@@ -731,7 +731,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - This is her first PR! 🎉
 - https://github.com/Fchat-Horizon/Horizon/pull/216 by @FatCatClient
 
-## [1.32.0] - 2025-06-15
+## [1.32.0] - 06-15-2025
 
 > [!IMPORTANT]
 > If you want to _downgrade_ from 1.32.0 or later to an earlier version, you will need to manually delete the `eicon.json` file in your Horizon data folder, or the EIcon search window might not show all results anymore.
@@ -780,7 +780,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/201 from @FireUnderTheMountain
 - https://github.com/Fchat-Horizon/Horizon/pull/204 from @FatCatClient
 
-## [1.31.1] - 2024-05-25
+## [1.31.1] - 05-25-2024
 
 ### Added
 
@@ -823,7 +823,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/147 from @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/178 from @FatCatClient
 
-## [1.31.0] - 2024-05-09
+## [1.31.0] - 05-09-2024
 
 > [!WARNING]
 > This is a major update!
@@ -894,7 +894,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/133/ from @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/134/ from @astrayblackcat
 
-## [1.30.3] - 2024-04-25
+## [1.30.3] - 04-25-2024
 
 ### Fixed
 
@@ -920,7 +920,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/63 from @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/42 from @FatCatClient
 
-## [1.30.2] [04.20.25]
+## [1.30.2] - 04-20-2025
 
 ### Fixed
 
@@ -942,7 +942,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated contributor information (#77)
 
-## [1.30.1] - 2024-03-25
+## [1.30.1] - 03-25-2024
 
 > [!WARNING]
 > This is a major update!
@@ -994,7 +994,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #32 Note silencer feature (from @FatCatClient) [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ca50d101557b52a21f21fbd75890c5f2febaf0f1)
 - #33 Dark dimmed links fix (from @FatCatClient) [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f25cfbf9dd016ad72b7528663ba721a3bd10b77a)
 
-## [1.29.1] - 2024-03-02
+## [1.29.1] - 03-02-2024
 
 ### Added
 

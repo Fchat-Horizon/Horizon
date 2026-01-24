@@ -79,7 +79,14 @@
       "fpm": [
         "--rpm-rpmbuild-define=_build_id_links none"
       ]
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Fchat-Horizon",
+        "repo": "Horizon"
+      }
+    ]
   },
   "scripts": {
     "webpack:dev": "node -e \"require('fs').mkdirSync('dist', {recursive: true})\" && node ../webpack development",
@@ -104,6 +111,7 @@
   },
   "dependencies": {
     "@mdit/plugin-alert": "^0.22.2",
+    "electron-updater": "^6.3.0",
     "markdown-it": "^14.1.0"
   }
 }

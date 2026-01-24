@@ -82,6 +82,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
@@ -100,7 +103,33 @@ jobs:
 
           cat SHASUMS256.txt
 
+      - name: Resolve Release Notes Path
+        id: release_notes
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          NOTES_PATH="docs/releases/${VERSION}.md"
+          if [ -f "$NOTES_PATH" ]; then
+            echo "path=$NOTES_PATH" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create Draft Release
+        if: steps.release_notes.outputs.path != ''
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          draft: true
+          body_path: ${{ steps.release_notes.outputs.path }}
+          files: final_release/**/*
+          # ^ Creates a draft release with uploaded artifacts including the SHASUMS256.txt file
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Draft Release (no notes)
+        if: steps.release_notes.outputs.path == ''
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}

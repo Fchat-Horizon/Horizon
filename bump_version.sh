@@ -44,6 +44,8 @@ fi
 # Paths to package.json files
 ROOT_PACKAGE="package.json"
 ELECTRON_PACKAGE="electron/package.json"
+RELEASE_NOTES_DIR="docs/releases"
+CHANGELOG_FILE="CHANGELOG.md"
 
 # Check if files exist
 if [ ! -f "$ROOT_PACKAGE" ]; then
@@ -54,6 +56,10 @@ fi
 if [ ! -f "$ELECTRON_PACKAGE" ]; then
     echo -e "${YELLOW}Error: $ELECTRON_PACKAGE not found.${NC}"
     exit 1
+fi
+
+if [ ! -f "$CHANGELOG_FILE" ]; then
+    echo -e "${YELLOW}Warning: $CHANGELOG_FILE not found.${NC}"
 fi
 
 # Get current versions
@@ -120,6 +126,30 @@ else
     fi
 fi
 
+# Regenerate changelog from release notes if available
+RELEASE_NOTES_PATH="$RELEASE_NOTES_DIR/$NEW_VERSION.md"
+if [ -f "$RELEASE_NOTES_PATH" ]; then
+    echo -e "${BLUE}Regenerating $CHANGELOG_FILE from release notes...${NC}"
+    if command -v node &> /dev/null; then
+        node scripts/changelog-tools.mjs build
+        if [ $? -ne 0 ]; then
+            echo -e "${YELLOW}Warning: Failed to regenerate $CHANGELOG_FILE.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${YELLOW}Warning: node is not installed; cannot regenerate $CHANGELOG_FILE.${NC}"
+        exit 1
+    fi
+else
+    echo -e "${YELLOW}Warning: Release notes not found at $RELEASE_NOTES_PATH.${NC}"
+    echo -e "Create the file before tagging to keep $CHANGELOG_FILE in sync."
+    read -p "Continue without regenerating changelog? (y/n): " CHANGELOG_CONFIRM
+    if [[ ! $CHANGELOG_CONFIRM =~ ^[Yy]$ ]]; then
+        echo "Operation cancelled."
+        exit 0
+    fi
+fi
+
 # Check if git is available
 if command -v git &> /dev/null; then
     # If we are in tag-only mode, skip to tagging
@@ -133,6 +163,12 @@ if command -v git &> /dev/null; then
         if [[ $GIT_CONFIRM =~ ^[Yy]$ ]]; then
             echo -e "${BLUE}Running git add...${NC}"
             git add "$ROOT_PACKAGE" "$ELECTRON_PACKAGE"
+            if [ -f "$CHANGELOG_FILE" ]; then
+                git add "$CHANGELOG_FILE"
+            fi
+            if [ -f "$RELEASE_NOTES_PATH" ]; then
+                git add "$RELEASE_NOTES_PATH"
+            fi
             
             if [ $? -eq 0 ]; then
                 echo -e "${BLUE}Running git commit...${NC}"
@@ -151,7 +187,7 @@ if command -v git &> /dev/null; then
         else
             echo
             echo -e "Changes were not committed. If you want to commit them later:"
-            echo -e "  git add package.json electron/package.json"
+            echo -e "  git add package.json electron/package.json $CHANGELOG_FILE $RELEASE_NOTES_PATH"
             echo -e "  git commit -m \"Bump version to $NEW_VERSION\""
             echo -e "  git tag -a \"v$NEW_VERSION\" -m \"Version $NEW_VERSION\""
             exit 0
@@ -180,7 +216,7 @@ if command -v git &> /dev/null; then
 else
     echo
     echo -e "Git not found. You may want to manually commit these changes:"
-    echo -e "  git add package.json electron/package.json"
+    echo -e "  git add package.json electron/package.json $CHANGELOG_FILE $RELEASE_NOTES_PATH"
     echo -e "  git commit -m \"Bump version to $NEW_VERSION\""
     echo -e "  git tag -a \"v$NEW_VERSION\" -m \"Version $NEW_VERSION\""
 fi
