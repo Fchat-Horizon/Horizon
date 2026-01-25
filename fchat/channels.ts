@@ -88,12 +88,15 @@ class Channel implements Interfaces.Channel {
 
 class ListItem implements Interfaces.ListItem {
   isJoined = false;
+  readonly lowerName: string;
 
   constructor(
     readonly id: string,
     readonly name: string,
     public memberCount: number
-  ) {}
+  ) {
+    this.lowerName = name.toLowerCase();
+  }
 }
 
 class State implements Interfaces.State {

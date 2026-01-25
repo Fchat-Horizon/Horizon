@@ -42,12 +42,18 @@
             ></span>
           </a>
         </div>
-        <div
-          class="hidden-scrollbar"
-          style="overflow: auto"
-          v-show="tab === '0'"
+        <virtual-list
+          class="hidden-scrollbar channel-scroll"
+          style="overflow: auto; flex: 1 1 auto"
+          v-if="tab === '0'"
+          :items="officialChannels"
+          :itemHeight="rowHeight"
+          :overscan="overscan"
+          keyField="id"
+          rowClass="channel-row"
+          :resetKey="filterApplied"
         >
-          <div v-for="channel in officialChannels" :key="channel.id">
+          <template slot-scope="{ item: channel }">
             <div class="form-check">
               <input
                 class="form-check-input"
@@ -60,14 +66,20 @@
                 {{ channel.name }} ({{ channel.memberCount }})
               </label>
             </div>
-          </div>
-        </div>
-        <div
-          class="hidden-scrollbar"
-          style="overflow: auto"
-          v-show="tab === '1'"
+          </template>
+        </virtual-list>
+        <virtual-list
+          class="hidden-scrollbar channel-scroll"
+          style="overflow: auto; flex: 1 1 auto"
+          v-else
+          :items="openRooms"
+          :itemHeight="rowHeight"
+          :overscan="overscan"
+          keyField="id"
+          rowClass="channel-row"
+          :resetKey="filterApplied"
         >
-          <div v-for="channel in openRooms" :key="channel.id">
+          <template slot-scope="{ item: channel }">
             <div class="form-check">
               <input
                 class="form-check-input"
@@ -80,8 +92,8 @@
                 {{ channel.name }} ({{ channel.memberCount }})
               </label>
             </div>
-          </div>
-        </div>
+          </template>
+        </virtual-list>
         <div class="input-group" style="padding: 10px 0; flex-shrink: 0">
           <span class="input-group-text">
             <span class="fas fa-plus"></span>
@@ -102,16 +114,17 @@
 </template>
 
 <script lang="ts">
-  import { Component } from '@f-list/vue-ts';
+  import { Component, Hook, Watch } from '@f-list/vue-ts';
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import Tabs from '../components/tabs';
+  import VirtualList from '../components/VirtualList.vue';
   import { Channel } from '../fchat';
   import core from './core';
   import l from './localize';
 
   @Component({
-    components: { modal: Modal, tabs: Tabs }
+    components: { modal: Modal, tabs: Tabs, 'virtual-list': VirtualList }
   })
   export default class ChannelList extends CustomDialog {
     privateTabShown = false;
@@ -120,32 +133,97 @@
     filter = '';
     createName = '';
     tab = '0';
+    filterApplied = 0;
+    rowHeight = 28;
+    overscan = 8;
+    filteredOpenRooms: ReadonlyArray<Channel.ListItem> = [];
+    filteredOfficialChannels: ReadonlyArray<Channel.ListItem> = [];
+    private sortedOpenRooms: ReadonlyArray<Channel.ListItem> = [];
+    private sortedOfficialChannels: ReadonlyArray<Channel.ListItem> = [];
+    private filterTimer: number | undefined;
+    private sortRaf: number | undefined;
 
     get openRooms(): ReadonlyArray<Channel.ListItem> {
-      return this.applyFilter(core.channels.openRooms);
+      return this.filteredOpenRooms;
     }
 
     get officialChannels(): ReadonlyArray<Channel.ListItem> {
-      return this.applyFilter(core.channels.officialChannels);
+      return this.filteredOfficialChannels;
     }
 
-    applyFilter(list: {
+    get officialChannelsSource(): {
+      [key: string]: Channel.ListItem | undefined;
+    } {
+      return core.channels.officialChannels;
+    }
+
+    get openRoomsSource(): {
+      [key: string]: Channel.ListItem | undefined;
+    } {
+      return core.channels.openRooms;
+    }
+
+    applyFilter(
+      list: ReadonlyArray<Channel.ListItem>,
+      filter: string
+    ): ReadonlyArray<Channel.ListItem> {
+      const search = filter.trim().toLowerCase();
+      if (search.length === 0) return list;
+      const channels: Channel.ListItem[] = [];
+      for (const item of list) {
+        if (item.lowerName.includes(search)) channels.push(item);
+      }
+      return channels;
+    }
+
+    buildSortedList(list: {
       [key: string]: Channel.ListItem | undefined;
     }): ReadonlyArray<Channel.ListItem> {
       const channels: Channel.ListItem[] = [];
-      if (this.filter.length > 0) {
-        const search = new RegExp(this.filter.replace(/[^\w]/gi, '\\$&'), 'i');
-        for (const key in list) {
-          const item = list[key]!;
-          if (search.test(item.name)) channels.push(item);
-        }
-      } else for (const key in list) channels.push(list[key]!);
+      for (const key in list) channels.push(list[key]!);
       channels.sort(
         this.sortCount
           ? (x, y) => y.memberCount - x.memberCount
-          : (x, y) => x.name.localeCompare(y.name)
+          : (x, y) => x.lowerName.localeCompare(y.lowerName)
       );
       return channels;
+    }
+
+    rebuildSortedLists(): void {
+      this.sortedOfficialChannels = this.buildSortedList(
+        core.channels.officialChannels
+      );
+      this.sortedOpenRooms = this.buildSortedList(core.channels.openRooms);
+      this.rebuildFilteredLists();
+    }
+
+    rebuildFilteredLists(): void {
+      this.filteredOfficialChannels = this.applyFilter(
+        this.sortedOfficialChannels,
+        this.filter
+      );
+      this.filteredOpenRooms = this.applyFilter(
+        this.sortedOpenRooms,
+        this.filter
+      );
+      this.filterApplied += 1;
+    }
+
+    scheduleSortedRebuild(): void {
+      if (this.sortRaf !== undefined) return;
+      this.sortRaf = window.requestAnimationFrame(() => {
+        this.sortRaf = undefined;
+        this.rebuildSortedLists();
+      });
+    }
+
+    scheduleFilterUpdate(): void {
+      if (this.filterTimer !== undefined) {
+        window.clearTimeout(this.filterTimer);
+      }
+      this.filterTimer = window.setTimeout(() => {
+        this.rebuildFilteredLists();
+      }, 150);
     }
 
     create(): void {
@@ -155,6 +233,7 @@
 
     opened(): void {
       core.channels.requestChannelsIfNeeded(30000);
+      this.rebuildSortedLists();
       this.$nextTick(() => {
         this.focusChannelFilter();
       });
@@ -166,6 +245,36 @@
 
     closed(): void {
       this.createName = '';
+    }
+
+    @Hook('beforeDestroy')
+    beforeDestroy(): void {
+      if (this.filterTimer !== undefined) {
+        window.clearTimeout(this.filterTimer);
+      }
+      if (this.sortRaf !== undefined) {
+        window.cancelAnimationFrame(this.sortRaf);
+      }
+    }
+
+    @Watch('filter')
+    onFilterChange(): void {
+      this.scheduleFilterUpdate();
+    }
+
+    @Watch('sortCount')
+    onSortChange(): void {
+      this.scheduleSortedRebuild();
+    }
+
+    @Watch('officialChannelsSource', { deep: true })
+    onOfficialChannelsChange(): void {
+      this.scheduleSortedRebuild();
+    }
+
+    @Watch('openRoomsSource', { deep: true })
+    onOpenRoomsChange(): void {
+      this.scheduleSortedRebuild();
     }
 
     setJoined(channel: Channel.ListItem): void {
@@ -180,5 +289,21 @@
   .channel-list .modal-body {
     display: flex;
     flex-direction: column;
+  }
+
+  .channel-list .channel-scroll {
+    position: relative;
+    padding-top: 10px;
+  }
+
+  .channel-list .channel-row {
+    display: flex;
+    align-items: center;
+  }
+
+  .channel-list .channel-row .form-check-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>
