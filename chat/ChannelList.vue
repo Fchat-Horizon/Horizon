@@ -293,6 +293,7 @@
 
   .channel-list .channel-scroll {
     position: relative;
+    padding-top: 10px;
   }
 
   .channel-list .channel-row {
