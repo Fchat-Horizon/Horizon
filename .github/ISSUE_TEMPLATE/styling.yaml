@@ -1,0 +1,22 @@
+name: Styling or visual issues
+description: Things don't look right, illegible text, misaligned elements, etc.
+labels: ['styling']
+projects: ['FChat-Horizon/Horizon']
+body:
+  - type: markdown
+    id: description
+    attributes:
+      label: Describe the problem
+      description: Where exactly does this issue happen? What makes it problematic for you? Screenshots are very helpful!
+  - type: textarea
+    id: version-info
+    attributes:
+      label: Version Information
+      placeholder: In the app menu, go to Horizon > About Horizon, click "Copy Version Info" and paste it here.
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
