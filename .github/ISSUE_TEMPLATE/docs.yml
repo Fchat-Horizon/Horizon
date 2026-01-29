@@ -1,12 +1,14 @@
 name: Documentation
 description: For the Wiki, documentation or the website.
 body:
-  - type: markdown
+  - type: textarea
     id: pages
     attributes:
       label: Relevant page(s)
       description: Please link the page(s) the problem occurs in.
-  - type: text-area
+    validations:
+      required: true
+  - type: textarea
     id: browser-info
     attributes:
       label: Browser Information

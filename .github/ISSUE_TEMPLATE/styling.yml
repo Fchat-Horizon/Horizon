@@ -3,11 +3,13 @@ description: Things don't look right, illegible text, misaligned elements, etc.
 labels: ['styling']
 projects: ['FChat-Horizon/Horizon']
 body:
-  - type: markdown
+  - type: textarea
     id: description
     attributes:
       label: Describe the problem
       description: Where exactly does this issue happen? What makes it problematic for you? Screenshots are very helpful!
+    validations:
+      required: true
   - type: textarea
     id: version-info
     attributes:
