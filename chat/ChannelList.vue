@@ -206,7 +206,6 @@
         this.sortedOpenRooms,
         this.filter
       );
-      this.filterApplied += 1;
     }
 
     scheduleSortedRebuild(): void {
@@ -223,6 +222,7 @@
       }
       this.filterTimer = window.setTimeout(() => {
         this.rebuildFilteredLists();
+        this.filterApplied += 1;
       }, 150);
     }
 
