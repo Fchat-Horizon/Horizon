@@ -376,8 +376,11 @@
         if (resultsContainer) {
           resultsContainer.scrollTop = 0;
         }
+        this.destroySortable();
 
-        this.initializeSortable();
+        if (this.search === 'category:favorites') {
+          this.initializeSortable();
+        }
       });
     }
 
