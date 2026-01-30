@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # [Releases]
 
+## [1.35.7] 25-01-2026
+
+## Fixed
+
+- Fixed the channel list erratically jumping back to the start of the list whenever any of its child components would update their value. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e10cdaff9444dacbbe4ef0585900ccf746f10438)
+- Fixes the eicon picker sometimes letting you click-drag eicons outside of the favourites tab, which would then result in your favourites list being deleted. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a2effce7bf605af5ca2a2b5642ae1d38c28f01e8)
+- Fixed the Redgifs URL previewer not handling some URL formats correctly. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/36e246c004c030634c8a3690e50f4a194e65ec93)
+
 ## [1.35.6] 25-01-2026
 
 ## Added
