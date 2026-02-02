@@ -291,6 +291,8 @@
       this.sortable = Sortable.create(resultsContainer, {
         animation: 150,
         onEnd: e => {
+          //sanity check, in case our sortableJS object hasnt been destroyed somehow (this has happened before!)
+          if (this.search !== 'category:favorites') return;
           const oldIndex = e.oldIndex!;
           const newIndex = e.newIndex!;
 
