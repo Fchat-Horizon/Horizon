@@ -58,7 +58,10 @@
         >
           <i class="fas fa-times"></i>
         </a>
-        {{ mod }}
+        <user-view
+          :character="getCharacter(mod)"
+          :isMarkerShown="shouldShowMarker"
+        ></user-view>
       </div>
       <div style="display: flex; margin-top: 5px">
         <input
@@ -88,9 +91,10 @@
   import core from './core';
   import { Channel, channelModes } from './interfaces';
   import l from './localize';
+  import UserView from './UserView.vue';
 
   @Component({
-    components: { modal: Modal, 'bbcode-editor': Editor }
+    components: { modal: Modal, 'bbcode-editor': Editor, 'user-view': UserView }
   })
   export default class ManageChannel extends CustomDialog {
     @Prop({ required: true })
@@ -121,6 +125,14 @@
         this.channel.owner === core.connection.character ||
         core.characters.ownCharacter.isChatOp
       );
+    }
+
+    getCharacter(name: string): Character {
+      return core.characters.get(name);
+    }
+
+    get shouldShowMarker(): boolean {
+      return core.state.settings.horizonShowGenderMarker;
     }
 
     modAdd(): void {
