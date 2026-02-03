@@ -20,6 +20,8 @@ export class ImageUrlMutator {
   private static readonly IMGUR_IMAGE_URL_REGEX =
     /^https?:\/\/i.imgur.com\/([a-zA-Z0-9]+)(\.[a-z0-9A-Z]+)(.*)$/;
 
+  private static redgifsToken: string | null = null;
+
   private debug: boolean;
 
   private static SUPPRESSOR_DOMAINS = ['vimeo.com', 'gfycat.com'];
@@ -105,6 +107,16 @@ export class ImageUrlMutator {
     );
 
     this.add(
+      /^https?:\/\/([\w-]*bsky|bskye|bskyx|bsyy)\.app\/(profile\/[\w.:]+\/post\/\w+)/,
+      async (url: string, match: RegExpMatchArray): Promise<string> => {
+        const path = match[2];
+
+        // https://github.com/Lexedia/VixBluesky/wiki/Features#custom-pds-video-support
+        return `https://r.v.bskx.app/${path}`;
+      }
+    );
+
+    this.add(
       /^https?:\/\/rule34video.com\/videos\/([0-9a-zA-Z-_]+)/,
       async (_url: string, match: RegExpMatchArray): Promise<string> => {
         const videoId = match[1];
@@ -135,21 +147,34 @@ export class ImageUrlMutator {
     );
 
     this.add(
-      /^https?:\/\/(www.|v3.)?gifdeliverynetwork.com\/([a-z0-9A-Z]+)/,
+      /^https?:\/\/(www.|v3.)?redgifs.com\/(?:watch|ifr)\/([a-z0-9A-Z]+)/,
       async (_url: string, match: RegExpMatchArray): Promise<string> => {
         const redgifId = match[2];
+        const fallback = `https://www.redgifs.com/ifr/${redgifId}?controls=0%hd=1`;
 
-        // Redgifs is correct
-        return `https://www.redgifs.com/ifr/${redgifId}?controls=0&hd=1`;
-      }
-    );
+        for (const refresh of [false, true]) {
+          try {
+            const token = await this.getRedgifsToken(refresh);
+            if (!token) continue;
 
-    this.add(
-      /^https?:\/\/(www.|v3.)?redgifs.com\/watch\/([a-z0-9A-Z]+)/,
-      async (_url: string, match: RegExpMatchArray): Promise<string> => {
-        const redgifId = match[2];
+            const response = await Axios.get(
+              `https://api.redgifs.com/v2/gifs/${redgifId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`
+                }
+              }
+            );
+            const hdUrl = _.get(response, 'data.gif.urls.hd');
 
-        return `https://www.redgifs.com/ifr/${redgifId}?controls=0&hd=1`;
+            return hdUrl || fallback;
+          } catch (err) {
+            // attempt token refresh, then fallback to iframe if API fails
+            if (refresh && this.debug)
+              console.error('RedGifs API Failure', redgifId, err);
+          }
+        }
+        return fallback;
       }
     );
 
@@ -310,6 +335,29 @@ export class ImageUrlMutator {
       async (_url: string, match: RegExpMatchArray) =>
         this.getOptimizedImgUrlFromMatch(match)
     );*/
+  }
+
+  private async getRedgifsToken(forceRefresh = false): Promise<string> {
+    if (!forceRefresh && ImageUrlMutator.redgifsToken) {
+      return ImageUrlMutator.redgifsToken;
+    }
+
+    try {
+      const response = await Axios.get(
+        'https://api.redgifs.com/v2/auth/temporary'
+      );
+      const token = _.get(response, 'data.token');
+      console.log('Fetching redgifs API token');
+
+      if (token) {
+        ImageUrlMutator.redgifsToken = token;
+        return token;
+      }
+    } catch (err) {
+      if (this.debug) console.error('Failed to get RedGifs token', err);
+    }
+
+    return '';
   }
 
   getOptimizedImgUrlFromMatch(match: RegExpMatchArray): string {

@@ -1,0 +1,24 @@
+name: Feature request
+description: Suggest an idea or feature for Horizon
+labels: ['feature']
+projects: ['FChat-Horizon/Horizon']
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the problem
+      description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Your idea/ solution
+      description: What's your idea? How do you see it working?
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about the feature request here.
