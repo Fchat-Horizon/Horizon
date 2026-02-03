@@ -14,7 +14,7 @@ Email: `dev@hoizn.moe`
 
 Please allow **60 days** from the initial report before public disclosure.
 
-### Vulnerabilities also present in Horizon 3.0
+### Vulnerabilities also present in F-Chat 3.0
 
 Email: `kira@f-list.net`
 
