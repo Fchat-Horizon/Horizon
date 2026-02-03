@@ -21,6 +21,7 @@
 
           buildInputs = [
             nodejs
+            pkgs.bashInteractive
             pnpm
             electron
             pkgs.python3
@@ -29,6 +30,7 @@
           ];
 
           shellHook = ''
+            export SHELL="${pkgs.bashInteractive}/bin/bash"
             echo "Horizon development environment"
             echo "Node version:  $(node --version)"
             echo "pnpm version:  $(pnpm --version)"
