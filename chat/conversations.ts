@@ -1515,9 +1515,12 @@ export default function (this: any): Interfaces.State {
 
   connection.onMessage('IGN', async (data, time) => {
     if (data.action !== 'add' && data.action !== 'delete') return;
-    const text = l(`events.ignore_${data.action}`, data.character);
-    state.selectedConversation.infoText = text;
-    return addEventMessage(new EventMessage(text, time));
+    const key = `events.ignore_${data.action}`;
+    const name = data.character;
+    state.selectedConversation.infoText = l(key, name);
+    return addEventMessage(
+      new EventMessage(l(key, `[user]${name}[/user]`), time)
+    );
   });
   connection.onMessage('RTB', async (data, time) => {
     let url = 'https://www.f-list.net/';
