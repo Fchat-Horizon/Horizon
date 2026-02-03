@@ -389,6 +389,7 @@ export enum Species {
   Alien = 281,
   Dinosaur = 610,
   Pokemon = 504,
+  Digimon = 503,
   Fae = 612,
   Taur = 68,
   Vampire = 182,
@@ -421,6 +422,7 @@ export const nonAnthroSpecies = [
   Species.Robot,
   Species.Alien,
   Species.Pokemon,
+  Species.Digimon,
   Species.Fae,
   Species.Vampire,
   Species.Monster,
@@ -988,6 +990,7 @@ export const speciesMapping: SpeciesMap = {
     '🐍'
   ],
 
+  //TODO: convert full list of Pokemon from Bulbapedia into a sorted (by dex number) array, with potential mispellings (like "Gardevior" or "Feraligator") taken into consideration
   [Species.Pokemon]: [
     'charizard',
     'charmander',
@@ -996,6 +999,8 @@ export const speciesMapping: SpeciesMap = {
     'renamon',
     'eevee',
     'gardev(oi|io)r',
+    'ralts',
+    'gallade',
     'absol',
     'aggron',
     'jolteon',
@@ -1008,15 +1013,17 @@ export const speciesMapping: SpeciesMap = {
     'mudsdale',
     'mewtwo',
     'glaceon',
-    'pokemon',
+    'pok(e|é)mon (?!trainer|coordinator|breeder)',
     'croconaw',
+    'feraligato?r',
+    'cor(ph|f)ish',
+    'crawdaunt',
     'rattata',
     'toxtricity',
     'audino',
     'sandslash',
     'luxray',
     'samurott',
-    'pokémon',
     'riolu',
     'greninja',
     'meowstick',
@@ -1026,6 +1033,7 @@ export const speciesMapping: SpeciesMap = {
     'zebstrika',
     'rapidash',
     'umbreon',
+    'espeon',
     'litten',
     'vulpix',
     'groudon',
@@ -1090,11 +1098,23 @@ export const speciesMapping: SpeciesMap = {
     'charmeleon',
     'lapras',
     'hatteren[ea]',
+    'aurorus',
+    'machamp',
+    //lest we accidentally label anyone with the word "hypnosis" as a Pokemon
+    '^hypno$',
+    'meowscarada',
+    'nickit'
+  ],
 
-    // digimon
+  [Species.Digimon]: [
+    'sparrowmon',
     'gatomon',
     'impmon',
-    'guilmon'
+    'guilmon',
+    'renamon',
+    'greymon',
+    'numemon',
+    'sukamon'
   ],
 
   [Species.Amphibian]: [

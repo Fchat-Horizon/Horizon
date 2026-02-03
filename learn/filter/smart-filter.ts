@@ -299,7 +299,7 @@ export const smartFilters: SmartFilterCollection = {
 
   pokemon: new SmartFilter({
     name: 'pokemon',
-    species: [Species.Pokemon]
+    species: [Species.Pokemon, Species.Digimon]
   }),
 
   rape: new SmartFilter({
