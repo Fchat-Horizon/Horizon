@@ -1451,7 +1451,7 @@ export default function (this: any): Interfaces.State {
     const logtext = l(
       'events.ban',
       conv.name,
-      `[user]${data.character}[/user]`,
+      data.character,
       `[user]${data.operator}[/user]`
     );
     conv.infoText = l('events.ban', conv.name, data.character, data.operator);
@@ -1463,7 +1463,7 @@ export default function (this: any): Interfaces.State {
     const logtext = l(
       'events.kick',
       conv.name,
-      `[user]${data.character}[/user]`,
+      data.character,
       `[user]${data.operator}[/user]`
     );
     conv.infoText = l('events.kick', conv.name, data.character, data.operator);
@@ -1475,7 +1475,7 @@ export default function (this: any): Interfaces.State {
     const logtext = l(
       'events.timeout',
       conv.name,
-      `[user]${data.character}[/user]`,
+      data.character,
       `[user]${data.operator}[/user]`,
       data.length.toString()
     );
