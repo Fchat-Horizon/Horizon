@@ -6,12 +6,12 @@
   >
     <div v-html="styling"></div>
     <div
-      style="
-        display: flex;
+      :style="`
+        display: ${!hideWindowControls | (tabs.length > 1) ? 'flex' : 'none'};
         align-items: stretch;
         border-bottom-width: 1px;
         min-height: 31px;
-      "
+      `"
       class="border-bottom"
       id="window-tabs"
     >
