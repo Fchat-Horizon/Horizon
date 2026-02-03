@@ -4,7 +4,7 @@ So you've found a security vulnerability in Horizon? This is where you should be
 
 ## Supported Versions
 
-Only the **latest release** of Horizon receives security fixes. Please verify the issue is reproducible on the latest version before reporting. 
+Only the **latest release** of Horizon receives security fixes. Please verify the issue is reproducible on the latest version before reporting.
 
 ## Reporting a Vulnerability
 
