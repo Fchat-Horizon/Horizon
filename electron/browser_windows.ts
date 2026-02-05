@@ -647,8 +647,8 @@ export function createChangelogWindow(
   updateVer?: string,
   updateMode?: 'auto' | 'manual'
 ): electron.BrowserWindow | undefined {
-  let desiredHeight = 700;
-  let desiredWidth = 600;
+  let desiredHeight = updateVer ? 850 : 700;
+  let desiredWidth = updateVer ? 900 : 600;
 
   const windowProperties: electron.BrowserWindowConstructorOptions = {
     center: true,

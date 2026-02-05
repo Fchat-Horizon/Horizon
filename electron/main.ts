@@ -796,13 +796,55 @@ async function onReady(): Promise<void> {
       { role: 'togglefullscreen' }
     ]
   };
-  if (process.env.NODE_ENV !== 'production')
-    viewItem.submenu.unshift(
+  const devItem: MenuItemConstructorOptions = {
+    label: l('action.developer'),
+    submenu: [
       { role: 'reload' },
       { role: 'forceReload' },
       { role: 'toggleDevTools' },
-      { type: 'separator' }
-    );
+      { type: 'separator' },
+      {
+        label: 'Show update notice',
+        click: (_menu, _window) => {
+          browserWindows.toggleUpdateNotice(true, `v${app.getVersion()}`);
+        }
+      },
+      {
+        label: 'Show update menu (auto)',
+        click: (_menu, window) => {
+          browserWindows.createChangelogWindow(
+            settings,
+            'none',
+            window as electron.BrowserWindow,
+            `v${app.getVersion()}`,
+            'auto'
+          );
+        }
+      },
+      {
+        label: 'Show update menu (manual)',
+        click: (_menu, window) => {
+          browserWindows.createChangelogWindow(
+            settings,
+            'none',
+            window as electron.BrowserWindow,
+            `v${app.getVersion()}`,
+            'manual'
+          );
+        }
+      },
+      {
+        type: 'separator'
+      },
+      {
+        label: 'Test UI items',
+        click: (_m, window) => {
+          (window as electron.BrowserWindow).webContents.send('ui-test');
+        },
+        id: 'uiTest'
+      }
+    ]
+  };
   const windowItem: MenuItemConstructorOptions = {
     label: l('window'),
     role: 'window',
@@ -967,14 +1009,6 @@ async function onReady(): Promise<void> {
               openURLExternally(
                 'https://wiki.f-list.net/How_to_Report_a_User#In_chat'
               )
-          },
-          {
-            label: 'Test UI items',
-            click: (_m, window: electron.BrowserWindow, _e: KeyboardEvent) => {
-              window.webContents.send('ui-test');
-            },
-            id: 'uiTest',
-            visible: process.env.NODE_ENV !== 'production'
           }
         ] as MenuItemConstructorOptions[]
       },
@@ -1043,7 +1077,8 @@ async function onReady(): Promise<void> {
               ] as MenuItemConstructorOptions[]
             } as MenuItemConstructorOptions
           ] as MenuItemConstructorOptions[])
-        : [])
+        : []),
+      ...(process.env.NODE_ENV !== 'production' ? [devItem] : [])
     ])
   );
 

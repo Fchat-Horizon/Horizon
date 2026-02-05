@@ -26,11 +26,14 @@
             </button>
           </div>
           <div class="modal-body">
-            <div v-if="updateVersion" class="update-banner">
+            <div
+              v-if="updateVersion"
+              class="update-banner bg-body-tertiary border"
+            >
               <div v-if="updateMode === 'manual'" class="update-banner__text">
                 {{
                   l(
-                    'changelog.manualUpdate',
+                    'changelog.compare',
                     updateVersion || '',
                     currentVersion || ''
                   )
@@ -45,45 +48,17 @@
                   )
                 }}
               </div>
-              <div
-                v-if="updateMode === 'manual'"
-                class="update-banner__actions"
-              >
-                <button
-                  type="button"
-                  class="btn btn-primary"
-                  @click.stop="openLatestRelease()"
-                >
-                  {{ l('changelog.openReleases') }}
-                </button>
+
+              <div class="update-banner__note text-muted">
+                {{
+                  l(
+                    this.updateMode === 'auto'
+                      ? 'update.installOnQuit.note'
+                      : 'changelog.manualUpdate'
+                  )
+                }}
               </div>
-              <div v-else class="update-banner__actions">
-                <button
-                  type="button"
-                  class="btn btn-primary"
-                  @click.stop="updateNow()"
-                >
-                  {{ l('changelog.updateNow') }}
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-secondary"
-                  @click.stop="skipUpdate()"
-                >
-                  {{ l('changelog.skipUpdate') }}
-                </button>
-              </div>
-              <div v-if="updateMode !== 'manual'" class="update-banner__note">
-                {{ l('update.installOnQuit.note') }}
-              </div>
-            </div>
-            <div
-              class="logs-container border bg-light"
-              v-html="changeLogText"
-              ref="mdContainer"
-            ></div>
-            <div class="modal-footer">
-              <div class="footer-links">
+              <div class="update-banner__actions">
                 <a
                   class="btn btn-outline-primary"
                   href="https://discord.gg/JYuxqNVNtP"
@@ -106,13 +81,91 @@
                   <span style="margin-left: 6px">Ko-Fi</span>
                 </a>
               </div>
-              <button
-                type="button"
-                class="btn btn-secondary"
-                @click.stop="close()"
-              >
-                {{ l('action.close') }}
-              </button>
+            </div>
+            <div
+              class="logs-container border bg-light"
+              v-html="changeLogText"
+              ref="mdContainer"
+            ></div>
+            <div class="modal-footer">
+              <template v-if="updateVersion && updateMode === 'auto'">
+                <div class="form-check me-auto w-100">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value=""
+                    id="autoInstall"
+                    disabled
+                  />
+                  <label class="form-check-label" for="autoInstall">
+                    {{ l('update.autoInstall') }}
+                  </label>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary me-auto"
+                  @click.stop="skipUpdate()"
+                >
+                  {{ l('changelog.skipUpdate') }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary me-1"
+                  @click.stop="close()"
+                >
+                  {{ l('changelog.remindLater') }}
+                </button>
+
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  @click.stop="updateNow()"
+                >
+                  {{ l('changelog.updateNow') }}
+                </button>
+              </template>
+              <template v-else>
+                <span v-if="!updateVer">
+                  <a
+                    class="btn btn-outline-primary me-2"
+                    href="https://discord.gg/JYuxqNVNtP"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    <span class="fab fa-discord"></span>
+                    <span style="margin-left: 6px">{{
+                      l('chat.joinDiscord')
+                    }}</span>
+                  </a>
+                  <a
+                    class="btn btn-outline-primary"
+                    href="https://ko-fi.com/thehorizonteam"
+                    target="_blank"
+                    rel="noopener"
+                    title="Support us on Ko-Fi"
+                  >
+                    <span class="fa fa-coffee"></span>
+                    <span style="margin-left: 6px">Ko-Fi</span>
+                  </a>
+                </span>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  @click.stop="close()"
+                >
+                  {{ l('action.close') }}
+                </button>
+
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  @click.stop="openLatestRelease()"
+                  v-if="updateMode === 'manual'"
+                >
+                  <span class="me-1">{{ l('changelog.openReleases') }}</span
+                  ><i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </button>
+              </template>
             </div>
           </div>
         </div>
@@ -360,11 +413,10 @@
   .update-banner {
     display: flex;
     flex-direction: column;
+    flex: 0 0 auto;
     gap: 8px;
     padding: 10px 12px;
     border-radius: 10px;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.08);
   }
   .update-banner__text {
     font-size: 0.95rem;
@@ -376,25 +428,19 @@
     gap: 8px;
     margin-top: 0;
     position: static;
+    justify-content: end;
   }
   .update-banner__note {
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.75);
   }
 
   /*This override exists because we allow the user to resize the window, which potentially resizes the footer otherwise*/
   .modal-body .modal-footer {
-    height: 52px;
     min-height: 52px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     flex: 0 0 auto;
-  }
-  .modal-body .modal-footer .footer-links {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+    padding: 0;
   }
 
   .card-full {
@@ -433,7 +479,7 @@
     max-width: 100%;
     height: auto;
     display: block;
-    margin: 0.5em auto;
+    margin: 0.5em 2em;
     max-height: calc(100vh - 160px);
     object-fit: contain;
   }
