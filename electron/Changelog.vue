@@ -7,12 +7,14 @@
   >
     <div v-html="styling"></div>
     <div class="window-modal modal" :class="getThemeClass()" tabindex="-1">
-      <div class="modal-dialog modal-xl" style="height: 100vh">
-        <div class="modal-content" style="height: 100vh">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
           <div class="modal-header">
             <h4 class="modal-title" style="-webkit-app-region: drag">
               {{
-                l('changelog.version', updateVersion || currentVersion || '')
+                updateVersion
+                  ? l('action.updateTitle')
+                  : l('changelog.version', currentVersion || '')
               }}
             </h4>
             <button
@@ -25,68 +27,73 @@
               <span class="fas fa-times"></span>
             </button>
           </div>
-          <div class="modal-body">
+          <div
+            class="modal-body"
+            :class="{ 'has-update-header': updateVersion }"
+          >
             <div
               v-if="updateVersion"
-              class="update-banner bg-body-tertiary border"
+              class="changelog-header d-flex align-items-center gap-3 p-2 pb-1"
             >
-              <div v-if="updateMode === 'manual'" class="update-banner__text">
-                {{
-                  l(
-                    'changelog.compare',
-                    updateVersion || '',
-                    currentVersion || ''
-                  )
-                }}
+              <div class="changelog-header__logo">
+                <div class="changelog-logo-bg"></div>
+                <img class="changelog-logo" :src="logoSrc" alt="Horizon logo" />
               </div>
-              <div v-else class="update-banner__text">
-                {{
-                  l(
-                    'changelog.compare',
-                    updateVersion || '',
-                    currentVersion || ''
-                  )
-                }}
-              </div>
-
-              <div class="update-banner__note text-muted">
-                {{
-                  l(
-                    this.updateMode === 'auto'
-                      ? 'update.installOnQuit.note'
-                      : 'changelog.manualUpdate'
-                  )
-                }}
-              </div>
-              <div class="update-banner__actions">
-                <a
-                  class="btn btn-outline-primary"
-                  href="https://discord.gg/JYuxqNVNtP"
-                  target="_blank"
-                  rel="noopener"
-                >
-                  <span class="fab fa-discord"></span>
-                  <span style="margin-left: 6px">{{
-                    l('chat.joinDiscord')
-                  }}</span>
-                </a>
-                <a
-                  class="btn btn-outline-primary"
-                  href="https://ko-fi.com/thehorizonteam"
-                  target="_blank"
-                  rel="noopener"
-                  title="Support us on Ko-Fi"
-                >
-                  <span class="fa fa-coffee"></span>
-                  <span style="margin-left: 6px">Ko-Fi</span>
-                </a>
+              <div
+                class="changelog-header__content d-flex flex-column gap-2 align-items-start"
+              >
+                <div class="changelog-header__title">
+                  {{
+                    l(
+                      'changelog.compare',
+                      updateVersion || '',
+                      currentVersion || ''
+                    )
+                  }}
+                </div>
+                <div class="changelog-header__subtitle">
+                  {{
+                    l(
+                      updateMode === 'auto'
+                        ? 'update.installOnQuit.note'
+                        : 'changelog.manualUpdate'
+                    )
+                  }}
+                </div>
+                <div class="changelog-header__links d-flex flex-wrap gap-2">
+                  <a
+                    class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2 text-nowrap"
+                    href="https://discord.gg/JYuxqNVNtP"
+                    @click.prevent="
+                      externalUrlHandler('https://discord.gg/JYuxqNVNtP')
+                    "
+                    data-action="openExternal"
+                  >
+                    <span class="fab fa-discord"></span>
+                    <span>{{ l('chat.joinDiscord') }}</span>
+                  </a>
+                  <a
+                    class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2 text-nowrap"
+                    href="https://ko-fi.com/thehorizonteam"
+                    @click.prevent="
+                      externalUrlHandler('https://ko-fi.com/thehorizonteam')
+                    "
+                    :title="l('changelog.supportHorizonTitle')"
+                    data-action="openExternal"
+                  >
+                    <span class="fa fa-coffee"></span>
+                    <span>{{ l('changelog.supportHorizon') }}</span>
+                  </a>
+                </div>
               </div>
             </div>
-            <div
-              class="logs-container border bg-light"
-              v-html="changeLogText"
-              ref="mdContainer"
-            ></div>
+            <div class="changelog-scroll pe-1 pb-2">
+              <div
+                class="logs-container border bg-light"
+                v-html="changeLogText"
+                ref="mdContainer"
+              ></div>
+            </div>
             <div class="modal-footer">
               <template v-if="updateVersion && updateMode === 'auto'">
                 <div class="form-check me-auto w-100">
@@ -125,12 +132,14 @@
                 </button>
               </template>
               <template v-else>
-                <span v-if="!updateVer">
+                <div v-if="!updateVersion" class="footer-links">
                   <a
-                    class="btn btn-outline-primary me-2"
+                    class="btn btn-outline-primary"
                     href="https://discord.gg/JYuxqNVNtP"
-                    target="_blank"
-                    rel="noopener"
+                    @click.prevent="
+                      externalUrlHandler('https://discord.gg/JYuxqNVNtP')
+                    "
+                    data-action="openExternal"
                   >
                     <span class="fab fa-discord"></span>
                     <span style="margin-left: 6px">{{
@@ -140,14 +149,18 @@
                   <a
                     class="btn btn-outline-primary"
                     href="https://ko-fi.com/thehorizonteam"
-                    target="_blank"
-                    rel="noopener"
-                    title="Support us on Ko-Fi"
+                    @click.prevent="
+                      externalUrlHandler('https://ko-fi.com/thehorizonteam')
+                    "
+                    :title="l('changelog.supportHorizonTitle')"
+                    data-action="openExternal"
                   >
                     <span class="fa fa-coffee"></span>
-                    <span style="margin-left: 6px">Ko-Fi</span>
+                    <span style="margin-left: 6px">{{
+                      l('changelog.supportHorizon')
+                    }}</span>
                   </a>
-                </span>
+                </div>
                 <button
                   type="button"
                   class="btn btn-secondary"
@@ -178,7 +191,7 @@
   import { Component, Hook } from '@f-list/vue-ts';
   import * as remote from '@electron/remote';
   import Vue from 'vue';
-  import l from '../chat/localize';
+  import l, { setLanguage } from '../chat/localize';
   import { GeneralSettings } from './common';
   import fs from 'fs';
   import path from 'path';
@@ -187,6 +200,9 @@
   import markdownit from 'markdown-it';
   import { alert } from '@mdit/plugin-alert';
   import electron from 'electron';
+
+  // tslint:disable-next-line:no-require-imports
+  const logoSrc = require('./build/icon.png').default;
 
   type ReleaseInfo = {
     html_url: string;
@@ -208,6 +224,7 @@
     isMac = process.platform === 'darwin';
     hasCompletedUpgrades = false;
     changeLogText: string = '';
+    logoSrc = logoSrc;
 
     get styling(): string {
       try {
@@ -235,6 +252,14 @@
       remote.nativeTheme.on('updated', () => {
         this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
       });
+      try {
+        setLanguage(this.settings.displayLanguage);
+      } catch (e) {
+        console.warn('Failed to set display language', e);
+      }
+      document.title = this.updateVersion
+        ? l('action.updateAvailable')
+        : l('help.changelog');
       const container = <HTMLElement>this.$refs['mdContainer'];
       if (container) {
         container.addEventListener('click', this.delegateLinkClick);
@@ -346,10 +371,22 @@
   .card-full .window-modal {
     position: relative;
     display: block;
+    height: 100%;
+  }
+
+  .window-modal.modal {
+    height: 100%;
+  }
+
+  .window-modal .modal-content {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100%;
   }
   .window-modal .modal-dialog {
     margin: 0px;
     max-width: 100%;
+    height: 100%;
   }
 
   .modal-title {
@@ -357,21 +394,86 @@
   }
 
   .modal-body {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     gap: 12px;
     min-height: 0;
     overflow: hidden;
+    padding-top: 6px;
+    padding-bottom: 12px;
+    --changelog-indent: 0;
+  }
+
+  .modal-body.has-update-header {
+    --changelog-indent: 80px;
+  }
+
+  .changelog-header__logo {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  .changelog-header {
+    grid-row: 1;
+  }
+
+  .changelog-logo-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background-image: linear-gradient(
+      -2deg,
+      #1b0f30 5%,
+      #a0487e 19%,
+      #ffa978 79%
+    );
+    filter: blur(12px);
+    z-index: 0;
+  }
+
+  .changelog-logo {
+    width: 64px;
+    height: 64px;
+    z-index: 1;
+  }
+
+  .changelog-header__title {
+    font-weight: 600;
+    font-size: 1.05rem;
+    line-height: 1.2;
+  }
+
+  .changelog-header__subtitle {
+    font-size: 0.9rem;
+    opacity: 0.75;
+  }
+
+  .changelog-scroll {
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    padding-left: var(--changelog-indent);
+    grid-row: 2;
   }
 
   .logs-container {
-    flex: 1 1 auto;
     min-height: 0;
     width: 100%;
     box-sizing: border-box;
-    overflow-y: scroll;
+    flex: 1 1 auto;
+    overflow-y: auto;
     padding: 1em;
+    max-height: calc(100% - 6px);
     border-radius: 10px;
     a {
       text-decoration: underline;
@@ -440,7 +542,25 @@
     display: flex;
     align-items: center;
     flex: 0 0 auto;
-    padding: 0;
+    padding: 0 0 12px 0;
+    grid-row: 3;
+  }
+
+  .modal-body .modal-footer .footer-links {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-right: auto;
+  }
+
+  .changelog-header__links a.btn,
+  .modal-body .modal-footer .footer-links a.btn {
+    color: var(--bs-link-color);
+
+    &:hover,
+    &:focus {
+      color: var(--bs-btn-hover-color);
+    }
   }
 
   .card-full {
