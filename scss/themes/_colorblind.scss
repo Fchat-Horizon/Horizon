@@ -46,3 +46,12 @@ $genders: (
     --gender-color: #{color.scale($color, $lightness: 5%)};
   }
 }
+
+.userlist-item.dimmed {
+  opacity: 1 !important;
+}
+
+.userlist-item.dimmed > .user-view::before {
+  content: '\f05e';
+  font-family: 'Font Awesome 7 Free';
+}
