@@ -33,7 +33,6 @@
         v-for="character in characterFriends"
         :key="'char-' + character.name"
         class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
       >
         <user
           :character="character"
@@ -53,7 +52,6 @@
         v-for="character in friends"
         :key="'friend-' + character.name"
         class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
       >
         <user
           :character="character"
@@ -67,7 +65,6 @@
         v-for="character in bookmarks"
         :key="'bookmark-' + character.name"
         class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
       >
         <user
           :character="character"
@@ -89,7 +86,6 @@
           v-for="member in filteredMembers"
           :key="member.character.name"
           class="userlist-item"
-          :class="{ dimmed: member.character.isIgnored }"
         >
           <user
             :character="member.character"
@@ -286,7 +282,6 @@
         v-for="character in allCharacterFriends"
         :key="'char-friends-all-' + character.name"
         class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
       >
         <user
           :character="character"
@@ -307,8 +302,6 @@
         v-for="character in allFriends"
         :key="'friend-all' + character.name"
         class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-
       >
         <user
           :character="character"
@@ -325,7 +318,6 @@
         v-for="character in allBookmarks"
         :key="'bookmarks-all' + character.name"
         class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
       >
         <user
           :character="character"
@@ -755,10 +747,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-    }
-
-    .userlist-item.dimmed {
-    opacity: 0.5;
     }
 
     @media (min-width: breakpoint-min(md)) {
