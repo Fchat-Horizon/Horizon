@@ -105,19 +105,32 @@
     </div>
     <div
       class="messages messages-both hidden-scrollbar"
-      :class="layoutClasses"
+      :class="[layoutClasses, { 'messages-searching': filter.length > 0 }]"
       style="overflow: auto; overscroll-behavior: none"
       ref="messages"
       tabindex="-1"
       @scroll="onMessagesScroll"
     >
-      <message-view
+      <div
         v-for="(message, i) in displayedMessages"
-        :message="message"
         :key="message.id"
-        :logs="true"
-        :previous="displayedMessages[i - 1]"
-      ></message-view>
+        class="message-container"
+        :ref="'message-' + message.id"
+      >
+        <span
+          v-if="filter.length > 0"
+          class="search-jump-icon"
+          @click="jumpToMessage(message.id)"
+          title="Jump to this message"
+        >
+          <i class="fa-solid fa-search fa-fw"></i>
+        </span>
+        <message-view
+          :message="message"
+          :logs="true"
+          :previous="displayedMessages[i - 1]"
+        ></message-view>
+      </div>
     </div>
     <div class="input-group" style="flex-shrink: 0">
       <span class="input-group-text">
@@ -528,6 +541,46 @@
     lockScroll = false;
     lastScroll = -1;
 
+    async jumpToMessage(messageId: string): Promise<void> {
+      const targetMessageId = messageId;
+      this.filter = '';
+      await this.$nextTick();
+      
+      const messageIndex = this.messages.findIndex(msg => msg.id === targetMessageId);
+      
+      if (messageIndex === -1) return;
+      if (this.selectedDate !== undefined) {
+        await this.$nextTick();
+        //This timeout is probably unnecessary when a date is selected.
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        const messageRef = this.$refs['message-' + targetMessageId];
+        if (messageRef && Array.isArray(messageRef) && messageRef[0]) {
+          const messageElement = messageRef[0] as HTMLElement;
+          messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+      
+      const totalMessages = this.messages.length;
+      this.windowStart = Math.max(0, messageIndex - 100);
+      this.windowEnd = Math.min(totalMessages, messageIndex + 100);
+    
+      /*
+       * If we remove this timeout the jump will not work with some of the messages.
+       * I've tried getting it to work but it seemingly jumps to a random message.
+       * It's safer to give the messages a little to load and then do the jump.
+      */
+      await this.$nextTick();
+      await new Promise(resolve => setTimeout(resolve, 100));
+    
+      const messageRef = this.$refs['message-' + targetMessageId];
+      if (messageRef && Array.isArray(messageRef) && messageRef[0]) {
+        const messageElement = messageRef[0] as HTMLElement;
+        messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
     async onMessagesScroll(ev?: Event): Promise<void> {
       const list = <HTMLElement | undefined>this.$refs['messages'];
       if (this.lockScroll) return;
@@ -601,5 +654,27 @@
   .logs-dialog .modal-body {
     display: flex;
     flex-direction: column;
+  }
+
+  .message-container {
+    position: relative;
+  }
+
+  .search-jump-icon {
+    position: absolute;
+    left: -24px;
+    top: 2px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s ease, color 0.2s ease;
+    z-index: 10;
+  }
+
+  .search-jump-icon:hover {
+    opacity: 1;
+  }
+  
+  .messages-searching {
+    padding-left: 30px;
   }
 </style>
