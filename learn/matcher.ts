@@ -1353,6 +1353,7 @@ export class Matcher {
   static isAnthro(c: Character): boolean | null {
     const bodyTypeId = Matcher.getTagValueList(TagId.BodyType, c);
 
+    if (bodyTypeId === BodyType.Human) return false;
     if (bodyTypeId === BodyType.Anthro) return true;
 
     const speciesId = Matcher.species(c);
