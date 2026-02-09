@@ -57,7 +57,7 @@
               class="nav-link tab"
               :class="{
                 active: tab === activeTab,
-                hasNew: tab.hasNew && tab !== activeTab
+                hasNew: tab.hasNew > 0 && tab !== activeTab
               }"
             >
               <img
@@ -67,6 +67,9 @@
               <span class="d-sm-inline d-none">{{
                 tab.user || l('window.newTab')
               }}</span>
+              <span class="badge text-bg-danger mb-1" v-if="tab.hasNew > 0">
+                {{ tab.hasNew }}</span
+              >
               <a
                 href="#"
                 :aria-label="l('action.close')"
@@ -205,7 +208,7 @@
   interface Tab {
     user: string | undefined;
     view: Electron.BrowserView;
-    hasNew: boolean;
+    hasNew: number;
     avatarUrl?: string;
     insertedCssKey?: string;
     title: string;
@@ -374,11 +377,11 @@
         'disconnect',
         (_e: Electron.IpcRendererEvent, id: number) => {
           const tab = this.tabMap[id];
-          if (tab.hasNew) {
-            tab.hasNew = false;
+          if (tab.hasNew > 0) {
+            tab.hasNew = 0;
             electron.ipcRenderer.send(
               'has-new',
-              this.tabs.reduce((cur, t) => cur || t.hasNew, false)
+              this.tabs.reduce((cur, t) => cur || t.hasNew, 0)
             );
           }
           tab.user = undefined;
@@ -389,12 +392,13 @@
       );
       electron.ipcRenderer.on(
         'has-new',
-        (_e: Electron.IpcRendererEvent, id: number, hasNew: boolean) => {
+        (_e: Electron.IpcRendererEvent, id: number, hasNew: number) => {
           const tab = this.tabMap[id];
           tab.hasNew = hasNew;
+          log.debug('tab.hasnew', hasNew);
           electron.ipcRenderer.send(
             'has-new',
-            this.tabs.reduce((cur, t) => cur || t.hasNew, false)
+            this.tabs.reduce((cur, t) => cur || t.hasNew, 0)
           );
         }
       );
@@ -600,7 +604,7 @@
         active: false,
         view,
         user: undefined,
-        hasNew: false,
+        hasNew: 0,
         title: l('title')
       };
       this.tabs.push(tab);
@@ -674,7 +678,7 @@
       this.tabs.splice(this.tabs.indexOf(tab), 1);
       electron.ipcRenderer.send(
         'has-new',
-        this.tabs.reduce((cur, t) => cur || t.hasNew, false)
+        this.tabs.reduce((cur, t) => cur || t.hasNew, 0)
       );
       delete this.tabMap[tab.view.webContents.id];
       if (this.tabs.length === 0) {

@@ -767,14 +767,14 @@ class State implements Interfaces.State {
   navigationHistoryIndex: number = -1;
   private isNavigatingHistory: boolean = false;
 
-  get hasNew(): boolean {
+  get hasNew(): number {
     return (
-      this.privateConversations.some(
-        x => x.unread === Interfaces.UnreadState.Mention
-      ) ||
-      this.channelConversations.some(
-        x => x.unread === Interfaces.UnreadState.Mention
-      )
+      this.privateConversations.filter(
+        item => item.unread === Interfaces.UnreadState.Mention
+      ).length +
+      this.channelConversations.filter(
+        item => item.unread === Interfaces.UnreadState.Mention
+      ).length
     );
   }
 

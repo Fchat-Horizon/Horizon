@@ -116,7 +116,7 @@ export namespace Conversation {
     readonly recent: ReadonlyArray<RecentPrivateConversation>;
     readonly recentChannels: ReadonlyArray<RecentChannelConversation>;
     readonly selectedConversation: Conversation;
-    readonly hasNew: boolean;
+    readonly hasNew: number;
     readonly lastConversation: Conversation;
     byKey(key: string): Conversation | undefined;
     navigateForward(): boolean;
