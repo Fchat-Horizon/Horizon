@@ -117,7 +117,29 @@
         :key="message.id"
         :logs="true"
         :previous="displayedMessages[i - 1]"
+        :selectable="selectionMode"
+        :selected="selectedMessages.has(message.id)"
+        @toggle-select="onToggleSelect(message, i, $event)"
       ></message-view>
+    </div>
+    <div
+      v-if="selectionMode"
+      class="d-flex align-items-center gap-2 mb-1"
+      style="flex-shrink: 0"
+    >
+      <span class="text-muted">{{
+        l('logs.selectedMessages.size', selectedMessages.size)
+      }}</span>
+      <button
+        class="btn btn-primary btn-sm"
+        :disabled="selectedMessages.size === 0"
+        @click="shareSelected"
+      >
+        <span class="fas fa-share"></span> {{ l('logs.share') }}
+      </button>
+      <button class="btn btn-secondary btn-sm" @click="setSelectionMode(false)">
+        {{ l('logs.cancelSelect') }}
+      </button>
     </div>
     <div class="input-group" style="flex-shrink: 0">
       <span class="input-group-text">
@@ -131,6 +153,13 @@
         v-show="messages"
         type="text"
       />
+      <button
+        v-if="isDmConversation && !selectionMode"
+        class="btn btn-outline-secondary"
+        @click="setSelectionMode(true)"
+      >
+        <span class="fas fa-check-square"></span> {{ l('logs.select') }}
+      </button>
     </div>
   </modal>
 </template>
@@ -226,12 +255,22 @@
     selectedCharacter = core.connection.character;
     showFilters = true;
     canZip = core.logs.canZip;
+    selectionMode = false;
+    selectedMessages = new Set<number>();
+    lastSelectedIndex = -1;
     dateOffset = -1;
     windowStart = 0;
     windowEnd = 0;
     resizeListener = async () => this.onMessagesScroll();
     get layoutClasses(): any {
       return getMessageWrapperClasses();
+    }
+
+    get isDmConversation(): boolean {
+      return (
+        this.selectedConversation !== undefined &&
+        !this.selectedConversation.key.startsWith('#')
+      );
     }
 
     get displayedMessages(): ReadonlyArray<Conversation.Message> {
@@ -318,6 +357,7 @@
       this.selectedDate = undefined;
       this.dateOffset = -1;
       this.filter = '';
+      this.setSelectionMode(false);
       await this.loadMessages();
     }
 
@@ -525,6 +565,83 @@
       } else return this.onMessagesScroll();
     }
 
+    setSelectionMode(active: boolean): void {
+      this.selectionMode = active;
+      this.selectedMessages = new Set<number>();
+      this.lastSelectedIndex = -1;
+    }
+
+    onToggleSelect(
+      message: Conversation.Message,
+      displayIndex: number,
+      event: MouseEvent
+    ): void {
+      const newSet = new Set(this.selectedMessages);
+      if (event.shiftKey && this.lastSelectedIndex >= 0) {
+        const start = Math.min(this.lastSelectedIndex, displayIndex);
+        const end = Math.max(this.lastSelectedIndex, displayIndex);
+        for (let i = start; i <= end; i++) {
+          newSet.add(this.displayedMessages[i].id);
+        }
+      } else {
+        if (newSet.has(message.id)) newSet.delete(message.id);
+        else newSet.add(message.id);
+      }
+      this.selectedMessages = newSet;
+      this.lastSelectedIndex = displayIndex;
+    }
+
+    async shareSelected(): Promise<void> {
+      if (
+        !this.selectedConversation ||
+        this.selectedMessages.size === 0 ||
+        !this.isDmConversation
+      )
+        return;
+
+      const targetName = this.selectedConversation.name;
+      const targetChar = core.characters.get(targetName);
+
+      if (
+        targetChar.status === 'offline' &&
+        !Dialog.confirmDialog(l('logs.shareOffline', targetName))
+      )
+        return;
+
+      if (
+        !Dialog.confirmDialog(
+          l('logs.selectConfirm', this.selectedMessages.size, targetName)
+        )
+      )
+        return;
+
+      const selected = this.messages.filter(m =>
+        this.selectedMessages.has(m.id)
+      );
+
+      const formatted = selected
+        .map(msg => {
+          const time = `[color=gray][${formatTime(msg.time, true)}][/color] `;
+          if (msg.type === Conversation.Message.Type.Event)
+            return `${time}${msg.text}\r\n`;
+          const name = `[user]${msg.sender.name}[/user]`;
+          if (msg.type === Conversation.Message.Type.Action)
+            return `${time}*${name} ${msg.text}\r\n`;
+          return `${time}${name}: ${msg.text}\r\n`;
+        })
+        .join('');
+
+      if (formatted.length > core.connection.vars.priv_max) {
+        alert(l('logs.shareTooLong'));
+        return;
+      }
+
+      const conv = core.conversations.getPrivate(targetChar);
+      await conv.sendMessageEx(formatted);
+      alert(l('logs.shareSuccess'));
+      this.setSelectionMode(false);
+    }
+
     lockScroll = false;
     lastScroll = -1;
 
@@ -601,5 +718,16 @@
   .logs-dialog .modal-body {
     display: flex;
     flex-direction: column;
+  }
+
+  .message-selectable {
+    cursor: pointer;
+  }
+
+  .message-select-checkbox {
+    flex-shrink: 0;
+    margin-right: 0.5em;
+    cursor: pointer;
+    align-self: center;
   }
 </style>

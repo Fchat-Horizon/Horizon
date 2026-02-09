@@ -275,6 +275,21 @@ const userPostfix: { [key: number]: string | undefined } = {
     }
 
     if (isModern) classes += ' message-modern';
+    if (this.selectable) {
+      classes += ' message-selectable';
+      const checkbox = createElement('input', {
+        attrs: { type: 'checkbox', checked: this.selected || undefined },
+        staticClass: 'message-select-checkbox',
+        on: {
+          click: (e: MouseEvent) => {
+            e.stopPropagation();
+            this.$emit('toggle-select', e);
+          }
+        }
+      });
+      children.unshift(checkbox);
+    }
+
     const node = createElement('div', { attrs: { class: classes } }, children);
     node.key = message.id;
     return node;
@@ -291,6 +306,10 @@ export default class MessageView extends Vue {
   readonly logs?: true;
   @Prop
   readonly previous?: Conversation.Message;
+  @Prop
+  readonly selectable?: boolean;
+  @Prop
+  readonly selected?: boolean;
 
   scoreClasses = this.getMessageScoreClasses(this.message);
   filterClasses = this.getMessageFilterClasses(this.message);
