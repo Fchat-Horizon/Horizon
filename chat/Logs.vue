@@ -122,25 +122,6 @@
         @toggle-select="onToggleSelect(message, i, $event)"
       ></message-view>
     </div>
-    <div
-      v-if="selectionMode"
-      class="d-flex align-items-center gap-2 mb-1"
-      style="flex-shrink: 0"
-    >
-      <span class="text-muted">{{
-        l('logs.selectedMessages.size', selectedMessages.size)
-      }}</span>
-      <button
-        class="btn btn-primary btn-sm"
-        :disabled="selectedMessages.size === 0"
-        @click="shareSelected"
-      >
-        <span class="fas fa-share"></span> {{ l('logs.share') }}
-      </button>
-      <button class="btn btn-secondary btn-sm" @click="setSelectionMode(false)">
-        {{ l('logs.cancelSelect') }}
-      </button>
-    </div>
     <div class="input-group" style="flex-shrink: 0">
       <span class="input-group-text">
         <span class="fas fa-search"></span>
@@ -153,8 +134,26 @@
         v-show="messages"
         type="text"
       />
+      <template v-if="selectionMode">
+        <span class="input-group-text text-muted">
+          {{ l('logs.selectedCount', selectedMessages.size) }}
+        </span>
+        <button
+          class="btn btn-primary"
+          :disabled="selectedMessages.size === 0"
+          @click="shareSelected"
+        >
+          <span class="fas fa-share"></span> {{ l('logs.share') }}
+        </button>
+        <button
+          class="btn btn-outline-secondary"
+          @click="setSelectionMode(false)"
+        >
+          {{ l('logs.cancelSelect') }}
+        </button>
+      </template>
       <button
-        v-if="isDmConversation && !selectionMode"
+        v-else-if="isDmConversation"
         class="btn btn-outline-secondary"
         @click="setSelectionMode(true)"
       >
