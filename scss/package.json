@@ -3,7 +3,7 @@
   "version": "3.0.0",
   "author": "The F-List Team",
   "description": "F-Chat Themes",
-  "license": "MIT",
+  "license": "MPL-2.0",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
     "sass-embedded": "^1.85.1"

@@ -24,8 +24,8 @@
  *
  * ---
  *
- * This file is now also licensed under GPLv3 (see LICENSE file).
- * Modifications made after the original MIT release are licensed under GPLv3.
+ * This file is now also licensed under MPL-2.0 (see LICENSE.md).
+ * Modifications made after the original MIT release are licensed under MPL-2.0.
  *
  * This license header applies to this file and all of the non-third-party assets it includes.
  * @file The entry point for the Electron renderer of F-Chat 3.0.
