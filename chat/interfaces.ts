@@ -170,6 +170,7 @@ export namespace Conversation {
     errorText: string;
     readonly key: string;
     readonly unread: UnreadState;
+    readonly unreadCount: number;
     settings: Settings;
     readonly adManager: AdManager;
     send(): Promise<void>;
