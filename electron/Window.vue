@@ -67,7 +67,10 @@
               <span class="d-sm-inline d-none">{{
                 tab.user || l('window.newTab')
               }}</span>
-              <span class="badge text-bg-danger mb-1" v-if="tab.hasNew > 0">
+              <span
+                class="badge rounded-pill text-bg-danger ms-1"
+                v-if="tab.hasNew > 0"
+              >
                 {{ tab.hasNew }}</span
               >
               <a

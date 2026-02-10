@@ -107,7 +107,7 @@
           >
             {{ conversations.consoleTab.name }}
             <span
-              class="badge text-bg-danger"
+              class="badge rounded-pill text-bg-danger"
               v-show="conversations.consoleTab.unreadCount > 0"
               >{{ conversations.consoleTab.unreadCount }}</span
             >
@@ -169,7 +169,7 @@
                   v-show="needsReply(conversation)"
                 ></span>
                 <span
-                  class="badge text-bg-danger"
+                  class="badge rounded-pill text-bg-danger"
                   v-show="conversation.unreadCount > 0"
                   >{{ conversation.unreadCount }}</span
                 >
@@ -240,7 +240,7 @@
             <span class="name">{{ conversation.name }}</span>
             <span>
               <span
-                class="badge text-bg-danger"
+                class="badge align-text-bottom rounded-pill text-bg-danger"
                 v-show="conversation.unreadCount > 0"
                 >{{ conversation.unreadCount }}</span
               >
@@ -925,6 +925,11 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        .badge {
+          --bs-badge-padding-x: 0.45em;
+          --bs-badge-padding-y: 0.25em;
+          --bs-badge-font-size: 0.75em;
+        }
       }
       .pin,
       .leave,
