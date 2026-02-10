@@ -1299,11 +1299,9 @@
       ipcRenderer.send('open-dir', this.settings.logDirectory);
     }
 
-    filterLanguage(
-      filter: RegExp,
-      languageEntry: { lang: string; name: string }
-    ): boolean {
-      return filter.test(languageEntry.name);
+    filterLanguage(filter: RegExp, languageEntry: string): boolean {
+      console.log(languageEntry);
+      return filter.test(this.formatLanguage(languageEntry));
     }
 
     externalUrlHandler(url: string) {
