@@ -128,19 +128,27 @@ const badges: electron.NativeImage[] = [
 
 /**
  * Handles the 'has-new' IPC event.
- * This event is triggered when there are new messages in the application.
- * It updates the dock badge on macOS and applies an overlay icon to the window that sent the event on Window and Linux.
+ * This event is triggered when there are new messages in an appplication window's tab(s).
+ * It updates the dock badge on macOS and applies an overlay icon to all windows on Windows and Linux.
  * @event
  * @param {IpcMainEvent} e Event reference.
  * @param {number} hasNew The amount of new messages. If hasNew =< 0, the user has no new messages
  */
 electron.ipcMain.on('has-new', (e: IpcMainEvent, hasNew: number) => {
-  if (process.platform === 'darwin' && app.dock !== undefined)
-    app.dock.setBadge(hasNew > 0 ? hasNew.toString() : '');
   const window = electron.BrowserWindow.fromWebContents(e.sender);
   if (window !== undefined && window !== null) {
-    applyOverlayIcon(window, hasNew);
     newMessagesMap[window.id] = hasNew;
+  }
+  const totalCount = windows.reduce(
+    (sum, item) => sum + newMessagesMap[item.id],
+    0
+  );
+  if (process.platform === 'darwin' && app.dock !== undefined)
+    app.dock.setBadge(totalCount > 0 ? totalCount.toString() : '');
+  else {
+    windows.forEach(item => {
+      applyOverlayIcon(item, totalCount);
+    });
   }
 });
 
@@ -149,14 +157,14 @@ electron.ipcMain.on('has-new', (e: IpcMainEvent, hasNew: number) => {
  * @function
  * @param {electron.BrowserWindow} window
  * The window to apply the overlay icon to.
- * @param {number} hasNew
+ * @param {number} badgeCount
  * The amount of new messages accumilated across all active tabs. If this value is below 1, no badge is drawn.
  * @internal
  */
-function applyOverlayIcon(window: electron.BrowserWindow, hasNew: number) {
+function applyOverlayIcon(window: electron.BrowserWindow, badgeCount: number) {
   window.setOverlayIcon(
-    badges[Math.min(hasNew, 10)],
-    hasNew > 0 ? 'New messages' : ''
+    badges[Math.max(Math.min(badgeCount, 10), 0)],
+    badgeCount > 0 ? 'New messages' : ''
   );
 }
 
