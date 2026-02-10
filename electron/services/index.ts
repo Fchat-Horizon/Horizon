@@ -9,6 +9,7 @@ export * from './importer/startup-import';
 export * as VanillaImporter from './importer/vanilla-importer';
 export * from './importer/vanilla-import-ui';
 export * from './exporter/backup-export';
+export type { ExportManifest } from './exporter/manifest';
 export * from './importer/backup-import';
 export * as SlimcatImporter from './importer/importer';
 

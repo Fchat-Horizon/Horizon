@@ -4,6 +4,8 @@ import path from 'path';
 import { ipcRenderer } from 'electron';
 import log from 'electron-log';
 import AdmZip from 'adm-zip';
+import { isValidManifest } from '../exporter/manifest';
+import type { ExportManifest } from '../exporter/manifest';
 
 /**
  * Information about a character found in a Horizon backup ZIP file.
@@ -75,6 +77,8 @@ export function resetImportZipState(vm: any): void {
   vm.importIncludeHidden = false;
   vm.importIncludeDrafts = false;
   vm.importZipError = undefined;
+  vm.importZipHasManifest = false;
+  vm.importZipManifest = undefined;
 }
 
 /**
@@ -142,6 +146,15 @@ function parseCharacterEntry(
     characterMap.set(characterName, info);
   }
 
+  // Recognize JSON log files (e.g. characters/X/logs/foo.json)
+  if (category === 'logs') {
+    const fileName = segments.slice(3).join('/');
+    if (fileName && fileName.endsWith('.json')) {
+      info.hasLogs = true;
+      return;
+    }
+  }
+
   updateCharacterInfo(info, category, segments);
 }
 
@@ -188,6 +201,27 @@ export function parseImportZip(vm: any): void {
 
   const characterMap = new Map<string, BackupCharacterInfo>();
   const entries = zip.getEntries();
+
+  // Check for manifest
+  const manifestEntry = zip.getEntry('manifest.json');
+  if (manifestEntry) {
+    try {
+      const parsed = JSON.parse(manifestEntry.getData().toString('utf8'));
+      if (isValidManifest(parsed)) {
+        vm.importZipHasManifest = true;
+        vm.importZipManifest = parsed as ExportManifest;
+      } else {
+        vm.importZipHasManifest = false;
+        vm.importZipManifest = undefined;
+      }
+    } catch {
+      vm.importZipHasManifest = false;
+      vm.importZipManifest = undefined;
+    }
+  } else {
+    vm.importZipHasManifest = false;
+    vm.importZipManifest = undefined;
+  }
 
   vm.importGeneralAvailable = entries.some(e => e.entryName === 'settings');
 
@@ -339,11 +373,35 @@ function isEffectivelyEmptyDraftsFile(p: string): boolean {
   }
 }
 
+export function jsonLogToBinary(
+  json: { time: number; type: number; sender: string; text: string }[]
+): Buffer {
+  const chunks: Buffer[] = [];
+  for (const msg of json) {
+    const sender = msg.sender || '';
+    const senderLength = Buffer.byteLength(sender);
+    const textLength = Buffer.byteLength(msg.text);
+    const buf = Buffer.allocUnsafe(senderLength + textLength + 10);
+    buf.writeUInt32LE(msg.time, 0);
+    buf.writeUInt8(msg.type, 4);
+    buf.writeUInt8(senderLength, 5);
+    buf.write(sender, 6);
+    let offset = 6 + senderLength;
+    buf.writeUInt16LE(textLength, offset);
+    buf.write(msg.text, offset + 2);
+    offset += 2 + textLength;
+    buf.writeUInt16LE(offset, offset);
+    chunks.push(buf);
+  }
+  return Buffer.concat(chunks);
+}
+
 interface ImportStats {
   logsCopied: number;
   logsSkipped: number;
   settingsCopied: number;
   settingsSkipped: number;
+  filesErrored: number;
   generalImported: boolean;
   generalCandidate: boolean;
   charactersTouched: Set<string>;
@@ -483,27 +541,51 @@ function importCharacterFile(
   const decision = shouldImportEntry(vm, category, segments, info);
   if (!decision.shouldImport) return;
 
-  const relative = normalized.substring('characters/'.length);
+  let relative = normalized.substring('characters/'.length);
+  // Strip .json suffix for JSON log files so they're written as binary
+  if (decision.isLog && relative.endsWith('.json')) {
+    relative = relative.slice(0, -5);
+  }
   const destination = getSafeDestination(dataDir, relative);
   if (!destination) return;
 
-  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  try {
+    fs.mkdirSync(path.dirname(destination), { recursive: true });
 
-  const exists = fs.existsSync(destination);
-  if (
-    shouldSkipExistingFile(destination, exists, vm.importOverwrite, decision)
-  ) {
-    if (decision.isLog) stats.logsSkipped++;
-    else stats.settingsSkipped++;
-    return;
+    const exists = fs.existsSync(destination);
+    if (
+      shouldSkipExistingFile(destination, exists, vm.importOverwrite, decision)
+    ) {
+      if (decision.isLog) stats.logsSkipped++;
+      else stats.settingsSkipped++;
+      return;
+    }
+
+    let fileData: Buffer = entry.getData();
+
+    // JSON log from export: re-serialize to binary
+    if (decision.isLog && normalized.endsWith('.json')) {
+      try {
+        const parsed = JSON.parse(fileData.toString('utf8'));
+        if (Array.isArray(parsed)) {
+          fileData = jsonLogToBinary(parsed);
+        }
+      } catch (err) {
+        stats.filesErrored++;
+        log.warn('import.file.json-convert-error', normalized, err);
+        return;
+      }
+    }
+
+    fs.writeFileSync(destination, fileData);
+    stats.charactersTouched.add(characterName);
+
+    if (decision.isLog) stats.logsCopied++;
+    else stats.settingsCopied++;
+  } catch (err) {
+    stats.filesErrored++;
+    log.warn('import.file.error', normalized, err);
   }
-
-  const fileData = entry.getData();
-  fs.writeFileSync(destination, fileData);
-  stats.charactersTouched.add(characterName);
-
-  if (decision.isLog) stats.logsCopied++;
-  else stats.settingsCopied++;
 }
 
 function importCharacterData(
@@ -542,7 +624,11 @@ function finalizeImport(vm: any, stats: ImportStats): void {
     generalState = 'not imported';
   }
 
-  vm.importSummary = `Restored data for ${stats.charactersTouched.size} character(s). Logs copied: ${stats.logsCopied} (skipped ${stats.logsSkipped}). Settings copied: ${stats.settingsCopied} (skipped ${stats.settingsSkipped}). General settings: ${generalState}.`;
+  let summary = `Restored data for ${stats.charactersTouched.size} character(s). Logs copied: ${stats.logsCopied} (skipped ${stats.logsSkipped}). Settings copied: ${stats.settingsCopied} (skipped ${stats.settingsSkipped}). General settings: ${generalState}.`;
+  if (stats.filesErrored > 0) {
+    summary += ` ${stats.filesErrored} file(s) failed to import.`;
+  }
+  vm.importSummary = summary;
 }
 
 /**
@@ -580,6 +666,7 @@ export async function runZipImport(vm: any): Promise<void> {
       logsSkipped: 0,
       settingsCopied: 0,
       settingsSkipped: 0,
+      filesErrored: 0,
       generalImported: false,
       generalCandidate: false,
       charactersTouched: new Set<string>()

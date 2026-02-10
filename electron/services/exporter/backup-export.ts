@@ -3,6 +3,10 @@ import fs from 'fs';
 import path from 'path';
 import log from 'electron-log';
 import archiver from 'archiver';
+import AdmZip from 'adm-zip';
+import { createManifest, isValidManifest } from './manifest';
+import type { ExportManifest } from './manifest';
+import { binaryLogToJson } from './backup-export-cli';
 
 async function yieldToUi(vm?: any): Promise<void> {
   try {
@@ -109,7 +113,7 @@ function listFilesRecursive(rootDir: string): string[] {
   return results;
 }
 
-type ExportEntry = { abs: string; zip: string };
+type ExportEntry = { abs: string; zip: string; isLog?: boolean };
 
 function buildExportEntries(
   dataDir: string,
@@ -133,9 +137,15 @@ function buildExportEntries(
       if (fs.existsSync(logsDir)) {
         const files = listFilesRecursive(logsDir);
         for (const abs of files) {
+          if (abs.endsWith('.idx')) continue;
           const rel = path.relative(logsDir, abs).replace(/\\/g, '/');
-          const zip = path.posix.join('characters', character, 'logs', rel);
-          entries.push({ abs, zip });
+          const zip = path.posix.join(
+            'characters',
+            character,
+            'logs',
+            rel + '.json'
+          );
+          entries.push({ abs, zip, isLog: true });
         }
       }
     }
@@ -197,6 +207,60 @@ function getSettingsFilesToInclude(vm: any): Set<string> {
  * @param vm - Vue component instance with export state and settings
  * @returns A promise that resolves when export completes or is cancelled
  */
+function buildManifestIncludes(vm: any): ExportManifest['includes'] {
+  return {
+    generalSettings: !!vm.exportIncludeGeneralSettings,
+    logs: !!vm.exportIncludeLogs,
+    drafts: !!vm.exportIncludeDrafts,
+    characterSettings: !!vm.exportIncludeCharacterSettings,
+    pinned: !!vm.exportIncludePinnedConversations,
+    eicons: !!vm.exportIncludePinnedEicons,
+    recents: !!vm.exportIncludeRecents,
+    hidden: !!vm.exportIncludeHidden,
+    jsonLogs: vm.exportIncludeLogs ? true : undefined
+  };
+}
+
+function verifyExportZip(
+  filePath: string,
+  manifest: ExportManifest
+): string | undefined {
+  try {
+    const zip = new AdmZip(filePath);
+    const manifestEntry = zip.getEntry('manifest.json');
+    if (!manifestEntry)
+      return 'Verification failed: manifest.json missing from ZIP.';
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(manifestEntry.getData().toString('utf8'));
+    } catch {
+      return 'Verification failed: manifest.json is not valid JSON.';
+    }
+
+    if (!isValidManifest(parsed))
+      return 'Verification failed: manifest.json has invalid format.';
+
+    const entries = zip.getEntries().filter(e => !e.isDirectory);
+    const expected = manifest.expectedFiles + 1; // +1 for manifest itself
+    if (Math.abs(entries.length - expected) > 1)
+      return `Verification failed: expected ~${expected} files but ZIP contains ${entries.length}.`;
+
+    const zipPaths = new Set(entries.map(e => e.entryName.replace(/\\/g, '/')));
+    for (const char of manifest.characters) {
+      const hasEntry = Array.from(zipPaths).some(p =>
+        p.startsWith(`characters/${char}/`)
+      );
+      if (!hasEntry)
+        return `Verification failed: no files found for character "${char}".`;
+    }
+
+    return undefined;
+  } catch (err) {
+    return `Verification failed: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+
 export async function runExport(vm: any): Promise<void> {
   if (!vm.canRunExport) return;
   vm.exportInProgress = true;
@@ -205,6 +269,8 @@ export async function runExport(vm: any): Promise<void> {
   vm.exportProgress = 0;
   vm.exportCount = 0;
   vm.exportTotal = 0;
+
+  let outputPath: string | undefined;
 
   try {
     const saveResult = await remote.dialog.showSaveDialog({
@@ -218,6 +284,8 @@ export async function runExport(vm: any): Promise<void> {
       vm.exportProgress = undefined;
       return;
     }
+
+    outputPath = saveResult.filePath;
 
     const dataDir = vm.settings.logDirectory;
     if (!dataDir || !fs.existsSync(dataDir))
@@ -233,24 +301,56 @@ export async function runExport(vm: any): Promise<void> {
       zlib: { level: 6 }
     });
 
-    const output = fs.createWriteStream(saveResult.filePath);
+    const output = fs.createWriteStream(outputPath);
+    let streamErrored = false;
+
+    output.on('error', () => {
+      streamErrored = true;
+    });
+
     archive.pipe(output);
+
+    // Write manifest as first entry
+    const manifest = createManifest(
+      selectedCharacters,
+      buildManifestIncludes(vm),
+      entries.length
+    );
+    archive.append(JSON.stringify(manifest, null, 2), {
+      name: 'manifest.json'
+    });
 
     archive.on('progress', progressData => {
       const processed = progressData.entries.processed || 0;
-      vm.exportCount = processed;
-      vm.exportProgress = Math.max(0, Math.min(0.98, processed / total));
+      vm.exportCount = Math.max(0, processed - 1); // -1 for manifest
+      vm.exportProgress = Math.max(0, Math.min(0.98, processed / (total + 1)));
     });
 
     let count = 0;
+    const failedFiles: string[] = [];
     for (const e of entries) {
-      if (fs.existsSync(e.abs)) {
-        archive.file(e.abs, { name: e.zip });
-        count++;
-        if (count % 10 === 0) {
-          await yieldToUi(vm);
+      try {
+        if (fs.existsSync(e.abs)) {
+          if (e.isLog) {
+            const buf = fs.readFileSync(e.abs);
+            const json = binaryLogToJson(buf);
+            archive.append(JSON.stringify(json), { name: e.zip });
+          } else {
+            archive.file(e.abs, { name: e.zip });
+          }
+          count++;
+          if (count % 10 === 0) {
+            await yieldToUi(vm);
+          }
         }
+      } catch (err) {
+        failedFiles.push(e.zip);
+        log.warn('export.file.error', e.zip, err);
       }
+    }
+
+    if (streamErrored) {
+      throw new Error('Output stream error during export.');
     }
 
     vm.exportProgress = 0.99;
@@ -260,17 +360,40 @@ export async function runExport(vm: any): Promise<void> {
       output.on('close', () => {
         vm.exportProgress = 1;
         const bytes = archive.pointer();
-        log.info('export.complete', saveResult.filePath, `${bytes} bytes`);
+        log.info('export.complete', outputPath, `${bytes} bytes`);
         resolve();
       });
       output.on('error', reject);
       archive.on('error', reject);
     });
 
-    vm.exportSummary = `Exported data for ${selectedCharacters.length} character(s) to ${saveResult.filePath}`;
+    if (archive.pointer() === 0) {
+      throw new Error('Export produced an empty ZIP file.');
+    }
+
+    // Verify the written ZIP
+    const verifyError = verifyExportZip(outputPath, manifest);
+    if (verifyError) {
+      log.error('export.verify.failed', verifyError);
+      vm.exportError = verifyError;
+      return;
+    }
+
+    let summary = `Exported ${count} file(s) for ${selectedCharacters.length} character(s) to ${outputPath}`;
+    if (failedFiles.length > 0) {
+      summary += ` (${failedFiles.length} file(s) skipped due to errors)`;
+    }
+    vm.exportSummary = summary;
   } catch (error) {
     log.error('settings.export.error', error);
-    vm.exportError = 'Export failed. Please check the logs for details.';
+    vm.exportError = `Export failed: ${error instanceof Error ? error.message : 'Please check the logs for details.'}`;
+
+    // Clean up partial ZIP on failure
+    if (outputPath) {
+      try {
+        if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+      } catch {}
+    }
   } finally {
     vm.exportInProgress = false;
     vm.exportProgress = undefined;

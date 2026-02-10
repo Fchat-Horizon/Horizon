@@ -67,6 +67,17 @@ export class GeneralSettings {
   hasImportedVanillaLogs: boolean = false;
   hasDismissedVanillaImport: boolean = false;
   vanillaCustomBaseDir: string | undefined = undefined;
+  autoBackupEnabled: boolean = false;
+  autoBackupIncludeGeneralSettings: boolean = true;
+  autoBackupIncludeCharacterSettings: boolean = true;
+  autoBackupIncludeLogs: boolean = true;
+  autoBackupIncludeDrafts: boolean = true;
+  autoBackupIncludePinnedConversations: boolean = true;
+  autoBackupIncludePinnedEicons: boolean = true;
+  autoBackupIncludeRecents: boolean = true;
+  autoBackupIncludeHidden: boolean = true;
+  autoBackupRetention: number = 5;
+  autoBackupDirectory: string = '';
 }
 
 log.debug('init.common.done');

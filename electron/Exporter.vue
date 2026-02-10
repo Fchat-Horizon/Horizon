@@ -40,6 +40,221 @@
                 class="card-body settings-content"
                 style="height: 100%; width: 100%"
               >
+                <h5>Auto Backup</h5>
+                <p class="text-muted">
+                  Automatically create a backup when the app starts. Old backups
+                  are removed based on the retention count.
+                </p>
+                <div class="form-check mb-2">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="autoBackupEnabled"
+                    v-model="settings.autoBackupEnabled"
+                  />
+                  <label class="form-check-label" for="autoBackupEnabled">
+                    Enable auto backup on launch
+                  </label>
+                </div>
+                <div v-if="settings.autoBackupEnabled">
+                  <div class="form-check mb-1">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="autoBackupIncludeGeneralSettings"
+                      v-model="settings.autoBackupIncludeGeneralSettings"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="autoBackupIncludeGeneralSettings"
+                    >
+                      {{ l('settings.export.includeGeneral') }}
+                    </label>
+                  </div>
+                  <div class="form-check mb-1">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="autoBackupIncludeCharacterSettings"
+                      v-model="settings.autoBackupIncludeCharacterSettings"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="autoBackupIncludeCharacterSettings"
+                    >
+                      {{ l('settings.export.includeCharacterSettings') }}
+                    </label>
+                  </div>
+                  <div class="form-check mb-1">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="autoBackupIncludeLogs"
+                      v-model="settings.autoBackupIncludeLogs"
+                    />
+                    <label class="form-check-label" for="autoBackupIncludeLogs">
+                      {{ l('settings.export.includeLogs') }}
+                    </label>
+                  </div>
+                  <div class="form-check mb-1">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="autoBackupIncludeDrafts"
+                      v-model="settings.autoBackupIncludeDrafts"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="autoBackupIncludeDrafts"
+                    >
+                      {{ l('settings.export.includeDrafts') }}
+                    </label>
+                  </div>
+                  <div class="form-check mb-1">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="autoBackupIncludePinnedConversations"
+                      v-model="settings.autoBackupIncludePinnedConversations"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="autoBackupIncludePinnedConversations"
+                    >
+                      {{ l('settings.export.includePinnedConversations') }}
+                    </label>
+                  </div>
+                  <div class="form-check mb-1">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="autoBackupIncludePinnedEicons"
+                      v-model="settings.autoBackupIncludePinnedEicons"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="autoBackupIncludePinnedEicons"
+                    >
+                      {{ l('settings.export.includePinnedEicons') }}
+                    </label>
+                  </div>
+                  <div class="form-check mb-1">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="autoBackupIncludeRecents"
+                      v-model="settings.autoBackupIncludeRecents"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="autoBackupIncludeRecents"
+                    >
+                      {{ l('settings.export.includeRecents') }}
+                    </label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="autoBackupIncludeHidden"
+                      v-model="settings.autoBackupIncludeHidden"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="autoBackupIncludeHidden"
+                    >
+                      {{ l('settings.export.includeHidden') }}
+                    </label>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="autoBackupRetention">
+                      Backups to keep
+                    </label>
+                    <input
+                      class="form-control"
+                      type="number"
+                      id="autoBackupRetention"
+                      v-model.number="settings.autoBackupRetention"
+                      min="1"
+                      max="50"
+                      style="max-width: 120px"
+                    />
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="autoBackupDirectory">
+                      Custom backup directory (optional)
+                    </label>
+                    <div class="input-group">
+                      <input
+                        class="form-control"
+                        type="text"
+                        id="autoBackupDirectory"
+                        v-model="settings.autoBackupDirectory"
+                        :placeholder="defaultBackupDir"
+                      />
+                      <button
+                        class="btn btn-outline-secondary"
+                        type="button"
+                        @click="chooseAutoBackupDir"
+                      >
+                        Browse
+                      </button>
+                      <button
+                        v-if="settings.autoBackupDirectory"
+                        class="btn btn-outline-secondary"
+                        type="button"
+                        @click="settings.autoBackupDirectory = ''"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                    <small class="form-text text-muted">
+                      Default: {{ defaultBackupDir }}
+                    </small>
+                  </div>
+                </div>
+
+                <div v-if="settings.autoBackupEnabled" class="mt-3 mb-2">
+                  <h6>Restore from Auto Backup</h6>
+                  <p class="text-muted small">
+                    Select an auto backup to restore. This loads it into the
+                    import section below.
+                  </p>
+                  <div class="d-flex align-items-center gap-2 mb-2">
+                    <select
+                      class="form-select"
+                      style="max-width: 400px"
+                      v-model="selectedAutoBackup"
+                      :disabled="importInProgress"
+                    >
+                      <option :value="undefined" disabled>
+                        {{
+                          autoBackups.length === 0
+                            ? 'No auto backups found'
+                            : 'Choose a backup...'
+                        }}
+                      </option>
+                      <option
+                        v-for="backup in autoBackups"
+                        :key="backup.path"
+                        :value="backup.path"
+                      >
+                        {{ formatBackupLabel(backup) }}
+                      </option>
+                    </select>
+                    <button
+                      class="btn btn-outline-secondary btn-sm"
+                      type="button"
+                      :disabled="importInProgress"
+                      @click="refreshAutoBackups"
+                    >
+                      <i class="fas fa-sync-alt"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <hr />
+
                 <h5>{{ l('settings.export.title') }}</h5>
                 <p class="text-muted">
                   {{ l('settings.export.description') }}
@@ -250,6 +465,37 @@
                 </div>
                 <div v-if="importZipError" class="alert alert-danger">
                   {{ importZipError }}
+                </div>
+                <div
+                  v-if="
+                    importZipName &&
+                    !importZipError &&
+                    importZipHasManifest &&
+                    importZipManifest
+                  "
+                  class="alert alert-info small mb-3"
+                >
+                  Horizon export v{{ importZipManifest.version }} &middot;
+                  {{ importZipManifest.characters.length }} character(s)
+                  &middot; {{ importZipManifest.expectedFiles }} file(s)
+                  &middot; created
+                  {{ new Date(importZipManifest.createdAt).toLocaleString() }}
+                  &middot; Logs:
+                  {{
+                    importZipManifest.includes &&
+                    importZipManifest.includes.jsonLogs
+                      ? 'JSON'
+                      : 'Binary'
+                  }}
+                </div>
+                <div
+                  v-if="
+                    importZipName && !importZipError && !importZipHasManifest
+                  "
+                  class="alert alert-secondary small mb-3"
+                >
+                  This export was created without a manifest. It may be from an
+                  older version of Horizon. Import should still work normally.
                 </div>
                 <div v-if="importZipName && !importZipError">
                   <div class="form-check mb-2">
@@ -861,8 +1107,27 @@
     importZipName: string | undefined = undefined;
     importZipError: string | undefined = undefined;
     private importZipArchive?: any;
+    importZipHasManifest = false;
+    importZipManifest: any = undefined;
 
     connectedCharacters: string[] = [];
+    autoBackups: { name: string; path: string; mtime: number; size: number }[] =
+      [];
+    selectedAutoBackup: string | undefined = undefined;
+
+    get defaultBackupDir(): string {
+      return path.join(remote.app.getPath('userData'), 'backups');
+    }
+
+    async chooseAutoBackupDir(): Promise<void> {
+      const result = await remote.dialog.showOpenDialog(browserWindow, {
+        properties: ['openDirectory'],
+        defaultPath: this.settings.autoBackupDirectory || this.defaultBackupDir
+      });
+      if (!result.canceled && result.filePaths.length > 0) {
+        this.settings.autoBackupDirectory = result.filePaths[0];
+      }
+    }
 
     get anyCharactersConnected(): boolean {
       return (
@@ -1047,6 +1312,12 @@
         this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
       });
 
+      window.addEventListener('beforeunload', e => {
+        if (this.exportInProgress || this.importInProgress) {
+          e.preventDefault();
+        }
+      });
+
       window.addEventListener('keyup', e => {
         if (e.key === 'Escape') {
           this.close();
@@ -1067,6 +1338,24 @@
         }
       );
       this.$watch(
+        () => [
+          this.settings.autoBackupEnabled,
+          this.settings.autoBackupIncludeGeneralSettings,
+          this.settings.autoBackupIncludeCharacterSettings,
+          this.settings.autoBackupIncludeLogs,
+          this.settings.autoBackupIncludeDrafts,
+          this.settings.autoBackupIncludePinnedConversations,
+          this.settings.autoBackupIncludePinnedEicons,
+          this.settings.autoBackupIncludeRecents,
+          this.settings.autoBackupIncludeHidden,
+          this.settings.autoBackupRetention,
+          this.settings.autoBackupDirectory
+        ],
+        () => {
+          ipcRenderer.send('general-settings-update', this.settings);
+        }
+      );
+      this.$watch(
         () => this.importIncludeCharacterSettings,
         include => {
           if (!include) return;
@@ -1082,6 +1371,18 @@
           if (include) this.vanillaImportPinnedEicons = true;
         }
       );
+
+      this.$watch(
+        () => this.selectedAutoBackup,
+        async (backupPath: string | undefined) => {
+          if (!backupPath) return;
+          await ImportExport.loadImportZip(this, backupPath);
+        }
+      );
+
+      if (this.settings.autoBackupEnabled) {
+        this.refreshAutoBackups();
+      }
 
       await this.initializeImportExport();
 
@@ -1137,6 +1438,24 @@
       ImportExport.describeImportCharacter(character);
     runZipImport = () => ImportExport.runZipImport(this);
 
+    async refreshAutoBackups(): Promise<void> {
+      try {
+        this.autoBackups = await ipcRenderer.invoke('list-auto-backups');
+      } catch {
+        this.autoBackups = [];
+      }
+    }
+
+    formatBackupLabel(backup: {
+      name: string;
+      mtime: number;
+      size: number;
+    }): string {
+      const date = new Date(backup.mtime).toLocaleString();
+      const mb = (backup.size / (1024 * 1024)).toFixed(1);
+      return `${date} (${mb} MB)`;
+    }
+
     startExportAnimation(): void {
       this.exportAnimatedDots = '';
       this.exportAnimationTimer = setInterval(() => {
@@ -1157,6 +1476,18 @@
     }
 
     close(): void {
+      if (this.exportInProgress || this.importInProgress) {
+        const choice = remote.dialog.showMessageBoxSync(browserWindow, {
+          type: 'warning',
+          buttons: ['Cancel', 'Close anyway'],
+          defaultId: 0,
+          cancelId: 0,
+          title: 'Operation in progress',
+          message:
+            'An export or import is still running. Closing now may result in incomplete or corrupted data.'
+        });
+        if (choice === 0) return;
+      }
       browserWindow.close();
     }
 

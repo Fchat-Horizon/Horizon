@@ -962,6 +962,28 @@ async function onReady(): Promise<void> {
     return characters.slice();
   });
 
+  electron.ipcMain.handle('list-auto-backups', () => {
+    const backupDir =
+      settings.autoBackupDirectory || path.join(baseDir, 'backups');
+    try {
+      return fs
+        .readdirSync(backupDir)
+        .filter(f => /^auto-backup-.*\.zip$/.test(f))
+        .map(f => {
+          const stat = fs.statSync(path.join(backupDir, f));
+          return {
+            name: f,
+            path: path.join(backupDir, f),
+            mtime: stat.mtimeMs,
+            size: stat.size
+          };
+        })
+        .sort((a, b) => b.mtime - a.mtime);
+    } catch {
+      return [];
+    }
+  });
+
   const adCoordinator = new AdCoordinatorHost();
   electron.ipcMain.on('request-send-ad', (event: IpcMainEvent, adId: string) =>
     adCoordinator.processAdRequest(event, adId)
@@ -1067,6 +1089,12 @@ async function onReady(): Promise<void> {
       window
     );
     showChangelogOnBoot = false;
+  }
+
+  if (settings.autoBackupEnabled) {
+    import('./services/exporter/auto-backup').then(({ performAutoBackup }) =>
+      setTimeout(() => performAutoBackup(settings, baseDir), 30000)
+    );
   }
 }
 
