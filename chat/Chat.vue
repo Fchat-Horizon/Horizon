@@ -412,7 +412,6 @@
       core.watch(
         () => core.conversations.hasNew,
         hasNew => {
-          console.log(`chat.vue hasnew: ${hasNew}`);
           document.title =
             (hasNew ? '💬 ' : '') +
             l(

@@ -395,7 +395,6 @@
         (_e: Electron.IpcRendererEvent, id: number, hasNew: number) => {
           const tab = this.tabMap[id];
           tab.hasNew = hasNew;
-          log.debug('tab.hasnew', hasNew);
           electron.ipcRenderer.send(
             'has-new',
             this.tabs.reduce((cur, t) => cur || t.hasNew, 0)
