@@ -1296,7 +1296,12 @@ export default function (this: any): Interfaces.State {
       await core.notifications.notify(
         conversation,
         data.character,
-        data.message,
+        l(
+          'events.watchedUserPosted.notification',
+          data.character,
+          conversation.name,
+          data.message
+        ),
         characterImage(data.character),
         'attention'
       );
