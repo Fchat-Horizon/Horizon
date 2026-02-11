@@ -68,6 +68,9 @@ export class GeneralSettings {
   hasDismissedVanillaImport: boolean = false;
   vanillaCustomBaseDir: string | undefined = undefined;
   autoBackupEnabled: boolean = false;
+  autoBackupTriggers: string[] = ['launch'];
+  autoBackupIntervalHours: number = 6;
+  autoBackupCronTimes: string[] = ['02:00'];
   autoBackupIncludeGeneralSettings: boolean = true;
   autoBackupIncludeCharacterSettings: boolean = true;
   autoBackupIncludeLogs: boolean = true;

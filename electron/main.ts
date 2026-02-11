@@ -70,6 +70,9 @@ const app = electron.app;
 remoteMain.initialize();
 
 const characters: string[] = [];
+let autoBackupScheduler:
+  | import('./services/exporter/auto-backup').AutoBackupScheduler
+  | undefined;
 
 async function tryHandleCli(): Promise<boolean> {
   const argv = process.argv.slice(1);
@@ -931,6 +934,7 @@ async function onReady(): Promise<void> {
       characters.push(character);
       e.returnValue = true;
       broadcastConnectedCharacters();
+      if (autoBackupScheduler) autoBackupScheduler.runOnConnect();
     }
   );
   electron.ipcMain.on(
@@ -1069,6 +1073,9 @@ async function onReady(): Promise<void> {
             settings.horizonCustomCssEnabled
           );
         }
+        if (autoBackupScheduler) {
+          autoBackupScheduler.reload();
+        }
       }
     }
   );
@@ -1091,11 +1098,12 @@ async function onReady(): Promise<void> {
     showChangelogOnBoot = false;
   }
 
-  if (settings.autoBackupEnabled) {
-    import('./services/exporter/auto-backup').then(({ performAutoBackup }) =>
-      setTimeout(() => performAutoBackup(settings, baseDir), 30000)
-    );
-  }
+  import('./services/exporter/auto-backup').then(({ AutoBackupScheduler }) => {
+    autoBackupScheduler = new AutoBackupScheduler(settings, baseDir);
+    if (settings.autoBackupEnabled) {
+      autoBackupScheduler.start();
+    }
+  });
 }
 
 // Twitter fix
@@ -1141,5 +1149,24 @@ app.on('before-quit', (event: Event) => {
     }
   }
   browserWindows.quitAllWindows();
+});
+let willQuitHandled = false;
+app.on('will-quit', (event: Event) => {
+  if (
+    !willQuitHandled &&
+    autoBackupScheduler &&
+    settings.autoBackupEnabled &&
+    Array.isArray(settings.autoBackupTriggers) &&
+    settings.autoBackupTriggers.includes('close')
+  ) {
+    willQuitHandled = true;
+    event.preventDefault();
+    autoBackupScheduler.runOnClose().finally(() => {
+      if (autoBackupScheduler) autoBackupScheduler.stop();
+      app.quit();
+    });
+  } else if (autoBackupScheduler) {
+    autoBackupScheduler.stop();
+  }
 });
 app.on('window-all-closed', () => app.quit());

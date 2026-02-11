@@ -68,8 +68,8 @@
                 >
                   <h5>Auto Backup</h5>
                   <p class="text-muted">
-                    Automatically create a backup when the app starts. Old
-                    backups are removed based on the retention count.
+                    Automatically create backups based on triggers you choose.
+                    Old backups are removed based on the retention count.
                   </p>
                   <div class="form-check mb-2">
                     <input
@@ -79,8 +79,135 @@
                       v-model="settings.autoBackupEnabled"
                     />
                     <label class="form-check-label" for="autoBackupEnabled">
-                      Enable auto backup on launch
+                      Enable auto backup
                     </label>
+                  </div>
+                  <div v-if="settings.autoBackupEnabled" class="mb-3 ms-3">
+                    <label class="form-label fw-semibold">Triggers</label>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="triggerLaunch"
+                        :checked="hasTrigger('launch')"
+                        @change="toggleTrigger('launch')"
+                      />
+                      <label class="form-check-label" for="triggerLaunch">
+                        On Launch
+                        <small class="text-muted"
+                          >&mdash; back up when the app starts</small
+                        >
+                      </label>
+                    </div>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="triggerClose"
+                        :checked="hasTrigger('close')"
+                        @change="toggleTrigger('close')"
+                      />
+                      <label class="form-check-label" for="triggerClose">
+                        On Close
+                        <small class="text-muted"
+                          >&mdash; back up when the app closes</small
+                        >
+                      </label>
+                    </div>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="triggerInterval"
+                        :checked="hasTrigger('interval')"
+                        @change="toggleTrigger('interval')"
+                      />
+                      <label class="form-check-label" for="triggerInterval">
+                        Interval
+                        <small class="text-muted"
+                          >&mdash; back up every N hours</small
+                        >
+                      </label>
+                    </div>
+                    <div
+                      v-if="hasTrigger('interval')"
+                      class="ms-4 mb-2"
+                      style="max-width: 180px"
+                    >
+                      <label
+                        class="form-label small"
+                        for="autoBackupIntervalHours"
+                        >Hours between backups</label
+                      >
+                      <input
+                        class="form-control form-control-sm"
+                        type="number"
+                        id="autoBackupIntervalHours"
+                        v-model.number="settings.autoBackupIntervalHours"
+                        min="0.5"
+                        max="168"
+                        step="0.5"
+                      />
+                    </div>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="triggerCron"
+                        :checked="hasTrigger('cron')"
+                        @change="toggleTrigger('cron')"
+                      />
+                      <label class="form-check-label" for="triggerCron">
+                        Scheduled
+                        <small class="text-muted"
+                          >&mdash; back up at specific times of day</small
+                        >
+                      </label>
+                    </div>
+                    <div v-if="hasTrigger('cron')" class="ms-4 mb-2">
+                      <div
+                        v-for="(time, idx) in settings.autoBackupCronTimes"
+                        :key="idx"
+                        class="d-flex align-items-center gap-2 mb-1"
+                      >
+                        <input
+                          class="form-control form-control-sm"
+                          type="time"
+                          :value="time"
+                          @input="setCronTime(idx, $event.target.value)"
+                          style="max-width: 140px"
+                        />
+                        <button
+                          class="btn btn-outline-secondary btn-sm"
+                          type="button"
+                          @click="removeCronTime(idx)"
+                        >
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                      <button
+                        class="btn btn-outline-secondary btn-sm"
+                        type="button"
+                        @click="addCronTime"
+                      >
+                        <i class="fas fa-plus me-1"></i>Add time
+                      </button>
+                    </div>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="triggerConnect"
+                        :checked="hasTrigger('connect')"
+                        @change="toggleTrigger('connect')"
+                      />
+                      <label class="form-check-label" for="triggerConnect">
+                        On Connect
+                        <small class="text-muted"
+                          >&mdash; back up when connecting to chat</small
+                        >
+                      </label>
+                    </div>
                   </div>
                   <div v-if="settings.autoBackupEnabled">
                     <div class="form-check mb-1">
@@ -208,6 +335,12 @@
                         max="50"
                         style="max-width: 120px"
                       />
+                      <small
+                        v-if="estimatedRetentionSize"
+                        class="form-text text-muted"
+                      >
+                        Estimated usage: ~{{ estimatedRetentionSize }}
+                      </small>
                     </div>
                     <div class="mb-2">
                       <label class="form-label" for="autoBackupDirectory">
@@ -1401,6 +1534,9 @@
       this.$watch(
         () => [
           this.settings.autoBackupEnabled,
+          ...(this.settings.autoBackupTriggers || []),
+          this.settings.autoBackupIntervalHours,
+          ...(this.settings.autoBackupCronTimes || []),
           this.settings.autoBackupIncludeGeneralSettings,
           this.settings.autoBackupIncludeCharacterSettings,
           this.settings.autoBackupIncludeLogs,
@@ -1535,6 +1671,63 @@
         this.exportAnimationTimer = undefined;
       }
       this.exportAnimatedDots = '';
+    }
+
+    get estimatedRetentionSize(): string | undefined {
+      if (!this.autoBackups.length) return undefined;
+      const latest = this.autoBackups[0];
+      const total = latest.size * (this.settings.autoBackupRetention || 1);
+      if (total < 1024 * 1024) {
+        return `${(total / 1024).toFixed(0)} KB`;
+      }
+      if (total < 1024 * 1024 * 1024) {
+        return `${(total / (1024 * 1024)).toFixed(1)} MB`;
+      }
+      return `${(total / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    }
+
+    hasTrigger(t: string): boolean {
+      const triggers = this.settings.autoBackupTriggers;
+      return Array.isArray(triggers) && triggers.includes(t);
+    }
+
+    toggleTrigger(t: string): void {
+      if (!Array.isArray(this.settings.autoBackupTriggers)) {
+        this.settings.autoBackupTriggers = ['launch'];
+      }
+      const idx = this.settings.autoBackupTriggers.indexOf(t);
+      if (idx === -1) {
+        this.settings.autoBackupTriggers.push(t);
+      } else {
+        this.settings.autoBackupTriggers.splice(idx, 1);
+      }
+      this.settings.autoBackupTriggers = [...this.settings.autoBackupTriggers];
+    }
+
+    setCronTime(idx: number, value: string): void {
+      if (!Array.isArray(this.settings.autoBackupCronTimes)) return;
+      this.settings.autoBackupCronTimes.splice(idx, 1, value);
+      this.settings.autoBackupCronTimes = [
+        ...this.settings.autoBackupCronTimes
+      ];
+    }
+
+    removeCronTime(idx: number): void {
+      if (!Array.isArray(this.settings.autoBackupCronTimes)) return;
+      this.settings.autoBackupCronTimes.splice(idx, 1);
+      this.settings.autoBackupCronTimes = [
+        ...this.settings.autoBackupCronTimes
+      ];
+    }
+
+    addCronTime(): void {
+      if (!Array.isArray(this.settings.autoBackupCronTimes)) {
+        this.settings.autoBackupCronTimes = [];
+      }
+      this.settings.autoBackupCronTimes = [
+        ...this.settings.autoBackupCronTimes,
+        '02:00'
+      ];
     }
 
     close(): void {
