@@ -5,7 +5,7 @@
   "author": "The F-List Team",
   "description": "F-List.net Chat Client",
   "main": "main.js",
-  "license": "MIT",
+  "license": "MPL-2.0",
   "scripts": {
     "build": "node ../webpack development",
     "build:dist": "node ../webpack production",

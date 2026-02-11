@@ -567,7 +567,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Major UI / UX rework and refresh. [[Initial UI pass]](https://github.com/Fchat-Horizon/Horizon/commit/3f66933) [[Sidebar redesign]](https://github.com/Fchat-Horizon/Horizon/commit/48857a7) [[Conversation list redesign]](https://github.com/Fchat-Horizon/Horizon/commit/0012124) See the "UI Changes overview" section below for full details.
-- Project now licensed under the GNU Public License v3 (previously MIT). [[License change]](https://github.com/Fchat-Horizon/Horizon/commit/9deb59b)
+- Project now licensed under the GNU Public License v3 (previously MIT). Later re-licensed under MPL-2.0. [[License change]](https://github.com/Fchat-Horizon/Horizon/commit/9deb59b)
 - Sound themes for customizing your notification sounds. [[Initial]](https://github.com/Fchat-Horizon/Horizon/commit/a7967bc72ae895a5e941a59f57a12b50be5845ea) [[Ocean]](https://github.com/Fchat-Horizon/Horizon/commit/6ac72cd72e9d3d66dd28abcf1ca7f87fd6c72cd2)
   - Want to create your own, or even submit it for release with Horizon? [Check this guide!](https://horizn.moe/docs/guides/sound-themes.html)
 - Global setting for custom CSS styles (experimental). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7c929d3b6a76976dc82f3a124de65f96fb3764f2)
