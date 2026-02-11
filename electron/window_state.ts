@@ -17,6 +17,7 @@ interface SavedWindowState {
 function mapToScreen(state: SavedWindowState): SavedWindowState {
   let x = state.x !== undefined ? state.x : 0;
   let y = state.y !== undefined ? state.y : 0;
+  let { width, height } = state;
   const primaryDisplay = screen.getPrimaryDisplay();
   const targetDisplay = screen.getDisplayMatching({
     x,
@@ -31,6 +32,14 @@ function mapToScreen(state: SavedWindowState): SavedWindowState {
     x /= primaryDisplay.scaleFactor;
     y /= primaryDisplay.scaleFactor;
   }
+  const workArea = targetDisplay.workArea;
+  width = Math.min(width, workArea.width);
+  height = Math.min(height, workArea.height);
+  x = Math.max(workArea.x, Math.min(x, workArea.x + workArea.width - width));
+  y = Math.max(workArea.y, Math.min(y, workArea.y + workArea.height - height));
+
+  state.width = width;
+  state.height = height;
   state.x = x !== 0 ? x : undefined;
   state.y = y !== 0 ? y : undefined;
   return state;
