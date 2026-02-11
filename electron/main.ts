@@ -683,12 +683,6 @@ async function onReady(): Promise<void> {
               process.platform === 'darwin' ? 'CmdOrCtrl+,' : undefined
           },
           {
-            label: l('settings.export.title'),
-            click: (_m, window: electron.BrowserWindow) => {
-              browserWindows.createExporterWindow(settings, 'none', window);
-            }
-          },
-          {
             label: l('fixLogs.action'),
             click: (_m, window: electron.BrowserWindow) =>
               window.webContents.send('fix-logs'),
@@ -734,6 +728,12 @@ async function onReady(): Promise<void> {
           { role: 'paste' },
           { role: 'selectall' }
         ] as MenuItemConstructorOptions[]
+      },
+      {
+        label: `&${l('settings.export.manageData')}`,
+        click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
+          browserWindows.createExporterWindow(settings, 'none', w);
+        }
       },
       viewItem,
       ...(process.platform === 'darwin' ? [windowItem] : []),

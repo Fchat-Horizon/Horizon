@@ -644,6 +644,7 @@
   "settings.export.noCharacters": "No character data is available to export.",
   "settings.export.saveTitle": "Save Horizon export",
   "settings.export.summary": "Exported data for {0} character(s) to {1}.",
+  "settings.export.manageData": "Manage Data",
   "settings.export.title": "Export Horizon data",
   "settings.export.zipping": "Finalizing export",
   "settings.filter.hideAds": "Hide [b]ads[/b] from matching characters",

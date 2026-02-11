@@ -636,6 +636,7 @@
   "settings.export.noCharacters": "Sumimasen... No chawacter data is available to export.",
   "settings.export.saveTitle": "Save Howizon expowt",
   "settings.export.summary": "Expowted data for {0} chawacter(s) to {1}.",
+  "settings.export.manageData": "Manage Data",
   "settings.export.title": "Expowt Howizon data",
   "settings.export.zipping": "Finalizing expowt",
   "settings.filter.hideAds": "Hide [b]ads[/b] fwom matching chawactews",
