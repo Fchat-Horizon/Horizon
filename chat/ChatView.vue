@@ -332,44 +332,12 @@
 
     <quick-jump ref="quickJump"></quick-jump>
 
-    <div
-      v-if="autoBackupToast"
-      class="auto-backup-toast"
-      :class="{ 'toast-error': autoBackupToast === 'error' }"
-    >
-      <div class="toast-content">
-        <span
-          v-if="autoBackupToast === 'started' || autoBackupToast === 'progress'"
-        >
-          <span class="fas fa-fw fa-sync fa-spin"></span> Auto backup in
-          progress...
-        </span>
-        <span v-else-if="autoBackupToast === 'success'">
-          <span class="fas fa-fw fa-check"></span> Auto backup complete
-        </span>
-        <span v-else-if="autoBackupToast === 'error'">
-          <span class="fas fa-fw fa-exclamation-triangle"></span> Auto backup
-          failed
-        </span>
-        <a
-          href="#"
-          class="toast-dismiss"
-          @click.prevent="autoBackupToast = ''"
-          aria-label="Dismiss"
-        >
-          <span class="fas fa-times"></span>
-        </a>
-      </div>
-      <div
-        v-if="autoBackupToast === 'started' || autoBackupToast === 'progress'"
-        class="toast-progress"
-      >
-        <div
-          class="toast-progress-bar"
-          :style="{ width: Math.round(autoBackupProgress * 100) + '%' }"
-        ></div>
-      </div>
-    </div>
+    <toast
+      v-for="t in toasts"
+      :key="t.id"
+      v-bind="t"
+      @dismiss="dismissToast(t.id)"
+    />
   </div>
 </template>
 
@@ -406,6 +374,8 @@
   import Modal from '../components/Modal.vue';
   import QuickJump from './QuickJump.vue';
   import { ipcRenderer } from 'electron';
+  import { toasts, showToast, updateToast, dismissToast } from './toast';
+  import Toast from '../components/Toast.vue';
 
   const unreadClasses = {
     [Conversation.UnreadState.None]: '',
@@ -431,7 +401,8 @@
       adCenter: AdCenterDialog,
       adLauncher: AdLauncherDialog,
       modal: Modal,
-      'quick-jump': QuickJump
+      'quick-jump': QuickJump,
+      toast: Toast
     }
   })
   export default class ChatView extends Vue {
@@ -445,9 +416,8 @@
     focusListener!: () => void;
     blurListener!: () => void;
     readonly isMac = process.platform === 'darwin';
-    autoBackupToast = '';
-    autoBackupProgress = 0;
-    private autoBackupDismissTimer?: ReturnType<typeof setTimeout>;
+    toasts = toasts;
+    dismissToast = dismissToast;
 
     channelConversations = core.conversations.channelConversations;
     privateConversations = core.conversations.privateConversations;
@@ -472,19 +442,35 @@
       ipcRenderer.on(
         'auto-backup-status',
         (_e, status: string, progress?: number) => {
-          if (this.autoBackupDismissTimer)
-            clearTimeout(this.autoBackupDismissTimer);
-          this.autoBackupToast = status;
-          if (status === 'progress' && typeof progress === 'number') {
-            this.autoBackupProgress = progress;
-          } else if (status === 'started') {
-            this.autoBackupProgress = 0;
-          }
-          if (status === 'success' || status === 'error') {
-            this.autoBackupProgress = status === 'success' ? 1 : 0;
-            this.autoBackupDismissTimer = setTimeout(() => {
-              this.autoBackupToast = '';
-            }, 5000);
+          const id = 'auto-backup';
+          if (status === 'started') {
+            showToast({
+              id,
+              message: 'Auto backup in progress...',
+              icon: 'fa-sync',
+              iconSpin: true,
+              progress: 0
+            });
+          } else if (status === 'progress' && typeof progress === 'number') {
+            updateToast(id, { progress });
+          } else if (status === 'success') {
+            updateToast(id, {
+              message: 'Auto backup complete',
+              icon: 'fa-check',
+              iconSpin: false,
+              variant: 'success',
+              progress: 1,
+              autoDismiss: 5000
+            });
+          } else if (status === 'error') {
+            updateToast(id, {
+              message: 'Auto backup failed',
+              icon: 'fa-exclamation-triangle',
+              iconSpin: false,
+              variant: 'error',
+              progress: undefined,
+              autoDismiss: 5000
+            });
           }
         }
       );
@@ -1167,55 +1153,6 @@
         // box-shadow: 0 0 10px 10px #aef4af;
         color: var(--yellow);
       }
-    }
-  }
-
-  .auto-backup-toast {
-    position: fixed;
-    bottom: 16px;
-    right: 16px;
-    z-index: 9999;
-    background: var(--bs-body-bg, #212529);
-    color: var(--bs-body-color, #adb5bd);
-    border: 1px solid var(--bs-border-color, rgba(255, 255, 255, 0.1));
-    padding: 0;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    min-width: 220px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    opacity: 0.85;
-    overflow: hidden;
-
-    &.toast-error {
-      border-color: var(--bs-danger, #dc3545);
-    }
-
-    .toast-content {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-    }
-
-    .toast-dismiss {
-      margin-left: auto;
-      color: inherit;
-      opacity: 0.5;
-      text-decoration: none;
-      &:hover {
-        opacity: 1;
-      }
-    }
-
-    .toast-progress {
-      height: 3px;
-      background: var(--bs-border-color, rgba(255, 255, 255, 0.08));
-    }
-
-    .toast-progress-bar {
-      height: 100%;
-      background: var(--bs-success);
-      transition: width 0.3s ease;
     }
   }
 </style>
