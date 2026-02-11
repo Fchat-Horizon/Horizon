@@ -154,6 +154,16 @@
 
               <hr class="w-100 my-3" />
 
+              <p class="text-muted small mb-2">
+                Licensed under the
+                <a
+                  href="https://mozilla.org/MPL/2.0/"
+                  target="_blank"
+                  rel="noopener"
+                  >Mozilla Public License 2.0</a
+                >
+              </p>
+
               <p class="text-muted mb-0">
                 Made with <span class="heart">❤</span> by
                 <a href="https://github.com/CodingWithAnxiety" target="_blank"

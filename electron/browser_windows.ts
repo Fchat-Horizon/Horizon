@@ -781,7 +781,7 @@ export function createAboutWindow(
     frame: false,
     minWidth: 460,
     width: 460,
-    height: 580,
+    height: 620,
     resizable: false,
     modal: true,
     parent: parentWindow,
@@ -803,7 +803,7 @@ export function createAboutWindow(
 
   if (process.platform === 'darwin') {
     aboutWindowProperties.frame = true;
-    aboutWindowProperties.height = 520;
+    aboutWindowProperties.height = 560;
     aboutWindowProperties.modal = false;
   }
 
