@@ -723,10 +723,7 @@
               style="cursor: pointer"
               @click.stop="hidden.splice(i, 1)"
             ></span>
-            <user-view
-              :character="getCharacter(user)"
-              :isMarkerShown="shouldShowMarker"
-            ></user-view>
+            <user-view :character="getCharacter(user)"></user-view>
           </div>
         </template>
         <template v-else>{{ l('settings.hideAds.empty') }}</template>
@@ -823,10 +820,7 @@
               :aria-label="l('user.unignore')"
               @click.stop="unignore(user)"
             ></span>
-            <user-view
-              :character="getCharacter(user)"
-              :isMarkerShown="shouldShowMarker"
-            ></user-view>
+            <user-view :character="getCharacter(user)"></user-view>
           </div>
         </template>
         <template v-else>{{
@@ -1535,9 +1529,6 @@
     }
     getCharacter(name: string): Character {
       return core.characters.get(name);
-    }
-    get shouldShowMarker(): boolean {
-      return core.state.settings.horizonShowGenderMarker;
     }
   }
 </script>

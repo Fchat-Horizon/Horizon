@@ -58,10 +58,7 @@
         >
           <i class="fas fa-times"></i>
         </a>
-        <user-view
-          :character="getCharacter(mod)"
-          :isMarkerShown="shouldShowMarker"
-        ></user-view>
+        <user-view :character="getCharacter(mod)"></user-view>
       </div>
       <div style="display: flex; margin-top: 5px">
         <input
@@ -129,10 +126,6 @@
 
     getCharacter(name: string): Character {
       return core.characters.get(name);
-    }
-
-    get shouldShowMarker(): boolean {
-      return core.state.settings.horizonShowGenderMarker;
     }
 
     modAdd(): void {
