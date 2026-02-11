@@ -2,7 +2,7 @@
  * @license
  * Originally licensed under MIT License
  *
- * Copyright (c) 2018 F-List
+ * Copyright (c) 2018-2026 Dragonfruit Ventures, LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,10 @@
  *
  * This license header applies to this file and all of the non-third-party assets it includes.
  * @file The entry point for the Electron renderer of F-Chat 3.0.
- * @copyright 2018 F-List
+ * @copyright 2018-2026 Dragonfruit Ventures, LLC
+ * @copyright 2024-2026 Sylvia Roselie & Respective Horizon Contributors
+ * @version 1.0
+ * @see {@link https://github.com/Fchat-Horizon/Horizon|GitHub repo}
  * @author Maya Wolf <maya@f-list.net>
  * @version 3.0
  * @see {@link https://github.com/f-list/exported|GitHub repo}
