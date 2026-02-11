@@ -153,7 +153,7 @@
         </button>
       </template>
       <button
-        v-else-if="isDmConversation"
+        v-else-if="isDmConversation && core.connection.isOpen"
         class="btn btn-outline-secondary"
         @click="setSelectionMode(true)"
       >
@@ -268,7 +268,8 @@
     get isDmConversation(): boolean {
       return (
         this.selectedConversation !== undefined &&
-        !this.selectedConversation.key.startsWith('#')
+        !this.selectedConversation.key.startsWith('#') &&
+        this.selectedConversation.key !== '_'
       );
     }
 
@@ -601,11 +602,10 @@
       const targetName = this.selectedConversation.name;
       const targetChar = core.characters.get(targetName);
 
-      if (
-        targetChar.status === 'offline' &&
-        !Dialog.confirmDialog(l('logs.shareOffline', targetName))
-      )
+      if (targetChar.status === 'offline') {
+        alert(l('logs.shareOffline', targetName));
         return;
+      }
 
       if (
         !Dialog.confirmDialog(
