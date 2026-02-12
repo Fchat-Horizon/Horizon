@@ -38,9 +38,6 @@ import {
 import * as Utils from '../site/utils';
 import core from './core';
 import { EventBus } from './preview/event-bus';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as remote from '@electron/remote';
 
 let horizonDevs: string[] = [];
 let horizonContributors: Map<string, string | undefined> = new Map();
@@ -206,37 +203,8 @@ export async function preloadTeamData(): Promise<void> {
       // Team data affects badge icons/titles in chat and profile sidebar.
       // Trigger a refresh for already-mounted components.
       EventBus.$emit('configuration-update', {});
-
-      // NOTE: We intentionally don't return data here.
     };
 
-    // note: if a local team.json exists, we should use that. this seems really fucking messy, but this was a hack for me. :shrug:
-    try {
-      const appPath = remote?.app?.getAppPath?.();
-      const candidates: string[] = [];
-
-      if (appPath) {
-        candidates.push(path.join(appPath, '..', 'team.json'));
-        candidates.push(path.join(appPath, '..', '..', 'team.json'));
-        candidates.push(path.join(appPath, '..', '..', '..', 'team.json'));
-      }
-
-      candidates.push(path.join(process.cwd(), 'team.json'));
-
-      for (const p of candidates) {
-        if (!p) continue;
-        if (!fs.existsSync(p)) continue;
-
-        const raw = fs.readFileSync(p, 'utf8');
-        const data = JSON.parse(raw);
-        applyTeamData(data);
-        return;
-      }
-    } catch {
-      // fall back to remote
-    }
-
-    // should fix ridiculous cache waits.
     const url = `https://raw.githubusercontent.com/Fchat-Horizon/Horizon/refs/heads/team/team.json?ts=${Date.now()}`;
     const response = await fetch(url, { cache: 'no-store' });
     if (response.ok) {
