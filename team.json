@@ -1,5 +1,5 @@
 {
-  "updated": "11-25-2025",
+  "updated": "12-2-2026",
   "devs": {
     "maintainers": [
       "Zheam Lucewing",
@@ -51,7 +51,7 @@
       },
       "Oni": {
         "alias": "Oni",
-        "characters": ["Oni Mistress", "A Youngster Trainer"],
+        "characters": ["A Youngster Trainer"],
         "languages": ["Spanish"]
       },
       "Fragile": {
