@@ -68,7 +68,6 @@
 
 <script lang="ts">
   import * as _ from 'lodash';
-  import { Component, Hook } from '@f-list/vue-ts';
   import Vue from 'vue';
   import core from '../core';
   import { EventBus, EventBusEvent } from './event-bus';
@@ -107,56 +106,40 @@
     httpStatusText: string;
   }
 
-  @Component({
+  export default Vue.extend({
     components: {
       'character-preview': CharacterPreview
-    }
-  })
-  export default class ImagePreview extends Vue {
-    l = l;
-    private readonly MinTimePreviewVisible = 100;
-
-    visible = false;
-
-    previewManager = new PreviewManager(this, [
-      new ExternalImagePreviewHelper(this),
-      new LocalImagePreviewHelper(this),
-      new CharacterPreviewHelper(this)
-      // new ChannelPreviewHelper(this)
-    ]);
-
-    // externalPreviewHelper = new ExternalImagePreviewHelper(this);
-    // localPreviewHelper = new LocalImagePreviewHelper(this);
-    // externalPreviewStyle: Record<string, any> = {};
-    // localPreviewStyle: Record<string, any> = {};
-
-    url: string | null = null;
-    domain: string | undefined;
-
-    sticky = false;
-    runJs = true;
-    debug = false;
-
-    jsMutator = new ImageDomMutator(this.debug);
-
-    state = 'hidden';
-
-    shouldShowSpinner = false;
-    shouldShowError = true;
-
-    private interval: Timer | null = null;
-
-    private exitInterval: Timer | null = null;
-    private exitUrl: string | null = null;
-
-    private initialCursorPosition: Point | null = null;
-    private shouldDismiss = false;
-    private visibleSince = 0;
-
-    previewStyles: Record<string, RenderStyle> = {};
-
-    @Hook('mounted')
-    async onMounted(): Promise<void> {
+    },
+    data() {
+      return {
+        l: l,
+        MinTimePreviewVisible: 100,
+        visible: false,
+        previewManager: new PreviewManager(this as any, [
+          new ExternalImagePreviewHelper(this as any),
+          new LocalImagePreviewHelper(this as any),
+          new CharacterPreviewHelper(this as any)
+          // new ChannelPreviewHelper(this)
+        ]),
+        url: null as string | null,
+        domain: undefined as string | undefined,
+        sticky: false,
+        runJs: true,
+        debug: false,
+        jsMutator: new ImageDomMutator(false),
+        state: 'hidden',
+        shouldShowSpinner: false,
+        shouldShowError: true,
+        interval: null as Timer | null,
+        exitInterval: null as Timer | null,
+        exitUrl: null as string | null,
+        initialCursorPosition: null as Point | null,
+        shouldDismiss: false,
+        visibleSince: 0,
+        previewStyles: {} as Record<string, RenderStyle>
+      };
+    },
+    async mounted(): Promise<void> {
       console.info('Mounted ImagePreview');
 
       // tslint:disable-next-line:no-floating-promises
@@ -518,504 +501,481 @@
         this.shouldShowSpinner = this.testSpinner();
         this.shouldShowError = this.testError();
       }, 50);
-    }
+    },
+    methods: {
+      reRenderStyles(): void {
+        this.previewStyles = this.previewManager.renderStyles();
+      },
+      negotiateUrl(url: string): string {
+        const match = url.match(FLIST_PROFILE_MATCH);
 
-    reRenderStyles(): void {
-      this.previewStyles = this.previewManager.renderStyles();
-    }
-
-    negotiateUrl(url: string): string {
-      const match = url.match(FLIST_PROFILE_MATCH);
-
-      if (!match) {
-        return url;
-      }
-
-      const characterName = decodeURIComponent(match[2].replace(/\+/g, '%20'));
-      return `flist-character://${characterName}`;
-    }
-
-    isMediaUrl(url: string): boolean {
-      const cleanUrl = url.split('?')[0].toLowerCase();
-      const mediaExtensions = [
-        '.jpg',
-        '.jpeg',
-        '.png',
-        '.gif',
-        '.webp',
-        '.svg',
-        '.bmp',
-        '.ico',
-        '.mp4',
-        '.webm',
-        '.mov',
-        '.avi',
-        '.mkv',
-        '.flv',
-        '.wmv',
-        '.m4v',
-        '.3gp',
-        '.ogv'
-      ];
-
-      return (
-        mediaExtensions.some(ext => cleanUrl.endsWith(ext)) ||
-        cleanUrl.includes('blob:') ||
-        cleanUrl.includes('data:image') ||
-        cleanUrl.includes('data:video')
-      );
-    }
-
-    isBlockedUrl(url: string): boolean {
-      const blockedProtocols = [
-        'discord://',
-        'steam://',
-        'skype:',
-        'mailto:',
-        'tel:',
-        'sms:',
-        'facetime:',
-        'facetime-audio:',
-        'zoom:',
-        'teams:',
-        'slack:',
-        'whatsapp:',
-        'telegram:',
-        'spotify:',
-        'itunes:',
-        'itunesmusic:',
-        'app:',
-        'x-apple:',
-        'com.apple.',
-        'com.microsoft.',
-        'com.spotify.',
-        'vscode:',
-        'vscode-insiders:',
-        'github-desktop:',
-        'unity:',
-        'blender:',
-        'obsidian:',
-        'notion:'
-      ];
-
-      const blockedDomains = [
-        'discord.gg/',
-        'discord.com/invite/',
-        'discordapp.com/invite/',
-        'steamcommunity.com/groups/',
-        'steamcommunity.com/chat/',
-        'web.whatsapp.com',
-        'web.telegram.org',
-        'teams.microsoft.com/l/chat',
-        'zoom.us/j/',
-        'meet.google.com/',
-        'whereby.com/'
-      ];
-
-      const lowerUrl = url.toLowerCase();
-
-      if (blockedProtocols.some(protocol => lowerUrl.startsWith(protocol))) {
-        return true;
-      }
-
-      if (blockedDomains.some(domain => lowerUrl.includes(domain))) {
-        return true;
-      }
-
-      const urlShorteners = [
-        'bit.ly',
-        'tinyurl.com',
-        'short.link',
-        'ow.ly',
-        'is.gd',
-        'buff.ly',
-        'adf.ly',
-        'goo.gl',
-        'shor.by',
-        'cutt.ly',
-        'rebrandly.com',
-        'tiny.cc',
-        'link.ly',
-        'shortened.link',
-        'shorturl.at',
-        'clck.ru',
-        'v.gd',
-        'po.st'
-      ];
-
-      return urlShorteners.some(shortener => lowerUrl.includes(shortener));
-    }
-
-    isSuspiciousRedirect(url: string): boolean {
-      const lowerUrl = url.toLowerCase();
-
-      const redirectParams = [
-        'redirect',
-        'url',
-        'goto',
-        'target',
-        'destination',
-        'forward',
-        'next'
-      ];
-      return redirectParams.some(param => lowerUrl.includes(param + '='));
-    }
-
-    updatePreviewSize(width: number, height: number): void {
-      const helper = this.previewManager.getVisiblePreview();
-
-      if (!helper || !helper.reactsToSizeUpdates()) {
-        return;
-      }
-
-      if (width && height) {
-        this.debugLog(
-          'ImagePreview: updatePreviewSize',
-          width,
-          height,
-          width / height
-        );
-
-        helper.setRatio(width / height);
-        this.reRenderStyles();
-      }
-    }
-
-    hide(): void {
-      this.cancelExitTimer();
-
-      this.url = null;
-      this.visible = false;
-
-      this.previewManager.hide();
-
-      this.exitUrl = null;
-      this.exitInterval = null;
-
-      this.shouldDismiss = false;
-
-      this.sticky = false;
-
-      this.setState('hidden');
-
-      this.reRenderStyles();
-    }
-
-    dismiss(initialUrl: string, force: boolean = false): void {
-      const url = this.jsMutator.mutateUrl(initialUrl);
-
-      this.debugLog('ImagePreview: dismiss', url);
-
-      if (this.url !== url) return; // simply ignore
-
-      // if (this.debug)
-      //    return;
-
-      if (this.sticky) return;
-
-      // console.log('DISMISS');
-
-      const due = this.visible
-        ? this.MinTimePreviewVisible -
-          Math.min(this.MinTimePreviewVisible, Date.now() - this.visibleSince)
-        : 0;
-
-      this.cancelTimer();
-
-      if (this.exitInterval) return;
-
-      this.exitUrl = this.url;
-      this.shouldDismiss = true;
-
-      if (!this.hasMouseMovedSince() && !force) return;
-
-      this.debugLog(
-        'ImagePreview: dismiss.exec',
-        due,
-        this.previewManager.getVisibilityStatus(),
-        url
-      );
-
-      // This timeout makes the preview window disappear with a slight delay, which helps UX
-      // when dealing with situations such as quickly scrolling text that moves the cursor away
-      // from the link
-      // tslint:disable-next-line no-unnecessary-type-assertion
-      this.exitInterval = setTimeout(() => this.hide(), due) as Timer;
-    }
-
-    show(initialUrl: string): void {
-      const url = this.jsMutator.mutateUrl(initialUrl);
-
-      // Block URLs that could trigger external applications
-      if (this.isBlockedUrl(url)) {
-        this.debugLog('ImagePreview: show blocked external URL', url);
-        return;
-      }
-
-      // Block suspicious URLs that might redirect to external applications
-      if (this.isSuspiciousRedirect(url)) {
-        this.debugLog(
-          'ImagePreview: show blocked suspicious redirect URL',
-          url
-        );
-        return;
-      }
-
-      this.debugLog(
-        'ImagePreview: show',
-        this.previewManager.getVisibilityStatus(),
-        this.visible,
-        this.hasMouseMovedSince(),
-        !!this.interval,
-        this.sticky,
-        url
-      );
-
-      // console.log('SHOW');
-
-      if (this.visible && !this.exitInterval && !this.hasMouseMovedSince()) {
-        this.debugLog('ImagePreview: show cancel: visible & not moved');
-        return;
-      }
-
-      if (this.url === url && (this.visible || this.interval)) {
-        this.debugLog('ImagePreview: same url', url, this.url);
-        return;
-      }
-
-      if (this.url && this.sticky && this.visible) {
-        this.debugLog('ImagePreview: sticky visible');
-        return;
-      }
-
-      this.debugLog('ImagePreview: show.exec', url);
-
-      const due = url === this.exitUrl && this.exitInterval ? 0 : 200;
-
-      this.url = url;
-      this.domain = domain(url);
-
-      this.cancelExitTimer();
-      this.cancelTimer();
-
-      // This timer makes sure that just by accidentally brushing across a link won't show (blink) the preview
-      // -- you actually have to pause on it
-      // tslint:disable-next-line no-unnecessary-type-assertion
-      this.interval = setTimeout(() => {
-        this.debugLog('ImagePreview: show.timeout', this.url);
-
-        const helper = this.previewManager.show(
-          this.url || undefined,
-          this.domain
-        );
-
-        this.interval = null;
-        this.visible = true;
-        this.visibleSince = Date.now();
-        this.shouldDismiss = false;
-
-        this.initialCursorPosition = screen.getCursorScreenPoint();
-
-        this.reRenderStyles();
-
-        if (helper) {
-          this.setState(helper.shouldTrackLoading() ? 'loading' : 'loaded');
-        } else {
-          this.setState('loaded');
+        if (!match) {
+          return url;
         }
-      }, due) as Timer;
-    }
 
-    hasMouseMovedSince(): boolean {
-      if (!this.initialCursorPosition) return true;
-
-      try {
-        const p = screen.getCursorScreenPoint();
+        const characterName = decodeURIComponent(
+          match[2].replace(/\+/g, '%20')
+        );
+        return `flist-character://${characterName}`;
+      },
+      isMediaUrl(url: string): boolean {
+        const cleanUrl = url.split('?')[0].toLowerCase();
+        const mediaExtensions = [
+          '.jpg',
+          '.jpeg',
+          '.png',
+          '.gif',
+          '.webp',
+          '.svg',
+          '.bmp',
+          '.ico',
+          '.mp4',
+          '.webm',
+          '.mov',
+          '.avi',
+          '.mkv',
+          '.flv',
+          '.wmv',
+          '.m4v',
+          '.3gp',
+          '.ogv'
+        ];
 
         return (
-          p.x !== this.initialCursorPosition.x ||
-          p.y !== this.initialCursorPosition.y
+          mediaExtensions.some(ext => cleanUrl.endsWith(ext)) ||
+          cleanUrl.includes('blob:') ||
+          cleanUrl.includes('data:image') ||
+          cleanUrl.includes('data:video')
         );
-      } catch (err) {
-        console.error('ImagePreview', err);
-        return true;
-      }
-    }
+      },
+      isBlockedUrl(url: string): boolean {
+        const blockedProtocols = [
+          'discord://',
+          'steam://',
+          'skype:',
+          'mailto:',
+          'tel:',
+          'sms:',
+          'facetime:',
+          'facetime-audio:',
+          'zoom:',
+          'teams:',
+          'slack:',
+          'whatsapp:',
+          'telegram:',
+          'spotify:',
+          'itunes:',
+          'itunesmusic:',
+          'app:',
+          'x-apple:',
+          'com.apple.',
+          'com.microsoft.',
+          'com.spotify.',
+          'vscode:',
+          'vscode-insiders:',
+          'github-desktop:',
+          'unity:',
+          'blender:',
+          'obsidian:',
+          'notion:'
+        ];
 
-    cancelTimer(): void {
-      if (this.interval) clearTimeout(this.interval);
+        const blockedDomains = [
+          'discord.gg/',
+          'discord.com/invite/',
+          'discordapp.com/invite/',
+          'steamcommunity.com/groups/',
+          'steamcommunity.com/chat/',
+          'web.whatsapp.com',
+          'web.telegram.org',
+          'teams.microsoft.com/l/chat',
+          'zoom.us/j/',
+          'meet.google.com/',
+          'whereby.com/'
+        ];
 
-      this.interval = null;
-    }
+        const lowerUrl = url.toLowerCase();
 
-    cancelExitTimer(): void {
-      if (this.exitInterval) clearTimeout(this.exitInterval);
-
-      this.exitInterval = null;
-    }
-
-    isVisible(): boolean {
-      return this.visible;
-    }
-
-    getUrl(): string | null {
-      return this.url;
-    }
-
-    /* isExternalUrl(): boolean {
-            // 'f-list.net' is tested here on purpose, because keeps the character URLs from being previewed
-            return !((this.domain === 'f-list.net') || (this.domain === 'static.f-list.net'));
+        if (blockedProtocols.some(protocol => lowerUrl.startsWith(protocol))) {
+          return true;
         }
 
-        isInternalUrl(): boolean {
-            return !this.isExternalUrl();
-        }*/
+        if (blockedDomains.some(domain => lowerUrl.includes(domain))) {
+          return true;
+        }
 
-    toggleDevMode(): void {
-      this.debug = !this.debug;
+        const urlShorteners = [
+          'bit.ly',
+          'tinyurl.com',
+          'short.link',
+          'ow.ly',
+          'is.gd',
+          'buff.ly',
+          'adf.ly',
+          'goo.gl',
+          'shor.by',
+          'cutt.ly',
+          'rebrandly.com',
+          'tiny.cc',
+          'link.ly',
+          'shortened.link',
+          'shorturl.at',
+          'clck.ru',
+          'v.gd',
+          'po.st'
+        ];
 
-      this.jsMutator.setDebug(this.debug);
-      this.previewManager.setDebug(this.debug);
+        return urlShorteners.some(shortener => lowerUrl.includes(shortener));
+      },
+      isSuspiciousRedirect(url: string): boolean {
+        const lowerUrl = url.toLowerCase();
 
-      if (this.debug) {
+        const redirectParams = [
+          'redirect',
+          'url',
+          'goto',
+          'target',
+          'destination',
+          'forward',
+          'next'
+        ];
+        return redirectParams.some(param => lowerUrl.includes(param + '='));
+      },
+      updatePreviewSize(width: number, height: number): void {
+        const helper = this.previewManager.getVisiblePreview();
+
+        if (!helper || !helper.reactsToSizeUpdates()) {
+          return;
+        }
+
+        if (width && height) {
+          this.debugLog(
+            'ImagePreview: updatePreviewSize',
+            width,
+            height,
+            width / height
+          );
+
+          helper.setRatio(width / height);
+          this.reRenderStyles();
+        }
+      },
+      hide(): void {
+        this.cancelExitTimer();
+
+        this.url = null;
+        this.visible = false;
+
+        this.previewManager.hide();
+
+        this.exitUrl = null;
+        this.exitInterval = null;
+
+        this.shouldDismiss = false;
+
+        this.sticky = false;
+
+        this.setState('hidden');
+
+        this.reRenderStyles();
+      },
+      dismiss(initialUrl: string, force: boolean = false): void {
+        const url = this.jsMutator.mutateUrl(initialUrl);
+
+        this.debugLog('ImagePreview: dismiss', url);
+
+        if (this.url !== url) return; // simply ignore
+
+        // if (this.debug)
+        //    return;
+
+        if (this.sticky) return;
+
+        // console.log('DISMISS');
+
+        const due = this.visible
+          ? this.MinTimePreviewVisible -
+            Math.min(this.MinTimePreviewVisible, Date.now() - this.visibleSince)
+          : 0;
+
+        this.cancelTimer();
+
+        if (this.exitInterval) return;
+
+        this.exitUrl = this.url;
+        this.shouldDismiss = true;
+
+        if (!this.hasMouseMovedSince() && !force) return;
+
+        this.debugLog(
+          'ImagePreview: dismiss.exec',
+          due,
+          this.previewManager.getVisibilityStatus(),
+          url
+        );
+
+        // This timeout makes the preview window disappear with a slight delay, which helps UX
+        // when dealing with situations such as quickly scrolling text that moves the cursor away
+        // from the link
+        // tslint:disable-next-line no-unnecessary-type-assertion
+        this.exitInterval = setTimeout(() => this.hide(), due) as Timer;
+      },
+      show(initialUrl: string): void {
+        const url = this.jsMutator.mutateUrl(initialUrl);
+
+        // Block URLs that could trigger external applications
+        if (this.isBlockedUrl(url)) {
+          this.debugLog('ImagePreview: show blocked external URL', url);
+          return;
+        }
+
+        // Block suspicious URLs that might redirect to external applications
+        if (this.isSuspiciousRedirect(url)) {
+          this.debugLog(
+            'ImagePreview: show blocked suspicious redirect URL',
+            url
+          );
+          return;
+        }
+
+        this.debugLog(
+          'ImagePreview: show',
+          this.previewManager.getVisibilityStatus(),
+          this.visible,
+          this.hasMouseMovedSince(),
+          !!this.interval,
+          this.sticky,
+          url
+        );
+
+        // console.log('SHOW');
+
+        if (this.visible && !this.exitInterval && !this.hasMouseMovedSince()) {
+          this.debugLog('ImagePreview: show cancel: visible & not moved');
+          return;
+        }
+
+        if (this.url === url && (this.visible || this.interval)) {
+          this.debugLog('ImagePreview: same url', url, this.url);
+          return;
+        }
+
+        if (this.url && this.sticky && this.visible) {
+          this.debugLog('ImagePreview: sticky visible');
+          return;
+        }
+
+        this.debugLog('ImagePreview: show.exec', url);
+
+        const due = url === this.exitUrl && this.exitInterval ? 0 : 200;
+
+        this.url = url;
+        this.domain = domain(url);
+
+        this.cancelExitTimer();
+        this.cancelTimer();
+
+        // This timer makes sure that just by accidentally brushing across a link won't show (blink) the preview
+        // -- you actually have to pause on it
+        // tslint:disable-next-line no-unnecessary-type-assertion
+        this.interval = setTimeout(() => {
+          this.debugLog('ImagePreview: show.timeout', this.url);
+
+          const helper = this.previewManager.show(
+            this.url || undefined,
+            this.domain
+          );
+
+          this.interval = null;
+          this.visible = true;
+          this.visibleSince = Date.now();
+          this.shouldDismiss = false;
+
+          this.initialCursorPosition = screen.getCursorScreenPoint();
+
+          this.reRenderStyles();
+
+          if (helper) {
+            this.setState(helper.shouldTrackLoading() ? 'loading' : 'loaded');
+          } else {
+            this.setState('loaded');
+          }
+        }, due) as Timer;
+      },
+      hasMouseMovedSince(): boolean {
+        if (!this.initialCursorPosition) return true;
+
+        try {
+          const p = screen.getCursorScreenPoint();
+
+          return (
+            p.x !== this.initialCursorPosition.x ||
+            p.y !== this.initialCursorPosition.y
+          );
+        } catch (err) {
+          console.error('ImagePreview', err);
+          return true;
+        }
+      },
+      cancelTimer(): void {
+        if (this.interval) clearTimeout(this.interval);
+
+        this.interval = null;
+      },
+      cancelExitTimer(): void {
+        if (this.exitInterval) clearTimeout(this.exitInterval);
+
+        this.exitInterval = null;
+      },
+      isVisible(): boolean {
+        return this.visible;
+      },
+      getUrl(): string | null {
+        return this.url;
+      },
+      /* isExternalUrl(): boolean {
+              // 'f-list.net' is tested here on purpose, because keeps the character URLs from being previewed
+              return !((this.domain === 'f-list.net') || (this.domain === 'static.f-list.net'));
+          }
+
+          isInternalUrl(): boolean {
+              return !this.isExternalUrl();
+          }*/
+      toggleDevMode(): void {
+        this.debug = !this.debug;
+
+        this.jsMutator.setDebug(this.debug);
+        this.previewManager.setDebug(this.debug);
+
+        if (this.debug) {
+          const webview = this.getWebview();
+
+          webview.openDevTools();
+        }
+      },
+      async executeJavaScript(
+        js: string | undefined,
+        context: string = 'unknown',
+        logDetails?: any
+      ): Promise<any> {
+        // console.log('EXECUTE JS', js);
+
+        if (!this.runJs) return;
+
         const webview = this.getWebview();
 
-        webview.openDevTools();
-      }
-    }
+        if (!js) {
+          this.debugLog(
+            `ImagePreview ${context}: No JavaScript to execute`,
+            logDetails
+          );
+          return;
+        }
 
-    async executeJavaScript(
-      js: string | undefined,
-      context: string = 'unknown',
-      logDetails?: any
-    ): Promise<any> {
-      // console.log('EXECUTE JS', js);
+        this.debugLog(`ImagePreview execute-${context}`, js, logDetails);
 
-      if (!this.runJs) return;
+        try {
+          const result = await (webview.executeJavaScript(
+            js
+          ) as unknown as Promise<any>);
 
-      const webview = this.getWebview();
+          this.debugLog(`ImagePreview result-${context}`, result);
 
-      if (!js) {
+          return result;
+        } catch (err) {
+          this.debugLog(`ImagePreview error-${context}`, err);
+        }
+      },
+      debugLog(...args: any[]): void {
+        if (this.debug) {
+          console.log(...args);
+        }
+      },
+      toggleStickyMode(): void {
+        this.sticky = !this.sticky;
+
+        if (!this.sticky) this.hide();
+      },
+      toggleJsMode(): void {
+        this.runJs = !this.runJs;
+      },
+      reloadUrl(): void {
+        const helper = this.previewManager.getVisiblePreview();
+
+        if (!helper || !helper.usesWebView()) {
+          return;
+        }
+
+        // helper.reload();
+        this.getWebview().reload();
+      },
+      getWebview(): Electron.WebviewTag {
+        return this.$refs.imagePreviewExt as Electron.WebviewTag;
+      },
+      getCharacterPreview(): CharacterPreview {
+        return this.$refs.characterPreview as CharacterPreview;
+      },
+      reset(): void {
+        this.previewManager = new PreviewManager(this as any, [
+          new ExternalImagePreviewHelper(this as any),
+          new LocalImagePreviewHelper(this as any),
+          new CharacterPreviewHelper(this as any)
+          // new ChannelPreviewHelper(this)
+        ]);
+
+        this.url = null;
+        this.domain = undefined;
+
+        this.sticky = false;
+        this.runJs = true;
+        this.debug = false;
+
+        this.jsMutator = new ImageDomMutator(this.debug);
+
+        this.cancelExitTimer();
+        this.cancelTimer();
+
+        this.exitUrl = null;
+
+        this.initialCursorPosition = null;
+        this.shouldDismiss = false;
+        this.visibleSince = 0;
+        this.shouldShowSpinner = false;
+        this.shouldShowError = false;
+
+        this.setState('hidden');
+
+        this.reRenderStyles();
+      },
+      setState(state: string): void {
         this.debugLog(
-          `ImagePreview ${context}: No JavaScript to execute`,
-          logDetails
+          'ImagePreview set-state',
+          state,
+          this.visibleSince > 0
+            ? `${(Date.now() - this.visibleSince) / 1000}s`
+            : ''
         );
-        return;
-      }
 
-      this.debugLog(`ImagePreview execute-${context}`, js, logDetails);
+        this.state = state;
+        this.shouldShowSpinner = this.testSpinner();
+        this.shouldShowError = this.testError();
+      },
+      testSpinner(): boolean {
+        return this.visibleSince > 0
+          ? this.state === 'loading' && Date.now() - this.visibleSince > 1000
+          : false;
+      },
+      testError(): boolean {
+        const helper = this.previewManager.getVisiblePreview();
 
-      try {
-        const result = await (webview.executeJavaScript(
-          js
-        ) as unknown as Promise<any>);
+        if (!helper || !helper.usesWebView()) {
+          return false;
+        }
 
-        this.debugLog(`ImagePreview result-${context}`, result);
-
-        return result;
-      } catch (err) {
-        this.debugLog(`ImagePreview error-${context}`, err);
-      }
-    }
-
-    debugLog(...args: any[]): void {
-      if (this.debug) {
-        console.log(...args);
+        return this.state === 'error';
       }
     }
-
-    toggleStickyMode(): void {
-      this.sticky = !this.sticky;
-
-      if (!this.sticky) this.hide();
-    }
-
-    toggleJsMode(): void {
-      this.runJs = !this.runJs;
-    }
-
-    reloadUrl(): void {
-      const helper = this.previewManager.getVisiblePreview();
-
-      if (!helper || !helper.usesWebView()) {
-        return;
-      }
-
-      // helper.reload();
-      this.getWebview().reload();
-    }
-
-    getWebview(): Electron.WebviewTag {
-      return this.$refs.imagePreviewExt as Electron.WebviewTag;
-    }
-
-    getCharacterPreview(): CharacterPreview {
-      return this.$refs.characterPreview as CharacterPreview;
-    }
-
-    reset(): void {
-      this.previewManager = new PreviewManager(this, [
-        new ExternalImagePreviewHelper(this),
-        new LocalImagePreviewHelper(this),
-        new CharacterPreviewHelper(this)
-        // new ChannelPreviewHelper(this)
-      ]);
-
-      this.url = null;
-      this.domain = undefined;
-
-      this.sticky = false;
-      this.runJs = true;
-      this.debug = false;
-
-      this.jsMutator = new ImageDomMutator(this.debug);
-
-      this.cancelExitTimer();
-      this.cancelTimer();
-
-      this.exitUrl = null;
-
-      this.initialCursorPosition = null;
-      this.shouldDismiss = false;
-      this.visibleSince = 0;
-      this.shouldShowSpinner = false;
-      this.shouldShowError = false;
-
-      this.setState('hidden');
-
-      this.reRenderStyles();
-    }
-
-    setState(state: string): void {
-      this.debugLog(
-        'ImagePreview set-state',
-        state,
-        this.visibleSince > 0
-          ? `${(Date.now() - this.visibleSince) / 1000}s`
-          : ''
-      );
-
-      this.state = state;
-      this.shouldShowSpinner = this.testSpinner();
-      this.shouldShowError = this.testError();
-    }
-
-    testSpinner(): boolean {
-      return this.visibleSince > 0
-        ? this.state === 'loading' && Date.now() - this.visibleSince > 1000
-        : false;
-    }
-
-    testError(): boolean {
-      const helper = this.previewManager.getVisiblePreview();
-
-      if (!helper || !helper.usesWebView()) {
-        return false;
-      }
-
-      return this.state === 'error';
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

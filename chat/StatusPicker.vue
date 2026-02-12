@@ -103,7 +103,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
   import Modal from '../components/Modal.vue';
   import CustomDialog from '../components/custom_dialog';
   import core from './core';
@@ -114,94 +113,91 @@
 
   const MAX_PINNED_STATUSES: number = 5;
 
-  @Component({
-    components: { modal: Modal, bbcode: BBCodeView(core.bbCodeParser) }
-  })
-  export default class StatusPicker extends CustomDialog {
-    maxPinnedStatuses = MAX_PINNED_STATUSES;
-    l = l;
-    @Prop({ required: true })
-    readonly callback!: (statusMessage: string) => void;
+  export default CustomDialog.extend({
+    components: { modal: Modal, bbcode: BBCodeView(core.bbCodeParser) },
+    props: {
+      callback: { required: true as const },
+      curStatus: { required: true as const }
+    },
+    data() {
+      return {
+        maxPinnedStatuses: MAX_PINNED_STATUSES,
+        l,
+        history: [] as string[],
+        pinned: [] as string[],
+        selectedStatus: null as number | null,
+        selectedPin: null as number | null
+      };
+    },
+    mounted(): void {
+      this.onMounted();
+    },
+    methods: {
+      async onMounted(): Promise<void> {
+        this.history = (await core.settingsStore.get('statusHistory')) || [];
+        this.pinned = (await core.settingsStore.get('statusPins')) || [];
+        this.selectedStatus = null;
+        this.selectedPin = null;
 
-    @Prop({ required: true })
-    readonly curStatus!: string | undefined;
+        if (this.curStatus && (this.curStatus as string).trim() !== '') {
+          const cleanedStatus = (this.curStatus as string).toLowerCase().trim();
 
-    history: string[] = [];
+          const index = _.findIndex(
+            this.history,
+            (c: string) => c.toString().toLowerCase().trim() === cleanedStatus
+          );
 
-    pinned: string[] = [];
-
-    selectedStatus: number | null = null;
-
-    selectedPin: number | null = null;
-
-    @Hook('mounted')
-    async onMounted(): Promise<void> {
-      this.history = (await core.settingsStore.get('statusHistory')) || [];
-      this.pinned = (await core.settingsStore.get('statusPins')) || [];
-      this.selectedStatus = null;
-      this.selectedPin = null;
-
-      if (this.curStatus && this.curStatus.trim() !== '') {
-        const cleanedStatus = this.curStatus.toLowerCase().trim();
-
-        const index = _.findIndex(
-          this.history,
-          (c: string) => c.toString().toLowerCase().trim() === cleanedStatus
-        );
-
-        if (index >= 0) {
-          this.selectedStatus = index;
+          if (index >= 0) {
+            this.selectedStatus = index;
+          }
         }
-      }
-    }
-
-    submit(e: Event): void {
-      (<Modal>this.$refs.dialog).submit(e);
-    }
-
-    selectStatus(): void {
-      if (this.selectedStatus !== null) {
-        this.callback(this.history[this.selectedStatus]);
-      } else if (this.selectedPin !== null) {
-        this.callback(this.pinned[this.selectedPin]);
-      }
-    }
-
-    async pinStatusFromHistory(pinHistoryIndex: number): Promise<void> {
-      const status = this.history[pinHistoryIndex];
-      console.log(this.pinned.indexOf(status));
-      if (this.pinned.indexOf(status) > -1) return;
-      this.pinned.push(status);
-
-      await core.settingsStore.set('statusPins', this.pinned);
-    }
-
-    async unpinStatus(index: number): Promise<void> {
-      if (Dialog.confirmDialog(l('statusHistory.confirmRemove.pinned'))) {
-        this.pinned.splice(index, 1);
+      },
+      submit(e: Event): void {
+        (<Modal>this.$refs.dialog).submit(e);
+      },
+      selectStatus(): void {
+        if (this.selectedStatus !== null) {
+          (this.callback as (statusMessage: string) => void)(
+            this.history[this.selectedStatus]
+          );
+        } else if (this.selectedPin !== null) {
+          (this.callback as (statusMessage: string) => void)(
+            this.pinned[this.selectedPin]
+          );
+        }
+      },
+      async pinStatusFromHistory(pinHistoryIndex: number): Promise<void> {
+        const status = this.history[pinHistoryIndex];
+        console.log(this.pinned.indexOf(status));
+        if (this.pinned.indexOf(status) > -1) return;
+        this.pinned.push(status);
 
         await core.settingsStore.set('statusPins', this.pinned);
+      },
+      async unpinStatus(index: number): Promise<void> {
+        if (Dialog.confirmDialog(l('statusHistory.confirmRemove.pinned'))) {
+          this.pinned.splice(index, 1);
+
+          await core.settingsStore.set('statusPins', this.pinned);
+        }
+      },
+      async removeStatusHistoryEntry(index: number): Promise<void> {
+        if (Dialog.confirmDialog(l('statusHistory.confirmRemove'))) {
+          this.history.splice(index, 1);
+
+          await core.settingsStore.set('statusHistory', this.history);
+        }
+      },
+      select(index: number): void {
+        this.selectedPin = null;
+        this.selectedStatus = index;
+      },
+      selectPin(index: number): void {
+        this.selectedStatus = null;
+        this.selectedPin = index;
       }
     }
-
-    async removeStatusHistoryEntry(index: number): Promise<void> {
-      if (Dialog.confirmDialog(l('statusHistory.confirmRemove'))) {
-        this.history.splice(index, 1);
-
-        await core.settingsStore.set('statusHistory', this.history);
-      }
-    }
-
-    select(index: number): void {
-      this.selectedPin = null;
-      this.selectedStatus = index;
-    }
-
-    selectPin(index: number): void {
-      this.selectedStatus = null;
-      this.selectedPin = index;
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

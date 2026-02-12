@@ -510,7 +510,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop, Watch } from '@f-list/vue-ts';
   import Vue from 'vue';
   import { EditorButton, EditorSelection } from '../bbcode/editor';
   import { BBCodeView } from '../bbcode/view';
@@ -553,7 +552,7 @@
 
   const UIBbcodeParser = new UserInterfaceBBCodeParser();
 
-  @Component({
+  export default Vue.extend({
     components: {
       user: UserView,
       'bbcode-editor': Editor,
@@ -569,57 +568,120 @@
       dropdown: Dropdown,
       adSettings: ConversationAdSettings,
       modal: Modal
-    }
-  })
-  export default class ConversationView extends Vue {
-    @Prop({ required: true })
-    readonly reportDialog!: ReportDialog;
-    modes = channelModes;
-    descriptionExpanded = false;
-    l = l;
-    extraButtons: EditorButton[] = [];
-    getByteLength = getByteLength;
-    tabOptions: string[] | undefined;
-    tabOptionsIndex!: number;
-    tabOptionSelection!: EditorSelection;
-    showSearch = false;
-    searchInput = '';
-    search = '';
-    lastSearchInput = 0;
-    messageCount = 0;
-    searchTimer = 0;
-    messageView!: HTMLElement;
-    resizeHandler!: EventListener;
-    keydownHandler!: EventListener;
-    keypressHandler!: EventListener;
-    scrolledDown = true;
-    scrolledUp = false;
-    ignoreScroll = false;
-    adCountdown = 0;
-    adsMode = l('channel.mode.ads');
-    autoPostingUpdater = 0;
-    adAutoPostUpdate: string | null = null;
-    adAutoPostNextAd: string | null = null;
-    adsRequireSetup = false;
-    isChannel = Conversation.isChannel;
-    isPrivate = Conversation.isPrivate;
-    showNonMatchingAds = true;
+    },
+    props: {
+      reportDialog: { required: true as const }
+    },
+    data() {
+      return {
+        modes: channelModes,
+        descriptionExpanded: false,
+        l: l,
+        extraButtons: [] as EditorButton[],
+        getByteLength: getByteLength,
+        tabOptions: undefined as string[] | undefined,
+        tabOptionsIndex: undefined as any as number,
+        tabOptionSelection: undefined as any as EditorSelection,
+        showSearch: false,
+        searchInput: '',
+        search: '',
+        lastSearchInput: 0,
+        messageCount: 0,
+        searchTimer: 0,
+        messageView: undefined as any as HTMLElement,
+        resizeHandler: undefined as any as EventListener,
+        keydownHandler: undefined as any as EventListener,
+        keypressHandler: undefined as any as EventListener,
+        scrolledDown: true,
+        scrolledUp: false,
+        ignoreScroll: false,
+        adCountdown: 0,
+        adsMode: l('channel.mode.ads'),
+        autoPostingUpdater: 0,
+        adAutoPostUpdate: null as string | null,
+        adAutoPostNextAd: null as string | null,
+        adsRequireSetup: false,
+        isChannel: Conversation.isChannel,
+        isPrivate: Conversation.isPrivate,
+        showNonMatchingAds: true,
+        userMemo: '',
+        editorMemo: '',
+        memoManager: undefined as MemoManager | undefined,
+        ownName: undefined as Character | undefined,
+        configUpdateHook: undefined as any,
+        memoUpdateHook: undefined as any
+      };
+    },
+    computed: {
+      conversation(): Conversation {
+        return core.conversations.selectedConversation;
+      },
+      shouldShowMarker(): boolean {
+        return core.state.settings.horizonShowGenderMarker;
+      },
+      messages(): ReadonlyArray<
+        Conversation.Message | Conversation.SFCMessage
+      > {
+        if (this.search === '') return this.conversation.messages;
+        const filter = new RegExp(this.search.replace(/[^\w]/gi, '\\$&'), 'i');
+        return this.conversation.messages.filter(
+          x =>
+            filter.test(x.text) ||
+            filter.test(_.get(x, 'sender.name', '') as string)
+        );
+      },
+      characterImage(): string {
+        return characterImage(this.conversation.name);
+      },
+      settings(): Settings {
+        return core.state.settings;
+      },
+      isConsoleTab(): boolean {
+        return this.conversation === core.conversations.consoleTab;
+      },
+      isChannelMod(): boolean {
+        if (core.characters.ownCharacter.isChatOp) return true;
+        const conv = <Conversation.ChannelConversation>this.conversation;
+        const member = conv.channel.members[core.connection.character];
+        return member !== undefined && member.rank > Channel.Rank.Member;
+      },
+      viewModeIconClass(): string {
+        const baseClasses = ['fas'];
 
-    userMemo: string = '';
-    editorMemo: string = '';
-    memoManager?: MemoManager;
+        if (this.conversation.mode === 'chat') {
+          baseClasses.push('fa-comments');
+        } else if (this.conversation.mode === 'ads') {
+          baseClasses.push('fa-ad');
+        } else if (this.conversation.mode === 'both') {
+          baseClasses.push('fa-asterisk');
+        }
 
-    ownName?: Character;
-
-    @Hook('beforeMount')
-    async onBeforeMount(): Promise<void> {
+        return baseClasses.join(' ');
+      }
+    },
+    watch: {
+      conversation: {
+        handler: 'conversationChanged'
+      },
+      'conversation.messages': {
+        handler: 'messageAdded'
+      },
+      'conversation.errorText'(newValue: string, oldValue: string): void {
+        if (oldValue.length === 0 && newValue.length > 0) this.keepScroll();
+      },
+      'conversation.infoText'(newValue: string, oldValue: string): void {
+        if (oldValue.length === 0 && newValue.length > 0) this.keepScroll();
+      },
+      'conversation.typingStatus'(str: string, oldValue: string): void {
+        if (oldValue === 'clear') this.keepScroll();
+      }
+    },
+    async beforeMount(): Promise<void> {
       this.updateOwnName();
 
       this.showNonMatchingAds =
         !(await core.settingsStore.get('hideNonMatchingAds'));
-    }
-
-    @Hook('mounted')
+    },
     mounted(): void {
       this.updateOwnName();
 
@@ -707,13 +769,7 @@
 
       this.memoUpdateHook = (e: any) => this.refreshMemo(e);
       EventBus.$on('character-memo', this.memoUpdateHook);
-    }
-
-    protected configUpdateHook: any;
-
-    protected memoUpdateHook: any;
-
-    @Hook('destroyed')
+    },
     destroyed(): void {
       window.removeEventListener('resize', this.resizeHandler);
       window.removeEventListener('keydown', this.keydownHandler);
@@ -724,435 +780,371 @@
 
       EventBus.$off('configuration-update', this.configUpdateHook);
       EventBus.$off('character-memo', this.memoUpdateHook);
-    }
+    },
+    methods: {
+      hideSearch(): void {
+        this.showSearch = false;
+        this.searchInput = '';
+      },
 
-    hideSearch(): void {
-      this.showSearch = false;
-      this.searchInput = '';
-    }
+      updateOwnName(): void {
+        this.ownName = core.state.settings.risingShowPortraitNearInput
+          ? core.characters.ownCharacter
+          : undefined;
+      },
 
-    updateOwnName(): void {
-      this.ownName = core.state.settings.risingShowPortraitNearInput
-        ? core.characters.ownCharacter
-        : undefined;
-    }
+      async sendButton(): Promise<void> {
+        return this.conversation.send();
+      },
 
-    get conversation(): Conversation {
-      return core.conversations.selectedConversation;
-    }
+      async conversationChanged(): Promise<void> {
+        this.updateOwnName();
 
-    get shouldShowMarker(): boolean {
-      return core.state.settings.horizonShowGenderMarker;
-    }
-
-    get messages(): ReadonlyArray<
-      Conversation.Message | Conversation.SFCMessage
-    > {
-      if (this.search === '') return this.conversation.messages;
-      const filter = new RegExp(this.search.replace(/[^\w]/gi, '\\$&'), 'i');
-      return this.conversation.messages.filter(
-        x =>
-          filter.test(x.text) ||
-          filter.test(_.get(x, 'sender.name', '') as string)
-      );
-    }
-
-    async sendButton(): Promise<void> {
-      return this.conversation.send();
-    }
-
-    @Watch('conversation')
-    async conversationChanged(): Promise<void> {
-      this.updateOwnName();
-
-      if (!anyDialogsShown) (<Editor>this.$refs['textBox']).focus();
-      this.$nextTick(() =>
-        setTimeout(
-          () => (this.messageView.scrollTop = this.messageView.scrollHeight)
-        )
-      );
-      this.scrolledDown = true;
-      this.refreshAutoPostingTimer();
-      this.userMemo = '';
-
-      if (this.isPrivate(this.conversation)) {
-        const c = await core.cache.profileCache.get(this.conversation.name);
-        this.userMemo = c?.character?.memo?.memo || '';
-      }
-      const editor = <Editor>this.$refs['textBox'];
-
-      if (editor !== null && editor.preview) {
-        editor.togglePreview();
-      }
-    }
-
-    @Watch('conversation.messages')
-    messageAdded(newValue: Conversation.Message[]): void {
-      this.keepScroll();
-      if (!this.scrolledDown && newValue.length === this.messageCount)
-        this.messageView.scrollTop -=
-          this.messageView.firstElementChild!.clientHeight;
-      this.messageCount = newValue.length;
-    }
-
-    keepScroll(): void {
-      if (this.scrolledDown) {
-        this.ignoreScroll = true;
+        if (!anyDialogsShown) (<Editor>this.$refs['textBox']).focus();
         this.$nextTick(() =>
-          setTimeout(() => {
-            this.ignoreScroll = true;
-            this.messageView.scrollTop = this.messageView.scrollHeight;
-          }, 0)
+          setTimeout(
+            () => (this.messageView.scrollTop = this.messageView.scrollHeight)
+          )
         );
-      }
-    }
+        this.scrolledDown = true;
+        this.refreshAutoPostingTimer();
+        this.userMemo = '';
 
-    onMessagesScroll(): void {
-      if (this.ignoreScroll) {
-        this.ignoreScroll = false;
-        return;
-      }
-      if (this.messageView.scrollTop < 20) {
-        if (!this.scrolledUp) {
-          const firstMessage = this.messageView.firstElementChild;
-          if (this.conversation.loadMore() && firstMessage !== null) {
-            this.messageView.style.overflow = 'hidden';
-            this.$nextTick(() => {
-              this.messageView.scrollTop = (<HTMLElement>(
-                firstMessage
-              )).offsetTop;
-              this.messageView.style.overflow = 'auto';
-            });
-          }
+        if (this.isPrivate(this.conversation)) {
+          const c = await core.cache.profileCache.get(this.conversation.name);
+          this.userMemo = c?.character?.memo?.memo || '';
         }
-        this.scrolledUp = true;
-      } else this.scrolledUp = false;
-      this.scrolledDown =
-        this.messageView.scrollTop + this.messageView.offsetHeight >=
-        this.messageView.scrollHeight - 15;
-    }
+        const editor = <Editor>this.$refs['textBox'];
 
-    @Watch('conversation.errorText')
-    @Watch('conversation.infoText')
-    textChanged(newValue: string, oldValue: string): void {
-      if (oldValue.length === 0 && newValue.length > 0) this.keepScroll();
-    }
+        if (editor !== null && editor.preview) {
+          editor.togglePreview();
+        }
+      },
 
-    @Watch('conversation.typingStatus')
-    // tslint:disable-next-line: ban-ts-ignore
-    // @ts-ignore-next
-    typingStatusChanged(str: string, oldValue: string): void {
-      if (oldValue === 'clear') this.keepScroll();
-    }
+      messageAdded(newValue: Conversation.Message[]): void {
+        this.keepScroll();
+        if (!this.scrolledDown && newValue.length === this.messageCount)
+          this.messageView.scrollTop -=
+            this.messageView.firstElementChild!.clientHeight;
+        this.messageCount = newValue.length;
+      },
 
-    async onKeyDown(e: KeyboardEvent): Promise<void> {
-      const editor = <Editor>this.$refs['textBox'];
-      if (getKey(e) === Keys.Tab) {
-        if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
-        e.preventDefault();
-        if (this.conversation.enteredText.length === 0 || this.isConsoleTab)
-          return;
-        if (this.tabOptions === undefined) {
-          const selection = editor.getSelection();
-          if (selection.text.length === 0) {
-            const match = /\b[\w]+$/.exec(
-              editor.text.substring(0, selection.end)
-            );
-            if (match === null) return;
-            selection.start = match.index < 0 ? 0 : match.index;
-            selection.text = editor.text.substring(
-              selection.start,
-              selection.end
-            );
-            if (selection.text.length === 0) return;
-          }
-          const search = new RegExp(
-            `^${selection.text.replace(/[^\w]/gi, '\\$&')}`,
-            'i'
+      keepScroll(): void {
+        if (this.scrolledDown) {
+          this.ignoreScroll = true;
+          this.$nextTick(() =>
+            setTimeout(() => {
+              this.ignoreScroll = true;
+              this.messageView.scrollTop = this.messageView.scrollHeight;
+            }, 0)
           );
-          const c = <Conversation.PrivateConversation>this.conversation;
-          let options: ReadonlyArray<{ character: Character }>;
-          options = Conversation.isChannel(this.conversation)
-            ? this.conversation.channel.sortedMembers
-            : [
-                { character: c.character },
-                { character: core.characters.ownCharacter }
-              ];
-          this.tabOptions = options
-            .filter(x => search.test(x.character.name))
-            .map(x => x.character.name);
-          this.tabOptionsIndex = 0;
-          this.tabOptionSelection = selection;
         }
-        if (this.tabOptions.length > 0) {
-          const selection = editor.getSelection();
-          if (selection.end !== this.tabOptionSelection.end) return;
-          if (this.tabOptionsIndex >= this.tabOptions.length)
-            this.tabOptionsIndex = 0;
-          const name = this.tabOptions[this.tabOptionsIndex];
-          const userName = isCommand(this.conversation.enteredText)
-            ? name
-            : `[user]${name}[/user]`;
-          this.tabOptionSelection.end =
-            this.tabOptionSelection.start + userName.length;
-          this.conversation.enteredText =
-            this.conversation.enteredText.substr(
-              0,
-              this.tabOptionSelection.start
-            ) +
-            userName +
-            this.conversation.enteredText.substr(selection.end);
-          ++this.tabOptionsIndex;
+      },
+
+      onMessagesScroll(): void {
+        if (this.ignoreScroll) {
+          this.ignoreScroll = false;
+          return;
         }
-      } else {
-        if (this.tabOptions !== undefined) this.tabOptions = undefined;
-        if (
-          getKey(e) === Keys.ArrowUp &&
-          this.conversation.enteredText.length === 0 &&
-          !e.shiftKey &&
-          !e.altKey &&
-          !e.ctrlKey &&
-          !e.metaKey
-        )
-          this.conversation.loadLastSent();
-        else if (getKey(e) === Keys.Enter) {
-          if (e.shiftKey === this.settings.enterSend) return;
+        if (this.messageView.scrollTop < 20) {
+          if (!this.scrolledUp) {
+            const firstMessage = this.messageView.firstElementChild;
+            if (this.conversation.loadMore() && firstMessage !== null) {
+              this.messageView.style.overflow = 'hidden';
+              this.$nextTick(() => {
+                this.messageView.scrollTop = (<HTMLElement>(
+                  firstMessage
+                )).offsetTop;
+                this.messageView.style.overflow = 'auto';
+              });
+            }
+          }
+          this.scrolledUp = true;
+        } else this.scrolledUp = false;
+        this.scrolledDown =
+          this.messageView.scrollTop + this.messageView.offsetHeight >=
+          this.messageView.scrollHeight - 15;
+      },
+
+      async onKeyDown(e: KeyboardEvent): Promise<void> {
+        const editor = <Editor>this.$refs['textBox'];
+        if (getKey(e) === Keys.Tab) {
+          if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
           e.preventDefault();
-          await this.conversation.send();
+          if (this.conversation.enteredText.length === 0 || this.isConsoleTab)
+            return;
+          if (this.tabOptions === undefined) {
+            const selection = editor.getSelection();
+            if (selection.text.length === 0) {
+              const match = /\b[\w]+$/.exec(
+                editor.text.substring(0, selection.end)
+              );
+              if (match === null) return;
+              selection.start = match.index < 0 ? 0 : match.index;
+              selection.text = editor.text.substring(
+                selection.start,
+                selection.end
+              );
+              if (selection.text.length === 0) return;
+            }
+            const search = new RegExp(
+              `^${selection.text.replace(/[^\w]/gi, '\\$&')}`,
+              'i'
+            );
+            const c = <Conversation.PrivateConversation>this.conversation;
+            let options: ReadonlyArray<{ character: Character }>;
+            options = Conversation.isChannel(this.conversation)
+              ? this.conversation.channel.sortedMembers
+              : [
+                  { character: c.character },
+                  { character: core.characters.ownCharacter }
+                ];
+            this.tabOptions = options
+              .filter(x => search.test(x.character.name))
+              .map(x => x.character.name);
+            this.tabOptionsIndex = 0;
+            this.tabOptionSelection = selection;
+          }
+          if (this.tabOptions.length > 0) {
+            const selection = editor.getSelection();
+            if (selection.end !== this.tabOptionSelection.end) return;
+            if (this.tabOptionsIndex >= this.tabOptions.length)
+              this.tabOptionsIndex = 0;
+            const name = this.tabOptions[this.tabOptionsIndex];
+            const userName = isCommand(this.conversation.enteredText)
+              ? name
+              : `[user]${name}[/user]`;
+            this.tabOptionSelection.end =
+              this.tabOptionSelection.start + userName.length;
+            this.conversation.enteredText =
+              this.conversation.enteredText.substr(
+                0,
+                this.tabOptionSelection.start
+              ) +
+              userName +
+              this.conversation.enteredText.substr(selection.end);
+            ++this.tabOptionsIndex;
+          }
+        } else {
+          if (this.tabOptions !== undefined) this.tabOptions = undefined;
+          if (
+            getKey(e) === Keys.ArrowUp &&
+            this.conversation.enteredText.length === 0 &&
+            !e.shiftKey &&
+            !e.altKey &&
+            !e.ctrlKey &&
+            !e.metaKey
+          )
+            this.conversation.loadLastSent();
+          else if (getKey(e) === Keys.Enter) {
+            if (e.shiftKey === this.settings.enterSend) return;
+            e.preventDefault();
+            await this.conversation.send();
+          }
         }
-      }
-    }
+      },
 
-    setMode(mode: Channel.Mode): void {
-      const conv = <Conversation.ChannelConversation>this.conversation;
-      if (conv.channel.mode === 'both') conv.mode = mode;
-    }
+      setMode(mode: Channel.Mode): void {
+        const conv = <Conversation.ChannelConversation>this.conversation;
+        if (conv.channel.mode === 'both') conv.mode = mode;
+      },
 
-    async toggleNonMatchingAds(): Promise<void> {
-      this.showNonMatchingAds = !this.showNonMatchingAds;
+      async toggleNonMatchingAds(): Promise<void> {
+        this.showNonMatchingAds = !this.showNonMatchingAds;
 
-      await core.settingsStore.set(
-        'hideNonMatchingAds',
-        !this.showNonMatchingAds
-      );
-    }
+        await core.settingsStore.set(
+          'hideNonMatchingAds',
+          !this.showNonMatchingAds
+        );
+      },
 
-    /* tslint:disable */
-    getMessageWrapperClasses(): any {
-      const filter = core.state.settings.risingFilter;
-      const classes: any = {};
-      const layout = core.state.settings.chatLayoutMode || 'classic';
+      /* tslint:disable */
+      getMessageWrapperClasses(): any {
+        const filter = core.state.settings.risingFilter;
+        const classes: any = {};
+        const layout = core.state.settings.chatLayoutMode || 'classic';
 
-      if (this.isPrivate(this.conversation)) {
-        classes['filter-channel-messages'] = filter.hidePrivateMessages;
+        if (this.isPrivate(this.conversation)) {
+          classes['filter-channel-messages'] = filter.hidePrivateMessages;
+          classes['layout-' + layout] = true;
+          return classes;
+        }
+
+        if (!this.isChannel(this.conversation)) {
+          return {};
+        }
+
+        const conv = <Conversation.ChannelConversation>this.conversation;
+
+        classes['messages-' + conv.mode] = true;
+        classes['hide-non-matching'] = !this.showNonMatchingAds;
+
+        classes['filter-ads'] = filter.hideAds;
+        classes['filter-channel-messages'] =
+          conv.channel.owner !== ''
+            ? filter.hidePrivateChannelMessages
+            : filter.hidePublicChannelMessages;
+
+        // Apply chat layout mode class (classic/modern)
         classes['layout-' + layout] = true;
         return classes;
-      }
+      },
 
-      if (!this.isChannel(this.conversation)) {
-        return {};
-      }
+      acceptReport(sfc: { callid: number }): void {
+        core.connection.send('SFC', { action: 'confirm', callid: sfc.callid });
+      },
 
-      const conv = <Conversation.ChannelConversation>this.conversation;
+      setSendingAds(is: boolean): void {
+        const conv = <Conversation.ChannelConversation>this.conversation;
+        if (conv.channel.mode === 'both') {
+          conv.isSendingAds = is;
+          (<Editor>this.$refs['textBox']).focus();
+        }
+      },
 
-      classes['messages-' + conv.mode] = true;
-      classes['hide-non-matching'] = !this.showNonMatchingAds;
+      showLogs(): void {
+        (<Logs>this.$refs['logsDialog']).show();
+      },
 
-      classes['filter-ads'] = filter.hideAds;
-      classes['filter-channel-messages'] =
-        conv.channel.owner !== ''
-          ? filter.hidePrivateChannelMessages
-          : filter.hidePublicChannelMessages;
+      showSettings(): void {
+        (<ConversationSettings>this.$refs['settingsDialog']).show();
+      },
 
-      // Apply chat layout mode class (classic/modern)
-      classes['layout-' + layout] = true;
-      return classes;
-    }
+      showAdSettings(): void {
+        (<ConversationAdSettings>this.$refs['adSettingsDialog']).show();
+      },
 
-    acceptReport(sfc: { callid: number }): void {
-      core.connection.send('SFC', { action: 'confirm', callid: sfc.callid });
-    }
+      showManage(): void {
+        (<ManageChannel>this.$refs['manageDialog']).show();
+      },
 
-    setSendingAds(is: boolean): void {
-      const conv = <Conversation.ChannelConversation>this.conversation;
-      if (conv.channel.mode === 'both') {
-        conv.isSendingAds = is;
-        (<Editor>this.$refs['textBox']).focus();
-      }
-    }
+      showAds(): void {
+        (<CharacterAdView>this.$refs['adViewer']).show();
+      },
 
-    showLogs(): void {
-      (<Logs>this.$refs['logsDialog']).show();
-    }
+      showChannels(): void {
+        (<CharacterChannelList>this.$refs['channelList']).show();
+      },
 
-    showSettings(): void {
-      (<ConversationSettings>this.$refs['settingsDialog']).show();
-    }
+      isAutopostingAds(): boolean {
+        return this.conversation.adManager.isActive();
+      },
 
-    showAdSettings(): void {
-      (<ConversationAdSettings>this.$refs['adSettingsDialog']).show();
-    }
+      skipAd(): void {
+        this.conversation.adManager.skipAd();
+        this.updateAutoPostingState();
+      },
 
-    showManage(): void {
-      (<ManageChannel>this.$refs['manageDialog']).show();
-    }
+      stopAutoPostAds(): void {
+        this.conversation.adManager.stop();
+      },
 
-    showAds(): void {
-      (<CharacterAdView>this.$refs['adViewer']).show();
-    }
+      renewAutoPosting(): void {
+        this.conversation.adManager.renew();
 
-    showChannels(): void {
-      (<CharacterChannelList>this.$refs['channelList']).show();
-    }
+        this.refreshAutoPostingTimer();
+      },
 
-    isAutopostingAds(): boolean {
-      return this.conversation.adManager.isActive();
-    }
+      toggleAutoPostAds(): void {
+        if (this.isAutopostingAds()) this.stopAutoPostAds();
+        else this.conversation.adManager.start();
 
-    skipAd(): void {
-      this.conversation.adManager.skipAd();
-      this.updateAutoPostingState();
-    }
+        this.refreshAutoPostingTimer();
+      },
 
-    stopAutoPostAds(): void {
-      this.conversation.adManager.stop();
-    }
+      updateAutoPostingState() {
+        const adManager = this.conversation.adManager;
 
-    renewAutoPosting(): void {
-      this.conversation.adManager.renew();
+        this.adAutoPostNextAd = adManager.getNextAd() || null;
 
-      this.refreshAutoPostingTimer();
-    }
+        if (this.adAutoPostNextAd) {
+          const diff =
+            ((adManager.getNextPostDue() || new Date()).getTime() -
+              Date.now()) /
+            1000;
+          const expDiff =
+            ((adManager.getExpireDue() || new Date()).getTime() - Date.now()) /
+            1000;
 
-    toggleAutoPostAds(): void {
-      if (this.isAutopostingAds()) this.stopAutoPostAds();
-      else this.conversation.adManager.start();
+          const diffMins = Math.floor(diff / 60);
+          const diffSecs = Math.floor(diff % 60);
+          const expDiffMins = Math.floor(expDiff / 60);
+          const expDiffSecs = Math.floor(expDiff % 60);
 
-      this.refreshAutoPostingTimer();
-    }
+          this.adAutoPostUpdate =
+            l(
+              adManager.getNextPostDue() && !adManager.getFirstPost()
+                ? 'admgr.postingBegins'
+                : 'admgr.nextPostDue',
+              diffMins,
+              diffSecs
+            ) + l('admgr.expiresIn', expDiffMins, expDiffSecs);
 
-    updateAutoPostingState() {
-      const adManager = this.conversation.adManager;
+          this.adsRequireSetup = false;
+        } else {
+          this.adAutoPostNextAd = null;
 
-      this.adAutoPostNextAd = adManager.getNextAd() || null;
+          this.adAutoPostUpdate = l('admgr.noAds');
+          this.adsRequireSetup = true;
+        }
+      },
 
-      if (this.adAutoPostNextAd) {
-        const diff =
-          ((adManager.getNextPostDue() || new Date()).getTime() - Date.now()) /
-          1000;
-        const expDiff =
-          ((adManager.getExpireDue() || new Date()).getTime() - Date.now()) /
-          1000;
+      refreshAutoPostingTimer(): void {
+        if (this.autoPostingUpdater)
+          window.clearInterval(this.autoPostingUpdater);
 
-        const diffMins = Math.floor(diff / 60);
-        const diffSecs = Math.floor(diff % 60);
-        const expDiffMins = Math.floor(expDiff / 60);
-        const expDiffSecs = Math.floor(expDiff % 60);
+        if (!this.isAutopostingAds()) {
+          this.adAutoPostUpdate = null;
+          this.adAutoPostNextAd = null;
+          return;
+        }
 
-        this.adAutoPostUpdate =
-          l(
-            adManager.getNextPostDue() && !adManager.getFirstPost()
-              ? 'admgr.postingBegins'
-              : 'admgr.nextPostDue',
-            diffMins,
-            diffSecs
-          ) + l('admgr.expiresIn', expDiffMins, expDiffSecs);
+        this.autoPostingUpdater = window.setInterval(
+          () => this.updateAutoPostingState(),
+          1000
+        );
+        this.updateAutoPostingState();
+      },
 
-        this.adsRequireSetup = false;
-      } else {
-        this.adAutoPostNextAd = null;
+      hasSFC(
+        message: Conversation.Message
+      ): message is Conversation.SFCMessage {
+        // noinspection TypeScriptValidateTypes
+        return (<Partial<Conversation.SFCMessage>>message).sfc !== undefined;
+      },
 
-        this.adAutoPostUpdate = l('admgr.noAds');
-        this.adsRequireSetup = true;
-      }
-    }
+      updateMemo(): void {
+        this.memoManager
+          ?.set(this.editorMemo)
+          .catch((e: object) => alert(errorToString(e)));
+        this.userMemo = this.editorMemo;
+      },
 
-    refreshAutoPostingTimer(): void {
-      if (this.autoPostingUpdater)
-        window.clearInterval(this.autoPostingUpdater);
+      refreshMemo(event: { character: string; memo: CharacterMemo }): void {
+        this.userMemo = event.memo.memo;
+      },
 
-      if (!this.isAutopostingAds()) {
-        this.adAutoPostUpdate = null;
-        this.adAutoPostNextAd = null;
-        return;
-      }
+      async showMemo(): Promise<void> {
+        if (this.isPrivate(this.conversation)) {
+          const c = this.conversation.character;
 
-      this.autoPostingUpdater = window.setInterval(
-        () => this.updateAutoPostingState(),
-        1000
-      );
-      this.updateAutoPostingState();
-    }
+          this.editorMemo = '';
 
-    hasSFC(message: Conversation.Message): message is Conversation.SFCMessage {
-      // noinspection TypeScriptValidateTypes
-      return (<Partial<Conversation.SFCMessage>>message).sfc !== undefined;
-    }
+          (<Modal>this.$refs['userMemoEditor']).show();
 
-    updateMemo(): void {
-      this.memoManager
-        ?.set(this.editorMemo)
-        .catch((e: object) => alert(errorToString(e)));
-      this.userMemo = this.editorMemo;
-    }
+          try {
+            this.memoManager = new MemoManager(c.name);
+            await this.memoManager.load();
 
-    refreshMemo(event: { character: string; memo: CharacterMemo }): void {
-      this.userMemo = event.memo.memo;
-    }
-
-    async showMemo(): Promise<void> {
-      if (this.isPrivate(this.conversation)) {
-        const c = this.conversation.character;
-
-        this.editorMemo = '';
-
-        (<Modal>this.$refs['userMemoEditor']).show();
-
-        try {
-          this.memoManager = new MemoManager(c.name);
-          await this.memoManager.load();
-
-          this.userMemo = this.memoManager.get().memo;
-          this.editorMemo = this.userMemo;
-        } catch (e) {
-          alert(errorToString(e));
+            this.userMemo = this.memoManager.get().memo;
+            this.editorMemo = this.userMemo;
+          } catch (e) {
+            alert(errorToString(e));
+          }
         }
       }
     }
-
-    get characterImage(): string {
-      return characterImage(this.conversation.name);
-    }
-
-    get settings(): Settings {
-      return core.state.settings;
-    }
-
-    get isConsoleTab(): boolean {
-      return this.conversation === core.conversations.consoleTab;
-    }
-
-    get isChannelMod(): boolean {
-      if (core.characters.ownCharacter.isChatOp) return true;
-      const conv = <Conversation.ChannelConversation>this.conversation;
-      const member = conv.channel.members[core.connection.character];
-      return member !== undefined && member.rank > Channel.Rank.Member;
-    }
-
-    get viewModeIconClass(): string {
-      const baseClasses = ['fas'];
-
-      if (this.conversation.mode === 'chat') {
-        baseClasses.push('fa-comments');
-      } else if (this.conversation.mode === 'ads') {
-        baseClasses.push('fa-ad');
-      } else if (this.conversation.mode === 'both') {
-        baseClasses.push('fa-asterisk');
-      }
-
-      return baseClasses.join(' ');
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

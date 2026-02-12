@@ -97,14 +97,12 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook } from '@f-list/vue-ts';
   import * as remote from '@electron/remote';
   import Vue from 'vue';
   import l from '../chat/localize';
   import { GeneralSettings } from './common';
   import fs from 'fs';
   import path from 'path';
-  // Unused imports removed
   import Axios from 'axios';
   import markdownit from 'markdown-it';
   import { alert } from '@mdit/plugin-alert';
@@ -117,41 +115,38 @@
   };
 
   const browserWindow = remote.getCurrentWindow();
-  @Component({})
-  export default class Changelog extends Vue {
-    settings!: GeneralSettings;
-    osIsDark = remote.nativeTheme.shouldUseDarkColors;
-    updateVersion!: string | undefined;
-    currentVersion = process.env.APP_VERSION;
-    isMaximized = false;
-    l = l;
-    platform = process.platform;
-    isMac = process.platform === 'darwin';
-    hasCompletedUpgrades = false;
-    changeLogText: string = '';
 
-    get styling(): string {
-      try {
-        return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
-      } catch (e) {
-        if (
-          (<Error & { code: string }>e).code === 'ENOENT' &&
-          this.settings.theme !== 'default'
-        ) {
-          this.settings.theme = 'default';
-          return this.styling;
+  export default Vue.extend({
+    data() {
+      return {
+        settings: undefined as any as GeneralSettings,
+        osIsDark: remote.nativeTheme.shouldUseDarkColors,
+        updateVersion: undefined as string | undefined,
+        currentVersion: process.env.APP_VERSION,
+        isMaximized: false,
+        l,
+        platform: process.platform,
+        isMac: process.platform === 'darwin',
+        hasCompletedUpgrades: false,
+        changeLogText: '' as string
+      };
+    },
+    computed: {
+      styling(): string {
+        try {
+          return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
+        } catch (e) {
+          if (
+            (<Error & { code: string }>e).code === 'ENOENT' &&
+            this.settings.theme !== 'default'
+          ) {
+            this.settings.theme = 'default';
+            return this.styling;
+          }
+          throw e;
         }
-        throw e;
       }
-    }
-    getSyncedTheme() {
-      if (!this.settings.themeSync) return this.settings.theme;
-      return this.osIsDark
-        ? this.settings.themeSyncDark
-        : this.settings.themeSyncLight;
-    }
-
-    @Hook('mounted')
+    },
     async mounted(): Promise<void> {
       remote.nativeTheme.on('updated', () => {
         this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
@@ -185,74 +180,69 @@
       ) {
         const token = tokens[idx];
         token.attrPush(['data-action', 'openExternal']);
-        // Set href to "#" or "javascript:void(0)"
-        //const hrefIndex = token.attrIndex('href');
-        //if (hrefIndex >= 0) token.attrs![hrefIndex][1] = '#';
-        // Add onclick handler
         return defaultRender(tokens, idx, options, _env, self);
       };
       this.changeLogText = md.render(releaseInfo.body);
-    }
-
-    close(): void {
-      browserWindow.close();
-    }
-
-    externalUrlHandler(url: string) {
-      electron.ipcRenderer.send('open-url-externally', url);
-    }
-
-    delegateLinkClick(event: MouseEvent) {
-      const target = event.target as HTMLElement;
-      if (
-        target.tagName === 'A' &&
-        target.getAttribute('data-action') === 'openExternal'
-      ) {
-        event.preventDefault();
-        this.externalUrlHandler(target.getAttribute('href') || '#');
-      }
-    }
-
-    getThemeClass() {
-      // console.log('getThemeClassWindow', this.settings?.risingDisableWindowsHighContrast);
-
-      try {
-        // Hack!
-        if (process.platform === 'win32') {
-          if (this.settings?.risingDisableWindowsHighContrast) {
-            document
-              .querySelector('html')
-              ?.classList.add('disableWindowsHighContrast');
-          } else {
-            document
-              .querySelector('html')
-              ?.classList.remove('disableWindowsHighContrast');
-          }
+    },
+    methods: {
+      getSyncedTheme() {
+        if (!this.settings.themeSync) return this.settings.theme;
+        return this.osIsDark
+          ? this.settings.themeSyncDark
+          : this.settings.themeSyncLight;
+      },
+      close(): void {
+        browserWindow.close();
+      },
+      externalUrlHandler(url: string) {
+        electron.ipcRenderer.send('open-url-externally', url);
+      },
+      delegateLinkClick(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+        if (
+          target.tagName === 'A' &&
+          target.getAttribute('data-action') === 'openExternal'
+        ) {
+          event.preventDefault();
+          this.externalUrlHandler(target.getAttribute('href') || '#');
         }
+      },
+      getThemeClass() {
+        try {
+          if (process.platform === 'win32') {
+            if (this.settings?.risingDisableWindowsHighContrast) {
+              document
+                .querySelector('html')
+                ?.classList.add('disableWindowsHighContrast');
+            } else {
+              document
+                .querySelector('html')
+                ?.classList.remove('disableWindowsHighContrast');
+            }
+          }
 
-        return {
-          ['platform-' + this.platform]: true,
-          bbcodeGlow: this.settings?.horizonBbcodeGlow || false,
-          disableWindowsHighContrast:
-            this.settings?.risingDisableWindowsHighContrast || false
-        };
-      } catch (err) {
-        return {
-          ['platform-' + this.platform]: true
-        };
+          return {
+            ['platform-' + this.platform]: true,
+            bbcodeGlow: this.settings?.horizonBbcodeGlow || false,
+            disableWindowsHighContrast:
+              this.settings?.risingDisableWindowsHighContrast || false
+          };
+        } catch (err) {
+          return {
+            ['platform-' + this.platform]: true
+          };
+        }
+      },
+      goToDownload() {
+        this.externalUrlHandler(
+          'https://horizn.moe/download.html?ver=' + this.updateVersion
+        );
+      },
+      closeAndDownload(): void {
+        electron.ipcRenderer.send('update-and-exit', this.updateVersion);
       }
     }
-
-    goToDownload() {
-      this.externalUrlHandler(
-        'https://horizn.moe/download.html?ver=' + this.updateVersion
-      );
-    }
-
-    closeAndDownload(): void {
-      electron.ipcRenderer.send('update-and-exit', this.updateVersion);
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

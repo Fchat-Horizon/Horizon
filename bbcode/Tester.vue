@@ -8,7 +8,6 @@
 
 <script lang="ts">
   import * as _ from 'lodash';
-  import { Component } from '@f-list/vue-ts';
   import Vue from 'vue';
 
   import { BBCodeView } from './view';
@@ -16,15 +15,16 @@
 
   const standardParser = new StandardBBCodeParser();
 
-  @Component({
+  export default Vue.extend({
     components: {
       bbcode: BBCodeView(standardParser)
+    },
+    data() {
+      return {
+        code: '[center][heading][collapse=Testing Collapse][url=https://google.com/]This is a link [/url][/collapse][/heading][/center]'
+      };
     }
-  })
-  export default class BBCodeTester extends Vue {
-    code =
-      '[center][heading][collapse=Testing Collapse][url=https://google.com/]This is a link [/url][/collapse][/heading][/center]';
-  }
+  });
 </script>
 
 <style lang="scss"></style>

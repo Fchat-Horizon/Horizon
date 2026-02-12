@@ -1163,17 +1163,18 @@
 </template>
 
 <script lang="ts">
-  import { Component } from '@f-list/vue-ts';
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import Tabs from '../components/tabs';
   import l from './localize';
 
-  @Component({
-    components: { modal: Modal, tabs: Tabs }
-  })
-  export default class UITest extends CustomDialog {
-    selectedTab = '0';
-    l = l;
-  }
+  export default CustomDialog.extend({
+    components: { modal: Modal, tabs: Tabs },
+    data() {
+      return {
+        selectedTab: '0',
+        l
+      };
+    }
+  });
 </script>

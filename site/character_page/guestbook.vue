@@ -70,7 +70,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop, Watch } from '@f-list/vue-ts';
   import Vue from 'vue';
   import * as Utils from '../utils';
   import { methods, Store } from './data_store';
@@ -80,89 +79,95 @@
   import core from '../../chat/core';
   import l from '../../chat/localize';
 
-  @Component({
-    components: { 'guestbook-post': GuestbookPostView }
-  })
-  export default class GuestbookView extends Vue {
-    @Prop({ required: true })
-    readonly character!: Character;
-    @Prop
-    readonly oldApi?: true;
-    loading = true;
-    error = '';
-    authenticated = Store.authenticated;
-    posts: GuestbookPost[] = [];
-    unapprovedOnly = false;
-    page = 1;
-    hasNextPage = false;
-    canEdit = false;
-    newPost = {
-      posting: false,
-      privatePost: false,
-      character: Utils.settings.defaultCharacter,
-      message: ''
-    };
-    l = l;
-
-    @Watch('unapprovedOnly')
-    @Watch('page')
-    async getPage(): Promise<void> {
-      try {
-        this.loading = true;
-        const guestbookState = await this.resolvePage();
-        this.posts = guestbookState.posts;
-        this.hasNextPage = (this.page + 1) * 10 < guestbookState.total;
-      } catch (e) {
-        this.posts = [];
-        this.hasNextPage = false;
-        this.canEdit = false;
-        if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
-        Utils.ajaxError(e, l('profile.guestbook.unableLoad'));
-      } finally {
-        this.loading = false;
+  export default Vue.extend({
+    components: { 'guestbook-post': GuestbookPostView },
+    props: {
+      character: { required: true as const },
+      oldApi: {}
+    },
+    data() {
+      return {
+        loading: true,
+        error: '',
+        authenticated: Store.authenticated,
+        posts: [] as GuestbookPost[],
+        unapprovedOnly: false,
+        page: 1,
+        hasNextPage: false,
+        canEdit: false,
+        newPost: {
+          posting: false,
+          privatePost: false,
+          character: Utils.settings.defaultCharacter,
+          message: ''
+        },
+        l: l
+      };
+    },
+    watch: {
+      unapprovedOnly(): void {
+        this.getPage();
+      },
+      page(): void {
+        this.getPage();
       }
-    }
-
-    async makePost(): Promise<void> {
-      try {
-        this.newPost.posting = true;
-        await methods.guestbookPostPost(
-          this.character.character.id,
-          this.newPost.character,
-          this.newPost.message,
-          this.newPost.privatePost
-        );
-        this.page = 1;
-        await this.getPage();
-      } catch (e) {
-        Utils.ajaxError(e, l('profile.guestbook.unablePost'));
-      } finally {
-        this.newPost.posting = false;
-      }
-    }
-
-    async resolvePage(): Promise<Guestbook> {
-      if (this.page === 1) {
-        const c = await core.cache.profileCache.get(
-          this.character.character.name
-        );
-
-        if (c && c.meta && c.meta.guestbook) {
-          return c.meta.guestbook;
+    },
+    methods: {
+      async getPage(): Promise<void> {
+        try {
+          this.loading = true;
+          const guestbookState = await this.resolvePage();
+          this.posts = guestbookState.posts;
+          this.hasNextPage = (this.page + 1) * 10 < guestbookState.total;
+        } catch (e) {
+          this.posts = [];
+          this.hasNextPage = false;
+          this.canEdit = false;
+          if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
+          Utils.ajaxError(e, l('profile.guestbook.unableLoad'));
+        } finally {
+          this.loading = false;
         }
+      },
+      async makePost(): Promise<void> {
+        try {
+          this.newPost.posting = true;
+          await methods.guestbookPostPost(
+            (this as any).character.character.id,
+            this.newPost.character,
+            this.newPost.message,
+            this.newPost.privatePost
+          );
+          this.page = 1;
+          await this.getPage();
+        } catch (e) {
+          Utils.ajaxError(e, l('profile.guestbook.unablePost'));
+        } finally {
+          this.newPost.posting = false;
+        }
+      },
+      async resolvePage(): Promise<Guestbook> {
+        if (this.page === 1) {
+          const c = await core.cache.profileCache.get(
+            (this as any).character.character.name
+          );
+
+          if (c && c.meta && c.meta.guestbook) {
+            return c.meta.guestbook;
+          }
+        }
+
+        return methods.guestbookPageGet(
+          (this as any).character.character.id,
+          (this.page - 1) * 10,
+          10,
+          this.unapprovedOnly
+        );
+        // return methods.guestbookPageGet(this.character.character.id, this.page, this.unapprovedOnly);
+      },
+      async show(): Promise<void> {
+        await this.getPage();
       }
-
-      return methods.guestbookPageGet(
-        this.character.character.id,
-        (this.page - 1) * 10,
-        10,
-        this.unapprovedOnly
-      );
-      // return methods.guestbookPageGet(this.character.character.id, this.page, this.unapprovedOnly);
     }
-
-    async show(): Promise<void> {
-      await this.getPage();
-    }
-  }
+  });
 </script>

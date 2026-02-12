@@ -62,9 +62,6 @@ importers:
       '@electron/remote':
         specifier: ^2.1.2
         version: 2.1.2(electron@39.2.7(supports-color@10.0.0))
-      '@f-list/vue-ts':
-        specifier: ^1.0.3
-        version: 1.0.3
       '@fortawesome/fontawesome-free':
         specifier: ^7.1.0
         version: 7.1.0
@@ -406,9 +403,6 @@ packages:
     resolution: {integrity: sha512-YfASnrhJ+ve6Q43ZiDwmpBgYgi2u0bYjeAVi2tDfN7YWAKO8X9EEOuPGtqbJpPLM6TfAHimghICjWe2eaJ8BAg==}
     engines: {node: '>=14.14'}
     hasBin: true
-
-  '@f-list/vue-ts@1.0.3':
-    resolution: {integrity: sha512-OnxqlnF4eq5OAswgyONoDXM+n1RF7bhdShi71BKyRDnsDVL9Skg8T/yiWsx80kvZ8ku8xfChrlLSFAwZMFwoaw==}
 
   '@fortawesome/fontawesome-free@7.1.0':
     resolution: {integrity: sha512-+WxNld5ZCJHvPQCr/GnzCTVREyStrAJjisUPtUxG5ngDA8TMlPnKp6dddlTpai4+1GNmltAeuk1hJEkBohwZYA==}
@@ -2655,6 +2649,7 @@ packages:
 
   glob@10.5.0:
     resolution: {integrity: sha512-DfXN8DfhJ7NH3Oe7cFmu3NCu1wKbkReJ8TorzSAFbSKrlNaQSKfIzqYqVY8zlbs2NLBbWpRiU52GX2PbaBVNkg==}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@7.2.3:
@@ -5751,11 +5746,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
     optional: true
-
-  '@f-list/vue-ts@1.0.3':
-    dependencies:
-      typescript: 3.9.10
-      vue: 2.7.16
 
   '@fortawesome/fontawesome-free@7.1.0': {}
 

@@ -1119,7 +1119,6 @@
 <script lang="ts">
   import * as fs from 'fs';
   import * as path from 'path';
-  import { Component } from '@f-list/vue-ts';
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import { Editor } from './bbcode';
@@ -1141,391 +1140,389 @@
 
   const bbcodeParser = new UserInterfaceBBCodeParser();
 
-  @Component({
+  export default CustomDialog.extend({
     components: {
       modal: Modal,
       editor: Editor,
       tabs: Tabs,
       bbcode: BBCodeView(bbcodeParser),
       'settings-checkbox': SettingsCheckbox
-    }
-  })
-  export default class SettingsView extends CustomDialog {
-    l = l;
-    availableImports: ReadonlyArray<string> = [];
-    selectedTab = '0';
-    importCharacter = '';
-    playSound!: boolean;
-    clickOpensMessage!: boolean;
-    disallowedTags!: string;
-    notifications!: boolean;
-    highlight!: boolean;
-    highlightWords!: string;
-    showAvatars!: boolean;
-    animatedEicons!: boolean;
-    smoothMosaics!: boolean;
-    idleTimer!: string;
-    messageSeparators!: boolean;
-    eventMessages!: boolean;
-    joinMessages!: boolean;
-    alwaysNotify!: boolean;
-    logMessages!: boolean;
-    logAds!: boolean;
-    fontSize!: string;
-    showNeedsReply!: boolean;
-    enterSend!: boolean;
-    colorBookmarks!: boolean;
-    showPerCharacterFriends!: boolean;
-    hideNonCharacterFriends!: boolean;
-    bbCodeBar!: boolean;
+    },
+    data() {
+      return {
+        l,
+        availableImports: [] as ReadonlyArray<string>,
+        selectedTab: '0',
+        importCharacter: '',
+        playSound: undefined as any as boolean,
+        clickOpensMessage: undefined as any as boolean,
+        disallowedTags: undefined as any as string,
+        notifications: undefined as any as boolean,
+        highlight: undefined as any as boolean,
+        highlightWords: undefined as any as string,
+        showAvatars: undefined as any as boolean,
+        animatedEicons: undefined as any as boolean,
+        smoothMosaics: undefined as any as boolean,
+        idleTimer: undefined as any as string,
+        messageSeparators: undefined as any as boolean,
+        eventMessages: undefined as any as boolean,
+        joinMessages: undefined as any as boolean,
+        alwaysNotify: undefined as any as boolean,
+        logMessages: undefined as any as boolean,
+        logAds: undefined as any as boolean,
+        fontSize: undefined as any as string,
+        showNeedsReply: undefined as any as boolean,
+        enterSend: undefined as any as boolean,
+        colorBookmarks: undefined as any as boolean,
+        showPerCharacterFriends: undefined as any as boolean,
+        hideNonCharacterFriends: undefined as any as boolean,
+        bbCodeBar: undefined as any as boolean,
 
-    risingAdScore!: boolean;
-    risingLinkPreview!: boolean;
-    risingAutoCompareKinks!: boolean;
+        risingAdScore: undefined as any as boolean,
+        risingLinkPreview: undefined as any as boolean,
+        risingAutoCompareKinks: undefined as any as boolean,
 
-    risingAutoExpandCustomKinks!: boolean;
-    risingCharacterPreview!: boolean;
-    risingComparisonInUserMenu!: boolean;
-    risingComparisonInSearch!: boolean;
+        risingAutoExpandCustomKinks: undefined as any as boolean,
+        risingCharacterPreview: undefined as any as boolean,
+        risingComparisonInUserMenu: undefined as any as boolean,
+        risingComparisonInSearch: undefined as any as boolean,
 
-    risingShowUnreadOfflineCount!: boolean;
-    risingColorblindMode!: boolean;
+        risingShowUnreadOfflineCount: undefined as any as boolean,
+        risingColorblindMode: undefined as any as boolean,
 
-    risingShowPortraitNearInput!: boolean;
-    risingShowPortraitInMessage!: boolean;
-    risingShowHighQualityPortraits!: boolean;
-    horizonMessagePortraitHighQuality!: boolean;
-    horizonShowCustomCharacterColors!: boolean;
-    horizonShowDeveloperBadges!: boolean;
-    horizonShowGenderMarker!: boolean;
-    horizonGenderMarkerOrigColor!: boolean;
-    horizonChangeOfflineColor!: boolean;
-    horizonNotifyFriendSignIn!: boolean;
-    horizonShowSigninNotifications!: boolean;
-    horizonShowDuplicateStatusNotifications!: boolean;
-    horizonHighlightUsers!: string;
-    chatLayoutMode!: 'classic' | 'modern';
-    messageGrouping!: boolean;
-    horizonUseColorPicker!: boolean;
+        risingShowPortraitNearInput: undefined as any as boolean,
+        risingShowPortraitInMessage: undefined as any as boolean,
+        risingShowHighQualityPortraits: undefined as any as boolean,
+        horizonMessagePortraitHighQuality: undefined as any as boolean,
+        horizonShowCustomCharacterColors: undefined as any as boolean,
+        horizonShowDeveloperBadges: undefined as any as boolean,
+        horizonShowGenderMarker: undefined as any as boolean,
+        horizonGenderMarkerOrigColor: undefined as any as boolean,
+        horizonChangeOfflineColor: undefined as any as boolean,
+        horizonNotifyFriendSignIn: undefined as any as boolean,
+        horizonShowSigninNotifications: undefined as any as boolean,
+        horizonShowDuplicateStatusNotifications: undefined as any as boolean,
+        horizonHighlightUsers: undefined as any as string,
+        chatLayoutMode: undefined as any as 'classic' | 'modern',
+        messageGrouping: undefined as any as boolean,
+        horizonUseColorPicker: undefined as any as boolean,
 
-    horizonCacheDraftMessages!: boolean;
-    horizonSaveDraftMessagesToDiskTimer!: string;
+        horizonCacheDraftMessages: undefined as any as boolean,
+        horizonSaveDraftMessagesToDiskTimer: undefined as any as string,
 
-    risingFilter: SmartFilterSettings = {} as any;
+        risingFilter: {} as any as SmartFilterSettings,
 
-    horizonPersistentMemberFilters!: boolean;
-    risingAvailableThemes: ReadonlyArray<string> = [];
-    risingCharacterTheme!: string | undefined;
+        horizonPersistentMemberFilters: undefined as any as boolean,
+        risingAvailableThemes: [] as ReadonlyArray<string>,
+        risingCharacterTheme: undefined as string | undefined,
 
-    smartFilterTypes = smartFilterTypesOrigin;
+        smartFilterTypes: smartFilterTypesOrigin
+      };
+    },
+    computed: {
+      hidden(): string[] {
+        return core.state.hiddenUsers;
+      },
+      ignored(): readonly string[] {
+        return core.characters.ignoreList;
+      }
+    },
+    methods: {
+      async load(): Promise<void> {
+        const settings = core.state.settings;
+        this.playSound = settings.playSound;
+        this.clickOpensMessage = settings.clickOpensMessage;
+        this.disallowedTags = settings.disallowedTags.join(',');
+        this.notifications = settings.notifications;
+        this.highlight = settings.highlight;
+        this.highlightWords = settings.highlightWords.join(',');
+        this.showAvatars = settings.showAvatars;
+        this.animatedEicons = settings.animatedEicons;
+        this.smoothMosaics = settings.smoothMosaics;
+        this.idleTimer = settings.idleTimer.toString();
+        this.messageSeparators = settings.messageSeparators;
+        this.eventMessages = settings.eventMessages;
+        this.joinMessages = settings.joinMessages;
+        this.alwaysNotify = settings.alwaysNotify;
+        this.logMessages = settings.logMessages;
+        this.logAds = settings.logAds;
+        this.fontSize = settings.fontSize.toString();
+        this.showNeedsReply = settings.showNeedsReply;
+        this.enterSend = settings.enterSend;
+        this.colorBookmarks = settings.colorBookmarks;
+        this.showPerCharacterFriends = settings.showPerCharacterFriends;
+        this.hideNonCharacterFriends = settings.hideNonCharacterFriends;
+        this.bbCodeBar = settings.bbCodeBar;
+        this.availableImports = (
+          await core.settingsStore.getAvailableCharacters()
+        ).filter(x => x !== core.connection.character);
 
-    async load(): Promise<void> {
-      const settings = core.state.settings;
-      this.playSound = settings.playSound;
-      this.clickOpensMessage = settings.clickOpensMessage;
-      this.disallowedTags = settings.disallowedTags.join(',');
-      this.notifications = settings.notifications;
-      this.highlight = settings.highlight;
-      this.highlightWords = settings.highlightWords.join(',');
-      this.showAvatars = settings.showAvatars;
-      this.animatedEicons = settings.animatedEicons;
-      this.smoothMosaics = settings.smoothMosaics;
-      this.idleTimer = settings.idleTimer.toString();
-      this.messageSeparators = settings.messageSeparators;
-      this.eventMessages = settings.eventMessages;
-      this.joinMessages = settings.joinMessages;
-      this.alwaysNotify = settings.alwaysNotify;
-      this.logMessages = settings.logMessages;
-      this.logAds = settings.logAds;
-      this.fontSize = settings.fontSize.toString();
-      this.showNeedsReply = settings.showNeedsReply;
-      this.enterSend = settings.enterSend;
-      this.colorBookmarks = settings.colorBookmarks;
-      this.showPerCharacterFriends = settings.showPerCharacterFriends;
-      this.hideNonCharacterFriends = settings.hideNonCharacterFriends;
-      this.bbCodeBar = settings.bbCodeBar;
-      this.availableImports = (
-        await core.settingsStore.getAvailableCharacters()
-      ).filter(x => x !== core.connection.character);
+        // settings.rising
 
-      // settings.rising
+        this.risingAdScore = settings.risingAdScore;
+        this.risingLinkPreview = settings.risingLinkPreview;
+        this.risingAutoCompareKinks = settings.risingAutoCompareKinks;
 
-      this.risingAdScore = settings.risingAdScore;
-      this.risingLinkPreview = settings.risingLinkPreview;
-      this.risingAutoCompareKinks = settings.risingAutoCompareKinks;
+        this.risingAutoExpandCustomKinks = settings.risingAutoExpandCustomKinks;
+        this.risingCharacterPreview = settings.risingCharacterPreview;
+        this.risingComparisonInUserMenu = settings.risingComparisonInUserMenu;
+        this.risingComparisonInSearch = settings.risingComparisonInSearch;
+        this.risingShowUnreadOfflineCount =
+          settings.risingShowUnreadOfflineCount;
 
-      this.risingAutoExpandCustomKinks = settings.risingAutoExpandCustomKinks;
-      this.risingCharacterPreview = settings.risingCharacterPreview;
-      this.risingComparisonInUserMenu = settings.risingComparisonInUserMenu;
-      this.risingComparisonInSearch = settings.risingComparisonInSearch;
-      this.risingShowUnreadOfflineCount = settings.risingShowUnreadOfflineCount;
+        this.risingColorblindMode = settings.risingColorblindMode;
+        this.risingShowPortraitNearInput = settings.risingShowPortraitNearInput;
+        this.risingShowPortraitInMessage = settings.risingShowPortraitInMessage;
+        this.risingShowHighQualityPortraits =
+          settings.risingShowHighQualityPortraits;
+        this.horizonMessagePortraitHighQuality =
+          settings.horizonMessagePortraitHighQuality;
+        this.horizonShowCustomCharacterColors =
+          settings.horizonShowCustomCharacterColors;
+        this.horizonShowDeveloperBadges = settings.horizonShowDeveloperBadges;
+        this.horizonShowGenderMarker = settings.horizonShowGenderMarker;
+        this.horizonGenderMarkerOrigColor =
+          settings.horizonGenderMarkerOrigColor;
+        this.horizonChangeOfflineColor = settings.horizonChangeOfflineColor;
+        this.chatLayoutMode = settings.chatLayoutMode || 'classic';
+        this.messageGrouping = settings.messageGrouping;
+        this.horizonUseColorPicker = settings.horizonUseColorPicker;
 
-      this.risingColorblindMode = settings.risingColorblindMode;
-      this.risingShowPortraitNearInput = settings.risingShowPortraitNearInput;
-      this.risingShowPortraitInMessage = settings.risingShowPortraitInMessage;
-      this.risingShowHighQualityPortraits =
-        settings.risingShowHighQualityPortraits;
-      this.horizonMessagePortraitHighQuality =
-        settings.horizonMessagePortraitHighQuality;
-      this.horizonShowCustomCharacterColors =
-        settings.horizonShowCustomCharacterColors;
-      this.horizonShowDeveloperBadges = settings.horizonShowDeveloperBadges;
-      this.horizonShowGenderMarker = settings.horizonShowGenderMarker;
-      this.horizonGenderMarkerOrigColor = settings.horizonGenderMarkerOrigColor;
-      this.horizonChangeOfflineColor = settings.horizonChangeOfflineColor;
-      this.chatLayoutMode = settings.chatLayoutMode || 'classic';
-      this.messageGrouping = settings.messageGrouping;
-      this.horizonUseColorPicker = settings.horizonUseColorPicker;
+        this.horizonCacheDraftMessages = settings.horizonCacheDraftMessages;
+        this.horizonSaveDraftMessagesToDiskTimer =
+          settings.horizonSaveDraftMessagesToDiskTimer.toString();
 
-      this.horizonCacheDraftMessages = settings.horizonCacheDraftMessages;
-      this.horizonSaveDraftMessagesToDiskTimer =
-        settings.horizonSaveDraftMessagesToDiskTimer.toString();
+        this.horizonNotifyFriendSignIn = settings.horizonNotifyFriendSignIn;
+        this.horizonShowSigninNotifications =
+          settings.horizonShowSigninNotifications;
+        this.horizonShowDuplicateStatusNotifications =
+          settings.horizonShowDuplicateStatusNotifications;
+        this.horizonHighlightUsers = settings.horizonHighlightUsers.join(',');
+        this.risingFilter = settings.risingFilter;
 
-      this.horizonNotifyFriendSignIn = settings.horizonNotifyFriendSignIn;
-      this.horizonShowSigninNotifications =
-        settings.horizonShowSigninNotifications;
-      this.horizonShowDuplicateStatusNotifications =
-        settings.horizonShowDuplicateStatusNotifications;
-      this.horizonHighlightUsers = settings.horizonHighlightUsers.join(',');
-      this.risingFilter = settings.risingFilter;
-
-      this.risingAvailableThemes = fs
-        .readdirSync(path.join(__dirname, 'themes'))
-        .filter(x => x.substr(-4) === '.css')
-        .map(x => x.slice(0, -4));
-      this.risingCharacterTheme = settings.risingCharacterTheme;
-      this.horizonPersistentMemberFilters =
-        typeof (settings as any).horizonPersistentMemberFilters === 'boolean'
-          ? (settings as any).horizonPersistentMemberFilters
-          : false;
-    }
-
-    async doImport(): Promise<void> {
-      if (
-        !confirm(
-          l(
-            'settings.import.confirm',
-            this.importCharacter,
-            core.connection.character
+        this.risingAvailableThemes = fs
+          .readdirSync(path.join(__dirname, 'themes'))
+          .filter(x => x.substr(-4) === '.css')
+          .map(x => x.slice(0, -4));
+        this.risingCharacterTheme = settings.risingCharacterTheme;
+        this.horizonPersistentMemberFilters =
+          typeof (settings as any).horizonPersistentMemberFilters === 'boolean'
+            ? (settings as any).horizonPersistentMemberFilters
+            : false;
+      },
+      async doImport(): Promise<void> {
+        if (
+          !confirm(
+            l(
+              'settings.import.confirm',
+              this.importCharacter,
+              core.connection.character
+            )
           )
         )
-      )
-        return;
-      const importKey = async (key: keyof SettingsInterface.Keys) => {
-        const settings = await core.settingsStore.get(
-          key,
-          this.importCharacter
-        );
-        if (settings !== undefined) await core.settingsStore.set(key, settings);
-      };
-      await importKey('settings');
-      await importKey('pinned');
-      await importKey('modes');
-      await importKey('conversationSettings');
-      await importKey('hiddenUsers');
-      await importKey('favoriteEIcons');
-      core.connection.close(false);
-    }
-
-    get hidden(): string[] {
-      return core.state.hiddenUsers;
-    }
-
-    get ignored(): readonly string[] {
-      return core.characters.ignoreList;
-    }
-
-    unignore(character: string): void {
-      core.connection.send('IGN', { action: 'delete', character });
-    }
-
-    async submit(): Promise<void> {
-      const oldRisingFilter = JSON.parse(
-        JSON.stringify(core.state.settings.risingFilter)
-      );
-
-      const idleTimer = parseInt(this.idleTimer, 10);
-      const fontSize = parseFloat(this.fontSize);
-
-      const minAge = this.getAsNumber(this.risingFilter.minAge);
-      const maxAge = this.getAsNumber(this.risingFilter.maxAge);
-
-      const diskDraftTimer = this.getAsNumber(
-        this.horizonSaveDraftMessagesToDiskTimer
-      );
-
-      const previousSettings = core.state.settings;
-
-      core.state.settings = {
-        playSound: this.playSound,
-        soundTheme: previousSettings.soundTheme,
-        clickOpensMessage: this.clickOpensMessage,
-        disallowedTags: this.disallowedTags
-          .split(',')
-          .map(x => x.trim())
-          .filter(x => x.length),
-        notifications: this.notifications,
-        highlight: this.highlight,
-        highlightWords: this.highlightWords
-          .split(',')
-          .map(x => x.trim())
-          .filter(x => x.length),
-        showAvatars: this.showAvatars,
-        animatedEicons: this.animatedEicons,
-        smoothMosaics: this.smoothMosaics,
-        soundTheme: core.state.settings.soundTheme || 'default',
-        idleTimer: isNaN(idleTimer)
-          ? 0
-          : idleTimer < 0
-            ? 0
-            : idleTimer > 1440
-              ? 1440
-              : idleTimer,
-        messageSeparators: this.messageSeparators,
-        eventMessages: this.eventMessages,
-        joinMessages: this.joinMessages,
-        alwaysNotify: this.alwaysNotify,
-        logMessages: this.logMessages,
-        logAds: this.logAds,
-        fontSize: isNaN(fontSize)
-          ? 14
-          : fontSize < 10
-            ? 10
-            : fontSize > 24
-              ? 24
-              : fontSize,
-        showNeedsReply: this.showNeedsReply,
-        enterSend: this.enterSend,
-        colorBookmarks: this.colorBookmarks,
-        showPerCharacterFriends: this.showPerCharacterFriends,
-        hideNonCharacterFriends: this.hideNonCharacterFriends,
-        bbCodeBar: this.bbCodeBar,
-
-        risingAdScore: this.risingAdScore,
-        risingLinkPreview: this.risingLinkPreview,
-        risingAutoCompareKinks: this.risingAutoCompareKinks,
-
-        risingAutoExpandCustomKinks: this.risingAutoExpandCustomKinks,
-        risingCharacterPreview: this.risingCharacterPreview,
-        risingComparisonInUserMenu: this.risingComparisonInUserMenu,
-        risingComparisonInSearch: this.risingComparisonInSearch,
-        risingShowUnreadOfflineCount: this.risingShowUnreadOfflineCount,
-        risingShowPortraitNearInput: this.risingShowPortraitNearInput,
-        risingShowPortraitInMessage: this.risingShowPortraitInMessage,
-        risingShowHighQualityPortraits: this.risingShowHighQualityPortraits,
-        horizonMessagePortraitHighQuality:
-          this.horizonMessagePortraitHighQuality,
-        horizonShowCustomCharacterColors: this.horizonShowCustomCharacterColors,
-        horizonShowDeveloperBadges: this.horizonShowDeveloperBadges,
-        horizonAutoGenderFilter: (previousSettings as any)
-          .horizonAutoGenderFilter,
-        horizonSavedGenderFilters: (previousSettings as any)
-          .horizonSavedGenderFilters,
-        horizonSavedMembersSort: (previousSettings as any)
-          .horizonSavedMembersSort,
-        horizonPersistentMemberFilters: this.horizonPersistentMemberFilters,
-        horizonShowGenderMarker: this.horizonShowGenderMarker,
-        horizonGenderMarkerOrigColor: this.horizonGenderMarkerOrigColor,
-        horizonChangeOfflineColor: this.horizonChangeOfflineColor,
-        horizonNotifyFriendSignIn: this.horizonNotifyFriendSignIn,
-        horizonShowSigninNotifications: this.horizonShowSigninNotifications,
-        horizonShowDuplicateStatusNotifications:
-          this.horizonShowDuplicateStatusNotifications,
-        horizonHighlightUsers: this.horizonHighlightUsers
-          .split(',')
-          .map(x => x.trim())
-          .filter(x => x.length),
-        chatLayoutMode: this.chatLayoutMode,
-        messageGrouping: this.messageGrouping,
-        horizonCacheDraftMessages: this.horizonCacheDraftMessages,
-        horizonSaveDraftMessagesToDiskTimer:
-          diskDraftTimer === null
-            ? 60
-            : diskDraftTimer > 5
-              ? diskDraftTimer
-              : 5,
-        horizonUseColorPicker: this.horizonUseColorPicker,
-
-        risingColorblindMode: this.risingColorblindMode,
-        risingFilter: {
-          ...this.risingFilter,
-          minAge:
-            minAge !== null && maxAge !== null
-              ? Math.min(minAge, maxAge)
-              : minAge,
-          maxAge:
-            minAge !== null && maxAge !== null
-              ? Math.max(minAge, maxAge)
-              : maxAge
-        },
-
-        risingCharacterTheme:
-          this.risingCharacterTheme != 'undefined'
-            ? this.risingCharacterTheme
-            : undefined
-      };
-      console.log('SETTINGS', minAge, maxAge, core.state.settings);
-
-      const newRisingFilter = JSON.parse(
-        JSON.stringify(core.state.settings.risingFilter)
-      );
-
-      if (!_.isEqual(oldRisingFilter, newRisingFilter)) {
-        this.rebuildFilters();
-      }
-
-      if (this.notifications) await core.notifications.requestPermission();
-
-      EventBus.$emit('configuration-update', core.state.settings);
-    }
-
-    rebuildFilters() {
-      core.cache.profileCache.onEachInMemory(c => {
-        const oldFiltered = c.match.isFiltered;
-
-        c.match.isFiltered = matchesSmartFilters(
-          c.character.character,
-          core.state.settings.risingFilter
-        );
-
-        if (oldFiltered !== c.match.isFiltered) {
-          core.cache.populateAllConversationsWithScore(
-            c.character.character.name,
-            c.match.matchScore,
-            c.match.isFiltered
+          return;
+        const importKey = async (key: keyof SettingsInterface.Keys) => {
+          const settings = await core.settingsStore.get(
+            key,
+            this.importCharacter
           );
+          if (settings !== undefined)
+            await core.settingsStore.set(key, settings);
+        };
+        await importKey('settings');
+        await importKey('pinned');
+        await importKey('modes');
+        await importKey('conversationSettings');
+        await importKey('hiddenUsers');
+        await importKey('favoriteEIcons');
+        core.connection.close(false);
+      },
+      unignore(character: string): void {
+        core.connection.send('IGN', { action: 'delete', character });
+      },
+      async submit(): Promise<void> {
+        const oldRisingFilter = JSON.parse(
+          JSON.stringify(core.state.settings.risingFilter)
+        );
+
+        const idleTimer = parseInt(this.idleTimer, 10);
+        const fontSize = parseFloat(this.fontSize);
+
+        const minAge = this.getAsNumber(this.risingFilter.minAge);
+        const maxAge = this.getAsNumber(this.risingFilter.maxAge);
+
+        const diskDraftTimer = this.getAsNumber(
+          this.horizonSaveDraftMessagesToDiskTimer
+        );
+
+        const previousSettings = core.state.settings;
+
+        core.state.settings = {
+          playSound: this.playSound,
+          soundTheme: previousSettings.soundTheme,
+          clickOpensMessage: this.clickOpensMessage,
+          disallowedTags: this.disallowedTags
+            .split(',')
+            .map(x => x.trim())
+            .filter(x => x.length),
+          notifications: this.notifications,
+          highlight: this.highlight,
+          highlightWords: this.highlightWords
+            .split(',')
+            .map(x => x.trim())
+            .filter(x => x.length),
+          showAvatars: this.showAvatars,
+          animatedEicons: this.animatedEicons,
+          smoothMosaics: this.smoothMosaics,
+          soundTheme: core.state.settings.soundTheme || 'default',
+          idleTimer: isNaN(idleTimer)
+            ? 0
+            : idleTimer < 0
+              ? 0
+              : idleTimer > 1440
+                ? 1440
+                : idleTimer,
+          messageSeparators: this.messageSeparators,
+          eventMessages: this.eventMessages,
+          joinMessages: this.joinMessages,
+          alwaysNotify: this.alwaysNotify,
+          logMessages: this.logMessages,
+          logAds: this.logAds,
+          fontSize: isNaN(fontSize)
+            ? 14
+            : fontSize < 10
+              ? 10
+              : fontSize > 24
+                ? 24
+                : fontSize,
+          showNeedsReply: this.showNeedsReply,
+          enterSend: this.enterSend,
+          colorBookmarks: this.colorBookmarks,
+          showPerCharacterFriends: this.showPerCharacterFriends,
+          hideNonCharacterFriends: this.hideNonCharacterFriends,
+          bbCodeBar: this.bbCodeBar,
+
+          risingAdScore: this.risingAdScore,
+          risingLinkPreview: this.risingLinkPreview,
+          risingAutoCompareKinks: this.risingAutoCompareKinks,
+
+          risingAutoExpandCustomKinks: this.risingAutoExpandCustomKinks,
+          risingCharacterPreview: this.risingCharacterPreview,
+          risingComparisonInUserMenu: this.risingComparisonInUserMenu,
+          risingComparisonInSearch: this.risingComparisonInSearch,
+          risingShowUnreadOfflineCount: this.risingShowUnreadOfflineCount,
+          risingShowPortraitNearInput: this.risingShowPortraitNearInput,
+          risingShowPortraitInMessage: this.risingShowPortraitInMessage,
+          risingShowHighQualityPortraits: this.risingShowHighQualityPortraits,
+          horizonMessagePortraitHighQuality:
+            this.horizonMessagePortraitHighQuality,
+          horizonShowCustomCharacterColors:
+            this.horizonShowCustomCharacterColors,
+          horizonShowDeveloperBadges: this.horizonShowDeveloperBadges,
+          horizonAutoGenderFilter: (previousSettings as any)
+            .horizonAutoGenderFilter,
+          horizonSavedGenderFilters: (previousSettings as any)
+            .horizonSavedGenderFilters,
+          horizonSavedMembersSort: (previousSettings as any)
+            .horizonSavedMembersSort,
+          horizonPersistentMemberFilters: this.horizonPersistentMemberFilters,
+          horizonShowGenderMarker: this.horizonShowGenderMarker,
+          horizonGenderMarkerOrigColor: this.horizonGenderMarkerOrigColor,
+          horizonChangeOfflineColor: this.horizonChangeOfflineColor,
+          horizonNotifyFriendSignIn: this.horizonNotifyFriendSignIn,
+          horizonShowSigninNotifications: this.horizonShowSigninNotifications,
+          horizonShowDuplicateStatusNotifications:
+            this.horizonShowDuplicateStatusNotifications,
+          horizonHighlightUsers: this.horizonHighlightUsers
+            .split(',')
+            .map(x => x.trim())
+            .filter(x => x.length),
+          chatLayoutMode: this.chatLayoutMode,
+          messageGrouping: this.messageGrouping,
+          horizonCacheDraftMessages: this.horizonCacheDraftMessages,
+          horizonSaveDraftMessagesToDiskTimer:
+            diskDraftTimer === null
+              ? 60
+              : diskDraftTimer > 5
+                ? diskDraftTimer
+                : 5,
+          horizonUseColorPicker: this.horizonUseColorPicker,
+
+          risingColorblindMode: this.risingColorblindMode,
+          risingFilter: {
+            ...this.risingFilter,
+            minAge:
+              minAge !== null && maxAge !== null
+                ? Math.min(minAge, maxAge)
+                : minAge,
+            maxAge:
+              minAge !== null && maxAge !== null
+                ? Math.max(minAge, maxAge)
+                : maxAge
+          },
+
+          risingCharacterTheme:
+            this.risingCharacterTheme != 'undefined'
+              ? this.risingCharacterTheme
+              : undefined
+        };
+        console.log('SETTINGS', minAge, maxAge, core.state.settings);
+
+        const newRisingFilter = JSON.parse(
+          JSON.stringify(core.state.settings.risingFilter)
+        );
+
+        if (!_.isEqual(oldRisingFilter, newRisingFilter)) {
+          this.rebuildFilters();
         }
-      });
-    }
 
-    getAsNumber(input: any): number | null {
-      if (_.isNil(input) || input === '') {
-        return null;
+        if (this.notifications) await core.notifications.requestPermission();
+
+        EventBus.$emit('configuration-update', core.state.settings);
+      },
+      rebuildFilters() {
+        core.cache.profileCache.onEachInMemory(c => {
+          const oldFiltered = c.match.isFiltered;
+
+          c.match.isFiltered = matchesSmartFilters(
+            c.character.character,
+            core.state.settings.risingFilter
+          );
+
+          if (oldFiltered !== c.match.isFiltered) {
+            core.cache.populateAllConversationsWithScore(
+              c.character.character.name,
+              c.match.matchScore,
+              c.match.isFiltered
+            );
+          }
+        });
+      },
+      getAsNumber(input: any): number | null {
+        if (_.isNil(input) || input === '') {
+          return null;
+        }
+
+        const n = parseInt(input, 10);
+
+        return !Number.isNaN(n) && Number.isFinite(n) ? n : null;
+      },
+      getExceptionList(): string {
+        return _.join(this.risingFilter.exceptionNames, '\n');
+      },
+      setExceptionList(v: any): void {
+        this.risingFilter.exceptionNames = _.map(_.split(v.target.value), v =>
+          _.trim(v)
+        );
+      },
+      getSmartFilter(key: keyof SmartFilterSelection): boolean {
+        return !!this.risingFilter.smartFilters?.[key];
+      },
+      setSmartFilter(key: keyof SmartFilterSelection, value: any): void {
+        this.risingFilter.smartFilters[key] = value.target.checked;
       }
-
-      const n = parseInt(input, 10);
-
-      return !Number.isNaN(n) && Number.isFinite(n) ? n : null;
     }
-
-    getExceptionList(): string {
-      return _.join(this.risingFilter.exceptionNames, '\n');
-    }
-
-    setExceptionList(v: any): void {
-      this.risingFilter.exceptionNames = _.map(_.split(v.target.value), v =>
-        _.trim(v)
-      );
-    }
-
-    getSmartFilter(key: keyof SmartFilterSelection): boolean {
-      return !!this.risingFilter.smartFilters?.[key];
-    }
-
-    setSmartFilter(key: keyof SmartFilterSelection, value: any): void {
-      this.risingFilter.smartFilters[key] = value.target.checked;
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

@@ -11,7 +11,6 @@
   },
   "devDependencies": {
     "@electron/remote": "^2.1.2",
-    "@f-list/vue-ts": "^1.0.3",
     "@fortawesome/fontawesome-free": "^7.1.0",
     "@types/bluebird": "3.5.32",
     "@types/file-loader": "^5.0.4",

@@ -185,7 +185,6 @@
 <script lang="ts">
   import * as _ from 'lodash';
 
-  import { Component, Hook, Prop, Watch } from '@f-list/vue-ts';
   import anyAscii from 'any-ascii';
   import Vue from 'vue';
   import log from 'electron-log'; //tslint:disable-line:match-default-export-name
@@ -227,7 +226,7 @@
 
   const standardParser = new StandardBBCodeParser();
 
-  @Component({
+  export default Vue.extend({
     components: {
       sidebar: Sidebar,
       date: DateDisplay,
@@ -241,407 +240,397 @@
       'match-report': MatchReportView,
       'profile-analysis': ProfileAnalysis,
       bbcode: BBCodeView(standardParser)
-    }
-  })
-  export default class CharacterPage extends Vue {
-    @Prop
-    readonly name?: string;
-    @Prop
-    readonly id?: number;
-    @Prop({ required: true })
-    readonly authenticated!: boolean;
-    @Prop
-    readonly oldApi?: true;
-    @Prop
-    readonly imagePreview?: true;
+    },
+    props: {
+      name: {},
+      id: {},
+      authenticated: { required: true as const },
+      oldApi: {},
+      imagePreview: {}
+    },
+    data() {
+      return {
+        shared: Store as SharedStore,
+        character: undefined as any as Character | undefined,
+        loading: true,
+        refreshing: false,
+        error: '',
+        tab: '0',
+        autoExpandCustoms: false,
+        guestbook: null as Guestbook | null,
+        friends: null as SimpleCharacter[] | null,
+        groups: null as CharacterGroup[] | null,
+        images: null as CharacterImage[] | null,
+        l: l,
+        selfCharacter: undefined as any as Character | undefined,
+        characterMatch: undefined as any as MatchReport | undefined
+      };
+    },
+    computed: {
+      tabLabels(): { [key: string]: string } {
+        const labels: { [key: string]: string } = {};
 
-    shared: SharedStore = Store;
-    character: Character | undefined;
-    loading = true;
-    refreshing = false;
-    error = '';
-    tab = '0';
-    autoExpandCustoms = false;
+        // Overview tab - key '0'
+        labels['0'] = this.l('profile.tab.overview');
 
-    /* guestbookPostCount: number | null = null;
-          friendCount: number | null = null;
-          groupCount: number | null = null; */
+        // Info tab - key '1'
+        labels['1'] = this.l('profile.tab.info');
 
-    guestbook: Guestbook | null = null;
-    friends: SimpleCharacter[] | null = null;
-    groups: CharacterGroup[] | null = null;
-    images: CharacterImage[] | null = null;
-    l = l;
+        // Images tab - key '2'
+        const imageCount = (this as any).character?.character?.image_count || 0;
+        labels['2'] = this.l('profile.tab.images') + ` (${imageCount})`;
 
-    selfCharacter: Character | undefined;
-    characterMatch: MatchReport | undefined;
+        // Guestbook tab - key '3'
+        if ((this as any).character?.settings?.guestbook) {
+          const guestbookCount =
+            this.guestbook !== null ? ` (${this.guestbook.posts.length})` : '';
+          labels['3'] = this.l('profile.tab.guestbook') + guestbookCount;
+        }
 
-    @Hook('beforeMount')
+        // Friends tab - key '4'
+        if (
+          (this as any).character?.is_self ||
+          (this as any).character?.settings?.show_friends
+        ) {
+          const friendsCount =
+            this.friends !== null ? ` (${this.friends.length})` : '';
+          labels['4'] = this.l('profile.tab.friends') + friendsCount;
+        }
+
+        // Recon tab - key '5'
+        labels['5'] = this.l('profile.tab.recon');
+
+        return labels;
+      }
+    },
+    watch: {
+      tab(): void {
+        const target = <ShowableVueTab>(this.$refs as any)[`tab${this.tab}`];
+        //tslint:disable-next-line:no-unbound-method
+        if (typeof target.show === 'function') target.show();
+      },
+      async name(): Promise<void> {
+        this.tab = '0';
+        this.autoExpandCustoms =
+          core.state.settings.risingAutoExpandCustomKinks;
+
+        await this.load();
+
+        // Kludge kluge
+        this.$nextTick(() => {
+          const el = document.querySelector(
+            '.modal .profile-viewer .modal-body'
+          );
+
+          if (!el) {
+            console.error('Could not find modal body for profile view');
+            return;
+          }
+
+          el.scrollTo(0, 0);
+        });
+      }
+    },
     beforeMount(): void {
-      this.shared.authenticated = this.authenticated;
+      this.shared.authenticated = (this as any).authenticated;
 
       // console.log('Beforemount');
-    }
-
-    @Hook('mounted')
+    },
     async mounted(): Promise<void> {
       await this.load(false);
 
       // console.log('mounted');
-    }
+    },
+    methods: {
+      shouldShowMatch(): boolean {
+        return core.state.settings.risingAdScore;
+      },
+      async reload(): Promise<void> {
+        await this.load(true, true);
 
-    @Watch('tab')
-    switchTabHook(): void {
-      const target = <ShowableVueTab>this.$refs[`tab${this.tab}`];
-      //tslint:disable-next-line:no-unbound-method
-      if (typeof target.show === 'function') target.show();
-    }
+        const target = <ShowableVueTab>(this.$refs as any)[`tab${this.tab}`];
 
-    @Watch('name')
-    async onCharacterSet(): Promise<void> {
-      this.tab = '0';
-      this.autoExpandCustoms = core.state.settings.risingAutoExpandCustomKinks;
+        //tslint:disable-next-line:no-unbound-method
+        if (typeof target.show === 'function') target.show();
+      },
+      async load(
+        mustLoad: boolean = true,
+        skipCache: boolean = false
+      ): Promise<void> {
+        this.loading = true;
+        this.refreshing = false;
+        this.error = '';
 
-      await this.load();
+        try {
+          const due: Promise<void>[] = [];
 
-      // Kludge kluge
-      this.$nextTick(() => {
-        const el = document.querySelector('.modal .profile-viewer .modal-body');
+          if (
+            (this as any).name === undefined ||
+            (this as any).name.length === 0
+          )
+            return;
 
-        if (!el) {
-          console.error('Could not find modal body for profile view');
-          return;
+          await methods.fieldsGet();
+
+          if (
+            (this.selfCharacter === undefined &&
+              Utils.settings.defaultCharacter >= 0) ||
+            _.get(this.selfCharacter, 'character.name') !==
+              core.characters.ownCharacter.name
+          ) {
+            due.push(this.loadSelfCharacter());
+          }
+
+          if (mustLoad || this.character === undefined)
+            due.push(this._getCharacter(skipCache));
+
+          await Promise.all(due);
+        } catch (e) {
+          console.error(e);
+
+          this.error = Utils.isJSONError(e)
+            ? <string>e.response.data.error
+            : (<Error>e).message;
+          Utils.ajaxError(e, 'Failed to load character information.');
         }
 
-        el.scrollTo(0, 0);
-      });
-    }
+        this.loading = false;
+      },
+      async updateGuestbook(): Promise<void> {
+        try {
+          if (!this.character || !_.get(this.character, 'settings.guestbook')) {
+            this.guestbook = null;
+            return;
+          }
 
-    shouldShowMatch(): boolean {
-      return core.state.settings.risingAdScore;
-    }
-
-    get tabLabels(): { [key: string]: string } {
-      const labels: { [key: string]: string } = {};
-
-      // Overview tab - key '0'
-      labels['0'] = this.l('profile.tab.overview');
-
-      // Info tab - key '1'
-      labels['1'] = this.l('profile.tab.info');
-
-      // Images tab - key '2'
-      const imageCount = this.character?.character?.image_count || 0;
-      labels['2'] = this.l('profile.tab.images') + ` (${imageCount})`;
-
-      // Guestbook tab - key '3'
-      if (this.character?.settings?.guestbook) {
-        const guestbookCount =
-          this.guestbook !== null ? ` (${this.guestbook.posts.length})` : '';
-        labels['3'] = this.l('profile.tab.guestbook') + guestbookCount;
-      }
-
-      // Friends tab - key '4'
-      if (this.character?.is_self || this.character?.settings?.show_friends) {
-        const friendsCount =
-          this.friends !== null ? ` (${this.friends.length})` : '';
-        labels['4'] = this.l('profile.tab.friends') + friendsCount;
-      }
-
-      // Recon tab - key '5'
-      labels['5'] = this.l('profile.tab.recon');
-
-      return labels;
-    }
-
-    async reload(): Promise<void> {
-      await this.load(true, true);
-
-      const target = <ShowableVueTab>this.$refs[`tab${this.tab}`];
-
-      //tslint:disable-next-line:no-unbound-method
-      if (typeof target.show === 'function') target.show();
-    }
-
-    async load(
-      mustLoad: boolean = true,
-      skipCache: boolean = false
-    ): Promise<void> {
-      this.loading = true;
-      this.refreshing = false;
-      this.error = '';
-
-      try {
-        const due: Promise<void>[] = [];
-
-        if (this.name === undefined || this.name.length === 0) return;
-
-        await methods.fieldsGet();
-
-        if (
-          (this.selfCharacter === undefined &&
-            Utils.settings.defaultCharacter >= 0) ||
-          _.get(this.selfCharacter, 'character.name') !==
-            core.characters.ownCharacter.name
-        ) {
-          due.push(this.loadSelfCharacter());
-        }
-
-        if (mustLoad || this.character === undefined)
-          due.push(this._getCharacter(skipCache));
-
-        await Promise.all(due);
-      } catch (e) {
-        console.error(e);
-
-        this.error = Utils.isJSONError(e)
-          ? <string>e.response.data.error
-          : (<Error>e).message;
-        Utils.ajaxError(e, 'Failed to load character information.');
-      }
-
-      this.loading = false;
-    }
-
-    async updateGuestbook(): Promise<void> {
-      try {
-        if (!this.character || !_.get(this.character, 'settings.guestbook')) {
+          this.guestbook = await methods.guestbookPageGet(
+            this.character.character.id,
+            1
+          );
+        } catch (err) {
+          console.error(err);
           this.guestbook = null;
-          return;
         }
+      },
+      async updateGroups(): Promise<void> {
+        try {
+          if (!this.character || (this as any).oldApi) {
+            this.groups = null;
+            return;
+          }
 
-        this.guestbook = await methods.guestbookPageGet(
-          this.character.character.id,
-          1
-        );
-      } catch (err) {
-        console.error(err);
-        this.guestbook = null;
-      }
-    }
-
-    async updateGroups(): Promise<void> {
-      try {
-        if (!this.character || this.oldApi) {
+          this.groups = await methods.groupsGet(this.character.character.id);
+        } catch (err) {
+          console.error('Update groups', err);
           this.groups = null;
-          return;
         }
+      },
+      async updateFriends(): Promise<void> {
+        try {
+          if (
+            !this.character ||
+            (!this.character.is_self && !this.character.settings.show_friends)
+          ) {
+            this.friends = null;
+            return;
+          }
 
-        this.groups = await methods.groupsGet(this.character.character.id);
-      } catch (err) {
-        console.error('Update groups', err);
-        this.groups = null;
-      }
-    }
-
-    async updateFriends(): Promise<void> {
-      try {
-        if (
-          !this.character ||
-          (!this.character.is_self && !this.character.settings.show_friends)
-        ) {
+          this.friends = await methods.friendsGet(this.character.character.id);
+        } catch (err) {
+          console.error('Update friends', err);
           this.friends = null;
-          return;
         }
+      },
+      async updateImages(): Promise<void> {
+        try {
+          if (!this.character) {
+            this.images = null;
+            return;
+          }
 
-        this.friends = await methods.friendsGet(this.character.character.id);
-      } catch (err) {
-        console.error('Update friends', err);
-        this.friends = null;
-      }
-    }
-
-    async updateImages(): Promise<void> {
-      try {
-        if (!this.character) {
+          this.images = await methods.imagesGet(this.character.character.id);
+        } catch (err) {
+          console.error('Update images', err);
           this.images = null;
-          return;
         }
+      },
+      async updateMeta(name: string): Promise<void> {
+        await Promise.all([
+          this.updateImages(),
+          this.updateGuestbook(),
+          this.updateFriends(),
+          this.updateGroups()
+        ]);
 
-        this.images = await methods.imagesGet(this.character.character.id);
-      } catch (err) {
-        console.error('Update images', err);
-        this.images = null;
-      }
-    }
-
-    async updateMeta(name: string): Promise<void> {
-      await Promise.all([
-        this.updateImages(),
-        this.updateGuestbook(),
-        this.updateFriends(),
-        this.updateGroups()
-      ]);
-
-      await core.cache.profileCache.registerMeta(name, {
-        lastMetaFetched: new Date(),
-        groups: this.groups,
-        friends: this.friends,
-        guestbook: this.guestbook,
-        images: this.images
-      });
-    }
-
-    memo(memo: { id: number; memo: string | null }): void {
-      Vue.set(this.character!, 'memo', memo);
-
-      void core.cache.profileCache.register(this.character!);
-    }
-
-    bookmarked(state: boolean): void {
-      Vue.set(this.character!, 'bookmarked', state);
-
-      void core.cache.profileCache.register(this.character!);
-    }
-
-    protected async loadSelfCharacter(): Promise<void> {
-      // console.log('SELF');
-
-      // const ownChar = core.characters.ownCharacter;
-
-      // this.selfCharacter = await methods.characterData(ownChar.name, -1);
-      this.selfCharacter = core.characters.ownProfile;
-
-      // console.log('SELF LOADED');
-
-      this.updateMatches();
-    }
-
-    private async fetchCharacterCache(): Promise<CharacterCacheRecord | null> {
-      if (!this.name) {
-        throw new Error('A man must have a name');
-      }
-
-      // tslint:disable-next-line: await-promise
-      return (await core.cache.profileCache.get(this.name)) || null;
-    }
-
-    private async _getCharacter(skipCache: boolean = false): Promise<void> {
-      log.debug('profile.getCharacter', { name: this.name });
-
-      this.character = undefined;
-      this.friends = null;
-      this.groups = null;
-      this.guestbook = null;
-      this.images = null;
-
-      if (!this.name) {
-        return;
-      }
-
-      const cache = await this.fetchCharacterCache();
-
-      this.character =
-        cache && !skipCache
-          ? cache.character
-          : await methods.characterData(this.name, this.id, false);
-
-      standardParser.inlines = this.character.character.inlines;
-
-      this.parseTextToAscii(this.character);
-
-      if (cache && cache.meta) {
-        this.guestbook = cache.meta.guestbook;
-        this.friends = cache.meta.friends;
-        this.groups = cache.meta.groups;
-        this.images = cache.meta.images;
-      }
-
-      if (
-        cache &&
-        !skipCache &&
-        cache.meta &&
-        cache.meta.lastMetaFetched &&
-        Date.now() - cache.meta.lastMetaFetched.getTime() <
-          CHARACTER_META_CACHE_EXPIRE
-      ) {
-        // do nothing
-      } else {
-        log.debug('profile.updateMeta', {
-          timestamp: cache?.meta?.lastMetaFetched,
-          diff: Date.now() - (cache?.meta?.lastMetaFetched?.getTime() || 0)
+        await core.cache.profileCache.registerMeta(name, {
+          lastMetaFetched: new Date(),
+          groups: this.groups,
+          friends: this.friends,
+          guestbook: this.guestbook,
+          images: this.images
         });
+      },
+      memo(memo: { id: number; memo: string | null }): void {
+        Vue.set(this.character!, 'memo', memo);
 
-        // No await on purpose:
-        // tslint:disable-next-line no-floating-promises
-        this.updateMeta(this.name).catch(err =>
-          console.error('profile.updateMeta', err)
-        );
-      }
+        void core.cache.profileCache.register(this.character!);
+      },
+      bookmarked(state: boolean): void {
+        Vue.set(this.character!, 'bookmarked', state);
 
-      // console.log('LoadChar', this.name, this.character);
-      this.updateMatches();
+        void core.cache.profileCache.register(this.character!);
+      },
+      async loadSelfCharacter(): Promise<void> {
+        // console.log('SELF');
 
-      // old profile cache, let's refresh
-      if (cache && cache.lastFetched) {
-        if (
-          Date.now() - cache.lastFetched.getTime() >=
-          CHARACTER_CACHE_EXPIRE
-        ) {
-          // No await on purpose:
-          // tslint:disable-next-line no-floating-promises
-          this.refreshCharacter();
-        }
-      }
-    }
+        // const ownChar = core.characters.ownCharacter;
 
-    private async refreshCharacter(): Promise<void> {
-      this.refreshing = true;
+        // this.selfCharacter = await methods.characterData(ownChar.name, -1);
+        this.selfCharacter = core.characters.ownProfile;
 
-      try {
-        const character = await methods.characterData(
-          this.name,
-          this.id,
-          false
-        );
-
-        if (!this.refreshing || this.name !== character.character.name) {
-          return;
-        }
-
-        this.character = character;
-
-        standardParser.inlines = this.character.character.inlines;
+        // console.log('SELF LOADED');
 
         this.updateMatches();
-
-        // No awaits on these on purpose:
-        // tslint:disable-next-line no-floating-promises
-        this.updateMeta(this.name);
-      } finally {
-        this.refreshing = false;
-      }
-    }
-
-    private parseTextToAscii(character: Character): void {
-      if (
-        core.state.generalSettings &&
-        core.state.generalSettings.horizonForceAsciiProfiles
-      ) {
-        character.character.description = anyAscii(
-          character.character.description
-        );
-
-        if (character.character.title) {
-          character.character.title = anyAscii(character.character.title);
+      },
+      async fetchCharacterCache(): Promise<CharacterCacheRecord | null> {
+        if (!(this as any).name) {
+          throw new Error('A man must have a name');
         }
 
-        // We don't do customs and infotags here, so that they are at least sorted before parsing.
-        //Check the character_page/kink.vue and infotag.vue components for that
+        // tslint:disable-next-line: await-promise
+        return (await core.cache.profileCache.get((this as any).name)) || null;
+      },
+      async _getCharacter(skipCache: boolean = false): Promise<void> {
+        log.debug('profile.getCharacter', { name: (this as any).name });
+
+        this.character = undefined;
+        this.friends = null;
+        this.groups = null;
+        this.guestbook = null;
+        this.images = null;
+
+        if (!(this as any).name) {
+          return;
+        }
+
+        const cache = await this.fetchCharacterCache();
+
+        this.character =
+          cache && !skipCache
+            ? cache.character
+            : await methods.characterData(
+                (this as any).name,
+                (this as any).id,
+                false
+              );
+
+        standardParser.inlines = this.character!.character.inlines;
+
+        this.parseTextToAscii(this.character!);
+
+        if (cache && cache.meta) {
+          this.guestbook = cache.meta.guestbook;
+          this.friends = cache.meta.friends;
+          this.groups = cache.meta.groups;
+          this.images = cache.meta.images;
+        }
+
+        if (
+          cache &&
+          !skipCache &&
+          cache.meta &&
+          cache.meta.lastMetaFetched &&
+          Date.now() - cache.meta.lastMetaFetched.getTime() <
+            CHARACTER_META_CACHE_EXPIRE
+        ) {
+          // do nothing
+        } else {
+          log.debug('profile.updateMeta', {
+            timestamp: cache?.meta?.lastMetaFetched,
+            diff: Date.now() - (cache?.meta?.lastMetaFetched?.getTime() || 0)
+          });
+
+          // No await on purpose:
+          // tslint:disable-next-line no-floating-promises
+          this.updateMeta((this as any).name).catch((err: any) =>
+            console.error('profile.updateMeta', err)
+          );
+        }
+
+        // console.log('LoadChar', this.name, this.character);
+        this.updateMatches();
+
+        // old profile cache, let's refresh
+        if (cache && cache.lastFetched) {
+          if (
+            Date.now() - cache.lastFetched.getTime() >=
+            CHARACTER_CACHE_EXPIRE
+          ) {
+            // No await on purpose:
+            // tslint:disable-next-line no-floating-promises
+            this.refreshCharacter();
+          }
+        }
+      },
+      async refreshCharacter(): Promise<void> {
+        this.refreshing = true;
+
+        try {
+          const character = await methods.characterData(
+            (this as any).name,
+            (this as any).id,
+            false
+          );
+
+          if (
+            !this.refreshing ||
+            (this as any).name !== character.character.name
+          ) {
+            return;
+          }
+
+          this.character = character;
+
+          standardParser.inlines = this.character!.character.inlines;
+
+          this.updateMatches();
+
+          // No awaits on these on purpose:
+          // tslint:disable-next-line no-floating-promises
+          this.updateMeta((this as any).name);
+        } finally {
+          this.refreshing = false;
+        }
+      },
+      parseTextToAscii(character: Character): void {
+        if (
+          core.state.generalSettings &&
+          core.state.generalSettings.horizonForceAsciiProfiles
+        ) {
+          character.character.description = anyAscii(
+            character.character.description
+          );
+
+          if (character.character.title) {
+            character.character.title = anyAscii(character.character.title);
+          }
+
+          // We don't do customs and infotags here, so that they are at least sorted before parsing.
+          //Check the character_page/kink.vue and infotag.vue components for that
+        }
+      },
+      updateMatches(): void {
+        if (!this.selfCharacter || !this.character) return;
+
+        this.characterMatch = Matcher.identifyBestMatchReport(
+          this.selfCharacter.character,
+          this.character.character
+        );
+
+        // console.log('Match', this.selfCharacter.character.name, this.character.character.name, this.characterMatch);
       }
     }
-
-    private updateMatches(): void {
-      if (!this.selfCharacter || !this.character) return;
-
-      this.characterMatch = Matcher.identifyBestMatchReport(
-        this.selfCharacter.character,
-        this.character.character
-      );
-
-      // console.log('Match', this.selfCharacter.character.name, this.character.character.name, this.characterMatch);
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

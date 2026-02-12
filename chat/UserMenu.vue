@@ -205,7 +205,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop } from '@f-list/vue-ts';
   import Vue from 'vue';
   import { BBCodeView } from '../bbcode/view';
   import Modal from '../components/Modal.vue';
@@ -225,259 +224,250 @@
   import MatchTags from './preview/MatchTags.vue';
   import { MemoManager } from './character/memo';
 
-  @Component({
+  export default Vue.extend({
     components: {
       'match-tags': MatchTags,
       bbcode: BBCodeView(core.bbCodeParser),
       modal: Modal,
       'ad-view': CharacterAdView
-    }
-  })
-  export default class UserMenu extends Vue {
-    @Prop({ required: true })
-    readonly reportDialog!: ReportDialog;
-    l = l;
-    showContextMenu = false;
-    getByteLength = getByteLength;
-    character: Character | undefined;
-    position = { left: '', top: '' };
-    characterImage: string | undefined;
-    touchedElement: HTMLElement | undefined;
-    channel: Channel | undefined;
-    memo = '';
-    // memoId = 0;
-    memoLoading = false;
-    match: MatchReport | null = null;
-    memoManager?: MemoManager;
-
-    openConversation(jump: boolean): void {
-      const conversation = core.conversations.getPrivate(this.character!);
-      if (jump) conversation.show();
-    }
-
-    setIgnored(): void {
-      core.connection.send('IGN', {
-        action: this.character!.isIgnored ? 'delete' : 'add',
-        character: this.character!.name
-      });
-    }
-
-    setBookmarked(): void {
-      core.connection
-        .queryApi(
-          `bookmark-${this.character!.isBookmarked ? 'remove' : 'add'}.php`,
-          { name: this.character!.name }
-        )
-        .catch((e: object) => alert(errorToString(e)));
-    }
-
-    setHidden(): void {
-      const index = core.state.hiddenUsers.indexOf(this.character!.name);
-      if (index !== -1) core.state.hiddenUsers.splice(index, 1);
-      else core.state.hiddenUsers.push(this.character!.name);
-    }
-
-    report(): void {
-      this.reportDialog.report(this.character!);
-    }
-
-    channelKick(): void {
-      core.connection.send('CKU', {
-        channel: this.channel!.id,
-        character: this.character!.name
-      });
-    }
-
-    chatKick(): void {
-      core.connection.send('KIK', { character: this.character!.name });
-    }
-
-    async showMemo(): Promise<void> {
-      this.memoLoading = true;
-      this.memo = '';
-      this.memoManager = new MemoManager(this.character!.name);
-
-      (<Modal>this.$refs['memo']).show();
-
-      try {
-        await this.memoManager.load();
-
-        this.memo = this.memoManager.get().memo;
-        this.memoLoading = false;
-      } catch (e) {
-        alert(errorToString(e));
+    },
+    props: {
+      reportDialog: { required: true as const }
+    },
+    data() {
+      return {
+        l,
+        showContextMenu: false,
+        getByteLength,
+        character: undefined as Character | undefined,
+        position: { left: '', top: '' },
+        characterImage: undefined as string | undefined,
+        touchedElement: undefined as HTMLElement | undefined,
+        channel: undefined as Channel | undefined,
+        memo: '',
+        // memoId: 0,
+        memoLoading: false,
+        match: null as MatchReport | null,
+        memoManager: undefined as MemoManager | undefined
+      };
+    },
+    computed: {
+      isChannelMod(): boolean {
+        if (this.channel === undefined) return false;
+        if (core.characters.ownCharacter.isChatOp) return true;
+        const member = this.channel.members[core.connection.character];
+        return member !== undefined && member.rank > Channel.Rank.Member;
+      },
+      isHidden(): boolean {
+        return core.state.hiddenUsers.indexOf(this.character!.name) !== -1;
+      },
+      isChatOp(): boolean {
+        return core.characters.ownCharacter.isChatOp;
+      },
+      showProfileFirst(): boolean {
+        return core.state.settings.clickOpensMessage;
+      },
+      showAvatars(): boolean {
+        return core.state.settings.showAvatars;
+      },
+      profileLink(): string | undefined {
+        return profileLink(this.character!.name);
       }
-    }
+    },
+    methods: {
+      openConversation(jump: boolean): void {
+        const conversation = core.conversations.getPrivate(this.character!);
+        if (jump) conversation.show();
+      },
+      setIgnored(): void {
+        core.connection.send('IGN', {
+          action: this.character!.isIgnored ? 'delete' : 'add',
+          character: this.character!.name
+        });
+      },
+      setBookmarked(): void {
+        core.connection
+          .queryApi(
+            `bookmark-${this.character!.isBookmarked ? 'remove' : 'add'}.php`,
+            { name: this.character!.name }
+          )
+          .catch((e: object) => alert(errorToString(e)));
+      },
+      setHidden(): void {
+        const index = core.state.hiddenUsers.indexOf(this.character!.name);
+        if (index !== -1) core.state.hiddenUsers.splice(index, 1);
+        else core.state.hiddenUsers.push(this.character!.name);
+      },
+      report(): void {
+        (this.reportDialog as any).report(this.character!);
+      },
+      channelKick(): void {
+        core.connection.send('CKU', {
+          channel: this.channel!.id,
+          character: this.character!.name
+        });
+      },
+      chatKick(): void {
+        core.connection.send('KIK', { character: this.character!.name });
+      },
+      async showMemo(): Promise<void> {
+        this.memoLoading = true;
+        this.memo = '';
+        this.memoManager = new MemoManager(this.character!.name);
 
-    updateMemo(): void {
-      this.memoManager
-        ?.set(this.memo)
-        .catch((e: object) => alert(errorToString(e)));
-    }
+        (<Modal>this.$refs['memo']).show();
 
-    showAdLogs(): void {
-      if (!this.hasAdLogs()) {
-        return;
-      }
+        try {
+          await this.memoManager.load();
 
-      (<CharacterAdView>this.$refs['adViewDialog']).show();
-    }
-
-    hasAdLogs(): boolean {
-      if (!this.character) {
-        return false;
-      }
-
-      const cache = core.cache.adCache.get(this.character.name);
-
-      if (!cache) {
-        return false;
-      }
-
-      return cache.count() > 0;
-    }
-
-    get isChannelMod(): boolean {
-      if (this.channel === undefined) return false;
-      if (core.characters.ownCharacter.isChatOp) return true;
-      const member = this.channel.members[core.connection.character];
-      return member !== undefined && member.rank > Channel.Rank.Member;
-    }
-
-    get isHidden(): boolean {
-      return core.state.hiddenUsers.indexOf(this.character!.name) !== -1;
-    }
-
-    get isChatOp(): boolean {
-      return core.characters.ownCharacter.isChatOp;
-    }
-
-    get showProfileFirst(): boolean {
-      return core.state.settings.clickOpensMessage;
-    }
-
-    get showAvatars(): boolean {
-      return core.state.settings.showAvatars;
-    }
-
-    get profileLink(): string | undefined {
-      return profileLink(this.character!.name);
-    }
-
-    handleEvent(e: MouseEvent | TouchEvent): void {
-      const touch =
-        e.type === 'touchstart'
-          ? (<TouchEvent>e).changedTouches[0]
-          : <MouseEvent>e;
-      let node = <
-        HTMLElement & {
-          character?: Character;
-          channel?: Channel;
-          touched?: boolean;
+          this.memo = this.memoManager.get().memo;
+          this.memoLoading = false;
+        } catch (e) {
+          alert(errorToString(e));
         }
-      >touch.target;
-      while (node !== document.body) {
-        if (
-          (e.type !== 'click' && node === this.$refs['menu']) ||
-          node.id === 'userMenuStatus' ||
-          node.className === 'spoiler-tag'
-        )
-          return;
-        if (
-          node.character !== undefined ||
-          node.dataset['character'] !== undefined ||
-          node.parentNode === null
-        )
-          break;
-        node = node.parentElement!;
-      }
-      if (node.dataset['touch'] === 'false' && e.type !== 'contextmenu') return;
-      if (!node.character)
-        if (node.dataset['character'] !== undefined)
-          node.character = core.characters.get(node.dataset['character']!);
-        else {
-          this.showContextMenu = false;
-          this.touchedElement = undefined;
+      },
+      updateMemo(): void {
+        this.memoManager
+          ?.set(this.memo)
+          .catch((e: object) => alert(errorToString(e)));
+      },
+      showAdLogs(): void {
+        if (!this.hasAdLogs()) {
           return;
         }
-      switch (e.type) {
-        case 'click':
-          if (node.dataset['character'] === undefined)
-            if (node === this.touchedElement)
-              // tslint:disable-next-line no-floating-promises
-              this.openMenu(touch, node.character, node.channel || undefined);
-            else this.onClick(node.character);
-          e.preventDefault();
-          break;
-        case 'touchstart':
-          this.touchedElement = node;
-          break;
-        case 'contextmenu':
-          // tslint:disable-next-line no-floating-promises
-          this.openMenu(touch, node.character, node.channel || undefined);
-          e.preventDefault();
-      }
-    }
 
-    private onClick(character: Character): void {
-      this.character = character;
-      // Always open profile for own character, regardless of clickOpensMessage setting
-      if (character.name === core.characters.ownCharacter.name) {
-        window.open(this.profileLink);
-      } else if (core.state.settings.clickOpensMessage) {
-        this.openConversation(true);
-      } else {
-        window.open(this.profileLink);
-      }
-      this.showContextMenu = false;
-    }
+        (<CharacterAdView>this.$refs['adViewDialog']).show();
+      },
+      hasAdLogs(): boolean {
+        if (!this.character) {
+          return false;
+        }
 
-    private async openMenu(
-      touch: MouseEvent | Touch,
-      character: Character,
-      channel: Channel | undefined
-    ): Promise<void> {
-      this.channel = channel;
-      this.character = character;
-      this.characterImage = undefined;
-      this.showContextMenu = true;
-      this.position = { left: `${touch.clientX}px`, top: `${touch.clientY}px` };
-      this.match = null;
+        const cache = core.cache.adCache.get(this.character.name);
 
-      if (core.state.settings.risingComparisonInUserMenu) {
-        const myProfile = core.characters.ownProfile;
-        const theirProfile = await core.cache.profileCache.get(
-          this.character.name
-        );
+        if (!cache) {
+          return false;
+        }
 
-        if (myProfile && theirProfile) {
-          const match = Matcher.identifyBestMatchReport(
-            myProfile.character,
-            theirProfile.character.character
+        return cache.count() > 0;
+      },
+      handleEvent(e: MouseEvent | TouchEvent): void {
+        const touch =
+          e.type === 'touchstart'
+            ? (<TouchEvent>e).changedTouches[0]
+            : <MouseEvent>e;
+        let node = <
+          HTMLElement & {
+            character?: Character;
+            channel?: Channel;
+            touched?: boolean;
+          }
+        >touch.target;
+        while (node !== document.body) {
+          if (
+            (e.type !== 'click' && node === this.$refs['menu']) ||
+            node.id === 'userMenuStatus' ||
+            node.className === 'spoiler-tag'
+          )
+            return;
+          if (
+            node.character !== undefined ||
+            node.dataset['character'] !== undefined ||
+            node.parentNode === null
+          )
+            break;
+          node = node.parentElement!;
+        }
+        if (node.dataset['touch'] === 'false' && e.type !== 'contextmenu')
+          return;
+        if (!node.character)
+          if (node.dataset['character'] !== undefined)
+            node.character = core.characters.get(node.dataset['character']!);
+          else {
+            this.showContextMenu = false;
+            this.touchedElement = undefined;
+            return;
+          }
+        switch (e.type) {
+          case 'click':
+            if (node.dataset['character'] === undefined)
+              if (node === this.touchedElement)
+                // tslint:disable-next-line no-floating-promises
+                this.openMenu(touch, node.character, node.channel || undefined);
+              else this.onClick(node.character);
+            e.preventDefault();
+            break;
+          case 'touchstart':
+            this.touchedElement = node;
+            break;
+          case 'contextmenu':
+            // tslint:disable-next-line no-floating-promises
+            this.openMenu(touch, node.character, node.channel || undefined);
+            e.preventDefault();
+        }
+      },
+      onClick(character: Character): void {
+        this.character = character;
+        // Always open profile for own character, regardless of clickOpensMessage setting
+        if (character.name === core.characters.ownCharacter.name) {
+          window.open(this.profileLink);
+        } else if (core.state.settings.clickOpensMessage) {
+          this.openConversation(true);
+        } else {
+          window.open(this.profileLink);
+        }
+        this.showContextMenu = false;
+      },
+      async openMenu(
+        touch: MouseEvent | Touch,
+        character: Character,
+        channel: Channel | undefined
+      ): Promise<void> {
+        this.channel = channel;
+        this.character = character;
+        this.characterImage = undefined;
+        this.showContextMenu = true;
+        this.position = {
+          left: `${touch.clientX}px`,
+          top: `${touch.clientY}px`
+        };
+        this.match = null;
+
+        if (core.state.settings.risingComparisonInUserMenu) {
+          const myProfile = core.characters.ownProfile;
+          const theirProfile = await core.cache.profileCache.get(
+            this.character.name
           );
 
-          if (_.keys(match.merged).length > 0) {
-            this.match = match;
+          if (myProfile && theirProfile) {
+            const match = Matcher.identifyBestMatchReport(
+              myProfile.character,
+              theirProfile.character.character
+            );
+
+            if (_.keys(match.merged).length > 0) {
+              this.match = match;
+            }
           }
         }
-      }
 
-      this.$nextTick(() => {
-        const menu = <HTMLElement>this.$refs['menu'];
-        this.characterImage = characterImage(character.name);
-        if (
-          parseInt(this.position.left, 10) + menu.offsetWidth >
-          window.innerWidth
-        )
-          this.position.left = `${window.innerWidth - menu.offsetWidth - 1}px`;
-        if (
-          parseInt(this.position.top, 10) + menu.offsetHeight >
-          window.innerHeight
-        )
-          this.position.top = `${window.innerHeight - menu.offsetHeight - 1}px`;
-      });
+        this.$nextTick(() => {
+          const menu = <HTMLElement>this.$refs['menu'];
+          this.characterImage = characterImage(character.name);
+          if (
+            parseInt(this.position.left, 10) + menu.offsetWidth >
+            window.innerWidth
+          )
+            this.position.left = `${window.innerWidth - menu.offsetWidth - 1}px`;
+          if (
+            parseInt(this.position.top, 10) + menu.offsetHeight >
+            window.innerHeight
+          )
+            this.position.top = `${window.innerHeight - menu.offsetHeight - 1}px`;
+        });
+      }
     }
-  }
+  });
 </script>
 
 <style lang="scss">

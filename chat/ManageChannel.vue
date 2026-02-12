@@ -80,7 +80,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop } from '@f-list/vue-ts';
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import { Editor } from './bbcode';
@@ -89,76 +88,78 @@
   import { Channel, channelModes } from './interfaces';
   import l from './localize';
 
-  @Component({
-    components: { modal: Modal, 'bbcode-editor': Editor }
-  })
-  export default class ManageChannel extends CustomDialog {
-    @Prop({ required: true })
-    readonly channel!: Channel;
-    modes = channelModes;
-    isPublic = this.channelIsPublic;
-    mode = this.channel.mode;
-    description = this.channel.description;
-    l = l;
-    getByteLength = getByteLength;
-    modAddName = '';
-    opList = this.channel.opList.slice();
-    maxLength = core.connection.vars.cds_max;
-
-    onOpen(): void {
-      this.mode = this.channel.mode;
-      this.isPublic = this.channelIsPublic;
-      this.description = this.channel.description;
-      this.opList = this.channel.opList.slice();
-    }
-
-    get channelIsPublic(): boolean {
-      return core.channels.openRooms[this.channel.id] !== undefined;
-    }
-
-    get isChannelOwner(): boolean {
-      return (
-        this.channel.owner === core.connection.character ||
-        core.characters.ownCharacter.isChatOp
-      );
-    }
-
-    modAdd(): void {
-      this.opList.push(this.modAddName);
-      this.modAddName = '';
-    }
-
-    submit(): void {
-      if (this.description !== this.channel.description)
-        core.connection.send('CDS', {
-          channel: this.channel.id,
-          description: this.description
-        });
-      if (!this.isChannelOwner) return;
-      if (this.isPublic !== this.channelIsPublic)
-        core.connection.send('RST', {
-          channel: this.channel.id,
-          status: this.isPublic ? 'public' : 'private'
-        });
-      if (this.mode !== this.channel.mode)
-        core.connection.send('RMO', {
-          channel: this.channel.id,
-          mode: this.mode
-        });
-      for (const op of this.channel.opList) {
-        const index = this.opList.indexOf(op);
-        if (index !== -1) this.opList.splice(index, 1);
-        else
-          core.connection.send('COR', {
+  export default CustomDialog.extend({
+    components: { modal: Modal, 'bbcode-editor': Editor },
+    props: {
+      channel: { required: true as const }
+    },
+    data() {
+      return {
+        modes: channelModes,
+        isPublic: (this as any).channelIsPublic,
+        mode: (this as any).channel.mode,
+        description: (this as any).channel.description,
+        l: l,
+        getByteLength: getByteLength,
+        modAddName: '',
+        opList: (this as any).channel.opList.slice(),
+        maxLength: core.connection.vars.cds_max
+      };
+    },
+    computed: {
+      channelIsPublic(): boolean {
+        return core.channels.openRooms[this.channel.id] !== undefined;
+      },
+      isChannelOwner(): boolean {
+        return (
+          this.channel.owner === core.connection.character ||
+          core.characters.ownCharacter.isChatOp
+        );
+      }
+    },
+    methods: {
+      onOpen(): void {
+        this.mode = this.channel.mode;
+        this.isPublic = this.channelIsPublic;
+        this.description = this.channel.description;
+        this.opList = this.channel.opList.slice();
+      },
+      modAdd(): void {
+        this.opList.push(this.modAddName);
+        this.modAddName = '';
+      },
+      submit(): void {
+        if (this.description !== this.channel.description)
+          core.connection.send('CDS', {
+            channel: this.channel.id,
+            description: this.description
+          });
+        if (!this.isChannelOwner) return;
+        if (this.isPublic !== this.channelIsPublic)
+          core.connection.send('RST', {
+            channel: this.channel.id,
+            status: this.isPublic ? 'public' : 'private'
+          });
+        if (this.mode !== this.channel.mode)
+          core.connection.send('RMO', {
+            channel: this.channel.id,
+            mode: this.mode
+          });
+        for (const op of this.channel.opList) {
+          const index = this.opList.indexOf(op);
+          if (index !== -1) this.opList.splice(index, 1);
+          else
+            core.connection.send('COR', {
+              channel: this.channel.id,
+              character: op
+            });
+        }
+        for (const op of this.opList)
+          core.connection.send('COA', {
             channel: this.channel.id,
             character: op
           });
       }
-      for (const op of this.opList)
-        core.connection.send('COA', {
-          channel: this.channel.id,
-          character: op
-        });
     }
-  }
+  });
 </script>

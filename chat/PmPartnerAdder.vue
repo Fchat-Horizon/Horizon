@@ -24,46 +24,46 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook } from '@f-list/vue-ts';
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import core from './core';
   import l from './localize';
 
-  @Component({
-    components: { modal: Modal }
-  })
-  export default class PmPartnerAdder extends CustomDialog {
-    name = '';
-    error: string | null = null;
-    l = l;
+  export default CustomDialog.extend({
+    components: { modal: Modal },
+    data() {
+      return {
+        name: '',
+        error: null as string | null,
+        l
+      };
+    },
+    methods: {
+      open(): void {
+        this.$nextTick(() => {
+          (this.$refs['nameRef'] as HTMLInputElement).focus();
+        });
+      },
+      submit(): void {
+        if (!this.name) return;
 
-    open(): void {
-      this.$nextTick(() => {
-        (this.$refs['nameRef'] as HTMLInputElement).focus();
-      });
-    }
+        const c = core.characters.get(this.name);
 
-    submit(): void {
-      if (!this.name) return;
+        if (c) {
+          const conversation = core.conversations.getPrivate(c);
 
-      const c = core.characters.get(this.name);
+          conversation.show();
 
-      if (c) {
-        const conversation = core.conversations.getPrivate(c);
-
-        conversation.show();
-
-        this.name = '';
-        this.error = '';
-      } else {
-        this.error = l('user.unknownCharacter', this.name);
+          this.name = '';
+          this.error = '';
+        } else {
+          this.error = l('user.unknownCharacter', this.name);
+        }
+      },
+      onEnter(): void {
+        this.submit();
+        (this.$refs['dialog'] as any).hide();
       }
     }
-
-    onEnter(): void {
-      this.submit();
-      this.$refs['dialog'].hide();
-    }
-  }
+  });
 </script>

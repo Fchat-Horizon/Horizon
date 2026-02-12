@@ -51,7 +51,6 @@
 </template>
 
 <script lang="ts">
-  import { Component } from '@f-list/vue-ts';
   import CustomDialog from '../components/custom_dialog';
   import Dropdown from '../components/Dropdown.vue';
   import Modal from '../components/Modal.vue';
@@ -66,92 +65,96 @@
 
   const MAX_STATUS_COUNT: number = 15;
 
-  @Component({
+  export default CustomDialog.extend({
     components: {
       modal: Modal,
       editor: Editor,
       dropdown: Dropdown,
       'status-picker': StatusPicker
-    }
-  })
-  export default class StatusSwitcher extends CustomDialog {
-    //Yes, you also need to update this in StatusPicker.vue, because I really cannot
-    //be assed to write a system for shared constants right now.
-    //That component only uses it to display the string that shows how many statuses you have saved though.
-    selectedStatus: Character.Status | undefined;
-    enteredText: string | undefined;
-    statuses = userStatuses;
-    l = l;
-    getByteLength = getByteLength;
-    getStatusIcon = getStatusIcon;
-
-    get status(): Character.Status {
-      return this.selectedStatus !== undefined
-        ? this.selectedStatus
-        : this.character.status;
-    }
-
-    set status(status: Character.Status) {
-      this.selectedStatus = status;
-    }
-
-    get text(): string {
-      return this.enteredText !== undefined
-        ? this.enteredText
-        : this.character.statusText;
-    }
-
-    set text(text: string) {
-      this.enteredText = text;
-    }
-
-    get character(): Character {
-      return core.characters.ownCharacter;
-    }
-
-    setStatus(): void {
-      core.connection.send('STA', {
-        status: this.status,
-        statusmsg: this.text
-      });
-
-      // tslint:disable-next-line
-      this.updateHistory(this.text);
-    }
-
-    reset(): void {
-      this.selectedStatus = undefined;
-      this.enteredText = undefined;
-    }
-
-    insertStatusMessage(statusMessage: string): void {
-      this.text = statusMessage;
-    }
-
-    async updateHistory(statusMessage: string): Promise<void> {
-      if (!statusMessage || statusMessage.trim() === '') {
-        return;
+    },
+    data() {
+      return {
+        //Yes, you also need to update this in StatusPicker.vue, because I really cannot
+        //be assed to write a system for shared constants right now.
+        //That component only uses it to display the string that shows how many statuses you have saved though.
+        selectedStatus: undefined as Character.Status | undefined,
+        enteredText: undefined as string | undefined,
+        statuses: userStatuses,
+        l,
+        getByteLength,
+        getStatusIcon
+      };
+    },
+    computed: {
+      status: {
+        get(): Character.Status {
+          return this.selectedStatus !== undefined
+            ? this.selectedStatus
+            : this.character.status;
+        },
+        set(status: Character.Status) {
+          this.selectedStatus = status;
+        }
+      },
+      text: {
+        get(): string {
+          return this.enteredText !== undefined
+            ? this.enteredText
+            : this.character.statusText;
+        },
+        set(text: string) {
+          this.enteredText = text;
+        }
+      },
+      character(): Character {
+        return core.characters.ownCharacter;
       }
+    },
+    methods: {
+      setStatus(): void {
+        core.connection.send('STA', {
+          status: this.status,
+          statusmsg: this.text
+        });
 
-      const curHistory: string[] =
-        (await core.settingsStore.get('statusHistory')) || [];
-      const statusMessageClean = statusMessage.toString().trim().toLowerCase();
-      const filteredHistory: string[] = _.reject(
-        curHistory,
-        (c: string) => c.toString().trim().toLowerCase() === statusMessageClean
-      );
-      const newHistory: string[] = _.take(
-        _.concat([statusMessage], filteredHistory),
-        MAX_STATUS_COUNT
-      );
+        // tslint:disable-next-line
+        this.updateHistory(this.text);
+      },
+      reset(): void {
+        this.selectedStatus = undefined;
+        this.enteredText = undefined;
+      },
+      insertStatusMessage(statusMessage: string): void {
+        this.text = statusMessage;
+      },
+      async updateHistory(statusMessage: string): Promise<void> {
+        if (!statusMessage || statusMessage.trim() === '') {
+          return;
+        }
 
-      await core.settingsStore.set('statusHistory', newHistory);
+        const curHistory: string[] =
+          (await core.settingsStore.get('statusHistory')) || [];
+        const statusMessageClean = statusMessage
+          .toString()
+          .trim()
+          .toLowerCase();
+        const filteredHistory: string[] = _.reject(
+          curHistory,
+          (c: string) =>
+            c.toString().trim().toLowerCase() === statusMessageClean
+        );
+        const newHistory: string[] = _.take(
+          _.concat([statusMessage], filteredHistory),
+          MAX_STATUS_COUNT
+        );
+
+        await core.settingsStore.set('statusHistory', newHistory);
+      },
+      showStatusPicker(): void {
+        (<StatusPicker>this.$refs['statusPicker']).show();
+      }
     }
-
-    showStatusPicker(): void {
-      (<StatusPicker>this.$refs['statusPicker']).show();
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

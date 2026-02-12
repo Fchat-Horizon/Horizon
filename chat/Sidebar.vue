@@ -27,62 +27,58 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop, Watch } from '@f-list/vue-ts';
   import Vue from 'vue';
 
-  @Component
-  export default class Sidebar extends Vue {
-    @Prop
-    readonly right?: true;
-    @Prop
-    readonly label?: string;
-    @Prop({ required: true })
-    readonly icon!: string;
-    @Prop({ default: false })
-    readonly open!: boolean;
-    expanded = this.open;
-
-    bodyWidth = 0;
-    bodyElement!: HTMLElement;
-    isResizing = false;
-    startX = 0;
-    startWidth = 0;
-
-    @Hook('mounted')
+  export default Vue.extend({
+    props: {
+      right: {},
+      label: {},
+      icon: { required: true as const },
+      open: { default: false }
+    },
+    data() {
+      return {
+        expanded: this.open as boolean,
+        bodyWidth: 0,
+        bodyElement: undefined as any as HTMLElement,
+        isResizing: false,
+        startX: 0,
+        startWidth: 0
+      };
+    },
+    watch: {
+      open(): void {
+        this.expanded = this.open as boolean;
+      }
+    },
     mounted(): void {
       this.bodyElement = this.$refs.body as HTMLElement;
       this.bodyWidth = this.bodyElement.offsetWidth;
+    },
+    methods: {
+      startResize(e: MouseEvent): void {
+        this.isResizing = true;
+        this.startX = e.clientX;
+        this.startWidth = this.bodyWidth;
+        document.addEventListener('mousemove', this.onResize);
+        document.addEventListener('mouseup', this.stopResize);
+        e.preventDefault();
+      },
+      onResize(e: MouseEvent): void {
+        if (!this.isResizing) return;
+        const delta = e.clientX - this.startX;
+        //Our widths are clamped by CSS values. in stopResize we then set our variable value to the effectize size.
+        //This is because if those values don't match, you might run into problems where it tries to resize 'outside' its boundaries, and the variable changes but the actual DOM element is clamped.
+        this.bodyWidth = this.right
+          ? this.startWidth - delta
+          : this.startWidth + delta;
+      },
+      stopResize(): void {
+        this.isResizing = false;
+        document.removeEventListener('mousemove', this.onResize);
+        document.removeEventListener('mouseup', this.stopResize);
+        this.bodyWidth = this.bodyElement.offsetWidth;
+      }
     }
-
-    @Watch('open')
-    watchOpen(): void {
-      this.expanded = this.open;
-    }
-
-    startResize(e: MouseEvent): void {
-      this.isResizing = true;
-      this.startX = e.clientX;
-      this.startWidth = this.bodyWidth;
-      document.addEventListener('mousemove', this.onResize);
-      document.addEventListener('mouseup', this.stopResize);
-      e.preventDefault();
-    }
-
-    onResize = (e: MouseEvent): void => {
-      if (!this.isResizing) return;
-      const delta = e.clientX - this.startX;
-      //Our widths are clamped by CSS values. in stopResize we then set our variable value to the effectize size.
-      //This is because if those values don't match, you might run into problems where it tries to resize 'outside' its boundaries, and the variable changes but the actual DOM element is clamped.
-      this.bodyWidth = this.right
-        ? this.startWidth - delta
-        : this.startWidth + delta;
-    };
-
-    stopResize = (): void => {
-      this.isResizing = false;
-      document.removeEventListener('mousemove', this.onResize);
-      document.removeEventListener('mouseup', this.stopResize);
-      this.bodyWidth = this.bodyElement.offsetWidth;
-    };
-  }
+  });
 </script>

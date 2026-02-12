@@ -20,7 +20,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop } from '@f-list/vue-ts';
   import Vue from 'vue';
   import { Infotag, InfotagGroup } from '../../interfaces';
   import { Store } from './data_store';
@@ -29,28 +28,32 @@
   import { Character } from './interfaces';
   import l from '../../chat/localize';
 
-  @Component({
-    components: { infotag: InfotagView }
-  })
-  export default class InfotagsView extends Vue {
-    l = l;
-    @Prop({ required: true })
-    readonly character!: Character;
-    @Prop({ required: true })
-    readonly characterMatch!: MatchReport;
-
-    get groups(): { readonly [key: string]: Readonly<InfotagGroup> } {
-      return Store.shared.infotagGroups;
+  export default Vue.extend({
+    components: { infotag: InfotagView },
+    props: {
+      character: { required: true as const },
+      characterMatch: { required: true as const }
+    },
+    data() {
+      return {
+        l: l
+      };
+    },
+    computed: {
+      groups(): { readonly [key: string]: Readonly<InfotagGroup> } {
+        return Store.shared.infotagGroups;
+      }
+    },
+    methods: {
+      getInfotags(group: number): Infotag[] {
+        return Object.keys(Store.shared.infotags)
+          .map(x => Store.shared.infotags[x])
+          .filter(
+            x =>
+              x.infotag_group === group &&
+              this.character.character.infotags[x.id] !== undefined
+          );
+      }
     }
-
-    getInfotags(group: number): Infotag[] {
-      return Object.keys(Store.shared.infotags)
-        .map(x => Store.shared.infotags[x])
-        .filter(
-          x =>
-            x.infotag_group === group &&
-            this.character.character.infotags[x.id] !== undefined
-        );
-    }
-  }
+  });
 </script>

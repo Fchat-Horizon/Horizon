@@ -196,7 +196,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook } from '@f-list/vue-ts';
   import * as remote from '@electron/remote';
   import { clipboard } from 'electron';
   import Vue from 'vue';
@@ -212,103 +211,93 @@
   // tslint:disable-next-line:no-require-imports
   const aboutIconSrc = require('../assets/images/logo.svg').default;
 
-  @Component({})
-  export default class About extends Vue {
-    settings!: GeneralSettings;
-    appCommit = '';
-    appVersion = '';
-    osIsDark = remote.nativeTheme.shouldUseDarkColors;
-    l = l;
-    platform = process.platform;
-    isMac = process.platform === 'darwin';
-    logoSrc = logoSrc;
-    aboutIconSrc = aboutIconSrc;
-    electronVersion = process.versions.electron || 'N/A';
-    chromiumVersion = process.versions.chrome || 'N/A';
-    nodeVersion = process.versions.node || 'N/A';
-    copySuccess = false;
-
-    get styling(): string {
-      try {
-        return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
-      } catch (e) {
-        if (
-          (<Error & { code: string }>e).code === 'ENOENT' &&
-          this.settings.theme !== 'default'
-        ) {
-          this.settings.theme = 'default';
-          return this.styling;
-        }
-        throw e;
-      }
-    }
-
-    getSyncedTheme() {
-      if (!this.settings.themeSync) return this.settings.theme;
-      return this.osIsDark
-        ? this.settings.themeSyncDark
-        : this.settings.themeSyncLight;
-    }
-
-    get displayCommit(): string {
-      return this.appCommit && this.appCommit !== 'unknown'
-        ? this.appCommit
-        : 'N/A';
-    }
-
-    get commitUrl(): string | undefined {
-      if (!this.appCommit || this.appCommit === 'unknown') return undefined;
-      return `https://github.com/Fchat-Horizon/Horizon/commit/${this.appCommit}`;
-    }
-
-    get platformDetails(): string {
-      const platformName = (() => {
-        switch (os.platform()) {
-          case 'win32':
-            return 'Windows';
-          case 'darwin':
-            return 'macOS';
-          case 'linux':
-            return 'Linux';
-          default:
-            return os.platform();
-        }
-      })();
-      const archLabel = (() => {
-        switch (os.arch()) {
-          case 'x64':
-            return '64-bit';
-          case 'ia32':
-            return '32-bit';
-          case 'arm64':
-            return 'ARM64';
-          default:
-            return os.arch();
-        }
-      })();
-      const release = os.release();
-      return `${platformName} ${archLabel}${release ? ` (${release})` : ''}`;
-    }
-
-    get versionInfoText(): string {
-      return [
-        `Version: ${this.appVersion || 'N/A'}`,
-        `Commit: ${this.displayCommit}`,
-        `Electron: ${this.electronVersion}`,
-        `Chromium: ${this.chromiumVersion}`,
-        `Node.js: ${this.nodeVersion}`,
-        `Platform: ${this.platformDetails}`
-      ].join('\n');
-    }
-
-    get aboutIconStyle(): Record<string, string> {
+  export default Vue.extend({
+    data() {
       return {
-        maskImage: `url(${this.aboutIconSrc})`,
-        WebkitMaskImage: `url(${this.aboutIconSrc})`
+        settings: undefined as any as GeneralSettings,
+        appCommit: '',
+        appVersion: '',
+        osIsDark: remote.nativeTheme.shouldUseDarkColors,
+        l,
+        platform: process.platform,
+        isMac: process.platform === 'darwin',
+        logoSrc,
+        aboutIconSrc,
+        electronVersion: process.versions.electron || 'N/A',
+        chromiumVersion: process.versions.chrome || 'N/A',
+        nodeVersion: process.versions.node || 'N/A',
+        copySuccess: false
       };
-    }
-
-    @Hook('mounted')
+    },
+    computed: {
+      styling(): string {
+        try {
+          return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
+        } catch (e) {
+          if (
+            (<Error & { code: string }>e).code === 'ENOENT' &&
+            this.settings.theme !== 'default'
+          ) {
+            this.settings.theme = 'default';
+            return this.styling;
+          }
+          throw e;
+        }
+      },
+      displayCommit(): string {
+        return this.appCommit && this.appCommit !== 'unknown'
+          ? this.appCommit
+          : 'N/A';
+      },
+      commitUrl(): string | undefined {
+        if (!this.appCommit || this.appCommit === 'unknown') return undefined;
+        return `https://github.com/Fchat-Horizon/Horizon/commit/${this.appCommit}`;
+      },
+      platformDetails(): string {
+        const platformName = (() => {
+          switch (os.platform()) {
+            case 'win32':
+              return 'Windows';
+            case 'darwin':
+              return 'macOS';
+            case 'linux':
+              return 'Linux';
+            default:
+              return os.platform();
+          }
+        })();
+        const archLabel = (() => {
+          switch (os.arch()) {
+            case 'x64':
+              return '64-bit';
+            case 'ia32':
+              return '32-bit';
+            case 'arm64':
+              return 'ARM64';
+            default:
+              return os.arch();
+          }
+        })();
+        const release = os.release();
+        return `${platformName} ${archLabel}${release ? ` (${release})` : ''}`;
+      },
+      versionInfoText(): string {
+        return [
+          `Version: ${this.appVersion || 'N/A'}`,
+          `Commit: ${this.displayCommit}`,
+          `Electron: ${this.electronVersion}`,
+          `Chromium: ${this.chromiumVersion}`,
+          `Node.js: ${this.nodeVersion}`,
+          `Platform: ${this.platformDetails}`
+        ].join('\n');
+      },
+      aboutIconStyle(): Record<string, string> {
+        return {
+          maskImage: `url(${this.aboutIconSrc})`,
+          WebkitMaskImage: `url(${this.aboutIconSrc})`
+        };
+      }
+    },
     async mounted(): Promise<void> {
       remote.nativeTheme.on('updated', () => {
         this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
@@ -330,47 +319,52 @@
           }
         });
       }
-    }
-
-    close(): void {
-      browserWindow.close();
-    }
-
-    copyVersionInfo(): void {
-      clipboard.writeText(this.versionInfoText);
-      this.copySuccess = true;
-      window.setTimeout(() => {
-        this.copySuccess = false;
-      }, 1500);
-    }
-
-    getThemeClass() {
-      try {
-        if (process.platform === 'win32') {
-          if (this.settings?.risingDisableWindowsHighContrast) {
-            document
-              .querySelector('html')
-              ?.classList.add('disableWindowsHighContrast');
-          } else {
-            document
-              .querySelector('html')
-              ?.classList.remove('disableWindowsHighContrast');
+    },
+    methods: {
+      getSyncedTheme() {
+        if (!this.settings.themeSync) return this.settings.theme;
+        return this.osIsDark
+          ? this.settings.themeSyncDark
+          : this.settings.themeSyncLight;
+      },
+      close(): void {
+        browserWindow.close();
+      },
+      copyVersionInfo(): void {
+        clipboard.writeText(this.versionInfoText);
+        this.copySuccess = true;
+        window.setTimeout(() => {
+          this.copySuccess = false;
+        }, 1500);
+      },
+      getThemeClass() {
+        try {
+          if (process.platform === 'win32') {
+            if (this.settings?.risingDisableWindowsHighContrast) {
+              document
+                .querySelector('html')
+                ?.classList.add('disableWindowsHighContrast');
+            } else {
+              document
+                .querySelector('html')
+                ?.classList.remove('disableWindowsHighContrast');
+            }
           }
-        }
 
-        return {
-          ['platform-' + this.platform]: true,
-          bbcodeGlow: this.settings?.horizonBbcodeGlow || false,
-          disableWindowsHighContrast:
-            this.settings?.risingDisableWindowsHighContrast || false
-        };
-      } catch (err) {
-        return {
-          ['platform-' + this.platform]: true
-        };
+          return {
+            ['platform-' + this.platform]: true,
+            bbcodeGlow: this.settings?.horizonBbcodeGlow || false,
+            disableWindowsHighContrast:
+              this.settings?.risingDisableWindowsHighContrast || false
+          };
+        } catch (err) {
+          return {
+            ['platform-' + this.platform]: true
+          };
+        }
       }
     }
-  }
+  });
 </script>
 
 <style lang="scss">

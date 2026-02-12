@@ -151,7 +151,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop, Watch } from '@f-list/vue-ts';
   import _ from 'lodash';
   import Vue from 'vue';
   import { mixin as clickaway } from 'vue-clickaway';
@@ -167,122 +166,112 @@
   import { Character } from '../fchat';
   import l from '../chat/localize';
 
-  @Component({
+  export default Vue.extend({
     components: {
       icon: IconView,
       EIconSelector: EIconSelector
     },
-    mixins: [clickaway]
-  })
-  export default class Editor extends Vue {
-    l = l;
-    @Prop
-    readonly extras?: EditorButton[];
+    mixins: [clickaway],
+    props: {
+      extras: {},
+      maxlength: { default: 1000 },
+      classes: {},
+      value: { default: undefined },
+      disabled: {},
+      placeholder: {},
+      hasToolbar: { default: true },
+      invalid: { default: false, type: Boolean },
+      characterName: { default: null },
+      type: { default: 'normal' }
+    },
+    data() {
+      return {
+        l: l,
+        buttonColors: [
+          'red',
+          'orange',
+          'yellow',
+          'green',
+          'cyan',
+          'purple',
+          'blue',
+          'pink',
+          'black',
+          'brown',
+          'white',
+          'gray'
+        ],
+        colorPopupVisible: false,
+        preview: false,
+        previewWarnings: [] as ReadonlyArray<string>,
+        previewResult: '',
+        // tslint:disable-next-line: no-unnecessary-type-assertion
+        text: (this.value !== undefined ? this.value : '') as string,
+        element: undefined as any as HTMLTextAreaElement,
+        sizer: undefined as any as HTMLTextAreaElement,
+        editorContainer: undefined as any as HTMLElement,
+        maxHeight: 0 as number,
+        minHeight: 0 as number,
+        showToolbar: false,
+        shortcutModifierKey: process.platform == 'darwin' ? '⌘' : 'Ctrl',
+        parser: undefined as any as BBCodeParser,
+        defaultButtons: defaultButtons,
+        isShiftPressed: false,
+        undoStack: [] as string[],
+        undoIndex: 0,
+        lastInput: 0,
+        awaitingColorKey: false as boolean,
+        awaitingNoMatch: false as boolean,
+        awaitingNoMatchTimer: null as number | null,
+        awaitingBuffer: '' as string,
+        //tslint:disable:strict-boolean-expressions
+        resizeListener: undefined as any as () => void
+      };
+    },
+    computed: {
+      awaitingMatches(): string[] {
+        return this.awaitingBuffer
+          ? this.getMatches(this.awaitingBuffer).slice(0, 3)
+          : [];
+      },
+      finalClasses(): string | undefined {
+        let classes = this.classes as string | undefined;
+        if (this.invalid) classes += ' is-invalid';
+        return classes;
+      },
+      buttons(): EditorButton[] {
+        const buttons = this.defaultButtons.slice();
 
-    @Prop({ default: 1000 })
-    readonly maxlength!: number;
+        if (this.extras !== undefined)
+          for (
+            let i = 0, l = (this.extras as EditorButton[]).length;
+            i < l;
+            i++
+          )
+            buttons.push((this.extras as EditorButton[])[i]);
 
-    @Prop
-    readonly classes?: string;
+        const colorButtonIndex = _.findIndex(buttons, b => b.tag === 'color');
 
-    @Prop
-    readonly value?: string | undefined = undefined;
+        if (this.colorPopupVisible) {
+          const colorButton = _.clone(buttons[colorButtonIndex]);
+          colorButton.outerClass = 'toggled';
 
-    @Prop
-    readonly disabled?: boolean;
+          buttons[colorButtonIndex] = colorButton;
+        }
 
-    @Prop
-    readonly placeholder?: string;
-
-    @Prop({ default: true })
-    readonly hasToolbar!: boolean;
-
-    @Prop({ default: false, type: Boolean })
-    readonly invalid!: boolean;
-
-    @Prop({ default: null })
-    readonly characterName: Character | null = null;
-
-    @Prop({ default: 'normal' })
-    readonly type: 'normal' | 'big' = 'normal';
-
-    buttonColors = [
-      'red',
-      'orange',
-      'yellow',
-      'green',
-      'cyan',
-      'purple',
-      'blue',
-      'pink',
-      'black',
-      'brown',
-      'white',
-      'gray'
-    ];
-    colorPopupVisible = false;
-
-    preview = false;
-    previewWarnings: ReadonlyArray<string> = [];
-    previewResult = '';
-    // tslint:disable-next-line: no-unnecessary-type-assertion
-    text: string = (this.value !== undefined ? this.value : '') as string;
-    element!: HTMLTextAreaElement;
-    sizer!: HTMLTextAreaElement;
-    editorContainer!: HTMLElement;
-    maxHeight!: number;
-    minHeight!: number;
-    showToolbar = false;
-    shortcutModifierKey: String = process.platform == 'darwin' ? '⌘' : 'Ctrl';
-    protected parser!: BBCodeParser;
-    protected defaultButtons = defaultButtons;
-
-    private isShiftPressed = false;
-    private undoStack: string[] = [];
-    private undoIndex = 0;
-    private lastInput = 0;
-    private awaitingColorKey: boolean = false;
-    private awaitingNoMatch: boolean = false;
-    private awaitingNoMatchTimer: number | null = null;
-    private awaitingBuffer: string = '';
-    //tslint:disable:strict-boolean-expressions
-    private resizeListener!: () => void;
-
-    private getMatches(prefix: string): string[] {
-      const topRow = new Set(this.buttonColors.slice(0, 8));
-      return this.buttonColors
-        .filter(c => c.toLowerCase().startsWith(prefix.toLowerCase()))
-        .sort((a, b) => {
-          const aTop = topRow.has(a) ? 0 : 1;
-          const bTop = topRow.has(b) ? 0 : 1;
-          if (aTop !== bTop) return aTop - bTop;
-          return a.localeCompare(b);
-        });
-    }
-
-    get awaitingMatches(): string[] {
-      return this.awaitingBuffer
-        ? this.getMatches(this.awaitingBuffer).slice(0, 3)
-        : [];
-    }
-
-    private clearAwaiting(): void {
-      this.awaitingColorKey = false;
-      this.awaitingBuffer = '';
-      this.awaitingNoMatch = false;
-      if (this.awaitingNoMatchTimer) {
-        window.clearTimeout(this.awaitingNoMatchTimer);
-        this.awaitingNoMatchTimer = null;
+        return buttons;
       }
-      this.colorPopupVisible = false;
-    }
-
-    private applyAndClearColor(color: string): void {
-      this.clearAwaiting();
-      this.colorApply(color);
-    }
-
-    @Hook('created')
+    },
+    watch: {
+      value(newValue: string): void {
+        this.$nextTick(() => this.resize());
+        if (this.text === newValue) return;
+        this.text = newValue;
+        this.lastInput = 0;
+        this.undoIndex = 0;
+        this.undoStack = [];
+      }
+    },
     created(): void {
       // console.log('EDITOR', 'created');
       this.parser = new CoreBBCodeParser();
@@ -291,9 +280,7 @@
         this.maxHeight = parseInt(styles.maxHeight, 10) || 250;
         this.minHeight = parseInt(styles.minHeight, 10) || 60;
       };
-    }
-
-    @Hook('mounted')
+    },
     mounted(): void {
       // console.log('EDITOR', 'mounted');
       this.element = <HTMLTextAreaElement>this.$refs['input'];
@@ -321,431 +308,423 @@
       this.resize();
       window.addEventListener('resize', this.resizeListener);
       this.editorContainer = this.$refs['editorContainer'] as HTMLElement;
-    }
+    },
 
     //tslint:enable
 
-    @Hook('destroyed')
     destroyed(): void {
       // console.log('EDITOR', 'destroyed');
       window.removeEventListener('resize', this.resizeListener);
-    }
+    },
+    methods: {
+      getMatches(prefix: string): string[] {
+        const topRow = new Set(this.buttonColors.slice(0, 8));
+        return this.buttonColors
+          .filter(c => c.toLowerCase().startsWith(prefix.toLowerCase()))
+          .sort((a, b) => {
+            const aTop = topRow.has(a) ? 0 : 1;
+            const bTop = topRow.has(b) ? 0 : 1;
+            if (aTop !== bTop) return aTop - bTop;
+            return a.localeCompare(b);
+          });
+      },
+      clearAwaiting(): void {
+        this.awaitingColorKey = false;
+        this.awaitingBuffer = '';
+        this.awaitingNoMatch = false;
+        if (this.awaitingNoMatchTimer) {
+          window.clearTimeout(this.awaitingNoMatchTimer);
+          this.awaitingNoMatchTimer = null;
+        }
+        this.colorPopupVisible = false;
+      },
+      applyAndClearColor(color: string): void {
+        this.clearAwaiting();
+        this.colorApply(color);
+      },
+      getButtonByTag(tag: string): EditorButton {
+        const btn = _.find(this.buttons, b => b.tag === tag);
 
-    get finalClasses(): string | undefined {
-      let classes = this.classes;
-      if (this.invalid) classes += ' is-invalid';
-      return classes;
-    }
+        if (!btn) {
+          throw new Error('Unknown button');
+        }
 
-    get buttons(): EditorButton[] {
-      const buttons = this.defaultButtons.slice();
+        return btn;
+      },
+      getSelection(): EditorSelection {
+        const length = this.element.selectionEnd - this.element.selectionStart;
+        return {
+          start: this.element.selectionStart,
+          end: this.element.selectionEnd,
+          length,
+          text: this.element.value.substr(this.element.selectionStart, length)
+        };
+      },
 
-      if (this.extras !== undefined)
-        for (let i = 0, l = this.extras.length; i < l; i++)
-          buttons.push(this.extras[i]);
+      replaceSelection(replacement: string): string {
+        const selection = this.getSelection();
+        const start =
+          this.element.value.substr(0, selection.start) + replacement;
+        const end = this.element.value.substr(selection.end);
+        this.element.value = start + end;
+        this.element.dispatchEvent(new Event('input'));
+        return start + end;
+      },
 
-      const colorButtonIndex = _.findIndex(buttons, b => b.tag === 'color');
+      setSelection(start: number, end?: number): void {
+        if (end === undefined) end = start;
+        this.element.focus();
+        this.element.setSelectionRange(start, end);
+      },
 
-      if (this.colorPopupVisible) {
-        const colorButton = _.clone(buttons[colorButtonIndex]);
-        colorButton.outerClass = 'toggled';
+      isEIconSelectorOpen(): boolean {
+        const eIconSelector = this.$refs['eIconSelector'] as any;
+        return eIconSelector?.dialog?.isShown === true;
+      },
 
-        buttons[colorButtonIndex] = colorButton;
-      }
+      applyText(
+        startText: string,
+        endText: string,
+        withInject?: string,
+        collapseAfterWrap: boolean = false
+      ): void {
+        if (this.undoIndex === 0 && this.text !== this.undoStack[0]) {
+          if (this.undoStack.length >= 30) this.undoStack.pop();
+          this.undoStack.unshift(this.text);
+        }
 
-      return buttons;
-    }
-
-    getButtonByTag(tag: string): EditorButton {
-      const btn = _.find(this.buttons, b => b.tag === tag);
-
-      if (!btn) {
-        throw new Error('Unknown button');
-      }
-
-      return btn;
-    }
-
-    @Watch('value')
-    watchValue(newValue: string): void {
-      this.$nextTick(() => this.resize());
-      if (this.text === newValue) return;
-      this.text = newValue;
-      this.lastInput = 0;
-      this.undoIndex = 0;
-      this.undoStack = [];
-    }
-
-    getSelection(): EditorSelection {
-      const length = this.element.selectionEnd - this.element.selectionStart;
-      return {
-        start: this.element.selectionStart,
-        end: this.element.selectionEnd,
-        length,
-        text: this.element.value.substr(this.element.selectionStart, length)
-      };
-    }
-
-    replaceSelection(replacement: string): string {
-      const selection = this.getSelection();
-      const start = this.element.value.substr(0, selection.start) + replacement;
-      const end = this.element.value.substr(selection.end);
-      this.element.value = start + end;
-      this.element.dispatchEvent(new Event('input'));
-      return start + end;
-    }
-
-    setSelection(start: number, end?: number): void {
-      if (end === undefined) end = start;
-      this.element.focus();
-      this.element.setSelectionRange(start, end);
-    }
-
-    private isEIconSelectorOpen(): boolean {
-      const eIconSelector = this.$refs['eIconSelector'] as any;
-      return eIconSelector?.dialog?.isShown === true;
-    }
-
-    applyText(
-      startText: string,
-      endText: string,
-      withInject?: string,
-      collapseAfterWrap: boolean = false
-    ): void {
-      if (this.undoIndex === 0 && this.text !== this.undoStack[0]) {
-        if (this.undoStack.length >= 30) this.undoStack.pop();
-        this.undoStack.unshift(this.text);
-      }
-
-      const selection = this.getSelection();
-      if (selection.length > 0) {
-        const replacement =
-          startText + (withInject || selection.text) + endText;
-        this.text = this.replaceSelection(replacement);
-        // If collapsing after wrap, place caret at end; otherwise keep wrapped text selected.
-        if (collapseAfterWrap) {
-          const caretPos = selection.start + replacement.length;
-          this.setSelection(caretPos, caretPos);
+        const selection = this.getSelection();
+        if (selection.length > 0) {
+          const replacement =
+            startText + (withInject || selection.text) + endText;
+          this.text = this.replaceSelection(replacement);
+          // If collapsing after wrap, place caret at end; otherwise keep wrapped text selected.
+          if (collapseAfterWrap) {
+            const caretPos = selection.start + replacement.length;
+            this.setSelection(caretPos, caretPos);
+          } else {
+            this.setSelection(
+              selection.start,
+              selection.start + replacement.length
+            );
+          }
         } else {
-          this.setSelection(
-            selection.start,
-            selection.start + replacement.length
-          );
+          const start = this.text.substr(0, selection.start) + startText;
+          const end = endText + this.text.substr(selection.start);
+          this.text = start + (withInject || '') + end;
+
+          const selectionPoint = withInject
+            ? start.length + withInject.length + endText.length
+            : start.length;
+
+          this.$nextTick(() => this.setSelection(selectionPoint));
         }
-      } else {
-        const start = this.text.substr(0, selection.start) + startText;
-        const end = endText + this.text.substr(selection.start);
-        this.text = start + (withInject || '') + end;
+        this.$emit('input', this.text);
+      },
 
-        const selectionPoint = withInject
-          ? start.length + withInject.length + endText.length
-          : start.length;
-
-        this.$nextTick(() => this.setSelection(selectionPoint));
-      }
-      this.$emit('input', this.text);
-    }
-
-    dismissColorSelector(): void {
-      this.colorPopupVisible = false;
-    }
-
-    colorApply(btnColor: string): void {
-      const button = this.getButtonByTag('color');
-
-      this.applyButtonEffect(button, btnColor);
-
-      this.colorPopupVisible = false;
-    }
-
-    dismissEIconSelector(): void {
-      (this.$refs['eIconSelector'] as Modal).hide();
-    }
-
-    showEIconSelector(): void {
-      (this.$refs['eIconSelector'] as Modal).show();
-      setTimeout(() => (this.$refs['eIconSelector'] as any).setFocus(), 50);
-    }
-
-    onSelectEIcon(eiconId: string, shift: boolean): void {
-      this.eiconApply(eiconId, shift);
-    }
-
-    eiconApply(eiconId: string, shift: boolean): void {
-      const button = this.getButtonByTag('eicon');
-
-      this.applyButtonEffect(button, undefined, eiconId);
-
-      if (!shift) {
-        this.dismissEIconSelector();
-      }
-    }
-
-    apply(button: EditorButton): void {
-      if (button.tag === 'color') {
-        this.colorPopupVisible = !this.colorPopupVisible;
-        return;
-      } else if (button.tag === 'eicon') {
-        this.showEIconSelector();
+      dismissColorSelector(): void {
         this.colorPopupVisible = false;
-        return;
-      } else {
+      },
+
+      colorApply(btnColor: string): void {
+        const button = this.getButtonByTag('color');
+
+        this.applyButtonEffect(button, btnColor);
+
         this.colorPopupVisible = false;
-      }
+      },
 
-      this.applyButtonEffect(button);
-    }
+      dismissEIconSelector(): void {
+        (this.$refs['eIconSelector'] as Modal).hide();
+      },
 
-    applyButtonEffect(
-      button: EditorButton,
-      withArgument?: string,
-      withInject?: string
-    ): void {
-      // Allow emitted variations for custom buttons.
-      this.$once('insert', (startText: string, endText: string) =>
-        this.applyText(startText, endText)
-      );
-      // noinspection TypeScriptValidateTypes
-      if (button.handler !== undefined) {
-        // tslint:ignore-next-line:no-any
-        return button.handler.call(this as any, this);
-      }
-      const startText =
-        button.startText === undefined || withArgument
-          ? `[${button.tag}${withArgument ? '=' + withArgument : ''}]`
-          : button.startText;
-      const endText =
-        button.endText === undefined ? `[/${button.tag}]` : button.endText;
+      showEIconSelector(): void {
+        (this.$refs['eIconSelector'] as Modal).show();
+        setTimeout(() => (this.$refs['eIconSelector'] as any).setFocus(), 50);
+      },
 
-      const ebl = endText ? endText.length : 0;
-      const sbl = startText ? startText.length : 0;
+      onSelectEIcon(eiconId: string, shift: boolean): void {
+        this.eiconApply(eiconId, shift);
+      },
 
-      if (this.text.length + sbl + ebl > this.maxlength) return;
+      eiconApply(eiconId: string, shift: boolean): void {
+        const button = this.getButtonByTag('eicon');
 
-      const collapseAfterWrap = button.tag === 'color';
-      this.applyText(
-        startText || '',
-        endText || '',
-        withInject,
-        collapseAfterWrap
-      );
-      this.lastInput = Date.now();
-    }
+        this.applyButtonEffect(button, undefined, eiconId);
 
-    onInput(): void {
-      if (this.undoIndex > 0) {
-        this.undoStack = this.undoStack.slice(this.undoIndex);
-        this.undoIndex = 0;
-      }
-      this.$emit('input', this.text);
-      this.lastInput = Date.now();
-    }
+        if (!shift) {
+          this.dismissEIconSelector();
+        }
+      },
 
-    //By "global" we mean global to the editor, not for the entire page.
-    //They fire when the editor element is focused, not the text box.
-    onKeyDownGlobal(e: KeyboardEvent): void {
-      if (this.isEIconSelectorOpen()) {
-        return;
-      }
+      apply(button: EditorButton): void {
+        if (button.tag === 'color') {
+          this.colorPopupVisible = !this.colorPopupVisible;
+          return;
+        } else if (button.tag === 'eicon') {
+          this.showEIconSelector();
+          this.colorPopupVisible = false;
+          return;
+        } else {
+          this.colorPopupVisible = false;
+        }
 
-      const key = getKey(e);
-      if (
-        ((e.metaKey || e.ctrlKey) && e.shiftKey && key === Keys.KeyP) ||
-        ((key === Keys.Enter || key === Keys.Space) && this.preview)
-      ) {
-        e.stopPropagation();
-        e.preventDefault();
-        this.togglePreview();
-        return;
-      }
+        this.applyButtonEffect(button);
+      },
 
-      const input = <HTMLTextAreaElement>this.$refs['input'];
-      if (input) {
-        input.focus();
-      }
-    }
+      applyButtonEffect(
+        button: EditorButton,
+        withArgument?: string,
+        withInject?: string
+      ): void {
+        // Allow emitted variations for custom buttons.
+        this.$once('insert', (startText: string, endText: string) =>
+          this.applyText(startText, endText)
+        );
+        // noinspection TypeScriptValidateTypes
+        if (button.handler !== undefined) {
+          // tslint:ignore-next-line:no-any
+          return button.handler.call(this as any, this);
+        }
+        const startText =
+          button.startText === undefined || withArgument
+            ? `[${button.tag}${withArgument ? '=' + withArgument : ''}]`
+            : button.startText;
+        const endText =
+          button.endText === undefined ? `[/${button.tag}]` : button.endText;
 
-    onKeyDown(e: KeyboardEvent): void {
-      const key = getKey(e);
-      if (this.awaitingColorKey) {
-        // Escape: cancel
-        if (key === Keys.Escape) {
-          e.stopPropagation();
-          e.preventDefault();
-          this.clearAwaiting();
+        const ebl = endText ? endText.length : 0;
+        const sbl = startText ? startText.length : 0;
+
+        if (this.text.length + sbl + ebl > this.maxlength) return;
+
+        const collapseAfterWrap = button.tag === 'color';
+        this.applyText(
+          startText || '',
+          endText || '',
+          withInject,
+          collapseAfterWrap
+        );
+        this.lastInput = Date.now();
+      },
+
+      onInput(): void {
+        if (this.undoIndex > 0) {
+          this.undoStack = this.undoStack.slice(this.undoIndex);
+          this.undoIndex = 0;
+        }
+        this.$emit('input', this.text);
+        this.lastInput = Date.now();
+      },
+
+      //By "global" we mean global to the editor, not for the entire page.
+      //They fire when the editor element is focused, not the text box.
+      onKeyDownGlobal(e: KeyboardEvent): void {
+        if (this.isEIconSelectorOpen()) {
           return;
         }
 
-        // Backspace: remove last char
-        if (key === Keys.Backspace) {
-          e.stopPropagation();
-          e.preventDefault();
-          if (this.awaitingBuffer.length > 0)
-            this.awaitingBuffer = this.awaitingBuffer.slice(0, -1);
-          return;
-        }
-
-        if (key >= Keys.KeyA && key <= Keys.KeyZ) {
-          e.stopPropagation();
-          e.preventDefault();
-          const ch = String.fromCharCode(key);
-          this.awaitingBuffer += ch;
-
-          const prefix = this.awaitingBuffer.toLowerCase();
-          const matches = this.buttonColors.filter(c =>
-            c.toLowerCase().startsWith(prefix)
-          );
-
-          if (matches.length === 1) {
-            this.applyAndClearColor(matches[0]);
-            return;
-          }
-          const exact = matches.find(c => c.toLowerCase() === prefix);
-          if (exact) {
-            this.applyAndClearColor(exact);
-            return;
-          }
-
-          if (matches.length === 0) {
-            this.awaitingNoMatch = true;
-            if (this.awaitingNoMatchTimer)
-              window.clearTimeout(this.awaitingNoMatchTimer);
-            this.awaitingNoMatchTimer = window.setTimeout(
-              () => this.clearAwaiting(),
-              800
-            ) as unknown as number;
-            return;
-          }
-
-          return;
-        }
-      }
-      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
-        if (key === Keys.KeyZ) {
-          e.preventDefault();
-          if (this.undoIndex === 0 && this.undoStack[0] !== this.text)
-            this.undoStack.unshift(this.text);
-          if (this.undoStack.length > this.undoIndex + 1) {
-            this.text = this.undoStack[++this.undoIndex];
-            this.$emit('input', this.text);
-            this.lastInput = Date.now();
-          }
-        } else if (key === Keys.KeyY) {
-          e.preventDefault();
-          if (this.undoIndex > 0) {
-            this.text = this.undoStack[--this.undoIndex];
-            this.$emit('input', this.text);
-            this.lastInput = Date.now();
-          }
-        }
+        const key = getKey(e);
         if (
-          this.hasToolbar &&
-          core.state.settings.horizonUseColorPicker &&
-          key === Keys.KeyD
+          ((e.metaKey || e.ctrlKey) && e.shiftKey && key === Keys.KeyP) ||
+          ((key === Keys.Enter || key === Keys.Space) && this.preview)
         ) {
           e.stopPropagation();
           e.preventDefault();
-          this.awaitingColorKey = true;
-          this.awaitingBuffer = '';
-          this.colorPopupVisible = true;
+          this.togglePreview();
           return;
         }
 
-        for (const button of this.buttons)
-          if (button.key === key) {
+        const input = <HTMLTextAreaElement>this.$refs['input'];
+        if (input) {
+          input.focus();
+        }
+      },
+
+      onKeyDown(e: KeyboardEvent): void {
+        const key = getKey(e);
+        if (this.awaitingColorKey) {
+          // Escape: cancel
+          if (key === Keys.Escape) {
             e.stopPropagation();
             e.preventDefault();
-            this.applyButtonEffect(button);
-            break;
+            this.clearAwaiting();
+            return;
           }
-      } else if (e.shiftKey) this.isShiftPressed = true;
-      this.$emit('keydown', e);
-    }
 
-    onKeyUp(e: KeyboardEvent): void {
-      if (!e.shiftKey) this.isShiftPressed = false;
-      this.$emit('keyup', e);
-    }
+          // Backspace: remove last char
+          if (key === Keys.Backspace) {
+            e.stopPropagation();
+            e.preventDefault();
+            if (this.awaitingBuffer.length > 0)
+              this.awaitingBuffer = this.awaitingBuffer.slice(0, -1);
+            return;
+          }
 
-    resize(): void {
-      const styles = getComputedStyle(this.element);
-      const paddingLeft = parseFloat(styles.paddingLeft) || 0;
-      const paddingRight = parseFloat(styles.paddingRight) || 0;
-      const contentWidth =
-        this.element.clientWidth - paddingLeft - paddingRight;
-      this.sizer.style.fontSize = this.element.style.fontSize;
-      this.sizer.style.lineHeight = this.element.style.lineHeight;
-      this.sizer.style.width = `${contentWidth}px`;
-      this.sizer.value = this.element.value;
-      this.element.style.height = `${Math.max(Math.min(this.sizer.scrollHeight, this.maxHeight), this.minHeight)}px`;
-      this.sizer.style.width = '0';
-    }
+          if (key >= Keys.KeyA && key <= Keys.KeyZ) {
+            e.stopPropagation();
+            e.preventDefault();
+            const ch = String.fromCharCode(key);
+            this.awaitingBuffer += ch;
 
-    onPaste(e: ClipboardEvent): void {
-      const data = e.clipboardData!.getData('text/plain');
-      if (!this.isShiftPressed && urlRegex.test(data)) {
-        const selection = this.getSelection();
-        if (selection.text.length === 0) {
-          //This regex tests for [url= so you don't wind up pasting another pair of URL tags
-          const match = /.*\[url=$/.exec(this.text.substring(0, selection.end));
-          if (match !== null) {
+            const prefix = this.awaitingBuffer.toLowerCase();
+            const matches = this.buttonColors.filter(c =>
+              c.toLowerCase().startsWith(prefix)
+            );
+
+            if (matches.length === 1) {
+              this.applyAndClearColor(matches[0]);
+              return;
+            }
+            const exact = matches.find(c => c.toLowerCase() === prefix);
+            if (exact) {
+              this.applyAndClearColor(exact);
+              return;
+            }
+
+            if (matches.length === 0) {
+              this.awaitingNoMatch = true;
+              if (this.awaitingNoMatchTimer)
+                window.clearTimeout(this.awaitingNoMatchTimer);
+              this.awaitingNoMatchTimer = window.setTimeout(
+                () => this.clearAwaiting(),
+                800
+              ) as unknown as number;
+              return;
+            }
+
             return;
           }
         }
+        if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+          if (key === Keys.KeyZ) {
+            e.preventDefault();
+            if (this.undoIndex === 0 && this.undoStack[0] !== this.text)
+              this.undoStack.unshift(this.text);
+            if (this.undoStack.length > this.undoIndex + 1) {
+              this.text = this.undoStack[++this.undoIndex];
+              this.$emit('input', this.text);
+              this.lastInput = Date.now();
+            }
+          } else if (key === Keys.KeyY) {
+            e.preventDefault();
+            if (this.undoIndex > 0) {
+              this.text = this.undoStack[--this.undoIndex];
+              this.$emit('input', this.text);
+              this.lastInput = Date.now();
+            }
+          }
+          if (
+            this.hasToolbar &&
+            core.state.settings.horizonUseColorPicker &&
+            key === Keys.KeyD
+          ) {
+            e.stopPropagation();
+            e.preventDefault();
+            this.awaitingColorKey = true;
+            this.awaitingBuffer = '';
+            this.colorPopupVisible = true;
+            return;
+          }
 
-        console.log('bbcode.url.paste', data);
-        e.preventDefault();
-        //we only replace the brackets instead of trying to force the whole path to be escaped because
-        //these two characters give us trouble with BBCode and the rest can just be picked up by the browser anyway
-        //Oh, and if your TS compiler cries about it, don't worry.  Chromium's JS engine supports it...
-        //And the problem is just that as of writing (27 nov 2025) we are still, somehow, using es2017 as our target.
-        this.applyText(
-          `[url=${data.replaceAll('[', '%5B').replaceAll(']', '%5D')}]`,
-          '[/url]'
-        );
+          for (const button of this.buttons)
+            if (button.key === key) {
+              e.stopPropagation();
+              e.preventDefault();
+              this.applyButtonEffect(button);
+              break;
+            }
+        } else if (e.shiftKey) this.isShiftPressed = true;
+        this.$emit('keydown', e);
+      },
+
+      onKeyUp(e: KeyboardEvent): void {
+        if (!e.shiftKey) this.isShiftPressed = false;
+        this.$emit('keyup', e);
+      },
+
+      resize(): void {
+        const styles = getComputedStyle(this.element);
+        const paddingLeft = parseFloat(styles.paddingLeft) || 0;
+        const paddingRight = parseFloat(styles.paddingRight) || 0;
+        const contentWidth =
+          this.element.clientWidth - paddingLeft - paddingRight;
+        this.sizer.style.fontSize = this.element.style.fontSize;
+        this.sizer.style.lineHeight = this.element.style.lineHeight;
+        this.sizer.style.width = `${contentWidth}px`;
+        this.sizer.value = this.element.value;
+        this.element.style.height = `${Math.max(Math.min(this.sizer.scrollHeight, this.maxHeight), this.minHeight)}px`;
+        this.sizer.style.width = '0';
+      },
+
+      onPaste(e: ClipboardEvent): void {
+        const data = e.clipboardData!.getData('text/plain');
+        if (!this.isShiftPressed && urlRegex.test(data)) {
+          const selection = this.getSelection();
+          if (selection.text.length === 0) {
+            //This regex tests for [url= so you don't wind up pasting another pair of URL tags
+            const match = /.*\[url=$/.exec(
+              this.text.substring(0, selection.end)
+            );
+            if (match !== null) {
+              return;
+            }
+          }
+
+          console.log('bbcode.url.paste', data);
+          e.preventDefault();
+          //we only replace the brackets instead of trying to force the whole path to be escaped because
+          //these two characters give us trouble with BBCode and the rest can just be picked up by the browser anyway
+          //Oh, and if your TS compiler cries about it, don't worry.  Chromium's JS engine supports it...
+          //And the problem is just that as of writing (27 nov 2025) we are still, somehow, using es2017 as our target.
+          this.applyText(
+            `[url=${data.replaceAll('[', '%5B').replaceAll(']', '%5D')}]`,
+            '[/url]'
+          );
+        }
+      },
+
+      focus(): void {
+        this.element.focus();
+      },
+
+      previewBBCode(): void {
+        this.doPreview();
+      },
+
+      doPreview(): void {
+        const targetElement = <HTMLElement>this.$refs['preview-element'];
+        if (this.preview) {
+          this.preview = false;
+          this.previewWarnings = [];
+          this.previewResult = '';
+          const previewElement = <BBCodeElement>targetElement.firstChild;
+          // noinspection TypeScriptValidateTypes
+          if (previewElement.cleanup !== undefined) previewElement.cleanup();
+          if (targetElement.firstChild !== null)
+            targetElement.removeChild(targetElement.firstChild);
+        } else {
+          this.preview = true;
+          this.parser.storeWarnings = true;
+          targetElement.appendChild(this.parser.parseEverything(this.text));
+          this.previewWarnings = this.parser.warnings;
+          this.parser.storeWarnings = false;
+        }
+      },
+
+      togglePreview(): void {
+        this.doPreview();
+        // If we're in preview mode, we need to ensure focus is maintained
+        if (this.preview) {
+          this.$nextTick(() => {
+            this.editorContainer.focus();
+          });
+        } else {
+          this.$nextTick(() => this.focus());
+        }
       }
     }
-
-    focus(): void {
-      this.element.focus();
-    }
-
-    previewBBCode(): void {
-      this.doPreview();
-    }
-
-    protected doPreview(): void {
-      const targetElement = <HTMLElement>this.$refs['preview-element'];
-      if (this.preview) {
-        this.preview = false;
-        this.previewWarnings = [];
-        this.previewResult = '';
-        const previewElement = <BBCodeElement>targetElement.firstChild;
-        // noinspection TypeScriptValidateTypes
-        if (previewElement.cleanup !== undefined) previewElement.cleanup();
-        if (targetElement.firstChild !== null)
-          targetElement.removeChild(targetElement.firstChild);
-      } else {
-        this.preview = true;
-        this.parser.storeWarnings = true;
-        targetElement.appendChild(this.parser.parseEverything(this.text));
-        this.previewWarnings = this.parser.warnings;
-        this.parser.storeWarnings = false;
-      }
-    }
-
-    togglePreview(): void {
-      this.doPreview();
-      // If we're in preview mode, we need to ensure focus is maintained
-      if (this.preview) {
-        this.$nextTick(() => {
-          this.editorContainer.focus();
-        });
-      } else {
-        this.$nextTick(() => this.focus());
-      }
-    }
-  }
+  });
 </script>
 <style lang="scss">
   .bbcode-editor .bbcode-toolbar .character-btn {

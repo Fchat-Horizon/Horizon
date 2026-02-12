@@ -185,7 +185,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
   import Sortable from 'sortablejs';
   import { EIconStore } from '../learn/eicon/store';
   import core from '../chat/core';
@@ -209,51 +208,43 @@
 
   let store: EIconStore | undefined;
 
-  @Component({
-    components: { modal }
-  })
-  export default class EIconSelector extends CustomDialog {
-    l = l;
-    @Prop
-    readonly onSelect?: (eicon: string, shift: boolean) => void;
+  export default CustomDialog.extend({
+    components: { modal },
+    props: {
+      onSelect: {}
+    },
+    data() {
+      return {
+        l: l,
+        sortable: undefined as Sortable | undefined,
+        storeLoaded: false as boolean,
+        results: [] as string[],
+        allResults: [] as string[],
+        displayedCount: 77 as number,
+        loadIncrement: 77 as number,
+        random_max: 2000,
+        search: '' as string,
+        refreshing: false,
+        isLoadingMore: false,
+        searchUpdateDebounce: debounce(function (this: any) {
+          this.runSearch();
+        }, 350),
+        handleScroll: debounce(function (this: any) {
+          const resultsContainer = this.$refs[
+            'resultsContainer'
+          ] as HTMLElement;
+          if (!resultsContainer || this.isLoadingMore) return;
 
-    private sortable: Sortable | undefined = undefined;
+          const scrollTop = resultsContainer.scrollTop;
+          const scrollHeight = resultsContainer.scrollHeight;
+          const clientHeight = resultsContainer.clientHeight;
 
-    storeLoaded: boolean = false;
-
-    results: string[] = [];
-
-    allResults: string[] = []; // store all search results
-
-    displayedCount: number = 77; // 77 results is about 1.5 pages
-
-    loadIncrement: number = 77; // initial load count and additional loading increment
-
-    readonly random_max = 2000; // maximum random results to fetch. do you *really* need more than this, you degenerate?
-
-    search: string = '';
-
-    refreshing = false;
-
-    isLoadingMore = false;
-
-    searchUpdateDebounce = debounce(() => this.runSearch(), 350);
-
-    handleScroll = debounce(() => {
-      const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
-      if (!resultsContainer || this.isLoadingMore) return; // checks if it's already loading to avoid too many calls to load
-
-      const scrollTop = resultsContainer.scrollTop;
-      const scrollHeight = resultsContainer.scrollHeight;
-      const clientHeight = resultsContainer.clientHeight;
-
-      // load more when user scrolls to within 200px of the bottom
-      if (scrollTop + clientHeight >= scrollHeight - 200) {
-        this.loadMoreResults();
-      }
-    }, 100);
-
-    @Hook('mounted')
+          if (scrollTop + clientHeight >= scrollHeight - 200) {
+            this.loadMoreResults();
+          }
+        }, 100)
+      };
+    },
     async mounted(): Promise<void> {
       store = await EIconStore.getSharedStore();
       this.storeLoaded = true;
@@ -271,585 +262,591 @@
         }
         this.initializeSortable();
       });
-    }
-
-    @Hook('beforeDestroy')
+    },
     beforeDestroy(): void {
       const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
       if (resultsContainer) {
         resultsContainer.removeEventListener('scroll', this.handleScroll);
       }
       this.destroySortable();
-    }
+    },
+    methods: {
+      initializeSortable(): void {
+        if (this.sortable || this.search !== 'category:favorites') return;
 
-    initializeSortable(): void {
-      if (this.sortable || this.search !== 'category:favorites') return;
+        const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
+        if (!resultsContainer) return;
 
-      const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
-      if (!resultsContainer) return;
+        this.sortable = Sortable.create(resultsContainer, {
+          animation: 150,
+          onEnd: e => {
+            //sanity check, in case our sortableJS object hasnt been destroyed somehow (this has happened before!)
+            if (this.search !== 'category:favorites') return;
+            const oldIndex = e.oldIndex!;
+            const newIndex = e.newIndex!;
 
-      this.sortable = Sortable.create(resultsContainer, {
-        animation: 150,
-        onEnd: e => {
-          //sanity check, in case our sortableJS object hasnt been destroyed somehow (this has happened before!)
-          if (this.search !== 'category:favorites') return;
-          const oldIndex = e.oldIndex!;
-          const newIndex = e.newIndex!;
+            const eicon = this.results[oldIndex];
 
-          const eicon = this.results[oldIndex];
+            this.results.splice(oldIndex, 1);
+            this.results.splice(newIndex, 0, eicon);
 
-          this.results.splice(oldIndex, 1);
-          this.results.splice(newIndex, 0, eicon);
+            const newFavorites: Record<string, boolean> = {};
+            for (const eicon of this.results) {
+              if (!this.isFavorite(eicon)) continue;
+              newFavorites[eicon] = true;
+            }
+            core.state.favoriteEIcons = newFavorites;
 
-          const newFavorites: Record<string, boolean> = {};
-          for (const eicon of this.results) {
-            if (!this.isFavorite(eicon)) continue;
-            newFavorites[eicon] = true;
+            void core.settingsStore.set(
+              'favoriteEIcons',
+              core.state.favoriteEIcons
+            );
           }
-          core.state.favoriteEIcons = newFavorites;
+        });
+      },
 
-          void core.settingsStore.set(
-            'favoriteEIcons',
-            core.state.favoriteEIcons
-          );
+      destroySortable(): void {
+        if (this.sortable) {
+          this.sortable.destroy();
+          this.sortable = undefined;
         }
-      });
-    }
+      },
 
-    destroySortable(): void {
-      if (this.sortable) {
-        this.sortable.destroy();
-        this.sortable = undefined;
-      }
-    }
+      loadMoreResults(): void {
+        if (this.displayedCount >= this.allResults.length) return;
 
-    loadMoreResults(): void {
-      if (this.displayedCount >= this.allResults.length) return;
+        this.isLoadingMore = true;
 
-      this.isLoadingMore = true;
+        const newCount = Math.min(
+          this.displayedCount + this.loadIncrement,
+          this.allResults.length
+        );
 
-      const newCount = Math.min(
-        this.displayedCount + this.loadIncrement,
-        this.allResults.length
-      );
+        this.displayedCount = newCount;
+        this.results = this.allResults.slice(0, this.displayedCount);
 
-      this.displayedCount = newCount;
-      this.results = this.allResults.slice(0, this.displayedCount);
+        this.$nextTick(() => {
+          this.isLoadingMore = false;
+        });
+      },
 
-      this.$nextTick(() => {
-        this.isLoadingMore = false;
-      });
-    }
+      searchWithString(s: string) {
+        this.search = s;
+        this.runSearch();
+      },
 
-    searchWithString(s: string) {
-      this.search = s;
-      this.runSearch();
-    }
+      runSearch() {
+        let s = this.search.toLowerCase();
+        const bbcodeMatch = s.match(/^\[eicon\](.*?)\[\/eicon\]\s*$/i);
+        if (bbcodeMatch) {
+          s = bbcodeMatch[1].trim();
+        }
 
-    runSearch() {
-      let s = this.search.toLowerCase();
-      const bbcodeMatch = s.match(/^\[eicon\](.*?)\[\/eicon\]\s*$/i);
-      if (bbcodeMatch) {
-        s = bbcodeMatch[1].trim();
-      }
+        // reset pagination
+        this.displayedCount = this.loadIncrement;
 
-      // reset pagination
-      this.displayedCount = this.loadIncrement;
+        if (s.startsWith('category:')) {
+          const category = s.substring(9).trim();
 
-      if (s.startsWith('category:')) {
-        const category = s.substring(9).trim();
-
-        if (category === 'random') {
+          if (category === 'random') {
+            this.allResults = [...(store?.nextPage(this.random_max) || [])];
+          } else {
+            this.allResults = this.getCategoryResults(category);
+          }
+        } else if (s.length === 0) {
           this.allResults = [...(store?.nextPage(this.random_max) || [])];
         } else {
-          this.allResults = this.getCategoryResults(category);
-        }
-      } else if (s.length === 0) {
-        this.allResults = [...(store?.nextPage(this.random_max) || [])];
-      } else {
-        this.allResults = store?.search(s) || [];
-      }
-
-      this.results = this.allResults.slice(0, this.displayedCount);
-
-      this.$nextTick(() => {
-        // returns user to top after changing search
-        const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
-        if (resultsContainer) {
-          resultsContainer.scrollTop = 0;
-        }
-        this.destroySortable();
-
-        if (this.search === 'category:favorites') {
-          this.initializeSortable();
-        }
-      });
-    }
-
-    getCategoryResults(category: string): string[] {
-      switch (category) {
-        case 'expressions':
-          return [
-            'coolemoji',
-            'coughing emoji',
-            'flushedemoji',
-            'grinning emoji',
-            'party emoji',
-            'pensiveemoji',
-            'lipbite emoji',
-            'nauseous emoji',
-            'love2',
-            'clapemoji',
-            'heart eyes',
-            'kissing heart',
-            'cowemoji',
-            'eggplantemoji',
-            'peachemoji',
-            'melting emoji',
-            'poopy',
-            'thinkingemoji',
-            'triumphemoji',
-            'uwuemoji',
-            'voremoji',
-            'skullemoji',
-            'smugemoji',
-            'heartflooshed',
-            'blushpanic',
-            'fluttersorry',
-            'snake emoji',
-            'horseeyes',
-            'thehorse',
-            'catblob',
-            'catblobangery',
-            'splashemoji',
-            'tonguemoji',
-            'blobhugs',
-            'lickscreen',
-            'eyes emoji',
-            'nerdmeme',
-            'horsepls',
-            'e62pog',
-            'thirstytwi',
-            'bangfingerbang',
-            'chefs kiss',
-            'excuse me',
-            'psychopath',
-            'ashemote3',
-            'whentheohitsright',
-            'caradrinkreact',
-            'lip_bite',
-            'twittersob',
-            'confused01',
-            'brogstare',
-            'brucegrin',
-            'onefortheteam',
-            'ellesogood',
-            'speaknoevil',
-            'react0',
-            'react1',
-            'react10',
-            'react11',
-            'react12',
-            'react13',
-            'react14',
-            'react15',
-            'react16',
-            'react17',
-            'react18',
-            'react19',
-            'react2',
-            'react20',
-            'react21',
-            'react22',
-            'react23',
-            'react24',
-            'react25',
-            'react26',
-            'react27',
-            'react28',
-            'react29',
-            'react2b',
-            'react3',
-            'react30',
-            'react31',
-            'react32',
-            'react33',
-            'react333',
-            'react34',
-            'react35',
-            'react36',
-            'react37',
-            'react38',
-            'react39',
-            'react4',
-            'react40',
-            'react41',
-            'react42',
-            'react43',
-            'react44',
-            'react45',
-            'react46',
-            'react47',
-            'react48',
-            'react49',
-            'react4nomouthzoomedin',
-            'react5',
-            'react50',
-            'react50-1',
-            'react51',
-            'react52',
-            'react53',
-            'react54',
-            'react55',
-            'react56',
-            'react57',
-            'react59',
-            'react6',
-            'react60',
-            'react61',
-            'react62',
-            'react63',
-            'react64',
-            'react65',
-            'react666',
-            'react7',
-            'react8'
-          ];
-
-        case 'symbols':
-          return [
-            'loveslove',
-            'pimpdcash',
-            'pls stop',
-            'paw2',
-            'gender-female',
-            'gender-male',
-            'gendershemale',
-            'gender-cuntboy',
-            'gender-mherm',
-            'gender-transgender',
-            'usflag',
-            'europeflag',
-            'lgbt',
-            'transflag',
-            'sunnyuhsuperlove',
-            'discovered',
-            'goldcoin1',
-            'star',
-            'full moon',
-            'sunshine',
-            'pinetree',
-            'carrots1',
-            'smashletter',
-            'ghostbuster',
-            'cuckquean',
-            'goldendicegmgolddicegif',
-            'pentagramo',
-            'sexsymbol',
-            'idnd1',
-            'twitterlogo',
-            'snapchaticon',
-            'tiktok',
-            'twitchlogo',
-            'discord',
-            'google',
-            'nvidia',
-            'playstation',
-            'suitclubs',
-            'suitdiamonds',
-            'suithearts',
-            'suitspades',
-            'chainscuffs',
-            'num-1',
-            'num-2',
-            'num-3',
-            'num-4',
-            'num-5',
-            'num-6',
-            'seven',
-            'eight',
-            '9ball',
-            'streamlive',
-            'question mark',
-            'questget',
-            'music',
-            'cam',
-            'speaker emoji',
-            'laptop',
-            'naughtyfood',
-            'dont look away',
-            'milkcartonreal'
-          ];
-
-        case 'bubbles':
-          return [
-            'takemetohornyjail',
-            'notcashmoney',
-            'lickme',
-            'iacs',
-            'imahugeslut',
-            'fuckyouasshole',
-            'bubblecute',
-            'pat my head',
-            'chorse',
-            'knotslutbubble',
-            'toofuckinghot',
-            'pbmr',
-            'imabimbo',
-            'dicefuck',
-            'ciaig',
-            'horseslut',
-            'fatdick',
-            'tomboypussy',
-            'breakthesubs',
-            'fuckingnya',
-            'iltclion',
-            'suckfuckobey',
-            'shemale',
-            'breedmaster',
-            'imastepfordwife',
-            'ahegaoalert2',
-            'buttslutbb',
-            'onlyfans',
-            'horsecockneed',
-            'crimes',
-            'nagagross',
-            'muskslut',
-            '4lewdbubble',
-            'shimathatlewd',
-            'hypnosiss',
-            'imahypnoslut',
-            'sheepsass2',
-            'imahugeslut',
-            'notahealslut',
-            'ratedmilf',
-            'ratedstud',
-            'ratedslut',
-            '5lewdbubble',
-            'xarcuminme',
-            'xarcumonme',
-            'choke me',
-            'iamgoingtopunchyou',
-            'snapmychoker',
-            'rude1',
-            'fuckbun',
-            'iamindanger',
-            'elves',
-            'helpicantstopsuckingcocks',
-            'talkpooltoy',
-            'thatskindahot',
-            'ygod',
-            'simpbait',
-            'eyesuphere',
-            'fuckpiggy',
-            'peggable2',
-            'sydeanothere',
-            'nothingcan',
-            'pawslut',
-            'corpsestare-',
-            'dinnersex',
-            'plappening',
-            'fallout-standby',
-            'inbagg',
-            'request denied',
-            'goodboy0',
-            'goodending',
-            'howbadcanibe',
-            'gwanna',
-            'spitinmouth',
-            'bathwater'
-          ];
-
-        case 'sexual':
-          return [
-            'kissspink',
-            'paytonkiss',
-            'coralbutt4',
-            'pinkundress',
-            'collaredpet',
-            'jhab1',
-            'pole',
-            'rorobutt2',
-            'lapgrind',
-            'jackthighs',
-            'a condom',
-            'wolf abs',
-            'musclefuck2',
-            'verobutt3',
-            'realahegao4',
-            'influencerhater',
-            'gagged2',
-            'fingerblast3',
-            'sloppy01',
-            'sybian',
-            'floppyhorsecock',
-            'blackshem1',
-            'fingersucc',
-            'vullylick',
-            'fingersucc',
-            'cmontakeit',
-            'jessi flash',
-            'cheegrope2',
-            'patr1',
-            'ahega01 2',
-            'handjob1nuke',
-            'harmanfingers',
-            '2buttw1',
-            'dropsqueeze',
-            'lixlove',
-            'bbctitjob6',
-            'appreciativetease',
-            'bimbowhisper',
-            'salivashare',
-            'ballsworship3',
-            'wolfsknot2',
-            'gaykiss',
-            'slurpkiss',
-            'absbulge',
-            'cockiss',
-            'horsedick11',
-            'knotknotknot',
-            'g4ebulge',
-            'knotdog',
-            'flaunt',
-            'lovetosuck',
-            'worship',
-            'hopelessly in love',
-            'knotjob2',
-            'cummz',
-            'every drop',
-            'edgyoops',
-            'orccummies2',
-            'oralcreampie100px',
-            'horseoral9a',
-            'swallowit',
-            'realahegao4',
-            'gayicon2',
-            'hossspurties2',
-            'cumringgag',
-            'jillbimbogiffell2'
-          ];
-
-        case 'memes':
-          return [
-            'guncock',
-            'michaelguns',
-            'watchbadass',
-            'gonnabang',
-            'flirting101',
-            'loudnoises',
-            'nyancat',
-            'gayb',
-            'fortasshole',
-            'dickletsign',
-            'hotdogface',
-            'siren0',
-            'apologize to god',
-            'jabbalick',
-            'zeldawink',
-            'whatislove',
-            'surprisemothafucka',
-            'females',
-            'thanksihateit',
-            'hell is this',
-            'confused travolta',
-            'no words',
-            'coffindance',
-            'homelander',
-            'thatsapenis',
-            'pennyhee',
-            'kermitbusiness',
-            'goodbye',
-            'rickle',
-            'oag'
-          ];
-
-        case 'favorites':
-          return Object.keys(core.state.favoriteEIcons);
-      }
-
-      return [];
-    }
-
-    selectIcon(eicon: string, event: MouseEvent): void {
-      const shift = event.shiftKey;
-
-      if (this.onSelect) {
-        this.onSelect(eicon, shift);
-      }
-    }
-
-    async refreshIcons(): Promise<void> {
-      this.refreshing = true;
-
-      await store?.checkForUpdates();
-      this.runSearch();
-
-      this.refreshing = false;
-
-      this.$nextTick(() => {
-        const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
-        if (resultsContainer) {
-          resultsContainer.addEventListener('scroll', this.handleScroll);
+          this.allResults = store?.search(s) || [];
         }
 
-        this.destroySortable();
+        this.results = this.allResults.slice(0, this.displayedCount);
 
-        if (this.search === 'category:favorites') {
-          this.initializeSortable();
+        this.$nextTick(() => {
+          // returns user to top after changing search
+          const resultsContainer = this.$refs[
+            'resultsContainer'
+          ] as HTMLElement;
+          if (resultsContainer) {
+            resultsContainer.scrollTop = 0;
+          }
+          this.destroySortable();
+
+          if (this.search === 'category:favorites') {
+            this.initializeSortable();
+          }
+        });
+      },
+
+      getCategoryResults(category: string): string[] {
+        switch (category) {
+          case 'expressions':
+            return [
+              'coolemoji',
+              'coughing emoji',
+              'flushedemoji',
+              'grinning emoji',
+              'party emoji',
+              'pensiveemoji',
+              'lipbite emoji',
+              'nauseous emoji',
+              'love2',
+              'clapemoji',
+              'heart eyes',
+              'kissing heart',
+              'cowemoji',
+              'eggplantemoji',
+              'peachemoji',
+              'melting emoji',
+              'poopy',
+              'thinkingemoji',
+              'triumphemoji',
+              'uwuemoji',
+              'voremoji',
+              'skullemoji',
+              'smugemoji',
+              'heartflooshed',
+              'blushpanic',
+              'fluttersorry',
+              'snake emoji',
+              'horseeyes',
+              'thehorse',
+              'catblob',
+              'catblobangery',
+              'splashemoji',
+              'tonguemoji',
+              'blobhugs',
+              'lickscreen',
+              'eyes emoji',
+              'nerdmeme',
+              'horsepls',
+              'e62pog',
+              'thirstytwi',
+              'bangfingerbang',
+              'chefs kiss',
+              'excuse me',
+              'psychopath',
+              'ashemote3',
+              'whentheohitsright',
+              'caradrinkreact',
+              'lip_bite',
+              'twittersob',
+              'confused01',
+              'brogstare',
+              'brucegrin',
+              'onefortheteam',
+              'ellesogood',
+              'speaknoevil',
+              'react0',
+              'react1',
+              'react10',
+              'react11',
+              'react12',
+              'react13',
+              'react14',
+              'react15',
+              'react16',
+              'react17',
+              'react18',
+              'react19',
+              'react2',
+              'react20',
+              'react21',
+              'react22',
+              'react23',
+              'react24',
+              'react25',
+              'react26',
+              'react27',
+              'react28',
+              'react29',
+              'react2b',
+              'react3',
+              'react30',
+              'react31',
+              'react32',
+              'react33',
+              'react333',
+              'react34',
+              'react35',
+              'react36',
+              'react37',
+              'react38',
+              'react39',
+              'react4',
+              'react40',
+              'react41',
+              'react42',
+              'react43',
+              'react44',
+              'react45',
+              'react46',
+              'react47',
+              'react48',
+              'react49',
+              'react4nomouthzoomedin',
+              'react5',
+              'react50',
+              'react50-1',
+              'react51',
+              'react52',
+              'react53',
+              'react54',
+              'react55',
+              'react56',
+              'react57',
+              'react59',
+              'react6',
+              'react60',
+              'react61',
+              'react62',
+              'react63',
+              'react64',
+              'react65',
+              'react666',
+              'react7',
+              'react8'
+            ];
+
+          case 'symbols':
+            return [
+              'loveslove',
+              'pimpdcash',
+              'pls stop',
+              'paw2',
+              'gender-female',
+              'gender-male',
+              'gendershemale',
+              'gender-cuntboy',
+              'gender-mherm',
+              'gender-transgender',
+              'usflag',
+              'europeflag',
+              'lgbt',
+              'transflag',
+              'sunnyuhsuperlove',
+              'discovered',
+              'goldcoin1',
+              'star',
+              'full moon',
+              'sunshine',
+              'pinetree',
+              'carrots1',
+              'smashletter',
+              'ghostbuster',
+              'cuckquean',
+              'goldendicegmgolddicegif',
+              'pentagramo',
+              'sexsymbol',
+              'idnd1',
+              'twitterlogo',
+              'snapchaticon',
+              'tiktok',
+              'twitchlogo',
+              'discord',
+              'google',
+              'nvidia',
+              'playstation',
+              'suitclubs',
+              'suitdiamonds',
+              'suithearts',
+              'suitspades',
+              'chainscuffs',
+              'num-1',
+              'num-2',
+              'num-3',
+              'num-4',
+              'num-5',
+              'num-6',
+              'seven',
+              'eight',
+              '9ball',
+              'streamlive',
+              'question mark',
+              'questget',
+              'music',
+              'cam',
+              'speaker emoji',
+              'laptop',
+              'naughtyfood',
+              'dont look away',
+              'milkcartonreal'
+            ];
+
+          case 'bubbles':
+            return [
+              'takemetohornyjail',
+              'notcashmoney',
+              'lickme',
+              'iacs',
+              'imahugeslut',
+              'fuckyouasshole',
+              'bubblecute',
+              'pat my head',
+              'chorse',
+              'knotslutbubble',
+              'toofuckinghot',
+              'pbmr',
+              'imabimbo',
+              'dicefuck',
+              'ciaig',
+              'horseslut',
+              'fatdick',
+              'tomboypussy',
+              'breakthesubs',
+              'fuckingnya',
+              'iltclion',
+              'suckfuckobey',
+              'shemale',
+              'breedmaster',
+              'imastepfordwife',
+              'ahegaoalert2',
+              'buttslutbb',
+              'onlyfans',
+              'horsecockneed',
+              'crimes',
+              'nagagross',
+              'muskslut',
+              '4lewdbubble',
+              'shimathatlewd',
+              'hypnosiss',
+              'imahypnoslut',
+              'sheepsass2',
+              'imahugeslut',
+              'notahealslut',
+              'ratedmilf',
+              'ratedstud',
+              'ratedslut',
+              '5lewdbubble',
+              'xarcuminme',
+              'xarcumonme',
+              'choke me',
+              'iamgoingtopunchyou',
+              'snapmychoker',
+              'rude1',
+              'fuckbun',
+              'iamindanger',
+              'elves',
+              'helpicantstopsuckingcocks',
+              'talkpooltoy',
+              'thatskindahot',
+              'ygod',
+              'simpbait',
+              'eyesuphere',
+              'fuckpiggy',
+              'peggable2',
+              'sydeanothere',
+              'nothingcan',
+              'pawslut',
+              'corpsestare-',
+              'dinnersex',
+              'plappening',
+              'fallout-standby',
+              'inbagg',
+              'request denied',
+              'goodboy0',
+              'goodending',
+              'howbadcanibe',
+              'gwanna',
+              'spitinmouth',
+              'bathwater'
+            ];
+
+          case 'sexual':
+            return [
+              'kissspink',
+              'paytonkiss',
+              'coralbutt4',
+              'pinkundress',
+              'collaredpet',
+              'jhab1',
+              'pole',
+              'rorobutt2',
+              'lapgrind',
+              'jackthighs',
+              'a condom',
+              'wolf abs',
+              'musclefuck2',
+              'verobutt3',
+              'realahegao4',
+              'influencerhater',
+              'gagged2',
+              'fingerblast3',
+              'sloppy01',
+              'sybian',
+              'floppyhorsecock',
+              'blackshem1',
+              'fingersucc',
+              'vullylick',
+              'fingersucc',
+              'cmontakeit',
+              'jessi flash',
+              'cheegrope2',
+              'patr1',
+              'ahega01 2',
+              'handjob1nuke',
+              'harmanfingers',
+              '2buttw1',
+              'dropsqueeze',
+              'lixlove',
+              'bbctitjob6',
+              'appreciativetease',
+              'bimbowhisper',
+              'salivashare',
+              'ballsworship3',
+              'wolfsknot2',
+              'gaykiss',
+              'slurpkiss',
+              'absbulge',
+              'cockiss',
+              'horsedick11',
+              'knotknotknot',
+              'g4ebulge',
+              'knotdog',
+              'flaunt',
+              'lovetosuck',
+              'worship',
+              'hopelessly in love',
+              'knotjob2',
+              'cummz',
+              'every drop',
+              'edgyoops',
+              'orccummies2',
+              'oralcreampie100px',
+              'horseoral9a',
+              'swallowit',
+              'realahegao4',
+              'gayicon2',
+              'hossspurties2',
+              'cumringgag',
+              'jillbimbogiffell2'
+            ];
+
+          case 'memes':
+            return [
+              'guncock',
+              'michaelguns',
+              'watchbadass',
+              'gonnabang',
+              'flirting101',
+              'loudnoises',
+              'nyancat',
+              'gayb',
+              'fortasshole',
+              'dickletsign',
+              'hotdogface',
+              'siren0',
+              'apologize to god',
+              'jabbalick',
+              'zeldawink',
+              'whatislove',
+              'surprisemothafucka',
+              'females',
+              'thanksihateit',
+              'hell is this',
+              'confused travolta',
+              'no words',
+              'coffindance',
+              'homelander',
+              'thatsapenis',
+              'pennyhee',
+              'kermitbusiness',
+              'goodbye',
+              'rickle',
+              'oag'
+            ];
+
+          case 'favorites':
+            return Object.keys(core.state.favoriteEIcons);
         }
-      });
-    }
 
-    setFocus(): void {
-      (this.$refs['search'] as any).focus();
-      (this.$refs['search'] as any).select();
-    }
+        return [];
+      },
 
-    isFavorite(eicon: string): boolean {
-      return eicon in core.state.favoriteEIcons;
-    }
+      selectIcon(eicon: string, event: MouseEvent): void {
+        const shift = event.shiftKey;
 
-    toggleFavorite(eicon: string): void {
-      if (eicon in core.state.favoriteEIcons) {
-        delete core.state.favoriteEIcons[eicon];
-      } else {
+        if (this.onSelect) {
+          this.onSelect(eicon, shift);
+        }
+      },
+
+      async refreshIcons(): Promise<void> {
+        this.refreshing = true;
+
+        await store?.checkForUpdates();
+        this.runSearch();
+
+        this.refreshing = false;
+
+        this.$nextTick(() => {
+          const resultsContainer = this.$refs[
+            'resultsContainer'
+          ] as HTMLElement;
+          if (resultsContainer) {
+            resultsContainer.addEventListener('scroll', this.handleScroll);
+          }
+
+          this.destroySortable();
+
+          if (this.search === 'category:favorites') {
+            this.initializeSortable();
+          }
+        });
+      },
+
+      setFocus(): void {
+        (this.$refs['search'] as any).focus();
+        (this.$refs['search'] as any).select();
+      },
+
+      isFavorite(eicon: string): boolean {
+        return eicon in core.state.favoriteEIcons;
+      },
+
+      toggleFavorite(eicon: string): void {
+        if (eicon in core.state.favoriteEIcons) {
+          delete core.state.favoriteEIcons[eicon];
+        } else {
+          core.state.favoriteEIcons[eicon] = true;
+        }
+
+        void core.settingsStore.set(
+          'favoriteEIcons',
+          core.state.favoriteEIcons
+        );
+
+        this.$forceUpdate();
+      },
+
+      forceAddFavorite(eicon: string): void {
+        if (eicon in core.state.favoriteEIcons) return;
+
         core.state.favoriteEIcons[eicon] = true;
-      }
 
-      void core.settingsStore.set('favoriteEIcons', core.state.favoriteEIcons);
+        core.settingsStore.set('favoriteEIcons', core.state.favoriteEIcons);
 
-      this.$forceUpdate();
-    }
+        if (this.search === 'category:favorites') {
+          this.runSearch();
+        }
+      },
 
-    forceAddFavorite(eicon: string): void {
-      if (eicon in core.state.favoriteEIcons) return;
+      forceRemove(eicon: string): void {
+        if (!(eicon in core.state.favoriteEIcons)) return;
 
-      core.state.favoriteEIcons[eicon] = true;
+        delete core.state.favoriteEIcons[eicon];
 
-      core.settingsStore.set('favoriteEIcons', core.state.favoriteEIcons);
+        core.settingsStore.set('favoriteEIcons', core.state.favoriteEIcons);
 
-      if (this.search === 'category:favorites') {
-        this.runSearch();
-      }
-    }
+        if (this.search === 'category:favorites') {
+          this.runSearch();
+        }
+      },
 
-    forceRemove(eicon: string): void {
-      if (!(eicon in core.state.favoriteEIcons)) return;
-
-      delete core.state.favoriteEIcons[eicon];
-
-      core.settingsStore.set('favoriteEIcons', core.state.favoriteEIcons);
-
-      if (this.search === 'category:favorites') {
-        this.runSearch();
+      close(): void {
+        store?.shuffle();
       }
     }
-
-    close(): void {
-      store?.shuffle();
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

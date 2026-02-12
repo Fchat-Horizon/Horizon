@@ -147,7 +147,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Watch } from '@f-list/vue-ts';
   import CustomDialog from '../../components/custom_dialog';
   import Modal from '../../components/Modal.vue';
   import core from '../core';
@@ -155,178 +154,170 @@
   import AdCenterDialog from './AdCenter.vue';
   import l from '../localize';
 
-  @Component({
-    components: { modal: Modal }
-  })
-  export default class AdLauncherDialog extends CustomDialog {
-    l = l;
-    adOrder: 'random' | 'ad-center' = 'random';
-
-    matchCount = 0;
-
-    timeoutMinutes = 180;
-
-    delayMinutes = 10;
-
-    tags: { value: boolean; title: string }[] = [];
-
-    channels: { value: boolean; title: string; id: string }[] = [];
-
-    timeoutOptions = [
-      { value: 30, title: l('time.minutes', '30') },
-      { value: 60, title: l('time.hour') },
-      { value: 120, title: l('time.hours', '2') },
-      { value: 180, title: l('time.hours', '3') }
-    ];
-
-    delayOptions = [
-      { value: 10, title: l('time.minutes', '10') },
-      { value: 15, title: l('time.minutes', '15') },
-      { value: 20, title: l('time.minutes', '20') },
-      { value: 30, title: l('time.minutes', '30') },
-      { value: 45, title: l('time.minutes', '45') },
-      { value: 60, title: l('time.hour') }
-    ];
-
-    get selectedChannelCount(): number {
-      return _.filter(this.channels, channel => channel.value).length;
-    }
-
-    get allChannelsSelected(): boolean {
-      return (
-        this.channels.length > 0 &&
-        this.selectedChannelCount === this.channels.length
-      );
-    }
-
-    get someChannelsSelected(): boolean {
-      return (
-        this.selectedChannelCount > 0 &&
-        this.selectedChannelCount < this.channels.length
-      );
-    }
-
-    load() {
-      this.channels = _.map(
-        _.filter(
-          core.channels.joinedChannels,
-          c => c.mode === 'ads' || c.mode === 'both'
-        ),
-        c => ({ value: false, title: c.name, id: c.id })
-      );
-
-      this.tags = _.map(core.adCenter.getActiveTags(), t => ({
-        value: false,
-        title: t
-      }));
-
-      this.checkCanSubmit();
-    }
-
-    hasAds(): boolean {
-      return core.adCenter.getActiveAds().length > 0;
-    }
-
-    @Watch('tags', { deep: true })
-    updateTags(): void {
-      this.matchCount = core.adCenter.getMatchingAds(
-        this.getWantedTags()
-      ).length;
-      this.checkCanSubmit();
-    }
-
-    @Watch('channels', { deep: true })
-    updateChannels(): void {
-      this.checkCanSubmit();
-    }
-
-    checkCanSubmit() {
-      const channelCount = this.selectedChannelCount;
-      const tagCount = _.filter(this.tags, tag => tag.value).length;
-
-      this.dialog.forceDisabled(tagCount === 0 || channelCount === 0);
-    }
-
-    getWantedTags(): string[] {
-      return _.map(
-        _.filter(this.tags, t => t.value),
-        t => t.title
-      );
-    }
-
-    getWantedChannels(): string[] {
-      return _.map(
-        _.filter(this.channels, t => t.value),
-        t => t.id
-      );
-    }
-
-    openAdEditor(): void {
-      this.hide();
-      const ref =
-        this.$parent && this.$parent.$refs
-          ? (this.$parent.$refs['adCenter'] as AdCenterDialog | undefined)
-          : undefined;
-      if (ref) ref.show();
-    }
-
-    selectAllChannels(e: any): void {
-      const newValue = e.target.checked;
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      _.each(this.channels, c => {
-        c.value = newValue;
-      });
-    }
-
-    submit(e: Event) {
-      const tags = this.getWantedTags();
-      const channelIds = this.getWantedChannels();
-
-      if (tags.length === 0) {
-        e.preventDefault();
-        alert(l('ads.selectTagRequired'));
-        return;
+  export default CustomDialog.extend({
+    components: { modal: Modal },
+    data() {
+      return {
+        l: l,
+        adOrder: 'random' as 'random' | 'ad-center',
+        matchCount: 0,
+        timeoutMinutes: 180,
+        delayMinutes: 10,
+        tags: [] as { value: boolean; title: string }[],
+        channels: [] as { value: boolean; title: string; id: string }[],
+        timeoutOptions: [
+          { value: 30, title: l('time.minutes', '30') },
+          { value: 60, title: l('time.hour') },
+          { value: 120, title: l('time.hours', '2') },
+          { value: 180, title: l('time.hours', '3') }
+        ],
+        delayOptions: [
+          { value: 10, title: l('time.minutes', '10') },
+          { value: 15, title: l('time.minutes', '15') },
+          { value: 20, title: l('time.minutes', '20') },
+          { value: 30, title: l('time.minutes', '30') },
+          { value: 45, title: l('time.minutes', '45') },
+          { value: 60, title: l('time.hour') }
+        ]
+      };
+    },
+    computed: {
+      selectedChannelCount(): number {
+        return _.filter(this.channels, channel => channel.value).length;
+      },
+      allChannelsSelected(): boolean {
+        return (
+          this.channels.length > 0 &&
+          this.selectedChannelCount === this.channels.length
+        );
+      },
+      someChannelsSelected(): boolean {
+        return (
+          this.selectedChannelCount > 0 &&
+          this.selectedChannelCount < this.channels.length
+        );
       }
-
-      if (channelIds.length === 0) {
-        e.preventDefault();
-        alert(l('ads.selectChannelRequired'));
-        return;
+    },
+    watch: {
+      tags: {
+        deep: true,
+        handler(): void {
+          this.matchCount = core.adCenter.getMatchingAds(
+            this.getWantedTags()
+          ).length;
+          this.checkCanSubmit();
+        }
+      },
+      channels: {
+        deep: true,
+        handler(): void {
+          this.checkCanSubmit();
+        }
       }
+    },
+    methods: {
+      load() {
+        this.channels = _.map(
+          _.filter(
+            core.channels.joinedChannels,
+            c => c.mode === 'ads' || c.mode === 'both'
+          ),
+          c => ({ value: false, title: c.name, id: c.id })
+        );
 
-      if (
-        !_.every(channelIds, channelId => {
-          if (core.adCenter.isSafeToOverride(channelId)) {
-            return true;
-          }
+        this.tags = _.map(core.adCenter.getActiveTags(), t => ({
+          value: false,
+          title: t
+        }));
 
-          const chan = core.channels.getChannel(channelId);
+        this.checkCanSubmit();
+      },
+      hasAds(): boolean {
+        return core.adCenter.getActiveAds().length > 0;
+      },
+      checkCanSubmit() {
+        const channelCount = this.selectedChannelCount;
+        const tagCount = _.filter(this.tags, tag => tag.value).length;
 
-          if (!chan) {
-            return true;
-          }
+        this.dialog.forceDisabled(tagCount === 0 || channelCount === 0);
+      },
+      getWantedTags(): string[] {
+        return _.map(
+          _.filter(this.tags, t => t.value),
+          t => t.title
+        );
+      },
+      getWantedChannels(): string[] {
+        return _.map(
+          _.filter(this.channels, t => t.value),
+          t => t.id
+        );
+      },
+      openAdEditor(): void {
+        this.hide();
+        const ref =
+          this.$parent && this.$parent.$refs
+            ? (this.$parent.$refs['adCenter'] as AdCenterDialog | undefined)
+            : undefined;
+        if (ref) ref.show();
+      },
+      selectAllChannels(e: any): void {
+        const newValue = e.target.checked;
 
-          return confirm(l('admgr.overwriteWarning', chan.name));
-        })
-      ) {
         e.preventDefault();
-        return;
+        e.stopPropagation();
+
+        _.each(this.channels, c => {
+          c.value = newValue;
+        });
+      },
+      submit(e: Event) {
+        const tags = this.getWantedTags();
+        const channelIds = this.getWantedChannels();
+
+        if (tags.length === 0) {
+          e.preventDefault();
+          alert(l('ads.selectTagRequired'));
+          return;
+        }
+
+        if (channelIds.length === 0) {
+          e.preventDefault();
+          alert(l('ads.selectChannelRequired'));
+          return;
+        }
+
+        if (
+          !_.every(channelIds, channelId => {
+            if (core.adCenter.isSafeToOverride(channelId)) {
+              return true;
+            }
+
+            const chan = core.channels.getChannel(channelId);
+
+            if (!chan) {
+              return true;
+            }
+
+            return confirm(l('admgr.overwriteWarning', chan.name));
+          })
+        ) {
+          e.preventDefault();
+          return;
+        }
+
+        core.adCenter.schedule(
+          tags,
+          channelIds,
+          this.adOrder,
+          this.timeoutMinutes,
+          this.delayMinutes * 60
+        );
+
+        this.hide();
       }
-
-      core.adCenter.schedule(
-        tags,
-        channelIds,
-        this.adOrder,
-        this.timeoutMinutes,
-        this.delayMinutes * 60
-      );
-
-      this.hide();
     }
-  }
+  });
 </script>
 
 <style lang="scss">

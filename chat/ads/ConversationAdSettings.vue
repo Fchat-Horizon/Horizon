@@ -78,7 +78,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop } from '@f-list/vue-ts';
   import CustomDialog from '../../components/custom_dialog';
   import Modal from '../../components/Modal.vue';
   import { Conversation } from '../interfaces';
@@ -89,99 +88,95 @@
   import AdCenterDialog from './AdCenter.vue';
   import _ from 'lodash';
 
-  @Component({
-    components: { modal: Modal, editor: Editor }
-  })
-  export default class ConversationAdSettings extends CustomDialog {
-    @Prop({ required: true })
-    readonly conversation!: Conversation;
-    l = l;
-    setting = Conversation.Setting;
-    ads!: string[];
-    randomOrder = false;
-    core = core;
-
-    load(): void {
-      const settings = this.conversation.settings;
-
-      this.ads = settings.adSettings.ads.slice(0);
-      this.randomOrder = !!settings.adSettings.randomOrder;
-
-      if (this.ads.length === 0) {
-        this.ads.push('');
-      }
-    }
-
-    submit(): void {
-      this.conversation.settings = {
-        ...this.conversation.settings,
-
-        adSettings: {
-          ...this.conversation.settings.adSettings,
-          ads: this.ads
-            .map((ad: string) => ad.trim())
-            .filter((ad: string) => ad.length > 0),
-          randomOrder: this.randomOrder
-        }
+  export default CustomDialog.extend({
+    components: { modal: Modal, editor: Editor },
+    props: {
+      conversation: { required: true as const }
+    },
+    data() {
+      return {
+        l: l,
+        setting: Conversation.Setting,
+        ads: undefined as any as string[],
+        randomOrder: false,
+        core: core
       };
-    }
+    },
+    methods: {
+      load(): void {
+        const settings = this.conversation.settings;
 
-    addAd(): void {
-      this.ads.push('');
-    }
+        this.ads = settings.adSettings.ads.slice(0);
+        this.randomOrder = !!settings.adSettings.randomOrder;
 
-    removeAd(index: number): void {
-      if (Dialog.confirmDialog(l('admgr.confirmRemoveAd'))) {
-        this.ads.splice(index, 1);
+        if (this.ads.length === 0) {
+          this.ads.push('');
+        }
+      },
+      submit(): void {
+        this.conversation.settings = {
+          ...this.conversation.settings,
+
+          adSettings: {
+            ...this.conversation.settings.adSettings,
+            ads: this.ads
+              .map((ad: string) => ad.trim())
+              .filter((ad: string) => ad.length > 0),
+            randomOrder: this.randomOrder
+          }
+        };
+      },
+      addAd(): void {
+        this.ads.push('');
+      },
+      removeAd(index: number): void {
+        if (Dialog.confirmDialog(l('admgr.confirmRemoveAd'))) {
+          this.ads.splice(index, 1);
+        }
+      },
+      moveAdUp(index: number): void {
+        const ad = this.ads.splice(index, 1);
+
+        this.ads.splice(index - 1, 0, ad[0]);
+      },
+      moveAdDown(index: number): void {
+        const ad = this.ads.splice(index, 1);
+
+        this.ads.splice(index + 1, 0, ad[0]);
+      },
+      openAdEditor() {
+        this.hide();
+        const r =
+          this.$parent && this.$parent.$parent && this.$parent.$parent.$refs
+            ? (this.$parent.$parent.$refs['adCenter'] as
+                | AdCenterDialog
+                | undefined)
+            : undefined;
+        r?.show();
+      },
+      openPostAds() {
+        this.hide();
+        const r =
+          this.$parent && this.$parent.$parent && this.$parent.$parent.$refs
+            ? (this.$parent.$parent.$refs['adLauncher'] as
+                | AdCenterDialog
+                | undefined)
+            : undefined;
+        r?.show();
+      },
+      async copyAds(): Promise<void> {
+        await Promise.all(
+          _.map(this.ads, async ad => {
+            if (core.adCenter.isMissingFromAdCenter(ad)) {
+              await core.adCenter.add(ad);
+            }
+          })
+        );
+
+        this.openAdEditor();
       }
     }
-
-    moveAdUp(index: number): void {
-      const ad = this.ads.splice(index, 1);
-
-      this.ads.splice(index - 1, 0, ad[0]);
-    }
-
-    moveAdDown(index: number): void {
-      const ad = this.ads.splice(index, 1);
-
-      this.ads.splice(index + 1, 0, ad[0]);
-    }
-
-    openAdEditor() {
-      this.hide();
-      const r =
-        this.$parent && this.$parent.$parent && this.$parent.$parent.$refs
-          ? (this.$parent.$parent.$refs['adCenter'] as
-              | AdCenterDialog
-              | undefined)
-          : undefined;
-      r?.show();
-    }
-
-    openPostAds() {
-      this.hide();
-      const r =
-        this.$parent && this.$parent.$parent && this.$parent.$parent.$refs
-          ? (this.$parent.$parent.$refs['adLauncher'] as
-              | AdCenterDialog
-              | undefined)
-          : undefined;
-      r?.show();
-    }
-
-    async copyAds(): Promise<void> {
-      await Promise.all(
-        _.map(this.ads, async ad => {
-          if (core.adCenter.isMissingFromAdCenter(ad)) {
-            await core.adCenter.add(ad);
-          }
-        })
-      );
-
-      this.openAdEditor();
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

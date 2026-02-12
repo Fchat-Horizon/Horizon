@@ -8,38 +8,38 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop } from '@f-list/vue-ts';
   import Vue from 'vue';
   import { SimpleCharacter } from '../interfaces';
   import * as Utils from '../site/utils';
   import l from '../chat/localize';
 
-  @Component
-  export default class CharacterLink extends Vue {
-    l = l;
-    @Prop({ required: true })
-    readonly character!: SimpleCharacter | string;
-    @Prop({ default: '_blank' })
-    readonly target!: string;
-
-    get deleted(): boolean {
-      return typeof this.character === 'string'
-        ? false
-        : this.character.deleted;
+  export default Vue.extend({
+    props: {
+      character: { required: true as const },
+      target: { default: '_blank' }
+    },
+    data() {
+      return {
+        l: l
+      };
+    },
+    computed: {
+      deleted(): boolean {
+        return typeof this.character === 'string'
+          ? false
+          : (this.character as SimpleCharacter).deleted;
+      },
+      linkClasses(): string {
+        return this.deleted ? 'characterLinkDeleted' : 'characterLink';
+      },
+      characterUrl(): string {
+        return Utils.characterURL(this.name);
+      },
+      name(): string {
+        return typeof this.character === 'string'
+          ? this.character
+          : (this.character as SimpleCharacter).name;
+      }
     }
-
-    get linkClasses(): string {
-      return this.deleted ? 'characterLinkDeleted' : 'characterLink';
-    }
-
-    get characterUrl(): string {
-      return Utils.characterURL(this.name);
-    }
-
-    get name(): string {
-      return typeof this.character === 'string'
-        ? this.character
-        : this.character.name;
-    }
-  }
+  });
 </script>

@@ -17,152 +17,132 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop, Watch } from '@f-list/vue-ts';
   import Vue from 'vue';
 
-  @Component
-  export default class VirtualList extends Vue {
-    @Prop({ required: true })
-    readonly items!: ReadonlyArray<any>;
-    @Prop({ required: true })
-    readonly itemHeight!: number;
-    @Prop({ default: 8 })
-    readonly overscan!: number;
-    @Prop()
-    readonly keyField?: string;
-    @Prop()
-    readonly keyFunc?: (item: any, index: number) => string | number;
-    @Prop()
-    readonly rowClass?: string;
-    @Prop()
-    readonly resetKey?: unknown;
-
-    scrollTop = 0;
-    containerHeight = 0;
-    visibleStart = 0;
-    visibleEnd = 0;
-    scrollRaf: number | undefined;
-    resizeListener = () => this.onResize();
-
-    get visibleItems(): ReadonlyArray<any> {
-      return this.items.slice(this.visibleStart, this.visibleEnd);
-    }
-
-    get totalHeight(): number {
-      return this.items.length * this.itemHeight;
-    }
-
-    get offset(): number {
-      return this.visibleStart * this.itemHeight;
-    }
-
-    @Hook('mounted')
+  export default Vue.extend({
+    props: {
+      items: { required: true as const },
+      itemHeight: { required: true as const },
+      overscan: { default: 8 },
+      keyField: {},
+      keyFunc: {},
+      rowClass: {},
+      resetKey: {}
+    },
+    data() {
+      return {
+        scrollTop: 0,
+        containerHeight: 0,
+        visibleStart: 0,
+        visibleEnd: 0,
+        scrollRaf: undefined as number | undefined,
+        resizeListener: () => this.onResize()
+      };
+    },
+    computed: {
+      visibleItems(): ReadonlyArray<any> {
+        return this.items.slice(this.visibleStart, this.visibleEnd);
+      },
+      totalHeight(): number {
+        return this.items.length * this.itemHeight;
+      },
+      offset(): number {
+        return this.visibleStart * this.itemHeight;
+      },
+      scroller(): HTMLElement | undefined {
+        return this.$refs['scroller'] as HTMLElement | undefined;
+      }
+    },
+    watch: {
+      items(): void {
+        this.$nextTick(() => {
+          this.updateContainerHeight();
+          this.updateVisibleRange();
+        });
+      },
+      itemHeight(): void {
+        this.updateVisibleRange();
+      },
+      overscan(): void {
+        this.updateVisibleRange();
+      },
+      resetKey(): void {
+        this.resetScroll();
+      }
+    },
     mounted(): void {
       this.updateContainerHeight();
       this.updateVisibleRange();
       window.addEventListener('resize', this.resizeListener);
-    }
-
-    @Hook('beforeDestroy')
+    },
     beforeDestroy(): void {
       if (this.scrollRaf !== undefined) {
         window.cancelAnimationFrame(this.scrollRaf);
       }
       window.removeEventListener('resize', this.resizeListener);
-    }
-
-    @Watch('items')
-    onItemsChange(): void {
-      this.$nextTick(() => {
+    },
+    methods: {
+      onResize(): void {
         this.updateContainerHeight();
         this.updateVisibleRange();
-      });
-    }
-
-    @Watch('itemHeight')
-    onItemHeightChange(): void {
-      this.updateVisibleRange();
-    }
-
-    @Watch('overscan')
-    onOverscanChange(): void {
-      this.updateVisibleRange();
-    }
-
-    @Watch('resetKey')
-    onResetKeyChange(): void {
-      this.resetScroll();
-    }
-
-    get scroller(): HTMLElement | undefined {
-      return this.$refs['scroller'] as HTMLElement | undefined;
-    }
-
-    onResize(): void {
-      this.updateContainerHeight();
-      this.updateVisibleRange();
-    }
-
-    resetScroll(): void {
-      const el = this.scroller;
-      if (!el) return;
-      this.scrollTop = 0;
-      el.scrollTop = 0;
-      this.updateVisibleRange();
-    }
-
-    onScroll(): void {
-      if (this.scrollRaf !== undefined) return;
-      this.scrollRaf = window.requestAnimationFrame(() => {
-        this.scrollRaf = undefined;
+      },
+      resetScroll(): void {
         const el = this.scroller;
         if (!el) return;
-        this.scrollTop = el.scrollTop;
-        if (this.containerHeight !== el.clientHeight) {
-          this.containerHeight = el.clientHeight;
-        }
+        this.scrollTop = 0;
+        el.scrollTop = 0;
         this.updateVisibleRange();
-      });
-    }
-
-    updateContainerHeight(): void {
-      const el = this.scroller;
-      if (el) this.containerHeight = el.clientHeight;
-    }
-
-    updateVisibleRange(): void {
-      const listLength = this.items.length;
-      const containerHeight = this.containerHeight;
-      const maxScrollTop = Math.max(
-        0,
-        listLength * this.itemHeight - containerHeight
-      );
-      const nextScrollTop = Math.min(this.scrollTop, maxScrollTop);
-      if (nextScrollTop !== this.scrollTop) {
-        this.scrollTop = nextScrollTop;
+      },
+      onScroll(): void {
+        if (this.scrollRaf !== undefined) return;
+        this.scrollRaf = window.requestAnimationFrame(() => {
+          this.scrollRaf = undefined;
+          const el = this.scroller;
+          if (!el) return;
+          this.scrollTop = el.scrollTop;
+          if (this.containerHeight !== el.clientHeight) {
+            this.containerHeight = el.clientHeight;
+          }
+          this.updateVisibleRange();
+        });
+      },
+      updateContainerHeight(): void {
         const el = this.scroller;
-        if (el) el.scrollTop = nextScrollTop;
+        if (el) this.containerHeight = el.clientHeight;
+      },
+      updateVisibleRange(): void {
+        const listLength = this.items.length;
+        const containerHeight = this.containerHeight;
+        const maxScrollTop = Math.max(
+          0,
+          listLength * this.itemHeight - containerHeight
+        );
+        const nextScrollTop = Math.min(this.scrollTop, maxScrollTop);
+        if (nextScrollTop !== this.scrollTop) {
+          this.scrollTop = nextScrollTop;
+          const el = this.scroller;
+          if (el) el.scrollTop = nextScrollTop;
+        }
+        const start = Math.max(
+          0,
+          Math.floor(this.scrollTop / this.itemHeight) - this.overscan
+        );
+        const visibleCount =
+          Math.ceil(containerHeight / this.itemHeight) + this.overscan * 2;
+        const end = Math.min(listLength, start + visibleCount);
+        this.visibleStart = start;
+        this.visibleEnd = end;
+      },
+      getItemKey(item: any, index: number): string | number {
+        const actualIndex = this.visibleStart + index;
+        if (this.keyFunc) return this.keyFunc(item, actualIndex);
+        if (this.keyField && item && item[this.keyField] !== undefined) {
+          return item[this.keyField];
+        }
+        return actualIndex;
       }
-      const start = Math.max(
-        0,
-        Math.floor(this.scrollTop / this.itemHeight) - this.overscan
-      );
-      const visibleCount =
-        Math.ceil(containerHeight / this.itemHeight) + this.overscan * 2;
-      const end = Math.min(listLength, start + visibleCount);
-      this.visibleStart = start;
-      this.visibleEnd = end;
     }
-
-    getItemKey(item: any, index: number): string | number {
-      const actualIndex = this.visibleStart + index;
-      if (this.keyFunc) return this.keyFunc(item, actualIndex);
-      if (this.keyField && item && item[this.keyField] !== undefined) {
-        return item[this.keyField];
-      }
-      return actualIndex;
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

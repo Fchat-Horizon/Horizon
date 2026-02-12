@@ -4,7 +4,6 @@ const fs = require('fs');
 const { execSync } = require('child_process');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
-const vueTransformer = require('@f-list/vue-ts/transform').default;
 const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const packageJson = require('./package.json');
@@ -134,8 +133,7 @@ const mainConfig = {
           options: {
             appendTsSuffixTo: [/\.vue$/],
             configFile: __dirname + '/tsconfig-renderer.json',
-            transpileOnly: true,
-            getCustomTransformers: () => ({ before: [vueTransformer] })
+            transpileOnly: true
           }
         },
         { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, loader: 'file-loader' },
@@ -306,8 +304,7 @@ const storeWorkerEndpointConfig = _.assign(_.cloneDeep(mainConfig), {
         loader: 'ts-loader',
         options: {
           configFile: __dirname + '/tsconfig-renderer.json',
-          transpileOnly: true,
-          getCustomTransformers: () => ({ before: [vueTransformer] })
+          transpileOnly: true
         }
       }
     ]

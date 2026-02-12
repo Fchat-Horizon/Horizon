@@ -35,7 +35,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook } from '@f-list/vue-ts';
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import core from './core';
@@ -55,21 +54,22 @@
     syntax: string;
   };
 
-  @Component({
-    components: { modal: Modal }
-  })
-  export default class CommandHelp extends CustomDialog {
-    commands: CommandItem[] = [];
-    filter = '';
-    l = l;
-
-    get filteredCommands(): ReadonlyArray<CommandItem> {
-      if (this.filter.length === 0) return this.commands;
-      const filter = new RegExp(this.filter.replace(/[^\w]/gi, '\\$&'), 'i');
-      return this.commands.filter(x => filter.test(x.name));
-    }
-
-    @Hook('mounted')
+  export default CustomDialog.extend({
+    components: { modal: Modal },
+    data() {
+      return {
+        commands: [] as CommandItem[],
+        filter: '',
+        l: l
+      };
+    },
+    computed: {
+      filteredCommands(): ReadonlyArray<CommandItem> {
+        if (this.filter.length === 0) return this.commands;
+        const filter = new RegExp(this.filter.replace(/[^\w]/gi, '\\$&'), 'i');
+        return this.commands.filter(x => filter.test(x.name));
+      }
+    },
     mounted(): void {
       const permissions = core.connection.vars.permissions;
       for (const key in commands) {
@@ -125,7 +125,7 @@
         });
       }
     }
-  }
+  });
 </script>
 
 <style lang="scss">

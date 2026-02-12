@@ -7,26 +7,26 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
   import Vue from 'vue';
   import { MatchReport, MatchResultScores } from '../../learn/matcher';
   import { TagId } from '../../learn/matcher-types';
 
-  @Component({
-    components: {}
-  })
-  export default class MatchTags extends Vue {
-    @Prop({ required: true })
-    readonly match!: MatchReport;
-
-    merged!: MatchResultScores;
-
-    // protected humanized: boolean = false;
-    //
-    // protected furryPreferenceId: string = '';
-
-    @Hook('mounted')
-    onMounted(): void {
+  export default Vue.extend({
+    components: {},
+    props: {
+      match: { required: true as const }
+    },
+    data() {
+      return {
+        merged: undefined as any as MatchResultScores
+      };
+    },
+    // @Watch('match', { deep: true })
+    // onMatchUpdate(match: MatchReport): void {
+    //   // console.log('ON UPDATED ETA', match);
+    //   this.merged = match.merged;
+    // }
+    mounted(): void {
       this.merged = this.match.merged;
       // this.humanized = false;
       // this.furryPreferenceId = TagId.FurryPreference.toString();
@@ -36,25 +36,20 @@
       // if (this.match.you.info.species === Species.Human && furryPreference === FurryPreference.HumansOnly) {
       //   this.humanized = true;
       // }
+    },
+    methods: {
+      getTagDesc(key: any): any {
+        // if (key === this.furryPreferenceId) {
+        //   return this.humanized ? 'Humans' : 'Anthros';
+        // }
+
+        return TagId[key]
+          .toString()
+          .replace(/([A-Z])/g, ' $1')
+          .trim();
+      }
     }
-
-    // @Watch('match', { deep: true })
-    // onMatchUpdate(match: MatchReport): void {
-    //   // console.log('ON UPDATED ETA', match);
-    //   this.merged = match.merged;
-    // }
-
-    getTagDesc(key: any): any {
-      // if (key === this.furryPreferenceId) {
-      //   return this.humanized ? 'Humans' : 'Anthros';
-      // }
-
-      return TagId[key]
-        .toString()
-        .replace(/([A-Z])/g, ' $1')
-        .trim();
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

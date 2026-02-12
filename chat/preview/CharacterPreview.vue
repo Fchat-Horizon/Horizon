@@ -115,7 +115,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
   import Vue from 'vue';
   import core from '../core';
   import { methods } from '../../site/character_page/data_store';
@@ -153,65 +152,47 @@
     name: string;
   }
 
-  @Component({
+  export default Vue.extend({
     components: {
       'match-tags': MatchTags,
       bbcode: BBCodeView(core.bbCodeParser),
       'message-view': MessageView
-    }
-  })
-  export default class CharacterPreview extends Vue {
-    @Prop
-    readonly id?: number;
-
-    characterName?: string;
-    character?: ComplexCharacter;
-    match?: MatchReport;
-    ownCharacter?: ComplexCharacter;
-    onlineCharacter?: CharacterStatus;
-    statusClasses?: StatusClasses;
-    latestAd?: AdCachedPosting;
-    statusMessage?: string;
-    memo?: string;
-
-    smartFilterIsFiltered?: boolean;
-    smartFilterDetails?: string[];
-
-    smartFilterLabels: Record<string, { name: string }> = {
-      ...smartFilterTypes,
-      ageMin: { name: 'Min age' },
-      ageMax: { name: 'Max age' }
-    };
-
-    age?: string;
-    sexualOrientation?: string;
-    species?: string;
-    gender?: string;
-    furryPref?: string;
-    subDomRole?: string;
-
-    formatTime = formatTime;
-    // readonly avatarUrl = Utils.avatarURL;
-
-    TagId = TagId;
-    Score = Score;
-
-    scoreWatcher: ((event: any) => void) | null = null;
-    customs?: CustomKinkWithScore[];
-
-    conversation?: Conversation.Message[];
-
-    getAvatarUrl(): string {
-      if (this.onlineCharacter && this.onlineCharacter.overrides.avatarUrl) {
-        return this.onlineCharacter.overrides.avatarUrl;
-      }
-
-      return Utils.avatarURL(
-        this.characterName || this.character?.character.name || ''
-      );
-    }
-
-    @Hook('mounted')
+    },
+    props: {
+      id: {}
+    },
+    data() {
+      return {
+        characterName: undefined as string | undefined,
+        character: undefined as ComplexCharacter | undefined,
+        match: undefined as MatchReport | undefined,
+        ownCharacter: undefined as ComplexCharacter | undefined,
+        onlineCharacter: undefined as CharacterStatus | undefined,
+        statusClasses: undefined as StatusClasses | undefined,
+        latestAd: undefined as AdCachedPosting | undefined,
+        statusMessage: undefined as string | undefined,
+        memo: undefined as string | undefined,
+        smartFilterIsFiltered: undefined as boolean | undefined,
+        smartFilterDetails: undefined as string[] | undefined,
+        smartFilterLabels: {
+          ...smartFilterTypes,
+          ageMin: { name: 'Min age' },
+          ageMax: { name: 'Max age' }
+        } as Record<string, { name: string }>,
+        age: undefined as string | undefined,
+        sexualOrientation: undefined as string | undefined,
+        species: undefined as string | undefined,
+        gender: undefined as string | undefined,
+        furryPref: undefined as string | undefined,
+        subDomRole: undefined as string | undefined,
+        formatTime: formatTime,
+        TagId: TagId,
+        Score: Score,
+        scoreWatcher: null as ((event: any) => void) | null,
+        customs: undefined as CustomKinkWithScore[] | undefined,
+        conversation: undefined as Conversation.Message[] | undefined
+      };
+    },
     mounted(): void {
       // tslint:disable-next-line no-unsafe-any no-any
       this.scoreWatcher = (event: {
@@ -230,287 +211,285 @@
       };
 
       EventBus.$on('character-score', this.scoreWatcher);
-    }
-
-    @Hook('beforeDestroy')
+    },
     beforeDestroy(): void {
       if (this.scoreWatcher) {
         EventBus.$off('character-score', this.scoreWatcher);
 
         this.scoreWatcher = null;
       }
-    }
+    },
+    methods: {
+      getAvatarUrl(): string {
+        if (this.onlineCharacter && this.onlineCharacter.overrides.avatarUrl) {
+          return this.onlineCharacter.overrides.avatarUrl;
+        }
 
-    load(characterName: string, force: boolean = false): void {
-      if (
-        this.characterName === characterName &&
-        !force &&
-        this.match &&
-        this.character &&
-        this.ownCharacter &&
-        this.ownCharacter.character.name ===
-          core.characters.ownProfile.character.name
-      ) {
+        return Utils.avatarURL(
+          this.characterName || this.character?.character.name || ''
+        );
+      },
+      load(characterName: string, force: boolean = false): void {
+        if (
+          this.characterName === characterName &&
+          !force &&
+          this.match &&
+          this.character &&
+          this.ownCharacter &&
+          this.ownCharacter.character.name ===
+            core.characters.ownProfile.character.name
+        ) {
+          this.updateOnlineStatus();
+          this.updateAdStatus();
+          return;
+        }
+
+        this.characterName = characterName;
+
+        this.match = undefined;
+        this.character = undefined;
+        this.customs = undefined;
+        this.memo = undefined;
+        this.ownCharacter = core.characters.ownProfile;
+
+        this.conversation = undefined;
+
+        this.smartFilterIsFiltered = false;
+        this.smartFilterDetails = [];
+
         this.updateOnlineStatus();
         this.updateAdStatus();
-        return;
-      }
 
-      this.characterName = characterName;
+        setTimeout(async () => {
+          this.character = await this.getCharacterData(characterName);
+          this.match = Matcher.identifyBestMatchReport(
+            this.ownCharacter!.character,
+            this.character!.character
+          );
 
-      this.match = undefined;
-      this.character = undefined;
-      this.customs = undefined;
-      this.memo = undefined;
-      this.ownCharacter = core.characters.ownProfile;
+          void this.updateConversationStatus();
 
-      this.conversation = undefined;
+          this.updateSmartFilterReport();
+          this.updateCustoms();
+          this.updateDetails();
+          this.updateMemo();
+        }, 0);
+      },
+      updateSmartFilterReport() {
+        if (!this.character) {
+          return;
+        }
 
-      this.smartFilterIsFiltered = false;
-      this.smartFilterDetails = [];
+        this.smartFilterIsFiltered = matchesSmartFilters(
+          this.character.character,
+          core.state.settings.risingFilter
+        );
+        this.smartFilterDetails = [];
 
-      this.updateOnlineStatus();
-      this.updateAdStatus();
+        if (!this.smartFilterIsFiltered) {
+          return;
+        }
 
-      setTimeout(async () => {
-        this.character = await this.getCharacterData(characterName);
-        this.match = Matcher.identifyBestMatchReport(
-          this.ownCharacter!.character,
-          this.character!.character
+        const results = testSmartFilters(
+          this.character.character,
+          core.state.settings.risingFilter
         );
 
-        void this.updateConversationStatus();
+        if (!results) {
+          return;
+        }
 
-        this.updateSmartFilterReport();
-        this.updateCustoms();
-        this.updateDetails();
-        this.updateMemo();
-      }, 0);
-    }
+        this.smartFilterDetails = [
+          ..._.map(
+            _.filter(_.toPairs(results.ageCheck), v => v[1]),
+            v => v[0]
+          ),
+          ..._.map(
+            _.filter(_.toPairs(results.filters), v => v[1].isFiltered),
+            (v: any) => v[0]
+          )
+        ];
+      },
+      async updateConversationStatus(): Promise<void> {
+        const ownName = core.characters.ownCharacter.name;
+        const logKey = this.characterName!.toLowerCase();
+        const logDates = await core.logs.getLogDates(ownName, logKey);
 
-    updateSmartFilterReport() {
-      if (!this.character) {
-        return;
-      }
+        if (logDates.length === 0) {
+          return;
+        }
 
-      this.smartFilterIsFiltered = matchesSmartFilters(
-        this.character.character,
-        core.state.settings.risingFilter
-      );
-      this.smartFilterDetails = [];
+        const messages = await core.logs.getLogs(
+          ownName,
+          logKey,
+          _.last(logDates) as Date
+        );
+        const matcher = /\[AUTOMATED MESSAGE]/;
 
-      if (!this.smartFilterIsFiltered) {
-        return;
-      }
+        this.conversation = _.map(
+          _.takeRight(
+            _.filter(messages, m => !matcher.exec(m.text)),
+            3
+          ),
+          m => ({
+            ...m,
+            text: m.text.length > 512 ? m.text.substr(0, 512) + '…' : m.text
+          })
+        );
+      },
+      updateOnlineStatus(): void {
+        this.onlineCharacter = core.characters.get(this.characterName!);
 
-      const results = testSmartFilters(
-        this.character.character,
-        core.state.settings.risingFilter
-      );
+        if (!this.onlineCharacter) {
+          this.statusClasses = undefined;
+          return;
+        }
 
-      if (!results) {
-        return;
-      }
+        this.statusMessage = this.onlineCharacter.statusText;
+        this.statusClasses = getStatusClasses(
+          this.onlineCharacter,
+          undefined,
+          true,
+          false,
+          true,
+          true
+        );
+      },
+      updateAdStatus(): void {
+        const cache = core.cache.adCache.get(this.characterName!);
 
-      this.smartFilterDetails = [
-        ..._.map(
-          _.filter(_.toPairs(results.ageCheck), v => v[1]),
-          v => v[0]
-        ),
-        ..._.map(
-          _.filter(_.toPairs(results.filters), v => v[1].isFiltered),
-          (v: any) => v[0]
-        )
-      ];
-    }
+        if (
+          !cache ||
+          cache.posts.length === 0 ||
+          Date.now() -
+            cache.posts[cache.posts.length - 1].datePosted.getTime() >
+            45 * 60 * 1000
+        ) {
+          this.latestAd = undefined;
+          return;
+        }
 
-    async updateConversationStatus(): Promise<void> {
-      const ownName = core.characters.ownCharacter.name;
-      const logKey = this.characterName!.toLowerCase();
-      const logDates = await core.logs.getLogDates(ownName, logKey);
+        this.latestAd = cache.posts[cache.posts.length - 1];
+      },
+      updateMemo(): void {
+        this.memo = this.character?.memo?.memo;
+      },
+      updateCustoms(): void {
+        this.customs = _.orderBy(
+          _.map(
+            _.reject(
+              Object.values(this.character!.character.customs ?? {}),
+              c => _.isUndefined(c)
+            ) as CustomKink[],
+            (c: CustomKink) => {
+              const val: CustomKinkWithScore = _.assign({}, c, {
+                score: kinkMapping[c.choice] as number,
+                name: c.name.trim().replace(/^\W+/, '').replace(/\W+$/, '')
+              }) as CustomKinkWithScore;
 
-      if (logDates.length === 0) {
-        return;
-      }
+              return val;
+            }
+          ),
+          ['score', 'name'],
+          ['desc', 'asc']
+        );
+      },
+      updateDetails(): void {
+        if (!this.match) {
+          this.age = undefined;
+          this.species = undefined;
+          this.gender = undefined;
+          this.furryPref = undefined;
+          this.subDomRole = undefined;
+          this.sexualOrientation = undefined;
+          return;
+        }
 
-      const messages = await core.logs.getLogs(
-        ownName,
-        logKey,
-        _.last(logDates) as Date
-      );
-      const matcher = /\[AUTOMATED MESSAGE]/;
+        const a = this.match.them.yourAnalysis;
+        const c = this.match.them.you;
 
-      this.conversation = _.map(
-        _.takeRight(
-          _.filter(messages, m => !matcher.exec(m.text)),
-          3
-        ),
-        m => ({
-          ...m,
-          text: m.text.length > 512 ? m.text.substr(0, 512) + '…' : m.text
-        })
-      );
-    }
+        const rawSpecies = Matcher.getTagValue(TagId.Species, c);
+        const rawAge = Matcher.getTagValue(TagId.Age, c);
 
-    updateOnlineStatus(): void {
-      this.onlineCharacter = core.characters.get(this.characterName!);
+        // if ((a.species) && (!Species[a.species])) {
+        // console.log('SPECIES', a.species, rawSpecies);
+        // }
 
-      if (!this.onlineCharacter) {
-        this.statusClasses = undefined;
-        return;
-      }
+        if (a.orientation && !Orientation[a.orientation]) {
+          console.error('Missing Orientation', a.orientation, c.name);
+        }
 
-      this.statusMessage = this.onlineCharacter.statusText;
-      this.statusClasses = getStatusClasses(
-        this.onlineCharacter,
-        undefined,
-        true,
-        false,
-        true,
-        true
-      );
-    }
-
-    updateAdStatus(): void {
-      const cache = core.cache.adCache.get(this.characterName!);
-
-      if (
-        !cache ||
-        cache.posts.length === 0 ||
-        Date.now() - cache.posts[cache.posts.length - 1].datePosted.getTime() >
-          45 * 60 * 1000
-      ) {
-        this.latestAd = undefined;
-        return;
-      }
-
-      this.latestAd = cache.posts[cache.posts.length - 1];
-    }
-
-    updateMemo(): void {
-      this.memo = this.character?.memo?.memo;
-    }
-
-    updateCustoms(): void {
-      this.customs = _.orderBy(
-        _.map(
-          _.reject(Object.values(this.character!.character.customs ?? {}), c =>
-            _.isUndefined(c)
-          ) as CustomKink[],
-          (c: CustomKink) => {
-            const val: CustomKinkWithScore = _.assign({}, c, {
-              score: kinkMapping[c.choice] as number,
-              name: c.name.trim().replace(/^\W+/, '').replace(/\W+$/, '')
-            }) as CustomKinkWithScore;
-
-            return val;
-          }
-        ),
-        ['score', 'name'],
-        ['desc', 'asc']
-      );
-    }
-
-    updateDetails(): void {
-      if (!this.match) {
-        this.age = undefined;
-        this.species = undefined;
-        this.gender = undefined;
-        this.furryPref = undefined;
-        this.subDomRole = undefined;
-        this.sexualOrientation = undefined;
-        return;
-      }
-
-      const a = this.match.them.yourAnalysis;
-      const c = this.match.them.you;
-
-      const rawSpecies = Matcher.getTagValue(TagId.Species, c);
-      const rawAge = Matcher.getTagValue(TagId.Age, c);
-
-      // if ((a.species) && (!Species[a.species])) {
-      // console.log('SPECIES', a.species, rawSpecies);
-      // }
-
-      if (a.orientation && !Orientation[a.orientation]) {
-        console.error('Missing Orientation', a.orientation, c.name);
-      }
-
-      this.age = a.age
-        ? this.readable(`${a.age}`)
-        : (rawAge && /[0-9]/.test(rawAge.string || '') && rawAge.string) ||
-          undefined;
-      this.species = a.species
-        ? this.readable(Species[a.species])
-        : (rawSpecies && rawSpecies.string) || undefined;
-      this.gender =
-        a.gender && a.gender !== Gender.None
-          ? this.readable(Gender[a.gender])
+        this.age = a.age
+          ? this.readable(`${a.age}`)
+          : (rawAge && /[0-9]/.test(rawAge.string || '') && rawAge.string) ||
+            undefined;
+        this.species = a.species
+          ? this.readable(Species[a.species])
+          : (rawSpecies && rawSpecies.string) || undefined;
+        this.gender =
+          a.gender && a.gender !== Gender.None
+            ? this.readable(Gender[a.gender])
+            : undefined;
+        this.furryPref = a.furryPreference
+          ? this.readable(furryPreferenceMapping[a.furryPreference])
           : undefined;
-      this.furryPref = a.furryPreference
-        ? this.readable(furryPreferenceMapping[a.furryPreference])
-        : undefined;
-      this.subDomRole = a.subDomRole
-        ? this.readable(SubDomRole[a.subDomRole])
-        : undefined;
-      this.sexualOrientation = a.orientation
-        ? this.readable(Orientation[a.orientation])
-        : undefined;
-    }
+        this.subDomRole = a.subDomRole
+          ? this.readable(SubDomRole[a.subDomRole])
+          : undefined;
+        this.sexualOrientation = a.orientation
+          ? this.readable(Orientation[a.orientation])
+          : undefined;
+      },
+      readable(s: string): string {
+        return s
+          .replace(/([A-Z])/g, ' $1')
+          .trim()
+          .toLowerCase()
+          .replace(/(always|usually) (submissive|dominant)/, '$2')
+          .replace(/bi (fe)?male preference/, 'bisexual');
+      },
+      byScore(_tagId: any): string {
+        return '';
 
-    readable(s: string): string {
-      return s
-        .replace(/([A-Z])/g, ' $1')
-        .trim()
-        .toLowerCase()
-        .replace(/(always|usually) (submissive|dominant)/, '$2')
-        .replace(/bi (fe)?male preference/, 'bisexual');
-    }
+        // too much
+        // if (!this.match) {
+        //   return '';
+        // }
+        //
+        // const score = this.match.merged[tagId];
+        //
+        // if (!score) {
+        //   return '';
+        // }
+        //
+        // return score.getRecommendedClass();
+      },
+      getOnlineStatus(): string {
+        if (!this.onlineCharacter) {
+          return 'Offline';
+        }
 
-    byScore(_tagId: any): string {
-      return '';
+        const s = this.onlineCharacter.status as string;
 
-      // too much
-      // if (!this.match) {
-      //   return '';
-      // }
-      //
-      // const score = this.match.merged[tagId];
-      //
-      // if (!score) {
-      //   return '';
-      // }
-      //
-      // return score.getRecommendedClass();
-    }
+        return `${s.substr(0, 1).toUpperCase()}${s.substr(1)}`;
+      },
+      async getCharacterData(characterName: string): Promise<ComplexCharacter> {
+        const cache = await core.cache.profileCache.get(characterName);
 
-    getOnlineStatus(): string {
-      if (!this.onlineCharacter) {
-        return 'Offline';
+        if (cache) {
+          return cache.character;
+        }
+
+        return methods.characterData(characterName, this.id, false);
+      },
+      getMessageWrapperClasses(): any {
+        const classes: any = {};
+        const layout = core.state.settings.chatLayoutMode || 'classic';
+        classes['layout-' + layout] = true;
+        return classes;
       }
-
-      const s = this.onlineCharacter.status as string;
-
-      return `${s.substr(0, 1).toUpperCase()}${s.substr(1)}`;
     }
-
-    async getCharacterData(characterName: string): Promise<ComplexCharacter> {
-      const cache = await core.cache.profileCache.get(characterName);
-
-      if (cache) {
-        return cache.character;
-      }
-
-      return methods.characterData(characterName, this.id, false);
-    }
-
-    getMessageWrapperClasses(): any {
-      const classes: any = {};
-      const layout = core.state.settings.chatLayoutMode || 'classic';
-      classes['layout-' + layout] = true;
-      return classes;
-    }
-  }
+  });
 </script>
 
 <style lang="scss">
