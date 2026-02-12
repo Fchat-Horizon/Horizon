@@ -1,7 +1,5 @@
 <!-- Linebreaks inside this template will break BBCode views -->
 <template>
-  <!-- I struggle to see a reality where the horsefucker (you know who you are)
-  makes code worse then this. -->
   <span
     :class="userClass"
     v-bind:bbcodeTag.prop="'user'"
