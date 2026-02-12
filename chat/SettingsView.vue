@@ -723,7 +723,7 @@
               style="cursor: pointer"
               @click.stop="hidden.splice(i, 1)"
             ></span>
-            {{ user }}
+            <user-view :character="getCharacter(user)"></user-view>
           </div>
         </template>
         <template v-else>{{ l('settings.hideAds.empty') }}</template>
@@ -820,7 +820,7 @@
               :aria-label="l('user.unignore')"
               @click.stop="unignore(user)"
             ></span>
-            {{ user }}
+            <user-view :character="getCharacter(user)"></user-view>
           </div>
         </template>
         <template v-else>{{
@@ -1138,6 +1138,7 @@
   import _ from 'lodash';
   import { matchesSmartFilters } from '../learn/filter/smart-filter';
   import { EventBus } from './preview/event-bus';
+  import UserView from './UserView.vue';
 
   const bbcodeParser = new UserInterfaceBBCodeParser();
 
@@ -1147,7 +1148,8 @@
       editor: Editor,
       tabs: Tabs,
       bbcode: BBCodeView(bbcodeParser),
-      'settings-checkbox': SettingsCheckbox
+      'settings-checkbox': SettingsCheckbox,
+      'user-view': UserView
     }
   })
   export default class SettingsView extends CustomDialog {
@@ -1524,6 +1526,9 @@
 
     setSmartFilter(key: keyof SmartFilterSelection, value: any): void {
       this.risingFilter.smartFilters[key] = value.target.checked;
+    }
+    getCharacter(name: string): Character {
+      return core.characters.get(name);
     }
   }
 </script>

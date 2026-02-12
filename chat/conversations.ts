@@ -1453,29 +1453,45 @@ export default function (this: any): Interfaces.State {
   connection.onMessage('CBU', async (data, time) => {
     const conv = state.channelMap[data.channel.toLowerCase()];
     if (conv === undefined) return core.channels.leave(data.channel);
-    const text = l('events.ban', conv.name, data.character, data.operator);
-    conv.infoText = text;
-    return addEventMessage(new EventMessage(text, time));
+    const logtext = l(
+      'events.ban',
+      conv.name,
+      data.character,
+      `[user]${data.operator}[/user]`
+    );
+    conv.infoText = l('events.ban', conv.name, data.character, data.operator);
+    return addEventMessage(new EventMessage(logtext, time));
   });
   connection.onMessage('CKU', async (data, time) => {
     const conv = state.channelMap[data.channel.toLowerCase()];
     if (conv === undefined) return core.channels.leave(data.channel);
-    const text = l('events.kick', conv.name, data.character, data.operator);
-    conv.infoText = text;
-    return addEventMessage(new EventMessage(text, time));
+    const logtext = l(
+      'events.kick',
+      conv.name,
+      data.character,
+      `[user]${data.operator}[/user]`
+    );
+    conv.infoText = l('events.kick', conv.name, data.character, data.operator);
+    return addEventMessage(new EventMessage(logtext, time));
   });
   connection.onMessage('CTU', async (data, time) => {
     const conv = state.channelMap[data.channel.toLowerCase()];
     if (conv === undefined) return core.channels.leave(data.channel);
-    const text = l(
+    const logtext = l(
+      'events.timeout',
+      conv.name,
+      data.character,
+      `[user]${data.operator}[/user]`,
+      data.length.toString()
+    );
+    conv.infoText = l(
       'events.timeout',
       conv.name,
       data.character,
       data.operator,
       data.length.toString()
     );
-    conv.infoText = text;
-    return addEventMessage(new EventMessage(text, time));
+    return addEventMessage(new EventMessage(logtext, time));
   });
   connection.onMessage('BRO', async (data, time) => {
     if (data.character !== undefined) {
@@ -1520,9 +1536,12 @@ export default function (this: any): Interfaces.State {
 
   connection.onMessage('IGN', async (data, time) => {
     if (data.action !== 'add' && data.action !== 'delete') return;
-    const text = l(`events.ignore_${data.action}`, data.character);
-    state.selectedConversation.infoText = text;
-    return addEventMessage(new EventMessage(text, time));
+    const key = `events.ignore_${data.action}`;
+    const name = data.character;
+    state.selectedConversation.infoText = l(key, name);
+    return addEventMessage(
+      new EventMessage(l(key, `[user]${name}[/user]`), time)
+    );
   });
   connection.onMessage('RTB', async (data, time) => {
     let url = 'https://www.f-list.net/';
