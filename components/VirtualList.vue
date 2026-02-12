@@ -56,9 +56,13 @@
     mouseUpListener = () => this.onMouseUp();
 
     heightCache: Map<string | number, number> = new Map();
-    updatingRange = false;
     totalHeight = 0;
     offset = 0;
+
+    prefixSums: number[] = [0];
+    prefixSumsDirty = true;
+    programmaticScroll = false;
+    measureCooldown = false;
 
     get visibleItems(): ReadonlyArray<any> {
       return this.items.slice(this.visibleStart, this.visibleEnd);
@@ -69,21 +73,37 @@
       return this.heightCache.get(key) ?? this.itemHeight;
     }
 
-    getCumHeight(index: number): number {
-      let sum = 0;
-      for (let i = 0; i < index; i++) {
-        sum += this.getItemHeight(i);
+    rebuildPrefixSums(): void {
+      if (!this.prefixSumsDirty) return;
+      const len = this.items.length;
+      const sums = new Array(len + 1);
+      sums[0] = 0;
+      for (let i = 0; i < len; i++) {
+        sums[i + 1] = sums[i] + this.getItemHeight(i);
       }
-      return sum;
+      this.prefixSums = sums;
+      this.prefixSumsDirty = false;
+    }
+
+    getCumHeight(index: number): number {
+      if (index <= 0) return 0;
+      if (index < this.prefixSums.length) return this.prefixSums[index];
+      return this.prefixSums[this.prefixSums.length - 1];
     }
 
     findStartIndex(scrollTop: number): number {
-      let cum = 0;
-      for (let i = 0; i < this.items.length; i++) {
-        cum += this.getItemHeight(i);
-        if (cum > scrollTop) return i;
+      const sums = this.prefixSums;
+      let lo = 0;
+      let hi = sums.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi) >>> 1;
+        if (sums[mid + 1] <= scrollTop) {
+          lo = mid + 1;
+        } else {
+          hi = mid;
+        }
       }
-      return this.items.length;
+      return lo;
     }
 
     @Hook('mounted')
@@ -113,6 +133,7 @@
 
     @Watch('items')
     onItemsChange(): void {
+      this.prefixSumsDirty = true;
       this.$nextTick(() => {
         this.updateContainerHeight();
         this.updateVisibleRange();
@@ -121,6 +142,7 @@
 
     @Watch('itemHeight')
     onItemHeightChange(): void {
+      this.prefixSumsDirty = true;
       this.updateVisibleRange();
     }
 
@@ -132,6 +154,7 @@
     @Watch('resetKey')
     onResetKeyChange(): void {
       this.heightCache.clear();
+      this.prefixSumsDirty = true;
       this.resetScroll();
     }
 
@@ -148,6 +171,7 @@
       const el = this.scroller;
       if (!el) return;
       this.scrollTop = 0;
+      this.programmaticScroll = true;
       el.scrollTop = 0;
       this.isScrolling = false;
       this.updateVisibleRange();
@@ -173,6 +197,10 @@
     }
 
     onScroll(): void {
+      if (this.programmaticScroll) {
+        this.programmaticScroll = false;
+        return;
+      }
       if (this.settleTimer !== undefined) clearTimeout(this.settleTimer);
       if (!this.scrollbarHeld) {
         this.settleTimer = setTimeout(() => {
@@ -195,7 +223,10 @@
         }
         this.updateVisibleRange();
         this.$emit('scroll', this.scrollTop);
-        if (this.scrollTop < this.containerHeight * 0.5) {
+        if (
+          !this.scrollbarHeld &&
+          this.scrollTop < this.containerHeight * 0.5
+        ) {
           this.$emit('near-top');
         }
       });
@@ -207,6 +238,7 @@
     }
 
     updateVisibleRange(): void {
+      this.rebuildPrefixSums();
       this.totalHeight = this.getCumHeight(this.items.length);
       const listLength = this.items.length;
       const containerHeight = this.containerHeight;
@@ -216,7 +248,10 @@
       if (nextScrollTop !== this.scrollTop) {
         this.scrollTop = nextScrollTop;
         const el = this.scroller;
-        if (el) el.scrollTop = nextScrollTop;
+        if (el) {
+          this.programmaticScroll = true;
+          el.scrollTop = nextScrollTop;
+        }
       }
 
       let start = this.findStartIndex(nextScrollTop);
@@ -238,6 +273,7 @@
     }
 
     measureRows(): void {
+      if (this.isScrolling || this.measureCooldown) return;
       const el = this.scroller;
       if (!el) return;
       const listWindow = el.querySelector('.virtual-list-window');
@@ -258,19 +294,23 @@
       }
 
       if (changed) {
-        if (!this.updatingRange) {
-          this.updatingRange = true;
-          this.updateVisibleRange();
-          this.updatingRange = false;
-        }
+        this.prefixSumsDirty = true;
+        this.measureCooldown = true;
+        this.updateVisibleRange();
+        this.$nextTick(() => {
+          this.measureCooldown = false;
+        });
       }
     }
 
     scrollToBottom(): void {
       const el = this.scroller;
       if (!el) return;
+      this.prefixSumsDirty = true;
+      this.rebuildPrefixSums();
       this.totalHeight = this.getCumHeight(this.items.length);
       this.scrollTop = this.totalHeight;
+      this.programmaticScroll = true;
       el.scrollTop = this.totalHeight;
       this.updateVisibleRange();
     }
@@ -283,6 +323,7 @@
         added += this.getItemHeight(i);
       }
       this.scrollTop += added;
+      this.programmaticScroll = true;
       el.scrollTop += added;
       this.updateVisibleRange();
     }

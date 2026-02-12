@@ -549,16 +549,15 @@
         ).map(m => Object.freeze(m));
         this.resetKey++;
       } else if (this.dateOffset === -1) {
-        this.messages = [];
         this.dateOffset = 0;
-        this.resetKey++;
         await this.bulkLoadDates(500);
-        this.$nextTick(() => {
-          const vl = this.$refs['messages'] as InstanceType<
-            typeof VirtualList
-          > | void;
-          if (vl) vl.scrollToBottom();
-        });
+        this.resetKey++;
+        await this.$nextTick();
+        await this.$nextTick();
+        const vl = this.$refs['messages'] as InstanceType<
+          typeof VirtualList
+        > | void;
+        if (vl) vl.scrollToBottom();
       }
     }
 
