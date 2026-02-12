@@ -116,7 +116,7 @@ export namespace Conversation {
     readonly recent: ReadonlyArray<RecentPrivateConversation>;
     readonly recentChannels: ReadonlyArray<RecentChannelConversation>;
     readonly selectedConversation: Conversation;
-    readonly hasNew: boolean;
+    readonly hasNew: number;
     readonly lastConversation: Conversation;
     byKey(key: string): Conversation | undefined;
     navigateForward(): boolean;
@@ -170,6 +170,7 @@ export namespace Conversation {
     errorText: string;
     readonly key: string;
     readonly unread: UnreadState;
+    readonly unreadCount: number;
     settings: Settings;
     readonly adManager: AdManager;
     send(): Promise<void>;

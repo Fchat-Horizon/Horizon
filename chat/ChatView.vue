@@ -96,15 +96,6 @@
             v-if="coreState.settings.risingShowUnreadOfflineCount"
           ></note-status>
         </div>
-
-        <!--
-        This is temporarily commented out until we properly merge the two ad centre modals into one.
-        <div>
-          <a href="#" @click.prevent="showAdLauncher()" class="btn"
-            ><span class="fas fa-fw fa-play"></span> Post Ads</a
-          >
-        </div>
-        -->
       </div>
       <div id="conversations" class="hidden-scrollbar">
         <div style="padding-top: 8px" class="list-group conversation-nav">
@@ -115,6 +106,11 @@
             class="list-group-item list-group-item-action"
           >
             {{ conversations.consoleTab.name }}
+            <span
+              class="badge rounded-pill text-bg-danger"
+              v-show="conversations.consoleTab.unreadCount > 0"
+              >{{ conversations.consoleTab.unreadCount }}</span
+            >
           </a>
         </div>
 
@@ -172,6 +168,11 @@
                   class="fas fa-reply"
                   v-show="needsReply(conversation)"
                 ></span>
+                <span
+                  class="badge rounded-pill text-bg-danger"
+                  v-show="conversation.unreadCount > 0"
+                  >{{ conversation.unreadCount }}</span
+                >
                 <span
                   class="online-status"
                   :class="getOnlineStatusIconClasses(conversation)"
@@ -238,6 +239,12 @@
           >
             <span class="name">{{ conversation.name }}</span>
             <span>
+              <span
+                class="badge align-text-bottom rounded-pill text-bg-danger"
+                v-show="conversation.unreadCount > 0"
+                >{{ conversation.unreadCount }}</span
+              >
+
               <span
                 v-if="conversation.hasAutomatedAds()"
                 class="fas fa-ad ads"
@@ -564,7 +571,8 @@
     }
 
     needsReply(conversation: Conversation): boolean {
-      if (!core.state.settings.showNeedsReply) return false;
+      if (!core.state.settings.showNeedsReply || conversation.unreadCount > 0)
+        return false;
       for (let i = conversation.messages.length - 1; i >= 0; --i) {
         const sender = (<Partial<Conversation.ChatMessage>>(
           conversation.messages[i]
@@ -917,6 +925,11 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        .badge {
+          --bs-badge-padding-x: 0.45em;
+          --bs-badge-padding-y: 0.25em;
+          --bs-badge-font-size: 0.75em;
+        }
       }
       .pin,
       .leave,
