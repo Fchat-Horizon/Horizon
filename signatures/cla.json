@@ -1,3 +1,12 @@
 {
-   "signedContributors": []
+  "signedContributors": [
+    {
+      "name": "CodingWithAnxiety",
+      "id": 78890450,
+      "comment_id": 3888006997,
+      "created_at": "2026-02-12T00:39:24Z",
+      "repoId": 935875355,
+      "pullRequestNo": 555
+    }
+  ]
 }
