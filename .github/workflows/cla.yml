@@ -25,13 +25,12 @@ jobs:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.CLA_TOKEN }}
         with:
           path-to-signatures: 'signatures/cla.json'
-          path-to-document: 'https://github.com/${{ github.repository }}/blob/main/CLA.md'
-          branch: 'main'
+          path-to-document: 'https://github.com/${{ github.repository }}/blob/development/CLA.md'
+          branch: 'development'
           allowlist: dependabot[bot],github-actions[bot]
           custom-notsigned-prcomment: >-
             Thank you for your pull request! Before we can merge it, you need
-            to sign our [Contributor License Agreement](https://github.com/${{ github.repository }}/blob/main/CLA.md).
-
+            to sign our [Contributor License Agreement](https://github.com/${{ github.repository }}/blob/development/CLA.md).
 
             **In short:** You keep ownership of your code, but you grant the
             project lead the right to license contributions under
