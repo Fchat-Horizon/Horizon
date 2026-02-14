@@ -17,12 +17,15 @@
         role="toolbar"
         :disabled="disabled"
         @mousedown.stop.prevent
-        v-if="hasToolbar && toolbarPosition === 'top'"
+        v-if="hasToolbar"
         ref="toolbarInternal"
       >
         <transition name="color-popover">
           <div
-            class="popover popover-top color-selector"
+            class="popover color-selector"
+            :class="
+              toolbarPosition === 'top' ? 'popover-bottom' : 'popover-top'
+            "
             v-show="colorPopupVisible"
             v-on-clickaway="dismissColorSelector"
           >
@@ -84,7 +87,7 @@
             v-if="overflowButtons.length > 0"
             @click.prevent.stop="toggleOverflowMenu"
             :class="{ active: showOverflowMenu }"
-            title="More formatting options"
+            :title="l('editor.moreOptions')"
             ref="overflowTrigger"
           >
             <i class="fa fa-fw fa-ellipsis-h"></i>
@@ -131,10 +134,7 @@
         <slot name="controls"></slot>
       </div>
 
-      <div
-        class="bbcode-editor-separator"
-        v-if="hasToolbar && toolbarPosition === 'top'"
-      ></div>
+      <div class="bbcode-editor-separator" v-if="hasToolbar"></div>
 
       <div class="bbcode-editor-text-area">
         <textarea
@@ -158,135 +158,13 @@
         <div class="bbcode-preview bg-body" v-show="preview">
           <div class="bbcode-preview-warnings">
             <div class="alert alert-danger" v-show="previewWarnings.length">
-              <li v-for="warning in previewWarnings">{{ warning }}</li>
+              <li v-for="(warning, index) in previewWarnings" :key="index">
+                {{ warning }}
+              </li>
             </div>
           </div>
           <div class="bbcode" ref="preview-element"></div>
         </div>
-      </div>
-
-      <div
-        class="bbcode-editor-separator"
-        v-if="hasToolbar && toolbarPosition === 'bottom'"
-      ></div>
-
-      <div
-        class="bbcode-toolbar-internal"
-        role="toolbar"
-        :disabled="disabled"
-        @mousedown.stop.prevent
-        v-if="hasToolbar && toolbarPosition === 'bottom'"
-        ref="toolbarInternal"
-      >
-        <transition name="color-popover">
-          <div
-            class="popover popover-top color-selector"
-            v-show="colorPopupVisible"
-            v-on-clickaway="dismissColorSelector"
-          >
-            <div class="popover-body">
-              <div
-                class="color-typing-hint"
-                v-if="awaitingColorKey && awaitingBuffer"
-                :class="{ 'no-match': awaitingNoMatch }"
-              >
-                <div class="buffer">{{ awaitingBuffer.toLowerCase() }}</div>
-                <div class="matches">
-                  <span
-                    v-for="m in awaitingMatches"
-                    :key="m"
-                    :class="['chip', m]"
-                    >{{ m }}</span
-                  >
-                </div>
-              </div>
-              <div
-                class="btn-group"
-                role="group"
-                :aria-label="l('common.color')"
-              >
-                <button
-                  v-for="btnCol in buttonColors"
-                  type="button"
-                  class="btn text-color"
-                  :class="btnCol"
-                  :title="btnCol"
-                  @click.prevent.stop="applyAndClearColor(btnCol)"
-                  tabindex="0"
-                ></button>
-              </div>
-            </div>
-          </div>
-        </transition>
-
-        <div class="toolbar-buttons-wrapper" ref="toolbarButtonsWrapper">
-          <div v-if="!!characterName" class="character-btn">
-            <icon :character="characterName"></icon>
-          </div>
-
-          <div
-            class="toolbar-btn"
-            v-for="button in visibleButtons"
-            :key="button.tag"
-            :class="button.outerClass"
-            :title="button.title"
-            @click.prevent.stop="apply(button)"
-          >
-            <i
-              :class="(button.class ? button.class : 'fa fa-fw ') + button.icon"
-            ></i>
-          </div>
-
-          <div
-            class="toolbar-btn toolbar-overflow-btn"
-            v-if="overflowButtons.length > 0"
-            @click.prevent.stop="toggleOverflowMenu"
-            :class="{ active: showOverflowMenu }"
-            title="More formatting options"
-            ref="overflowTrigger"
-          >
-            <i class="fa fa-fw fa-ellipsis-h"></i>
-          </div>
-
-          <div
-            @click="previewBBCode"
-            class="toolbar-btn bbcode-editor-preview"
-            :class="preview ? 'active' : ''"
-            :title="
-              preview
-                ? l(
-                    'editor.closePreview',
-                    `${this.shortcutModifierKey}+Shift+P`
-                  )
-                : l('editor.preview', `${this.shortcutModifierKey}+Shift+P`)
-            "
-          >
-            <i class="fa" :class="preview ? 'fa-eye' : 'far fa-eye'"></i>
-          </div>
-        </div>
-
-        <div
-          class="toolbar-overflow-menu"
-          v-if="overflowButtons.length > 0"
-          v-show="showOverflowMenu"
-          v-on-clickaway="closeOverflowMenu"
-          ref="overflowMenu"
-        >
-          <div
-            class="toolbar-overflow-item"
-            v-for="button in overflowButtons"
-            :key="button.tag"
-            :class="button.outerClass"
-            :title="button.title"
-            @click.prevent.stop="applyFromOverflow(button)"
-          >
-            <i
-              :class="(button.class ? button.class : 'fa fa-fw ') + button.icon"
-            ></i>
-          </div>
-        </div>
-
-        <slot name="controls"></slot>
       </div>
     </div>
 
@@ -609,6 +487,31 @@
       }
 
       return btn;
+    }
+
+    @Watch('toolbarPosition')
+    onToolbarPositionChanged(): void {
+      this.$nextTick(() => {
+        this.reattachResizeObserver();
+        this.calculateVisibleButtons();
+      });
+    }
+
+    private reattachResizeObserver(): void {
+      if (this.overflowResizeObserver) {
+        this.overflowResizeObserver.disconnect();
+      }
+      const wrapper = this.$refs['toolbarButtonsWrapper'] as HTMLElement;
+      // tslint:disable-next-line:no-any
+      const RO = (window as any).ResizeObserver;
+      if (wrapper && typeof RO !== 'undefined') {
+        if (!this.overflowResizeObserver) {
+          this.overflowResizeObserver = new RO(() => {
+            this.calculateVisibleButtons();
+          });
+        }
+        this.overflowResizeObserver.observe(wrapper);
+      }
     }
 
     @Watch('value')
@@ -1024,6 +927,32 @@
         border-color: var(--bs-primary);
         box-shadow: 0 0 0 2px rgba(var(--bs-primary-rgb), 0.15);
       }
+
+      .bbcode-editor-text-area {
+        order: 1;
+      }
+
+      .bbcode-toolbar-internal {
+        order: 2;
+      }
+
+      .bbcode-editor-separator {
+        order: 2;
+      }
+    }
+
+    &.toolbar-top .bbcode-editor-container {
+      .bbcode-toolbar-internal {
+        order: 0;
+      }
+
+      .bbcode-editor-separator {
+        order: 0;
+      }
+
+      .bbcode-editor-text-area {
+        order: 1;
+      }
     }
 
     .bbcode-editor-text-area {
@@ -1210,7 +1139,6 @@
       .color-selector {
         max-width: 150px;
         left: 4.5em;
-        bottom: 2.5em;
         line-height: 1;
         z-index: 1000;
         background-color: var(--bs-body-bg);
@@ -1218,6 +1146,14 @@
         border: 1px solid var(--bs-border-color);
         border-radius: 6px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+        &.popover-top {
+          bottom: 2.5em;
+        }
+
+        &.popover-bottom {
+          top: 2.5em;
+        }
 
         .popover-body {
           padding: 0;
@@ -1397,11 +1333,6 @@
   }
 
   .bbcode-editor.bbcode-editor-mattermost.toolbar-top {
-    .bbcode-toolbar-internal .color-selector {
-      bottom: auto;
-      top: 2.5em;
-    }
-
     .bbcode-toolbar-internal .toolbar-overflow-menu {
       bottom: auto;
       top: calc(100% + 4px);

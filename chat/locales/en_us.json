@@ -344,6 +344,7 @@
   "duplicateDialog.info": "This will duplicate the character, kinks, infotags, customs, subkinks and images. Guestbook entries, friends, groups, and bookmarks are not duplicated.",
   "duplicateDialog.nameValid": "Name valid and unused.",
   "editor.closePreview": "Close Preview ({0})\n\nDismisses the BBCode preview.",
+  "editor.moreOptions": "More formatting options",
   "editor.preview": "Preview ({0})\n\nShows a preview of the BBCode you have typed, including any formatting errors.",
   "eicon.action": "Select EIcon",
   "eicon.addToFavorites": "Add to favorites",
