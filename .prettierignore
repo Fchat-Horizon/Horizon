@@ -19,3 +19,4 @@ test.ts
 
 **/pnpm-lock.yaml
 *.desktop
+signatures/cla.json
