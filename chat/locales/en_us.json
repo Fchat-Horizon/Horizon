@@ -661,6 +661,7 @@
   "settings.flashWindow": "Enable taskbar flashing",
   "settings.flashWindow.note": "On Linux, this feature might not be supported by your window manager or desktop environment.",
   "settings.fontSize": "Font size",
+  "settings.forceNativeWindowControls": "Force native window controls (requires restart)",
   "settings.genderIconUseOriginalColor": "Make gender icon use the original gender color instead of the custom name color",
   "settings.hideAds.empty": "You aren't currently hiding the ads of any users.",
   "settings.hideNonCharacterFriends": "Additionally hide non-character friends",

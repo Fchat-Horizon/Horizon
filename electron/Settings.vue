@@ -10,7 +10,7 @@
     <div class="window-modal modal" :class="getThemeClass()" tabindex="-1">
       <div class="modal-dialog modal-xl" style="height: 100vh">
         <div class="modal-content" style="height: 100vh">
-          <div class="modal-header">
+          <div class="modal-header" v-if="!showTitle">
             <h5 class="modal-title" style="-webkit-app-region: drag">
               <i class="fa-solid fa-fw fa-gear"></i>
               {{ l('settings.action') }}
@@ -623,6 +623,28 @@
                     </label>
                   </div>
                 </div>
+
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="forceNativeWindowControls"
+                      v-model="settings.forceNativeWindowControls"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="forceNativeWindowControls"
+                    >
+                      {{
+                        l(
+                          'settings.experimental',
+                          l('settings.forceNativeWindowControls')
+                        )
+                      }}
+                    </label>
+                  </div>
+                </div>
               </div>
               <!--Accessibility-->
               <div
@@ -950,6 +972,8 @@
     isWindows = process.platform === 'win32';
     isMac = process.platform === 'darwin';
 
+    showTitle: boolean = true;
+
     platformName = process.platform;
 
     get styling(): string {
@@ -983,6 +1007,7 @@
       this.browserArgs = this.settings.browserArgs;
       this.logDirectory = this.settings.logDirectory;
       this.logLevel = this.settings.risingSystemLogLevel;
+      this.showTitle = this.settings.forceNativeWindowControls;
       this.availableThemes = fs
         .readdirSync(path.join(__dirname, 'themes'))
         .filter(x => x.substr(-4) === '.css')

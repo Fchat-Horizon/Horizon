@@ -63,6 +63,7 @@ export class GeneralSettings {
   fuzzyDates: boolean = true;
   flashWindow: boolean = true;
   allowWindowTransparency: boolean = false;
+  forceNativeWindowControls: boolean = false;
   horizonForceAsciiProfiles: boolean = false;
   hasImportedVanillaLogs: boolean = false;
   hasDismissedVanillaImport: boolean = false;

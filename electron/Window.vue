@@ -6,14 +6,28 @@
   >
     <div v-html="styling"></div>
     <div
-      style="display: flex; align-items: stretch; border-bottom-width: 1px"
+      :style="`
+        display: ${!hideWindowControls | (tabs.length > 1) ? 'flex' : 'none'};
+        align-items: stretch;
+        border-bottom-width: 1px;
+        min-height: 31px;
+      `"
       class="border-bottom"
       id="window-tabs"
     >
-      <h4 style="padding: 2px 0" class="d-md-block d-none">
+      <h4
+        style="padding: 2px 0"
+        class="d-md-block d-none"
+        v-if="!hideWindowControls"
+      >
         {{ l(windowTitleKey) }}
       </h4>
-      <div class="btn btn-light" @click="openMenu" id="settings">
+      <div
+        class="btn btn-light"
+        @click="openMenu"
+        id="settings"
+        v-if="!hideWindowControls"
+      >
         <i class="fas fa-bars"></i>
       </div>
       <div
@@ -101,6 +115,7 @@
         "
         id="windowButtons"
         class="btn-group"
+        v-if="!hideWindowControls"
       >
         <span
           @click.stop="openSettingsMenu()"
@@ -234,6 +249,7 @@
     windowTitleKey: string =
       process.env.NODE_ENV === 'production' ? 'title' : 'title.dev';
     isClosing = false;
+    hideWindowControls = false;
 
     @Hook('mounted')
     async mounted(): Promise<void> {
@@ -244,6 +260,8 @@
       if (remote.process.argv.includes('--devtools')) {
         browserWindow.webContents.openDevTools({ mode: 'detach' });
       }
+
+      this.hideWindowControls = this.settings.forceNativeWindowControls;
 
       updateSupportedLanguages(
         browserWindow.webContents.session.availableSpellCheckerLanguages

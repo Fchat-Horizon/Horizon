@@ -9,7 +9,7 @@
     <div class="window-modal modal" :class="getThemeClass()" tabindex="-1">
       <div class="modal-dialog modal-xl" style="height: 100vh">
         <div class="modal-content" style="height: 100vh">
-          <div class="modal-header">
+          <div class="modal-header" v-if="!settings.forceNativeWindowControls">
             <h5 class="modal-title" style="-webkit-app-region: drag">
               <i class="fas fa-fw fa-file-export"></i>
               {{ l('settings.export.title') }}
