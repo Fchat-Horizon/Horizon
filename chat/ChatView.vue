@@ -83,11 +83,11 @@
             </a>
 
             <a
-              href="#"
+              href="javascript:void(0)"
               role="button"
               class="userInfo-button-item"
               :title="l('chat.logout')"
-              @click.prevent="logOut()"
+              @click="logOut()"
             >
               <i class="fa-solid fa-sign-out-alt fa-fw"></i>
             </a>

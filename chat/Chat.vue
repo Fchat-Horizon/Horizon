@@ -398,7 +398,8 @@
           character: core.characters.ownCharacter?.name
         });
 
-        (<Modal>this.$refs['reconnecting']).hide();
+        const reconnectingModal = this.$refs['reconnecting'] as Modal;
+        if (reconnectingModal) reconnectingModal.hide();
         this.error = '';
         await core.cache.start((core.state as any).generalSettings, true);
         this.connecting = false;
@@ -439,7 +440,8 @@
 
     cancelReconnect(): void {
       core.connection.close();
-      (<Modal>this.$refs['reconnecting']).hide();
+      const reconnectingModal = this.$refs['reconnecting'] as Modal;
+      if (reconnectingModal) reconnectingModal.hide();
     }
 
     selectCharacter(character: SimpleCharacter): void {

@@ -1,13 +1,13 @@
 buildscript {
     ext {
-        kotlin_version = '1.3.72' // Updated Kotlin version
+        kotlin_version = '1.8.22' // Updated Kotlin version for Java 17 compatibility
     }
     repositories {
         google()
         mavenCentral() // Use mavenCentral instead of jcenter
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.0.0' // Updated AGP version
+        classpath 'com.android.tools.build:gradle:7.4.2' // Updated AGP for Java 17 support
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
