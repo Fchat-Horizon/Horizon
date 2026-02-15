@@ -195,6 +195,8 @@ export function openTab(w: electron.BrowserWindow) {
 
 /**
  * Creates a new main window for the application.
+ * If all windows are hidden but not closed, this function will show all windows.
+ * If the maximum number of tabs has been reached, see {@link maxTabCount}, this function will return undefined and no new window will be created.
  * @function
  * @param {GeneralSettings} settings
  * This contains the general settings for the application.
@@ -203,6 +205,7 @@ export function openTab(w: electron.BrowserWindow) {
  * @param {string} baseDir
  * Base directory for the application, used for the ad blocker.
  * @returns {electron.BrowserWindow | undefined}
+ * Reference to the created window or undefined if the window could not be created (for example, if the maximum number of tabs has been reached).
  */
 export function createMainWindow(
   settings: GeneralSettings,
@@ -210,7 +213,18 @@ export function createMainWindow(
   baseDir: string
 ): electron.BrowserWindow | undefined {
   log.info('browser_windows.createMainWindow', { ImporterHint });
-  if (tabCount >= maxTabCount) return;
+  if (
+    windows.every(item => {
+      !item.isVisible;
+    })
+  ) {
+    windows.forEach(item => {
+      item.show();
+    });
+  }
+  if (tabCount >= maxTabCount) {
+    return;
+  }
   const lastState = windowState.getSavedWindowState();
 
   let windowBackgroundColor: string;
