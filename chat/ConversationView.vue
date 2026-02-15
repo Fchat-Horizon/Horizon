@@ -358,6 +358,7 @@
           : '')
       "
       :hasToolbar="settings.bbCodeBar"
+      :toolbarPosition="settings.bbCodeBarPosition"
       ref="textBox"
       style="position: relative; margin-top: 5px"
       :maxlength="
@@ -367,6 +368,7 @@
       "
       :characterName="ownName"
       :type="'big'"
+      :placeholder="editorPlaceholder"
     >
       <span
         v-if="isPrivate(conversation) && conversation.typingStatus !== 'clear'"
@@ -403,71 +405,74 @@
           style="flex: 1; margin-left: 5px"
         ></bbcode-ui>
       </div>
-      <div class="bbcode-editor-controls">
-        <div
-          v-if="isChannel(conversation) || isPrivate(conversation)"
-          style="margin-right: 5px"
-        >
-          {{ getByteLength(conversation.enteredText) }} /
-          {{ conversation.maxMessageLength }}
-        </div>
-        <ul
-          class="nav nav-pills send-ads-switcher"
-          v-if="isChannel(conversation)"
-          style="position: relative; z-index: 10; margin-right: 5px"
-        >
-          <li
-            class="nav-item"
-            v-show="
-              conversation.channel.mode === 'both' ||
-              conversation.channel.mode === 'chat'
-            "
+      <template v-slot:controls>
+        <div class="toolbar-controls">
+          <span
+            v-if="isChannel(conversation) || isPrivate(conversation)"
+            class="char-counter"
           >
-            <a
-              href="#"
-              :class="{
-                active: !conversation.isSendingAds,
-                disabled:
-                  conversation.channel.mode != 'both' ||
-                  conversation.adManager.isActive()
-              }"
-              class="nav-link"
-              @click.prevent="setSendingAds(false)"
-              >{{ l('channel.mode.chat') }}</a
-            >
-          </li>
-          <li
-            class="nav-item"
-            v-show="
-              conversation.channel.mode === 'both' ||
-              conversation.channel.mode === 'ads'
-            "
+            {{ getByteLength(conversation.enteredText) }} /
+            {{ conversation.maxMessageLength }}
+          </span>
+          <ul
+            class="nav nav-pills send-ads-switcher"
+            v-if="isChannel(conversation)"
           >
-            <a
-              href="#"
-              :class="{
-                active: conversation.isSendingAds,
-                disabled:
-                  conversation.channel.mode != 'both' ||
-                  conversation.adManager.isActive()
-              }"
-              class="nav-link"
-              @click.prevent="setSendingAds(true)"
-              >{{ adsMode }}</a
+            <li
+              class="nav-item"
+              v-show="
+                conversation.channel.mode === 'both' ||
+                conversation.channel.mode === 'chat'
+              "
             >
-          </li>
-          <!--                    <li class="nav-item">-->
-          <!--                        <a href="#" :class="{active: conversation.adManager.isActive()}" class="nav-link toggle-autopost" @click="toggleAutoPostAds()">{{l('admgr.toggleAutoPost')}}</a>-->
-          <!--                    </li>-->
-        </ul>
-        <div
-          class="btn btn-sm btn-primary"
-          v-show="!settings.enterSend"
-          @click="sendButton"
-        >
-          {{ l('chat.send') }}
+              <a
+                href="#"
+                :class="{
+                  active: !conversation.isSendingAds,
+                  disabled:
+                    conversation.channel.mode != 'both' ||
+                    conversation.adManager.isActive()
+                }"
+                class="nav-link"
+                @click.prevent="setSendingAds(false)"
+                >{{ l('channel.mode.chat') }}</a
+              >
+            </li>
+            <li
+              class="nav-item"
+              v-show="
+                conversation.channel.mode === 'both' ||
+                conversation.channel.mode === 'ads'
+              "
+            >
+              <a
+                href="#"
+                :class="{
+                  active: conversation.isSendingAds,
+                  disabled:
+                    conversation.channel.mode != 'both' ||
+                    conversation.adManager.isActive()
+                }"
+                class="nav-link"
+                @click.prevent="setSendingAds(true)"
+                >{{ adsMode }}</a
+              >
+            </li>
+          </ul>
+          <span
+            class="toolbar-separator"
+            v-show="!settings.enterSend && isChannel(conversation)"
+          ></span>
+          <div
+            class="btn btn-sm btn-primary send-btn"
+            v-show="!settings.enterSend"
+            @click="sendButton"
+            :title="l('chat.send')"
+          >
+            <i class="fas fa-paper-plane"></i>
+          </div>
         </div>
-      </div>
+      </template>
     </bbcode-editor>
     <command-help ref="helpDialog"></command-help>
     <settings ref="settingsDialog" :conversation="conversation"></settings>
@@ -735,6 +740,15 @@
       this.ownName = core.state.settings.risingShowPortraitNearInput
         ? core.characters.ownCharacter
         : undefined;
+    }
+
+    get editorPlaceholder(): string {
+      if (this.isChannel(this.conversation)) {
+        return l('chat.placeholder.channel', this.conversation.name);
+      } else if (this.isPrivate(this.conversation)) {
+        return l('chat.placeholder.private', this.conversation.name);
+      }
+      return '';
     }
 
     get conversation(): Conversation {
