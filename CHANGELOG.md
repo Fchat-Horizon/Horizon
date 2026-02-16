@@ -80,7 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Drastically improved detection of your browser for the "Open in incognito mode" right click option. Linux is now supported as well [[Improvements]](https://github.com/Fchat-Horizon/Horizon/commit/3737b0ea3ad8039a9faba690256b3c6847095a28) [[Linux]](https://github.com/Fchat-Horizon/Horizon/commit/e82f2b0028801608cf91028346e578f2bd51fcd6)
   - If the browser you have set in the advanced app options is different from your computer's default browser, Horizon will try to open incognito links using your custom browser path too.
   - Due to Safari not supporting Private Mode flags for the command line, MacOS support for this feature has not yet been added.
-- If you try and change the server host, you'll now get a warning asking you if you are _really_ sure. This is an advanced option after all. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8c626f023e42842077574afad81fca4de1537044)
+- If you try and change the server host, you'll now get a warning asking you if you are *really* sure. This is an advanced option after all. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8c626f023e42842077574afad81fca4de1537044)
 - Adjusted some matching/ kink-related colors in colorblind mode for better contrast. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/745da3f83cb008067ad310478d9c0db954fa8a82)
 - "Yes" is once again the default option when prompted to log out or close a tab. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/14c53f141f793e27dee8e74c2d102091829988b5)
   - Fun fact: This was technically a bug, and "No" was the intended default option, an update in our dependencies unbroke this accidentally. But muscle memory > intent.
