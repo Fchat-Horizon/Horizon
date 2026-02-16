@@ -167,7 +167,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Your character's friends now appear in their own list on top of the friends tab. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1bd8a6afb6f308ba35428d04838ba39198aca238)
-  - There is even a setting to hide other friends (the ones that are not friends with your _current_ character), or to group them all together (the vanilla behaviour).
+  - There is even a setting to hide other friends (the ones that are not friends with your *current* character), or to group them all together (the vanilla behaviour).
 - The profile viewer now has extra filters and sorting options for comparing kinks between you and the profile you're viewing. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6da8d252ff8b01dc3f01875b84e29a59d30bf8c6)
   - Thank you, @Matthew-X!
 - The console view now has an "All friends" tab where you can see all of your friends and bookmarked profiles, even if they are offline. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/110a8534efbf5f5a738fee9dedcbfec0dab630d2)
