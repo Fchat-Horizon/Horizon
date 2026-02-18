@@ -661,6 +661,7 @@
   "settings.flashWindow": "Activar parpadeo en la barra de tareas",
   "settings.flashWindow.note": "En Linux, esta característica puede que no esté soportada por tu administrador de ventanas o por el entorno de escritorio.",
   "settings.fontSize": "Tamaño de fuente",
+  "settings.forceNativeWindowControls": "Forzar los controles de ventana nativos (requiere reiniciar)",
   "settings.genderIconUseOriginalColor": "Hacer que el icono de género use el color de género original en lugar del color personalizado del nombre",
   "settings.hideAds.empty": "Actualmente no estás ocultando los anuncios de ningún usuario.",
   "settings.hideNonCharacterFriends": "También ocultar amigos que no sean personajes",

@@ -33,11 +33,7 @@
       </editor>
     </div>
     <div class="mb-3">
-      <button
-        type="button"
-        @click="showStatusPicker"
-        class="btn btn-outline-secondary"
-      >
+      <button type="button" @click="showStatusPicker" class="btn btn-secondary">
         History
       </button>
     </div>

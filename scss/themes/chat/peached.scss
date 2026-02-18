@@ -161,6 +161,13 @@ $genders: (
   }
 }
 
+.message-own {
+  .yellowText,
+  .yellowNameText {
+    color: #fff6ac;
+  }
+}
+
 .message-warn {
   .pinkText,
   .pinkNameText,

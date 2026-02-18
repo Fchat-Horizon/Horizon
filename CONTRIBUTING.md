@@ -19,6 +19,12 @@ That being said, _Horizon is an opinionated fork_, and as such we enforce strong
   - [Style guidelines](#style-guidelines)
   - [Packaging and installing](#packaging-and-installing)
 
+## Contributor License Agreement
+
+By submitting a pull request or contributing to this project (including translations via Weblate), you agree to the terms of our [Contributor License Agreement](./CLA.md).
+
+In short: you keep ownership of your code, but you grant the project lead the right to license contributions under MPL-2.0 and to provide them to Dragonfruit under MIT.
+
 ## Where do I start?!
 
 You wish to add a new feature to Horizon, or fix that one bug that's been pissing you off for months? Then this guide'll give you the rundown.

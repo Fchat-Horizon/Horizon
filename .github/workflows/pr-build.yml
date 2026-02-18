@@ -3,7 +3,7 @@ name: PR Build Validation
 
 # Set the required permissions for the workflow
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 # Trigger workflow on pull requests to main and dev branches
@@ -26,30 +26,54 @@ jobs:
           pr_number="${GITHUB_REF#refs/pull/}"
           pr_number="${pr_number%/merge}"
           echo "version=pr-${pr_number}" >> $GITHUB_OUTPUT
-  #This is its own job, because a build's success should be independent of Prettier's opinions (and vice versa). Sometimes we might want to push noncompliant code.
   prettier:
-    name: Prettier Validation
+    name: Auto-format
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: 'pnpm'
 
       - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Prettier
+        run: pnpm lint
+
+      - name: Commit formatting changes
         run: |
-          pnpm install --frozen-lockfile
-      - name: Prettier Format Check
-        run: |
-          pnpm check
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet; then
+            echo "No formatting changes needed."
+            exit 0
+          fi
+
+          git add -A
+          git commit -m "style: auto-format with Prettier"
+
+          COMMIT_SHA=$(git rev-parse HEAD)
+          echo "" >> .git-blame-ignore-revs
+          echo "# Auto-format $(date -u +%Y-%m-%d)" >> .git-blame-ignore-revs
+          echo "$COMMIT_SHA" >> .git-blame-ignore-revs
+
+          git add .git-blame-ignore-revs
+          git commit -m "chore: add formatting commit to blame-ignore-revs"
+
+          git push
 
   build:
     name: Build

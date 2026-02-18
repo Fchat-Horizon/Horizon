@@ -103,25 +103,49 @@
         </button>
       </div>
     </div>
-    <div
+    <virtual-list
       class="messages messages-both hidden-scrollbar"
       :class="layoutClasses"
-      style="overflow: auto; overscroll-behavior: none"
+      style="overscroll-behavior: none"
       ref="messages"
       tabindex="-1"
-      @scroll="onMessagesScroll"
+      :items="filteredMessages"
+      :itemHeight="itemHeight"
+      :keyFunc="messageKeyFunc"
+      :resetKey="resetKey"
+      @near-top="onNearTop"
+      @keydown.native.page-up="onPageUp"
     >
-      <message-view
-        v-for="(message, i) in displayedMessages"
-        :message="message"
-        :key="message.id"
-        :logs="true"
-        :previous="displayedMessages[i - 1]"
-        :selectable="selectionMode"
-        :selected="selectedMessages.has(message.id)"
-        @toggle-select="onToggleSelect(message, i, $event)"
-      ></message-view>
-    </div>
+      <template slot-scope="{ item, index, isScrolling }">
+        <message-view
+          v-if="!isScrolling"
+          :message="item"
+          :logs="true"
+          :previous="index > 0 ? filteredMessages[index - 1] : undefined"
+          :selectable="selectionMode"
+          :selected="selectedMessages.has(item.id)"
+          @toggle-select="onToggleSelect(item, index, $event)"
+        ></message-view>
+        <div v-else class="message-skeleton" :class="layoutClasses">
+          <div
+            v-if="itemHeight > 40"
+            class="message-skeleton-avatar throbber"
+          ></div>
+          <div class="message-skeleton-content">
+            <div class="message-skeleton-header">
+              <div class="skeleton-bone throbber" style="width: 28%"></div>
+              <div class="skeleton-bone throbber" style="width: 14%"></div>
+            </div>
+            <div class="message-skeleton-body">
+              <div
+                class="skeleton-bone throbber"
+                :style="{ width: 50 + ((index * 37) % 45) + '%' }"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </virtual-list>
     <div class="input-group" style="flex-shrink: 0">
       <span class="input-group-text">
         <span class="fas fa-search"></span>
@@ -175,6 +199,7 @@
   import { Conversation, Logs as LogInterface } from './interfaces';
   import l from './localize';
   import MessageView from './message_view';
+  import VirtualList from '../components/VirtualList.vue';
   import AdmZip from 'adm-zip';
   import { Dialog } from '../helpers/dialog';
 
@@ -206,6 +231,13 @@
             html
               ? t => {
                   const parsedElement = core.bbCodeParser.parseEverything(t);
+                  //TODO: If we want to instead use a custom BBCode parser (so we can also have a different kind of Spoiler tag for logs
+                  //Then we would need to remove this
+                  parsedElement
+                    .querySelectorAll('.character-avatar.eicon')
+                    .forEach(el => {
+                      el.classList.remove('loading');
+                    });
                   const result = parsedElement.innerHTML;
                   parsedElement.cleanup?.();
                   return `${result}`;
@@ -218,23 +250,20 @@
     );
   }
 
-  function getMessageWrapperClasses(): any {
-    const classes: any = {};
-    let layout: 'classic' | 'modern' = 'classic';
+  function getLayoutMode(): 'classic' | 'modern' {
     try {
-      layout = (core.state as any)._settings?.chatLayoutMode || 'classic';
+      return (core.state as any)._settings?.chatLayoutMode || 'classic';
     } catch (_) {
-      layout = 'classic';
+      return 'classic';
     }
-    classes['layout-' + layout] = true;
-    return classes;
   }
 
   @Component({
     components: {
       modal: Modal,
       'message-view': MessageView,
-      'filterable-select': FilterableSelect
+      'filterable-select': FilterableSelect,
+      'virtual-list': VirtualList
     }
   })
   export default class Logs extends CustomDialog {
@@ -258,11 +287,14 @@
     selectedMessages = new Set<number>();
     lastSelectedIndex = -1;
     dateOffset = -1;
-    windowStart = 0;
-    windowEnd = 0;
-    resizeListener = async () => this.onMessagesScroll();
-    get layoutClasses(): any {
-      return getMessageWrapperClasses();
+    loadingDates = false;
+    resetKey = 0;
+    filterDebounce: ReturnType<typeof setTimeout> | undefined;
+    nearTopDebounce: ReturnType<typeof setTimeout> | undefined;
+    pendingFilter = '';
+
+    get layoutClasses(): Record<string, boolean> {
+      return { ['layout-' + getLayoutMode()]: true };
     }
 
     get isDmConversation(): boolean {
@@ -273,14 +305,20 @@
       );
     }
 
-    get displayedMessages(): ReadonlyArray<Conversation.Message> {
-      if (this.selectedDate !== undefined) return this.filteredMessages;
-      return this.filteredMessages.slice(this.windowStart, this.windowEnd);
+    get itemHeight(): number {
+      return getLayoutMode() === 'modern' ? 52 : 40;
+    }
+
+    messageKeyFunc(item: Conversation.Message): string | number {
+      return item.id;
     }
 
     get filteredMessages(): ReadonlyArray<Conversation.Message> {
-      if (this.filter.length === 0) return this.messages;
-      const filter = new RegExp(this.filter.replace(/[^\w]/gi, '\\$&'), 'i');
+      if (this.pendingFilter.length === 0) return this.messages;
+      const filter = new RegExp(
+        this.pendingFilter.replace(/[^\w]/gi, '\\$&'),
+        'i'
+      );
       return this.messages.filter(
         x =>
           filter.test(x.text) ||
@@ -296,12 +334,13 @@
       this.characters = this.characters
         .slice()
         .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-      window.addEventListener('resize', this.resizeListener);
     }
 
     @Hook('beforeDestroy')
     beforeDestroy(): void {
-      window.removeEventListener('resize', this.resizeListener);
+      if (this.filterDebounce !== undefined) clearTimeout(this.filterDebounce);
+      if (this.nearTopDebounce !== undefined)
+        clearTimeout(this.nearTopDebounce);
     }
 
     async loadCharacter(): Promise<void> {
@@ -358,21 +397,17 @@
       this.dateOffset = -1;
       this.filter = '';
       this.setSelectionMode(false);
+      this.pendingFilter = '';
       await this.loadMessages();
     }
 
     @Watch('filter')
     onFilterChanged(): void {
-      if (this.selectedDate === undefined) {
-        this.windowEnd = this.filteredMessages.length;
-        this.windowStart = this.windowEnd - 50;
-      }
-      this.$nextTick(async () => this.onMessagesScroll());
-    }
-
-    @Watch('showFilters')
-    async onFilterToggle(): Promise<void> {
-      return this.onMessagesScroll();
+      if (this.filterDebounce !== undefined) clearTimeout(this.filterDebounce);
+      this.filterDebounce = setTimeout(() => {
+        this.pendingFilter = this.filter;
+        this.resetKey++;
+      }, 200);
     }
 
     download(file: string, logs: string): void {
@@ -530,11 +565,13 @@
           if (selection === null) return;
           selection.removeAllRanges();
           if (this.messages.length > 0) {
-            const range = document.createRange();
-            const messages = this.$refs['messages'] as Node;
-            range.setStartBefore(messages.firstChild!);
-            range.setEndAfter(messages.lastChild!);
-            selection.addRange(range);
+            const el = (this.$refs['messages'] as Vue | undefined)?.$el;
+            if (el?.firstChild && el.lastChild) {
+              const range = document.createRange();
+              range.setStartBefore(el.firstChild);
+              range.setEndAfter(el.lastChild);
+              selection.addRange(range);
+            }
           }
         }
       };
@@ -546,23 +583,29 @@
     }
 
     async loadMessages(): Promise<void> {
-      if (this.selectedConversation === undefined) this.messages = [];
-      else if (this.selectedDate !== undefined) {
-        this.dateOffset = -1;
-        this.messages = await core.logs.getLogs(
-          this.selectedCharacter,
-          this.selectedConversation.key,
-          new Date(this.selectedDate)
-        );
-      } else if (this.dateOffset === -1) {
+      if (this.selectedConversation === undefined) {
         this.messages = [];
+      } else if (this.selectedDate !== undefined) {
+        this.dateOffset = -1;
+        this.messages = (
+          await core.logs.getLogs(
+            this.selectedCharacter,
+            this.selectedConversation.key,
+            new Date(this.selectedDate)
+          )
+        ).map(m => Object.freeze(m));
+        this.resetKey++;
+      } else if (this.dateOffset === -1) {
         this.dateOffset = 0;
-        this.windowStart = 0;
-        this.windowEnd = 0;
-        this.lastScroll = -1;
-        this.lockScroll = false;
-        this.$nextTick(async () => this.onMessagesScroll());
-      } else return this.onMessagesScroll();
+        await this.bulkLoadDates(500);
+        this.resetKey++;
+        await this.$nextTick();
+        await this.$nextTick();
+        const vl = this.$refs['messages'] as InstanceType<
+          typeof VirtualList
+        > | void;
+        if (vl) vl.scrollToBottom();
+      }
     }
 
     setSelectionMode(active: boolean): void {
@@ -581,7 +624,7 @@
         const start = Math.min(this.lastSelectedIndex, displayIndex);
         const end = Math.max(this.lastSelectedIndex, displayIndex);
         for (let i = start; i <= end; i++) {
-          newSet.add(this.displayedMessages[i].id);
+          newSet.add(this.filteredMessages[i].id);
         }
       } else {
         if (newSet.has(message.id)) newSet.delete(message.id);
@@ -641,69 +684,64 @@
       this.setSelectionMode(false);
     }
 
-    lockScroll = false;
-    lastScroll = -1;
-
-    async onMessagesScroll(ev?: Event): Promise<void> {
-      const list = <HTMLElement | undefined>this.$refs['messages'];
-      if (this.lockScroll) return;
-      if (
-        list === undefined ||
-        (ev !== undefined && Math.abs(list.scrollTop - this.lastScroll) < 50)
-      )
-        return;
-      this.lockScroll = true;
-
-      function getTop(index: number): number {
-        return (<HTMLElement>list!.children[index]).offsetTop;
-      }
-
-      while (
-        this.selectedConversation !== undefined &&
-        this.selectedDate === undefined &&
-        this.dialog.isShown
-      ) {
-        const oldHeight = list.scrollHeight,
-          oldTop = list.scrollTop;
-        const oldFirst = this.displayedMessages[0];
-        const oldEnd = this.windowEnd;
-        const length = this.displayedMessages.length;
-        const oldTotal = this.filteredMessages.length;
-        let loaded = false;
-        if (length <= 20 || getTop(20) > list.scrollTop) this.windowStart -= 50;
-        else if (length > 100 && getTop(100) < list.scrollTop)
-          this.windowStart += 50;
-        else if (
-          length >= 100 &&
-          getTop(length - 100) > list.scrollTop + list.offsetHeight
+    async fetchDate(): Promise<ReadonlyArray<Conversation.Message>> {
+      if (!this.selectedConversation || this.dateOffset >= this.dates.length)
+        return [];
+      return (
+        await core.logs.getLogs(
+          this.selectedCharacter,
+          this.selectedConversation.key,
+          this.dates[this.dateOffset++]
         )
-          this.windowEnd -= 50;
-        else if (getTop(length - 20) < list.scrollTop + list.offsetHeight)
-          this.windowEnd += 50;
-        if (this.windowStart <= 0 && this.dateOffset < this.dates.length) {
-          const messages = await core.logs.getLogs(
-            this.selectedCharacter,
-            this.selectedConversation.key,
-            this.dates[this.dateOffset++]
-          );
-          this.messages = messages.concat(this.messages);
-          const addedTotal = this.filteredMessages.length - oldTotal;
-          this.windowStart += addedTotal;
-          this.windowEnd += addedTotal;
-          loaded = true;
-        }
-        this.windowStart = Math.max(this.windowStart, 0);
-        this.windowEnd = Math.min(this.windowEnd, this.filteredMessages.length);
-        if (this.displayedMessages[0] !== oldFirst) {
-          list.style.overflow = 'hidden';
-          await this.$nextTick();
-          list.scrollTop = oldTop + list.scrollHeight - oldHeight;
-          list.style.overflow = 'auto';
-        } else if (this.windowEnd === oldEnd && !loaded) break;
-        else await this.$nextTick();
+      ).map(m => Object.freeze(m));
+    }
+
+    async bulkLoadDates(minMessages: number): Promise<void> {
+      let all: Conversation.Message[] = [];
+      while (all.length < minMessages && this.dateOffset < this.dates.length) {
+        const msgs = await this.fetchDate();
+        all = (msgs as Conversation.Message[]).concat(all);
       }
-      this.lastScroll = list.scrollTop;
-      this.lockScroll = false;
+      this.messages = all.concat(this.messages);
+    }
+
+    async loadNextDate(): Promise<void> {
+      if (this.loadingDates) return;
+      this.loadingDates = true;
+      const oldLen = this.filteredMessages.length;
+      const msgs = await this.fetchDate();
+      if (msgs.length > 0) {
+        this.messages = (msgs as Conversation.Message[]).concat(this.messages);
+        await this.$nextTick();
+        const added = this.filteredMessages.length - oldLen;
+        const vl = this.$refs['messages'] as InstanceType<
+          typeof VirtualList
+        > | void;
+        if (vl && added > 0) vl.adjustScrollForPrepend(added);
+      }
+      this.loadingDates = false;
+    }
+
+    onPageUp(e: KeyboardEvent): void {
+      e.preventDefault();
+      const vl = this.$refs['messages'] as InstanceType<
+        typeof VirtualList
+      > | void;
+      if (!vl) return;
+      const el = vl.$refs['scroller'] as HTMLElement | undefined;
+      if (!el) return;
+      // Scroll by 1/3 of viewport instead of full page
+      el.scrollTop -= el.clientHeight / 3;
+    }
+
+    onNearTop(): void {
+      if (this.selectedDate !== undefined) return;
+      if (this.nearTopDebounce !== undefined)
+        clearTimeout(this.nearTopDebounce);
+      this.nearTopDebounce = setTimeout(() => {
+        this.nearTopDebounce = undefined;
+        this.loadNextDate();
+      }, 250);
     }
   }
 </script>
@@ -728,5 +766,43 @@
     margin-right: 0.5em;
     cursor: pointer;
     align-self: center;
+  }
+
+  .message-skeleton {
+    display: flex;
+    align-items: flex-start;
+    padding: 4px 10px;
+    gap: 10px;
+  }
+
+  .message-skeleton-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .message-skeleton-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .message-skeleton-header {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .message-skeleton-body {
+    display: flex;
+    gap: 6px;
+  }
+
+  .skeleton-bone {
+    height: 12px;
+    border-radius: 6px;
   }
 </style>

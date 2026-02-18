@@ -272,9 +272,8 @@ export function createMainWindow(
 
   if (process.platform === 'darwin') {
     windowProperties.titleBarStyle = 'hiddenInset';
-    // windowProperties.frame = true;
   } else {
-    windowProperties.frame = false;
+    windowProperties.frame = settings.forceNativeWindowControls;
   }
 
   const window = new electron.BrowserWindow(windowProperties);
@@ -622,6 +621,11 @@ export function createSettingsWindow(
 
   if (process.platform === 'darwin') {
     windowProperties.titleBarStyle = 'hiddenInset';
+  } else if (settings.forceNativeWindowControls) {
+    windowProperties.frame = true;
+    windowProperties.minimizable = false;
+    windowProperties.maximizable = false;
+    windowProperties.autoHideMenuBar = true;
   }
   const browserWindow = new electron.BrowserWindow(windowProperties);
   remoteMain.enable(browserWindow.webContents);
@@ -689,6 +693,11 @@ export function createChangelogWindow(
 
   if (process.platform === 'darwin') {
     windowProperties.titleBarStyle = 'hiddenInset';
+  } else if (settings.forceNativeWindowControls) {
+    windowProperties.frame = true;
+    windowProperties.minimizable = false;
+    windowProperties.maximizable = false;
+    windowProperties.autoHideMenuBar = true;
   }
   const browserWindow = new electron.BrowserWindow(windowProperties);
   remoteMain.enable(browserWindow.webContents);
@@ -753,6 +762,11 @@ export function createExporterWindow(
 
   if (process.platform === 'darwin') {
     windowProperties.titleBarStyle = 'hiddenInset';
+  } else if (settings.forceNativeWindowControls) {
+    windowProperties.frame = true;
+    windowProperties.minimizable = false;
+    windowProperties.maximizable = false;
+    windowProperties.autoHideMenuBar = true;
   }
 
   const browserWindow = new electron.BrowserWindow(windowProperties);

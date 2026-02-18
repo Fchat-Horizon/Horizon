@@ -446,6 +446,7 @@ class PrivateConversation
       this.safeAddMessage(message);
 
       await this.logMessage(message, false);
+      core.cache.deregisterConversationDraft(this.name);
       this.markRead();
     });
   }
