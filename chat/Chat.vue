@@ -172,6 +172,20 @@
       <div class="alert alert-danger" v-show="error">{{ error }}</div>
       {{ l('chat.disconnected') }}
     </modal>
+    <!--
+    TODO: Make both buttons work.
+    -->
+    <modal
+      :action="l('settings.migration.title')"
+      :buttonText="l('settings.migration.useCurrent')"
+      ref="settingsMigration"
+      @submit="migrateSettings(true)"
+      :showCancel="true"
+      :cancelText="l('settings.migration.startFresh')"
+      @cancel="migrateSettings(false)"
+    >
+      <p>{{ l('settings.migration.prompt') }}</p>
+    </modal>
     <logs ref="logsDialog"></logs>
     <div
       v-if="version && !connected"
@@ -406,6 +420,11 @@
         core.notifications.playSound('login');
         document.title = l('title.connected', core.connection.character);
 
+        // Check if settings migration is needed
+        if (core.state.needsSettingsMigration) {
+          (<Modal>this.$refs['settingsMigration']).show(true);
+        }
+
         // tslint:disable-next-line:no-floating-promises
         core.siteSession.onConnectionEstablished();
       });
@@ -440,6 +459,11 @@
     cancelReconnect(): void {
       core.connection.close();
       (<Modal>this.$refs['reconnecting']).hide();
+    }
+
+    async migrateSettings(useCurrentAsGlobal: boolean): Promise<void> {
+      await core.migrateToGlobalSettings(useCurrentAsGlobal);
+      (<Modal>this.$refs['settingsMigration']).hide();
     }
 
     selectCharacter(character: SimpleCharacter): void {
