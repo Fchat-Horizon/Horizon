@@ -37,7 +37,7 @@ Also check out [Frolic Chat](https://github.com/Frolic-chat/Frolic)! It's anothe
 
 # Horizon
 
-This repository contains a continuation of the heavily customized F-Chat Rising, a version of the mainline F-Chat 3.0 client.
+This repository contains a continuation of the heavily customized F-Chat Rising, a version of the mainline F-Chat 3.0 client. That's so cool, right?
 
 ## Features
 
