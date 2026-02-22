@@ -177,6 +177,12 @@
       this.updateVisibleRange();
     }
 
+    invalidate(): void {
+      this.heightCache.clear();
+      this.prefixSumsDirty = true;
+      this.updateVisibleRange();
+    }
+
     onMouseDown(e: MouseEvent): void {
       const el = this.scroller;
       if (!el) return;
@@ -312,6 +318,23 @@
       this.scrollTop = this.totalHeight;
       this.programmaticScroll = true;
       el.scrollTop = this.totalHeight;
+      this.updateVisibleRange();
+    }
+
+    scrollToIndex(index: number, block: 'start' | 'center' = 'center'): void {
+      const el = this.scroller;
+      if (!el) return;
+      this.rebuildPrefixSums();
+      let top = this.getCumHeight(index);
+      if (block === 'center') {
+        top = Math.max(
+          0,
+          top - this.containerHeight / 2 + this.getItemHeight(index) / 2
+        );
+      }
+      this.scrollTop = top;
+      this.programmaticScroll = true;
+      el.scrollTop = top;
       this.updateVisibleRange();
     }
 

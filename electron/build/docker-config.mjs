@@ -94,9 +94,11 @@ function generateEnvVars(targetKey) {
 
 // * Generate volume mappings for Docker command
 function generateVolumeMappings(project) {
+  const rootDir = path.resolve(process.cwd(), '..');
   const volumes = [
     `-v ${process.cwd()}:/project`,
     `-v ${process.cwd()}/node_modules:/project/node_modules`,
+    `-v ${rootDir}/node_modules:/project/../node_modules`,
     `-v ~/.cache/electron:/root/.cache/electron`,
     `-v ~/.cache/electron-builder:/root/.cache/electron-builder`
   ];

@@ -661,6 +661,7 @@
   "settings.flashWindow": "Abilita lampeggio nella barra applicazioni",
   "settings.flashWindow.note": "Su Linux questa opzione potrebbe non essere supportata dal tuo window manager o il tuo ambiente desktop.",
   "settings.fontSize": "Dimensione font",
+  "settings.forceNativeWindowControls": "Forza controlli di finestra nativi (richiede un riavvio)",
   "settings.genderIconUseOriginalColor": "Colora l'icona di genere con il colore di genere originale invece del colore personalizzato del nome",
   "settings.hideAds.empty": "Non stai nascondendo pubblicità di nessun utente al moment.",
   "settings.hideNonCharacterFriends": "Nascondi inoltre gli amici degli altri personaggi",

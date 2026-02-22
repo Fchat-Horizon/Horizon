@@ -35,7 +35,6 @@ When 'High-Quality Portraits' feature is used, Horizon may connect to the follow
 
 - iili.io
 - e621.net
-- imgur.com
 - freeimage.host
 - redgifs.com
 - imgchest.com

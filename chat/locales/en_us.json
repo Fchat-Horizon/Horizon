@@ -887,6 +887,7 @@
   "status.looking": "Looking",
   "status.offline": "Offline",
   "status.online": "Online",
+  "statusHistory": "History",
   "statusHistory.confirmRemove": "Are you sure you want to remove this status message?",
   "statusHistory.confirmRemove.pinned": "Are you sure you want to unpin this status message?",
   "statusHistory.count": "Status history {0}/{1}",

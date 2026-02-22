@@ -117,15 +117,23 @@
       @keydown.native.page-up="onPageUp"
     >
       <template slot-scope="{ item, index, isScrolling }">
-        <message-view
-          v-if="!isScrolling"
-          :message="item"
-          :logs="true"
-          :previous="index > 0 ? filteredMessages[index - 1] : undefined"
-          :selectable="selectionMode"
-          :selected="selectedMessages.has(item.id)"
-          @toggle-select="onToggleSelect(item, index, $event)"
-        ></message-view>
+        <div v-if="!isScrolling" class="message-container">
+          <span
+            class="message-jump-icon"
+            @click="jumpToMessage(item.id)"
+            title="Jump to this message"
+          >
+            <i class="fa-solid fa-arrow-up-right-from-square fa-fw"></i>
+          </span>
+          <message-view
+            :message="item"
+            :logs="true"
+            :previous="index > 0 ? filteredMessages[index - 1] : undefined"
+            :selectable="selectionMode"
+            :selected="selectedMessages.has(item.id)"
+            @toggle-select="onToggleSelect(item, index, $event)"
+          ></message-view>
+        </div>
         <div v-else class="message-skeleton" :class="layoutClasses">
           <div
             v-if="itemHeight > 40"
@@ -158,6 +166,9 @@
         v-show="messages"
         type="text"
       />
+      <span v-if="searching" class="input-group-text">
+        <span class="fas fa-spinner fa-spin"></span>
+      </span>
       <template v-if="selectionMode">
         <span class="input-group-text text-muted">
           {{ l('logs.selectedCount', selectedMessages.size) }}
@@ -292,6 +303,7 @@
     filterDebounce: ReturnType<typeof setTimeout> | undefined;
     nearTopDebounce: ReturnType<typeof setTimeout> | undefined;
     pendingFilter = '';
+    searching = false;
 
     get layoutClasses(): Record<string, boolean> {
       return { ['layout-' + getLayoutMode()]: true };
@@ -406,8 +418,42 @@
       if (this.filterDebounce !== undefined) clearTimeout(this.filterDebounce);
       this.filterDebounce = setTimeout(() => {
         this.pendingFilter = this.filter;
-        this.resetKey++;
+        const vl = this.$refs['messages'] as InstanceType<
+          typeof VirtualList
+        > | void;
+        if (vl) vl.invalidate();
+        if (this.filter) this.searchMore();
       }, 200);
+    }
+
+    async searchMore(): Promise<void> {
+      if (!this.pendingFilter || this.selectedDate !== undefined) return;
+      if (this.dateOffset >= this.dates.length) return;
+
+      const MIN_RESULTS = 50;
+      if (this.filteredMessages.length >= MIN_RESULTS) return;
+
+      this.searching = true;
+      const snapshot = this.pendingFilter;
+
+      while (
+        this.dateOffset < this.dates.length &&
+        this.filteredMessages.length < MIN_RESULTS
+      ) {
+        const msgs = await this.fetchDate();
+        if (msgs.length > 0) {
+          this.messages = (msgs as Conversation.Message[]).concat(
+            this.messages
+          );
+        }
+        if (this.pendingFilter !== snapshot) break;
+      }
+
+      const vl = this.$refs['messages'] as InstanceType<
+        typeof VirtualList
+      > | void;
+      if (vl) vl.invalidate();
+      this.searching = false;
     }
 
     download(file: string, logs: string): void {
@@ -598,13 +644,14 @@
       } else if (this.dateOffset === -1) {
         this.dateOffset = 0;
         await this.bulkLoadDates(500);
-        this.resetKey++;
-        await this.$nextTick();
         await this.$nextTick();
         const vl = this.$refs['messages'] as InstanceType<
           typeof VirtualList
         > | void;
-        if (vl) vl.scrollToBottom();
+        if (vl) {
+          vl.invalidate();
+          vl.scrollToBottom();
+        }
       }
     }
 
@@ -684,6 +731,29 @@
       this.setSelectionMode(false);
     }
 
+    jumpToMessage(messageId: number): void {
+      // Clear filter immediately, bypassing the debounce
+      this.filter = '';
+      this.pendingFilter = '';
+      this.$nextTick(() => {
+        // Clear debounce AFTER the filter watcher has fired and set a new one
+        if (this.filterDebounce !== undefined) {
+          clearTimeout(this.filterDebounce);
+          this.filterDebounce = undefined;
+        }
+        setTimeout(() => {
+          const index = this.filteredMessages.findIndex(
+            msg => msg.id === messageId
+          );
+          if (index === -1) return;
+          const vl = this.$refs['messages'] as InstanceType<
+            typeof VirtualList
+          > | void;
+          if (vl) vl.scrollToIndex(index, 'center');
+        }, 0);
+      });
+    }
+
     async fetchDate(): Promise<ReadonlyArray<Conversation.Message>> {
       if (!this.selectedConversation || this.dateOffset >= this.dates.length)
         return [];
@@ -755,6 +825,34 @@
   .logs-dialog .modal-body {
     display: flex;
     flex-direction: column;
+  }
+
+  .message-container {
+    position: relative;
+  }
+
+  .message-jump-icon {
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    cursor: pointer;
+    opacity: 0;
+    z-index: 10;
+    padding: 2px 4px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 3px;
+    color: #fff;
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  .message-container:hover .message-jump-icon {
+    opacity: 0.7;
+  }
+
+  .message-jump-icon:hover {
+    opacity: 1 !important;
+    background-color: rgba(0, 0, 0, 0.8);
   }
 
   .message-selectable {

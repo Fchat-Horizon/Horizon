@@ -34,7 +34,8 @@
     </div>
     <div class="mb-3">
       <button type="button" @click="showStatusPicker" class="btn btn-secondary">
-        History
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        {{ l('statusHistory') }}
       </button>
     </div>
 
