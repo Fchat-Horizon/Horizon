@@ -236,7 +236,8 @@ export type AvailableSort = 'normal' | 'status' | 'gender' | 'compatibility';
 
 export namespace Settings {
   export type Keys = {
-    settings: Settings;
+    /** Global settings stored under '_' are of the type "Settings",character overrides are of the type "PartialSettings" */
+    settings: Settings | PartialSettings;
     pinned: { channels: string[]; private: string[] };
     conversationSettings: { [key: string]: Conversation.Settings | undefined };
     modes: { [key: string]: Channel.Mode | undefined };
@@ -259,7 +260,11 @@ export namespace Settings {
       character?: string
     ): Promise<Keys[K] | undefined>;
     getAvailableCharacters(): Promise<ReadonlyArray<string>>;
-    set<K extends keyof Keys>(key: K, value: Keys[K]): Promise<void>;
+    set<K extends keyof Keys>(
+      key: K,
+      value: Keys[K],
+      character?: string
+    ): Promise<void>;
   }
 
   export interface Settings {
@@ -328,9 +333,18 @@ export namespace Settings {
     readonly risingCharacterTheme: string | undefined;
     readonly soundTheme: string;
   }
+
+  /**
+   * Partial settings used for character-level overrides.
+   * Properties set to `undefined` indicate "use global value".
+   */
+  export type PartialSettings = {
+    [K in keyof Settings]?: Settings[K] | undefined;
+  };
 }
 
 export type Settings = Settings.Settings;
+export type PartialSettings = Settings.PartialSettings;
 
 export interface Notifications {
   isInBackground: boolean;
@@ -348,7 +362,13 @@ export interface Notifications {
 }
 
 export interface State {
+  /** Merged settings (global + character overrides). Use this for reading settings in logic. */
   settings: Settings;
+  /** Global settings shared across all characters. Stored under character '_'. */
+  globalSettings: Settings;
+  /** Character-specific overrides. Properties set to undefined use global value. */
+  characterSettings: PartialSettings;
+  needsSettingsMigration: boolean;
   hiddenUsers: string[];
   favoriteEIcons: Record<string, boolean>;
 }
