@@ -153,6 +153,7 @@ $selection-color: color-contrast($primary);
 
 .hidden-scrollbar {
   overflow-y: scroll;
+  scrollbar-gutter: stable;
   &::-webkit-scrollbar-thumb {
     display: none;
   }

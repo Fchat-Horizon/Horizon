@@ -1,4 +1,4 @@
-import { Channel, AvailableSort } from './interfaces';
+import { Channel, Character, AvailableSort } from './interfaces';
 import { CharacterAnalysis, Matcher } from '../learn/matcher';
 import { Gender, Scoring, fchatGenderMap } from '../learn/matcher-types';
 
@@ -150,6 +150,15 @@ export function filterByName(
   return members.filter(member => filter.test(member.character.name));
 }
 
+export function filterCharactersByName(
+  characters: ReadonlyArray<Character>,
+  filterText: string
+): ReadonlyArray<Character> {
+  if (!filterText || filterText.length === 0) return characters;
+  const filter = new RegExp(filterText.replace(/[^\w]/gi, '\\$&'), 'i');
+  return characters.filter(character => filter.test(character.name));
+}
+
 export function filterByGender(
   members: ReadonlyArray<Channel.Member>,
   genderFilters: string[] | undefined
@@ -170,6 +179,26 @@ export function filterByGender(
   });
 }
 
+export function filterCharactersByGender(
+  characters: ReadonlyArray<Character>,
+  genderFilters: string[] | undefined
+): ReadonlyArray<Character> {
+  if (!genderFilters) return characters;
+  const effective = genderFilters
+    .map(g => (typeof g === 'string' ? g.trim() : ''))
+    .filter(g => g.length > 0);
+
+  if (effective.length === 0) return characters;
+
+  const normalizedSet = new Set(effective.map(g => normalizeLabel(g)));
+
+  return characters.filter(character => {
+    const raw = character.gender || 'None';
+    const cand = canonicalGenderByNormalized[normalizeLabel(raw)] || raw;
+    return normalizedSet.has(normalizeLabel(cand));
+  });
+}
+
 export function filterByStatus(
   members: ReadonlyArray<Channel.Member>,
   selectedStatuses: string[] | undefined
@@ -177,6 +206,16 @@ export function filterByStatus(
   if (!selectedStatuses || selectedStatuses.length === 0) return members;
   return members.filter(
     m => selectedStatuses.indexOf(m.character.status) !== -1
+  );
+}
+
+export function filterCharactersByStatus(
+  characters: ReadonlyArray<Character>,
+  selectedStatuses: string[] | undefined
+): ReadonlyArray<Character> {
+  if (!selectedStatuses || selectedStatuses.length === 0) return characters;
+  return characters.filter(
+    character => selectedStatuses.indexOf(character.status) !== -1
   );
 }
 
@@ -217,6 +256,50 @@ export function sortMembers(
         const bVal = genderSort[bKey];
         if (aVal - bVal === 0) {
           return a.character.name.localeCompare(b.character.name);
+        }
+        return aVal - bVal;
+      });
+      break;
+  }
+
+  return sorted;
+}
+
+export function sortCharacters(
+  characters: ReadonlyArray<Character>,
+  sortType: AvailableSort
+): ReadonlyArray<Character> {
+  if (sortType === 'normal') {
+    return [...characters].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  const sorted = [...characters];
+  switch (sortType) {
+    case 'status':
+      sorted.sort((a, b) => {
+        const aVal = statusSort[a.status];
+        const bVal = statusSort[b.status];
+        if (aVal - bVal === 0) {
+          return a.name.localeCompare(b.name);
+        }
+        return aVal - bVal;
+      });
+      break;
+
+    case 'gender':
+      sorted.sort((a, b) => {
+        const aKey =
+          canonicalGenderByNormalized[normalizeLabel(a.gender || 'None')] ||
+          a.gender ||
+          'None';
+        const bKey =
+          canonicalGenderByNormalized[normalizeLabel(b.gender || 'None')] ||
+          b.gender ||
+          'None';
+        const aVal = genderSort[aKey];
+        const bVal = genderSort[bKey];
+        if (aVal - bVal === 0) {
+          return a.name.localeCompare(b.name);
         }
         return aVal - bVal;
       });
