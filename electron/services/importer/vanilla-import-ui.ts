@@ -22,8 +22,12 @@ export async function initializeVanillaImport(vm: any): Promise<void> {
       vm.vanillaImportAvailable) ||
     vm.importHint === 'advanced';
   if (vm.showVanillaAutoPrompt) {
-    const targetTab = vm.vanillaTabId ?? '6';
-    vm.selectedTab = targetTab;
+    if ('selectedSection' in vm) {
+      vm.selectedSection = 'vanilla';
+    } else {
+      const targetTab = vm.vanillaTabId ?? '6';
+      vm.selectedTab = targetTab;
+    }
   }
 }
 

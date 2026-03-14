@@ -331,6 +331,13 @@
     <add-pm-partner ref="addPmPartnerDialog"></add-pm-partner>
 
     <quick-jump ref="quickJump"></quick-jump>
+
+    <toast
+      v-for="t in toasts"
+      :key="t.id"
+      v-bind="t"
+      @dismiss="dismissToast(t.id)"
+    />
   </div>
 </template>
 
@@ -366,6 +373,9 @@
   import AdLauncherDialog from './ads/AdLauncher.vue';
   import Modal from '../components/Modal.vue';
   import QuickJump from './QuickJump.vue';
+  import { ipcRenderer } from 'electron';
+  import { toasts, showToast, updateToast, dismissToast } from './toast';
+  import Toast from '../components/Toast.vue';
 
   const unreadClasses = {
     [Conversation.UnreadState.None]: '',
@@ -391,7 +401,8 @@
       adCenter: AdCenterDialog,
       adLauncher: AdLauncherDialog,
       modal: Modal,
-      'quick-jump': QuickJump
+      'quick-jump': QuickJump,
+      toast: Toast
     }
   })
   export default class ChatView extends Vue {
@@ -405,6 +416,8 @@
     focusListener!: () => void;
     blurListener!: () => void;
     readonly isMac = process.platform === 'darwin';
+    toasts = toasts;
+    dismissToast = dismissToast;
 
     channelConversations = core.conversations.channelConversations;
     privateConversations = core.conversations.privateConversations;
@@ -425,6 +438,42 @@
 
       this.mouseButtonListener = (e: MouseEvent) => this.onMouseButton(e);
       window.addEventListener('mouseup', this.mouseButtonListener);
+
+      ipcRenderer.on(
+        'auto-backup-status',
+        (_e, status: string, progress?: number) => {
+          const id = 'auto-backup';
+          if (status === 'started') {
+            showToast({
+              id,
+              message: 'Auto backup in progress...',
+              icon: 'fa-sync',
+              iconSpin: true,
+              progress: 0
+            });
+          } else if (status === 'progress' && typeof progress === 'number') {
+            updateToast(id, { progress });
+          } else if (status === 'success') {
+            updateToast(id, {
+              message: 'Auto backup complete',
+              icon: 'fa-check',
+              iconSpin: false,
+              variant: 'success',
+              progress: 1,
+              autoDismiss: 5000
+            });
+          } else if (status === 'error') {
+            updateToast(id, {
+              message: 'Auto backup failed',
+              icon: 'fa-exclamation-triangle',
+              iconSpin: false,
+              variant: 'error',
+              progress: undefined,
+              autoDismiss: 5000
+            });
+          }
+        }
+      );
 
       //We do this because it's a massive pain in the 🫏 to read some monstrosity of
       //an if-else statement to compare our platforms and then pick a keyboard shortcut in our keyboard handle event
