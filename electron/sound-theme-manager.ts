@@ -6,6 +6,9 @@ export interface SoundTheme {
   version: string;
   description: string;
   author: string;
+  characterName?: string;
+  website?: string;
+  source?: string;
   sounds: {
     [key: string]: string;
   };

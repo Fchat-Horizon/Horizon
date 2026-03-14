@@ -12,6 +12,9 @@ interface SoundTheme {
   version: string;
   description: string;
   author: string;
+  characterName?: string;
+  website?: string;
+  source?: string;
   license?: string;
   sounds: {
     [key: string]: string;
@@ -98,7 +101,9 @@ export default class Notifications implements Interface {
 
   async initSounds(sounds: ReadonlyArray<string>): Promise<void> {
     const soundTheme = this.getSoundTheme();
-    const theme = await this.loadSoundTheme(soundTheme);
+    const loaded = await this.loadSoundTheme(soundTheme);
+    const theme = loaded?.theme ?? null;
+    const themeDir = loaded?.themeDir ?? null;
     const preloadPromises: Promise<void>[] = [];
 
     if (this.hasInitialized) {
@@ -112,7 +117,7 @@ export default class Notifications implements Interface {
       const audio = this.createAudioElement(sound);
       if (!audio) continue;
 
-      this.setupAudioSources(audio, theme, soundTheme, sound);
+      this.setupAudioSources(audio, theme, themeDir, sound);
       // Apply saved volume if available before preloading
       const volume = this.getSoundVolume(soundTheme, sound);
       audio.volume = volume;
@@ -139,22 +144,51 @@ export default class Notifications implements Interface {
     );
   }
 
-  private async loadSoundTheme(soundTheme: string): Promise<SoundTheme | null> {
+  private getUserSoundThemesPath(): string | null {
+    try {
+      const remote = (window as any).require?.('@electron/remote');
+      const nodePath = (window as any).require?.('path');
+      const userData = remote?.app?.getPath?.('userData');
+      if (!userData || !nodePath) return null;
+      return nodePath.join(userData, 'sound-themes');
+    } catch {
+      return null;
+    }
+  }
+
+  private async loadSoundTheme(
+    soundTheme: string
+  ): Promise<{ theme: SoundTheme; themeDir: string } | null> {
     try {
       const fs = (window as any).require?.('fs');
       const path = (window as any).require?.('path');
 
       if (!fs || !path) return null;
 
-      const themeJsonPath = path.join(
-        __dirname,
-        'sound-themes',
-        soundTheme,
-        'sound.json'
-      );
+      // Check user themes directory first
+      const userThemesPath = this.getUserSoundThemesPath();
+      if (userThemesPath) {
+        const userThemeDir = path.join(userThemesPath, soundTheme);
+        const userJsonPath = path.join(userThemeDir, 'sound.json');
+        if (fs.existsSync(userJsonPath)) {
+          const theme = JSON.parse(
+            fs.readFileSync(userJsonPath, 'utf8')
+          ) as SoundTheme;
+          return { theme, themeDir: userThemeDir };
+        }
+      }
 
-      const themeData = JSON.parse(fs.readFileSync(themeJsonPath, 'utf8'));
-      return themeData;
+      // Fall back to built-in themes
+      const builtinThemeDir = path.join(__dirname, 'sound-themes', soundTheme);
+      const builtinJsonPath = path.join(builtinThemeDir, 'sound.json');
+      if (fs.existsSync(builtinJsonPath)) {
+        const theme = JSON.parse(
+          fs.readFileSync(builtinJsonPath, 'utf8')
+        ) as SoundTheme;
+        return { theme, themeDir: builtinThemeDir };
+      }
+
+      return null;
     } catch (error) {
       console.warn(`Failed to load sound theme "${soundTheme}":`, error);
       return null;
@@ -174,19 +208,25 @@ export default class Notifications implements Interface {
   private setupAudioSources(
     audio: HTMLAudioElement,
     theme: SoundTheme | null,
-    soundTheme: string,
+    themeDir: string | null,
     sound: string
   ): void {
     // Try themed sound first
-    if (theme?.sounds[sound]) {
+    if (theme?.sounds[sound] && themeDir) {
       const soundPath = theme.sounds[sound];
       const formats = [theme.formats.preferred, ...theme.formats.fallback];
+      const path = (window as any).require?.('path');
 
       for (const format of formats) {
         if (SUPPORTED_AUDIO_CODECS[format]) {
           const src = document.createElement('source');
           src.type = `audio/${format}`;
-          src.src = `./sound-themes/${soundTheme}/${soundPath}.${SUPPORTED_AUDIO_CODECS[format]}`;
+          const ext = SUPPORTED_AUDIO_CODECS[format];
+          if (path) {
+            src.src = `file://${path.join(themeDir, `${soundPath}.${ext}`)}`;
+          } else {
+            src.src = `./sound-themes/${soundPath}.${ext}`;
+          }
           audio.appendChild(src);
         }
       }

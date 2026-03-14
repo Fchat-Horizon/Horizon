@@ -811,6 +811,8 @@
   "settings.soundTheme": "Sound Theme",
   "settings.soundTheme.by": "By {0}",
   "settings.soundTheme.hide": "Hide",
+  "settings.soundTheme.source": "Souwce",
+  "settings.soundTheme.website": "Website",
   "settings.soundTheme.noMetadata": "Nyo metadata avaiwabwe",
   "settings.soundTheme.noSounds": "Nyo sounds wisted fow this theme",
   "settings.soundTheme.preview": "Pweview",

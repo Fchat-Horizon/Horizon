@@ -811,6 +811,8 @@
   "settings.soundTheme": "Sound Theme",
   "settings.soundTheme.by": "By {0}",
   "settings.soundTheme.hide": "Hide",
+  "settings.soundTheme.source": "Source",
+  "settings.soundTheme.website": "Website",
   "settings.soundTheme.noMetadata": "No metadata available",
   "settings.soundTheme.noSounds": "No sounds listed for this theme",
   "settings.soundTheme.preview": "Preview",

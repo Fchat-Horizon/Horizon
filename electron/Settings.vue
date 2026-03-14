@@ -394,6 +394,20 @@
                               currentSoundThemeDetails.author
                             )
                           }}
+                          <a
+                            v-if="currentSoundThemeDetails.characterName"
+                            href="#"
+                            class="small"
+                            @click.prevent="
+                              openExternal(
+                                'https://www.f-list.net/c/' +
+                                  encodeURIComponent(
+                                    currentSoundThemeDetails.characterName
+                                  )
+                              )
+                            "
+                            >({{ currentSoundThemeDetails.characterName }})</a
+                          >
                         </div>
                         <div class="small">
                           {{
@@ -402,6 +416,31 @@
                               currentSoundThemeDetails.version
                             )
                           }}
+                        </div>
+                        <div
+                          v-if="
+                            currentSoundThemeDetails.website ||
+                            currentSoundThemeDetails.source
+                          "
+                          class="small mt-1"
+                          style="display: flex; gap: 8px"
+                        >
+                          <a
+                            v-if="currentSoundThemeDetails.website"
+                            href="#"
+                            @click.prevent="
+                              openExternal(currentSoundThemeDetails.website)
+                            "
+                            >{{ l('settings.soundTheme.website') }}</a
+                          >
+                          <a
+                            v-if="currentSoundThemeDetails.source"
+                            href="#"
+                            @click.prevent="
+                              openExternal(currentSoundThemeDetails.source)
+                            "
+                            >{{ l('settings.soundTheme.source') }}</a
+                          >
                         </div>
                       </div>
                       <div v-else class="text-muted small">
@@ -1114,25 +1153,65 @@
       return this.capitalizeThemeName(themeName);
     }
 
+    openExternal(url: string): void {
+      remote.shell
+        .openExternal(url)
+        .catch((e: Error) => console.error('Failed to open URL:', e));
+    }
+
+    getUserSoundThemesPath(): string {
+      return path.join(remote.app.getPath('userData'), 'sound-themes');
+    }
+
+    getSoundThemeDir(themeName: string): string | null {
+      const userThemeDir = path.join(this.getUserSoundThemesPath(), themeName);
+      if (fs.existsSync(path.join(userThemeDir, 'sound.json')))
+        return userThemeDir;
+      const builtinThemeDir = path.join(__dirname, 'sound-themes', themeName);
+      if (fs.existsSync(path.join(builtinThemeDir, 'sound.json')))
+        return builtinThemeDir;
+      return null;
+    }
+
     loadAvailableSoundThemes(): void {
+      const seen = new Set<string>();
+      const themes: string[] = [];
+
+      // User themes take precedence — list them first
       try {
-        const soundThemesPath = path.join(__dirname, 'sound-themes');
-        this.availableSoundThemes = fs
-          .readdirSync(soundThemesPath, { withFileTypes: true })
-          .filter(dirent => dirent.isDirectory())
-          .map(dirent => dirent.name)
-          .filter(name => {
-            const soundJsonPath = path.join(
-              soundThemesPath,
-              name,
-              'sound.json'
-            );
-            return fs.existsSync(soundJsonPath);
+        const userPath = this.getUserSoundThemesPath();
+        fs.readdirSync(userPath, { withFileTypes: true })
+          .filter(d => d.isDirectory())
+          .map(d => d.name)
+          .filter(n => fs.existsSync(path.join(userPath, n, 'sound.json')))
+          .forEach(n => {
+            seen.add(n);
+            themes.push(n);
           });
+      } catch {
+        /* no user themes dir yet */
+      }
+
+      // Built-in themes
+      try {
+        const builtinPath = path.join(__dirname, 'sound-themes');
+        fs.readdirSync(builtinPath, { withFileTypes: true })
+          .filter(d => d.isDirectory())
+          .map(d => d.name)
+          .filter(
+            n =>
+              !seen.has(n) &&
+              fs.existsSync(path.join(builtinPath, n, 'sound.json'))
+          )
+          .forEach(n => themes.push(n));
       } catch (error) {
         console.error('Error loading sound themes:', error);
-        this.availableSoundThemes = ['default'];
+        if (themes.length === 0) {
+          themes.push('default');
+        }
       }
+
+      this.availableSoundThemes = themes;
     }
 
     // Currently selected sound theme metadata and per-sound volumes for the UI
@@ -1148,14 +1227,11 @@
       const theme = this.settings.soundTheme || 'default';
       // Load metadata (sound.json) if present
       try {
-        const themeJsonPath = path.join(
-          __dirname,
-          'sound-themes',
-          theme,
-          'sound.json'
-        );
-        const raw = fs.readFileSync(themeJsonPath, 'utf8');
-        this.currentSoundThemeDetails = JSON.parse(raw);
+        const themeDir = this.getSoundThemeDir(theme);
+        const raw = themeDir
+          ? fs.readFileSync(path.join(themeDir, 'sound.json'), 'utf8')
+          : null;
+        this.currentSoundThemeDetails = raw ? JSON.parse(raw) : null;
       } catch (err) {
         this.currentSoundThemeDetails = null;
       }
@@ -1230,12 +1306,12 @@
             this.currentSoundThemeDetails.formats?.preferred,
             ...(this.currentSoundThemeDetails.formats?.fallback || [])
           ].filter(Boolean);
+          const themeDir = this.getSoundThemeDir(this.settings.soundTheme);
           for (const format of formats) {
             const ext = format === 'mpeg' ? 'mp3' : format;
             const abs = path.join(
-              __dirname,
-              'sound-themes',
-              this.settings.soundTheme,
+              themeDir ??
+                path.join(__dirname, 'sound-themes', this.settings.soundTheme),
               `${soundPath}.${ext}`
             );
             pushSource(`file://${abs}`, `audio/${format}`);
