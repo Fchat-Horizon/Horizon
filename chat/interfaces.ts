@@ -286,6 +286,7 @@ export namespace Settings {
     readonly showPerCharacterFriends: boolean;
     readonly hideNonCharacterFriends: boolean;
     readonly bbCodeBar: boolean;
+    readonly bbCodeBarPosition: 'bottom' | 'top';
 
     readonly risingAdScore: boolean;
     readonly risingLinkPreview: boolean;

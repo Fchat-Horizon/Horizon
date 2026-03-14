@@ -1,10 +1,75 @@
 .bbcode-editor-text-area {
   textarea {
-    min-height: 150px;
+    min-height: 80px;
     &:focus {
-      box-shadow: 0 0 0 ($input-btn-focus-width / 2) $input-btn-focus-color;
+      box-shadow: none;
     }
     resize: none;
+  }
+}
+
+.bbcode-editor.bbcode-editor-mattermost {
+  .bbcode-editor-text-area {
+    textarea {
+      min-height: 80px;
+      max-height: 250px;
+
+      &:focus {
+        box-shadow: none;
+        outline: none;
+      }
+    }
+  }
+
+  .bbcode-toolbar-internal {
+    .color-typing-hint .chip.red {
+      background: var(--textRedColor);
+      color: color-contrast($red-color);
+    }
+    .color-typing-hint .chip.orange {
+      background: var(--textOrangeColor);
+      color: color-contrast($orange-color);
+    }
+    .color-typing-hint .chip.yellow {
+      background: var(--textYellowColor);
+      color: color-contrast($yellow-color);
+    }
+    .color-typing-hint .chip.green {
+      background: var(--textGreenColor);
+      color: color-contrast($green-color);
+    }
+    .color-typing-hint .chip.cyan {
+      background: var(--textCyanColor);
+      color: color-contrast($cyan-color);
+    }
+    .color-typing-hint .chip.purple {
+      background: var(--textPurpleColor);
+      color: color-contrast($purple-color);
+    }
+    .color-typing-hint .chip.blue {
+      background: var(--textBlueColor);
+      color: color-contrast($blue-color);
+    }
+    .color-typing-hint .chip.pink {
+      background: var(--textPinkColor);
+      color: color-contrast($pink-color);
+    }
+    .color-typing-hint .chip.black {
+      background: var(--textBlackColor);
+      color: color-contrast($black-color);
+    }
+    .color-typing-hint .chip.brown {
+      background: var(--textBrownColor);
+      color: color-contrast($brown-color);
+    }
+    .color-typing-hint .chip.white {
+      background: var(--textWhiteColor);
+      color: color-contrast($white);
+    }
+    .color-typing-hint .chip.gray {
+      background: var(--textGrayColor);
+      color: color-contrast($gray-color);
+    }
   }
 }
 

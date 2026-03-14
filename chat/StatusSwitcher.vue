@@ -27,9 +27,11 @@
     <div class="mb-3">
       <label class="control-label">{{ l('chat.setStatus.message') }}</label>
       <editor id="text" v-model="text" classes="form-control" maxlength="255">
-        <div class="bbcode-editor-controls">
-          {{ getByteLength(text) }} / 255
-        </div>
+        <template v-slot:controls>
+          <div class="toolbar-controls">
+            <span class="char-counter"> {{ getByteLength(text) }} / 255 </span>
+          </div>
+        </template>
       </editor>
     </div>
     <div class="mb-3">

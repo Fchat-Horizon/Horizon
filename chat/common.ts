@@ -100,6 +100,7 @@ export class Settings implements ISettings {
   showPerCharacterFriends = true;
   hideNonCharacterFriends = false;
   bbCodeBar = true;
+  bbCodeBarPosition: 'bottom' | 'top' = 'bottom';
 
   risingAdScore = true;
   risingLinkPreview = true;

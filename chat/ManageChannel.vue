@@ -42,9 +42,13 @@
         style="position: relative"
         :maxlength="50000"
       >
-        <div class="bbcode-editor-controls">
-          {{ getByteLength(description) }} / {{ maxLength }}
-        </div>
+        <template v-slot:controls>
+          <div class="toolbar-controls">
+            <span class="char-counter">
+              {{ getByteLength(description) }} / {{ maxLength }}
+            </span>
+          </div>
+        </template>
       </bbcode-editor>
     </div>
     <template v-if="isChannelOwner">
