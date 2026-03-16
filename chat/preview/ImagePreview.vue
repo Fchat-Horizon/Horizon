@@ -93,7 +93,7 @@
   const screen = remote.screen;
 
   const FLIST_PROFILE_MATCH = _.cloneDeep(
-    /https?:\/\/(www.)?f-list.net\/c\/([a-zA-Z0-9+%_.!~*'()]+)\/?/
+    /https?:\/\/(www.)?f-list.net\/c\/([a-zA-Z0-9+%_.!~*'()-]+)\/?/
   );
 
   interface DidFailLoadEvent extends Event {
