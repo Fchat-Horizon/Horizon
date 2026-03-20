@@ -110,18 +110,19 @@
           "Lilly Whitman"
         ],
         "roles": ["Community Lead"]
-    },
-    "supporters": {},
-    "sponsors": {
-      "Kyanto": {
-        "alias": "Horizon Bweh",
-        "characters": [
-          "Kyanto",
-          "Jesse Corgi",
-          "Aero Wind",
-          "Ashton Moshton",
-          "Kuro Tsukiko"
-        ]
+      },
+      "supporters": {},
+      "sponsors": {
+        "Kyanto": {
+          "alias": "Horizon Bweh",
+          "characters": [
+            "Kyanto",
+            "Jesse Corgi",
+            "Aero Wind",
+            "Ashton Moshton",
+            "Kuro Tsukiko"
+          ]
+        }
       }
     }
   }
