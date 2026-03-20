@@ -97,7 +97,19 @@
         "alias": "Bootsie",
         "characters": ["BootsieWootsie", "Isla Barnes"],
         "roles": ["Assistant Development"]
-      }
+      },
+      "Pankake": {
+        "alias": "Pankake",
+        "characters": [
+          "Lexie Yamada",
+          "Kennedy H Morgan",
+          "Purah of Hyrule",
+          "Yuuki Aikawa",
+          "Sarah Loveheart",
+          "Sachi Nakamura",
+          "Lilly Whitman"
+        ],
+        "roles": ["Community Lead"]
     },
     "supporters": {},
     "sponsors": {
