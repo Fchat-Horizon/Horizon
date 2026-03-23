@@ -122,6 +122,20 @@
             "Ashton Moshton",
             "Kuro Tsukiko"
           ]
+        },
+        "Wes": {
+          "alias": "Wes",
+          "characters": [
+            "Wes",
+            "Lil Wes",
+            "Wes the Runner",
+            "MechCommander Wes",
+            "Vault Dweller Wes"
+          ]
+        },
+        "TeaLord": {
+          "alias": "TeaLord",
+          "characters": ["TeaBoy"]
         }
       }
     }
