@@ -107,7 +107,7 @@
           >
             {{ conversations.consoleTab.name }}
             <span
-              class="badge rounded-pill text-bg-danger"
+              class="badge rounded-pill text-bg-info"
               v-show="shouldShowNotificationBadge(conversations.consoleTab)"
               >{{ conversations.consoleTab.unreadCount }}</span
             >
@@ -169,7 +169,7 @@
                   v-show="needsReply(conversation)"
                 ></span>
                 <span
-                  class="badge rounded-pill text-bg-danger"
+                  class="badge rounded-pill text-bg-info"
                   v-show="shouldShowNotificationBadge(conversation)"
                   >{{ conversation.unreadCount }}</span
                 >
@@ -240,7 +240,7 @@
             <span class="name">{{ conversation.name }}</span>
             <span>
               <span
-                class="badge align-text-bottom rounded-pill text-bg-danger"
+                class="badge align-text-bottom rounded-pill text-bg-info"
                 v-show="shouldShowNotificationBadge(conversation)"
                 >{{ conversation.unreadCount }}</span
               >

@@ -82,7 +82,7 @@
                 tab.user || l('window.newTab')
               }}</span>
               <span
-                class="badge rounded-pill text-bg-danger ms-1"
+                class="badge rounded-pill text-bg-info ms-1"
                 v-if="shouldShowNotificationBadge(tab)"
               >
                 {{ tab.hasNew }}</span
