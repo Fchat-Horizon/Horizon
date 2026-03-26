@@ -1,12 +1,8 @@
-# PR Build Validation
-name: PR Build Validation
+name: PR Build
 
-# Set the required permissions for the workflow
 permissions:
   contents: read
-  pull-requests: write
 
-# Trigger workflow on pull requests to main and dev branches
 on:
   pull_request:
     branches:
@@ -14,112 +10,112 @@ on:
       - development
 
 jobs:
-  set-version:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.get_version.outputs.version }}
-    steps:
-      - name: Extract PR Information
-        id: get_version
-        run: |
-          # Get PR number for version
-          pr_number="${GITHUB_REF#refs/pull/}"
-          pr_number="${pr_number%/merge}"
-          echo "version=pr-${pr_number}" >> $GITHUB_OUTPUT
-  #This is its own job, because a build's success should be independent of Prettier's opinions (and vice versa). Sometimes we might want to push noncompliant code.
-  prettier:
-    name: Prettier Validation
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile
-      - name: Prettier Format Check
-        run: |
-          pnpm check
-
   build:
-    name: Build
-    needs: set-version
+    name: Build (${{ matrix.platform }}-${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-26, windows-latest]
-    env:
-      PR_VERSION: ${{ needs.set-version.outputs.version }}
-      APP_VERSION: PR_${{ needs.set-version.outputs.version }}
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: arm64
+          - os: macos-26
+            platform: macos
+            arch: x64
+          - os: macos-26
+            platform: macos
+            arch: arm64
+          - os: windows-latest
+            platform: windows
+            arch: x64
+          - os: windows-latest
+            platform: windows
+            arch: arm64
+    outputs:
+      sha: ${{ steps.info.outputs.sha }}
     steps:
+      - name: Get build info
+        id: info
+        shell: bash
+        run: |
+          pr_number="${GITHUB_REF#refs/pull/}"
+          pr_number="${pr_number%/merge}"
+          echo "version=pr-${pr_number}" >> $GITHUB_OUTPUT
+          echo "sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
       - name: Checkout Repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@v4
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: 'pnpm'
 
-      - name: Install OS-specific Dependencies
-        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-26'
+      - name: Install OS-specific Dependencies (Linux)
+        if: matrix.platform == 'linux'
         run: |
-          # Install dependencies based on the operating system
-          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-            # Ubuntu-specific dependencies
-            sudo apt-get update
-            sudo apt-get install -y libsecret-1-dev
-          elif [ "${{ matrix.os }}" == "macos-26" ]; then
-            # macOS-specific dependencies
-            brew install python-setuptools
-          fi
+          sudo apt-get update
+          sudo apt-get install -y libsecret-1-dev
+
+      - name: Install OS-specific Dependencies (macOS)
+        if: matrix.platform == 'macos'
+        run: brew install python-setuptools
 
       - name: Install OS-specific Dependencies (Windows)
-        if: matrix.os == 'windows-latest'
+        if: matrix.platform == 'windows'
         shell: pwsh
-        run: |
-          # Windows-specific dependencies
-          npm install --global node-gyp
+        run: npm install --global node-gyp
 
       - name: Run Build Script (Linux)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.platform == 'linux'
+        env:
+          PR_VERSION: ${{ steps.info.outputs.version }}
+          BUILD_ARCH: ${{ matrix.arch }}
         run: |
-          # Execute Linux build script
           chmod +x electron/release-scripts/linux-dev.sh
-          electron/release-scripts/linux-dev.sh "$PR_VERSION" "$GITHUB_WORKSPACE/release_artifacts/linux/$PR_VERSION"
+          electron/release-scripts/linux-dev.sh "$PR_VERSION" "$GITHUB_WORKSPACE/release_artifacts/linux/$PR_VERSION" "$BUILD_ARCH"
 
       - name: Run Build Script (macOS)
-        if: matrix.os == 'macos-26'
+        if: matrix.platform == 'macos'
+        env:
+          PR_VERSION: ${{ steps.info.outputs.version }}
+          BUILD_ARCH: ${{ matrix.arch }}
         run: |
-          # Execute macOS build script
           chmod +x electron/release-scripts/macos-dev.sh
-          electron/release-scripts/macos-dev.sh "$PR_VERSION" "$GITHUB_WORKSPACE/release_artifacts/macos/$PR_VERSION"
+          electron/release-scripts/macos-dev.sh "$PR_VERSION" "$GITHUB_WORKSPACE/release_artifacts/macos/$PR_VERSION" "$BUILD_ARCH"
 
       - name: Run Build Script (Windows)
-        if: matrix.os == 'windows-latest'
+        if: matrix.platform == 'windows'
+        env:
+          PR_VERSION: ${{ steps.info.outputs.version }}
+          BUILD_ARCH: ${{ matrix.arch }}
         shell: pwsh
         run: |
-          # Execute Windows build script
-          .\electron\release-scripts\windows-dev.ps1 -ReleaseVersion "$env:PR_VERSION" -ReleasePath "$env:GITHUB_WORKSPACE\release_artifacts\windows\$env:PR_VERSION"
+          .\electron\release-scripts\windows-dev.ps1 -ReleaseVersion "$env:PR_VERSION" -ReleasePath "$env:GITHUB_WORKSPACE\release_artifacts\windows\$env:PR_VERSION" -Arch "$env:BUILD_ARCH"
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: PR-${{ github.event.pull_request.number }}-${{ matrix.os }}-build
+          name: Horizon-PR${{ github.event.pull_request.number }}-${{ steps.info.outputs.sha }}-${{ matrix.platform }}-${{ matrix.arch }}
           path: release_artifacts/**
-          retention-days: 14 # Keep PR builds for 14 days instead of the default 90 days
+          retention-days: 14
+
+      - name: Save PR number
+        if: matrix.platform == 'linux' && matrix.arch == 'x64'
+        shell: bash
+        run: echo "${{ github.event.pull_request.number }}" > pr_number.txt
+
+      - name: Upload PR number
+        if: matrix.platform == 'linux' && matrix.arch == 'x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-number
+          path: pr_number.txt
+          retention-days: 1

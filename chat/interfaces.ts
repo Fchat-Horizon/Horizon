@@ -4,7 +4,7 @@ import { Connection } from '../fchat';
 import { Channel, Character } from '../fchat/interfaces';
 import { AdManager } from './ads/ad-manager';
 import { SmartFilterSettings } from '../learn/filter/types';
-export { Connection, Channel, Character } from '../fchat/interfaces';
+export { type Connection, Channel, type Character } from '../fchat/interfaces';
 export const userStatuses: ReadonlyArray<Character.Status> = [
   'online',
   'looking',
@@ -116,7 +116,7 @@ export namespace Conversation {
     readonly recent: ReadonlyArray<RecentPrivateConversation>;
     readonly recentChannels: ReadonlyArray<RecentChannelConversation>;
     readonly selectedConversation: Conversation;
-    readonly hasNew: boolean;
+    readonly hasNew: number;
     readonly lastConversation: Conversation;
     byKey(key: string): Conversation | undefined;
     navigateForward(): boolean;
@@ -170,8 +170,10 @@ export namespace Conversation {
     errorText: string;
     readonly key: string;
     readonly unread: UnreadState;
+    readonly unreadCount: number;
     settings: Settings;
     readonly adManager: AdManager;
+    addMessage(message: Message): Promise<void>;
     send(): Promise<void>;
     clear(): void;
     loadLastSent(): void;
@@ -327,6 +329,9 @@ export namespace Settings {
 
     readonly risingCharacterTheme: string | undefined;
     readonly soundTheme: string;
+    readonly soundThemeSoundVolumes: {
+      readonly [theme: string]: { readonly [sound: string]: number };
+    };
   }
 }
 
@@ -344,6 +349,7 @@ export interface Notifications {
   playSound(sound: string): void;
   requestPermission(): Promise<void>;
   initSounds(sounds: ReadonlyArray<string>): Promise<void>;
+  alert(message: string): void;
 }
 
 export interface State {

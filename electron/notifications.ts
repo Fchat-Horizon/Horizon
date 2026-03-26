@@ -3,6 +3,7 @@ import core from '../chat/core';
 import { Conversation } from '../chat/interfaces';
 //tslint:disable-next-line:match-default-export-name
 import BaseNotifications from '../chat/notifications';
+import l from '../chat/localize';
 
 const browserWindow = remote.getCurrentWindow();
 
@@ -38,5 +39,13 @@ export default class Notifications extends BaseNotifications {
         notification.close();
       };
     }
+  }
+
+  //My bad this also uses Electron remote (for now). We will have to restructure it to use IPC messaging later, but for now at least you can be glad it's only a single reference I added
+  alert(message: string) {
+    remote.dialog.showMessageBox(browserWindow, {
+      title: l('title'),
+      message
+    });
   }
 }

@@ -169,6 +169,8 @@ export class Settings implements ISettings {
       intersex: false,
       male: false,
       microMacro: false,
+      noFurries: false,
+      noHumans: false,
       obesity: false,
       pokemon: false,
       pregnancy: false,

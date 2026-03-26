@@ -147,7 +147,7 @@ export class ImageUrlMutator {
     );
 
     this.add(
-      /^https?:\/\/(www.|v3.)?redgifs.com\/watch\/([a-z0-9A-Z]+)/,
+      /^https?:\/\/(www.|v3.)?redgifs.com\/(?:watch|ifr)\/([a-z0-9A-Z]+)/,
       async (_url: string, match: RegExpMatchArray): Promise<string> => {
         const redgifId = match[2];
         const fallback = `https://www.redgifs.com/ifr/${redgifId}?controls=0%hd=1`;

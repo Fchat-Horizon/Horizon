@@ -43,7 +43,7 @@ export class ConversationDraftCache extends Cache<ConversationDraftRecord> {
   private cacheAlreadyLoaded = false;
   private useCache = true;
   private diskSaveTimerInSeconds = 60;
-  private diskSaveInterval: NodeJS.Timer | null = null;
+  private diskSaveInterval: ReturnType<typeof setInterval> | null = null;
   private currentlyCachedCharacter = '';
   private resetListenerActive = false;
 

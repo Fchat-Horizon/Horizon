@@ -15,7 +15,6 @@
 </template>
 <script lang="ts">
   import Vue from 'vue';
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
   import { EventBusEvent } from '../../chat/preview/event-bus';
 
   import anyAscii from 'any-ascii';
@@ -30,15 +29,19 @@
     mutator: mutatorScript
   };
 
-  @Component({})
-  export default class WordDefinition extends Vue {
-    mode: 'dictionary' | 'thesaurus' | 'urbandictionary' | 'wikipedia' =
-      'dictionary';
-
-    @Prop
-    readonly expression?: string;
-
-    @Hook('mounted')
+  export default Vue.extend({
+    props: {
+      expression: {}
+    },
+    data() {
+      return {
+        mode: 'dictionary' as
+          | 'dictionary'
+          | 'thesaurus'
+          | 'urbandictionary'
+          | 'wikipedia'
+      };
+    },
     async mounted(): Promise<void> {
       const webview = this.getWebview();
 
@@ -52,80 +55,77 @@
       webview.addEventListener('dom-ready', eventProcessor);
 
       // await remote.webContents.fromId(webview.getWebContentsId()).session.clearStorageData({storages: ['cookies', 'indexdb']});
-    }
+    },
+    methods: {
+      setMode(
+        mode: 'dictionary' | 'thesaurus' | 'urbandictionary' | 'wikipedia'
+      ): void {
+        this.mode = mode;
+      },
+      getWebUrl(): string {
+        if (!this.expression) {
+          return 'about:blank';
+        }
 
-    setMode(
-      mode: 'dictionary' | 'thesaurus' | 'urbandictionary' | 'wikipedia'
-    ): void {
-      this.mode = mode;
-    }
+        switch (this.mode) {
+          case 'dictionary':
+            return `https://www.dictionary.com/browse/${encodeURI(this.getCleanedWordDefinition())}`;
 
-    getWebUrl(): string {
-      if (!this.expression) {
-        return 'about:blank';
+          case 'thesaurus':
+            return `https://www.thesaurus.com/browse/${encodeURI(this.getCleanedWordDefinition())}`;
+
+          case 'urbandictionary':
+            return `https://www.urbandictionary.com/define.php?term=${encodeURIComponent(this.getCleanedWordDefinition())}`;
+
+          case 'wikipedia':
+            return `https://en.m.wikipedia.org/wiki/${encodeURI(this.getCleanedWordDefinition())}`;
+        }
+      },
+      getCleanedWordDefinition(expression?: string): string {
+        const expr =
+          expression !== undefined ? expression : (this.expression as string);
+        return anyAscii(expr || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9\-]/g, ' ')
+          .replace(/  +/g, ' ')
+          .trim();
+      },
+      getWebview(): Electron.WebviewTag {
+        return this.$refs.definitionPreview as Electron.WebviewTag;
+      },
+      async executeJavaScript(
+        js: string | undefined,
+        logDetails?: any
+      ): Promise<any> {
+        const webview = this.getWebview();
+
+        if (!js) {
+          log.debug('word-definition.execute-js.missing', { logDetails });
+          return;
+        }
+
+        try {
+          const result = await (webview.executeJavaScript(
+            js
+          ) as unknown as Promise<any>);
+
+          log.debug('word-definition.execute-js.result', result);
+
+          return result;
+        } catch (err) {
+          log.debug('word-definition.execute-js.error', err);
+        }
+      },
+      wrapJs(mutatorJs: string): string {
+        return `(() => { try { ${mutatorJs} } catch (err) { console.error('Mutator error', err); } })();`;
+      },
+      getMutator(mode: string): string {
+        const js = scripts.mutator; // ./assets/mutator.raw.js
+
+        return js.replace(/## SITE ##/g, mode);
       }
-
-      switch (this.mode) {
-        case 'dictionary':
-          return `https://www.dictionary.com/browse/${encodeURI(this.getCleanedWordDefinition())}`;
-
-        case 'thesaurus':
-          return `https://www.thesaurus.com/browse/${encodeURI(this.getCleanedWordDefinition())}`;
-
-        case 'urbandictionary':
-          return `https://www.urbandictionary.com/define.php?term=${encodeURIComponent(this.getCleanedWordDefinition())}`;
-
-        case 'wikipedia':
-          return `https://en.m.wikipedia.org/wiki/${encodeURI(this.getCleanedWordDefinition())}`;
-      }
     }
-
-    getCleanedWordDefinition(expression = this.expression): string {
-      return anyAscii(expression || '')
-        .toLowerCase()
-        .replace(/[^a-z0-9\-]/g, ' ')
-        .replace(/  +/g, ' ')
-        .trim();
-    }
-
-    protected getWebview(): Electron.WebviewTag {
-      return this.$refs.definitionPreview as Electron.WebviewTag;
-    }
-
-    protected async executeJavaScript(
-      js: string | undefined,
-      logDetails?: any
-    ): Promise<any> {
-      const webview = this.getWebview();
-
-      if (!js) {
-        log.debug('word-definition.execute-js.missing', { logDetails });
-        return;
-      }
-
-      try {
-        const result = await (webview.executeJavaScript(
-          js
-        ) as unknown as Promise<any>);
-
-        log.debug('word-definition.execute-js.result', result);
-
-        return result;
-      } catch (err) {
-        log.debug('word-definition.execute-js.error', err);
-      }
-    }
-
-    protected wrapJs(mutatorJs: string): string {
-      return `(() => { try { ${mutatorJs} } catch (err) { console.error('Mutator error', err); } })();`;
-    }
-
-    protected getMutator(mode: string): string {
-      const js = scripts.mutator; // ./assets/mutator.raw.js
-
-      return js.replace(/## SITE ##/g, mode);
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

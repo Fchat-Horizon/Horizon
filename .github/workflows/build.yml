@@ -78,7 +78,7 @@ jobs:
           # note: Uploads artifacts for the current operating system
 
   release:
-    name: Create Draft Release
+    name: Create Release
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -103,39 +103,40 @@ jobs:
 
           cat SHASUMS256.txt
 
-      - name: Resolve Release Notes Path
-        id: release_notes
+      - name: Extract release notes from CHANGELOG.md
+        id: changelog
         run: |
           TAG="${{ github.ref_name }}"
           VERSION="${TAG#v}"
-          NOTES_PATH="docs/releases/${VERSION}.md"
-          if [ -f "$NOTES_PATH" ]; then
-            echo "path=$NOTES_PATH" >> "$GITHUB_OUTPUT"
+          # Extract the section between ## [VERSION] and the next ## [
+          NOTES=$(awk "/^## \\[${VERSION}\\]/{found=1; next} /^## \\[/{if(found) exit} found" CHANGELOG.md)
+          # Write to file to preserve formatting
+          echo "$NOTES" > /tmp/release-notes.md
+
+      - name: Detect release type
+        id: release_type
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [[ "$TAG" == *"-dev."* ]]; then
+            # Dev builds publish automatically — no human gate needed
+            echo "draft=false" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          elif [[ "$TAG" == *"-beta."* ]]; then
+            echo "draft=true" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
           else
-            echo "path=" >> "$GITHUB_OUTPUT"
+            echo "draft=true" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create Draft Release
-        if: steps.release_notes.outputs.path != ''
+      - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
-          draft: true
-          body_path: ${{ steps.release_notes.outputs.path }}
+          draft: ${{ steps.release_type.outputs.draft }}
+          prerelease: ${{ steps.release_type.outputs.prerelease }}
+          body_path: /tmp/release-notes.md
           files: final_release/**/*
-          # ^ Creates a draft release with uploaded artifacts including the SHASUMS256.txt file
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Draft Release (no notes)
-        if: steps.release_notes.outputs.path == ''
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
-          draft: true
-          files: final_release/**/*
-          # ^ Creates a draft release with uploaded artifacts including the SHASUMS256.txt file
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

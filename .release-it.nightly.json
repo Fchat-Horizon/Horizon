@@ -1,0 +1,17 @@
+{
+  "git": {
+    "commitMessage": "chore: bump version to ${version} [skip ci]",
+    "tagName": "v${version}",
+    "tagAnnotation": "Dev build v${version}",
+    "commitArgs": ["-a"]
+  },
+  "github": {
+    "release": false
+  },
+  "npm": {
+    "publish": false
+  },
+  "hooks": {
+    "after:bump": "node scripts/sync-electron-version.js ${version}"
+  }
+}

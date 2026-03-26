@@ -71,7 +71,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Watch } from '@f-list/vue-ts';
   import Vue from 'vue';
   import { getKey } from './common';
   import core from './core';
@@ -87,350 +86,350 @@
     description?: string;
   }
 
-  @Component({})
-  export default class QuickJump extends Vue {
-    l = l;
-    visible = false;
-    searchQuery = '';
-    selectedIndex = 0;
-    allResults: SearchResult[] = [];
-
-    get filteredResults(): SearchResult[] {
-      if (this.searchQuery.length === 0) {
-        return this.allResults.slice(0, 10); // Show recent results when no query
-      }
-
-      const query = this.searchQuery.toLowerCase();
-      return this.allResults
-        .filter(result => result.name.toLowerCase().includes(query))
-        .slice(0, 10); // Limit to 10 results
-    }
-
-    show(): void {
-      this.visible = true;
-      this.updateResults();
-      this.searchQuery = '';
-      this.selectedIndex = 0;
-      this.$nextTick(() => {
-        const input = this.$refs.searchInput as HTMLInputElement;
-        if (input) {
-          input.focus();
+  export default Vue.extend({
+    data() {
+      return {
+        l,
+        visible: false,
+        searchQuery: '',
+        selectedIndex: 0,
+        allResults: [] as SearchResult[]
+      };
+    },
+    computed: {
+      filteredResults(): SearchResult[] {
+        if (this.searchQuery.length === 0) {
+          return this.allResults.slice(0, 10); // Show recent results when no query
         }
-      });
-    }
 
-    hide(): void {
-      this.visible = false;
-      this.searchQuery = '';
-      this.selectedIndex = 0;
-    }
-
-    updateResults(): void {
-      const results: SearchResult[] = [];
-
-      // Add console tab
-      results.push({
-        key: 'console',
-        name: core.conversations.consoleTab.name,
-        type: 'console',
-        conversation: core.conversations.consoleTab,
-        description: l('quickJump.consoleDescription')
-      });
-
-      // Add private conversations
-      for (const conversation of core.conversations.privateConversations) {
-        results.push({
-          key: conversation.key,
-          name: conversation.name,
-          type: 'private',
-          conversation,
-          description: l('quickJump.privateConversation')
-        });
+        const query = this.searchQuery.toLowerCase();
+        return this.allResults
+          .filter(result => result.name.toLowerCase().includes(query))
+          .slice(0, 10); // Limit to 10 results
       }
-
-      // Add channel conversations
-      for (const conversation of core.conversations.channelConversations) {
-        results.push({
-          key: conversation.key,
-          name: conversation.name,
-          type: 'channel',
-          conversation,
-          description: l(
-            'quickJump.members',
-            conversation.channel.sortedMembers.length
-          )
-        });
+    },
+    watch: {
+      visible(newValue: boolean): void {
+        if (newValue) {
+          // Update results when showing
+          this.updateResults();
+        }
       }
-
-      //we filter: active conversations
-      for (const friend of core.characters.friends
-        .slice()
-        .filter(x => core.conversations.getPrivate(x, true) === undefined)) {
-        results.push({
-          key: friend.name,
-          name: friend.name,
-          type: 'friend',
-          description: l('user.friend')
+    },
+    methods: {
+      show(): void {
+        this.visible = true;
+        this.updateResults();
+        this.searchQuery = '';
+        this.selectedIndex = 0;
+        this.$nextTick(() => {
+          const input = this.$refs.searchInput as HTMLInputElement;
+          if (input) {
+            input.focus();
+          }
         });
-      }
+      },
+      hide(): void {
+        this.visible = false;
+        this.searchQuery = '';
+        this.selectedIndex = 0;
+      },
+      updateResults(): void {
+        const results: SearchResult[] = [];
 
-      //we filter: online friends, and active conversations
-      for (const bookmark of core.characters.bookmarks
-        .slice()
-        .filter(x => core.characters.friends.indexOf(x) === -1)
-        .filter(x => core.conversations.getPrivate(x, true) === undefined)) {
+        // Add console tab
         results.push({
-          key: bookmark.name,
-          name: bookmark.name,
-          type: 'bookmark',
-          description: l('user.bookmark')
+          key: 'console',
+          name: core.conversations.consoleTab.name,
+          type: 'console',
+          conversation: core.conversations.consoleTab,
+          description: l('quickJump.consoleDescription')
         });
-      }
 
-      //We filter: online friends, online bookmarks, and active conversations
-      for (const recent of core.conversations.recent
-        .slice()
-        .filter(
-          x =>
-            !core.characters.bookmarks.some(
-              bookmark => bookmark.name === x.character
+        // Add private conversations
+        for (const conversation of core.conversations.privateConversations) {
+          results.push({
+            key: conversation.key,
+            name: conversation.name,
+            type: 'private',
+            conversation,
+            description: l('quickJump.privateConversation')
+          });
+        }
+
+        // Add channel conversations
+        for (const conversation of core.conversations.channelConversations) {
+          results.push({
+            key: conversation.key,
+            name: conversation.name,
+            type: 'channel',
+            conversation,
+            description: l(
+              'quickJump.members',
+              conversation.channel.sortedMembers.length
             )
-        )
-        .filter(
-          x =>
-            !core.characters.friends.some(friend => friend.name === x.character)
-        )
-        .filter(
-          x =>
-            core.conversations.getPrivate(
-              core.characters.get(x.character),
-              true
-            ) === undefined
-        )) {
-        results.push({
-          key: recent.character,
-          name: recent.character,
-          type: 'recent',
-          description: l('quickJump.recent')
+          });
+        }
+
+        //we filter: active conversations
+        for (const friend of core.characters.friends
+          .slice()
+          .filter(x => core.conversations.getPrivate(x, true) === undefined)) {
+          results.push({
+            key: friend.name,
+            name: friend.name,
+            type: 'friend',
+            description: l('user.friend')
+          });
+        }
+
+        //we filter: online friends, and active conversations
+        for (const bookmark of core.characters.bookmarks
+          .slice()
+          .filter(x => core.characters.friends.indexOf(x) === -1)
+          .filter(x => core.conversations.getPrivate(x, true) === undefined)) {
+          results.push({
+            key: bookmark.name,
+            name: bookmark.name,
+            type: 'bookmark',
+            description: l('user.bookmark')
+          });
+        }
+
+        //We filter: online friends, online bookmarks, and active conversations
+        for (const recent of core.conversations.recent
+          .slice()
+          .filter(
+            x =>
+              !core.characters.bookmarks.some(
+                bookmark => bookmark.name === x.character
+              )
+          )
+          .filter(
+            x =>
+              !core.characters.friends.some(
+                friend => friend.name === x.character
+              )
+          )
+          .filter(
+            x =>
+              core.conversations.getPrivate(
+                core.characters.get(x.character),
+                true
+              ) === undefined
+          )) {
+          results.push({
+            key: recent.character,
+            name: recent.character,
+            type: 'recent',
+            description: l('quickJump.recent')
+          });
+        }
+        // Sort by recent activity (unread first, then by last message time)
+        results.sort((a, b) => {
+          if (!a.conversation || !b.conversation) return 0;
+
+          //First we want pings
+          if (
+            a.conversation.unread === Conversation.UnreadState.Mention &&
+            b.conversation.unread !== Conversation.UnreadState.Mention
+          ) {
+            return -1;
+          }
+          if (
+            b.conversation.unread === Conversation.UnreadState.Mention &&
+            a.conversation.unread !== Conversation.UnreadState.Mention
+          ) {
+            return 1;
+          }
+
+          if (
+            a.conversation === core.conversations.lastConversation &&
+            b.conversation !== core.conversations.lastConversation
+          ) {
+            return -1;
+          }
+          if (
+            b.conversation === core.conversations.lastConversation &&
+            a.conversation !== core.conversations.lastConversation
+          ) {
+            return 1;
+          }
+
+          //Any other unread states (currently only UnreadState.Unread) that aren't None get prioritized after
+          if (
+            a.conversation.unread !== Conversation.UnreadState.None &&
+            b.conversation.unread === Conversation.UnreadState.None
+          ) {
+            return -1;
+          }
+          if (
+            b.conversation.unread !== Conversation.UnreadState.None &&
+            a.conversation.unread === Conversation.UnreadState.None
+          ) {
+            return 1;
+          }
+
+          // Then sort by last message time (most recent first)
+          const aLastMessage =
+            a.conversation.messages[a.conversation.messages.length - 1];
+          const bLastMessage =
+            b.conversation.messages[b.conversation.messages.length - 1];
+
+          if (aLastMessage && bLastMessage) {
+            return bLastMessage.time.getTime() - aLastMessage.time.getTime();
+          }
+          if (aLastMessage && !bLastMessage) return -1;
+          if (!aLastMessage && bLastMessage) return 1;
+
+          return a.name.localeCompare(b.name);
         });
-      }
-      // Sort by recent activity (unread first, then by last message time)
-      results.sort((a, b) => {
-        if (!a.conversation || !b.conversation) return 0;
 
-        //First we want pings
-        if (
-          a.conversation.unread === Conversation.UnreadState.Mention &&
-          b.conversation.unread !== Conversation.UnreadState.Mention
-        ) {
-          return -1;
-        }
-        if (
-          b.conversation.unread === Conversation.UnreadState.Mention &&
-          a.conversation.unread !== Conversation.UnreadState.Mention
-        ) {
-          return 1;
-        }
-
-        if (
-          a.conversation === core.conversations.lastConversation &&
-          b.conversation !== core.conversations.lastConversation
-        ) {
-          return -1;
-        }
-        if (
-          b.conversation === core.conversations.lastConversation &&
-          a.conversation !== core.conversations.lastConversation
-        ) {
-          return 1;
-        }
-
-        //Any other unread states (currently only UnreadState.Unread) that aren't None get prioritized after
-        if (
-          a.conversation.unread !== Conversation.UnreadState.None &&
-          b.conversation.unread === Conversation.UnreadState.None
-        ) {
-          return -1;
-        }
-        if (
-          b.conversation.unread !== Conversation.UnreadState.None &&
-          a.conversation.unread === Conversation.UnreadState.None
-        ) {
-          return 1;
-        }
-
-        // Then sort by last message time (most recent first)
-        const aLastMessage =
-          a.conversation.messages[a.conversation.messages.length - 1];
-        const bLastMessage =
-          b.conversation.messages[b.conversation.messages.length - 1];
-
-        if (aLastMessage && bLastMessage) {
-          return bLastMessage.time.getTime() - aLastMessage.time.getTime();
-        }
-        if (aLastMessage && !bLastMessage) return -1;
-        if (!aLastMessage && bLastMessage) return 1;
-
-        return a.name.localeCompare(b.name);
-      });
-
-      this.allResults = results;
-    }
-
-    onInput(): void {
-      this.selectedIndex = 0;
-      // Auto-focus the "open new conversation" option when it's the only option
-      this.$nextTick(() => {
-        if (this.filteredResults.length === 0 && this.searchQuery.length > 0) {
-          this.selectedIndex = -1;
-        }
-      });
-    }
-
-    onKeyDown(e: KeyboardEvent): void {
-      const key = getKey(e);
-
-      switch (key) {
-        case Keys.Escape:
-          e.preventDefault();
-          this.hide();
-          break;
-
-        case Keys.ArrowUp:
-          e.preventDefault();
+        this.allResults = results;
+      },
+      onInput(): void {
+        this.selectedIndex = 0;
+        // Auto-focus the "open new conversation" option when it's the only option
+        this.$nextTick(() => {
           if (
             this.filteredResults.length === 0 &&
             this.searchQuery.length > 0
           ) {
-            // Only the "open new conversation" option is available
             this.selectedIndex = -1;
-          } else if (this.selectedIndex === -1) {
-            // From "open new conversation" to last result
-            this.selectedIndex = this.filteredResults.length - 1;
-          } else if (this.selectedIndex > 0) {
-            this.selectedIndex--;
-          } else {
-            // From first result, go to "open new conversation" if available, otherwise wrap to last
-            if (this.searchQuery.length > 0) {
+          }
+        });
+      },
+      onKeyDown(e: KeyboardEvent): void {
+        const key = getKey(e);
+
+        switch (key) {
+          case Keys.Escape:
+            e.preventDefault();
+            this.hide();
+            break;
+
+          case Keys.ArrowUp:
+            e.preventDefault();
+            if (
+              this.filteredResults.length === 0 &&
+              this.searchQuery.length > 0
+            ) {
+              // Only the "open new conversation" option is available
               this.selectedIndex = -1;
-            } else {
+            } else if (this.selectedIndex === -1) {
+              // From "open new conversation" to last result
               this.selectedIndex = this.filteredResults.length - 1;
-            }
-          }
-          break;
-
-        case Keys.ArrowDown:
-          e.preventDefault();
-          if (
-            this.filteredResults.length === 0 &&
-            this.searchQuery.length > 0
-          ) {
-            // Only the "open new conversation" option is available
-            this.selectedIndex = -1;
-          } else if (this.selectedIndex === -1) {
-            // From "open new conversation" to first result
-            this.selectedIndex = 0;
-          } else if (this.selectedIndex < this.filteredResults.length - 1) {
-            this.selectedIndex++;
-          } else {
-            // From last result, go to "open new conversation" if available, otherwise wrap to first
-            if (this.searchQuery.length > 0) {
-              this.selectedIndex = -1;
+            } else if (this.selectedIndex > 0) {
+              this.selectedIndex--;
             } else {
-              this.selectedIndex = 0;
+              // From first result, go to "open new conversation" if available, otherwise wrap to last
+              if (this.searchQuery.length > 0) {
+                this.selectedIndex = -1;
+              } else {
+                this.selectedIndex = this.filteredResults.length - 1;
+              }
             }
-          }
-          break;
+            break;
 
-        case Keys.Enter:
-          e.preventDefault();
-          if (
-            this.selectedIndex === -1 &&
-            this.filteredResults.length === 0 &&
-            this.searchQuery.length > 0
-          ) {
-            // Open new conversation
-            this.openNewConversation();
-          } else if (this.filteredResults.length > 0) {
-            this.selectResult(this.filteredResults[this.selectedIndex]);
-          }
-          break;
-      }
-    }
+          case Keys.ArrowDown:
+            e.preventDefault();
+            if (
+              this.filteredResults.length === 0 &&
+              this.searchQuery.length > 0
+            ) {
+              // Only the "open new conversation" option is available
+              this.selectedIndex = -1;
+            } else if (this.selectedIndex === -1) {
+              // From "open new conversation" to first result
+              this.selectedIndex = 0;
+            } else if (this.selectedIndex < this.filteredResults.length - 1) {
+              this.selectedIndex++;
+            } else {
+              // From last result, go to "open new conversation" if available, otherwise wrap to first
+              if (this.searchQuery.length > 0) {
+                this.selectedIndex = -1;
+              } else {
+                this.selectedIndex = 0;
+              }
+            }
+            break;
 
-    selectResult(result: SearchResult): void {
-      if (result.conversation) {
-        result.conversation.show();
-      } else {
-        //We don't have a conversation for this result, but since one was selected we open it
-        const character = core.characters.get(result.name);
+          case Keys.Enter:
+            e.preventDefault();
+            if (
+              this.selectedIndex === -1 &&
+              this.filteredResults.length === 0 &&
+              this.searchQuery.length > 0
+            ) {
+              // Open new conversation
+              this.openNewConversation();
+            } else if (this.filteredResults.length > 0) {
+              this.selectResult(this.filteredResults[this.selectedIndex]);
+            }
+            break;
+        }
+      },
+      selectResult(result: SearchResult): void {
+        if (result.conversation) {
+          result.conversation.show();
+        } else {
+          //We don't have a conversation for this result, but since one was selected we open it
+          const character = core.characters.get(result.name);
+          const conversation = core.conversations.getPrivate(character);
+          conversation.show();
+        }
+        this.hide();
+      },
+      hasMentions(result: SearchResult): boolean {
+        return (
+          result.conversation !== undefined &&
+          result.conversation.unread === Conversation.UnreadState.Mention
+        );
+      },
+      isUnread(result: SearchResult): boolean {
+        return (
+          result.conversation !== undefined &&
+          result.conversation.unread !== Conversation.UnreadState.None
+        );
+      },
+      isMostRecent(result: SearchResult): boolean {
+        return (
+          result.conversation !== undefined &&
+          result.conversation === core.conversations.lastConversation
+        );
+      },
+      openNewConversation(): void {
+        if (this.searchQuery.trim().length === 0) return;
+
+        // Create a character object for the username
+        const character = core.characters.get(this.searchQuery.trim());
+
+        // Create and show the conversation
         const conversation = core.conversations.getPrivate(character);
         conversation.show();
-      }
-      this.hide();
-    }
 
-    hasMentions(result: SearchResult): boolean {
-      return (
-        result.conversation !== undefined &&
-        result.conversation.unread === Conversation.UnreadState.Mention
-      );
-    }
-
-    isUnread(result: SearchResult): boolean {
-      return (
-        result.conversation !== undefined &&
-        result.conversation.unread !== Conversation.UnreadState.None
-      );
-    }
-
-    isMostRecent(result: SearchResult): boolean {
-      return (
-        result.conversation !== undefined &&
-        result.conversation === core.conversations.lastConversation
-      );
-    }
-
-    openNewConversation(): void {
-      if (this.searchQuery.trim().length === 0) return;
-
-      // Create a character object for the username
-      const character = core.characters.get(this.searchQuery.trim());
-
-      // Create and show the conversation
-      const conversation = core.conversations.getPrivate(character);
-      conversation.show();
-
-      this.hide();
-    }
-
-    getResultIcon(result: SearchResult) {
-      switch (result.type) {
-        case 'console':
-          return 'fas fa-home';
-        case 'private':
-          return 'fas fa-comment';
-        case 'channel':
-          return 'fas fa-hashtag';
-        case 'friend':
-          return 'fas fa-user-group';
-        case 'bookmark':
-          return 'fas fa-bookmark';
-        case 'recent':
-          return 'fas fa-clock-rotate-left';
-        default:
-          return 'fas fa-comment';
+        this.hide();
+      },
+      getResultIcon(result: SearchResult) {
+        switch (result.type) {
+          case 'console':
+            return 'fas fa-home';
+          case 'private':
+            return 'fas fa-comment';
+          case 'channel':
+            return 'fas fa-hashtag';
+          case 'friend':
+            return 'fas fa-user-group';
+          case 'bookmark':
+            return 'fas fa-bookmark';
+          case 'recent':
+            return 'fas fa-clock-rotate-left';
+          default:
+            return 'fas fa-comment';
+        }
       }
     }
-
-    @Watch('visible')
-    onVisibilityChange(newValue: boolean): void {
-      if (newValue) {
-        // Update results when showing
-        this.updateResults();
-      }
-    }
-  }
+  });
 </script>
 
 <style lang="scss" scoped>

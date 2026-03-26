@@ -1,0 +1,48 @@
+name: Auto-format
+
+on:
+  push:
+    branches: [development]
+
+permissions:
+  contents: write
+
+jobs:
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+
+      - name: Commit and update blame-ignore-revs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet; then
+            echo "No formatting changes needed."
+            exit 0
+          fi
+
+          git add -A
+          git commit -m "style: auto-format with Prettier"
+
+          COMMIT_SHA=$(git rev-parse HEAD)
+          echo "" >> .git-blame-ignore-revs
+          echo "# Auto-format $(date -u +%Y-%m-%d)" >> .git-blame-ignore-revs
+          echo "$COMMIT_SHA" >> .git-blame-ignore-revs
+
+          git add .git-blame-ignore-revs
+          git commit -m "chore: add formatting commit to blame-ignore-revs"
+
+          git push

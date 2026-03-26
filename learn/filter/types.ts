@@ -10,6 +10,8 @@ export const smartFilterTypes = {
   intersex: { name: 'Intersex' },
   male: { name: 'Males' },
   microMacro: { name: 'Micro/macro' },
+  noFurries: { name: 'Not into furries' },
+  noHumans: { name: 'Not into humans' },
   obesity: { name: 'Obesity' },
   pokemon: { name: 'Pokemons/Digimons' },
   pregnancy: { name: 'Pregnancy' },

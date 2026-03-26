@@ -10,7 +10,7 @@
     <div class="window-modal modal" :class="getThemeClass()" tabindex="-1">
       <div class="modal-dialog modal-xl" style="height: 100vh">
         <div class="modal-content" style="height: 100vh">
-          <div class="modal-header">
+          <div class="modal-header" v-if="!showTitle">
             <h5 class="modal-title" style="-webkit-app-region: drag">
               <i class="fa-solid fa-fw fa-gear"></i>
               {{ l('settings.action') }}
@@ -383,6 +383,7 @@
                       :options="availableSoundThemes"
                       style="flex: 1; margin-right: 10px"
                       :title="l('settings.soundTheme')"
+                      :placeholder="l('filter')"
                     >
                       <template v-slot="s">
                         {{ capitalizeSoundThemeName(s.option) }}
@@ -502,6 +503,56 @@
                     {{ l('settings.soundTheme.noSounds') }}
                   </div>
                 </div>
+                <h5>
+                  {{ l('settings.notifications.badges') }}
+                </h5>
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="horizonShowNotificationBadge"
+                      v-model="settings.horizonShowNotificationBadge"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="horizonShowNotificationBadge"
+                    >
+                      {{ l('settings.notifications.badges.shouldShow') }}
+                    </label>
+                  </div>
+                  <div
+                    id="horizonShowNotificationBadgeNote"
+                    class="form-text text-muted"
+                    v-if="!isWindows && !isMac"
+                  >
+                    {{
+                      l('settings.notifications.badges.shouldShow.linuxNote')
+                    }}
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="horizonShowWindowAndChatNotificationBadge"
+                      v-model="
+                        settings.horizonShowWindowAndChatNotificationBadge
+                      "
+                    />
+                    <label
+                      class="form-check-label"
+                      for="horizonShowWindowAndChatNotificationBadge"
+                    >
+                      {{
+                        l(
+                          'settings.notifications.badges.shouldShow.windowAndChat'
+                        )
+                      }}
+                    </label>
+                  </div>
+                </div>
                 <div class="mb-3" v-if="!isMac">
                   <div class="form-check">
                     <input
@@ -598,6 +649,13 @@
                         <span class="far fa-fw fa-folder-open"></span>
                       </button></div
                   ></label>
+                  <div
+                    id="logDirNoteOnedrive"
+                    class="form-text text-muted"
+                    v-if="isWindows"
+                  >
+                    <span>{{ `${l('settings.logDir.note.onedrive')} ` }}</span>
+                  </div>
                   <div id="logDirNote" class="form-text text-muted">
                     <a
                       href="#"
@@ -637,6 +695,52 @@
                     <label class="form-check-label" for="windowTitleCharacter">
                       {{ l('settings.windowTitleCharacter') }}
                     </label>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="forceNativeWindowControls"
+                      v-model="settings.forceNativeWindowControls"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="forceNativeWindowControls"
+                    >
+                      {{
+                        l(
+                          'settings.experimental',
+                          l('settings.forceNativeWindowControls')
+                        )
+                      }}
+                    </label>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="nativeWindowShowSingleTab"
+                      v-model="settings.nativeWindowShowSingleTab"
+                      :disabled="!settings.forceNativeWindowControls"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="nativeWindowShowSingleTab"
+                    >
+                      {{ l('settings.nativeWindowShowSingleTab') }}
+                    </label>
+                    <div
+                      id="nativeWindowShowSingleTabNote"
+                      class="form-text text-muted"
+                    >
+                      {{ l('settings.nativeWindowShowSingleTab.note') }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -704,7 +808,7 @@
                   </div>
                 </div>
                 <div class="mb-3">
-                  <!--We do this one slightly differently because we 
+                  <!--We do this one slightly differently because we
                 cannot and will not make ElectronLogger.LogType reactive -->
                   <label class="control-label" for="systemLogLevel">
                     {{ l('settings.systemLogLevel') }}
@@ -921,7 +1025,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook } from '@f-list/vue-ts';
   import * as remote from '@electron/remote';
   import Vue from 'vue';
   import l, { setLanguage, availableDisplayLanguages } from '../chat/localize';
@@ -941,56 +1044,58 @@
   import _ from 'lodash';
 
   const browserWindow = remote.getCurrentWindow();
-  @Component({
-    components: { tabs: Tabs, 'filterable-select': FilterableSelect }
-  })
-  export default class BrowserOption extends Vue {
-    sortedLangs: string[] = [];
-    settings!: GeneralSettings;
-    osIsDark: boolean = remote.nativeTheme.shouldUseDarkColors;
-    selectedTab = '0';
-    isMaximized = false;
-    l = l;
-    platform = process.platform;
-    hasCompletedUpgrades = false;
-    browserPath = '';
-    browserArgs = '';
-    logDirectory = '';
-    availableThemes: ReadonlyArray<string> = [];
-    availableSoundThemes: ReadonlyArray<string> = [];
-    logLevel: log.LevelOption = false;
-    selectedLang: string | string[] | undefined;
-    availableDisplayLanguages = availableDisplayLanguages;
-    //These are not reactive.
-    //Which is kind of good because of all the security issues that'd otherwise arise
-    isWindows = process.platform === 'win32';
-    isMac = process.platform === 'darwin';
 
-    platformName = process.platform;
-
-    get styling(): string {
-      try {
-        return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
-      } catch (e) {
-        if (
-          (<Error & { code: string }>e).code === 'ENOENT' &&
-          this.settings.theme !== 'default'
-        ) {
-          this.settings.theme = 'default';
-          return this.styling;
+  export default Vue.extend({
+    components: { tabs: Tabs, 'filterable-select': FilterableSelect },
+    data() {
+      return {
+        sortedLangs: [] as string[],
+        settings: undefined as any as GeneralSettings,
+        osIsDark: remote.nativeTheme.shouldUseDarkColors as boolean,
+        selectedTab: '0',
+        isMaximized: false,
+        l: l,
+        platform: process.platform,
+        hasCompletedUpgrades: false,
+        browserPath: '',
+        browserArgs: '',
+        logDirectory: '',
+        availableThemes: [] as ReadonlyArray<string>,
+        availableSoundThemes: [] as ReadonlyArray<string>,
+        logLevel: false as log.LevelOption,
+        selectedLang: undefined as string | string[] | undefined,
+        availableDisplayLanguages: availableDisplayLanguages,
+        //These are not reactive.
+        //Which is kind of good because of all the security issues that'd otherwise arise
+        isWindows: process.platform === 'win32',
+        isMac: process.platform === 'darwin',
+        platformName: process.platform,
+        showTitle: false as boolean,
+        // Currently selected sound theme metadata and per-sound volumes for the UI
+        currentSoundThemeDetails: null as any | null,
+        // live values driven by the slider (used for immediate UI feedback and persisted)
+        liveVolumeMap: {} as { [sound: string]: number },
+        // collapse the sound list by default so it doesn't take the whole page
+        soundListCollapsed: true as boolean,
+        soundPreviewAudio: null as HTMLAudioElement | null
+      };
+    },
+    computed: {
+      styling(): string {
+        try {
+          return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
+        } catch (e) {
+          if (
+            (<Error & { code: string }>e).code === 'ENOENT' &&
+            this.settings.theme !== 'default'
+          ) {
+            this.settings.theme = 'default';
+            return this.styling;
+          }
+          throw e;
         }
-        throw e;
       }
-    }
-
-    getSyncedTheme() {
-      if (!this.settings.themeSync) return this.settings.theme;
-      return this.osIsDark
-        ? this.settings.themeSyncDark
-        : this.settings.themeSyncLight;
-    }
-
-    @Hook('mounted')
+    },
     async mounted(): Promise<void> {
       updateSupportedLanguages(
         browserWindow.webContents.session.availableSpellCheckerLanguages
@@ -999,6 +1104,7 @@
       this.browserArgs = this.settings.browserArgs;
       this.logDirectory = this.settings.logDirectory;
       this.logLevel = this.settings.risingSystemLogLevel;
+      this.showTitle = this.settings.forceNativeWindowControls && !this.isMac;
       this.availableThemes = fs
         .readdirSync(path.join(__dirname, 'themes'))
         .filter(x => x.substr(-4) === '.css')
@@ -1050,319 +1156,319 @@
           }
         });
       }
-    }
+    },
+    methods: {
+      getSyncedTheme(): string {
+        if (!this.settings.themeSync) return this.settings.theme;
+        return this.osIsDark
+          ? this.settings.themeSyncDark
+          : this.settings.themeSyncLight;
+      },
 
-    minimize(): void {
-      browserWindow.minimize();
-    }
+      minimize(): void {
+        browserWindow.minimize();
+      },
 
-    formatLanguage(lang: string): string {
-      return lang in knownLanguageNames
-        ? `${(knownLanguageNames as any)[lang]} (${lang})`
-        : lang;
-    }
+      formatLanguage(lang: string): string {
+        return lang in knownLanguageNames
+          ? `${(knownLanguageNames as any)[lang]} (${lang})`
+          : lang;
+      },
 
-    capitalizeThemeName(themeName: string): string {
-      return themeName
-        .split(/[\s-_]+/) // Split on spaces, hyphens, or underscores
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ');
-    }
-
-    capitalizeSoundThemeName(themeName: string): string {
-      return this.capitalizeThemeName(themeName);
-    }
-
-    loadAvailableSoundThemes(): void {
-      try {
-        const soundThemesPath = path.join(__dirname, 'sound-themes');
-        this.availableSoundThemes = fs
-          .readdirSync(soundThemesPath, { withFileTypes: true })
-          .filter(dirent => dirent.isDirectory())
-          .map(dirent => dirent.name)
-          .filter(name => {
-            const soundJsonPath = path.join(
-              soundThemesPath,
-              name,
-              'sound.json'
-            );
-            return fs.existsSync(soundJsonPath);
-          });
-      } catch (error) {
-        console.error('Error loading sound themes:', error);
-        this.availableSoundThemes = ['default'];
-      }
-    }
-
-    // Currently selected sound theme metadata and per-sound volumes for the UI
-    currentSoundThemeDetails: any | null = null;
-    // live values driven by the slider (used for immediate UI feedback and persisted)
-    liveVolumeMap: { [sound: string]: number } = {};
-    // collapse the sound list by default so it doesn't take the whole page
-    soundListCollapsed: boolean = true;
-    soundPreviewAudio: HTMLAudioElement | null = null;
-
-    // Watcher-like helper: call this when sound theme changes
-    async loadSelectedSoundThemeDetails(): Promise<void> {
-      const theme = this.settings.soundTheme || 'default';
-      // Load metadata (sound.json) if present
-      try {
-        const themeJsonPath = path.join(
-          __dirname,
-          'sound-themes',
-          theme,
-          'sound.json'
-        );
-        const raw = fs.readFileSync(themeJsonPath, 'utf8');
-        this.currentSoundThemeDetails = JSON.parse(raw);
-      } catch (err) {
-        this.currentSoundThemeDetails = null;
-      }
-
-      // Build a fresh liveVolumeMap from saved settings (or defaults)
-      try {
-        const perTheme = (this.settings as any).soundThemeSoundVolumes || {};
-        const saved = perTheme[this.settings.soundTheme] || {};
-        const newMap: { [k: string]: number } = {};
-        if (this.currentSoundThemeDetails?.sounds) {
-          for (const sound of Object.keys(
-            this.currentSoundThemeDetails.sounds
-          )) {
-            const rawVal = saved[sound];
-            newMap[sound] =
-              typeof rawVal === 'number' ? Math.max(0, Math.min(1, rawVal)) : 1;
-          }
-        }
-        this.liveVolumeMap = newMap;
-      } catch (err) {
-        this.liveVolumeMap = {};
-      }
-    }
-
-    onVolumeChange(sound: any): void {
-      // Persist the changed volume into settings for the current theme
-      const v = Number(this.liveVolumeMap[sound] ?? 1);
-      const container = (this.settings as any).soundThemeSoundVolumes || {};
-      if (!container[this.settings.soundTheme])
-        container[this.settings.soundTheme] = {};
-      container[this.settings.soundTheme][sound] = v;
-      (this.settings as any).soundThemeSoundVolumes = container;
-    }
-
-    // live updates are handled by v-model on liveVolumeMap and persisted by onVolumeChange
-    handlePercentInput(e: Event, sound: any): void {
-      const target = e.target as HTMLInputElement;
-      let pct = parseInt(target.value || '0', 10);
-      if (isNaN(pct)) pct = 0;
-      pct = Math.max(0, Math.min(100, pct));
-      const v = pct / 100;
-      (this as any).$set(this.liveVolumeMap, sound, v);
-      this.onVolumeChange(sound);
-    }
-
-    previewSound(sound: any): void {
-      // stop previous preview
-      if (this.soundPreviewAudio) {
-        try {
-          this.soundPreviewAudio.pause();
-          this.soundPreviewAudio.remove();
-        } catch (e) {}
-        this.soundPreviewAudio = null;
-      }
-
-      const audio = document.createElement('audio');
-      audio.preload = 'auto';
-      audio.volume = this.liveVolumeMap[sound] ?? 1;
-      audio.muted = false;
-      const pushSource = (src: string, mime: string) => {
-        const s = document.createElement('source');
-        s.type = mime;
-        s.src = src;
-        audio.appendChild(s);
-      };
-
-      try {
-        // Prefer themed sound files from the selected sound theme
-        if (this.currentSoundThemeDetails?.sounds?.[sound]) {
-          const soundPath = this.currentSoundThemeDetails.sounds[sound];
-          const formats = [
-            this.currentSoundThemeDetails.formats?.preferred,
-            ...(this.currentSoundThemeDetails.formats?.fallback || [])
-          ].filter(Boolean);
-          for (const format of formats) {
-            const ext = format === 'mpeg' ? 'mp3' : format;
-            const abs = path.join(
-              __dirname,
-              'sound-themes',
-              this.settings.soundTheme,
-              `${soundPath}.${ext}`
-            );
-            pushSource(`file://${abs}`, `audio/${format}`);
-          }
-        } else {
-          // Fallback: look for assets on disk in common locations
-          const codecOrder = ['wav', 'mp3', 'ogg'];
-          for (const ext of codecOrder) {
-            const candidate1 = path.join(
-              __dirname,
-              '..',
-              'chat',
-              'assets',
-              `${sound}.${ext}`
-            );
-            const candidate2 = path.join(
-              __dirname,
-              '..',
-              'assets',
-              `${sound}.${ext}`
-            );
-            if (fs.existsSync(candidate1))
-              pushSource(`file://${candidate1}`, `audio/${ext}`);
-            else if (fs.existsSync(candidate2))
-              pushSource(`file://${candidate2}`, `audio/${ext}`);
-          }
-        }
-      } catch (err) {
-        console.warn('Preview load failed', err);
-      }
-
-      audio.addEventListener('ended', () => {
-        try {
-          audio.remove();
-        } catch (e) {}
-        if (this.soundPreviewAudio === audio) this.soundPreviewAudio = null;
-      });
-
-      document.body.appendChild(audio);
-      this.soundPreviewAudio = audio;
-      // Some browsers require a user gesture; this is an explicit user action (click) so should work.
-      audio.play().catch(e => console.warn('Preview play failed', e));
-    }
-
-    close(): void {
-      browserWindow.close();
-    }
-
-    getThemeClass() {
-      // console.log('getThemeClassWindow', this.settings?.risingDisableWindowsHighContrast);
-
-      try {
-        // Hack!
-        if (process.platform === 'win32') {
-          if (this.settings?.risingDisableWindowsHighContrast) {
-            document
-              .querySelector('html')
-              ?.classList.add('disableWindowsHighContrast');
-          } else {
-            document
-              .querySelector('html')
-              ?.classList.remove('disableWindowsHighContrast');
-          }
-        }
-
-        return {
-          ['platform-' + this.platform]: true,
-          disableWindowsHighContrast:
-            this.settings?.risingDisableWindowsHighContrast || false
-        };
-      } catch (err) {
-        return {
-          ['platform-' + this.platform]: true
-        };
-      }
-    }
-
-    submit(): void {
-      this.settings.spellcheckLang = this.selectedLang;
-      ipcRenderer.send('general-settings-update', this.settings);
-      this.close();
-    }
-
-    browserReset(): void {
-      this.settings.browserPath = '';
-      this.settings.browserArgs = '%s';
-    }
-
-    browseForPath(): void {
-      ipcRenderer.invoke('browser-option-browse').then(result => {
-        this.settings.browserPath = result;
-      });
-    }
-
-    browseForLogDir(): void {
-      const dir = remote.dialog.showOpenDialogSync({
-        defaultPath: this.settings.logDirectory,
-        properties: ['openDirectory']
-      });
-      if (dir !== undefined) {
-        if (dir[0].startsWith(path.dirname(remote.app.getPath('exe'))))
-          return remote.dialog.showErrorBox(
-            l('settings.logDir'),
-            l('settings.logDir.inAppDir')
-          );
-
-        if (
-          Dialog.confirmDialog(
-            l('settings.logDir.confirm', dir[0], this.settings.logDirectory)
+      capitalizeThemeName(themeName: string): string {
+        return themeName
+          .split(/[\s-_]+/) // Split on spaces, hyphens, or underscores
+          .map(
+            word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
           )
-        ) {
-          ipcRenderer.send('log-path-update', dir[0]);
+          .join(' ');
+      },
+
+      capitalizeSoundThemeName(themeName: string): string {
+        return this.capitalizeThemeName(themeName);
+      },
+
+      loadAvailableSoundThemes(): void {
+        try {
+          const soundThemesPath = path.join(__dirname, 'sound-themes');
+          this.availableSoundThemes = fs
+            .readdirSync(soundThemesPath, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name)
+            .filter(name => {
+              const soundJsonPath = path.join(
+                soundThemesPath,
+                name,
+                'sound.json'
+              );
+              return fs.existsSync(soundJsonPath);
+            });
+        } catch (error) {
+          console.error('Error loading sound themes:', error);
+          this.availableSoundThemes = ['default'];
         }
+      },
+
+      async loadSelectedSoundThemeDetails(): Promise<void> {
+        const theme = this.settings.soundTheme || 'default';
+        // Load metadata (sound.json) if present
+        try {
+          const themeJsonPath = path.join(
+            __dirname,
+            'sound-themes',
+            theme,
+            'sound.json'
+          );
+          const raw = fs.readFileSync(themeJsonPath, 'utf8');
+          this.currentSoundThemeDetails = JSON.parse(raw);
+        } catch (err) {
+          this.currentSoundThemeDetails = null;
+        }
+
+        // Build a fresh liveVolumeMap from saved settings (or defaults)
+        try {
+          const perTheme = (this.settings as any).soundThemeSoundVolumes || {};
+          const saved = perTheme[this.settings.soundTheme] || {};
+          const newMap: { [k: string]: number } = {};
+          if (this.currentSoundThemeDetails?.sounds) {
+            for (const sound of Object.keys(
+              this.currentSoundThemeDetails.sounds
+            )) {
+              const rawVal = saved[sound];
+              newMap[sound] =
+                typeof rawVal === 'number'
+                  ? Math.max(0, Math.min(1, rawVal))
+                  : 1;
+            }
+          }
+          this.liveVolumeMap = newMap;
+        } catch (err) {
+          this.liveVolumeMap = {};
+        }
+      },
+
+      onVolumeChange(sound: any): void {
+        // Persist the changed volume into settings for the current theme
+        const v = Number(this.liveVolumeMap[sound] ?? 1);
+        const container = (this.settings as any).soundThemeSoundVolumes || {};
+        if (!container[this.settings.soundTheme])
+          container[this.settings.soundTheme] = {};
+        container[this.settings.soundTheme][sound] = v;
+        (this.settings as any).soundThemeSoundVolumes = container;
+      },
+
+      handlePercentInput(e: Event, sound: any): void {
+        const target = e.target as HTMLInputElement;
+        let pct = parseInt(target.value || '0', 10);
+        if (isNaN(pct)) pct = 0;
+        pct = Math.max(0, Math.min(100, pct));
+        const v = pct / 100;
+        (this as any).$set(this.liveVolumeMap, sound, v);
+        this.onVolumeChange(sound);
+      },
+
+      previewSound(sound: any): void {
+        // stop previous preview
+        if (this.soundPreviewAudio) {
+          try {
+            this.soundPreviewAudio.pause();
+            this.soundPreviewAudio.remove();
+          } catch (e) {}
+          this.soundPreviewAudio = null;
+        }
+
+        const audio = document.createElement('audio');
+        audio.preload = 'auto';
+        audio.volume = this.liveVolumeMap[sound] ?? 1;
+        audio.muted = false;
+        const pushSource = (src: string, mime: string) => {
+          const s = document.createElement('source');
+          s.type = mime;
+          s.src = src;
+          audio.appendChild(s);
+        };
+
+        try {
+          // Prefer themed sound files from the selected sound theme
+          if (this.currentSoundThemeDetails?.sounds?.[sound]) {
+            const soundPath = this.currentSoundThemeDetails.sounds[sound];
+            const formats = [
+              this.currentSoundThemeDetails.formats?.preferred,
+              ...(this.currentSoundThemeDetails.formats?.fallback || [])
+            ].filter(Boolean);
+            for (const format of formats) {
+              const ext = format === 'mpeg' ? 'mp3' : format;
+              const abs = path.join(
+                __dirname,
+                'sound-themes',
+                this.settings.soundTheme,
+                `${soundPath}.${ext}`
+              );
+              pushSource(`file://${abs}`, `audio/${format}`);
+            }
+          } else {
+            // Fallback: look for assets on disk in common locations
+            const codecOrder = ['wav', 'mp3', 'ogg'];
+            for (const ext of codecOrder) {
+              const candidate1 = path.join(
+                __dirname,
+                '..',
+                'chat',
+                'assets',
+                `${sound}.${ext}`
+              );
+              const candidate2 = path.join(
+                __dirname,
+                '..',
+                'assets',
+                `${sound}.${ext}`
+              );
+              if (fs.existsSync(candidate1))
+                pushSource(`file://${candidate1}`, `audio/${ext}`);
+              else if (fs.existsSync(candidate2))
+                pushSource(`file://${candidate2}`, `audio/${ext}`);
+            }
+          }
+        } catch (err) {
+          console.warn('Preview load failed', err);
+        }
+
+        audio.addEventListener('ended', () => {
+          try {
+            audio.remove();
+          } catch (e) {}
+          if (this.soundPreviewAudio === audio) this.soundPreviewAudio = null;
+        });
+
+        document.body.appendChild(audio);
+        this.soundPreviewAudio = audio;
+        // Some browsers require a user gesture; this is an explicit user action (click) so should work.
+        audio.play().catch(e => console.warn('Preview play failed', e));
+      },
+
+      close(): void {
+        browserWindow.close();
+      },
+
+      getThemeClass(): any {
+        // console.log('getThemeClassWindow', this.settings?.risingDisableWindowsHighContrast);
+
+        try {
+          // Hack!
+          if (process.platform === 'win32') {
+            if (this.settings?.risingDisableWindowsHighContrast) {
+              document
+                .querySelector('html')
+                ?.classList.add('disableWindowsHighContrast');
+            } else {
+              document
+                .querySelector('html')
+                ?.classList.remove('disableWindowsHighContrast');
+            }
+          }
+
+          return {
+            ['platform-' + this.platform]: true,
+            disableWindowsHighContrast:
+              this.settings?.risingDisableWindowsHighContrast || false
+          };
+        } catch (err) {
+          return {
+            ['platform-' + this.platform]: true
+          };
+        }
+      },
+
+      submit(): void {
+        this.settings.spellcheckLang = this.selectedLang;
+        ipcRenderer.send('general-settings-update', this.settings);
+        this.close();
+      },
+
+      browserReset(): void {
+        this.settings.browserPath = '';
+        this.settings.browserArgs = '%s';
+      },
+
+      browseForPath(): void {
+        ipcRenderer.invoke('browser-option-browse').then(result => {
+          this.settings.browserPath = result;
+        });
+      },
+
+      browseForLogDir(): void {
+        const dir = remote.dialog.showOpenDialogSync({
+          defaultPath: this.settings.logDirectory,
+          properties: ['openDirectory']
+        });
+        if (dir !== undefined) {
+          if (dir[0].startsWith(path.dirname(remote.app.getPath('exe'))))
+            return remote.dialog.showErrorBox(
+              l('settings.logDir'),
+              l('settings.logDir.inAppDir')
+            );
+
+          if (
+            Dialog.confirmDialog(
+              l('settings.logDir.confirm', dir[0], this.settings.logDirectory)
+            )
+          ) {
+            ipcRenderer.send('log-path-update', dir[0]);
+          }
+        }
+      },
+
+      openLogDir(): void {
+        ipcRenderer.send('open-dir', this.settings.logDirectory);
+      },
+
+      filterLanguage(filter: RegExp, languageEntry: string): boolean {
+        console.log(languageEntry);
+        return filter.test(this.formatLanguage(languageEntry));
+      },
+
+      externalUrlHandler(url: string): void {
+        ipcRenderer.send('open-url-externally', url);
+      },
+
+      countLines(text: string): number {
+        let pointer = 0;
+        for (let i = 0; i < text.length; i += 1) {
+          switch (text[i]) {
+            case '\r':
+              pointer += 1;
+              if (text[i + 1] === '\n') {
+                i += 1;
+              }
+              break;
+            case '\n':
+              pointer += 1;
+              if (text[i + 1] === '\r') {
+                i += 1;
+              }
+              break;
+          }
+        }
+        return pointer;
+      },
+
+      handleTab(e: KeyboardEvent): void {
+        const target = e.target as HTMLTextAreaElement;
+        const start = target.selectionStart;
+        const end = target.selectionEnd;
+
+        // Get the current value and insert tab at cursor position
+        const value = target.value;
+        this.settings.horizonCustomCss =
+          value.substring(0, start) + '\t' + value.substring(end);
+
+        // Move cursor after tab
+        this.$nextTick(() => {
+          target.selectionStart = target.selectionEnd = start + 1;
+        });
       }
     }
-
-    openLogDir(): void {
-      ipcRenderer.send('open-dir', this.settings.logDirectory);
-    }
-
-    filterLanguage(
-      filter: RegExp,
-      languageEntry: { lang: string; name: string }
-    ): boolean {
-      return filter.test(languageEntry.name);
-    }
-
-    externalUrlHandler(url: string) {
-      ipcRenderer.send('open-url-externally', url);
-    }
-
-    countLines(text: string): number {
-      let pointer = 0;
-      for (let i = 0; i < text.length; i += 1) {
-        switch (text[i]) {
-          case '\r':
-            pointer += 1;
-            if (text[i + 1] === '\n') {
-              i += 1;
-            }
-            break;
-          case '\n':
-            pointer += 1;
-            if (text[i + 1] === '\r') {
-              i += 1;
-            }
-            break;
-        }
-      }
-      return pointer;
-    }
-
-    handleTab(e: KeyboardEvent): void {
-      const target = e.target as HTMLTextAreaElement;
-      const start = target.selectionStart;
-      const end = target.selectionEnd;
-
-      // Get the current value and insert tab at cursor position
-      const value = target.value;
-      this.settings.horizonCustomCss =
-        value.substring(0, start) + '\t' + value.substring(end);
-
-      // Move cursor after tab
-      this.$nextTick(() => {
-        target.selectionStart = target.selectionEnd = start + 1;
-      });
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

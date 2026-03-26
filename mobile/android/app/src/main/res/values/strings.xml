@@ -1,7 +1,0 @@
-<resources>
-	<string name="app_name">F-Chat</string>
-	<string name="channel_background">Running in Background</string>
-	<string name="channel_messages">Messages</string>
-	<string name="ok">OK</string>
-	<string name="cancel">Cancel</string>
-</resources>

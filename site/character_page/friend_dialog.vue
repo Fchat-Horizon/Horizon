@@ -126,7 +126,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop } from '@f-list/vue-ts';
   import CustomDialog from '../../components/custom_dialog';
   import Modal from '../../components/Modal.vue';
   import * as Utils from '../utils';
@@ -134,107 +133,103 @@
   import { Character, Friend, FriendRequest } from './interfaces';
   import l from './../../chat/localize';
 
-  @Component({
-    components: { Modal }
-  })
-  export default class FriendDialog extends CustomDialog {
-    l = l;
-    @Prop({ required: true })
-    readonly character!: Character;
-
-    ourCharacter = Utils.settings.defaultCharacter;
-
-    incoming: FriendRequest[] = [];
-    pending: FriendRequest[] = [];
-    existing: Friend[] = [];
-
-    requesting = false;
-    loading = true;
-    error = '';
-
-    avatarUrl = Utils.avatarURL;
-
-    get name(): string {
-      return this.character.character.name;
-    }
-
-    async request(): Promise<void> {
-      try {
-        this.requesting = true;
-        const newRequest = await methods.friendRequest(
-          this.character.character.id,
-          this.ourCharacter
-        );
-        if (typeof newRequest === 'number')
-          this.pending.push({
-            id: newRequest,
-            source: Utils.characters.find(x => x.id === this.ourCharacter)!,
-            target: this.character.character,
-            createdAt: Date.now() / 1000
-          });
-        else this.existing.push(newRequest);
-      } catch (e) {
-        if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
-        Utils.ajaxError(e, 'Unable to send friend request');
+  export default CustomDialog.extend({
+    components: { Modal },
+    props: {
+      character: { required: true as const }
+    },
+    data() {
+      return {
+        l: l,
+        ourCharacter: Utils.settings.defaultCharacter,
+        incoming: [] as FriendRequest[],
+        pending: [] as FriendRequest[],
+        existing: [] as Friend[],
+        requesting: false,
+        loading: true,
+        error: '',
+        avatarUrl: Utils.avatarURL
+      };
+    },
+    computed: {
+      name(): string {
+        return (this as any).character.character.name;
       }
-      this.requesting = false;
-    }
-
-    async dissolve(friendship: Friend): Promise<void> {
-      try {
-        await methods.friendDissolve(friendship);
-        this.existing.splice(this.existing.indexOf(friendship), 1);
-      } catch (e) {
-        if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
-        Utils.ajaxError(e, 'Unable to dissolve friendship');
+    },
+    methods: {
+      async request(): Promise<void> {
+        try {
+          this.requesting = true;
+          const newRequest = await methods.friendRequest(
+            (this as any).character.character.id,
+            this.ourCharacter
+          );
+          if (typeof newRequest === 'number')
+            this.pending.push({
+              id: newRequest,
+              source: Utils.characters.find(x => x.id === this.ourCharacter)!,
+              target: (this as any).character.character,
+              createdAt: Date.now() / 1000
+            });
+          else this.existing.push(newRequest);
+        } catch (e) {
+          if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
+          Utils.ajaxError(e, 'Unable to send friend request');
+        }
+        this.requesting = false;
+      },
+      async dissolve(friendship: Friend): Promise<void> {
+        try {
+          await methods.friendDissolve(friendship);
+          this.existing.splice(this.existing.indexOf(friendship), 1);
+        } catch (e) {
+          if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
+          Utils.ajaxError(e, 'Unable to dissolve friendship');
+        }
+      },
+      async accept(request: FriendRequest): Promise<void> {
+        try {
+          const friend = await methods.friendRequestAccept(request);
+          this.existing.push(friend);
+          this.incoming.splice(this.incoming.indexOf(request), 1);
+        } catch (e) {
+          if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
+          Utils.ajaxError(e, 'Unable to accept friend request');
+        }
+      },
+      async cancel(request: FriendRequest): Promise<void> {
+        try {
+          await methods.friendRequestCancel(request);
+          this.pending.splice(this.pending.indexOf(request), 1);
+        } catch (e) {
+          if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
+          Utils.ajaxError(e, 'Unable to cancel friend request');
+        }
+      },
+      async ignore(request: FriendRequest): Promise<void> {
+        try {
+          await methods.friendRequestIgnore(request);
+          this.incoming.splice(this.incoming.indexOf(request), 1);
+        } catch (e) {
+          if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
+          Utils.ajaxError(e, 'Unable to ignore friend request');
+        }
+      },
+      async show(): Promise<void> {
+        (CustomDialog as any).options.methods.show.call(this);
+        try {
+          this.loading = true;
+          const friendData = await methods.characterFriends(
+            (this as any).character.character.id
+          );
+          this.incoming = friendData.incoming;
+          this.pending = friendData.pending;
+          this.existing = friendData.existing;
+        } catch (e) {
+          Utils.ajaxError(e, 'Unable to load character friendship information');
+        }
+        this.loading = false;
       }
     }
-
-    async accept(request: FriendRequest): Promise<void> {
-      try {
-        const friend = await methods.friendRequestAccept(request);
-        this.existing.push(friend);
-        this.incoming.splice(this.incoming.indexOf(request), 1);
-      } catch (e) {
-        if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
-        Utils.ajaxError(e, 'Unable to accept friend request');
-      }
-    }
-
-    async cancel(request: FriendRequest): Promise<void> {
-      try {
-        await methods.friendRequestCancel(request);
-        this.pending.splice(this.pending.indexOf(request), 1);
-      } catch (e) {
-        if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
-        Utils.ajaxError(e, 'Unable to cancel friend request');
-      }
-    }
-
-    async ignore(request: FriendRequest): Promise<void> {
-      try {
-        await methods.friendRequestIgnore(request);
-        this.incoming.splice(this.incoming.indexOf(request), 1);
-      } catch (e) {
-        if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
-        Utils.ajaxError(e, 'Unable to ignore friend request');
-      }
-    }
-
-    async show(): Promise<void> {
-      super.show();
-      try {
-        this.loading = true;
-        const friendData = await methods.characterFriends(
-          this.character.character.id
-        );
-        this.incoming = friendData.incoming;
-        this.pending = friendData.pending;
-        this.existing = friendData.existing;
-      } catch (e) {
-        Utils.ajaxError(e, 'Unable to load character friendship information');
-      }
-      this.loading = false;
-    }
-  }
+  });
 </script>

@@ -1,3 +1,14 @@
+/**
+ * @license MPL-2.0
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * @copyright 2024-2026 Sylvia Roselie & Respective Horizon Contributors
+ * @version 1.0
+ * @see {@link https://github.com/Fchat-Horizon/Horizon|GitHub repo}
+ */
+
 /* eslint-disable no-null-keyword, max-file-line-count */
 
 import * as _ from 'lodash';
@@ -1353,6 +1364,7 @@ export class Matcher {
   static isAnthro(c: Character): boolean | null {
     const bodyTypeId = Matcher.getTagValueList(TagId.BodyType, c);
 
+    if (bodyTypeId === BodyType.Human) return false;
     if (bodyTypeId === BodyType.Anthro) return true;
 
     const speciesId = Matcher.species(c);

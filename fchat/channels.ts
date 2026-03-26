@@ -8,7 +8,7 @@ interface SortableMember extends Interfaces.Member {
 }
 
 export function queuedJoin(this: void, channels: string[]): void {
-  const timer: NodeJS.Timer = setInterval(() => {
+  const timer: ReturnType<typeof setInterval> = setInterval(() => {
     const channel = channels.shift();
     if (channel === undefined) return clearInterval(timer);
     state.join(channel);
@@ -88,12 +88,15 @@ class Channel implements Interfaces.Channel {
 
 class ListItem implements Interfaces.ListItem {
   isJoined = false;
+  readonly lowerName: string;
 
   constructor(
     readonly id: string,
     readonly name: string,
     public memberCount: number
-  ) {}
+  ) {
+    this.lowerName = name.toLowerCase();
+  }
 }
 
 class State implements Interfaces.State {

@@ -387,6 +387,7 @@ export namespace Channel {
   export interface ListItem {
     readonly id: string;
     readonly name: string;
+    readonly lowerName: string;
     readonly memberCount: number;
     readonly isJoined: boolean;
   }

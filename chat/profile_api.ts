@@ -40,7 +40,15 @@ import core from './core';
 import { EventBus } from './preview/event-bus';
 
 let horizonDevs: string[] = [];
-let horizonContributors: Map<string, string> = new Map(); // character name -> alias
+let horizonContributors: Map<string, string | undefined> = new Map();
+type TranslatorDetails = {
+  alias?: string;
+  languages?: string[];
+};
+let horizonTranslators: Map<string, TranslatorDetails> = new Map();
+let horizonStaff: Map<string, { alias: string; role?: string }> = new Map();
+let horizonSupporters: Map<string, string | undefined> = new Map();
+let horizonSponsors: Map<string, string | undefined> = new Map();
 
 export function isHorizonDev(characterName: string): boolean {
   return horizonDevs.includes(characterName);
@@ -54,13 +62,51 @@ export function getContributorAlias(characterName: string): string | undefined {
   return horizonContributors.get(characterName);
 }
 
+export function isHorizonTranslator(characterName: string): boolean {
+  return horizonTranslators.has(characterName);
+}
+
+export function getTranslatorAlias(characterName: string): string | undefined {
+  return horizonTranslators.get(characterName)?.alias;
+}
+
+export function getTranslatorLanguages(
+  characterName: string
+): ReadonlyArray<string> {
+  return horizonTranslators.get(characterName)?.languages || [];
+}
+
+export function isHorizonStaff(characterName: string): boolean {
+  return horizonStaff.has(characterName);
+}
+
+export function getStaffRole(characterName: string): string | undefined {
+  return horizonStaff.get(characterName)?.role;
+}
+
+export function getStaffAlias(characterName: string): string | undefined {
+  return horizonStaff.get(characterName)?.alias;
+}
+
+export function isHorizonSupporter(characterName: string): boolean {
+  return horizonSupporters.has(characterName);
+}
+
+export function getSupporterAlias(characterName: string): string | undefined {
+  return horizonSupporters.get(characterName);
+}
+
+export function isHorizonSponsor(characterName: string): boolean {
+  return horizonSponsors.has(characterName);
+}
+
+export function getSponsorAlias(characterName: string): string | undefined {
+  return horizonSponsors.get(characterName);
+}
+
 export async function preloadTeamData(): Promise<void> {
   try {
-    const response = await fetch(
-      'https://raw.githubusercontent.com/Fchat-Horizon/Horizon/refs/heads/team/team.json'
-    );
-    if (response.ok) {
-      const data = await response.json();
+    const applyTeamData = (data: any): void => {
       horizonDevs = data.devs?.maintainers || [];
 
       // Load contributors
@@ -68,13 +114,102 @@ export async function preloadTeamData(): Promise<void> {
       if (data.devs?.contributors) {
         for (const key in data.devs.contributors) {
           const contributor = data.devs.contributors[key];
-          if (contributor.characters && contributor.alias) {
-            for (const charName of contributor.characters) {
-              horizonContributors.set(charName, contributor.alias);
-            }
+          if (!contributor.characters) continue;
+          for (const charName of contributor.characters) {
+            horizonContributors.set(charName, contributor.alias || undefined);
           }
         }
       }
+
+      // Load translators
+      horizonTranslators = new Map();
+      if (data.devs?.translators) {
+        for (const key in data.devs.translators) {
+          const translator = data.devs.translators[key];
+          if (!translator.characters) continue;
+
+          const alias: string | undefined = translator.alias || undefined;
+
+          let languages: string[] | undefined;
+          if (Array.isArray(translator.languages)) {
+            const raw: unknown[] = translator.languages as unknown[];
+            const cleaned = raw
+              .filter((l: unknown): l is string => typeof l === 'string')
+              .map((l: string) => l.trim())
+              .filter(Boolean);
+            languages = cleaned.length > 0 ? cleaned : undefined;
+          } else if (typeof translator.language === 'string') {
+            const l = translator.language.trim();
+            languages = l ? [l] : undefined;
+          } else if (typeof translator.languages === 'string') {
+            const l = translator.languages.trim();
+            languages = l ? [l] : undefined;
+          }
+
+          for (const charName of translator.characters) {
+            horizonTranslators.set(charName, { alias, languages });
+          }
+        }
+      }
+
+      // Load staff
+      horizonStaff = new Map();
+      if (data.devs?.staff) {
+        for (const key in data.devs.staff) {
+          const staff = data.devs.staff[key];
+          if (!staff?.characters || !staff?.alias) continue;
+
+          const role: string | undefined =
+            typeof staff.role === 'string' && staff.role.trim()
+              ? staff.role.trim()
+              : Array.isArray(staff.roles)
+                ? (staff.roles as unknown[])
+                    .filter((r: unknown): r is string => typeof r === 'string')
+                    .map((r: string) => r.trim())
+                    .filter(Boolean)
+                    .join(', ') || undefined
+                : undefined;
+
+          for (const charName of staff.characters) {
+            horizonStaff.set(charName, { alias: staff.alias, role });
+          }
+        }
+      }
+
+      // Load supporters
+      horizonSupporters = new Map();
+      if (data.devs?.supporters) {
+        for (const key in data.devs.supporters) {
+          const supporter = data.devs.supporters[key];
+          if (!supporter.characters) continue;
+          for (const charName of supporter.characters) {
+            horizonSupporters.set(charName, supporter.alias || undefined);
+          }
+        }
+      }
+
+      // Load sponsors
+      horizonSponsors = new Map();
+      if (data.devs?.sponsors) {
+        for (const key in data.devs.sponsors) {
+          const sponsor = data.devs.sponsors[key];
+          if (!sponsor.characters) continue;
+          for (const charName of sponsor.characters) {
+            horizonSponsors.set(charName, sponsor.alias || undefined);
+          }
+        }
+      }
+
+      // Team data affects badge icons/titles in chat and profile sidebar.
+      // Trigger a refresh for already-mounted components.
+      EventBus.$emit('configuration-update', {});
+    };
+
+    const url = `https://raw.githubusercontent.com/Fchat-Horizon/Horizon/refs/heads/team/team.json?ts=${Date.now()}`;
+    const response = await fetch(url, { cache: 'no-store' });
+    if (response.ok) {
+      const data = await response.json();
+      applyTeamData(data);
     }
   } catch (error) {}
 }
@@ -185,11 +320,44 @@ async function executeCharacterData(
     }
   }
 
-  const contributorAlias = getContributorAlias(data.name);
-  if (contributorAlias && core.state.settings.horizonShowDeveloperBadges) {
+  if (
+    isHorizonContributor(data.name) &&
+    core.state.settings.horizonShowDeveloperBadges
+  ) {
     if (!badges.includes('contributor')) {
       badges.push('contributor');
     }
+  }
+
+  if (
+    isHorizonTranslator(data.name) &&
+    core.state.settings.horizonShowDeveloperBadges
+  ) {
+    if (!badges.includes('horizon-translator')) {
+      badges.push('horizon-translator');
+    }
+  }
+
+  // Add Horizon staff/supporter/sponsor badges
+  if (
+    isHorizonStaff(data.name) &&
+    core.state.settings.horizonShowDeveloperBadges
+  ) {
+    if (!badges.includes('horizon-staff')) badges.push('horizon-staff');
+  }
+
+  if (
+    isHorizonSupporter(data.name) &&
+    core.state.settings.horizonShowDeveloperBadges
+  ) {
+    if (!badges.includes('horizon-supporter')) badges.push('horizon-supporter');
+  }
+
+  if (
+    isHorizonSponsor(data.name) &&
+    core.state.settings.horizonShowDeveloperBadges
+  ) {
+    if (!badges.includes('horizon-sponsor')) badges.push('horizon-sponsor');
   }
 
   const charData = {

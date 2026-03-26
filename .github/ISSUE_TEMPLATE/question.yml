@@ -1,0 +1,22 @@
+name: Question
+description: Ask a question about using Horizon.
+labels: ['help wanted']
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe your question
+      description: A clear and concise description of what the problem is. Ex. I'm trying to[...]
+    validations:
+      required: true
+  - type: textarea
+    id: version-info
+    attributes:
+      label: Version Information
+      description: If applicable, please provide the version of Horizon you are using.
+      placeholder: In the app menu, go to Horizon > About Horizon, click "Copy Version Info" and paste it here.
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about your question here.

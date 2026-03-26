@@ -9,8 +9,6 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
 
   protected urlMutator = new ImageUrlMutator(this.parent.debug);
 
-  protected ratio: number | null = null;
-
   hide(): void {
     const wasVisible = this.visible;
 
@@ -35,10 +33,6 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
 
       this.visible = false;
     }
-  }
-
-  setRatio(ratio: number): void {
-    this.ratio = ratio;
   }
 
   getName(): string {
@@ -139,40 +133,6 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
       ImagePreviewHelper.HTTP_TESTER.test(url) &&
       !(domainName === 'f-list.net' || domainName === 'static.f-list.net')
     );
-  }
-
-  determineScalingRatio(): Record<string, any> {
-    // ratio = width / height
-    const ratio = this.ratio;
-
-    if (!ratio) {
-      return {};
-    }
-
-    const ww = window.innerWidth;
-    const wh = window.innerHeight;
-
-    const maxWidth = Math.round(ww * 0.5);
-    const maxHeight = Math.round(wh * 0.7);
-
-    if (ratio >= 1) {
-      const presumedWidth = maxWidth;
-      const presumedHeight = presumedWidth / ratio;
-
-      return {
-        width: `${presumedWidth}px`,
-        height: `${presumedHeight}px`
-      };
-      // tslint:disable-next-line:unnecessary-else
-    } else {
-      const presumedHeight = maxHeight;
-      const presumedWidth = presumedHeight * ratio;
-
-      return {
-        width: `${presumedWidth}px`,
-        height: `${presumedHeight}px`
-      };
-    }
   }
 
   renderStyle(): Record<string, any> {

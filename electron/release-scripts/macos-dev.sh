@@ -1,13 +1,15 @@
 #!/bin/bash -e
 
-# Usage: ./macos.sh RELEASE_VERSION [RELEASE_PATH]
+# Usage: ./macos.sh RELEASE_VERSION [RELEASE_PATH] [ARCH]
 # ** RELEASE_VERSION: The version string for the release.
 #    RELEASE_PATH (optional): The directory where release artifacts will be stored.
 #       ^ The github action will automatically set the release path— Do not fret!
+#    ARCH (optional): Target architecture (default: universal)
 
 # * Parse arguments
 RELEASE_VERSION="$1"
 RELEASE_PATH="${2:-$(pwd)/release_artifacts/macos/$RELEASE_VERSION}"
+ARCH="$3"
 
 if [ -z "$RELEASE_VERSION" ]; then
   echo "Usage: $0 RELEASE_VERSION [RELEASE_PATH]"
@@ -37,7 +39,12 @@ cd electron
 rm -rf app dist
 # Create dist directory for logging before build
 mkdir -p "$DIST_PATH"
-pnpm build:dev:mac
+if [ -n "$ARCH" ]; then
+  pnpm run webpack:dev
+  node build/build.mjs --os macos --format zip --arch "$ARCH"
+else
+  pnpm build:dev:mac
+fi
 
 # & Prepare release directory
 mkdir -p "$RELEASE_PATH"

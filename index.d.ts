@@ -8,3 +8,8 @@ declare module 'any-ascii' {
 }
 
 declare module 'vue-input-tag' {}
+
+declare module '*.vue' {
+  import Vue from 'vue';
+  export default Vue;
+}

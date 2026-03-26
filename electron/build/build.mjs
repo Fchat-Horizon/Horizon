@@ -176,7 +176,7 @@ async function runNativeBuild(opts, targetKey) {
     [platformMap[targetKey]]: { target: targets }
   };
 
-  await build({ config });
+  await build({ config, publish: 'never' });
   console.log('Build completed successfully!');
 }
 

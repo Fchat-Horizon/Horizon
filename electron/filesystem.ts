@@ -200,7 +200,8 @@ export function fixLogs(character: string): void {
           isChatOp: false,
           isIgnored: false,
           name,
-          overrides: {}
+          overrides: {},
+          hasStatusTextChanged: () => false
         }));
         const time = deserialized.message.time;
         const day = Math.floor(
@@ -250,7 +251,7 @@ function loadIndex(name: string): Index {
         index[file.slice(0, -4).toLowerCase()] = item;
       } catch (e) {
         console.error(e);
-        alert(l('logs.corruption.desktop'));
+        core.notifications.alert(l('logs.corruption.desktop'));
       }
   return index;
 }
@@ -289,7 +290,7 @@ export class Logs implements Logging {
       return messages;
     } catch (e) {
       console.error(e);
-      alert(l('logs.corruption.desktop'));
+      core.notifications.alert(l('logs.corruption.desktop'));
       return [];
     } finally {
       fs.closeSync(fd);
@@ -349,7 +350,7 @@ export class Logs implements Logging {
       return messages;
     } catch (e) {
       console.error(e);
-      alert(l('logs.corruption.desktop'));
+      core.notifications.alert(l('logs.corruption.desktop'));
       return [];
     } finally {
       fs.closeSync(fd);

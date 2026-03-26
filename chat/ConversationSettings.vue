@@ -125,7 +125,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop } from '@f-list/vue-ts';
   import CustomDialog from '../components/custom_dialog';
   import SettingsRadio from '../components/SettingsRadio.vue';
   import SettingsCheckbox from '../components/SettingsCheckbox.vue';
@@ -133,58 +132,61 @@
   import { Conversation } from './interfaces';
   import l from './localize';
 
-  @Component({
+  export default CustomDialog.extend({
     components: {
       modal: Modal,
       'settings-radio': SettingsRadio,
       'settings-checkbox': SettingsCheckbox
-    }
-  })
-  export default class ConversationSettings extends CustomDialog {
-    @Prop({ required: true })
-    readonly conversation!: Conversation;
-    l = l;
-    setting = Conversation.Setting;
-    notify!: Conversation.Setting;
-    highlight!: Conversation.Setting;
-    highlightWords!: string;
-    horizonHighlightUsers!: string;
-    joinMessages!: Conversation.Setting;
-    defaultHighlights!: boolean;
-    logMessages!: Conversation.Setting;
-    muted!: boolean;
-
-    load(): void {
-      const settings = this.conversation.settings;
-      this.notify = settings.notify;
-      this.highlight = settings.highlight;
-      this.highlightWords = settings.highlightWords.join(',');
-      this.joinMessages = settings.joinMessages;
-      this.defaultHighlights = settings.defaultHighlights;
-      this.horizonHighlightUsers = settings.horizonHighlightUsers.join(',');
-      this.logMessages = settings.logMessages;
-      this.muted = settings.muted;
-    }
-
-    submit(): void {
-      this.conversation.settings = {
-        notify: this.notify,
-        highlight: this.highlight,
-        highlightWords: this.highlightWords
-          .split(',')
-          .map(x => x.trim())
-          .filter(x => x.length > 0),
-        horizonHighlightUsers: this.horizonHighlightUsers
-          .split(',')
-          .map(x => x.trim())
-          .filter(x => x.length > 0),
-
-        joinMessages: this.joinMessages,
-        defaultHighlights: this.defaultHighlights,
-        adSettings: this.conversation.settings.adSettings,
-        logMessages: this.logMessages,
-        muted: this.muted
+    },
+    props: {
+      conversation: { required: true as const }
+    },
+    data() {
+      return {
+        l: l,
+        setting: Conversation.Setting,
+        notify: undefined as any as Conversation.Setting,
+        highlight: undefined as any as Conversation.Setting,
+        highlightWords: undefined as any as string,
+        horizonHighlightUsers: undefined as any as string,
+        joinMessages: undefined as any as Conversation.Setting,
+        defaultHighlights: undefined as any as boolean,
+        logMessages: undefined as any as Conversation.Setting,
+        muted: undefined as any as boolean
       };
+    },
+    methods: {
+      load(): void {
+        const settings = this.conversation.settings;
+        this.notify = settings.notify;
+        this.highlight = settings.highlight;
+        this.highlightWords = settings.highlightWords.join(',');
+        this.joinMessages = settings.joinMessages;
+        this.defaultHighlights = settings.defaultHighlights;
+        this.horizonHighlightUsers = settings.horizonHighlightUsers.join(',');
+        this.logMessages = settings.logMessages;
+        this.muted = settings.muted;
+      },
+      submit(): void {
+        this.conversation.settings = {
+          notify: this.notify,
+          highlight: this.highlight,
+          highlightWords: this.highlightWords
+            .split(',')
+            .map(x => x.trim())
+            .filter(x => x.length > 0),
+          horizonHighlightUsers: this.horizonHighlightUsers
+            .split(',')
+            .map(x => x.trim())
+            .filter(x => x.length > 0),
+
+          joinMessages: this.joinMessages,
+          defaultHighlights: this.defaultHighlights,
+          adSettings: this.conversation.settings.adSettings,
+          logMessages: this.logMessages,
+          muted: this.muted
+        };
+      }
     }
-  }
+  });
 </script>

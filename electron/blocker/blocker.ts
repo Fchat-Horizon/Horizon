@@ -1,5 +1,5 @@
 import log from 'electron-log';
-import { ElectronBlocker, Request } from '@ghostery/adblocker-electron';
+import type { ElectronBlocker, Request } from '@ghostery/adblocker-electron';
 import path from 'path';
 import fs from 'fs';
 import * as _ from 'lodash';
@@ -37,7 +37,9 @@ export class BlockerIntegration {
     log.debug('adblock.init');
 
     try {
-      const blocker = await ElectronBlocker.fromLists(
+      const ghosteryAdblocker = await import('@ghostery/adblocker-electron');
+
+      const blocker = await ghosteryAdblocker.ElectronBlocker.fromLists(
         fetch,
         BlockerIntegration.adBlockerLists,
         {

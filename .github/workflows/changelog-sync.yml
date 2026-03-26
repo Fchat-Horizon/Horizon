@@ -1,0 +1,29 @@
+name: Sync Changelog to Docs
+
+on:
+  push:
+    branches: [development]
+    paths:
+      - CHANGELOG.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  trigger-docs-rebuild:
+    name: Trigger docs site rebuild
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch workflow_dispatch to docs repo
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.DOCS_DEPLOY_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: 'Fchat-Horizon',
+              repo: 'docs',
+              workflow_id: 'docs.yml',
+              ref: 'main'
+            });
+            core.notice('Docs rebuild triggered successfully.');

@@ -3,6 +3,7 @@ import { Matcher } from '../matcher';
 import {
   BodyType,
   Build,
+  FurryPreference,
   Gender,
   Kink,
   Species,
@@ -22,6 +23,7 @@ export interface SmartFilterOpts {
   genders?: Gender[];
   isAnthro?: boolean;
   isHuman?: boolean;
+  furryPreferences?: FurryPreference[];
 }
 
 export interface SmartFilterTestResult {
@@ -33,6 +35,7 @@ export interface SmartFilterTestResult {
   isAnthro: boolean;
   isHuman: boolean;
   kinks: boolean;
+  furryPreferences: boolean;
 }
 
 function getBaseLog(base: number, x: number): number {
@@ -50,9 +53,17 @@ export class SmartFilter {
     const isHuman = this.testIsHuman(c);
     const kinks = this.testKinks(c);
     const genders = this.testGenders(c);
+    const furryPreferences = this.testFurryPreferences(c);
 
     const isFiltered =
-      builds || bodyTypes || species || isAnthro || isHuman || kinks || genders;
+      builds ||
+      bodyTypes ||
+      species ||
+      isAnthro ||
+      isHuman ||
+      kinks ||
+      genders ||
+      furryPreferences;
     const result = {
       isFiltered,
       builds,
@@ -61,6 +72,7 @@ export class SmartFilter {
       isAnthro,
       isHuman,
       kinks,
+      furryPreferences,
       genders
     };
 
@@ -158,6 +170,19 @@ export class SmartFilter {
   testIsAnthro(c: Character): boolean {
     return !!this.opts.isAnthro && (Matcher.isAnthro(c) || false);
   }
+
+  testFurryPreferences(c: Character): boolean {
+    if (!this.opts.furryPreferences) {
+      return false;
+    }
+
+    const pref = Matcher.getTagValueList(TagId.FurryPreference, c);
+
+    return (
+      pref !== null &&
+      _.findIndex(this.opts.furryPreferences || [], p => p === pref) >= 0
+    );
+  }
 }
 
 export type SmartFilterCollection = {
@@ -189,6 +214,16 @@ export const smartFilters: SmartFilterCollection = {
   feral: new SmartFilter({
     name: 'feral',
     bodyTypes: [BodyType.Feral]
+  }),
+
+  noFurries: new SmartFilter({
+    name: 'noFurries',
+    furryPreferences: [FurryPreference.HumansOnly]
+  }),
+
+  noHumans: new SmartFilter({
+    name: 'noHumans',
+    furryPreferences: [FurryPreference.FurriesOnly]
   }),
 
   gore: new SmartFilter({
@@ -299,7 +334,7 @@ export const smartFilters: SmartFilterCollection = {
 
   pokemon: new SmartFilter({
     name: 'pokemon',
-    species: [Species.Pokemon]
+    species: [Species.Pokemon, Species.Digimon]
   }),
 
   rape: new SmartFilter({

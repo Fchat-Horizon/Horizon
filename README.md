@@ -98,7 +98,7 @@ Since we currently don't have a paid developer license (and MacOS by default blo
 
 1. Download the installer. There are both versions specific to Intel (pre-2020) and Apple Sillicon Macs, and a 'Universal' one that works on both.
    - [MacOS (Apple Sillicon)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-arm64.dmg)
-   - [MacOS (Intel)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-arm64.dmg)
+   - [MacOS (Intel)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-x64.dmg)
    - [MacOS (Universal)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-universal.dmg)
 
 2. Open the downloaded .dmg file and drag the application to your Applications folder.
@@ -135,6 +135,7 @@ Horizon has excellent Linux support. Read more at [horizon-packages](https://git
 | ![Arch](https://img.shields.io/badge/Arch%20Linux-1793D1?logo=arch-linux&logoColor=fff&style=for-the-badge) <br> ![Manjaro](https://img.shields.io/badge/Manjaro-35BF5C?style=for-the-badge&logo=Manjaro&logoColor=white) | [![AUR package](https://repology.org/badge/version-for-repo/aur/fchat-horizon.svg)](https://repology.org/project/fchat-horizon/versions) | astrayblackcat, KenwoodFox, @CodingWithAnxiety |
 | ![Debian](https://img.shields.io/badge/Debian-D70A53?style=for-the-badge&logo=debian&logoColor=white) <br> ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)          | [Available under releases](https://github.com/Fchat-Horizon/Horizon/releases/latest)                                                     | The Horizon Developers                         |
 | ![Fedora](https://img.shields.io/badge/Fedora-294172?style=for-the-badge&logo=fedora&logoColor=white) <br> ![openSUSE](https://img.shields.io/badge/openSUSE-%2364B345?style=for-the-badge&logo=openSUSE&logoColor=white) | [Available under releases](https://github.com/Fchat-Horizon/Horizon/releases/latest)                                                     | The Horizon Developers                         |
+| ![Alpine](https://img.shields.io/badge/Alpine%20Linux-1793D1?logo=alpine-linux&logoColor=fff&style=for-the-badge)                                                                                                         | [link](https://codeberg.org/akatsukilevi/fchat-horizon)                                                                                  | @akatsukilevi                                  |
 
 ### Additional installation instructions
 

@@ -65,10 +65,14 @@ export class GeneralSettings {
   fuzzyDates: boolean = true;
   flashWindow: boolean = true;
   allowWindowTransparency: boolean = false;
+  forceNativeWindowControls: boolean = false;
+  nativeWindowShowSingleTab: boolean = false;
   horizonForceAsciiProfiles: boolean = false;
   hasImportedVanillaLogs: boolean = false;
   hasDismissedVanillaImport: boolean = false;
   vanillaCustomBaseDir: string | undefined = undefined;
+  horizonShowNotificationBadge: boolean = true;
+  horizonShowWindowAndChatNotificationBadge: boolean = true;
 }
 
 log.debug('init.common.done');

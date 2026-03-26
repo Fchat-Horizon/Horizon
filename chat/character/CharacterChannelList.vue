@@ -30,7 +30,6 @@
 
 <script lang="ts">
   import * as _ from 'lodash';
-  import { Component, Hook, Prop, Watch } from '@f-list/vue-ts';
   import CustomDialog from '../../components/custom_dialog';
   import Modal from '../../components/Modal.vue';
   import { Character } from '../../fchat/interfaces';
@@ -39,44 +38,45 @@
   import UserView from '../UserView.vue';
   import ChannelConversation = Conversation.ChannelConversation;
 
-  @Component({
-    components: { modal: Modal, user: UserView }
-  })
-  export default class CharacterChannelList extends CustomDialog {
-    @Prop({ required: true })
-    readonly character!: Character;
-
-    channels: ChannelConversation[] = [];
-
-    @Watch('character')
-    onNameUpdate(): void {
-      this.update();
-    }
-
-    @Hook('mounted')
-    onMounted(): void {
-      this.update();
-    }
-
-    update(): void {
-      if (!this.character) {
-        this.channels = [];
-        return;
+  export default CustomDialog.extend({
+    components: { modal: Modal, user: UserView },
+    props: {
+      character: { required: true as const }
+    },
+    data() {
+      return {
+        channels: [] as ChannelConversation[]
+      };
+    },
+    watch: {
+      character(): void {
+        this.update();
       }
+    },
+    mounted(): void {
+      this.update();
+    },
+    methods: {
+      update(): void {
+        if (!this.character) {
+          this.channels = [];
+          return;
+        }
 
-      this.channels = _.sortBy(
-        _.filter(
-          core.conversations.channelConversations,
-          (cc: ChannelConversation) => !!cc.channel.members[this.character.name]
-        ),
-        'name'
-      );
+        this.channels = _.sortBy(
+          _.filter(
+            core.conversations.channelConversations,
+            (cc: ChannelConversation) =>
+              !!cc.channel.members[this.character.name]
+          ),
+          'name'
+        );
+      },
+      jumpToChannel(channel: ChannelConversation): void {
+        channel.show();
+      }
     }
-
-    jumpToChannel(channel: ChannelConversation): void {
-      channel.show();
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

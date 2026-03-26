@@ -86,7 +86,6 @@
   </div>
 </template>
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
   import Vue from 'vue';
   import core from '../../chat/core';
   import {
@@ -96,54 +95,50 @@
   import { CharacterAnalysis } from '../matcher';
   import { methods } from '../../site/character_page/data_store';
 
-  @Component({})
-  export default class ProfileAnalysis extends Vue {
-    recommendations: ProfileRecommendation[] = [];
-    analyzing = false;
-
-    isMinimized = true;
-
-    @Prop({ required: true })
-    readonly characterName: string;
-
-    @Prop({ required: true })
-    readonly characterId: number;
-    @Prop({ required: true })
-    @Hook('beforeMount')
+  export default Vue.extend({
+    props: {
+      characterName: { required: true as const },
+      characterId: { required: true as const }
+    },
+    data() {
+      return {
+        recommendations: [] as ProfileRecommendation[],
+        analyzing: false,
+        isMinimized: true
+      };
+    },
     async beforeMount(): Promise<void> {
       this.isMinimized = !!(await core.settingsStore.get(
         'hideProfileAnalysis'
       ));
-    }
-
-    @Hook('mounted')
-    async onMounted(): void {
+    },
+    async mounted(): Promise<void> {
       this.analyze();
+    },
+    methods: {
+      async analyze() {
+        this.analyzing = true;
+        this.recommendations = [];
+
+        const char = await methods.characterData(
+          this.characterName as string,
+          this.characterId as number,
+          true
+        );
+        const profile = new CharacterAnalysis(char.character);
+        const analyzer = new ProfileRecommendationAnalyzer(profile);
+
+        this.recommendations = await analyzer.analyze();
+
+        this.analyzing = false;
+      },
+      async toggleMinimize(): Promise<void> {
+        this.isMinimized = !this.isMinimized;
+
+        await core.settingsStore.set('hideProfileAnalysis', this.isMinimized);
+      }
     }
-
-    async analyze() {
-      this.analyzing = true;
-      this.recommendations = [];
-
-      const char = await methods.characterData(
-        this.characterName,
-        this.characterId,
-        true
-      );
-      const profile = new CharacterAnalysis(char.character);
-      const analyzer = new ProfileRecommendationAnalyzer(profile);
-
-      this.recommendations = await analyzer.analyze();
-
-      this.analyzing = false;
-    }
-
-    async toggleMinimize(): Promise<void> {
-      this.isMinimized = !this.isMinimized;
-
-      await core.settingsStore.set('hideProfileAnalysis', this.isMinimized);
-    }
-  }
+  });
 </script>
 <style lang="scss">
   .profile-analysis-wrapper {

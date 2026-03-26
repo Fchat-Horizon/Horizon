@@ -11,7 +11,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        nodejs = pkgs.nodejs_22;
+        nodejs = pkgs.nodejs_24;
         pnpm = nodejs.pkgs. pnpm;
         electron = pkgs.electron_39;
       in
@@ -21,6 +21,7 @@
 
           buildInputs = [
             nodejs
+            pkgs.bashInteractive
             pnpm
             electron
             pkgs.python3
@@ -29,6 +30,7 @@
           ];
 
           shellHook = ''
+            export SHELL="${pkgs.bashInteractive}/bin/bash"
             echo "Horizon development environment"
             echo "Node version:  $(node --version)"
             echo "pnpm version:  $(pnpm --version)"

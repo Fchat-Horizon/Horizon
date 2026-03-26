@@ -48,7 +48,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
   import Modal from '../components/Modal.vue';
   import Dropdown from '../components/Dropdown.vue';
   import CustomDialog from '../components/custom_dialog';
@@ -58,27 +57,24 @@
   import { ExtendedSearchData, SearchData } from './interfaces';
   import l from './localize';
 
-  @Component({
+  export default CustomDialog.extend({
     components: {
       modal: Modal,
       dropdown: Dropdown,
       bbcode: BBCodeView(core.bbCodeParser)
-    }
-  })
-  export default class CharacterSearchHistory extends CustomDialog {
-    l = l;
-    @Prop({ required: true })
-    readonly callback!: (searchData: ExtendedSearchData) => void;
-
-    @Prop({ required: true })
-    readonly curSearch!: ExtendedSearchData | undefined;
-
-    history: (ExtendedSearchData | SearchData)[] = [];
-
-    selectedSearch: number | null = null;
-
-    @Hook('mounted')
-    async onMounted(): Promise<void> {
+    },
+    props: {
+      callback: { required: true as const },
+      curSearch: { required: true as const }
+    },
+    data() {
+      return {
+        l: l,
+        history: [] as (ExtendedSearchData | SearchData)[],
+        selectedSearch: null as number | null
+      };
+    },
+    async mounted(): Promise<void> {
       this.history = (await core.settingsStore.get('searchHistory')) || [];
       this.selectedSearch = null;
 
@@ -94,45 +90,42 @@
           this.selectedSearch = index;
         }
       }
-    }
-
-    selectStatus(): void {
-      if (this.selectedSearch !== null) {
-        this.callback(
-          _.merge(
-            { species: [], bodytypes: [] },
-            this.history[this.selectedSearch]
-          ) as ExtendedSearchData
+    },
+    methods: {
+      selectStatus(): void {
+        if (this.selectedSearch !== null) {
+          this.callback(
+            _.merge(
+              { species: [], bodytypes: [] },
+              this.history[this.selectedSearch]
+            ) as ExtendedSearchData
+          );
+        }
+      },
+      submit(e: Event): void {
+        (<Modal>this.$refs.dialog).submit(e);
+      },
+      describeSearch(searchData: SearchData | ExtendedSearchData): string {
+        return _.join(
+          _.map(
+            // tslint:disable-next-line no-unsafe-any no-any
+            _.flatten(_.map(searchData as any)),
+            // tslint:disable-next-line no-unsafe-any no-any
+            v => _.get(v, 'name', v)
+          ),
+          ', '
         );
+      },
+      async removeSearchHistoryEntry(index: number): Promise<void> {
+        this.history.splice(index, 1);
+
+        await core.settingsStore.set('searchHistory', this.history);
+      },
+      select(index: number): void {
+        this.selectedSearch = index;
       }
     }
-
-    submit(e: Event): void {
-      (<Modal>this.$refs.dialog).submit(e);
-    }
-
-    describeSearch(searchData: SearchData | ExtendedSearchData): string {
-      return _.join(
-        _.map(
-          // tslint:disable-next-line no-unsafe-any no-any
-          _.flatten(_.map(searchData as any)),
-          // tslint:disable-next-line no-unsafe-any no-any
-          v => _.get(v, 'name', v)
-        ),
-        ', '
-      );
-    }
-
-    async removeSearchHistoryEntry(index: number): Promise<void> {
-      this.history.splice(index, 1);
-
-      await core.settingsStore.set('searchHistory', this.history);
-    }
-
-    select(index: number): void {
-      this.selectedSearch = index;
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

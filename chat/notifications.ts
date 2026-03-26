@@ -127,6 +127,10 @@ export default class Notifications implements Interface {
     this.hasInitialized = true;
   }
 
+  alert(message: string): void {
+    alert(message);
+  }
+
   private getSoundTheme(): string {
     return (
       (core.state as any).generalSettings?.soundTheme ||

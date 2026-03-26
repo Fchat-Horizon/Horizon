@@ -38,10 +38,10 @@ const tabMap: { [key: string]: electron.WebContents } = {};
 
 /**
  * Used to track whether a window has new messages.
- * This is a map where the key is the window ID and the value is a boolean indicating whether there are new messages.
+ * This is a map where the key is the window ID and the value is a number indicating how many new messages there are.
  * @internal
  */
-const newMessagesMap: { [id: number]: boolean } = {};
+const newMessagesMap: { [id: number]: number } = {};
 
 /**
  * Used to track the injected CSS per key value. Inserting CSS returns a key value that can later be used to remove the value.
@@ -62,6 +62,16 @@ const trayIcon: string = path.join(
         : './build/trayTemplate.png'
     ).default
   )
+);
+
+/**
+ * Tray icon path for the notified state.
+ * Used only on Windows and Linux.
+ * @internal
+ */
+const trayIconNotif: string = path.join(
+  __dirname,
+  <string>require('./build/tray-notif.png').default
 );
 
 /**
@@ -89,50 +99,108 @@ const winIcon: string = path.join(
 );
 
 /**
- * Empty badge icon for the overlay.
- * @internal
+ * Badge icon path for the app icion overlay. Used for when there are new messages and numbered badges are disabled.
  */
-const emptyBadge = electron.nativeImage.createEmpty();
-
-/**
- * Badge icon for the overlay, indicating new messages.
- * @internal
- */
-const badge = electron.nativeImage.createFromPath(
+const badge: electron.NativeImage = electron.nativeImage.createFromPath(
   path.join(__dirname, <string>require('./build/badge.png').default)
 );
 
 /**
- * Handles the 'has-new' IPC event.
- * This event is triggered when there are new messages in the application.
- * It updates the dock badge on macOS and applies an overlay icon to the window that sent the event on Window and Linux.
- * @event
- * @param {IpcMainEvent} e
- * @param {boolean} hasNew
+ * Array of badge icons for the app icon overlay, the index indicating the amount of new messages with 0 being an empty icon and 10 representing any values above 9.
+ * @internal
  */
-electron.ipcMain.on('has-new', (e: IpcMainEvent, hasNew: boolean) => {
-  if (process.platform === 'darwin' && app.dock !== undefined)
-    app.dock.setBadge(hasNew ? '•' : '');
-  const window = electron.BrowserWindow.fromWebContents(e.sender);
-  if (window !== undefined && window !== null) {
-    applyOverlayIcon(window, hasNew);
-    newMessagesMap[window.id] = hasNew;
+const badges: electron.NativeImage[] = [
+  electron.nativeImage.createEmpty(),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/1.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/2.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/3.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/4.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/5.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/6.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/7.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/8.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/9.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/9plus.png').default)
+  )
+];
+
+/**
+ * Handles the 'has-new' IPC event.
+ * This event is triggered when there are new messages in an appplication window's tab(s).
+ * It updates the dock badge on macOS and applies an overlay icon to all windows on Windows and Linux.
+ * @event
+ * @param {IpcMainEvent} e Event reference.
+ * @param {number} hasNew The amount of new messages for the window that called it. If hasNew =< 0, the user has no new messages
+ * @param {boolean} numberedBadges Whether to show the number of new messages in the badge or just a dot indicating that there are new messages. This is used on Windows and Linux, as macOS does not support numbered badges.
+ */
+electron.ipcMain.on(
+  'has-new',
+  (e: IpcMainEvent, hasNew: number, numberedBadges: boolean) => {
+    const window = electron.BrowserWindow.fromWebContents(e.sender);
+    if (window !== undefined && window !== null) {
+      newMessagesMap[window.id] = hasNew;
+    }
+    updateNotificationBadges(numberedBadges);
   }
-});
+);
+
+export function updateNotificationBadges(numberedBadges = true) {
+  const totalCount = windows.reduce(
+    (sum, item) => sum + newMessagesMap[item.id],
+    0
+  );
+  if (process.platform !== 'win32') {
+    if (numberedBadges) {
+      app.setBadgeCount(totalCount);
+    } else {
+      if (app.dock) {
+        app.dock.setBadge(totalCount > 0 ? '*' : '');
+      }
+    }
+  } else {
+    windows.forEach(item => {
+      applyWin32OverlayIcon(item, totalCount, numberedBadges);
+    });
+    tray.setImage(totalCount > 0 ? trayIconNotif : trayIcon);
+  }
+}
 
 /**
  * Apply an overlay icon to the given window based on whether there are new messages.
  * @function
  * @param {electron.BrowserWindow} window
  * The window to apply the overlay icon to.
- * @param {boolean} hasNew
- * Whether or not the window has new messages.
+ * @param {number} badgeCount
+ * The amount of new messages accumilated across all active tabs. If this value is below 1, no badge is drawn.
  * @internal
  */
-function applyOverlayIcon(window: electron.BrowserWindow, hasNew: boolean) {
+function applyWin32OverlayIcon(
+  window: electron.BrowserWindow,
+  badgeCount: number,
+  numberedBadges: boolean
+) {
   window.setOverlayIcon(
-    hasNew ? badge : emptyBadge,
-    hasNew ? 'New messages' : ''
+    numberedBadges ? badges[Math.max(Math.min(badgeCount, 10), 0)] : badge,
+    badgeCount > 0 ? ` ${badgeCount} new messages` : ''
   );
 }
 
@@ -195,6 +263,8 @@ export function openTab(w: electron.BrowserWindow) {
 
 /**
  * Creates a new main window for the application.
+ * If all windows are hidden but not closed, this function will show all windows.
+ * If the maximum number of tabs has been reached, see {@link maxTabCount}, this function will return undefined and no new window will be created.
  * @function
  * @param {GeneralSettings} settings
  * This contains the general settings for the application.
@@ -203,6 +273,7 @@ export function openTab(w: electron.BrowserWindow) {
  * @param {string} baseDir
  * Base directory for the application, used for the ad blocker.
  * @returns {electron.BrowserWindow | undefined}
+ * Reference to the created window or undefined if the window could not be created (for example, if the maximum number of tabs has been reached).
  */
 export function createMainWindow(
   settings: GeneralSettings,
@@ -210,7 +281,18 @@ export function createMainWindow(
   baseDir: string
 ): electron.BrowserWindow | undefined {
   log.info('browser_windows.createMainWindow', { ImporterHint });
-  if (tabCount >= maxTabCount) return;
+  if (
+    windows.every(item => {
+      !item.isVisible;
+    })
+  ) {
+    windows.forEach(item => {
+      item.show();
+    });
+  }
+  if (tabCount >= maxTabCount) {
+    return;
+  }
   const lastState = windowState.getSavedWindowState();
 
   let windowBackgroundColor: string;
@@ -258,14 +340,13 @@ export function createMainWindow(
 
   if (process.platform === 'darwin') {
     windowProperties.titleBarStyle = 'hiddenInset';
-    // windowProperties.frame = true;
   } else {
-    windowProperties.frame = false;
+    windowProperties.frame = settings.forceNativeWindowControls;
   }
 
   const window = new electron.BrowserWindow(windowProperties);
 
-  newMessagesMap[window.id] = false;
+  newMessagesMap[window.id] = 0;
   remoteMain.enable(window.webContents);
 
   windows.push(window);
@@ -280,7 +361,11 @@ export function createMainWindow(
   });
 
   window.on('show', () => {
-    applyOverlayIcon(window, newMessagesMap[window.id]);
+    applyWin32OverlayIcon(
+      window,
+      newMessagesMap[window.id],
+      settings.horizonShowNotificationBadge
+    );
   });
 
   window.on('closed', () => {
@@ -608,6 +693,11 @@ export function createSettingsWindow(
 
   if (process.platform === 'darwin') {
     windowProperties.titleBarStyle = 'hiddenInset';
+  } else if (settings.forceNativeWindowControls) {
+    windowProperties.frame = true;
+    windowProperties.minimizable = false;
+    windowProperties.maximizable = false;
+    windowProperties.autoHideMenuBar = true;
   }
   const browserWindow = new electron.BrowserWindow(windowProperties);
   remoteMain.enable(browserWindow.webContents);
@@ -676,6 +766,11 @@ export function createChangelogWindow(
 
   if (process.platform === 'darwin') {
     windowProperties.titleBarStyle = 'hiddenInset';
+  } else if (settings.forceNativeWindowControls) {
+    windowProperties.frame = true;
+    windowProperties.minimizable = false;
+    windowProperties.maximizable = false;
+    windowProperties.autoHideMenuBar = true;
   }
   const browserWindow = new electron.BrowserWindow(windowProperties);
   remoteMain.enable(browserWindow.webContents);
@@ -741,6 +836,11 @@ export function createExporterWindow(
 
   if (process.platform === 'darwin') {
     windowProperties.titleBarStyle = 'hiddenInset';
+  } else if (settings.forceNativeWindowControls) {
+    windowProperties.frame = true;
+    windowProperties.minimizable = false;
+    windowProperties.maximizable = false;
+    windowProperties.autoHideMenuBar = true;
   }
 
   const browserWindow = new electron.BrowserWindow(windowProperties);
@@ -783,7 +883,7 @@ export function createAboutWindow(
     frame: false,
     minWidth: 460,
     width: 460,
-    height: 580,
+    height: 620,
     resizable: false,
     modal: true,
     parent: parentWindow,
@@ -805,7 +905,7 @@ export function createAboutWindow(
 
   if (process.platform === 'darwin') {
     aboutWindowProperties.frame = true;
-    aboutWindowProperties.height = 520;
+    aboutWindowProperties.height = 560;
     aboutWindowProperties.modal = false;
   }
 
