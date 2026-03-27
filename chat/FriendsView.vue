@@ -496,7 +496,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook } from '@f-list/vue-ts';
   import Vue from 'vue';
   import Dropdown from '../components/Dropdown.vue';
   import Modal from '../components/Modal.vue';
@@ -521,56 +520,270 @@
 
   const availableSorts: AvailableSort[] = ['normal', 'status', 'gender'];
 
-  @Component({
+  export default Vue.extend({
     components: {
       dropdown: Dropdown,
       modal: Modal,
       tabs: Tabs,
       user: UserView,
       bbcode: BBCodeView(core.bbCodeParser)
-    }
-  })
-  class FriendsView extends Vue {
-    l = l;
-    tab = '0';
-    search = '';
-    pending: { [key: string]: boolean } = {};
-    ownSimpleCharacter: SimpleCharacter | null = null;
-    profileLink = profileLink;
-    removeFriendTarget: Character | null = null;
-    removeFriendAvailableSources: string[] = [];
-    removeFriendSelectedSources: string[] = [];
-    removeBookmarkTarget: Character | null = null;
-    genderFilters: string[] =
-      (core.state.settings as any).horizonPersistentMemberFilters &&
-      Array.isArray((core.state.settings as any).horizonSavedGenderFilters)
-        ? (core.state.settings as any).horizonSavedGenderFilters.slice()
-        : [];
-    genderOptions: string[] = builtInGenderOptions.slice();
-    autoGenderFilterEnabled: boolean =
-      typeof (core.state.settings as any).horizonAutoGenderFilter === 'boolean'
-        ? (core.state.settings as any).horizonAutoGenderFilter
-        : true;
-    statusOptions: string[] = [
-      'looking',
-      'online',
-      'idle',
-      'away',
-      'busy',
-      'dnd',
-      'offline',
-      'crown'
-    ];
-    selectedStatuses: string[] = [];
-    sortType: AvailableSort = (((core.state.settings as any)
-      .horizonPersistentMemberFilters &&
-      (core.state.settings as any).horizonSavedMembersSort) ||
-      'normal') as AvailableSort;
+    },
+    data() {
+      return {
+        l: l,
+        tab: '0',
+        search: '',
+        pending: {} as { [key: string]: boolean },
+        ownSimpleCharacter: null as SimpleCharacter | null,
+        profileLink: profileLink,
+        removeFriendTarget: null as Character | null,
+        removeFriendAvailableSources: [] as string[],
+        removeFriendSelectedSources: [] as string[],
+        removeBookmarkTarget: null as Character | null,
+        genderFilters:
+          (core.state.settings as any).horizonPersistentMemberFilters &&
+          Array.isArray((core.state.settings as any).horizonSavedGenderFilters)
+            ? (core.state.settings as any).horizonSavedGenderFilters.slice()
+            : ([] as string[]),
+        genderOptions: builtInGenderOptions.slice(),
+        autoGenderFilterEnabled:
+          typeof (core.state.settings as any).horizonAutoGenderFilter ===
+          'boolean'
+            ? (core.state.settings as any).horizonAutoGenderFilter
+            : true,
+        statusOptions: [
+          'looking',
+          'online',
+          'idle',
+          'away',
+          'busy',
+          'dnd',
+          'offline',
+          'crown'
+        ] as string[],
+        selectedStatuses: [] as string[],
+        sortType: (((core.state.settings as any)
+          .horizonPersistentMemberFilters &&
+          (core.state.settings as any).horizonSavedMembersSort) ||
+          'normal') as AvailableSort,
+        sorter: (x: Character, y: Character) =>
+          x.name.toLocaleLowerCase().localeCompare(y.name.toLocaleLowerCase())
+      };
+    },
+    computed: {
+      showPerCharacterFriends(): boolean {
+        return core.state.settings.showPerCharacterFriends;
+      },
+      hideNonCharacterFriends(): boolean {
+        return core.state.settings.hideNonCharacterFriends;
+      },
+      onlineCharacterFriendsBase(): Character[] {
+        if (!this.showPerCharacterFriends) {
+          return [];
+        }
+        return core.characters.characterFriends.slice().sort(this.sorter);
+      },
+      onlineFriendsBase(): Character[] {
+        let friendsList = core.characters.friends.slice();
 
-    sorter = (x: Character, y: Character) =>
-      x.name.toLocaleLowerCase().localeCompare(y.name.toLocaleLowerCase());
+        if (this.showPerCharacterFriends) {
+          const characterFriendNames = new Set(
+            core.characters.characterFriendList.map(name => name.toLowerCase())
+          );
+          friendsList = friendsList.filter(
+            friend => !characterFriendNames.has(friend.name.toLowerCase())
+          );
 
-    @Hook('mounted')
+          if (this.hideNonCharacterFriends) {
+            return [];
+          }
+        }
+
+        return friendsList.sort(this.sorter);
+      },
+      onlineBookmarksBase(): Character[] {
+        const friendNames = this.getFriendNamesForBookmarkFilter(
+          this.onlineCharacterFriendsBase,
+          this.onlineFriendsBase
+        );
+        let bookmarks = core.characters.bookmarks
+          .slice()
+          .filter(character => !friendNames.has(character.name.toLowerCase()));
+
+        if (this.showPerCharacterFriends) {
+          const characterFriendNames = new Set(
+            core.characters.characterFriendList.map(name => name.toLowerCase())
+          );
+          bookmarks = bookmarks.filter(
+            character => !characterFriendNames.has(character.name.toLowerCase())
+          );
+        }
+
+        return bookmarks.sort(this.sorter);
+      },
+      allCharacterFriendsBase(): Character[] {
+        if (!this.showPerCharacterFriends) {
+          return [];
+        }
+        const characterFriendsList =
+          core.characters.characterFriendList.slice();
+        return characterFriendsList
+          .map(name => core.characters.get(name))
+          .sort(this.sorter);
+      },
+      allFriendsBase(): Character[] {
+        let friendsList = core.characters.friendList.slice();
+
+        const uniqueFriendNames = new Set<string>();
+        friendsList = friendsList.filter(name => {
+          const lowerName = name.toLowerCase();
+          if (uniqueFriendNames.has(lowerName)) {
+            return false;
+          }
+          uniqueFriendNames.add(lowerName);
+          return true;
+        });
+
+        if (this.showPerCharacterFriends) {
+          const characterFriendNames = new Set(
+            core.characters.characterFriendList.map(name => name.toLowerCase())
+          );
+          friendsList = friendsList.filter(
+            name => !characterFriendNames.has(name.toLowerCase())
+          );
+
+          if (this.hideNonCharacterFriends) {
+            return [];
+          }
+        }
+
+        return friendsList
+          .map(name => core.characters.get(name))
+          .sort(this.sorter);
+      },
+      allBookmarksBase(): Character[] {
+        const bookmarkList = core.characters.bookmarkList.slice();
+        const friendNames = this.getFriendNamesForBookmarkFilter(
+          this.allCharacterFriendsBase,
+          this.allFriendsBase
+        );
+
+        let characters = bookmarkList
+          .map(name => core.characters.get(name))
+          .filter(character => !friendNames.has(character.name.toLowerCase()));
+
+        if (this.showPerCharacterFriends) {
+          const characterFriendNames = new Set(
+            core.characters.characterFriendList.map(name => name.toLowerCase())
+          );
+          characters = characters.filter(
+            character => !characterFriendNames.has(character.name.toLowerCase())
+          );
+        }
+
+        return characters.sort(this.sorter);
+      },
+      currentCharacterFriends(): Character[] {
+        return this.filterCharacters(
+          this.tab === '0'
+            ? this.onlineCharacterFriendsBase
+            : this.allCharacterFriendsBase
+        );
+      },
+      currentFriends(): Character[] {
+        return this.filterCharacters(
+          this.tab === '0' ? this.onlineFriendsBase : this.allFriendsBase
+        );
+      },
+      currentBookmarks(): Character[] {
+        return this.filterCharacters(
+          this.tab === '0' ? this.onlineBookmarksBase : this.allBookmarksBase
+        );
+      },
+      hasFriends(): boolean {
+        return (
+          this.currentCharacterFriends.length + this.currentFriends.length > 0
+        );
+      },
+      onlineCount(): number {
+        return (
+          this.onlineCharacterFriendsBase.length +
+          this.onlineFriendsBase.length +
+          this.onlineBookmarksBase.length
+        );
+      },
+      allCount(): number {
+        return (
+          this.allCharacterFriendsBase.length +
+          this.allFriendsBase.length +
+          this.allBookmarksBase.length
+        );
+      },
+      ignoredCount(): number {
+        return (
+          core.characters.ignoreList.length + core.state.hiddenUsers.length
+        );
+      },
+      tabLabels(): { [key: string]: string } {
+        return {
+          0: `${this.l('status.online')} (${this.onlineCount})`,
+          1: `${this.l('users.friends.all')} (${this.allCount})`,
+          2: `${this.l('settings.profile.ignoredList')} (${this.ignoredCount})`
+        };
+      },
+      showAvatars(): boolean {
+        return core.state.settings.showAvatars;
+      },
+      shouldShowMarker(): boolean {
+        return core.state.settings.horizonShowGenderMarker;
+      },
+      filteredIgnored(): Character[] {
+        const ignored = core.characters.ignoreList.map(name =>
+          core.characters.get(name)
+        );
+        return this.applyCharacterFilters(ignored);
+      },
+      filteredHidden(): Character[] {
+        const hidden = core.state.hiddenUsers.map(name =>
+          core.characters.get(name)
+        );
+        return this.applyCharacterFilters(hidden);
+      },
+      removeFriendTargetName(): string {
+        return this.removeFriendTarget ? this.removeFriendTarget.name : '';
+      },
+      removeBookmarkTargetName(): string {
+        return this.removeBookmarkTarget ? this.removeBookmarkTarget.name : '';
+      },
+      allRemoveFriendSourcesSelected(): boolean {
+        return (
+          this.removeFriendAvailableSources.length > 0 &&
+          this.removeFriendSelectedSources.length ===
+            this.removeFriendAvailableSources.length
+        );
+      },
+      someRemoveFriendSourcesSelected(): boolean {
+        return (
+          this.removeFriendSelectedSources.length > 0 &&
+          !this.allRemoveFriendSourcesSelected
+        );
+      },
+      dropdownLinkClass(): string {
+        return this.filterActive
+          ? 'dropdown-toggle btn btn-primary'
+          : 'dropdown-toggle btn btn-secondary';
+      },
+      filterActive(): boolean {
+        return (
+          this.genderFilters.length > 0 ||
+          this.selectedStatuses.length > 0 ||
+          this.sortType !== 'normal'
+        );
+      },
+      availableSorts(): AvailableSort[] {
+        return availableSorts;
+      }
+    },
     mounted(): void {
       this.applyOrientationAutoFilter();
 
@@ -611,554 +824,319 @@
           } as any;
         }
       });
-    }
-
-    applyOrientationAutoFilter(): void {
-      if (!this.autoGenderFilterEnabled) return;
-      const profile = core.characters.ownProfile as any;
-      if (!profile || !profile.character) return;
-
-      const buckets = computeGenderPreferenceBuckets(profile);
-      const genders = (buckets.match || []).concat(buckets.weakMatch || []);
-
-      this.genderFilters = genders.length > 0 ? genders.slice() : [];
-    }
-
-    toggleAutoGenderFilter(): void {
-      this.autoGenderFilterEnabled = !this.autoGenderFilterEnabled;
-      core.state.settings = {
-        ...(core.state.settings as any),
-        horizonAutoGenderFilter: this.autoGenderFilterEnabled
-      } as any;
-      if (this.autoGenderFilterEnabled) {
-        this.applyOrientationAutoFilter();
-      }
-    }
-
-    onManualGenderChange(): void {
-      if (!this.autoGenderFilterEnabled) return;
-      this.autoGenderFilterEnabled = false;
-      core.state.settings = {
-        ...(core.state.settings as any),
-        horizonAutoGenderFilter: false
-      } as any;
-    }
-
-    get showPerCharacterFriends(): boolean {
-      return core.state.settings.showPerCharacterFriends;
-    }
-
-    get hideNonCharacterFriends(): boolean {
-      return core.state.settings.hideNonCharacterFriends;
-    }
-
-    filterCharacters(list: Character[]): Character[] {
-      return this.applyCharacterFilters(list);
-    }
-
-    get onlineCharacterFriendsBase(): Character[] {
-      if (!this.showPerCharacterFriends) {
-        return [];
-      }
-      return core.characters.characterFriends.slice().sort(this.sorter);
-    }
-
-    get onlineFriendsBase(): Character[] {
-      let friendsList = core.characters.friends.slice();
-
-      if (this.showPerCharacterFriends) {
-        const characterFriendNames = new Set(
-          core.characters.characterFriendList.map(name => name.toLowerCase())
-        );
-        friendsList = friendsList.filter(
-          friend => !characterFriendNames.has(friend.name.toLowerCase())
-        );
-
-        if (this.hideNonCharacterFriends) {
-          return [];
-        }
-      }
-
-      return friendsList.sort(this.sorter);
-    }
-
-    get onlineBookmarksBase(): Character[] {
-      const friendNames = this.getFriendNamesForBookmarkFilter(
-        this.onlineCharacterFriendsBase,
-        this.onlineFriendsBase
-      );
-      let bookmarks = core.characters.bookmarks
-        .slice()
-        .filter(character => !friendNames.has(character.name.toLowerCase()));
-
-      if (this.showPerCharacterFriends) {
-        const characterFriendNames = new Set(
-          core.characters.characterFriendList.map(name => name.toLowerCase())
-        );
-        bookmarks = bookmarks.filter(
-          character => !characterFriendNames.has(character.name.toLowerCase())
-        );
-      }
-
-      return bookmarks.sort(this.sorter);
-    }
-
-    get allCharacterFriendsBase(): Character[] {
-      if (!this.showPerCharacterFriends) {
-        return [];
-      }
-      const characterFriendsList = core.characters.characterFriendList.slice();
-      return characterFriendsList
-        .map(name => core.characters.get(name))
-        .sort(this.sorter);
-    }
-
-    get allFriendsBase(): Character[] {
-      let friendsList = core.characters.friendList.slice();
-
-      const uniqueFriendNames = new Set<string>();
-      friendsList = friendsList.filter(name => {
-        const lowerName = name.toLowerCase();
-        if (uniqueFriendNames.has(lowerName)) {
-          return false;
-        }
-        uniqueFriendNames.add(lowerName);
-        return true;
-      });
-
-      if (this.showPerCharacterFriends) {
-        const characterFriendNames = new Set(
-          core.characters.characterFriendList.map(name => name.toLowerCase())
-        );
-        friendsList = friendsList.filter(
-          name => !characterFriendNames.has(name.toLowerCase())
-        );
-
-        if (this.hideNonCharacterFriends) {
-          return [];
-        }
-      }
-
-      return friendsList
-        .map(name => core.characters.get(name))
-        .sort(this.sorter);
-    }
-
-    get allBookmarksBase(): Character[] {
-      const bookmarkList = core.characters.bookmarkList.slice();
-      const friendNames = this.getFriendNamesForBookmarkFilter(
-        this.allCharacterFriendsBase,
-        this.allFriendsBase
-      );
-
-      let characters = bookmarkList
-        .map(name => core.characters.get(name))
-        .filter(character => !friendNames.has(character.name.toLowerCase()));
-
-      if (this.showPerCharacterFriends) {
-        const characterFriendNames = new Set(
-          core.characters.characterFriendList.map(name => name.toLowerCase())
-        );
-        characters = characters.filter(
-          character => !characterFriendNames.has(character.name.toLowerCase())
-        );
-      }
-
-      return characters.sort(this.sorter);
-    }
-
-    get currentCharacterFriends(): Character[] {
-      return this.filterCharacters(
-        this.tab === '0'
-          ? this.onlineCharacterFriendsBase
-          : this.allCharacterFriendsBase
-      );
-    }
-
-    get currentFriends(): Character[] {
-      return this.filterCharacters(
-        this.tab === '0' ? this.onlineFriendsBase : this.allFriendsBase
-      );
-    }
-
-    get currentBookmarks(): Character[] {
-      return this.filterCharacters(
-        this.tab === '0' ? this.onlineBookmarksBase : this.allBookmarksBase
-      );
-    }
-
-    get hasFriends(): boolean {
-      return (
-        this.currentCharacterFriends.length + this.currentFriends.length > 0
-      );
-    }
-
-    get onlineCount(): number {
-      return (
-        this.onlineCharacterFriendsBase.length +
-        this.onlineFriendsBase.length +
-        this.onlineBookmarksBase.length
-      );
-    }
-
-    get allCount(): number {
-      return (
-        this.allCharacterFriendsBase.length +
-        this.allFriendsBase.length +
-        this.allBookmarksBase.length
-      );
-    }
-
-    get ignoredCount(): number {
-      return core.characters.ignoreList.length + core.state.hiddenUsers.length;
-    }
-
-    get tabLabels(): { [key: string]: string } {
-      return {
-        0: `${this.l('status.online')} (${this.onlineCount})`,
-        1: `${this.l('users.friends.all')} (${this.allCount})`,
-        2: `${this.l('settings.profile.ignoredList')} (${this.ignoredCount})`
-      };
-    }
-
-    get showAvatars(): boolean {
-      return core.state.settings.showAvatars;
-    }
-
-    get shouldShowMarker(): boolean {
-      return core.state.settings.horizonShowGenderMarker;
-    }
-
-    get filteredIgnored(): Character[] {
-      const ignored = core.characters.ignoreList.map(name =>
-        core.characters.get(name)
-      );
-      return this.applyCharacterFilters(ignored);
-    }
-
-    get filteredHidden(): Character[] {
-      const hidden = core.state.hiddenUsers.map(name =>
-        core.characters.get(name)
-      );
-      return this.applyCharacterFilters(hidden);
-    }
-
-    getFriendNamesForBookmarkFilter(
-      characterFriends: Character[],
-      friends: Character[]
-    ): Set<string> {
-      if (this.showPerCharacterFriends && this.hideNonCharacterFriends) {
-        return new Set(
-          characterFriends.map(character => character.name.toLowerCase())
-        );
-      }
-      return new Set(friends.map(friend => friend.name.toLowerCase()));
-    }
-
-    actionKey(kind: 'friend' | 'bookmark' | 'ignore', name: string): string {
-      return `${kind}:${name.toLowerCase()}`;
-    }
-
-    applyCharacterFilters(list: ReadonlyArray<Character>): Character[] {
-      let visible = filterCharactersByName(list, this.search) as Character[];
-      visible = filterCharactersByGender(
-        visible,
-        this.genderFilters
-      ) as Character[];
-      visible = filterCharactersByStatus(
-        visible,
-        this.selectedStatuses
-      ) as Character[];
-      return sortCharacters(visible, this.sortType) as Character[];
-    }
-
-    isPending(key: string): boolean {
-      return !!this.pending[key];
-    }
-
-    setPending(key: string, value: boolean): void {
-      if (value) {
-        this.pending = { ...this.pending, [key]: true };
-        return;
-      }
-      const pending = { ...this.pending };
-      delete pending[key];
-      this.pending = pending;
-    }
-
-    getCachedSimpleCharacter(name: string): SimpleCharacter | null {
-      const cached = core.cache.profileCache.getSync(name);
-      if (cached && cached.character && cached.character.character) {
-        const target = cached.character.character;
-        return {
-          id: target.id,
-          name: target.name,
-          deleted: !!target.deleted
-        };
-      }
-      return null;
-    }
-
-    async getSimpleCharacter(name: string): Promise<SimpleCharacter> {
-      const cached = this.getCachedSimpleCharacter(name);
-      if (cached) return cached;
-      const data = await methods.characterData(name, -1, false);
-      return {
-        id: data.character.id,
-        name: data.character.name,
-        deleted: !!data.character.deleted
-      };
-    }
-
-    async getOwnSimpleCharacter(): Promise<SimpleCharacter> {
-      if (this.ownSimpleCharacter) return this.ownSimpleCharacter;
-      const ownName = core.characters.ownCharacter.name;
-      const cached = this.getCachedSimpleCharacter(ownName);
-      if (cached) {
-        this.ownSimpleCharacter = cached;
-        return cached;
-      }
-      const data = await methods.characterData(ownName, -1, false);
-      this.ownSimpleCharacter = {
-        id: data.character.id,
-        name: data.character.name,
-        deleted: !!data.character.deleted
-      };
-      return this.ownSimpleCharacter;
-    }
-
-    get removeFriendTargetName(): string {
-      return this.removeFriendTarget ? this.removeFriendTarget.name : '';
-    }
-
-    get removeBookmarkTargetName(): string {
-      return this.removeBookmarkTarget ? this.removeBookmarkTarget.name : '';
-    }
-
-    get allRemoveFriendSourcesSelected(): boolean {
-      return (
-        this.removeFriendAvailableSources.length > 0 &&
-        this.removeFriendSelectedSources.length ===
-          this.removeFriendAvailableSources.length
-      );
-    }
-
-    get someRemoveFriendSourcesSelected(): boolean {
-      return (
-        this.removeFriendSelectedSources.length > 0 &&
-        !this.allRemoveFriendSourcesSelected
-      );
-    }
-
+    },
     updated(): void {
       this.updateRemoveFriendAllToggle();
-    }
+    },
+    methods: {
+      applyOrientationAutoFilter(): void {
+        if (!this.autoGenderFilterEnabled) return;
+        const profile = core.characters.ownProfile as any;
+        if (!profile || !profile.character) return;
 
-    openRemoveFriendDialog(
-      character: Character,
-      availableSources: string[]
-    ): void {
-      this.removeFriendTarget = character;
-      this.removeFriendAvailableSources = availableSources.slice();
-      this.removeFriendSelectedSources =
-        availableSources.length === 1 ? availableSources.slice() : [];
-      (this.$refs['removeFriendDialog'] as Modal).show();
-    }
+        const buckets = computeGenderPreferenceBuckets(profile);
+        const genders = (buckets.match || []).concat(buckets.weakMatch || []);
 
-    resetRemoveFriendDialog(): void {
-      this.removeFriendTarget = null;
-      this.removeFriendAvailableSources = [];
-      this.removeFriendSelectedSources = [];
-    }
+        this.genderFilters = genders.length > 0 ? genders.slice() : [];
+      },
 
-    openRemoveBookmarkDialog(character: Character): void {
-      this.removeBookmarkTarget = character;
-      (this.$refs['removeBookmarkDialog'] as Modal).show();
-    }
-
-    resetRemoveBookmarkDialog(): void {
-      this.removeBookmarkTarget = null;
-    }
-
-    toggleAllRemoveFriendSources(event: Event): void {
-      const input = event.target as HTMLInputElement;
-      this.removeFriendSelectedSources = input.checked
-        ? this.removeFriendAvailableSources.slice()
-        : [];
-      this.updateRemoveFriendAllToggle();
-    }
-
-    updateRemoveFriendAllToggle(): void {
-      this.$nextTick(() => {
-        const input = this.$refs['removeFriendAllToggle'] as
-          | HTMLInputElement
-          | undefined;
-        if (!input) return;
-        input.indeterminate = this.someRemoveFriendSourcesSelected;
-      });
-    }
-
-    async executeRemoveFriend(
-      character: Character,
-      selectedSources: string[]
-    ): Promise<void> {
-      const key = this.actionKey('friend', character.name);
-      if (this.isPending(key)) return;
-
-      this.setPending(key, true);
-      try {
-        const target = await this.getSimpleCharacter(character.name);
-        for (const sourceName of selectedSources) {
-          const source =
-            sourceName === core.characters.ownCharacter.name
-              ? await this.getOwnSimpleCharacter()
-              : await this.getSimpleCharacter(sourceName);
-          const friend: Friend = {
-            id: 0,
-            source,
-            target,
-            createdAt: Date.now() / 1000
-          };
-          await methods.friendDissolve(friend);
+      toggleAutoGenderFilter(): void {
+        this.autoGenderFilterEnabled = !this.autoGenderFilterEnabled;
+        core.state.settings = {
+          ...(core.state.settings as any),
+          horizonAutoGenderFilter: this.autoGenderFilterEnabled
+        } as any;
+        if (this.autoGenderFilterEnabled) {
+          this.applyOrientationAutoFilter();
         }
-      } catch (e) {
-        alert(errorToString(e));
-      } finally {
+      },
+
+      onManualGenderChange(): void {
+        if (!this.autoGenderFilterEnabled) return;
+        this.autoGenderFilterEnabled = false;
+        core.state.settings = {
+          ...(core.state.settings as any),
+          horizonAutoGenderFilter: false
+        } as any;
+      },
+
+      filterCharacters(list: Character[]): Character[] {
+        return this.applyCharacterFilters(list);
+      },
+
+      getFriendNamesForBookmarkFilter(
+        characterFriends: Character[],
+        friends: Character[]
+      ): Set<string> {
+        if (this.showPerCharacterFriends && this.hideNonCharacterFriends) {
+          return new Set(
+            characterFriends.map(character => character.name.toLowerCase())
+          );
+        }
+        return new Set(friends.map(friend => friend.name.toLowerCase()));
+      },
+
+      actionKey(kind: 'friend' | 'bookmark' | 'ignore', name: string): string {
+        return `${kind}:${name.toLowerCase()}`;
+      },
+
+      applyCharacterFilters(list: ReadonlyArray<Character>): Character[] {
+        let visible = filterCharactersByName(list, this.search) as Character[];
+        visible = filterCharactersByGender(
+          visible,
+          this.genderFilters
+        ) as Character[];
+        visible = filterCharactersByStatus(
+          visible,
+          this.selectedStatuses
+        ) as Character[];
+        return sortCharacters(visible, this.sortType) as Character[];
+      },
+
+      isPending(key: string): boolean {
+        return !!this.pending[key];
+      },
+
+      setPending(key: string, value: boolean): void {
+        if (value) {
+          this.pending = { ...this.pending, [key]: true };
+          return;
+        }
+        const pending = { ...this.pending };
+        delete pending[key];
+        this.pending = pending;
+      },
+
+      getCachedSimpleCharacter(name: string): SimpleCharacter | null {
+        const cached = core.cache.profileCache.getSync(name);
+        if (cached && cached.character && cached.character.character) {
+          const target = cached.character.character;
+          return {
+            id: target.id,
+            name: target.name,
+            deleted: !!target.deleted
+          };
+        }
+        return null;
+      },
+
+      async getSimpleCharacter(name: string): Promise<SimpleCharacter> {
+        const cached = this.getCachedSimpleCharacter(name);
+        if (cached) return cached;
+        const data = await methods.characterData(name, -1, false);
+        return {
+          id: data.character.id,
+          name: data.character.name,
+          deleted: !!data.character.deleted
+        };
+      },
+
+      async getOwnSimpleCharacter(): Promise<SimpleCharacter> {
+        if (this.ownSimpleCharacter) return this.ownSimpleCharacter;
+        const ownName = core.characters.ownCharacter.name;
+        const cached = this.getCachedSimpleCharacter(ownName);
+        if (cached) {
+          this.ownSimpleCharacter = cached;
+          return cached;
+        }
+        const data = await methods.characterData(ownName, -1, false);
+        this.ownSimpleCharacter = {
+          id: data.character.id,
+          name: data.character.name,
+          deleted: !!data.character.deleted
+        };
+        return this.ownSimpleCharacter;
+      },
+
+      openRemoveFriendDialog(
+        character: Character,
+        availableSources: string[]
+      ): void {
+        this.removeFriendTarget = character;
+        this.removeFriendAvailableSources = availableSources.slice();
+        this.removeFriendSelectedSources =
+          availableSources.length === 1 ? availableSources.slice() : [];
+        (this.$refs['removeFriendDialog'] as any).show();
+      },
+
+      resetRemoveFriendDialog(): void {
+        this.removeFriendTarget = null;
+        this.removeFriendAvailableSources = [];
+        this.removeFriendSelectedSources = [];
+      },
+
+      openRemoveBookmarkDialog(character: Character): void {
+        this.removeBookmarkTarget = character;
+        (this.$refs['removeBookmarkDialog'] as any).show();
+      },
+
+      resetRemoveBookmarkDialog(): void {
+        this.removeBookmarkTarget = null;
+      },
+
+      toggleAllRemoveFriendSources(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        this.removeFriendSelectedSources = input.checked
+          ? this.removeFriendAvailableSources.slice()
+          : [];
+        this.updateRemoveFriendAllToggle();
+      },
+
+      updateRemoveFriendAllToggle(): void {
+        this.$nextTick(() => {
+          const input = this.$refs['removeFriendAllToggle'] as
+            | HTMLInputElement
+            | undefined;
+          if (!input) return;
+          input.indeterminate = this.someRemoveFriendSourcesSelected;
+        });
+      },
+
+      async executeRemoveFriend(
+        character: Character,
+        selectedSources: string[]
+      ): Promise<void> {
+        const key = this.actionKey('friend', character.name);
+        if (this.isPending(key)) return;
+
+        this.setPending(key, true);
+        try {
+          const target = await this.getSimpleCharacter(character.name);
+          for (const sourceName of selectedSources) {
+            const source =
+              sourceName === core.characters.ownCharacter.name
+                ? await this.getOwnSimpleCharacter()
+                : await this.getSimpleCharacter(sourceName);
+            const friend: Friend = {
+              id: 0,
+              source,
+              target,
+              createdAt: Date.now() / 1000
+            };
+            await methods.friendDissolve(friend);
+          }
+        } catch (e) {
+          alert(errorToString(e));
+        } finally {
+          this.setPending(key, false);
+        }
+      },
+
+      executeRemoveBookmark(character: Character): void {
+        const key = this.actionKey('bookmark', character.name);
+        if (this.isPending(key)) return;
+
+        this.setPending(key, true);
+        core.connection
+          .queryApi('bookmark-remove.php', { name: character.name })
+          .catch((e: object) => alert(errorToString(e)))
+          .finally(() => this.setPending(key, false));
+      },
+
+      confirmRemoveFriendSelection(): void {
+        if (
+          this.removeFriendTarget === null ||
+          this.removeFriendSelectedSources.length === 0
+        ) {
+          return;
+        }
+
+        void this.executeRemoveFriend(
+          this.removeFriendTarget,
+          this.removeFriendSelectedSources.slice()
+        );
+      },
+
+      confirmRemoveBookmark(): void {
+        if (this.removeBookmarkTarget === null) return;
+        this.executeRemoveBookmark(this.removeBookmarkTarget);
+      },
+
+      async removeFriend(
+        character: Character,
+        event?: MouseEvent
+      ): Promise<void> {
+        if (this.isPending(this.actionKey('friend', character.name))) return;
+
+        const sourceNames = this.getFriendSources(character);
+        const availableSources =
+          sourceNames.length > 0
+            ? sourceNames
+            : [core.characters.ownCharacter.name];
+
+        let selectedSources = availableSources.slice();
+        if (!event || !event.shiftKey) {
+          this.openRemoveFriendDialog(character, availableSources);
+          return;
+        }
+
+        await this.executeRemoveFriend(character, selectedSources);
+      },
+
+      removeBookmark(character: Character, event?: MouseEvent): void {
+        const key = this.actionKey('bookmark', character.name);
+        if (this.isPending(key)) return;
+
+        if (!event || !event.shiftKey) {
+          this.openRemoveBookmarkDialog(character);
+          return;
+        }
+
+        this.executeRemoveBookmark(character);
+      },
+
+      unignore(name: string): void {
+        const key = this.actionKey('ignore', name);
+        if (this.isPending(key)) return;
+        this.setPending(key, true);
+        core.connection.send('IGN', {
+          action: 'delete',
+          character: name
+        });
         this.setPending(key, false);
+      },
+
+      unhide(name: string): void {
+        const index = core.state.hiddenUsers.indexOf(name);
+        if (index !== -1) {
+          core.state.hiddenUsers.splice(index, 1);
+        }
+      },
+
+      getFriendSources(character: Character): string[] {
+        const map = core.characters.friendSourceMap || {};
+        const sources = map[character.name.toLowerCase()] || [];
+        if (!sources.length && character.isCharacterFriend) {
+          return [core.characters.ownCharacter.name];
+        }
+        return sources
+          .slice()
+          .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+      },
+
+      resetFilters(): void {
+        this.autoGenderFilterEnabled = false;
+        core.state.settings = {
+          ...(core.state.settings as any),
+          horizonAutoGenderFilter: false
+        } as any;
+
+        this.genderFilters = [];
+        this.selectedStatuses = [];
+        this.sortType = 'normal';
+        this.search = '';
+      },
+
+      focusFriendsFilter(): void {
+        this.$nextTick(() => {
+          const input = this.$refs['friendsFilter'] as
+            | HTMLInputElement
+            | undefined;
+          if (input) input.focus();
+        });
       }
     }
-
-    executeRemoveBookmark(character: Character): void {
-      const key = this.actionKey('bookmark', character.name);
-      if (this.isPending(key)) return;
-
-      this.setPending(key, true);
-      core.connection
-        .queryApi('bookmark-remove.php', { name: character.name })
-        .catch((e: object) => alert(errorToString(e)))
-        .finally(() => this.setPending(key, false));
-    }
-
-    confirmRemoveFriendSelection(): void {
-      if (
-        this.removeFriendTarget === null ||
-        this.removeFriendSelectedSources.length === 0
-      ) {
-        return;
-      }
-
-      void this.executeRemoveFriend(
-        this.removeFriendTarget,
-        this.removeFriendSelectedSources.slice()
-      );
-    }
-
-    confirmRemoveBookmark(): void {
-      if (this.removeBookmarkTarget === null) return;
-      this.executeRemoveBookmark(this.removeBookmarkTarget);
-    }
-
-    async removeFriend(
-      character: Character,
-      event?: MouseEvent
-    ): Promise<void> {
-      if (this.isPending(this.actionKey('friend', character.name))) return;
-
-      const sourceNames = this.getFriendSources(character);
-      const availableSources =
-        sourceNames.length > 0
-          ? sourceNames
-          : [core.characters.ownCharacter.name];
-
-      let selectedSources = availableSources.slice();
-      if (!event || !event.shiftKey) {
-        this.openRemoveFriendDialog(character, availableSources);
-        return;
-      }
-
-      await this.executeRemoveFriend(character, selectedSources);
-    }
-
-    removeBookmark(character: Character, event?: MouseEvent): void {
-      const key = this.actionKey('bookmark', character.name);
-      if (this.isPending(key)) return;
-
-      if (!event || !event.shiftKey) {
-        this.openRemoveBookmarkDialog(character);
-        return;
-      }
-
-      this.executeRemoveBookmark(character);
-    }
-
-    unignore(name: string): void {
-      const key = this.actionKey('ignore', name);
-      if (this.isPending(key)) return;
-      this.setPending(key, true);
-      core.connection.send('IGN', { action: 'delete', character: name });
-      this.setPending(key, false);
-    }
-
-    unhide(name: string): void {
-      const index = core.state.hiddenUsers.indexOf(name);
-      if (index !== -1) {
-        core.state.hiddenUsers.splice(index, 1);
-      }
-    }
-
-    getFriendSources(character: Character): string[] {
-      const map = core.characters.friendSourceMap || {};
-      const sources = map[character.name.toLowerCase()] || [];
-      if (!sources.length && character.isCharacterFriend) {
-        return [core.characters.ownCharacter.name];
-      }
-      return sources
-        .slice()
-        .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-    }
-
-    resetFilters(): void {
-      this.autoGenderFilterEnabled = false;
-      core.state.settings = {
-        ...(core.state.settings as any),
-        horizonAutoGenderFilter: false
-      } as any;
-
-      this.genderFilters = [];
-      this.selectedStatuses = [];
-      this.sortType = 'normal';
-      this.search = '';
-    }
-
-    focusFriendsFilter(): void {
-      this.$nextTick(() => {
-        const input = this.$refs['friendsFilter'] as
-          | HTMLInputElement
-          | undefined;
-        if (input) input.focus();
-      });
-    }
-
-    get dropdownLinkClass(): string {
-      return this.filterActive
-        ? 'dropdown-toggle btn btn-primary'
-        : 'dropdown-toggle btn btn-secondary';
-    }
-
-    get filterActive(): boolean {
-      return (
-        this.genderFilters.length > 0 ||
-        this.selectedStatuses.length > 0 ||
-        this.sortType !== 'normal'
-      );
-    }
-
-    get availableSorts(): AvailableSort[] {
-      return availableSorts;
-    }
-  }
-
-  export default FriendsView;
+  });
 </script>
 
 <style lang="scss">
