@@ -648,6 +648,16 @@ export function toggleUpdateNotice(updateAvailable: boolean, version?: string) {
 }
 
 /**
+ * Sends download progress information to all open windows.
+ * @param {number} percent - Download progress percentage (0-100).
+ * @param {boolean} [done=false] - Whether the download has completed.
+ */
+export function sendUpdateProgress(percent: number, done: boolean = false) {
+  for (const w of windows)
+    w.webContents.send('update-download-progress', percent, done);
+}
+
+/**
  * Creates a new settings window.
  * @function
  * @param {GeneralSettings} settings

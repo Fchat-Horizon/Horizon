@@ -221,6 +221,22 @@
                     {{ l('settings.updateHideAutoUpdater.note') }}
                   </div>
                 </div>
+                <div v-if="settings.updateCheck">
+                  <div class="form-check">
+                    <input
+                      type="checkbox"
+                      id="autoDownloadUpdates"
+                      v-model="settings.horizonAutoDownloadUpdates"
+                      class="form-check-input"
+                    />
+                    <label class="form-check-label" for="autoDownloadUpdates">
+                      {{ l('settings.autoDownloadUpdates') }}
+                    </label>
+                  </div>
+                  <div class="form-text text-muted">
+                    {{ l('settings.autoDownloadUpdates.note') }}
+                  </div>
+                </div>
               </div>
               <!--Appearance-->
               <div

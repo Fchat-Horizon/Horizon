@@ -31,11 +31,36 @@
         <i class="fas fa-bars"></i>
       </div>
       <div
-        class="btn btn-outline-success"
-        :class="'btn-download-' + (hasUpdate ? 'ready' : 'unavailable')"
-        @click="openUpdatePage"
+        class="btn-update-wrapper"
+        :class="{
+          'btn-update-visible':
+            hasUpdate || updateDownloading || updateDownloaded
+        }"
       >
-        <i class="fa fa-arrow-down"></i>
+        <div
+          v-if="updateDownloading"
+          class="btn btn-outline-info btn-update-progress"
+          :title="'Downloading update: ' + updateDownloadPercent + '%'"
+        >
+          <div
+            class="btn-update-progress-fill"
+            :style="{ width: updateDownloadPercent + '%' }"
+          ></div>
+          <span class="btn-update-progress-label"
+            >{{ updateDownloadPercent }}%</span
+          >
+        </div>
+        <div
+          v-else-if="updateDownloaded"
+          class="btn btn-success btn-update-done"
+          @click="installUpdate"
+          title="Update ready — click to install"
+        >
+          <i class="fa fa-check"></i>
+        </div>
+        <div v-else class="btn btn-outline-success" @click="openUpdatePage">
+          <i class="fa fa-arrow-down"></i>
+        </div>
       </div>
       <ul
         class="nav nav-tabs"
@@ -242,6 +267,9 @@
         l,
         hasUpdate: false,
         updateVersion: '',
+        updateDownloading: false,
+        updateDownloadPercent: 0,
+        updateDownloaded: false,
         platform: process.platform,
         lockTab: false,
         hasCompletedUpgrades: false,
@@ -331,6 +359,14 @@
           } else {
             this.updateVersion = '';
           }
+        }
+      );
+      electron.ipcRenderer.on(
+        'update-download-progress',
+        (_e: Electron.IpcRendererEvent, percent: number, done: boolean) => {
+          this.updateDownloading = !done;
+          this.updateDownloadPercent = Math.round(percent);
+          this.updateDownloaded = done;
         }
       );
       electron.ipcRenderer.on('fix-logs', () =>
@@ -728,6 +764,9 @@
       openUpdatePage(): void {
         electron.ipcRenderer.send('open-update-changelog', this.updateVersion);
       },
+      installUpdate(): void {
+        electron.ipcRenderer.send('install-update');
+      },
       openSettingsMenu(): void {
         log.debug('settings clicked');
         electron.ipcRenderer.send('open-settings-menu');
@@ -860,12 +899,54 @@
     font-size: 14px;
   }
 
-  #window-tabs .btn-download-ready {
+  #window-tabs .btn-update-wrapper {
+    display: none;
+    align-items: stretch;
+  }
+
+  #window-tabs .btn-update-visible {
     display: flex;
   }
 
-  #window-tabs .btn-download-unavailable {
-    display: none;
+  #window-tabs .btn-update-progress {
+    position: relative;
+    overflow: hidden;
+    min-width: 48px;
+    cursor: default;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #window-tabs .btn-update-progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: rgba(var(--bs-info-rgb, 13, 202, 240), 0.25);
+    transition: width 0.3s ease;
+    pointer-events: none;
+  }
+
+  #window-tabs .btn-update-progress-label {
+    position: relative;
+    z-index: 1;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  #window-tabs .btn-update-done {
+    animation: pulse-success 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse-success {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
   }
 
   .platform-darwin {

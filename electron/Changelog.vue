@@ -100,9 +100,9 @@
                   <input
                     class="form-check-input"
                     type="checkbox"
-                    value=""
+                    v-model="autoDownloadChecked"
                     id="autoInstall"
-                    disabled
+                    @change="toggleAutoDownload"
                   />
                   <label class="form-check-label" for="autoInstall">
                     {{ l('update.autoInstall') }}
@@ -224,7 +224,8 @@
         isMac: process.platform === 'darwin',
         hasCompletedUpgrades: false,
         changeLogText: '' as string,
-        logoSrc
+        logoSrc,
+        autoDownloadChecked: false
       };
     },
     computed: {
@@ -359,6 +360,11 @@
         if (!this.updateVersion) return;
         electron.ipcRenderer.send('update-now', this.updateVersion);
         this.close();
+      },
+      toggleAutoDownload(): void {
+        if (this.autoDownloadChecked) {
+          electron.ipcRenderer.send('enable-auto-download-updates');
+        }
       }
     }
   });

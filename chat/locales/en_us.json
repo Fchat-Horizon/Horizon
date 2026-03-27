@@ -882,6 +882,8 @@
   "settings.updateCheck": "Automatically check for updates",
   "settings.updateHideAutoUpdater": "Hide update popups",
   "settings.updateHideAutoUpdater.note": "Only show the update icon in the titlebar.",
+  "settings.autoDownloadUpdates": "Automatically download updates",
+  "settings.autoDownloadUpdates.note": "Download updates in the background without prompting. You'll still need to confirm the restart.",
   "settings.updates": "Updates",
   "settings.useDefaultTheme": "(Use default theme)",
   "settings.visibility": "Visibility",

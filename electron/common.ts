@@ -39,6 +39,7 @@ export class GeneralSettings {
   beta = false;
   updateCheck = true;
   horizonHideAutoUpdater = false;
+  horizonAutoDownloadUpdates = false;
   horizonSkippedUpdateVersion = '';
   customDictionary: string[] = [];
   hwAcceleration = true;

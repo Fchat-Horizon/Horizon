@@ -94,8 +94,6 @@
   },
   "scripts": {
     "__removed__postinstall": "electron-rebuild --prebuild-tag-prefix=ignoreprebuilds -f -o keytar",
-    "changelog:split": "node scripts/changelog-tools.mjs split",
-    "changelog:build": "node scripts/changelog-tools.mjs build",
     "build": "pnpm --filter horizon-electron build",
     "build:dist": "pnpm --filter horizon-electron build:dist",
     "watch": "pnpm --filter horizon-electron watch",

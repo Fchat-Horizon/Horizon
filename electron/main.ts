@@ -706,15 +706,24 @@ async function onReady(): Promise<void> {
           return;
         }
         browserWindows.toggleUpdateNotice(true, updateTag);
-        maybeShowUpdatePrompt(updateTag, updateMode);
+        if (settings.horizonAutoDownloadUpdates) {
+          log.info('autoUpdater.autoDownload', updateTag);
+          void requestUpdateDownload(updateTag);
+        } else {
+          maybeShowUpdatePrompt(updateTag, updateMode);
+        }
       });
 
       autoUpdater.on('update-not-available', () => {
         browserWindows.toggleUpdateNotice(false);
       });
 
+      autoUpdater.on('download-progress', progress => {
+        browserWindows.sendUpdateProgress(progress.percent);
+      });
+
       autoUpdater.on('update-downloaded', () => {
-        maybePromptRestartAndInstallUpdate(getConnectedCharacterCount());
+        browserWindows.sendUpdateProgress(100, true);
       });
 
       setTimeout(() => runAutoUpdateCheck(), updateCheckFirstDelay);
@@ -1085,6 +1094,25 @@ async function onReady(): Promise<void> {
   );
   electron.ipcMain.on('hide-auto-updater', () => {
     settings.horizonHideAutoUpdater = true;
+    setGeneralSettings(settings);
+  });
+  electron.ipcMain.on('install-update', () => {
+    if (getConnectedCharacterCount() > 0) {
+      const button = electron.dialog.showMessageBoxSync(
+        electron.BrowserWindow.getFocusedWindow()!,
+        {
+          message: l('changelog.quitAndDownload.confirm'),
+          title: l('title'),
+          buttons: [l('confirmYes'), l('confirmNo')],
+          cancelId: 1
+        }
+      );
+      if (button !== 0) return;
+    }
+    autoUpdater.quitAndInstall(true, true);
+  });
+  electron.ipcMain.on('enable-auto-download-updates', () => {
+    settings.horizonAutoDownloadUpdates = true;
     setGeneralSettings(settings);
   });
   electron.ipcMain.on(
