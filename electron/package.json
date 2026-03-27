@@ -1,6 +1,6 @@
 {
   "name": "horizon-electron",
-  "version": "1.36.0",
+  "version": "2.0.2",
   "author": "The F-List Team and Horizon Contributors",
   "description": "Horizon",
   "homepage": "https://horizn.moe",
@@ -9,7 +9,7 @@
   "build": {
     "appId": "net.flist.fchat",
     "productName": "Horizon",
-    "artifactName": "F-Chat.${productName}-${os}-${arch}.${ext}",
+    "artifactName": "F-Chat.${productName}-${version}-${os}-${arch}.${ext}",
     "directories": {
       "app": "app",
       "output": "dist"
@@ -88,6 +88,7 @@
     "build:dist": "pnpm run webpack:prod",
     "watch": "node ../webpack watch",
     "start": "electron app",
+    "typecheck": "tsc -p tsconfig-main.json --noEmit && tsc -p tsconfig-renderer.json --noEmit",
     "startDebugMain": "ELECTRON_ENABLE_LOGGING=1 electron --serve --inspect-brk=9229 .",
     "startDebugRender": "ELECTRON_ENABLE_LOGGING=1 electron --remote-debugging-port=9229 .",
     "build:win": "powershell -Command \"New-Item -ItemType Directory -Path dist -Force | Out-Null; pnpm run webpack:prod; node build/build.mjs --os windows --format nsis | Tee-Object -FilePath dist/build.log\"",
@@ -103,7 +104,8 @@
     "electron-builder": "^26.3.2"
   },
   "dependencies": {
+    "@ghostery/adblocker-electron-preload": "^2.0.0",
     "@mdit/plugin-alert": "^0.22.2",
-    "markdown-it": "^14.1.0"
+    "markdown-it": "^14.1.1"
   }
 }

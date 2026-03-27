@@ -7,6 +7,7 @@ export abstract class ImagePreviewHelper {
   protected url: string | undefined = 'about:blank';
   protected parent: ImagePreview;
   protected debug: boolean;
+  protected ratio: number | null = null;
 
   abstract show(url: string | undefined): void;
   abstract hide(): void;
@@ -18,9 +19,40 @@ export abstract class ImagePreviewHelper {
   abstract getName(): string;
 
   abstract reactsToSizeUpdates(): boolean;
-  abstract setRatio(ratio: number): void;
   abstract shouldTrackLoading(): boolean;
   abstract usesWebView(): boolean;
+
+  setRatio(ratio: number): void {
+    this.ratio = ratio;
+  }
+
+  determineScalingRatio(): Record<string, any> {
+    if (!this.ratio) {
+      return {};
+    }
+
+    const ww = window.innerWidth;
+    const wh = window.innerHeight;
+
+    const maxWidth = Math.round(ww * 0.5);
+    const maxHeight = Math.round(wh * 0.7);
+
+    if (this.ratio >= 1) {
+      const presumedWidth = Math.min(maxWidth, maxHeight * this.ratio);
+      const presumedHeight = presumedWidth / this.ratio;
+      return {
+        width: `${Math.round(presumedWidth)}px`,
+        height: `${Math.round(presumedHeight)}px`
+      };
+    } else {
+      const presumedHeight = Math.min(maxHeight, maxWidth / this.ratio);
+      const presumedWidth = presumedHeight * this.ratio;
+      return {
+        width: `${Math.round(presumedWidth)}px`,
+        height: `${Math.round(presumedHeight)}px`
+      };
+    }
+  }
 
   constructor(parent: ImagePreview) {
     if (!parent) {

@@ -184,7 +184,6 @@
 
 <script lang="ts">
   import log from 'electron-log'; //tslint:disable-line:match-default-export-name
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
   import Vue from 'vue';
   import { getKey } from './common';
   import Modal from '../components/Modal.vue';
@@ -270,30 +269,73 @@
     return hide ? '' : str;
   }
 
-  @Component({
-    components: { chat: ChatView, modal: Modal, logs: Logs, tips: Tips }
-  })
-  export default class Chat extends Vue {
-    @Prop({ required: true })
-    readonly ownCharacters!: SimpleCharacter[];
-    @Prop({ required: true })
-    readonly defaultCharacter!: number;
-    //tslint:disable-next-line:strict-boolean-expressions
-    selectedCharacter =
-      this.ownCharacters.find(x => x.id === this.defaultCharacter) ||
-      this.ownCharacters[0];
-    characterImage = characterImage;
-    // pins persisted in localStorage as array of ids
-    pinnedIds: number[] = [];
-    @Prop
-    readonly version?: string;
-    error = '';
-    connecting = false;
-    connected = false;
-    l = l;
-    copyPlain = false;
+  export default Vue.extend({
+    components: { chat: ChatView, modal: Modal, logs: Logs, tips: Tips },
+    props: {
+      ownCharacters: { required: true as const },
+      defaultCharacter: { required: true as const },
+      version: {}
+    },
+    data() {
+      const self = this as any;
+      return {
+        //tslint:disable-next-line:strict-boolean-expressions
+        selectedCharacter:
+          self.ownCharacters.find(
+            (x: SimpleCharacter) => x.id === self.defaultCharacter
+          ) || self.ownCharacters[0],
+        characterImage: characterImage,
+        // pins persisted in localStorage as array of ids
+        pinnedIds: [] as number[],
+        error: '',
+        connecting: false,
+        connected: false,
+        l: l,
+        copyPlain: false,
+        filterText: ''
+      };
+    },
+    computed: {
+      filteredCharacters(): SimpleCharacter[] {
+        const q = this.filterText.trim().toLowerCase();
+        let list = (this as any).ownCharacters.slice();
+        if (q) {
+          list = list.filter((c: SimpleCharacter) =>
+            c.name.toLowerCase().includes(q)
+          );
+        }
 
-    @Hook('mounted')
+        // ensure defaultCharacter appears first
+        const defaultIdx = list.findIndex(
+          (x: SimpleCharacter) => x.id === (this as any).defaultCharacter
+        );
+        if (defaultIdx !== -1) {
+          const def = list.splice(defaultIdx, 1)[0];
+          list.unshift(def);
+        }
+
+        // move pinned characters (except default which is already first) to the top after default
+        const pinned: SimpleCharacter[] = [];
+        const others: SimpleCharacter[] = [];
+        for (let i = 0; i < list.length; i++) {
+          const c = list[i];
+          if (c.id === (this as any).defaultCharacter) continue; // skip default
+          if (this.isPinned(c.id)) pinned.push(c);
+          else others.push(c);
+        }
+
+        // keep relative order among pinned and others
+        const result: SimpleCharacter[] = [];
+        if (list.length > 0 && list[0].id === (this as any).defaultCharacter)
+          result.push(list[0]);
+        result.push(...pinned, ...others);
+        this.selectedCharacter = result[0];
+        return result;
+      },
+      showTips(): boolean {
+        return core.state.generalSettings?.horizonShowTips ?? false;
+      }
+    },
     mounted(): void {
       // load pinned ids from localStorage (gracefully)
       try {
@@ -382,13 +424,13 @@
 
         profileApiInit(
           {
-            defaultCharacter: this.defaultCharacter,
+            defaultCharacter: (this as any).defaultCharacter,
             animateEicons: core.state.settings.animatedEicons,
             smoothMosaics: core.state.settings.smoothMosaics,
             fuzzyDates: true,
             inlineDisplayMode: InlineDisplayMode.DISPLAY_ALL
           },
-          this.ownCharacters
+          (this as any).ownCharacters
         );
         if (core.state.settings.notifications)
           await core.notifications.requestPermission();
@@ -435,131 +477,93 @@
           throw e;
         }
       });
-    }
+    },
+    methods: {
+      cancelReconnect(): void {
+        core.connection.close();
+        (<Modal>this.$refs['reconnecting']).hide();
+      },
 
-    cancelReconnect(): void {
-      core.connection.close();
-      (<Modal>this.$refs['reconnecting']).hide();
-    }
+      selectCharacter(character: SimpleCharacter): void {
+        this.selectedCharacter = character;
+      },
 
-    selectCharacter(character: SimpleCharacter): void {
-      this.selectedCharacter = character;
-    }
-
-    handleCharacterDoubleClick(character: SimpleCharacter): void {
-      this.selectCharacter(character);
-      //better safe than sorry :^)
-      if (!this.connecting && !this.connected) {
-        this.connect();
-      }
-    }
-
-    isPinned(id: number): boolean {
-      return this.pinnedIds.indexOf(id) !== -1;
-    }
-
-    focusFilter() {
-      const el = this.$refs['filterInput'] as
-        | HTMLInputElement
-        | Vue
-        | undefined;
-      (el as any)?.focus?.();
-    }
-
-    charTileKeyDown(e: KeyboardEvent): void {
-      const key = getKey(e);
-      console.log(key);
-      switch (key) {
-        case Keys.ForwardSlash: {
-          e.preventDefault();
-          this.focusFilter();
+      handleCharacterDoubleClick(character: SimpleCharacter): void {
+        this.selectCharacter(character);
+        //better safe than sorry :^)
+        if (!this.connecting && !this.connected) {
+          this.connect();
         }
+      },
+
+      isPinned(id: number): boolean {
+        return this.pinnedIds.indexOf(id) !== -1;
+      },
+
+      focusFilter() {
+        const el = this.$refs['filterInput'] as
+          | HTMLInputElement
+          | Vue
+          | undefined;
+        (el as any)?.focus?.();
+      },
+
+      charTileKeyDown(e: KeyboardEvent): void {
+        const key = getKey(e);
+        console.log(key);
+        switch (key) {
+          case Keys.ForwardSlash: {
+            e.preventDefault();
+            this.focusFilter();
+          }
+        }
+      },
+
+      togglePin(character: SimpleCharacter): void {
+        // don't allow pinning the default character
+        if (character.id === (this as any).defaultCharacter) return;
+        const exists = this.pinnedIds.includes(character.id);
+        this.pinnedIds = exists
+          ? this.pinnedIds.filter(id => id !== character.id)
+          : [...this.pinnedIds, character.id];
+        try {
+          localStorage.setItem('characterPins', JSON.stringify(this.pinnedIds));
+        } catch (e) {
+          log.debug('characterPins.saveFailed', { error: e });
+        }
+      },
+
+      // The top input is a simple filter; selecting a tile is done by clicking it.
+
+      showLogs(): void {
+        (<Logs>this.$refs['logsDialog']).show();
+      },
+
+      async connect(): Promise<void> {
+        if (!this.selectedCharacter) {
+          return;
+        }
+        this.connecting = true;
+
+        // skipping await
+        // tslint:disable-next-line: no-floating-promises
+        core.notifications.initSounds([
+          'attention',
+          'login',
+          'logout',
+          'modalert',
+          'newnote',
+          'silence'
+        ]);
+
+        core.connection.connect(this.selectedCharacter.name);
+      },
+
+      getChatView(): ChatView | undefined {
+        return this.$refs['chatview'] as ChatView;
       }
     }
-
-    togglePin(character: SimpleCharacter): void {
-      // don't allow pinning the default character
-      if (character.id === this.defaultCharacter) return;
-      const exists = this.pinnedIds.includes(character.id);
-      this.pinnedIds = exists
-        ? this.pinnedIds.filter(id => id !== character.id)
-        : [...this.pinnedIds, character.id];
-      try {
-        localStorage.setItem('characterPins', JSON.stringify(this.pinnedIds));
-      } catch (e) {
-        log.debug('characterPins.saveFailed', { error: e });
-      }
-    }
-
-    filterText: string = '';
-
-    get filteredCharacters(): SimpleCharacter[] {
-      const q = this.filterText.trim().toLowerCase();
-      let list = this.ownCharacters.slice();
-      if (q) {
-        list = list.filter(c => c.name.toLowerCase().includes(q));
-      }
-
-      // ensure defaultCharacter appears first
-      const defaultIdx = list.findIndex(x => x.id === this.defaultCharacter);
-      if (defaultIdx !== -1) {
-        const def = list.splice(defaultIdx, 1)[0];
-        list.unshift(def);
-      }
-
-      // move pinned characters (except default which is already first) to the top after default
-      const pinned: SimpleCharacter[] = [];
-      const others: SimpleCharacter[] = [];
-      for (let i = 0; i < list.length; i++) {
-        const c = list[i];
-        if (c.id === this.defaultCharacter) continue; // skip default
-        if (this.isPinned(c.id)) pinned.push(c);
-        else others.push(c);
-      }
-
-      // keep relative order among pinned and others
-      const result: SimpleCharacter[] = [];
-      if (list.length > 0 && list[0].id === this.defaultCharacter)
-        result.push(list[0]);
-      result.push(...pinned, ...others);
-      this.selectedCharacter = result[0];
-      return result;
-    }
-
-    // The top input is a simple filter; selecting a tile is done by clicking it.
-
-    showLogs(): void {
-      (<Logs>this.$refs['logsDialog']).show();
-    }
-
-    async connect(): Promise<void> {
-      if (!this.selectedCharacter) {
-        return;
-      }
-      this.connecting = true;
-
-      // skipping await
-      // tslint:disable-next-line: no-floating-promises
-      core.notifications.initSounds([
-        'attention',
-        'login',
-        'logout',
-        'modalert',
-        'newnote',
-        'silence'
-      ]);
-
-      core.connection.connect(this.selectedCharacter.name);
-    }
-
-    getChatView(): ChatView | undefined {
-      return this.$refs['chatview'] as ChatView;
-    }
-
-    get showTips(): boolean {
-      return core.state.generalSettings?.horizonShowTips ?? false;
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

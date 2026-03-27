@@ -78,7 +78,7 @@ jobs:
           # note: Uploads artifacts for the current operating system
 
   release:
-    name: Create Draft Release
+    name: Create Release
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -100,13 +100,29 @@ jobs:
 
           cat SHASUMS256.txt
 
-      - name: Create Draft Release
+      - name: Detect release type
+        id: release_type
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [[ "$TAG" == *"-dev."* ]]; then
+            # Dev builds publish automatically — no human gate needed
+            echo "draft=false" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          elif [[ "$TAG" == *"-beta."* ]]; then
+            echo "draft=true" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "draft=true" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
-          draft: true
+          draft: ${{ steps.release_type.outputs.draft }}
+          prerelease: ${{ steps.release_type.outputs.prerelease }}
           files: final_release/**/*
-          # ^ Creates a draft release with uploaded artifacts including the SHASUMS256.txt file
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

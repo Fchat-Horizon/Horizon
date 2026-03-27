@@ -69,7 +69,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
   import Vue from 'vue';
   import { getKey } from '../chat/common';
   import { Keys } from '../keys';
@@ -101,78 +100,71 @@
 
   export let isShowing = false;
 
-  @Component
-  export default class Modal extends Vue {
-    l = l;
-    @Prop({ default: '' })
-    readonly action!: string;
-    @Prop
-    readonly dialogClass?: { string: boolean };
-    @Prop({ default: true })
-    readonly buttons!: boolean;
-    @Prop({ default: () => ({ 'btn-primary': true }) })
-    readonly buttonClass!: { string: boolean };
-    @Prop
-    readonly disabled?: boolean;
-    @Prop({ default: true })
-    readonly showCancel!: boolean;
-    @Prop
-    readonly buttonText?: string;
-    @Prop
-    readonly iconClass?: string;
-    isShown = false;
-    hasFinishedHiding = true;
-
-    keepOpen = false;
-    forcedDisabled = false;
-
-    get submitText(): string {
-      return this.buttonText !== undefined ? this.buttonText : this.action;
-    }
-
-    forceDisabled(disabled: boolean): void {
-      this.forcedDisabled = disabled;
-    }
-
-    shouldBeDisabled(): boolean {
-      return this.disabled || this.forcedDisabled;
-    }
-
-    submit(e: Event): void {
-      this.$emit('submit', e);
-      if (!e.defaultPrevented) this.hideWithCheck();
-    }
-
-    show(keepOpen: boolean = false): void {
-      this.keepOpen = keepOpen;
-      if (this.isShown) {
-        this.$emit('reopen');
-        return;
+  type Modal = InstanceType<typeof Modal>;
+  const Modal = Vue.extend({
+    props: {
+      action: { default: '' },
+      dialogClass: {},
+      buttons: { default: true },
+      buttonClass: { default: () => ({ 'btn-primary': true }) },
+      disabled: {},
+      showCancel: { default: true },
+      buttonText: {},
+      iconClass: {}
+    },
+    data() {
+      return {
+        l: l,
+        isShown: false,
+        hasFinishedHiding: true,
+        keepOpen: false,
+        forcedDisabled: false
+      };
+    },
+    computed: {
+      submitText(): string {
+        return this.buttonText !== undefined ? this.buttonText : this.action;
       }
-      this.isShown = true;
-      this.hasFinishedHiding = false;
-      dialogStack.push(this);
-      this.$emit('open');
-      isShowing = true;
-    }
-
-    hide(): void {
-      this.isShown = false;
-      this.$emit('close');
-      dialogStack.pop();
-      if (dialogStack.length === 0) isShowing = false;
-    }
-
-    hideWithCheck(): void {
-      if (this.keepOpen) return;
-      this.hide();
-    }
-
-    @Hook('beforeDestroy')
+    },
     beforeDestroy(): void {
       if (this.isShown) this.hide();
+    },
+    methods: {
+      forceDisabled(disabled: boolean): void {
+        this.forcedDisabled = disabled;
+      },
+      shouldBeDisabled(): boolean {
+        return this.disabled || this.forcedDisabled;
+      },
+      submit(e: Event): void {
+        this.$emit('submit', e);
+        if (!e.defaultPrevented) this.hideWithCheck();
+      },
+      show(keepOpen: boolean = false): void {
+        this.keepOpen = keepOpen;
+        if (this.isShown) {
+          this.$emit('reopen');
+          return;
+        }
+        this.isShown = true;
+        this.hasFinishedHiding = false;
+        dialogStack.push(this);
+        this.$emit('open');
+        isShowing = true;
+      },
+      hide(): void {
+        this.isShown = false;
+        this.$emit('close');
+        dialogStack.pop();
+        if (dialogStack.length === 0) isShowing = false;
+      },
+      hideWithCheck(): void {
+        if (this.keepOpen) return;
+        this.hide();
+      }
     }
-  }
+  });
+  export default Modal;
 </script>
 
 <style>

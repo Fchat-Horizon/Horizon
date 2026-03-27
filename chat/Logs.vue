@@ -200,7 +200,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop, Watch } from '@f-list/vue-ts';
   import { format } from 'date-fns';
   import CustomDialog from '../components/custom_dialog';
   import FilterableSelect from '../components/FilterableSelect.vue';
@@ -270,583 +269,598 @@
     }
   }
 
-  @Component({
+  export default CustomDialog.extend({
     components: {
       modal: Modal,
       'message-view': MessageView,
       'filterable-select': FilterableSelect,
       'virtual-list': VirtualList
-    }
-  })
-  export default class Logs extends CustomDialog {
-    @Prop
-    readonly conversation?: Conversation;
-    core = core;
-    conversations: LogInterface.Conversation[] = [];
-    selectedConversation: LogInterface.Conversation | undefined;
-    dates: ReadonlyArray<Date> = [];
-    selectedDate: string | undefined;
-    l = l;
-    filter = '';
-    messages: ReadonlyArray<Conversation.Message> = [];
-    formatDate = formatDate;
-    keyDownListener?: (e: KeyboardEvent) => void;
-    characters: ReadonlyArray<string> = [];
-    selectedCharacter = core.connection.character;
-    showFilters = true;
-    canZip = core.logs.canZip;
-    selectionMode = false;
-    selectedMessages = new Set<number>();
-    lastSelectedIndex = -1;
-    dateOffset = -1;
-    loadingDates = false;
-    resetKey = 0;
-    filterDebounce: ReturnType<typeof setTimeout> | undefined;
-    nearTopDebounce: ReturnType<typeof setTimeout> | undefined;
-    pendingFilter = '';
-    searching = false;
-
-    get layoutClasses(): Record<string, boolean> {
-      return { ['layout-' + getLayoutMode()]: true };
-    }
-
-    get isDmConversation(): boolean {
-      return (
-        this.selectedConversation !== undefined &&
-        !this.selectedConversation.key.startsWith('#') &&
-        this.selectedConversation.key !== '_'
-      );
-    }
-
-    get itemHeight(): number {
-      return getLayoutMode() === 'modern' ? 52 : 40;
-    }
-
-    messageKeyFunc(item: Conversation.Message): string | number {
-      return item.id;
-    }
-
-    get filteredMessages(): ReadonlyArray<Conversation.Message> {
-      if (this.pendingFilter.length === 0) return this.messages;
-      const filter = new RegExp(
-        this.pendingFilter.replace(/[^\w]/gi, '\\$&'),
-        'i'
-      );
-      return this.messages.filter(
-        x =>
-          filter.test(x.text) ||
-          (x.type !== Conversation.Message.Type.Event &&
-            filter.test(x.sender.name))
-      );
-    }
-
-    @Hook('mounted')
+    },
+    props: {
+      conversation: {}
+    },
+    data() {
+      return {
+        core: core,
+        conversations: [] as LogInterface.Conversation[],
+        selectedConversation: undefined as
+          | LogInterface.Conversation
+          | undefined,
+        dates: [] as ReadonlyArray<Date>,
+        selectedDate: undefined as string | undefined,
+        l: l,
+        filter: '',
+        messages: [] as ReadonlyArray<Conversation.Message>,
+        formatDate: formatDate,
+        keyDownListener: undefined as ((e: KeyboardEvent) => void) | undefined,
+        characters: [] as ReadonlyArray<string>,
+        selectedCharacter: core.connection.character,
+        showFilters: true,
+        canZip: core.logs.canZip,
+        selectionMode: false,
+        selectedMessages: new Set<number>(),
+        lastSelectedIndex: -1,
+        dateOffset: -1,
+        loadingDates: false,
+        resetKey: 0,
+        filterDebounce: undefined as ReturnType<typeof setTimeout> | undefined,
+        nearTopDebounce: undefined as ReturnType<typeof setTimeout> | undefined,
+        pendingFilter: '',
+        searching: false
+      };
+    },
+    computed: {
+      layoutClasses(): Record<string, boolean> {
+        return { ['layout-' + getLayoutMode()]: true };
+      },
+      isDmConversation(): boolean {
+        return (
+          this.selectedConversation !== undefined &&
+          !this.selectedConversation.key.startsWith('#') &&
+          this.selectedConversation.key !== '_'
+        );
+      },
+      itemHeight(): number {
+        return getLayoutMode() === 'modern' ? 52 : 40;
+      },
+      filteredMessages(): ReadonlyArray<Conversation.Message> {
+        if (this.pendingFilter.length === 0) return this.messages;
+        const filter = new RegExp(
+          this.pendingFilter.replace(/[^\w]/gi, '\\$&'),
+          'i'
+        );
+        return this.messages.filter(
+          x =>
+            filter.test(x.text) ||
+            (x.type !== Conversation.Message.Type.Event &&
+              filter.test(x.sender.name))
+        );
+      }
+    },
+    watch: {
+      conversation: {
+        async handler(this: any): Promise<void> {
+          if (!this.dialog.isShown || this.conversation === undefined) return;
+          let match = this.conversations.find(
+            (x: any) => x.key === this.conversation!.key
+          );
+          if (!match) {
+            await this.loadConversations();
+            match = this.conversations.find(
+              (x: any) => x.key === this.conversation!.key
+            );
+          }
+          if (match && match !== this.selectedConversation) {
+            this.selectedConversation = match;
+          }
+        }
+      },
+      selectedConversation: {
+        handler: 'conversationSelected'
+      },
+      filter: {
+        handler: 'onFilterChanged'
+      }
+    },
     async mounted(): Promise<void> {
       this.characters = await core.logs.getAvailableCharacters();
       //On Windows, sort is case-sensitive by default, so we need to force case-insensitive sorting for Linux and macOS.
       this.characters = this.characters
         .slice()
         .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-    }
-
-    @Hook('beforeDestroy')
+    },
     beforeDestroy(): void {
       if (this.filterDebounce !== undefined) clearTimeout(this.filterDebounce);
       if (this.nearTopDebounce !== undefined)
         clearTimeout(this.nearTopDebounce);
-    }
+    },
+    methods: {
+      async loadCharacter(): Promise<void> {
+        this.selectedConversation = undefined;
+        return this.loadConversations();
+      },
 
-    async loadCharacter(): Promise<void> {
-      this.selectedConversation = undefined;
-      return this.loadConversations();
-    }
+      async loadConversations(): Promise<void> {
+        if (this.selectedCharacter === '') return;
+        this.conversations = (
+          await core.logs.getConversations(this.selectedCharacter)
+        ).slice();
+        this.conversations.sort((x, y) => {
+          const xName = x.name.replace(/^#/, '').toLowerCase();
+          const yName = y.name.replace(/^#/, '').toLowerCase();
+          return xName < yName ? -1 : xName > yName ? 1 : 0;
+        });
+      },
 
-    async loadConversations(): Promise<void> {
-      if (this.selectedCharacter === '') return;
-      this.conversations = (
-        await core.logs.getConversations(this.selectedCharacter)
-      ).slice();
-      this.conversations.sort((x, y) => {
-        const xName = x.name.replace(/^#/, '').toLowerCase();
-        const yName = y.name.replace(/^#/, '').toLowerCase();
-        return xName < yName ? -1 : xName > yName ? 1 : 0;
-      });
-    }
-
-    async loadDates(): Promise<void> {
-      this.dates =
-        this.selectedConversation === undefined
-          ? []
-          : (
-              await core.logs.getLogDates(
-                this.selectedCharacter,
-                this.selectedConversation.key
+      async loadDates(): Promise<void> {
+        this.dates =
+          this.selectedConversation === undefined
+            ? []
+            : (
+                await core.logs.getLogDates(
+                  this.selectedCharacter,
+                  this.selectedConversation.key
+                )
               )
-            )
-              .slice()
-              .reverse();
-    }
+                .slice()
+                .reverse();
+      },
 
-    filterConversation(
-      filter: RegExp,
-      conversation: LogInterface.Conversation
-    ): boolean {
-      return filter.test(conversation.name);
-    }
+      filterConversation(
+        filter: RegExp,
+        conversation: LogInterface.Conversation
+      ): boolean {
+        return filter.test(conversation.name);
+      },
 
-    @Watch('conversation')
-    async onConversationPropChanged(): Promise<void> {
-      if (!this.dialog.isShown || this.conversation === undefined) return;
-      let match = this.conversations.find(
-        x => x.key === this.conversation!.key
-      );
-      if (!match) {
-        await this.loadConversations();
-        match = this.conversations.find(x => x.key === this.conversation!.key);
-      }
-      if (match && match !== this.selectedConversation) {
-        this.selectedConversation = match;
-      }
-    }
+      messageKeyFunc(item: Conversation.Message): string | number {
+        return item.id;
+      },
 
-    @Watch('selectedConversation')
-    async conversationSelected(
-      oldValue: Conversation | undefined,
-      newValue: Conversation | undefined
-    ): Promise<void> {
-      if (
-        oldValue !== undefined &&
-        newValue !== undefined &&
-        oldValue.key === newValue.key
-      )
-        return;
-      this.messages = [];
-      await this.loadDates();
-      this.selectedDate = undefined;
-      this.dateOffset = -1;
-      this.filter = '';
-      this.setSelectionMode(false);
-      this.pendingFilter = '';
-      await this.loadMessages();
-    }
+      async conversationSelected(
+        oldValue: Conversation | undefined,
+        newValue: Conversation | undefined
+      ): Promise<void> {
+        if (
+          oldValue !== undefined &&
+          newValue !== undefined &&
+          oldValue.key === newValue.key
+        )
+          return;
+        this.messages = [];
+        await this.loadDates();
+        this.selectedDate = undefined;
+        this.dateOffset = -1;
+        this.filter = '';
+        this.setSelectionMode(false);
+        this.pendingFilter = '';
+        await this.loadMessages();
+      },
 
-    @Watch('filter')
-    onFilterChanged(): void {
-      if (this.filterDebounce !== undefined) clearTimeout(this.filterDebounce);
-      this.filterDebounce = setTimeout(() => {
-        const wasFiltered = this.pendingFilter.length > 0;
-        this.pendingFilter = this.filter;
+      onFilterChanged(): void {
+        if (this.filterDebounce !== undefined)
+          clearTimeout(this.filterDebounce);
+        this.filterDebounce = setTimeout(() => {
+          const wasFiltered = this.pendingFilter.length > 0;
+          this.pendingFilter = this.filter;
+          const vl = this.$refs['messages'] as InstanceType<
+            typeof VirtualList
+          > | void;
+          if (vl) vl.invalidate();
+          if (this.filter) {
+            this.searchMore();
+          } else if (wasFiltered) {
+            this.$nextTick().then(() => vl?.scrollToBottom());
+          }
+        }, 200);
+      },
+
+      async searchMore(): Promise<void> {
+        if (!this.pendingFilter || this.selectedDate !== undefined) return;
+        if (this.dateOffset >= this.dates.length) return;
+
+        const MIN_RESULTS = 50;
+        if (this.filteredMessages.length >= MIN_RESULTS) return;
+
+        this.searching = true;
+        const snapshot = this.pendingFilter;
+
+        while (
+          this.dateOffset < this.dates.length &&
+          this.filteredMessages.length < MIN_RESULTS
+        ) {
+          const msgs = await this.fetchDate();
+          if (msgs.length > 0) {
+            this.messages = (msgs as Conversation.Message[]).concat(
+              this.messages
+            );
+          }
+          if (this.pendingFilter !== snapshot) break;
+        }
+
         const vl = this.$refs['messages'] as InstanceType<
           typeof VirtualList
         > | void;
         if (vl) vl.invalidate();
-        if (this.filter) {
-          this.searchMore();
-        } else if (wasFiltered) {
-          this.$nextTick().then(() => vl?.scrollToBottom());
+        this.searching = false;
+      },
+
+      download(file: string, logs: string): void {
+        const a = document.createElement('a');
+        a.href = logs;
+        a.setAttribute('download', file);
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        setTimeout(() => {
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(logs);
+        });
+      },
+
+      sanitizeConversationName(name: string): string {
+        /*
+         * Replace characters that are forbidden in paths with an underscore.
+         * This list should cover Unix, Windows and macOS.
+         * Files and folders also may not end with spaces.
+         */
+        let sanitizedName = name.replace(/[\/<>:"\\|?*.]/g, '_').trimRight();
+
+        /*
+         * For Windows, certain names are forbidden, too.
+         */
+        if (
+          [
+            'CON',
+            'PRN',
+            'AUX',
+            'NUL',
+            'COM1',
+            'COM2',
+            'COM3',
+            'COM4',
+            'COM5',
+            'COM6',
+            'COM7',
+            'COM8',
+            'COM9',
+            'LPT1',
+            'LPT2',
+            'LPT3',
+            'LPT4',
+            'LPT5',
+            'LPT6',
+            'LPT7',
+            'LPT8',
+            'LPT9'
+          ].includes(sanitizedName)
+        ) {
+          sanitizedName += '_';
         }
-      }, 200);
-    }
 
-    async searchMore(): Promise<void> {
-      if (!this.pendingFilter || this.selectedDate !== undefined) return;
-      if (this.dateOffset >= this.dates.length) return;
+        return sanitizedName;
+      },
 
-      const MIN_RESULTS = 50;
-      if (this.filteredMessages.length >= MIN_RESULTS) return;
+      downloadDay(): void {
+        if (
+          this.selectedConversation === undefined ||
+          this.selectedDate === undefined ||
+          this.messages.length === 0
+        )
+          return;
+        const html = Dialog.confirmDialog(l('logs.html'));
+        const name = `${this.sanitizeConversationName(this.selectedConversation.name)}-${formatDate(new Date(this.selectedDate))}.${html ? 'html' : 'txt'}`;
+        this.download(
+          name,
+          `data:${encodeURIComponent(name)},${encodeURIComponent(getLogs(this.messages, html))}`
+        );
+      },
 
-      this.searching = true;
-      const snapshot = this.pendingFilter;
+      async downloadConversation(): Promise<void> {
+        if (this.selectedConversation === undefined) return;
+        const zip = new AdmZip();
+        const html = Dialog.confirmDialog(l('logs.html'));
+        for (const date of this.dates) {
+          const messages = await core.logs.getLogs(
+            this.selectedCharacter,
+            this.selectedConversation.key,
+            date
+          );
+          zip.addFile(
+            `${formatDate(date)}.${html ? 'html' : 'txt'}`,
+            Buffer.from(getLogs(messages, html), 'utf-8')
+          );
+        }
+        this.download(
+          `${this.sanitizeConversationName(this.selectedConversation.name)}.zip`,
+          URL.createObjectURL(new Blob([zip.toBuffer()]))
+        );
+      },
 
-      while (
-        this.dateOffset < this.dates.length &&
-        this.filteredMessages.length < MIN_RESULTS
-      ) {
+      async downloadCharacter(): Promise<void> {
+        if (
+          this.selectedCharacter === '' ||
+          !Dialog.confirmDialog(l('logs.confirmExport', this.selectedCharacter))
+        )
+          return;
+        const zip = new AdmZip();
+        const html = Dialog.confirmDialog(l('logs.html'));
+        const existingConversationNames = new Array<string>();
+        for (const conv of this.conversations) {
+          const dates = await core.logs.getLogDates(
+            this.selectedCharacter,
+            conv.key
+          );
+          let sanitizedConvName = this.sanitizeConversationName(conv.name);
+          while (existingConversationNames.includes(sanitizedConvName)) {
+            sanitizedConvName += '_';
+          }
+          existingConversationNames.push(sanitizedConvName);
+          for (const date of dates) {
+            const messages = await core.logs.getLogs(
+              this.selectedCharacter,
+              conv.key,
+              date
+            );
+            zip.addFile(
+              `${sanitizedConvName}/${formatDate(date)}.${html ? 'html' : 'txt'}`,
+              Buffer.from(getLogs(messages, html), 'utf-8')
+            );
+          }
+        }
+        this.download(
+          `${this.selectedCharacter}.zip`,
+          URL.createObjectURL(new Blob([zip.toBuffer()]))
+        );
+      },
+
+      async onOpen(): Promise<void> {
+        if (this.selectedCharacter !== '') {
+          await this.loadConversations();
+          if (this.conversation !== undefined) {
+            this.selectedConversation = this.conversations.filter(
+              x => x.key === (this as any).conversation!.key
+            )[0];
+            (this.$refs['messageFilter'] as HTMLInputElement).focus();
+          } else {
+            await this.loadDates();
+            await this.loadMessages();
+          }
+        }
+        this.keyDownListener = e => {
+          if (
+            getKey(e) === Keys.KeyA &&
+            (e.ctrlKey || e.metaKey) &&
+            !e.altKey &&
+            !e.shiftKey
+          ) {
+            if ((<HTMLElement>e.target).tagName.toLowerCase() === 'input')
+              return;
+            e.preventDefault();
+            const selection = document.getSelection();
+            if (selection === null) return;
+            selection.removeAllRanges();
+            if (this.messages.length > 0) {
+              const el = (this.$refs['messages'] as Vue | undefined)?.$el;
+              if (el?.firstChild && el.lastChild) {
+                const range = document.createRange();
+                range.setStartBefore(el.firstChild);
+                range.setEndAfter(el.lastChild);
+                selection.addRange(range);
+              }
+            }
+          }
+        };
+        window.addEventListener('keydown', this.keyDownListener);
+      },
+
+      onClose(): void {
+        window.removeEventListener('keydown', this.keyDownListener!);
+      },
+
+      async loadMessages(): Promise<void> {
+        if (this.selectedConversation === undefined) {
+          this.messages = [];
+        } else if (this.selectedDate !== undefined) {
+          this.dateOffset = -1;
+          this.messages = (
+            await core.logs.getLogs(
+              this.selectedCharacter,
+              this.selectedConversation.key,
+              new Date(this.selectedDate)
+            )
+          ).map(m => Object.freeze(m));
+          this.resetKey++;
+          await this.$nextTick();
+          const vl = this.$refs['messages'] as InstanceType<
+            typeof VirtualList
+          > | void;
+          if (vl) {
+            vl.invalidate();
+            vl.scrollToBottom();
+          }
+        } else if (this.dateOffset === -1) {
+          this.dateOffset = 0;
+          this.messages = [];
+          await this.bulkLoadDates(500);
+          await this.$nextTick();
+          const vl = this.$refs['messages'] as InstanceType<
+            typeof VirtualList
+          > | void;
+          if (vl) {
+            vl.invalidate();
+            vl.scrollToBottom();
+          }
+        }
+      },
+
+      setSelectionMode(active: boolean): void {
+        this.selectionMode = active;
+        this.selectedMessages = new Set<number>();
+        this.lastSelectedIndex = -1;
+      },
+
+      onToggleSelect(
+        message: Conversation.Message,
+        displayIndex: number,
+        event: MouseEvent
+      ): void {
+        const newSet = new Set(this.selectedMessages);
+        if (event.shiftKey && this.lastSelectedIndex >= 0) {
+          const start = Math.min(this.lastSelectedIndex, displayIndex);
+          const end = Math.max(this.lastSelectedIndex, displayIndex);
+          for (let i = start; i <= end; i++) {
+            newSet.add(this.filteredMessages[i].id);
+          }
+        } else {
+          if (newSet.has(message.id)) newSet.delete(message.id);
+          else newSet.add(message.id);
+        }
+        this.selectedMessages = newSet;
+        this.lastSelectedIndex = displayIndex;
+      },
+
+      async shareSelected(): Promise<void> {
+        if (
+          !this.selectedConversation ||
+          this.selectedMessages.size === 0 ||
+          !this.isDmConversation
+        )
+          return;
+
+        const targetName = this.selectedConversation.name;
+        const targetChar = core.characters.get(targetName);
+
+        if (targetChar.status === 'offline') {
+          core.notifications.alert(l('logs.shareOffline', targetName));
+          return;
+        }
+
+        if (
+          !Dialog.confirmDialog(
+            l('logs.selectConfirm', this.selectedMessages.size, targetName)
+          )
+        )
+          return;
+
+        const selected = this.messages.filter(m =>
+          this.selectedMessages.has(m.id)
+        );
+
+        const formatted = selected
+          .map(msg => {
+            const time = `[color=gray][${formatTime(msg.time, true)}][/color] `;
+            if (msg.type === Conversation.Message.Type.Event)
+              return `${time}${msg.text}\r\n`;
+            const name = `[user]${msg.sender.name}[/user]`;
+            if (msg.type === Conversation.Message.Type.Action)
+              return `${time}*${name} ${msg.text}\r\n`;
+            return `${time}${name}: ${msg.text}\r\n`;
+          })
+          .join('');
+
+        if (formatted.length > core.connection.vars.priv_max) {
+          core.notifications.alert(l('logs.shareTooLong'));
+          return;
+        }
+
+        const conv = core.conversations.getPrivate(targetChar);
+        await conv.sendMessageEx(formatted);
+        core.notifications.alert(l('logs.shareSuccess'));
+        this.setSelectionMode(false);
+      },
+
+      jumpToMessage(messageId: number): void {
+        // Clear filter immediately, bypassing the debounce
+        this.filter = '';
+        this.pendingFilter = '';
+        this.$nextTick(() => {
+          // Clear debounce AFTER the filter watcher has fired and set a new one
+          if (this.filterDebounce !== undefined) {
+            clearTimeout(this.filterDebounce);
+            this.filterDebounce = undefined;
+          }
+          setTimeout(() => {
+            const index = this.filteredMessages.findIndex(
+              msg => msg.id === messageId
+            );
+            if (index === -1) return;
+            const vl = this.$refs['messages'] as InstanceType<
+              typeof VirtualList
+            > | void;
+            if (!vl) return;
+            vl.invalidate();
+            vl.scrollToIndex(index, 'center');
+          }, 0);
+        });
+      },
+
+      async fetchDate(): Promise<ReadonlyArray<Conversation.Message>> {
+        if (!this.selectedConversation || this.dateOffset >= this.dates.length)
+          return [];
+        return (
+          await core.logs.getLogs(
+            this.selectedCharacter,
+            this.selectedConversation.key,
+            this.dates[this.dateOffset++]
+          )
+        ).map(m => Object.freeze(m));
+      },
+
+      async bulkLoadDates(minMessages: number): Promise<void> {
+        let all: Conversation.Message[] = [];
+        while (
+          all.length < minMessages &&
+          this.dateOffset < this.dates.length
+        ) {
+          const msgs = await this.fetchDate();
+          all = (msgs as Conversation.Message[]).concat(all);
+        }
+        this.messages = all.concat(this.messages);
+      },
+
+      async loadNextDate(): Promise<void> {
+        if (this.loadingDates) return;
+        this.loadingDates = true;
+        const oldLen = this.filteredMessages.length;
         const msgs = await this.fetchDate();
         if (msgs.length > 0) {
           this.messages = (msgs as Conversation.Message[]).concat(
             this.messages
           );
-        }
-        if (this.pendingFilter !== snapshot) break;
-      }
-
-      const vl = this.$refs['messages'] as InstanceType<
-        typeof VirtualList
-      > | void;
-      if (vl) vl.invalidate();
-      this.searching = false;
-    }
-
-    download(file: string, logs: string): void {
-      const a = document.createElement('a');
-      a.href = logs;
-      a.setAttribute('download', file);
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      setTimeout(() => {
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(logs);
-      });
-    }
-
-    sanitizeConversationName(name: string): string {
-      /*
-       * Replace characters that are forbidden in paths with an underscore.
-       * This list should cover Unix, Windows and macOS.
-       * Files and folders also may not end with spaces.
-       */
-      let sanitizedName = name.replace(/[\/<>:"\\|?*.]/g, '_').trimRight();
-
-      /*
-       * For Windows, certain names are forbidden, too.
-       */
-      if (
-        [
-          'CON',
-          'PRN',
-          'AUX',
-          'NUL',
-          'COM1',
-          'COM2',
-          'COM3',
-          'COM4',
-          'COM5',
-          'COM6',
-          'COM7',
-          'COM8',
-          'COM9',
-          'LPT1',
-          'LPT2',
-          'LPT3',
-          'LPT4',
-          'LPT5',
-          'LPT6',
-          'LPT7',
-          'LPT8',
-          'LPT9'
-        ].includes(sanitizedName)
-      ) {
-        sanitizedName += '_';
-      }
-
-      return sanitizedName;
-    }
-
-    downloadDay(): void {
-      if (
-        this.selectedConversation === undefined ||
-        this.selectedDate === undefined ||
-        this.messages.length === 0
-      )
-        return;
-      const html = Dialog.confirmDialog(l('logs.html'));
-      const name = `${this.sanitizeConversationName(this.selectedConversation.name)}-${formatDate(new Date(this.selectedDate))}.${html ? 'html' : 'txt'}`;
-      this.download(
-        name,
-        `data:${encodeURIComponent(name)},${encodeURIComponent(getLogs(this.messages, html))}`
-      );
-    }
-
-    async downloadConversation(): Promise<void> {
-      if (this.selectedConversation === undefined) return;
-      const zip = new AdmZip();
-      const html = Dialog.confirmDialog(l('logs.html'));
-      for (const date of this.dates) {
-        const messages = await core.logs.getLogs(
-          this.selectedCharacter,
-          this.selectedConversation.key,
-          date
-        );
-        zip.addFile(
-          `${formatDate(date)}.${html ? 'html' : 'txt'}`,
-          Buffer.from(getLogs(messages, html), 'utf-8')
-        );
-      }
-      this.download(
-        `${this.sanitizeConversationName(this.selectedConversation.name)}.zip`,
-        URL.createObjectURL(new Blob([zip.toBuffer()]))
-      );
-    }
-
-    async downloadCharacter(): Promise<void> {
-      if (
-        this.selectedCharacter === '' ||
-        !Dialog.confirmDialog(l('logs.confirmExport', this.selectedCharacter))
-      )
-        return;
-      const zip = new AdmZip();
-      const html = Dialog.confirmDialog(l('logs.html'));
-      const existingConversationNames = new Array<string>();
-      for (const conv of this.conversations) {
-        const dates = await core.logs.getLogDates(
-          this.selectedCharacter,
-          conv.key
-        );
-        let sanitizedConvName = this.sanitizeConversationName(conv.name);
-        while (existingConversationNames.includes(sanitizedConvName)) {
-          sanitizedConvName += '_';
-        }
-        existingConversationNames.push(sanitizedConvName);
-        for (const date of dates) {
-          const messages = await core.logs.getLogs(
-            this.selectedCharacter,
-            conv.key,
-            date
-          );
-          zip.addFile(
-            `${sanitizedConvName}/${formatDate(date)}.${html ? 'html' : 'txt'}`,
-            Buffer.from(getLogs(messages, html), 'utf-8')
-          );
-        }
-      }
-      this.download(
-        `${this.selectedCharacter}.zip`,
-        URL.createObjectURL(new Blob([zip.toBuffer()]))
-      );
-    }
-
-    async onOpen(): Promise<void> {
-      if (this.selectedCharacter !== '') {
-        await this.loadConversations();
-        if (this.conversation !== undefined) {
-          this.selectedConversation = this.conversations.filter(
-            x => x.key === this.conversation!.key
-          )[0];
-          (this.$refs['messageFilter'] as HTMLInputElement).focus();
-        } else {
-          await this.loadDates();
-          await this.loadMessages();
-        }
-      }
-      this.keyDownListener = e => {
-        if (
-          getKey(e) === Keys.KeyA &&
-          (e.ctrlKey || e.metaKey) &&
-          !e.altKey &&
-          !e.shiftKey
-        ) {
-          if ((<HTMLElement>e.target).tagName.toLowerCase() === 'input') return;
-          e.preventDefault();
-          const selection = document.getSelection();
-          if (selection === null) return;
-          selection.removeAllRanges();
-          if (this.messages.length > 0) {
-            const el = (this.$refs['messages'] as Vue | undefined)?.$el;
-            if (el?.firstChild && el.lastChild) {
-              const range = document.createRange();
-              range.setStartBefore(el.firstChild);
-              range.setEndAfter(el.lastChild);
-              selection.addRange(range);
-            }
-          }
-        }
-      };
-      window.addEventListener('keydown', this.keyDownListener);
-    }
-
-    onClose(): void {
-      window.removeEventListener('keydown', this.keyDownListener!);
-    }
-
-    async loadMessages(): Promise<void> {
-      if (this.selectedConversation === undefined) {
-        this.messages = [];
-      } else if (this.selectedDate !== undefined) {
-        this.dateOffset = -1;
-        this.messages = (
-          await core.logs.getLogs(
-            this.selectedCharacter,
-            this.selectedConversation.key,
-            new Date(this.selectedDate)
-          )
-        ).map(m => Object.freeze(m));
-        this.resetKey++;
-        await this.$nextTick();
-        const vl = this.$refs['messages'] as InstanceType<
-          typeof VirtualList
-        > | void;
-        if (vl) {
-          vl.invalidate();
-          vl.scrollToBottom();
-        }
-      } else if (this.dateOffset === -1) {
-        this.dateOffset = 0;
-        this.messages = [];
-        await this.bulkLoadDates(500);
-        await this.$nextTick();
-        const vl = this.$refs['messages'] as InstanceType<
-          typeof VirtualList
-        > | void;
-        if (vl) {
-          vl.invalidate();
-          vl.scrollToBottom();
-        }
-      }
-    }
-
-    setSelectionMode(active: boolean): void {
-      this.selectionMode = active;
-      this.selectedMessages = new Set<number>();
-      this.lastSelectedIndex = -1;
-    }
-
-    onToggleSelect(
-      message: Conversation.Message,
-      displayIndex: number,
-      event: MouseEvent
-    ): void {
-      const newSet = new Set(this.selectedMessages);
-      if (event.shiftKey && this.lastSelectedIndex >= 0) {
-        const start = Math.min(this.lastSelectedIndex, displayIndex);
-        const end = Math.max(this.lastSelectedIndex, displayIndex);
-        for (let i = start; i <= end; i++) {
-          newSet.add(this.filteredMessages[i].id);
-        }
-      } else {
-        if (newSet.has(message.id)) newSet.delete(message.id);
-        else newSet.add(message.id);
-      }
-      this.selectedMessages = newSet;
-      this.lastSelectedIndex = displayIndex;
-    }
-
-    async shareSelected(): Promise<void> {
-      if (
-        !this.selectedConversation ||
-        this.selectedMessages.size === 0 ||
-        !this.isDmConversation
-      )
-        return;
-
-      const targetName = this.selectedConversation.name;
-      const targetChar = core.characters.get(targetName);
-
-      if (targetChar.status === 'offline') {
-        core.notifications.alert(l('logs.shareOffline', targetName));
-        return;
-      }
-
-      if (
-        !Dialog.confirmDialog(
-          l('logs.selectConfirm', this.selectedMessages.size, targetName)
-        )
-      )
-        return;
-
-      const selected = this.messages.filter(m =>
-        this.selectedMessages.has(m.id)
-      );
-
-      const formatted = selected
-        .map(msg => {
-          const time = `[color=gray][${formatTime(msg.time, true)}][/color] `;
-          if (msg.type === Conversation.Message.Type.Event)
-            return `${time}${msg.text}\r\n`;
-          const name = `[user]${msg.sender.name}[/user]`;
-          if (msg.type === Conversation.Message.Type.Action)
-            return `${time}*${name} ${msg.text}\r\n`;
-          return `${time}${name}: ${msg.text}\r\n`;
-        })
-        .join('');
-
-      if (formatted.length > core.connection.vars.priv_max) {
-        core.notifications.alert(l('logs.shareTooLong'));
-        return;
-      }
-
-      const conv = core.conversations.getPrivate(targetChar);
-      await conv.sendMessageEx(formatted);
-      core.notifications.alert(l('logs.shareSuccess'));
-      this.setSelectionMode(false);
-    }
-
-    jumpToMessage(messageId: number): void {
-      // Clear filter immediately, bypassing the debounce
-      this.filter = '';
-      this.pendingFilter = '';
-      this.$nextTick(() => {
-        // Clear debounce AFTER the filter watcher has fired and set a new one
-        if (this.filterDebounce !== undefined) {
-          clearTimeout(this.filterDebounce);
-          this.filterDebounce = undefined;
-        }
-        setTimeout(() => {
-          const index = this.filteredMessages.findIndex(
-            msg => msg.id === messageId
-          );
-          if (index === -1) return;
+          await this.$nextTick();
+          const added = this.filteredMessages.length - oldLen;
           const vl = this.$refs['messages'] as InstanceType<
             typeof VirtualList
           > | void;
-          if (!vl) return;
-          vl.invalidate();
-          vl.scrollToIndex(index, 'center');
-        }, 0);
-      });
-    }
+          if (vl && added > 0) vl.adjustScrollForPrepend(added);
+        }
+        this.loadingDates = false;
+      },
 
-    async fetchDate(): Promise<ReadonlyArray<Conversation.Message>> {
-      if (!this.selectedConversation || this.dateOffset >= this.dates.length)
-        return [];
-      return (
-        await core.logs.getLogs(
-          this.selectedCharacter,
-          this.selectedConversation.key,
-          this.dates[this.dateOffset++]
-        )
-      ).map(m => Object.freeze(m));
-    }
-
-    async bulkLoadDates(minMessages: number): Promise<void> {
-      let all: Conversation.Message[] = [];
-      while (all.length < minMessages && this.dateOffset < this.dates.length) {
-        const msgs = await this.fetchDate();
-        all = (msgs as Conversation.Message[]).concat(all);
-      }
-      this.messages = all.concat(this.messages);
-    }
-
-    async loadNextDate(): Promise<void> {
-      if (this.loadingDates) return;
-      this.loadingDates = true;
-      const oldLen = this.filteredMessages.length;
-      const msgs = await this.fetchDate();
-      if (msgs.length > 0) {
-        this.messages = (msgs as Conversation.Message[]).concat(this.messages);
-        await this.$nextTick();
-        const added = this.filteredMessages.length - oldLen;
+      onPageUp(e: KeyboardEvent): void {
+        e.preventDefault();
         const vl = this.$refs['messages'] as InstanceType<
           typeof VirtualList
         > | void;
-        if (vl && added > 0) vl.adjustScrollForPrepend(added);
+        if (!vl) return;
+        const el = vl.$refs['scroller'] as HTMLElement | undefined;
+        if (!el) return;
+        // Scroll by 1/3 of viewport instead of full page
+        el.scrollTop -= el.clientHeight / 3;
+      },
+
+      onNearTop(): void {
+        if (this.selectedDate !== undefined) return;
+        if (this.nearTopDebounce !== undefined)
+          clearTimeout(this.nearTopDebounce);
+        this.nearTopDebounce = setTimeout(() => {
+          this.nearTopDebounce = undefined;
+          this.loadNextDate();
+        }, 250);
       }
-      this.loadingDates = false;
     }
-
-    onPageUp(e: KeyboardEvent): void {
-      e.preventDefault();
-      const vl = this.$refs['messages'] as InstanceType<
-        typeof VirtualList
-      > | void;
-      if (!vl) return;
-      const el = vl.$refs['scroller'] as HTMLElement | undefined;
-      if (!el) return;
-      // Scroll by 1/3 of viewport instead of full page
-      el.scrollTop -= el.clientHeight / 3;
-    }
-
-    onNearTop(): void {
-      if (this.selectedDate !== undefined) return;
-      if (this.nearTopDebounce !== undefined)
-        clearTimeout(this.nearTopDebounce);
-      this.nearTopDebounce = setTimeout(() => {
-        this.nearTopDebounce = undefined;
-        this.loadNextDate();
-      }, 250);
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

@@ -200,7 +200,8 @@ export function fixLogs(character: string): void {
           isChatOp: false,
           isIgnored: false,
           name,
-          overrides: {}
+          overrides: {},
+          hasStatusTextChanged: () => false
         }));
         const time = deserialized.message.time;
         const day = Math.floor(

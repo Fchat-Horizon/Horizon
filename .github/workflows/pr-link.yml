@@ -1,0 +1,73 @@
+name: Post PR Links
+
+on:
+  workflow_run:
+    workflows: ['PR Build']
+    types: [completed]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  link:
+    name: Post Download Links
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Download PR number
+        uses: actions/download-artifact@v4
+        with:
+          name: pr-number
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Post artifact links
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const fs = require('fs');
+            const prNumber = parseInt(fs.readFileSync('pr_number.txt', 'utf8').trim());
+            const runId = ${{ github.event.workflow_run.id }};
+            const { owner, repo } = context.repo;
+            const SIG = '<!-- bot: beni69/artifact-link -->';
+            const baseUrl = `https://nightly.link/${owner}/${repo}/actions/runs/${runId}`;
+
+            const { data: { artifacts } } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner, repo, run_id: runId
+            });
+
+            if (!artifacts.length) {
+              core.warning('No artifacts found');
+              return;
+            }
+
+            const platforms = ['linux', 'macos', 'windows'];
+            const arches = ['x64', 'arm64'];
+
+            let md = `${SIG}\n### Artifacts\n\n[View all](${baseUrl})\n\n`;
+            md += `| | ${arches.join(' | ')} |\n`;
+            md += `|---|${arches.map(() => '---').join('|')}|\n`;
+
+            for (const platform of platforms) {
+              const cells = arches.map(arch => {
+                const artifact = artifacts.find(a => a.name.endsWith(`${platform}-${arch}`));
+                return artifact ? `[Download](${baseUrl}/${artifact.name}.zip)` : '—';
+              });
+              md += `| **${platform}** | ${cells.join(' | ')} |\n`;
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner, repo, issue_number: prNumber, per_page: 100
+            });
+            const existing = comments.find(c => c.body?.includes(SIG));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner, repo, comment_id: existing.id, body: md
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: prNumber, body: md
+              });
+            }

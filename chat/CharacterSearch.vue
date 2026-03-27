@@ -139,7 +139,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Watch } from '@f-list/vue-ts';
   import Axios from 'axios';
   import { BBCodeView } from '../bbcode/view';
   import CustomDialog from '../components/custom_dialog';
@@ -222,68 +221,83 @@
     return 0;
   }
 
-  @Component({
+  export default CustomDialog.extend({
     components: {
       modal: Modal,
       user: UserView,
       'filterable-select': FilterableSelect,
       bbcode: BBCodeView(core.bbCodeParser),
       'search-history': CharacterSearchHistory
-    }
-  })
-  export default class CharacterSearch extends CustomDialog {
-    l = l;
-    kinksFilter = '';
-    error = '';
-    results: SearchResult[] = [];
-    resultsPending = 0;
-    characterImage = characterImage;
-    options!: ExtendedSearchData;
-    shouldShowMatch = true;
-    state = 'search';
-    hasReceivedResults = false;
-    shouldShowAvatar = false;
-    shouldShowMarker = false;
-
-    debugSearchJson = JSON.stringify(
-      {
-        scoreMap: kinkMatchScoreMap,
-        weights: kinkMatchWeights
-      },
-      null,
-      2
-    );
-
-    private countUpdater?: ResultCountUpdater;
-
-    data: ExtendedSearchData = {
-      kinks: [],
-      genders: [],
-      orientations: [],
-      languages: [],
-      furryprefs: [],
-      roles: [],
-      positions: [],
-      species: [],
-      bodytypes: []
-    };
-
-    listItems: ReadonlyArray<keyof SearchData> = [
-      'genders',
-      'orientations',
-      'languages',
-      'furryprefs',
-      'roles',
-      'positions',
-      'bodytypes'
-    ]; // SearchData is correct
-
-    searchString = '';
-
-    // tslint:disable-next-line no-any
-    scoreWatcher: ((event: any) => void) | null = null;
-
-    @Hook('created')
+    },
+    data() {
+      return {
+        l: l,
+        kinksFilter: '',
+        error: '',
+        results: [] as SearchResult[],
+        resultsPending: 0,
+        characterImage: characterImage,
+        options: undefined as any as ExtendedSearchData,
+        shouldShowMatch: true,
+        state: 'search',
+        hasReceivedResults: false,
+        shouldShowAvatar: false,
+        shouldShowMarker: false,
+        debugSearchJson: JSON.stringify(
+          {
+            scoreMap: kinkMatchScoreMap,
+            weights: kinkMatchWeights
+          },
+          null,
+          2
+        ),
+        countUpdater: undefined as ResultCountUpdater | undefined,
+        data: {
+          kinks: [],
+          genders: [],
+          orientations: [],
+          languages: [],
+          furryprefs: [],
+          roles: [],
+          positions: [],
+          species: [],
+          bodytypes: []
+        } as ExtendedSearchData,
+        listItems: [
+          'genders',
+          'orientations',
+          'languages',
+          'furryprefs',
+          'roles',
+          'positions',
+          'bodytypes'
+        ] as ReadonlyArray<keyof SearchData>, // SearchData is correct
+        searchString: '',
+        // tslint:disable-next-line no-any
+        scoreWatcher: null as ((event: any) => void) | null
+      };
+    },
+    computed: {
+      showAvatars(): boolean {
+        return core.state.settings.showAvatars;
+      }
+    },
+    watch: {
+      data: {
+        deep: true,
+        handler(): void {
+          this.searchString = _.join(
+            _.map(
+              // tslint:disable-next-line no-unsafe-any no-any
+              _.flatten(_.map(this.data as any)),
+              // tslint:disable-next-line no-unsafe-any no-any
+              v => _.get(v, 'name', v)
+            ),
+            ', '
+          );
+        }
+      }
+    },
     async created(): Promise<void> {
       if (options === undefined)
         options = <Options | undefined>(
@@ -328,40 +342,7 @@
 
         this.resort();
       });
-    }
-
-    async debugUpdateResults(): Promise<void> {
-      if (this.state !== 'results') {
-        return;
-      }
-
-      const data = JSON.parse(this.debugSearchJson);
-
-      _.assign(kinkMatchScoreMap, data.scoreMap);
-      _.assign(kinkMatchWeights, data.weights);
-
-      core.cache.profileCache.clear();
-
-      const results = this.results;
-
-      this.results = [];
-
-      await Bluebird.delay(10);
-
-      // pre-warm cache
-      await Bluebird.mapSeries(results, c =>
-        core.cache.profileCache.get(c.character.name)
-      );
-
-      this.resultsPending = this.countPendingResults(undefined, results);
-
-      this.countUpdater?.start();
-      this.resort(results);
-
-      console.log('Done!');
-    }
-
-    @Hook('mounted')
+    },
     mounted(): void {
       core.connection.onMessage('ERR', data => {
         this.state = 'search';
@@ -434,9 +415,7 @@
       };
 
       EventBus.$on('character-score', this.scoreWatcher);
-    }
-
-    @Hook('beforeDestroy')
+    },
     beforeDestroy(): void {
       if (this.scoreWatcher) {
         EventBus.$off('character-score', this.scoreWatcher);
@@ -445,271 +424,274 @@
       }
 
       this.countUpdater?.stop();
-    }
+    },
+    methods: {
+      async debugUpdateResults(): Promise<void> {
+        if (this.state !== 'results') {
+          return;
+        }
 
-    @Watch('data', { deep: true })
-    onDataChange(): void {
-      this.searchString = _.join(
-        _.map(
-          // tslint:disable-next-line no-unsafe-any no-any
-          _.flatten(_.map(this.data as any)),
-          // tslint:disable-next-line no-unsafe-any no-any
-          v => _.get(v, 'name', v)
-        ),
-        ', '
-      );
-    }
+        const data = JSON.parse(this.debugSearchJson);
 
-    private resort(results = this.results) {
-      this.results = (
-        _.filter(
-          results,
-          x =>
-            this.isSpeciesMatch(x) &&
-            this.isBodyTypeMatch(x) &&
-            !this.isSmartFiltered(x)
-        ) as SearchResult[]
-      ).sort(sort);
-    }
+        _.assign(kinkMatchScoreMap, data.scoreMap);
+        _.assign(kinkMatchWeights, data.weights);
 
-    isSpeciesMatch(result: SearchResult): boolean {
-      if (this.data.species.length === 0) {
-        return true;
-      }
+        core.cache.profileCache.clear();
 
-      const knownCharacter = core.cache.profileCache.getSync(
-        result.character.name
-      );
+        const results = this.results;
 
-      if (!knownCharacter) {
-        return true;
-      }
+        this.results = [];
 
-      // optimization
-      result.profile = knownCharacter;
+        await Bluebird.delay(10);
 
-      const isSearchingForAnthro = !!_.find(
-        this.data.species,
-        s => s.id === Species.Anthro
-      );
-      const isSearchingForHuman = !!_.find(
-        this.data.species,
-        s => s.id === Species.Human
-      );
+        // pre-warm cache
+        await Bluebird.mapSeries(results, c =>
+          core.cache.profileCache.get(c.character.name)
+        );
 
-      const species = Matcher.species(knownCharacter.character.character);
+        this.resultsPending = this.countPendingResults(undefined, results);
 
-      if (!species) {
-        // returns TRUE if we're only searching for humans -- we suck at identifying humans
-        return isSearchingForHuman && this.data.species.length === 1;
-      }
+        this.countUpdater?.start();
+        this.resort(results);
 
-      return (
-        (isSearchingForAnthro && _.indexOf(nonAnthroSpecies, species) < 0) ||
-        // || ((isSearchingForMammal) && (_.indexOf(mammalSpecies, s.id) >= 0))
-        !!_.find(this.data.species, (s: SearchSpecies) => s.id === species)
-      );
-    }
+        console.log('Done!');
+      },
+      resort(results = this.results) {
+        this.results = (
+          _.filter(
+            results,
+            x =>
+              this.isSpeciesMatch(x) &&
+              this.isBodyTypeMatch(x) &&
+              !this.isSmartFiltered(x)
+          ) as SearchResult[]
+        ).sort(sort);
+      },
+      isSpeciesMatch(result: SearchResult): boolean {
+        if (this.data.species.length === 0) {
+          return true;
+        }
 
-    isBodyTypeMatch(result: SearchResult) {
-      if (this.data.bodytypes.length === 0) return true;
+        const knownCharacter = core.cache.profileCache.getSync(
+          result.character.name
+        );
 
-      const knownCharacter = core.cache.profileCache.getSync(
-        result.character.name
-      );
-      if (!knownCharacter) return false;
+        if (!knownCharacter) {
+          return true;
+        }
 
-      result.profile = knownCharacter;
+        // optimization
+        result.profile = knownCharacter;
 
-      const bodytypeId = result.profile.character.character.infotags[51]?.list;
-      if (bodytypeId === undefined) return false;
+        const isSearchingForAnthro = !!_.find(
+          this.data.species,
+          s => s.id === Species.Anthro
+        );
+        const isSearchingForHuman = !!_.find(
+          this.data.species,
+          s => s.id === Species.Human
+        );
 
-      const bodytype = options!.listitems
-        .filter(x => x.name === 'bodytype')
-        .find(x => +x.id === bodytypeId);
-      return this.data.bodytypes.indexOf(bodytype!.value) > -1;
-    }
+        const species = Matcher.species(knownCharacter.character.character);
 
-    isSmartFiltered(result: SearchResult) {
-      if (!core.state.settings.risingFilter.hideSearchResults) {
-        return false;
-      }
+        if (!species) {
+          // returns TRUE if we're only searching for humans -- we suck at identifying humans
+          return isSearchingForHuman && this.data.species.length === 1;
+        }
 
-      return !!result.profile?.match.isFiltered;
-    }
+        return (
+          (isSearchingForAnthro && _.indexOf(nonAnthroSpecies, species) < 0) ||
+          // || ((isSearchingForMammal) && (_.indexOf(mammalSpecies, s.id) >= 0))
+          !!_.find(this.data.species, (s: SearchSpecies) => s.id === species)
+        );
+      },
+      isBodyTypeMatch(result: SearchResult) {
+        if (this.data.bodytypes.length === 0) return true;
 
-    getSpeciesOptions(): SearchSpecies[] {
-      const species = _.map(
-        speciesMapping,
-        (keywords: string[], speciesIdStr: Species): SearchSpecies => {
-          // const speciesId: number = Species[speciesName];
-          const keywordsStr = `${keywords.join(', ')}`;
-          const details = `${keywordsStr.substr(0, 24)}...`;
-          const speciesId = parseInt(speciesIdStr as any, 10);
+        const knownCharacter = core.cache.profileCache.getSync(
+          result.character.name
+        );
+        if (!knownCharacter) return false;
 
-          if (speciesId in speciesNames) {
-            const name = `${speciesNames[speciesId].substr(0, 1).toUpperCase()}${speciesNames[speciesId].substr(1)}`;
+        result.profile = knownCharacter;
+
+        const bodytypeId =
+          result.profile.character.character.infotags[51]?.list;
+        if (bodytypeId === undefined) return false;
+
+        const bodytype = options!.listitems
+          .filter(x => x.name === 'bodytype')
+          .find(x => +x.id === bodytypeId);
+        return this.data.bodytypes.indexOf(bodytype!.value) > -1;
+      },
+      isSmartFiltered(result: SearchResult) {
+        if (!core.state.settings.risingFilter.hideSearchResults) {
+          return false;
+        }
+
+        return !!result.profile?.match.isFiltered;
+      },
+      getSpeciesOptions(): SearchSpecies[] {
+        const species = _.map(
+          speciesMapping,
+          (keywords: string[], speciesIdStr: Species): SearchSpecies => {
+            // const speciesId: number = Species[speciesName];
+            const keywordsStr = `${keywords.join(', ')}`;
+            const details = `${keywordsStr.substr(0, 24)}...`;
+            const speciesId = parseInt(speciesIdStr as any, 10);
+
+            if (speciesId in speciesNames) {
+              const name = `${speciesNames[speciesId].substr(0, 1).toUpperCase()}${speciesNames[speciesId].substr(1)}`;
+
+              return {
+                details,
+                keywords: `${name}: ${keywordsStr}`,
+                name: `${name} (species)`,
+                shortName: name,
+                id: speciesId
+              };
+            }
+
+            const speciesName = Species[speciesId];
 
             return {
               details,
-              keywords: `${name}: ${keywordsStr}`,
-              name: `${name} (species)`,
-              shortName: name,
+              keywords: `${speciesName}s: ${keywordsStr}`,
+              name: `${speciesName}s (species)`,
+              shortName: `${speciesName}s`,
               id: speciesId
             };
           }
+        ) as unknown[] as SearchSpecies[];
 
-          const speciesName = Species[speciesId];
+        // console.log('SPECIES', species);
 
-          return {
-            details,
-            keywords: `${speciesName}s: ${keywordsStr}`,
-            name: `${speciesName}s (species)`,
-            shortName: `${speciesName}s`,
-            id: speciesId
-          };
+        return _.sortBy(species, 'name');
+      },
+      countPendingResults(names?: string[], results = this.results): number {
+        // console.log('COUNTPENDINGRESULTS', names);
+        if (!this.shouldShowMatch) return 0;
+        return _.reduce(
+          results,
+          (accum: number, result: SearchResult) => {
+            if (!!result.profile) {
+              return accum;
+            }
+
+            if (
+              _.isUndefined(names) ||
+              _.indexOf(names, result.character.name) >= 0
+            ) {
+              result.profile = core.cache.profileCache.getSync(
+                result.character.name
+              );
+            }
+
+            return !!result.profile ? accum : accum + 1;
+          },
+          0
+        );
+      },
+      filterKink(filter: RegExp, kink: SearchKink): boolean {
+        if (this.data.kinks.length >= 5)
+          return this.data.kinks.indexOf(kink) !== -1;
+        return filter.test(kink.name);
+      },
+      filterSpecies(filter: RegExp, species: SearchSpecies): boolean {
+        return filter.test(species.keywords);
+      },
+      reset(): void {
+        this.data = {
+          kinks: [],
+          genders: [],
+          orientations: [],
+          languages: [],
+          furryprefs: [],
+          roles: [],
+          positions: [],
+          species: [],
+          bodytypes: []
+        };
+      },
+      updateSearch(data?: ExtendedSearchData): void {
+        if (data) {
+          // this.data = {kinks: [], genders: [], orientations: [], languages: [], furryprefs: [], roles: [], positions: []};
+          // this.data = data;
+
+          this.data = _.mapValues(data, (category, categoryName) =>
+            _.map(category, selection => {
+              const jsonSelection = JSON.stringify(selection);
+              const v = _.find(
+                (this.options as any)[categoryName],
+                op => JSON.stringify(op) === jsonSelection
+              );
+
+              return v || selection;
+            })
+          ) as ExtendedSearchData;
         }
-      ) as unknown[] as SearchSpecies[];
+      },
+      submit(): void {
+        if (this.state === 'results') {
+          this.results = [];
+          this.hasReceivedResults = false;
+          this.countUpdater?.stop();
+          this.state = 'search';
+          return;
+        }
 
-      // console.log('SPECIES', species);
+        this.shouldShowMatch = core.state.settings.risingComparisonInSearch;
+        this.shouldShowAvatar = core.state.settings.risingShowPortraitInMessage;
+        this.shouldShowMarker = core.state.settings.horizonShowGenderMarker;
 
-      return _.sortBy(species, 'name');
-    }
-
-    countPendingResults(names?: string[], results = this.results): number {
-      // console.log('COUNTPENDINGRESULTS', names);
-      if (!this.shouldShowMatch) return 0;
-      return _.reduce(
-        results,
-        (accum: number, result: SearchResult) => {
-          if (!!result.profile) {
-            return accum;
-          }
-
-          if (
-            _.isUndefined(names) ||
-            _.indexOf(names, result.character.name) >= 0
-          ) {
-            result.profile = core.cache.profileCache.getSync(
-              result.character.name
-            );
-          }
-
-          return !!result.profile ? accum : accum + 1;
-        },
-        0
-      );
-    }
-
-    filterKink(filter: RegExp, kink: SearchKink): boolean {
-      if (this.data.kinks.length >= 5)
-        return this.data.kinks.indexOf(kink) !== -1;
-      return filter.test(kink.name);
-    }
-
-    filterSpecies(filter: RegExp, species: SearchSpecies): boolean {
-      return filter.test(species.keywords);
-    }
-
-    get showAvatars(): boolean {
-      return core.state.settings.showAvatars;
-    }
-
-    reset(): void {
-      this.data = {
-        kinks: [],
-        genders: [],
-        orientations: [],
-        languages: [],
-        furryprefs: [],
-        roles: [],
-        positions: [],
-        species: [],
-        bodytypes: []
-      };
-    }
-
-    updateSearch(data?: ExtendedSearchData): void {
-      if (data) {
-        // this.data = {kinks: [], genders: [], orientations: [], languages: [], furryprefs: [], roles: [], positions: []};
-        // this.data = data;
-
-        this.data = _.mapValues(data, (category, categoryName) =>
-          _.map(category, selection => {
-            const jsonSelection = JSON.stringify(selection);
-            const v = _.find(
-              (this.options as any)[categoryName],
-              op => JSON.stringify(op) === jsonSelection
-            );
-
-            return v || selection;
-          })
-        ) as ExtendedSearchData;
-      }
-    }
-
-    submit(): void {
-      if (this.state === 'results') {
         this.results = [];
-        this.hasReceivedResults = false;
-        this.countUpdater?.stop();
-        this.state = 'search';
-        return;
+
+        this.state = 'results';
+
+        this.error = '';
+
+        const data: Connection.ClientCommands['FKS'] & {
+          [key: string]: (string | number)[];
+        } = { kinks: [] };
+
+        for (const key in this.data) {
+          const item = this.data[<keyof SearchData>key]; // SearchData is correct
+          if (item.length > 0 && key !== 'bodytypes')
+            data[key] =
+              key === 'kinks'
+                ? (<SearchKink[]>item).map(x => x.id)
+                : <string[]>item;
+        }
+
+        core.connection.send('FKS', data);
+
+        // tslint:disable-next-line
+        this.updateSearchHistory(this.data);
+      },
+      showHistory(): void {
+        (<CharacterSearchHistory>this.$refs.searchHistory).show();
+      },
+      async updateSearchHistory(data: ExtendedSearchData): Promise<void> {
+        const history = (await core.settingsStore.get('searchHistory')) || [];
+        const dataStr = JSON.stringify(data, null, 0);
+
+        const filteredHistory = _.map(
+          _.reject(
+            history,
+            (h: SearchData) => JSON.stringify(h, null, 0) === dataStr
+          ),
+          h => _.merge({ species: [], bodytypes: [] }, h)
+        ) as ExtendedSearchData[];
+
+        const newHistory: ExtendedSearchData[] = _.take(
+          _.concat([data], filteredHistory),
+          15
+        );
+
+        await core.settingsStore.set('searchHistory', newHistory);
       }
-
-      this.shouldShowMatch = core.state.settings.risingComparisonInSearch;
-      this.shouldShowAvatar = core.state.settings.risingShowPortraitInMessage;
-      this.shouldShowMarker = core.state.settings.horizonShowGenderMarker;
-
-      this.results = [];
-
-      this.state = 'results';
-
-      this.error = '';
-
-      const data: Connection.ClientCommands['FKS'] & {
-        [key: string]: (string | number)[];
-      } = { kinks: [] };
-
-      for (const key in this.data) {
-        const item = this.data[<keyof SearchData>key]; // SearchData is correct
-        if (item.length > 0 && key !== 'bodytypes')
-          data[key] =
-            key === 'kinks'
-              ? (<SearchKink[]>item).map(x => x.id)
-              : <string[]>item;
-      }
-
-      core.connection.send('FKS', data);
-
-      // tslint:disable-next-line
-      this.updateSearchHistory(this.data);
     }
-
-    showHistory(): void {
-      (<CharacterSearchHistory>this.$refs.searchHistory).show();
-    }
-
-    async updateSearchHistory(data: ExtendedSearchData): Promise<void> {
-      const history = (await core.settingsStore.get('searchHistory')) || [];
-      const dataStr = JSON.stringify(data, null, 0);
-
-      const filteredHistory = _.map(
-        _.reject(
-          history,
-          (h: SearchData) => JSON.stringify(h, null, 0) === dataStr
-        ),
-        h => _.merge({ species: [], bodytypes: [] }, h)
-      ) as ExtendedSearchData[];
-
-      const newHistory: ExtendedSearchData[] = _.take(
-        _.concat([data], filteredHistory),
-        15
-      );
-
-      await core.settingsStore.set('searchHistory', newHistory);
-    }
-  }
+  });
 
   class ResultCountUpdater {
     // @ts-ignore

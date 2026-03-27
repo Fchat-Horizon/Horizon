@@ -3,6 +3,7 @@ on:
     types: [released]
 jobs:
   release-to-discord:
+    if: github.event.release.prerelease == false
     runs-on: ubuntu-latest
     steps:
       - name: Send Release to Discord

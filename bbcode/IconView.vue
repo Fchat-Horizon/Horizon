@@ -20,74 +20,53 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
   import Vue from 'vue';
   import { EventBus } from '../chat/preview/event-bus';
   import * as Utils from '../site/utils';
   import { characterImage } from '../chat/common';
   import { Character } from '../fchat';
 
-  @Component
-  export default class IconView extends Vue {
-    Utils = Utils;
-    characterImage = characterImage;
-
-    @Prop({ required: true })
-    readonly character!: Character;
-
-    @Prop()
-    readonly useOriginalAvatar: boolean = false;
-
-    @Hook('mounted')
+  export default Vue.extend({
+    props: {
+      character: { required: true as const },
+      useOriginalAvatar: { default: false }
+    },
+    data() {
+      return {
+        Utils: Utils,
+        characterImage: characterImage
+      };
+    },
     mounted(): void {
       // do nothing
-    }
-
-    @Hook('beforeDestroy')
+    },
     beforeDestroy(): void {
       this.dismiss();
-    }
-
-    @Hook('deactivated')
-    deactivate(): void {
+    },
+    deactivated(): void {
       this.dismiss();
+    },
+    methods: {
+      getCharacterUrl(): string {
+        return `flist-character://${(this.character as Character).name}`;
+      },
+      dismiss(force: boolean = false): void {
+        EventBus.$emit('imagepreview-dismiss', {
+          url: this.getCharacterUrl(),
+          force
+        });
+      },
+      show(): void {
+        EventBus.$emit('imagepreview-show', { url: this.getCharacterUrl() });
+      },
+      toggleStickyness(): void {
+        EventBus.$emit('imagepreview-toggle-stickyness', {
+          url: this.getCharacterUrl()
+        });
+      },
+      onImageError(): void {
+        (this.character as Character).overrides.avatarUrl = undefined;
+      }
     }
-
-    getCharacterUrl(): string {
-      return `flist-character://${this.character.name}`;
-    }
-
-    dismiss(force: boolean = false): void {
-      // if (!this.preview) {
-      //   return;
-      // }
-
-      EventBus.$emit('imagepreview-dismiss', {
-        url: this.getCharacterUrl(),
-        force
-      });
-    }
-
-    show(): void {
-      // if (!this.preview) {
-      //   return;
-      // }
-
-      EventBus.$emit('imagepreview-show', { url: this.getCharacterUrl() });
-    }
-
-    toggleStickyness(): void {
-      // if (!this.preview) {
-      //   return;
-      // }
-
-      EventBus.$emit('imagepreview-toggle-stickyness', {
-        url: this.getCharacterUrl()
-      });
-    }
-
-    onImageError(): void {
-      this.character.overrides.avatarUrl = undefined;
-    }
-  }
+  });
 </script>

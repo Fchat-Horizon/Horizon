@@ -38,10 +38,10 @@ const tabMap: { [key: string]: electron.WebContents } = {};
 
 /**
  * Used to track whether a window has new messages.
- * This is a map where the key is the window ID and the value is a boolean indicating whether there are new messages.
+ * This is a map where the key is the window ID and the value is a number indicating how many new messages there are.
  * @internal
  */
-const newMessagesMap: { [id: number]: boolean } = {};
+const newMessagesMap: { [id: number]: number } = {};
 
 /**
  * Used to track the injected CSS per key value. Inserting CSS returns a key value that can later be used to remove the value.
@@ -62,6 +62,16 @@ const trayIcon: string = path.join(
         : './build/trayTemplate.png'
     ).default
   )
+);
+
+/**
+ * Tray icon path for the notified state.
+ * Used only on Windows and Linux.
+ * @internal
+ */
+const trayIconNotif: string = path.join(
+  __dirname,
+  <string>require('./build/tray-notif.png').default
 );
 
 /**
@@ -89,50 +99,115 @@ const winIcon: string = path.join(
 );
 
 /**
- * Empty badge icon for the overlay.
- * @internal
+ * Badge icon path for the app icon overlay. Used for when there are new messages and numbered badges are disabled.
  */
-const emptyBadge = electron.nativeImage.createEmpty();
-
-/**
- * Badge icon for the overlay, indicating new messages.
- * @internal
- */
-const badge = electron.nativeImage.createFromPath(
+const badge: electron.NativeImage = electron.nativeImage.createFromPath(
   path.join(__dirname, <string>require('./build/badge.png').default)
 );
 
 /**
- * Handles the 'has-new' IPC event.
- * This event is triggered when there are new messages in the application.
- * It updates the dock badge on macOS and applies an overlay icon to the window that sent the event on Window and Linux.
- * @event
- * @param {IpcMainEvent} e
- * @param {boolean} hasNew
+ * Array of badge icons for the app icon overlay, the index indicating the amount of new messages with 0 being an empty icon and 10 representing any values above 9.
+ * @internal
  */
-electron.ipcMain.on('has-new', (e: IpcMainEvent, hasNew: boolean) => {
-  if (process.platform === 'darwin' && app.dock !== undefined)
-    app.dock.setBadge(hasNew ? '•' : '');
-  const window = electron.BrowserWindow.fromWebContents(e.sender);
-  if (window !== undefined && window !== null) {
-    applyOverlayIcon(window, hasNew);
-    newMessagesMap[window.id] = hasNew;
+const badges: electron.NativeImage[] = [
+  electron.nativeImage.createEmpty(),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/1.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/2.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/3.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/4.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/5.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/6.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/7.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/8.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/9.png').default)
+  ),
+  electron.nativeImage.createFromPath(
+    path.join(__dirname, <string>require('./build/badges/9plus.png').default)
+  )
+];
+
+/**
+ * Handles the 'has-new' IPC event.
+ * This event is triggered when there are new messages in an appplication window's tab(s).
+ * It updates the dock badge on macOS and applies an overlay icon to all windows on Windows and Linux.
+ * @event
+ * @param {IpcMainEvent} e Event reference.
+ * @param {number} hasNew The amount of new messages for the window that called it. If hasNew =< 0, the user has no new messages
+ * @param {boolean} numberedBadges Whether to show the number of new messages in the badge or just a dot indicating that there are new messages. This is used on Windows and Linux, as macOS does not support numbered badges.
+ */
+electron.ipcMain.on(
+  'has-new',
+  (e: IpcMainEvent, hasNew: number, numberedBadges: boolean) => {
+    log.debug('app.hasNew', { hasNew, numberedBadges });
+    const window = electron.BrowserWindow.fromWebContents(e.sender);
+    if (window !== undefined && window !== null) {
+      newMessagesMap[window.id] = hasNew;
+    }
+    updateNotificationBadges(numberedBadges);
   }
-});
+);
+
+export function updateNotificationBadges(numberedBadges: boolean) {
+  const totalCount = windows.reduce(
+    (sum, item) => sum + newMessagesMap[item.id],
+    0
+  );
+  if (process.platform !== 'win32') {
+    if (numberedBadges) {
+      app.setBadgeCount(totalCount);
+    } else {
+      if (app.dock) {
+        app.dock.setBadge(totalCount > 0 ? '*' : '');
+      }
+    }
+  } else {
+    windows.forEach(browserWindow => {
+      applyWin32OverlayIcon(browserWindow, totalCount, numberedBadges);
+    });
+    tray.setImage(totalCount > 0 ? trayIconNotif : trayIcon);
+  }
+}
 
 /**
  * Apply an overlay icon to the given window based on whether there are new messages.
  * @function
- * @param {electron.BrowserWindow} window
+ * @param {electron.BrowserWindow} browserWindow
  * The window to apply the overlay icon to.
- * @param {boolean} hasNew
- * Whether or not the window has new messages.
+ * @param {number} badgeCount
+ * The amount of new messages accumilated across all active tabs. If this value is below 1, no badge is drawn.
+ * @param {boolean} numberedBadges
+ * Whether to show the number of new messages in the badge or just a dot indicating that there are new messages. If true, the badge will show the number of new messages up to 10, with 10 representing any value above 9. If false, the badge will just show a dot if there are any new messages.
  * @internal
  */
-function applyOverlayIcon(window: electron.BrowserWindow, hasNew: boolean) {
-  window.setOverlayIcon(
-    hasNew ? badge : emptyBadge,
-    hasNew ? 'New messages' : ''
+function applyWin32OverlayIcon(
+  browserWindow: electron.BrowserWindow,
+  badgeCount: number,
+  numberedBadges: boolean
+) {
+  browserWindow.setOverlayIcon(
+    numberedBadges
+      ? badges[Math.max(Math.min(badgeCount, 10), 0)]
+      : badgeCount > 0
+        ? badge
+        : null,
+    badgeCount > 0 ? ` ${badgeCount} new messages` : ''
   );
 }
 
@@ -278,7 +353,7 @@ export function createMainWindow(
 
   const window = new electron.BrowserWindow(windowProperties);
 
-  newMessagesMap[window.id] = false;
+  newMessagesMap[window.id] = 0;
   remoteMain.enable(window.webContents);
 
   windows.push(window);
@@ -293,7 +368,11 @@ export function createMainWindow(
   });
 
   window.on('show', () => {
-    applyOverlayIcon(window, newMessagesMap[window.id]);
+    applyWin32OverlayIcon(
+      window,
+      newMessagesMap[window.id],
+      settings.horizonShowNotificationBadge
+    );
   });
 
   window.on('closed', () => {

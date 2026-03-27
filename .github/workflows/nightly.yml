@@ -1,0 +1,132 @@
+name: Nightly Dev Build
+
+permissions:
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # 06:00 UTC daily
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Check for new commits
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: development
+          fetch-depth: 0
+
+      - name: Check for new commits since last tag
+        id: check
+        run: |
+          set -euo pipefail
+
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ -n "$LAST_TAG" ]; then
+            COMMITS=$(git rev-list "${LAST_TAG}..HEAD" --count)
+            if [ "$COMMITS" -eq "0" ]; then
+              echo "No new commits since ${LAST_TAG} — skipping nightly build."
+              echo "skip=true" >> $GITHUB_OUTPUT
+            else
+              echo "${COMMITS} new commit(s) since ${LAST_TAG}."
+              echo "skip=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    name: Build (${{ matrix.platform }}-${{ matrix.arch }})
+    needs: check
+    if: needs.check.outputs.skip != 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: arm64
+          - os: macos-26
+            platform: macos
+            arch: x64
+          - os: macos-26
+            platform: macos
+            arch: arm64
+          - os: windows-latest
+            platform: windows
+            arch: x64
+          - os: windows-latest
+            platform: windows
+            arch: arm64
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install OS-specific Dependencies (Linux)
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsecret-1-dev
+
+      - name: Install OS-specific Dependencies (macOS)
+        if: matrix.platform == 'macos'
+        run: brew install python-setuptools
+
+      - name: Install OS-specific Dependencies (Windows)
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: npm install --global node-gyp
+
+      - name: Run Build Script (Linux)
+        if: matrix.platform == 'linux'
+        env:
+          NIGHTLY_VERSION: nightly-${{ github.run_number }}
+          BUILD_ARCH: ${{ matrix.arch }}
+        run: |
+          chmod +x electron/release-scripts/linux-dev.sh
+          electron/release-scripts/linux-dev.sh "$NIGHTLY_VERSION" "$GITHUB_WORKSPACE/release_artifacts/linux/$NIGHTLY_VERSION" "$BUILD_ARCH"
+
+      - name: Run Build Script (macOS)
+        if: matrix.platform == 'macos'
+        env:
+          NIGHTLY_VERSION: nightly-${{ github.run_number }}
+          BUILD_ARCH: ${{ matrix.arch }}
+        run: |
+          chmod +x electron/release-scripts/macos-dev.sh
+          electron/release-scripts/macos-dev.sh "$NIGHTLY_VERSION" "$GITHUB_WORKSPACE/release_artifacts/macos/$NIGHTLY_VERSION" "$BUILD_ARCH"
+
+      - name: Run Build Script (Windows)
+        if: matrix.platform == 'windows'
+        env:
+          NIGHTLY_VERSION: nightly-${{ github.run_number }}
+          BUILD_ARCH: ${{ matrix.arch }}
+        shell: pwsh
+        run: |
+          .\electron\release-scripts\windows-dev.ps1 -ReleaseVersion "$env:NIGHTLY_VERSION" -ReleasePath "$env:GITHUB_WORKSPACE\release_artifacts\windows\$env:NIGHTLY_VERSION" -Arch "$env:BUILD_ARCH"
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Horizon-nightly-${{ github.run_number }}-${{ matrix.platform }}-${{ matrix.arch }}
+          path: release_artifacts/**
+          retention-days: 14

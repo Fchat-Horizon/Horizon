@@ -4,6 +4,7 @@ export class LocalImagePreviewHelper extends ImagePreviewHelper {
   hide(): void {
     this.visible = false;
     this.url = undefined;
+    this.ratio = null;
   }
 
   getName(): string {
@@ -13,14 +14,21 @@ export class LocalImagePreviewHelper extends ImagePreviewHelper {
   show(url: string | undefined): void {
     this.visible = true;
     this.url = url;
-  }
+    this.ratio = null;
 
-  setRatio(_ratio: number): void {
-    // do nothing
+    if (url) {
+      const img = new Image();
+      img.onload = () => {
+        if (this.url === url && img.naturalWidth && img.naturalHeight) {
+          this.parent.updatePreviewSize(img.naturalWidth, img.naturalHeight);
+        }
+      };
+      img.src = url;
+    }
   }
 
   reactsToSizeUpdates(): boolean {
-    return false;
+    return true;
   }
 
   shouldTrackLoading(): boolean {
@@ -44,7 +52,11 @@ export class LocalImagePreviewHelper extends ImagePreviewHelper {
 
   renderStyle(): Record<string, any> {
     return this.isVisible()
-      ? { backgroundImage: `url(${this.getUrl()})`, display: 'block' }
+      ? {
+          backgroundImage: `url(${this.getUrl()})`,
+          display: 'block',
+          ...this.determineScalingRatio()
+        }
       : { display: 'none' };
   }
 }

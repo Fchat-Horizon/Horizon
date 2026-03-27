@@ -34,7 +34,6 @@
 
 <script lang="ts">
   import * as _ from 'lodash';
-  import { Component, Hook, Prop, Watch } from '@f-list/vue-ts';
   import CustomDialog from '../../components/custom_dialog';
   import Modal from '../../components/Modal.vue';
   import { Character } from '../../fchat/interfaces';
@@ -45,52 +44,51 @@
   import { BBCodeView } from '../../bbcode/view';
   import l from '../localize';
 
-  @Component({
+  export default CustomDialog.extend({
     components: {
       modal: Modal,
       user: UserView,
       bbcode: BBCodeView(core.bbCodeParser)
-    }
-  })
-  export default class CharacterAdView extends CustomDialog {
-    @Prop({ required: true })
-    readonly character!: Character;
-
-    messages: AdCachedPosting[] = [];
-    formatTime = formatTime;
-    l = l;
-
-    @Watch('character')
-    onNameUpdate(): void {
+    },
+    props: {
+      character: { required: true as const }
+    },
+    data() {
+      return {
+        messages: [] as AdCachedPosting[],
+        formatTime: formatTime,
+        l: l
+      };
+    },
+    watch: {
+      character(): void {
+        this.update();
+      }
+    },
+    mounted(): void {
       this.update();
-    }
+    },
+    methods: {
+      update(): void {
+        if (!this.character) {
+          this.messages = [];
+          return;
+        }
 
-    @Hook('mounted')
-    onMounted(): void {
-      this.update();
-    }
+        const cache = core.cache.adCache.get(this.character.name);
 
-    update(): void {
-      if (!this.character) {
-        this.messages = [];
+        this.messages = (
+          cache ? _.takeRight(cache.posts, 10).reverse() : []
+        ) as AdCachedPosting[];
+      },
+      async onOpen(): Promise<void> {
+        // empty
+        return;
+      },
+      async onClose(): Promise<void> {
+        // empty
         return;
       }
-
-      const cache = core.cache.adCache.get(this.character.name);
-
-      this.messages = (
-        cache ? _.takeRight(cache.posts, 10).reverse() : []
-      ) as AdCachedPosting[];
     }
-
-    async onOpen(): Promise<void> {
-      // empty
-      return;
-    }
-
-    async onClose(): Promise<void> {
-      // empty
-      return;
-    }
-  }
+  });
 </script>

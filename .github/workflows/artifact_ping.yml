@@ -1,0 +1,31 @@
+name: Artifact Announcements
+
+on:
+  workflow_run:
+    workflows:
+      - PR Build
+      - Build & Create Draft Release
+      - Nightly Dev Build
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  announce:
+    name: Post artifact links
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Send artifact notification to Discord
+        uses: actions/github-script@v7
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_ARTIFACTS }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            await require('./.github/scripts/artifact-announce.js')({ github, context, core });

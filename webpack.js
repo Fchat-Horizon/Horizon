@@ -23,7 +23,8 @@ function compilerCallback(err, stats) {
       context: config[0].context,
       cached: false,
       cachedAssets: false,
-      exclude: ['node_modules']
+      exclude: ['node_modules'],
+      timings: true
     });
     if (statsString) process.stdout.write(statsString + '\n');
   }
@@ -33,8 +34,6 @@ function compilerCallback(err, stats) {
     console.error('FULL ERROR', stats.stats[0].compilation.errors[0]);
   }
 }
-
-console.log(config);
 
 const compiler = webpack(config);
 if (mode === 'watch') compiler.watch({}, compilerCallback);

@@ -69,6 +69,8 @@ export class GeneralSettings {
   hasImportedVanillaLogs: boolean = false;
   hasDismissedVanillaImport: boolean = false;
   vanillaCustomBaseDir: string | undefined = undefined;
+  horizonShowNotificationBadge: boolean = true;
+  horizonShowWindowAndChatNotificationBadge: boolean = true;
 }
 
 log.debug('init.common.done');

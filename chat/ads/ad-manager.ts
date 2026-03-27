@@ -16,8 +16,8 @@ import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 
 import core from '../core';
 import { Conversation } from '../interfaces';
-import Timer = NodeJS.Timer;
 import ChannelConversation = Conversation.ChannelConversation;
+type Timer = ReturnType<typeof setTimeout>;
 
 const adManagerThroat = throat(1);
 

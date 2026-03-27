@@ -582,7 +582,7 @@ export async function runZipImport(vm: any): Promise<void> {
     fs.mkdirSync(dataDir, { recursive: true });
 
     const selectedCharacters = new Set(getSelectedImportCharacters(vm));
-    const characterInfo = new Map(
+    const characterInfo = new Map<string, BackupCharacterInfo>(
       vm.importCharacters.map((c: BackupCharacterInfo) => [c.name, c])
     );
 

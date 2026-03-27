@@ -98,7 +98,7 @@ Since we currently don't have a paid developer license (and MacOS by default blo
 
 1. Download the installer. There are both versions specific to Intel (pre-2020) and Apple Sillicon Macs, and a 'Universal' one that works on both.
    - [MacOS (Apple Sillicon)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-arm64.dmg)
-   - [MacOS (Intel)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-arm64.dmg)
+   - [MacOS (Intel)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-x64.dmg)
    - [MacOS (Universal)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-universal.dmg)
 
 2. Open the downloaded .dmg file and drag the application to your Applications folder.

@@ -413,9 +413,16 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
         log.info('portrait.hq.invalid.domain', { name, url: avatarUrl });
       } else {
         if (c.character.name === core.characters.ownCharacter.name) {
-          const parent = remote.getCurrentWindow().webContents;
-
-          parent.send('update-avatar-url', c.character.name, avatarUrl);
+          const parent =
+            remote.getCurrentWindow() ||
+            remote.BrowserWindow.getAllWindows()[0];
+          if (parent) {
+            parent.webContents.send(
+              'update-avatar-url',
+              c.character.name,
+              avatarUrl
+            );
+          }
         }
 
         log.info('portrait.hq.url', { name: c.character.name, url: avatarUrl });
@@ -431,12 +438,16 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
         });
       } else {
         if (c.character.name === core.characters.ownCharacter.name) {
-          const parent = remote.getCurrentWindow().webContents;
-          parent.send(
-            'update-character-color',
-            c.character.name,
-            characterColor
-          );
+          const parent =
+            remote.getCurrentWindow() ||
+            remote.BrowserWindow.getAllWindows()[0];
+          if (parent) {
+            parent.webContents.send(
+              'update-character-color',
+              c.character.name,
+              characterColor
+            );
+          }
         }
 
         log.info('character.custom.color.applied', {
@@ -466,7 +477,7 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
   async register(
     c: ComplexCharacter,
     skipStore: boolean = false,
-    shouldMatch: boolean = true
+    _shouldMatch: boolean = true
   ): Promise<CharacterCacheRecord> {
     const k = AsyncCache.nameKey(c.character.name);
     const match = ProfileCache.match(c);

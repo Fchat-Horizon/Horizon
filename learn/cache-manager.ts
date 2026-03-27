@@ -18,7 +18,6 @@ import {
   ConversationDraftCache,
   ConversationDraftRecord
 } from './conversation-draft-cache';
-import Timer = NodeJS.Timer;
 import ChannelConversation = Conversation.ChannelConversation;
 import Message = Conversation.Message;
 import { Character } from '../fchat/interfaces';
@@ -61,7 +60,7 @@ export class CacheManager {
 
   protected queue: ProfileCacheQueueEntry[] = [];
 
-  protected profileTimer: Timer | null = null;
+  protected profileTimer: ReturnType<typeof setTimeout> | null = null;
   protected characterProfiler: CharacterProfiler | undefined;
 
   protected profileStore?: PermanentIndexedStore;

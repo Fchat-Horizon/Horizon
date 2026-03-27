@@ -993,6 +993,9 @@ async function onReady(): Promise<void> {
           settings.horizonCustomCssEnabled !==
             _options.horizonCustomCssEnabled ||
           settings.horizonCustomCss !== _options.horizonCustomCss;
+        let badgeChange =
+          settings.horizonShowNotificationBadge !==
+          _options.horizonShowNotificationBadge;
         Object.assign(settings, _options);
         //Now we save it to a file
         setGeneralSettings(_options);
@@ -1001,6 +1004,11 @@ async function onReady(): Promise<void> {
           browserWindows.updateCustomCssAllWindows(
             settings.horizonCustomCss,
             settings.horizonCustomCssEnabled
+          );
+        }
+        if (badgeChange) {
+          browserWindows.updateNotificationBadges(
+            settings.horizonShowNotificationBadge
           );
         }
       }

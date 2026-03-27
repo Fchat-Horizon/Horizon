@@ -62,7 +62,8 @@ abstract class Conversation implements Interfaces.Conversation {
   abstract readonly name: string;
   messages: Interfaces.Message[] = [];
   errorText = '';
-  unread = Interfaces.UnreadState.None;
+  private _unread = Interfaces.UnreadState.None;
+  unreadCount = 0;
   lastRead: Interfaces.Message | undefined = undefined;
   infoText = '';
   abstract readonly maxMessageLength: number | undefined;
@@ -76,7 +77,7 @@ abstract class Conversation implements Interfaces.Conversation {
   // private loadedMore = false;
   adManager: AdManager;
   cacheActive = false;
-  protected cacheInterval: NodeJS.Timer | undefined;
+  protected cacheInterval: ReturnType<typeof setInterval> | undefined;
 
   public static readonly conversationThroat = throat(1); // make sure user posting and ad posting won't get in each others' way
 
@@ -90,6 +91,17 @@ abstract class Conversation implements Interfaces.Conversation {
   markRead(): void {
     this.lastRead = this.messages[this.messages.length - 1];
     this.unread = Interfaces.UnreadState.None;
+  }
+
+  get unread(): Interfaces.UnreadState {
+    return this._unread;
+  }
+
+  set unread(state: Interfaces.UnreadState) {
+    this._unread = state;
+    if (state !== Interfaces.UnreadState.Mention) {
+      this.unreadCount = 0;
+    }
   }
 
   get settings(): Interfaces.Settings {
@@ -346,8 +358,10 @@ class PrivateConversation
         );
         unreadState = Interfaces.UnreadState.Mention;
       }
-      if (this !== state.selectedConversation || !state.windowFocused)
+      if (this !== state.selectedConversation || !state.windowFocused) {
         this.unread = unreadState;
+        this.unreadCount++;
+      }
       this.typingStatus = 'clear';
     }
   }
@@ -795,14 +809,13 @@ class State implements Interfaces.State {
   navigationHistoryIndex: number = -1;
   private isNavigatingHistory: boolean = false;
 
-  get hasNew(): boolean {
+  get hasNew(): number {
     return (
-      this.privateConversations.some(
-        x => x.unread === Interfaces.UnreadState.Mention
-      ) ||
-      this.channelConversations.some(
-        x => x.unread === Interfaces.UnreadState.Mention
-      )
+      this.privateConversations.reduce(
+        (sum, item) => sum + item.unreadCount,
+        0
+      ) +
+      this.channelConversations.reduce((sum, item) => sum + item.unreadCount, 0)
     );
   }
 
@@ -863,6 +876,7 @@ class State implements Interfaces.State {
   show(conversation: Conversation): void {
     if (conversation === this.selectedConversation) return;
     this.lastConversation = this.selectedConversation;
+    this.lastConversation.unreadCount = 0;
     this.selectedConversation.onHide();
     conversation.unread = Interfaces.UnreadState.None;
     this.selectedConversation = conversation;
@@ -1315,8 +1329,10 @@ export default function (this: any): Interfaces.State {
         characterImage(data.character),
         'attention'
       );
-      if (conversation !== state.selectedConversation || !state.windowFocused)
+      if (conversation !== state.selectedConversation || !state.windowFocused) {
         conversation.unread = Interfaces.UnreadState.Mention;
+        conversation.unreadCount++;
+      }
       message.isHighlight = true;
       await state.consoleTab.addMessage(
         new EventMessage(
@@ -1353,8 +1369,10 @@ export default function (this: any): Interfaces.State {
           time
         )
       );
-      if (conversation !== state.selectedConversation || !state.windowFocused)
+      if (conversation !== state.selectedConversation || !state.windowFocused) {
         conversation.unread = Interfaces.UnreadState.Mention;
+        conversation.unreadCount++;
+      }
     } else if (conversation.settings.notify === Interfaces.Setting.True) {
       await core.notifications.notify(
         conversation,
@@ -1363,8 +1381,10 @@ export default function (this: any): Interfaces.State {
         characterImage(data.character),
         'attention'
       );
-      if (conversation !== state.selectedConversation || !state.windowFocused)
+      if (conversation !== state.selectedConversation || !state.windowFocused) {
         conversation.unread = Interfaces.UnreadState.Mention;
+        conversation.unreadCount++;
+      }
     }
   });
   connection.onMessage('LRP', async (data, time) => {
@@ -1419,8 +1439,13 @@ export default function (this: any): Interfaces.State {
           characterImage(data.character),
           'attention'
         );
-        if (conversation !== state.selectedConversation || !state.windowFocused)
+        if (
+          conversation !== state.selectedConversation ||
+          !state.windowFocused
+        ) {
           conversation.unread = Interfaces.UnreadState.Mention;
+          conversation.unreadCount++;
+        }
         message.isHighlight = true;
       }
       await conversation.addMessage(message);
@@ -1543,6 +1568,7 @@ export default function (this: any): Interfaces.State {
       );
       await state.consoleTab.addMessage(message);
       state.consoleTab.unread = Interfaces.UnreadState.Mention;
+      state.consoleTab.unreadCount++;
       await core.notifications.notify(
         state.consoleTab,
         l('events.broadcast.notification', data.character),

@@ -226,7 +226,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop } from '@f-list/vue-ts';
   import l from '../../chat/localize';
   import Vue, {
     Component as VueComponent,
@@ -281,193 +280,177 @@
     resolveComponent('character-action-menu')
   );
 
-  @Component({
+  export default Vue.extend({
     components: {
       date: DateDisplay,
       'friend-dialog': FriendDialog,
       'infotag-item': InfotagView,
       'memo-dialog': MemoDialog,
       'report-dialog': ReportDialog
-    }
-  })
-  export default class Sidebar extends Vue {
-    @Prop({ required: true })
-    readonly character!: Character;
-    @Prop
-    readonly oldApi?: true;
-    @Prop({ required: true })
-    readonly characterMatch!: MatchReport;
-    l = l;
-
-    readonly shared: SharedStore = Store;
-    readonly quickInfoIds: ReadonlyArray<number> = [
-      1, 3, 2, 49, 9, 29, 15, 41, 25
-    ]; // Do not sort these.
-    readonly avatarUrl = Utils.avatarURL;
-
-    getAvatarUrl(): string {
-      const onlineCharacter = core.characters.get(
-        this.character.character.name
-      );
-
-      if (onlineCharacter && onlineCharacter.overrides.avatarUrl) {
-        return onlineCharacter.overrides.avatarUrl;
-      }
-
-      return Utils.avatarURL(this.character.character.name);
-    }
-
-    get displayBadges(): string[] {
-      if (!this.character.badges) return [];
-      if (core.state.settings?.horizonShowDeveloperBadges)
-        return this.character.badges;
-      // Filter out Horizon dev/team badges if user disabled them.
-      return this.character.badges.filter(
-        b =>
-          b !== 'maintainer' &&
-          b !== 'developer' &&
-          b !== 'contributor' &&
-          b !== 'horizon-translator' &&
-          b !== 'horizon-staff' &&
-          b !== 'horizon-supporter' &&
-          b !== 'horizon-sponsor'
-      );
-    }
-
-    badgeClass(badgeName: string): string {
-      return `character-badge-${badgeName.replace('.', '-')}`;
-    }
-
-    badgeIconClass(badgeName: string): string {
-      const classMap: { [key: string]: string } = {
-        admin: 'fa fa-gem',
-        global: 'far fa-gem',
-        chatop: 'far fa-gem',
-        chanop: 'fa fa-star',
-        helpdesk: 'fa fa-user',
-        developer: 'fa fa-terminal',
-        maintainer: 'fa fa-wrench',
-        contributor: 'fa fa-code',
-        'horizon-translator': 'fa fa-language',
-        'horizon-staff': 'fa fa-id-badge',
-        'horizon-supporter': 'fa fa-handshake',
-        'horizon-sponsor': 'fa fa-cookie',
-        'subscription.lifetime': 'fa fa-certificate'
+    },
+    props: {
+      character: { required: true as const },
+      oldApi: {},
+      characterMatch: { required: true as const }
+    },
+    data() {
+      return {
+        l: l,
+        shared: Store as SharedStore,
+        quickInfoIds: [1, 3, 2, 49, 9, 29, 15, 41, 25] as ReadonlyArray<number>,
+        avatarUrl: Utils.avatarURL
       };
-      return badgeName in classMap ? classMap[badgeName] : '';
-    }
-
-    badgeTitle(badgeName: string): string {
-      if (badgeName === 'contributor') {
-        const alias = getContributorAlias(this.character.character.name);
-        return alias ? `Horizon Contributor "${alias}"` : 'Horizon Contributor';
-      }
-
-      if (badgeName === 'horizon-translator') {
-        const alias = getTranslatorAlias(this.character.character.name);
-        const langs = getTranslatorLanguages(this.character.character.name);
-        const langLabel = langs.length > 0 ? ` (${langs.join(', ')})` : '';
-        if (alias) return `Horizon Translator${langLabel} "${alias}"`;
-        return `Horizon Translator${langLabel}`;
-      }
-
-      if (badgeName === 'horizon-staff') {
-        const alias = getStaffAlias(this.character.character.name);
-        const role = getStaffRole(this.character.character.name);
-        if (alias && role) return `Horizon Staff (${role}) "${alias}"`;
-        if (alias) return `Horizon Staff "${alias}"`;
-        return role ? `Horizon Staff (${role})` : 'Horizon Staff';
-      }
-
-      if (badgeName === 'horizon-supporter') {
-        const alias = getSupporterAlias(this.character.character.name);
-        return alias ? `Horizon Supporter "${alias}"` : 'Horizon Supporter';
-      }
-
-      if (badgeName === 'horizon-sponsor') {
-        const alias = getSponsorAlias(this.character.character.name);
-        return alias ? `Horizon Sponsor "${alias}"` : 'Horizon Sponsor';
-      }
-
-      const badgeMap: { [key: string]: string } = {
-        admin: 'Administrator',
-        global: 'Global Moderator',
-        chatop: 'Chat Moderator',
-        chanop: 'Channel Moderator',
-        helpdesk: 'Helpdesk',
-        developer: 'Developer',
-        maintainer: 'Horizon Maintainer',
-        'subscription.lifetime': 'Lifetime Subscriber',
-        'subscription.other': 'Subscriber'
-      };
-      return badgeName in badgeMap ? badgeMap[badgeName] : badgeName;
-    }
-
-    showBlock(): void {
-      (<ShowableVueDialog>this.$refs['block-dialog']).show();
-    }
-
-    showRename(): void {
-      (<ShowableVueDialog>this.$refs['rename-dialog']).show();
-    }
-
-    showMemo(): void {
-      (<ShowableVueDialog>this.$refs['memo-dialog']).show();
-    }
-
-    showReport(): void {
-      (<ShowableVueDialog>this.$refs['report-dialog']).show();
-    }
-
-    showFriends(): void {
-      (<ShowableVueDialog>this.$refs['friend-dialog']).show();
-    }
-
-    showInChat(): void {
-      //TODO implement this
-    }
-
-    async toggleBookmark(): Promise<void> {
-      try {
-        await methods.bookmarkUpdate(
-          this.character.character.id,
-          !this.character.bookmarked
+    },
+    computed: {
+      displayBadges(): string[] {
+        const char = this.character as Character;
+        if (!char.badges) return [];
+        if (core.state.settings?.horizonShowDeveloperBadges) return char.badges;
+        return char.badges.filter(
+          (b: string) =>
+            b !== 'maintainer' &&
+            b !== 'developer' &&
+            b !== 'contributor' &&
+            b !== 'horizon-translator' &&
+            b !== 'horizon-staff' &&
+            b !== 'horizon-supporter' &&
+            b !== 'horizon-sponsor'
         );
-        this.character.bookmarked = !this.character.bookmarked;
-      } catch (e) {
-        Utils.ajaxError(e, 'Unable to change bookmark state.');
+      },
+      editUrl(): string {
+        return `${Utils.siteDomain}character_edit.php?id=${(this.character as Character).character.id}`;
+      },
+      noteUrl(): string {
+        return methods.sendNoteUrl((this.character as Character).character);
+      },
+      contactMethods(): { id: number; value?: string }[] {
+        const char = this.character as Character;
+        return Object.keys(Store.shared.infotags)
+          .map(x => Store.shared.infotags[x])
+          .filter(
+            x =>
+              x.infotag_group === CONTACT_GROUP_ID &&
+              char.character.infotags[x.id] !== undefined
+          )
+          .sort((a, b) => (a.name < b.name ? -1 : 1));
+      },
+      authenticated(): boolean {
+        return Store.authenticated;
+      }
+    },
+    methods: {
+      getAvatarUrl(): string {
+        const char = this.character as Character;
+        const onlineCharacter = core.characters.get(char.character.name);
+
+        if (onlineCharacter && onlineCharacter.overrides.avatarUrl) {
+          return onlineCharacter.overrides.avatarUrl;
+        }
+
+        return Utils.avatarURL(char.character.name);
+      },
+      badgeClass(badgeName: string): string {
+        return `character-badge-${badgeName.replace('.', '-')}`;
+      },
+      badgeIconClass(badgeName: string): string {
+        const classMap: { [key: string]: string } = {
+          admin: 'fa fa-gem',
+          global: 'far fa-gem',
+          chatop: 'far fa-gem',
+          chanop: 'fa fa-star',
+          helpdesk: 'fa fa-user',
+          developer: 'fa fa-terminal',
+          maintainer: 'fa fa-wrench',
+          contributor: 'fa fa-code',
+          'horizon-translator': 'fa fa-language',
+          'horizon-staff': 'fa fa-id-badge',
+          'horizon-supporter': 'fa fa-handshake',
+          'horizon-sponsor': 'fa fa-cookie',
+          'subscription.lifetime': 'fa fa-certificate'
+        };
+        return badgeName in classMap ? classMap[badgeName] : '';
+      },
+      badgeTitle(badgeName: string): string {
+        const char = this.character as Character;
+        if (badgeName === 'contributor') {
+          const alias = getContributorAlias(char.character.name);
+          return alias
+            ? `Horizon Contributor "${alias}"`
+            : 'Horizon Contributor';
+        }
+
+        if (badgeName === 'horizon-translator') {
+          const alias = getTranslatorAlias(char.character.name);
+          const langs = getTranslatorLanguages(char.character.name);
+          const langLabel = langs.length > 0 ? ` (${langs.join(', ')})` : '';
+          if (alias) return `Horizon Translator${langLabel} "${alias}"`;
+          return `Horizon Translator${langLabel}`;
+        }
+
+        if (badgeName === 'horizon-staff') {
+          const alias = getStaffAlias(char.character.name);
+          const role = getStaffRole(char.character.name);
+          if (alias && role) return `Horizon Staff (${role}) "${alias}"`;
+          if (alias) return `Horizon Staff "${alias}"`;
+          return role ? `Horizon Staff (${role})` : 'Horizon Staff';
+        }
+
+        if (badgeName === 'horizon-supporter') {
+          const alias = getSupporterAlias(char.character.name);
+          return alias ? `Horizon Supporter "${alias}"` : 'Horizon Supporter';
+        }
+
+        if (badgeName === 'horizon-sponsor') {
+          const alias = getSponsorAlias(char.character.name);
+          return alias ? `Horizon Sponsor "${alias}"` : 'Horizon Sponsor';
+        }
+
+        const badgeMap: { [key: string]: string } = {
+          admin: 'Administrator',
+          global: 'Global Moderator',
+          chatop: 'Chat Moderator',
+          chanop: 'Channel Moderator',
+          helpdesk: 'Helpdesk',
+          developer: 'Developer',
+          maintainer: 'Horizon Maintainer',
+          'subscription.lifetime': 'Lifetime Subscriber',
+          'subscription.other': 'Subscriber'
+        };
+        return badgeName in badgeMap ? badgeMap[badgeName] : badgeName;
+      },
+      showBlock(): void {
+        (<ShowableVueDialog>this.$refs['block-dialog']).show();
+      },
+      showRename(): void {
+        (<ShowableVueDialog>this.$refs['rename-dialog']).show();
+      },
+      showMemo(): void {
+        (<ShowableVueDialog>this.$refs['memo-dialog']).show();
+      },
+      showReport(): void {
+        (<ShowableVueDialog>this.$refs['report-dialog']).show();
+      },
+      showFriends(): void {
+        (<ShowableVueDialog>this.$refs['friend-dialog']).show();
+      },
+      showInChat(): void {
+        //TODO implement this
+      },
+      async toggleBookmark(): Promise<void> {
+        const char = this.character as Character;
+        try {
+          await methods.bookmarkUpdate(char.character.id, !char.bookmarked);
+          char.bookmarked = !char.bookmarked;
+        } catch (e) {
+          Utils.ajaxError(e, 'Unable to change bookmark state.');
+        }
+      },
+      getInfotag(id: number): Infotag {
+        return Store.shared.infotags[id];
+      },
+      memo(memo: object): void {
+        this.$emit('memo', memo);
       }
     }
-
-    get editUrl(): string {
-      return `${Utils.siteDomain}character_edit.php?id=${this.character.character.id}`;
-    }
-
-    get noteUrl(): string {
-      return methods.sendNoteUrl(this.character.character);
-    }
-
-    get contactMethods(): { id: number; value?: string }[] {
-      return Object.keys(Store.shared.infotags)
-        .map(x => Store.shared.infotags[x])
-        .filter(
-          x =>
-            x.infotag_group === CONTACT_GROUP_ID &&
-            this.character.character.infotags[x.id] !== undefined
-        )
-        .sort((a, b) => (a.name < b.name ? -1 : 1));
-    }
-
-    getInfotag(id: number): Infotag {
-      return Store.shared.infotags[id];
-    }
-
-    get authenticated(): boolean {
-      return Store.authenticated;
-    }
-
-    memo(memo: object): void {
-      this.$emit('memo', memo);
-    }
-  }
+  });
 </script>

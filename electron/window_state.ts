@@ -40,8 +40,8 @@ function mapToScreen(state: SavedWindowState): SavedWindowState {
 
   state.width = width;
   state.height = height;
-  state.x = x !== 0 ? x : undefined;
-  state.y = y !== 0 ? y : undefined;
+  if (state.x !== undefined) state.x = x;
+  if (state.y !== undefined) state.y = y;
   return state;
 }
 

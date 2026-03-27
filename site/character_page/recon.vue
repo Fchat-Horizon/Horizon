@@ -46,7 +46,6 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop } from '@f-list/vue-ts';
   import Vue from 'vue';
   import { Character } from './interfaces';
   import { Conversation } from '../../chat/interfaces';
@@ -58,68 +57,67 @@
 
   import { formatTime } from '../../chat/common';
 
-  @Component({
+  export default Vue.extend({
     components: {
       'message-view': MessageView,
       bbcode: BBCodeView(core.bbCodeParser)
-    }
-  })
-  export default class ReconView extends Vue {
-    @Prop({ required: true })
-    readonly character!: Character;
-
-    conversation: Conversation.Message[] = [];
-    ads: AdCachedPosting[] = [];
-
-    formatTime = formatTime;
-
-    @Hook('mounted')
+    },
+    props: {
+      character: { required: true as const }
+    },
+    data() {
+      return {
+        conversation: [] as Conversation.Message[],
+        ads: [] as AdCachedPosting[],
+        formatTime: formatTime
+      };
+    },
     async mounted(): Promise<void> {
       await this.load();
-    }
+    },
+    methods: {
+      async load(): Promise<void> {
+        this.conversation = [];
+        this.ads = [];
 
-    async load(): Promise<void> {
-      this.conversation = [];
-      this.ads = [];
+        await Promise.all([this.loadAds(), this.loadConversation()]);
+      },
+      async loadAds(): Promise<void> {
+        const char = this.character as Character;
+        const cache = core.cache.adCache.get(char.character.name);
 
-      await Promise.all([this.loadAds(), this.loadConversation()]);
-    }
+        this.ads = _.uniq(
+          cache ? _.takeRight(cache.posts, 5).reverse() : []
+        ) as AdCachedPosting[];
+      },
+      async loadConversation(): Promise<void> {
+        const char = this.character as Character;
+        const ownName = core.characters.ownCharacter.name;
+        const logKey = char.character.name.toLowerCase();
+        const logDates = await core.logs.getLogDates(ownName, logKey);
 
-    async loadAds(): Promise<void> {
-      const cache = core.cache.adCache.get(this.character.character.name);
+        if (logDates.length === 0) {
+          return;
+        }
 
-      this.ads = _.uniq(
-        cache ? _.takeRight(cache.posts, 5).reverse() : []
-      ) as AdCachedPosting[];
-    }
+        const messages = await core.logs.getLogs(
+          ownName,
+          logKey,
+          _.last(logDates) as Date
+        );
+        const matcher = /\[AUTOMATED MESSAGE]/;
 
-    async loadConversation(): Promise<void> {
-      const ownName = core.characters.ownCharacter.name;
-      const logKey = this.character.character.name.toLowerCase();
-      const logDates = await core.logs.getLogDates(ownName, logKey);
-
-      if (logDates.length === 0) {
-        return;
+        this.conversation = _.takeRight(
+          _.filter(messages, m => !matcher.exec(m.text)),
+          5
+        );
+      },
+      getMessageWrapperClasses(): any {
+        const classes: any = {};
+        const layout = core.state.settings.chatLayoutMode || 'classic';
+        classes['layout-' + layout] = true;
+        return classes;
       }
-
-      const messages = await core.logs.getLogs(
-        ownName,
-        logKey,
-        _.last(logDates) as Date
-      );
-      const matcher = /\[AUTOMATED MESSAGE]/;
-
-      this.conversation = _.takeRight(
-        _.filter(messages, m => !matcher.exec(m.text)),
-        5
-      );
     }
-
-    getMessageWrapperClasses(): any {
-      const classes: any = {};
-      const layout = core.state.settings.chatLayoutMode || 'classic';
-      classes['layout-' + layout] = true;
-      return classes;
-    }
-  }
+  });
 </script>
