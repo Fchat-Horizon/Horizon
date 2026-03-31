@@ -1,2 +1,1 @@
-git diff --cached --name-only --diff-filter=d -z | xargs -0 -r npx pnpm prettier --write || true
-git diff --cached --name-only --diff-filter=d -z | xargs -0 -r git add
+pnpm lint-staged

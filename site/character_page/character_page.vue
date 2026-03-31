@@ -756,6 +756,7 @@
     margin-right: -6px;
     border: 1px var(--characterKinkCustomBorderColor) solid;
     border-radius: 2px;
+
     /* border-collapse: collapse; */
     padding: 5px;
   }
@@ -802,6 +803,7 @@
 
   .infotag-label {
     display: block;
+
     /* margin-bottom: 1rem; */
     font-weight: normal !important;
     line-height: 120%;
@@ -823,6 +825,7 @@
 
   .quick-info-label {
     display: block;
+
     /* margin-bottom: 1rem; */
     font-weight: normal !important;
     line-height: 120%;
@@ -949,6 +952,7 @@
 
   .match-report {
     background-color: var(--scoreReportBg);
+
     /* width: 100%; */
     margin-top: -1.2rem;
     margin-left: -1.2rem;
