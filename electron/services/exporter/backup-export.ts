@@ -103,7 +103,7 @@ function listFilesRecursive(rootDir: string): string[] {
   const stack: string[] = [rootDir];
   while (stack.length > 0) {
     const dir = stack.pop()!;
-    let entries: string[] = [];
+    let entries: string[];
     try {
       entries = fs.readdirSync(dir).map(n => path.join(dir, n));
     } catch {

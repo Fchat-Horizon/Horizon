@@ -53,7 +53,7 @@
           rowClass="channel-row"
           :resetKey="filterApplied"
         >
-          <template slot-scope="{ item: channel }">
+          <template v-slot="{ item: channel }">
             <div class="form-check">
               <input
                 class="form-check-input"
@@ -79,7 +79,7 @@
           rowClass="channel-row"
           :resetKey="filterApplied"
         >
-          <template slot-scope="{ item: channel }">
+          <template v-slot="{ item: channel }">
             <div class="form-check">
               <input
                 class="form-check-input"

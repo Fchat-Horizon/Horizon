@@ -7,7 +7,7 @@
     style="width: 98%"
     dialogClass="ads-dialog"
   >
-    <template slot="title">
+    <template v-slot:title>
       {{ l('characterAd.title') }}
       <user :character="character" :isMarkerShown="false">{{
         character.name

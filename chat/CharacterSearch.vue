@@ -19,7 +19,7 @@
           :filterFunc="filterKink"
           :options="options.kinks"
         >
-          <template slot-scope="s">{{ s.option.name }}</template>
+          <template v-slot="s">{{ s.option.name }}</template>
         </filterable-select>
         <filterable-select
           v-for="item in listItems"
@@ -42,7 +42,7 @@
           :title="l('characterSearch.species')"
           :options="options.species"
         >
-          <template slot-scope="s"
+          <template v-slot="s"
             >{{ s.option.shortName }}
             <small>{{ s.option.details }}</small></template
           >
@@ -119,7 +119,7 @@
             </div>
           </div>
         </template>
-        <template v-else v-once>
+        <template v-else>
           <user
             :character="record.character"
             :showStatus="true"
@@ -574,7 +574,7 @@
         return _.reduce(
           results,
           (accum: number, result: SearchResult) => {
-            if (!!result.profile) {
+            if (result.profile) {
               return accum;
             }
 
@@ -587,7 +587,7 @@
               );
             }
 
-            return !!result.profile ? accum : accum + 1;
+            return result.profile ? accum : accum + 1;
           },
           0
         );

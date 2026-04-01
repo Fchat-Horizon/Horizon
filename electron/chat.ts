@@ -134,9 +134,9 @@ function openIncognitoWindows(url: string): void {
     log.debug('incognito.open.win32.ProgId', browser);
 
     try {
-      let ftypeAssocmd = execSync(`ftype ${browser}`).toString().trim();
+      const ftypeAssocmd = execSync(`ftype ${browser}`).toString().trim();
       log.verbose('incognito.open.win32.ftype', ftypeAssocmd);
-      let match = ftypeAssocmd.match(/"([^"]+\.exe)"/);
+      const match = ftypeAssocmd.match(/"([^"]+\.exe)"/);
       if (match?.[1]) executablePath = match?.[1];
     } catch (e) {
       log.error('incognito.open.win32.ftype.error', e);
@@ -480,7 +480,7 @@ webContents.on('context-menu', (_, props) => {
     connection.isOpen &&
     props.srcURL.startsWith('https://static.f-list.net/images/eicon/')
   ) {
-    let eiconName = props.titleText;
+    const eiconName = props.titleText;
     //Electron on Mac allows for header context menu items, so we use that instead of a disabled item split of by a seperator.
     menuTemplate.unshift(
       {

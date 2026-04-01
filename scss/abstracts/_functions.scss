@@ -26,6 +26,6 @@
     @return map-get($colors, $key);
   }
 
-  @warn "Unknown `#{$key}` in $colors.";
+  @warn 'Unknown `#{$key}` in $colors.';
   @return null;
 }

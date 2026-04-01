@@ -44,8 +44,6 @@
       const blob = new Blob([finalData], { type: 'plain/text;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const el = document.createElement('a');
-      const d = new Date();
-
       el.href = url;
       el.download = `unknown-species.txt`;
 

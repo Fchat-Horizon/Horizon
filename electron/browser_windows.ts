@@ -483,7 +483,7 @@ function toggleWindowSpecificMenuItems(active: boolean) {
 
   if (appMenu) {
     toggleableIds.forEach(itemId => {
-      var item = appMenu!.getMenuItemById(itemId);
+      const item = appMenu!.getMenuItemById(itemId);
       if (item) item.enabled = active;
     });
   }
@@ -541,9 +541,12 @@ export async function updateCustomCssAllWindows(
       delete windowCssKeyMap[window.id];
     }
     if (useCustomCss) {
-      let key = await window.webContents.insertCSS(` html { ${styleSheet} }`, {
-        cssOrigin: 'author'
-      });
+      const key = await window.webContents.insertCSS(
+        ` html { ${styleSheet} }`,
+        {
+          cssOrigin: 'author'
+        }
+      );
       windowCssKeyMap[window.id] = key;
     }
 
@@ -671,8 +674,8 @@ export function createSettingsWindow(
   ImporterHint: ImporterHint,
   parentWindow: electron.BrowserWindow
 ): electron.BrowserWindow | undefined {
-  let desiredHeight = 570;
-  let desiredWidth = 885;
+  const desiredHeight = 570;
+  const desiredWidth = 885;
 
   const windowProperties: electron.BrowserWindowConstructorOptions = {
     center: true,
@@ -743,8 +746,8 @@ export function createChangelogWindow(
   parentWindow: electron.BrowserWindow,
   updateVer?: string
 ): electron.BrowserWindow | undefined {
-  let desiredHeight = 700;
-  let desiredWidth = 600;
+  const desiredHeight = 700;
+  const desiredWidth = 600;
 
   const windowProperties: electron.BrowserWindowConstructorOptions = {
     center: true,
@@ -812,8 +815,8 @@ export function createExporterWindow(
   importHint: ImporterHint,
   parentWindow: electron.BrowserWindow
 ): electron.BrowserWindow | undefined {
-  let desiredHeight = 720;
-  let desiredWidth = 885;
+  const desiredHeight = 720;
+  const desiredWidth = 885;
 
   const windowProperties: electron.BrowserWindowConstructorOptions = {
     center: true,

@@ -61,11 +61,10 @@ export class WordPosSearch {
     const words = parentElt.textContent.split(/[\s\.\<\>\,\?\!\;\:\@\$\*\(\)]/);
 
     let start = 0;
-    let end = 0;
 
     for (let i = 0; i < words.length; i++) {
       const word = words[i];
-      end = start + word.length;
+      const end = start + word.length;
 
       try {
         range.setStart(parentElt, start);

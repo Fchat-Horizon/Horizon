@@ -312,7 +312,7 @@
 
     //tslint:enable
 
-    destroyed(): void {
+    unmounted(): void {
       // console.log('EDITOR', 'destroyed');
       window.removeEventListener('resize', this.resizeListener);
     },

@@ -192,7 +192,7 @@ export class BBCodeParser {
         paramStart = i;
 
         const paramIndex = paramStart === -1 ? i : paramStart;
-        let tagKey = input
+        const tagKey = input
           .substring(tagStart + 1, paramIndex)
           .trim()
           .toLowerCase();
@@ -219,7 +219,7 @@ export class BBCodeParser {
           continue;
         }
         if (isInCollapseParam) {
-          let fullTagKey = input
+          const fullTagKey = input
             .substring(tagStart + 1, i + 1)
             .trim()
             .toLowerCase();

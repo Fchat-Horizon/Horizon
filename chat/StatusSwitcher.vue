@@ -9,10 +9,12 @@
     <div class="mb-3" id="statusSelector">
       <label class="control-label">{{ l('chat.setStatus.status') }}</label>
       <dropdown linkClass="form-select">
-        <span slot="title"
-          ><span class="fa fa-fw" :class="getStatusIcon(status)"></span
-          >{{ l('status.' + status) }}</span
-        >
+        <template v-slot:title>
+          <span
+            ><span class="fa fa-fw" :class="getStatusIcon(status)"></span
+            >{{ l('status.' + status) }}</span
+          >
+        </template>
         <a
           href="#"
           class="dropdown-item"
@@ -155,9 +157,6 @@
 </script>
 
 <style lang="scss">
-  .statusEditor .bbcode-toolbar .color-selector {
-  }
-
   .statusEditor .bbcode-toolbar .eicon-selector {
     top: 30px !important;
   }

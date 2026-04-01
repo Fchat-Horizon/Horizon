@@ -322,7 +322,7 @@ async function checkForGitRelease(
     return;
   }
   try {
-    let releases: ReleaseInfo[] = (
+    const releases: ReleaseInfo[] = (
       await Axios.get<ReleaseInfo[]>(`${releaseUrl}`)
     ).data;
     //The releases we get from the GitHub API are in in descending order from their release date.
@@ -382,7 +382,7 @@ export function openURLExternally(linkUrl: string): void {
       }
 
       // replace %s in arguments with URL and encapsulate in quotes to prevent issues with spaces and special characters in the path
-      let link = settings.browserArgs.replace('%s', '"' + linkUrl + '"');
+      const link = settings.browserArgs.replace('%s', '"' + linkUrl + '"');
 
       const execFile = require('child_process').exec;
       if (process.platform === 'darwin') {
@@ -671,7 +671,7 @@ async function onReady(): Promise<void> {
               process.env.APP_VERSION || app.getVersion()
             ),
             click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
-              let win = w || electron.BrowserWindow.getFocusedWindow();
+              const win = w || electron.BrowserWindow.getFocusedWindow();
               if (!win) return;
               browserWindows.createChangelogWindow(settings, 'none', win);
             }
@@ -989,11 +989,11 @@ async function onReady(): Promise<void> {
     (_e, _options: GeneralSettings) => {
       log.info('main.settings.update.message', _options);
       if (_options) {
-        let newCss =
+        const newCss =
           settings.horizonCustomCssEnabled !==
             _options.horizonCustomCssEnabled ||
           settings.horizonCustomCss !== _options.horizonCustomCss;
-        let badgeChange =
+        const badgeChange =
           settings.horizonShowNotificationBadge !==
           _options.horizonShowNotificationBadge;
         Object.assign(settings, _options);
@@ -1019,7 +1019,7 @@ async function onReady(): Promise<void> {
     openURLExternally(_url);
   });
 
-  let window = browserWindows.createMainWindow(
+  const window = browserWindows.createMainWindow(
     settings,
     shouldImportSettings ? 'auto' : 'none',
     baseDir

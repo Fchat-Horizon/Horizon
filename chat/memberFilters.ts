@@ -79,7 +79,7 @@ function getOrComputeGenderPreferences(
   Object.values(Gender)
     .filter(v => typeof v === 'number')
     .forEach(gv => {
-      let score: Scoring = Scoring.NEUTRAL;
+      let score: Scoring;
       const kinkPref = Matcher.getKinkGenderPreference(c, gv as Gender);
       if (kinkPref === null) {
         score = Matcher.scoreOrientationByGender(

@@ -9,8 +9,6 @@
  * @see {@link https://github.com/Fchat-Horizon/Horizon|GitHub repo}
  */
 
-/* eslint-disable no-null-keyword, max-file-line-count */
-
 import * as _ from 'lodash';
 import { Character, CharacterInfotag, KinkChoice } from '../interfaces';
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
@@ -856,7 +854,7 @@ export class Matcher {
     }
 
     //No preference listed? Then we return based on assumed preference from the orientation.
-    let score = Matcher.scoreOrientationByGender(
+    const score = Matcher.scoreOrientationByGender(
       yourGender,
       yourOrientation,
       theirGender

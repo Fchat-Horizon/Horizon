@@ -19,9 +19,9 @@ export interface EditorSelection {
   length: number;
   text: string;
 }
-let shortcutModifierKey: String = process.platform == 'darwin' ? '⌘' : 'Ctrl';
+const shortcutModifierKey: string = process.platform == 'darwin' ? '⌘' : 'Ctrl';
 /*tslint:disable:max-line-length*/
-export let defaultButtons: ReadonlyArray<EditorButton> = [
+export const defaultButtons: ReadonlyArray<EditorButton> = [
   {
     title:
       'Bold (' +

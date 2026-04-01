@@ -239,7 +239,7 @@ export default Vue.extend({
 
     if (isModern) {
       if (modernInner && modernInner.children) {
-        let messagePrefix = '';
+        let messagePrefix;
         switch (message.type) {
           case Conversation.Message.Type.Action:
             messagePrefix = createElement('i', {

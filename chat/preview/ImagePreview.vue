@@ -1049,6 +1049,7 @@
 
     .image-preview-toolbar {
       position: absolute;
+
       /* background-color: green; */
       left: 0;
       top: 0;

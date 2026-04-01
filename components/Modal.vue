@@ -101,6 +101,7 @@
   export let isShowing = false;
 
   type Modal = InstanceType<typeof Modal>;
+  /* eslint-disable-next-line no-redeclare */
   const Modal = Vue.extend({
     props: {
       action: { default: '' },

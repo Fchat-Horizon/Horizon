@@ -184,6 +184,7 @@
     .selected-row,
     .row.selected-row:hover {
       /*background-color: #343461;*/
+
       /*border: 1px solid #6565b2;*/
 
       backdrop-filter: invert(20%);

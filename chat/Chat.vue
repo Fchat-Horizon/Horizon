@@ -743,6 +743,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: normal;
-    word-break: break-word;
+    overflow-wrap: break-word;
   }
 </style>

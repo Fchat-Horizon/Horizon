@@ -116,7 +116,7 @@ const previewInitiationTime = Date.now();
 
     const originalLocationAssign = window.location.assign;
     const originalLocationReplace = window.location.replace;
-    const originalLocationReload = window.location.reload;
+    const originalLocationReload = window.location.reload; // eslint-disable-line sonarjs/no-unused-vars
 
     let originalHref = window.location.href;
     Object.defineProperty(window.location, 'href', {
@@ -130,7 +130,6 @@ const previewInitiationTime = Date.now();
         }
         originalHref = url;
         //Allow setting for legitimate URLs
-        return url;
       }
     });
 
@@ -152,7 +151,7 @@ const previewInitiationTime = Date.now();
 
     //Monitor for programmatic redirects via setTimeout/setInterval
     const originalSetTimeout = window.setTimeout;
-    const originalSetInterval = window.setInterval;
+    const originalSetInterval = window.setInterval; // eslint-disable-line sonarjs/no-unused-vars
 
     window.setTimeout = function (callback, delay, ...args) {
       //Wrap callback to check for redirects
@@ -357,7 +356,7 @@ const previewInitiationTime = Date.now();
 })();
 
 try {
-  if (!!window.location.toString().match(/__x-suppress__/)) {
+  if (window.location.toString().match(/__x-suppress__/)) {
     document.write("<script type='application/x-suppress'>");
   }
 } catch (err) {

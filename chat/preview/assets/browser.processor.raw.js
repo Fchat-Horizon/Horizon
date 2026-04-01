@@ -357,7 +357,7 @@ class FListImagePreviewDomMutator {
   }
 
   createStyleElement() {
-    if (!!this.settings.skipInjectStyle) {
+    if (this.settings.skipInjectStyle) {
       return document.createElement('i');
     }
 

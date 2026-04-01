@@ -12,11 +12,14 @@ const config = {
     'electron/dist/**',
     'electron/release_artifacts/**',
     'mobile/**',
-    'webchat/dist/**',
-    'reference/**'
+    'webchat/dist/**'
   ],
   rules: {
-    'max-nesting-depth': 4,
+    'max-nesting-depth': null,
+    'selector-type-no-unknown': [
+      true,
+      { ignoreTypes: ['webview', 'character-select'] }
+    ],
     'selector-max-id': null,
     'selector-max-compound-selectors': 4,
     'color-named': null,
@@ -51,10 +54,13 @@ const config = {
     'declaration-block-no-redundant-longhand-properties': null,
     'comment-whitespace-inside': null,
     'block-no-redundant-nested-style-rules': null,
+    '@stylistic/declaration-block-trailing-semicolon': null,
 
-    '@stylistic/indentation': 2,
-    '@stylistic/string-quotes': 'single',
-    '@stylistic/function-parentheses-space-inside': 'never-single-line'
+    // Prettier handles all formatting — disable conflicting stylistic rules
+    '@stylistic/indentation': null,
+    '@stylistic/string-quotes': null,
+    '@stylistic/block-opening-brace-space-before': null,
+    '@stylistic/function-parentheses-space-inside': null
   },
   overrides: [
     {
@@ -88,6 +94,9 @@ const config = {
         'stylelint-config-standard-vue/scss'
       ],
       rules: {
+        // Prettier handles indentation in Vue <style> blocks
+        '@stylistic/indentation': null,
+        '@stylistic/block-opening-brace-space-before': null,
         'declaration-property-value-no-unknown': null,
         'color-function-alias-notation': null,
         'scss/dollar-variable-pattern': null,

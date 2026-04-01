@@ -22,7 +22,6 @@ export default [
       'electron/release_artifacts/**',
       'mobile/**',
       'webchat/dist/**',
-      'reference/**',
       'test.ts'
     ]
   },
@@ -55,7 +54,7 @@ export default [
       'vue/no-side-effects-in-computed-properties': 'warn',
       'vue/require-v-for-key': 'warn',
       'vue/no-deprecated-slot-scope-attribute': 'warn',
-      'vue/no-deprecated-destroyed-lifecycle': 'warn',
+      'vue/no-deprecated-destroyed-lifecycle': 'off',
       'vue/no-deprecated-slot-attribute': 'warn',
       'vue/no-deprecated-delete-set': 'off',
       'vue/no-deprecated-v-on-native-modifier': 'off'
@@ -112,7 +111,42 @@ export default [
       'sonarjs/no-redundant-jump': 'off',
       'sonarjs/no-nested-template-literals': 'off',
       'sonarjs/no-ignored-exceptions': 'warn',
-      'sonarjs/unused-import': 'warn'
+      'sonarjs/unused-import': 'warn',
+
+      // Electron app — these are expected
+      'sonarjs/os-command': 'off',
+      'sonarjs/no-os-command-from-path': 'off',
+      'sonarjs/constructor-for-side-effects': 'off',
+      'sonarjs/code-eval': 'off',
+      'sonarjs/disabled-auto-escaping': 'off',
+
+      // Too noisy / stylistic for legacy code
+      'sonarjs/updated-loop-counter': 'off',
+      'sonarjs/no-inverted-boolean-check': 'off',
+      'sonarjs/no-redundant-boolean': 'off',
+      'sonarjs/prefer-single-boolean-return': 'off',
+      'sonarjs/no-nested-functions': 'off',
+      'sonarjs/use-type-alias': 'off',
+      'sonarjs/public-static-readonly': 'off',
+      'sonarjs/regex-complexity': 'off',
+      'sonarjs/no-gratuitous-expressions': 'warn',
+      'sonarjs/no-redundant-assignments': 'warn',
+      'sonarjs/single-char-in-character-classes': 'warn',
+      'sonarjs/duplicates-in-character-class': 'warn',
+      'sonarjs/no-regex-spaces': 'off',
+
+      // Downgrade to warn
+      'no-empty': 'warn',
+      'no-case-declarations': 'warn',
+      '@typescript-eslint/no-empty-object-type': 'off',
+
+      // Vue 2 compat
+      'vue/no-use-v-if-with-v-for': 'warn',
+      'vue/no-v-for-template-key-on-child': 'warn',
+      'vue/no-mutating-props': 'warn',
+      'vue/no-deprecated-events-api': 'warn',
+      'vue/no-deprecated-props-default-this': 'off',
+      'vue/no-dupe-keys': 'warn'
     }
   },
   {

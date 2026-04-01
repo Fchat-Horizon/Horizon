@@ -119,8 +119,9 @@ export class CoreBBCodeParser extends BBCodeParser {
           img.classList.add('loading');
           img.addEventListener('load', evt => {
             //whenever an image is loaded, check if every other image in the span has been loaded. Only then should you show them all
-            let imgs = [];
-            for (let i of (evt.target as Node).parentElement?.children || []) {
+            const imgs = [];
+            for (const i of (evt.target as Node).parentElement?.children ||
+              []) {
               if (i.tagName == 'IMG') {
                 imgs.push(i);
                 if (!(i as HTMLImageElement).complete) {
@@ -128,7 +129,7 @@ export class CoreBBCodeParser extends BBCodeParser {
                 }
               }
             }
-            for (let i of imgs) {
+            for (const i of imgs) {
               i.classList.remove('loading'); //perhaps we could use a spinner here instead of that. Tried it but it looks terrible on mosaics and the transition is smooth
             }
           });

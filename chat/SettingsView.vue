@@ -826,7 +826,8 @@
       <h5>{{ l('settings.profile.ignoredList') }}</h5>
       <div class="mb-3 p-2">
         <template v-if="ignored.length">
-          <div v-for="(user, i) in ignored">
+          <!-- eslint-disable-next-line vue/no-unused-vars -->
+          <div v-for="(user, _i) in ignored">
             <span
               class="fa fa-times"
               style="cursor: pointer"
@@ -1377,7 +1378,7 @@
 
         core.state.settings = {
           playSound: this.playSound,
-          soundTheme: previousSettings.soundTheme,
+          soundTheme: previousSettings.soundTheme || 'default',
           clickOpensMessage: this.clickOpensMessage,
           disallowedTags: this.disallowedTags
             .split(',')
@@ -1392,7 +1393,6 @@
           showAvatars: this.showAvatars,
           animatedEicons: this.animatedEicons,
           smoothMosaics: this.smoothMosaics,
-          soundTheme: core.state.settings.soundTheme || 'default',
           idleTimer: isNaN(idleTimer)
             ? 0
             : idleTimer < 0

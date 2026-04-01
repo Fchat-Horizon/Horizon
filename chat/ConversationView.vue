@@ -770,7 +770,7 @@
       this.memoUpdateHook = (e: any) => this.refreshMemo(e);
       EventBus.$on('character-memo', this.memoUpdateHook);
     },
-    destroyed(): void {
+    unmounted(): void {
       window.removeEventListener('resize', this.resizeHandler);
       window.removeEventListener('keydown', this.keydownHandler);
       window.removeEventListener('keypress', this.keypressHandler);
@@ -1235,9 +1235,12 @@
       .renew-autoposts {
         display: block;
         float: right;
+
         /* margin-top: auto; */
+
         /* margin-bottom: auto; */
         position: absolute;
+
         /* bottom: 1px; */
         right: 10px;
         top: 50%;

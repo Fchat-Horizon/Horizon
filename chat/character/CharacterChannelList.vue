@@ -1,6 +1,6 @@
 <template>
   <modal :buttons="false" ref="dialog" style="width: 98%" dialogClass="">
-    <template slot="title">
+    <template v-slot:title>
       Channels for
       <user :character="character" :isMarkerShown="false">{{
         character.name

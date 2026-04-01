@@ -36,7 +36,7 @@
   border: 1px solid mix($black, $danger, $alert-border-level * 8%);
   background-color: mix($white, $danger, abs($alert-bg-level) * 8%);
   .tag-input {
-    text-color: mix($black, $danger, $alert-color-level * 8%);
+    color: mix($black, $danger, $alert-color-level * 8%);
     background-color: mix($white, $danger, abs($alert-bg-level) * 8%);
   }
 }

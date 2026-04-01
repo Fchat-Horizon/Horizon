@@ -405,7 +405,6 @@
   // import { EventBus } from './preview/event-bus';
   import AdCenterDialog from './ads/AdCenter.vue';
   import AdLauncherDialog from './ads/AdLauncher.vue';
-  import Modal from '../components/Modal.vue';
   import QuickJump from './QuickJump.vue';
 
   const unreadClasses = {
@@ -431,7 +430,6 @@
       'note-status': NoteStatus,
       adCenter: AdCenterDialog,
       adLauncher: AdLauncherDialog,
-      modal: Modal,
       'quick-jump': QuickJump
     },
     data() {
@@ -598,7 +596,7 @@
 
       void core.adCenter.load();
     },
-    destroyed(): void {
+    unmounted(): void {
       window.removeEventListener('keydown', this.keydownListener);
       window.removeEventListener('focus', this.focusListener);
       window.removeEventListener('blur', this.blurListener);
@@ -1062,9 +1060,13 @@
         }
 
         /*.offline,*/
+
         /*.online,*/
+
         /*.away {*/
+
         /*    font-size: 80%;*/
+
         /*}*/
 
         .offline {
@@ -1088,7 +1090,9 @@
         }
 
         /*.fa-eye {*/
+
         /*    // margin-right: 3px;*/
+
         /*}*/
       }
       img {

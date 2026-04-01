@@ -206,7 +206,7 @@
         :image-preview="true"
         ref="characterPage"
       ></character-page>
-      <template slot="title">
+      <template v-slot:title>
         {{ profileName }}
         <a class="btn" @click="openProfileInBrowser"
           ><i class="fa fa-external-link-alt"
@@ -271,7 +271,7 @@
         :expression="wordDefinitionLookup"
         ref="wordDefinitionLookup"
       ></word-definition>
-      <template slot="title">
+      <template v-slot:title>
         {{ wordDefinitionLookup }}
         <a
           class="btn wordDefBtn dictionary"
@@ -326,7 +326,7 @@
   // import { Sqlite3Store } from '../learn/store/sqlite3';
   import CharacterPage from '../site/character_page/character_page.vue';
   import WordDefinition from '../learn/dictionary/WordDefinition.vue';
-  import ProfileAnalysis from '../learn/recommend/ProfileAnalysis.vue';
+
   import { defaultHost, GeneralSettings } from './common';
   import { fixLogs /*SettingsStore, Logs as FSLogs*/ } from './filesystem';
   import { SlimcatImporter } from './services';
@@ -407,8 +407,7 @@
       'ui-test': UITest,
       'word-definition': WordDefinition,
       BBCodeTester: BBCodeTester,
-      bbcode: BBCodeView(core.bbCodeParser),
-      'profile-analysis': ProfileAnalysis
+      bbcode: BBCodeView(core.bbCodeParser)
     },
     data() {
       return {
@@ -626,7 +625,7 @@
         this.loggingIn = true;
 
         // set proxy inside from the advanced option
-        if (!!this.settings.proxy) {
+        if (this.settings.proxy) {
           try {
             // Get the current BrowserWindow's session
             const currentWindow = remote.getCurrentWindow();
@@ -734,7 +733,7 @@
             EventBus.$on('word-definition', (data: any) => {
               this.wordDefinitionLookup = data.lookupWord;
 
-              if (!!data.lookupWord) {
+              if (data.lookupWord) {
                 (<Modal>this.$refs.wordDefinitionViewer).show();
               }
             });

@@ -202,7 +202,7 @@ $bookmark-color: #66cc33 !default;
   min-height: initial !important;
   max-height: 250px;
   resize: none;
-  @media (max-height: 600px) {
+  @media (height <= 600px) {
     max-height: 150px;
   }
 }
@@ -498,7 +498,7 @@ $bookmark-color: #66cc33 !default;
         padding: 0;
         border-radius: 0;
         border: none;
-        word-break: break-word;
+        overflow-wrap: break-word;
       }
     }
     &.message-warn,

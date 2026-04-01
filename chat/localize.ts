@@ -2,7 +2,7 @@ import Vue from 'vue';
 // Runtime uses en_us only. en.json exists for Weblate but is not referenced here.
 const enUS: { [k: string]: string } = require('./locales/en_us.json');
 // Ensure Webpack can resolve dynamic locale filenames (including hyphens)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const localeContext: any = (require as any).context(
   './locales',
   false,

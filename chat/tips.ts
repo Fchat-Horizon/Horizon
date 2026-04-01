@@ -11,7 +11,7 @@ const TIP_COUNT = 30;
  * The modifier key for keyboard shortcuts based on the user's platform.
  */
 
-let isMac = process.platform === 'darwin';
+const isMac = process.platform === 'darwin';
 const MODIFIER_KEY = !isMac ? 'Ctrl' : '⌘';
 const ALT_KEY = !isMac ? 'Alt' : '⌥';
 /*

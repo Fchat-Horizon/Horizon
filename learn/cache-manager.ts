@@ -141,7 +141,7 @@ export class CacheManager {
 
     const key = ProfileCache.nameKey(name);
 
-    if (!!_.find(this.queue, (q: ProfileCacheQueueEntry) => q.key === key))
+    if (_.find(this.queue, (q: ProfileCacheQueueEntry) => q.key === key))
       return;
 
     const entry: ProfileCacheQueueEntry = {
@@ -404,14 +404,6 @@ export class CacheManager {
               skipFetch = true;
             }
 
-            // tslint:disable-next-line: binary-expression-operand-order
-            if (false && next) {
-              console.log(
-                `Fetch '${next!.name}' for channel '${next!.channelId}', gap: ${Date.now() - this.lastFetch}ms`
-              );
-              this.lastFetch = Date.now();
-            }
-
             if (!skipFetch) {
               this.ongoingLog[next.name] = true;
 
@@ -621,9 +613,7 @@ export class CacheManager {
     }
 
     // this is done here so that the message will be rendered correctly when cache is hit
-    let p: CharacterCacheRecord | undefined;
-
-    p =
+    const p: CharacterCacheRecord | undefined =
       (await core.cache.profileCache.get(
         char.name,
         skipStore,

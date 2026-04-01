@@ -8,7 +8,7 @@
     style="width: 98%"
     dialogClass="logs-dialog"
   >
-    <template slot="title">
+    <template v-slot:title>
       {{ l('logs.title') }}
       <div
         class="logs-fab btn btn-secondary"
@@ -57,7 +57,7 @@
           :filterFunc="filterConversation"
           :placeholder="l('filter')"
         >
-          <template slot-scope="s">
+          <template v-slot="s">
             {{
               (s.option &&
                 (s.option.key[0] == '#' ? '#' : '') + s.option.name) ||
@@ -116,7 +116,7 @@
       @near-top="onNearTop"
       @keydown.native.page-up="onPageUp"
     >
-      <template slot-scope="{ item, index, isScrolling }">
+      <template v-slot="{ item, index, isScrolling }">
         <div v-if="!isScrolling" class="message-container">
           <span
             v-if="filter.length > 0"

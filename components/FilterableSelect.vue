@@ -7,8 +7,10 @@
     @opened="selectOpened"
     ref="dropdown"
   >
-    <template slot="title" v-if="multiple">{{ label }}</template>
-    <slot v-else slot="title" :option="selected">{{ label }}</slot>
+    <template v-slot:title>
+      <template v-if="multiple">{{ label }}</template>
+      <slot v-else :option="selected">{{ label }}</slot>
+    </template>
 
     <div class="p-2">
       <input
