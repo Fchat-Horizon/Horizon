@@ -16,10 +16,6 @@
         "alias": "Firespark",
         "characters": ["Cinder the Cat", "Vera Io", "J u c i k a"]
       },
-      "Clovermoth": {
-        "alias": "Clovermoth",
-        "characters": ["Reggie", "Sparky-", "Prefecta"]
-      },
       "Peel": {
         "alias": "Peel",
         "characters": ["Peel", "Inai", "Amaya Shigo"]
@@ -47,6 +43,11 @@
       "Layne Autumnal": {
         "characters": ["Layne Autumnal"],
         "languages": ["French"]
+      },
+      "Clovermoth": {
+        "alias": "Clovermoth",
+        "characters": ["Reggie", "Sparky-", "Prefecta"],
+        "languages": ["Italian"]
       },
       "Regi Kaname": {
         "alias": "Contri-bun-or",
