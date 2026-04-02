@@ -277,7 +277,7 @@
   export default CustomDialog.extend({
     components: { modal, draggable },
     props: {
-      onSelect: {}
+      onSelect: Function
     },
     data() {
       return {
@@ -292,24 +292,27 @@
         search: '' as string,
         refreshing: false,
         isLoadingMore: false,
-        searchUpdateDebounce: debounce(() => {
-          this.runSearch();
-        }, 350),
-        handleScroll: debounce(() => {
-          const resultsContainer = this.$refs[
-            'resultsContainer'
-          ] as HTMLElement;
-          if (!resultsContainer || this.isLoadingMore) return;
-
-          const scrollTop = resultsContainer.scrollTop;
-          const scrollHeight = resultsContainer.scrollHeight;
-          const clientHeight = resultsContainer.clientHeight;
-
-          if (scrollTop + clientHeight >= scrollHeight - 200) {
-            this.loadMoreResults();
-          }
-        }, 100)
+        searchUpdateDebounce: (() => {}) as () => void,
+        handleScroll: (() => {}) as () => void
       };
+    },
+    created(): void {
+      this.searchUpdateDebounce = debounce(() => {
+        this.runSearch();
+      }, 350);
+
+      this.handleScroll = debounce(() => {
+        const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
+        if (!resultsContainer || this.isLoadingMore) return;
+
+        const scrollTop = resultsContainer.scrollTop;
+        const scrollHeight = resultsContainer.scrollHeight;
+        const clientHeight = resultsContainer.clientHeight;
+
+        if (scrollTop + clientHeight >= scrollHeight - 200) {
+          this.loadMoreResults();
+        }
+      }, 100);
     },
     async mounted(): Promise<void> {
       store = await EIconStore.getSharedStore();
@@ -831,8 +834,8 @@
       },
 
       setFocus(): void {
-        (this.$refs['search'] as any).focus();
-        (this.$refs['search'] as any).select();
+        (this.$refs['search'] as HTMLInputElement).focus();
+        (this.$refs['search'] as HTMLInputElement).select();
       },
 
       isFavorite(eicon: string): boolean {
