@@ -244,7 +244,7 @@
     }
   };
 
-  const previewPrev = async (e: MouseEvent): Promise<void> => {
+  const previewPrev = async (): Promise<void> => {
     if (!previewImage) return;
     let targetIndex = images.value.indexOf(
       previewImage.value as CharacterImage
@@ -254,7 +254,7 @@
     previewImage.value = images.value[targetIndex];
   };
 
-  const previewNext = async (e: MouseEvent): Promise<void> => {
+  const previewNext = async (): Promise<void> => {
     if (!previewImage) return;
     let targetIndex = images.value.indexOf(
       previewImage.value as CharacterImage

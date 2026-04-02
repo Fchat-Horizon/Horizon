@@ -9,19 +9,19 @@
       <div class="infotag-title">{{ group.name }}</div>
       <hr />
       <infotag
-        :infotag="infotag"
-        v-for="infotag in getInfotags(group.id)"
-        :key="infotag.id"
+        :infotag="item.infotag"
+        v-for="item in getInfotags(group.id)"
+        :key="item.infotag.id"
         :characterMatch="characterMatch"
-        :data="character.character.infotags[infotag.id]"
+        :data="item.data"
       ></infotag>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
-  import { Infotag, InfotagGroup } from '../../interfaces';
+  import Vue, { PropType } from 'vue';
+  import { CharacterInfotag, Infotag, InfotagGroup } from '../../interfaces';
   import { Store } from './data_store';
   import InfotagView from './infotag.vue';
   import { MatchReport } from '../../learn/matcher';
@@ -31,8 +31,8 @@
   export default Vue.extend({
     components: { infotag: InfotagView },
     props: {
-      character: { required: true as const },
-      characterMatch: { required: true as const }
+      character: { type: Object as PropType<Character>, required: true },
+      characterMatch: { type: Object as PropType<MatchReport>, required: true }
     },
     data() {
       return {
@@ -45,13 +45,25 @@
       }
     },
     methods: {
-      getInfotags(group: number): Infotag[] {
+      getInfotags(
+        group: number
+      ): { infotag: Infotag; data: CharacterInfotag }[] {
         return Object.keys(Store.shared.infotags)
           .map(x => Store.shared.infotags[x])
           .filter(
             x =>
               x.infotag_group === group &&
               this.character.character.infotags[x.id] !== undefined
+          )
+          .map(infotag => {
+            const data = this.character.character.infotags[infotag.id];
+            if (!data) return null;
+
+            return { infotag, data };
+          })
+          .filter(
+            (item): item is { infotag: Infotag; data: CharacterInfotag } =>
+              item !== null
           );
       }
     }

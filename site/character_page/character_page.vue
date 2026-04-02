@@ -124,7 +124,7 @@
 
                   <character-kinks
                     :character="character"
-                    :oldApi="oldApi"
+                    :oldApi="true"
                     ref="tab0"
                     :autoExpandCustoms="autoExpandCustoms"
                   ></character-kinks>
@@ -243,17 +243,17 @@
       bbcode: BBCodeView(standardParser)
     },
     props: {
-      name: {},
-      id: {},
-      authenticated: { required: true as const },
-      oldApi: {},
+      name: { type: String },
+      id: { type: Number },
+      authenticated: { type: Boolean, required: true },
+      oldApi: { type: Boolean, default: true },
       imagePreview: { type: Boolean, default: true },
       animatedThumbs: { type: Boolean, default: false }
     },
     data() {
       return {
         shared: Store as SharedStore,
-        character: undefined as any as Character | undefined,
+        character: undefined as Character | undefined,
         loading: true,
         refreshing: false,
         error: '',
@@ -264,8 +264,8 @@
         groups: null as CharacterGroup[] | null,
         images: null as CharacterImage[] | null,
         l: l,
-        selfCharacter: undefined as any as Character | undefined,
-        characterMatch: undefined as any as MatchReport | undefined
+        selfCharacter: undefined as Character | undefined,
+        characterMatch: undefined as MatchReport | undefined
       };
     },
     computed: {
@@ -290,10 +290,7 @@
         }
 
         // Friends tab - key '4'
-        if (
-          (this as any).character?.is_self ||
-          (this as any).character?.settings?.show_friends
-        ) {
+        if (this.character?.is_self || this.character?.settings?.show_friends) {
           const friendsCount =
             this.friends !== null ? ` (${this.friends.length})` : '';
           labels['4'] = this.l('profile.tab.friends') + friendsCount;
@@ -307,7 +304,7 @@
     },
     watch: {
       tab(): void {
-        const target = <ShowableVueTab>(this.$refs as any)[`tab${this.tab}`];
+        const target = <ShowableVueTab>this.$refs[`tab${this.tab}`];
         //tslint:disable-next-line:no-unbound-method
         if (typeof target.show === 'function') target.show();
       },
@@ -334,7 +331,7 @@
       }
     },
     beforeMount(): void {
-      this.shared.authenticated = (this as any).authenticated;
+      this.shared.authenticated = this.authenticated;
 
       // console.log('Beforemount');
     },
@@ -350,7 +347,7 @@
       async reload(): Promise<void> {
         await this.load(true, true);
 
-        const target = <ShowableVueTab>(this.$refs as any)[`tab${this.tab}`];
+        const target = <ShowableVueTab>this.$refs[`tab${this.tab}`];
 
         //tslint:disable-next-line:no-unbound-method
         if (typeof target.show === 'function') target.show();
@@ -366,11 +363,7 @@
         try {
           const due: Promise<void>[] = [];
 
-          if (
-            (this as any).name === undefined ||
-            (this as any).name.length === 0
-          )
-            return;
+          if (this.name === undefined || this.name.length === 0) return;
 
           await methods.fieldsGet();
 
@@ -410,11 +403,11 @@
             1
           );
 
-          if ((this as any).name !== expectedName) return;
+          if (this.name !== expectedName) return;
 
           this.guestbook = result;
         } catch (err) {
-          if ((this as any).name !== expectedName) return;
+          if (this.name !== expectedName) return;
           console.error(err);
           this.guestbook = null;
         }
@@ -428,11 +421,11 @@
 
           const result = await methods.groupsGet(this.character.character.id);
 
-          if ((this as any).name !== expectedName) return;
+          if (this.name !== expectedName) return;
 
           this.groups = result;
         } catch (err) {
-          if ((this as any).name !== expectedName) return;
+          if (this.name !== expectedName) return;
           console.error('Update groups', err);
           this.groups = null;
         }
@@ -449,11 +442,11 @@
 
           const result = await methods.friendsGet(this.character.character.id);
 
-          if ((this as any).name !== expectedName) return;
+          if (this.name !== expectedName) return;
 
           this.friends = result;
         } catch (err) {
-          if ((this as any).name !== expectedName) return;
+          if (this.name !== expectedName) return;
           console.error('Update friends', err);
           this.friends = null;
         }
@@ -469,11 +462,11 @@
             this.character.character.id
           );
 
-          if ((this as any).name !== expectedName) return;
+          if (this.name !== expectedName) return;
 
           this.images = fetchedImages;
         } catch (err) {
-          if ((this as any).name !== expectedName) return;
+          if (this.name !== expectedName) return;
           console.error('Update images', err);
           this.images = null;
         }
@@ -519,15 +512,15 @@
         this.updateMatches();
       },
       async fetchCharacterCache(): Promise<CharacterCacheRecord | null> {
-        if (!(this as any).name) {
+        if (!this.name) {
           throw new Error('A man must have a name');
         }
 
         // tslint:disable-next-line: await-promise
-        return (await core.cache.profileCache.get((this as any).name)) || null;
+        return (await core.cache.profileCache.get(this.name)) || null;
       },
       async _getCharacter(skipCache: boolean = false): Promise<void> {
-        log.debug('profile.getCharacter', { name: (this as any).name });
+        log.debug('profile.getCharacter', { name: this.name });
 
         this.character = undefined;
         this.friends = null;
@@ -535,7 +528,7 @@
         this.guestbook = null;
         this.images = null;
 
-        if (!(this as any).name) {
+        if (!this.name) {
           return;
         }
 
@@ -544,11 +537,7 @@
         this.character =
           cache && !skipCache
             ? cache.character
-            : await methods.characterData(
-                (this as any).name,
-                (this as any).id,
-                false
-              );
+            : await methods.characterData(this.name, this.id, false);
 
         standardParser.inlines = this.character!.character.inlines;
 
@@ -583,7 +572,7 @@
 
           // No await on purpose:
           // tslint:disable-next-line no-floating-promises
-          this.updateMeta((this as any).name).catch((err: any) =>
+          this.updateMeta(this.name).catch((err: any) =>
             console.error('profile.updateMeta', err)
           );
         }
@@ -608,15 +597,12 @@
 
         try {
           const character = await methods.characterData(
-            (this as any).name,
-            (this as any).id,
+            this.name,
+            this.id,
             false
           );
 
-          if (
-            !this.refreshing ||
-            (this as any).name !== character.character.name
-          ) {
+          if (!this.refreshing || this.name !== character.character.name) {
             return;
           }
 
@@ -630,7 +616,7 @@
 
           // No awaits on these on purpose:
           // tslint:disable-next-line no-floating-promises
-          this.updateMeta((this as any).name);
+          this.updateMeta(this.name);
         } finally {
           this.refreshing = false;
         }
