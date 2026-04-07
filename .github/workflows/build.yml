@@ -82,6 +82,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
@@ -99,6 +102,16 @@ jobs:
           find . -type f -not -name "SHASUMS256.txt" -exec sha256sum {} \; | sort > SHASUMS256.txt
 
           cat SHASUMS256.txt
+
+      - name: Extract release notes from CHANGELOG.md
+        id: changelog
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          # Extract the section between ## [VERSION] and the next ## [
+          NOTES=$(awk "/^## \\[${VERSION}\\]/{found=1; next} /^## \\[/{if(found) exit} found" CHANGELOG.md)
+          # Write to file to preserve formatting
+          echo "$NOTES" > /tmp/release-notes.md
 
       - name: Detect release type
         id: release_type
@@ -123,6 +136,7 @@ jobs:
           name: Release ${{ github.ref_name }}
           draft: ${{ steps.release_type.outputs.draft }}
           prerelease: ${{ steps.release_type.outputs.prerelease }}
+          body_path: /tmp/release-notes.md
           files: final_release/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

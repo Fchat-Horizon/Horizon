@@ -655,6 +655,16 @@ export function toggleUpdateNotice(updateAvailable: boolean, version?: string) {
 }
 
 /**
+ * Sends download progress information to all open windows.
+ * @param {number} percent - Download progress percentage (0-100).
+ * @param {boolean} [done=false] - Whether the download has completed.
+ */
+export function sendUpdateProgress(percent: number, done: boolean = false) {
+  for (const w of windows)
+    w.webContents.send('update-download-progress', percent, done);
+}
+
+/**
  * Creates a new settings window.
  * @function
  * @param {GeneralSettings} settings
@@ -741,10 +751,11 @@ export function createChangelogWindow(
   settings: GeneralSettings,
   ImporterHint: ImporterHint,
   parentWindow: electron.BrowserWindow,
-  updateVer?: string
+  updateVer?: string,
+  updateMode?: 'auto' | 'manual'
 ): electron.BrowserWindow | undefined {
-  let desiredHeight = 700;
-  let desiredWidth = 600;
+  let desiredHeight = updateVer ? 850 : 700;
+  let desiredWidth = updateVer ? 900 : 600;
 
   const windowProperties: electron.BrowserWindowConstructorOptions = {
     center: true,
@@ -784,7 +795,8 @@ export function createChangelogWindow(
     query: {
       settings: JSON.stringify(settings),
       import: ImporterHint === 'none' ? '' : ImporterHint,
-      updateVer: updateVer || ''
+      updateVer: updateVer || '',
+      updateMode: updateMode || ''
     }
   });
 
