@@ -370,6 +370,7 @@
     <user-menu ref="userMenu" :reportDialog="$refs['reportDialog']"></user-menu>
     <recent-conversations ref="recentDialog"></recent-conversations>
     <image-preview ref="imagePreview"></image-preview>
+    <image-lightbox></image-lightbox>
     <add-pm-partner ref="addPmPartnerDialog"></add-pm-partner>
 
     <quick-jump ref="quickJump"></quick-jump>
@@ -398,6 +399,7 @@
   import UserList from './UserList.vue';
   import UserMenu from './UserMenu.vue';
   import ImagePreview from './preview/ImagePreview.vue';
+  import ImageLightbox from './preview/ImageLightbox.vue';
   import PrivateConversation = Conversation.PrivateConversation;
   import * as _ from 'lodash';
   import NoteStatus from '../site/NoteStatus.vue';
@@ -427,6 +429,7 @@
       'user-menu': UserMenu,
       'recent-conversations': RecentConversations,
       'image-preview': ImagePreview,
+      'image-lightbox': ImageLightbox,
       'add-pm-partner': PmPartnerAdder,
       'note-status': NoteStatus,
       adCenter: AdCenterDialog,

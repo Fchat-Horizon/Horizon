@@ -13,6 +13,8 @@ import { NoteCheckerCount } from '../../site/note-checker';
  * 'imagepreview-dismiss': {url: string}
  * 'imagepreview-show': {url: string}
  * 'imagepreview-toggle-stickyness': {url: string}
+ * 'lightbox-open': LightboxOpenEvent
+ * 'lightbox-close': {}
  * 'character-data': {character: Character}
  * 'character-score': {character: Character, score: number, isFiltered: boolean}
  * 'private-message': {message: Message}
@@ -26,6 +28,17 @@ import { NoteCheckerCount } from '../../site/note-checker';
 export interface EventBusEvent {
   // tslint:disable: no-any
   [key: string]: any;
+}
+
+export interface LightboxImage {
+  url: string;
+  sourceUrl?: string;
+  description?: string;
+}
+
+export interface LightboxOpenEvent extends EventBusEvent {
+  images: LightboxImage[];
+  startIndex?: number;
 }
 
 export interface ChannelMessageEvent extends EventBusEvent {
