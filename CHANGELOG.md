@@ -11,14 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Hotfix for the zoom controls spanning two lines on Windows. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/29c52031359c5fd8a437d8370c2ba8295adaa385)
+- Hotfix for the image previewer's zoom controls spanning two lines on Windows. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/29c52031359c5fd8a437d8370c2ba8295adaa385)
 
 ## [2.1.0] - 2026-04-13
 
 ### Added
 
 - Recently picked EIcons are now their own category in the EIcon picker. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8b34333993c8965be9f63be87314a660ad8e6cb7)
-- Extra options for viewing images in a profile's gallery: Full screen previews, mouse hover previews (similar to `[url]` tags, or just the expanded columns that you already know and love. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d887e8382d4a0648711b233e9adefdbd23cf50a3)
+- Extra options for viewing images in a profile's gallery: Full screen previews, mouse hover previews (similar to `[url]` tags), or just the expanded columns that you already know and love. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d887e8382d4a0648711b233e9adefdbd23cf50a3)
 
 ### Changed
 
@@ -94,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Notification count badges on conversations, windows, and the tray icon, with redrawn icons on Windows for improved legibility on lower display scales and hiDPI screens. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9994f25fd5bf6553fcd7a639d1471015aaa55cf1) [[Commit 2]](https://github.com/Fchat-Horizon/Horizon/commit/3a4e4d1bd878f71c7c55f75de9fabf1a1464b6fd) [[Commit 3]](https://github.com/Fchat-Horizon/Horizon/commit/7ab8f8ca9619b7c8834e4e7d7b5b7594d1f080a5)
-- "No humans" and "no furries" smart filter options, which hides ads from characters who have marked themselves as not interested in your species. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0e8e6bcf95dc11f1c6556fb80778199b58d59d4a)
+- "No humans" and "no furries" smart filter options, which hide ads from characters who have marked themselves as not interested in your species. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0e8e6bcf95dc11f1c6556fb80778199b58d59d4a)
 - Filterable select dropdowns now show the selected value, auto-focus the filter input on open, and select the first result on Enter. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/32f2923ffb1cf7dbc1391c794dd2f2946a480cd0)
 
 ### Fixed
@@ -214,7 +214,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Imgur is no longer supported as a host for your high-quality portraits. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/571949d8f92a896b99a390054c2ed04d46fda63b)
-- Opening the "Open conversation" and channel search dialogs now automatically focus the text input. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1c2d4ad307e97d16b7cc0c5123d6e444072fcc51)
+- Opening the "Open conversation" and channel search dialogs now automatically focuses the text input. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1c2d4ad307e97d16b7cc0c5123d6e444072fcc51)
 - The user right-click menu has some of its old separator borders returned. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4c464f87f4e5af4c14ba032f0ac6b3b30627ad4a)
 - Some common misconfigurations (incorrect log folders and custom chat host URLs) now show actual error message when connecting inevitably fails. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/62dc89378b3000576c8768dd30050bb3b8ccae09) [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5e84da60f25bd52495c4dfa430888472770b8b4d)
 
@@ -264,7 +264,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Drastically improved detection of your browser for the "Open in incognito mode" right click option. Linux is now supported as well [[Improvements]](https://github.com/Fchat-Horizon/Horizon/commit/3737b0ea3ad8039a9faba690256b3c6847095a28) [[Linux]](https://github.com/Fchat-Horizon/Horizon/commit/e82f2b0028801608cf91028346e578f2bd51fcd6)
+- Drastically improved detection of your browser for the "Open in incognito mode" right click option. Linux is now supported as well. [[Improvements]](https://github.com/Fchat-Horizon/Horizon/commit/3737b0ea3ad8039a9faba690256b3c6847095a28) [[Linux]](https://github.com/Fchat-Horizon/Horizon/commit/e82f2b0028801608cf91028346e578f2bd51fcd6)
   - If the browser you have set in the advanced app options is different from your computer's default browser, Horizon will try to open incognito links using your custom browser path too.
   - Due to Safari not supporting Private Mode flags for the command line, MacOS support for this feature has not yet been added.
 - If you try and change the server host, you'll now get a warning asking you if you are _really_ sure. This is an advanced option after all. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8c626f023e42842077574afad81fca4de1537044)
