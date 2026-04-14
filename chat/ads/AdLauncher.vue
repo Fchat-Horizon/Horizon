@@ -151,7 +151,6 @@
   import Modal from '../../components/Modal.vue';
   import core from '../core';
   import _ from 'lodash';
-  import AdCenterDialog from './AdCenter.vue';
   import l from '../localize';
 
   export default CustomDialog.extend({
@@ -257,7 +256,9 @@
         this.hide();
         const ref =
           this.$parent && this.$parent.$refs
-            ? (this.$parent.$refs['adCenter'] as AdCenterDialog | undefined)
+            ? (this.$parent.$refs['adCenter'] as
+                | InstanceType<typeof CustomDialog>
+                | undefined)
             : undefined;
         if (ref) ref.show();
       },

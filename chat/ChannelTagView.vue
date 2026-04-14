@@ -19,8 +19,8 @@
 
   export default Vue.extend({
     props: {
-      id: { required: true as const },
-      text: { required: true as const }
+      id: { type: String, required: true },
+      text: { type: String, required: true }
     },
     computed: {
       channel(): Channel.ListItem | undefined {

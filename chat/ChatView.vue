@@ -405,6 +405,7 @@
   // import { EventBus } from './preview/event-bus';
   import AdCenterDialog from './ads/AdCenter.vue';
   import AdLauncherDialog from './ads/AdLauncher.vue';
+  import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import QuickJump from './QuickJump.vue';
 
@@ -883,11 +884,11 @@
       },
 
       showAdCenter(): void {
-        (<AdCenterDialog>this.$refs['adCenter']).show();
+        (<InstanceType<typeof CustomDialog>>this.$refs['adCenter']).show();
       },
 
       showAdLauncher(): void {
-        (<AdLauncherDialog>this.$refs['adLauncher']).show();
+        (<InstanceType<typeof CustomDialog>>this.$refs['adLauncher']).show();
       },
 
       showProfileAnalyzer(): void {

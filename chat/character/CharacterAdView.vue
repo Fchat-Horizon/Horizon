@@ -43,6 +43,7 @@
   import UserView from '../UserView.vue';
   import { BBCodeView } from '../../bbcode/view';
   import l from '../localize';
+  import { PropType } from 'vue';
 
   export default CustomDialog.extend({
     components: {
@@ -51,7 +52,7 @@
       bbcode: BBCodeView(core.bbCodeParser)
     },
     props: {
-      character: { required: true as const }
+      character: { type: Object as PropType<Character>, required: true }
     },
     data() {
       return {
