@@ -43,7 +43,7 @@
           @click="select(option)"
           v-for="option in filtered"
           class="dropdown-item"
-          :class="value === option ? 'selected' : ''"
+          :class="selected === option ? 'selected' : ''"
         >
           <slot :option="option">{{ option }}</slot>
         </a>
@@ -59,14 +59,16 @@
   export default Vue.extend({
     components: { dropdown: Dropdown },
     props: {
-      placeholder: {},
-      options: { required: true as const },
+      placeholder: { type: String, default: 'Filter...' },
+      options: { type: Array, required: true as const },
       filterFunc: {
-        default: () => (filter: RegExp, value: string) => filter.test(value)
+        type: Function,
+        default: () => (filter: RegExp, value: unknown) =>
+          filter.test(String(value))
       },
-      multiple: { default: undefined },
+      multiple: { type: Boolean, default: undefined },
       value: { default: undefined },
-      title: {}
+      title: { type: String }
     },
     data() {
       return {
@@ -75,43 +77,58 @@
           ? this.value
           : this.multiple !== undefined
             ? []
-            : undefined) as object | object[] | undefined
+            : undefined) as unknown | unknown[] | undefined
       };
     },
     computed: {
-      filtered(): object[] {
-        return this.options.filter((x: object) =>
-          this.filterFunc(this.filterRegex, x)
+      filtered(): unknown[] {
+        return (this.options as unknown[]).filter((option: unknown) =>
+          (this.filterFunc as (filter: RegExp, value: unknown) => boolean)(
+            this.filterRegex,
+            option
+          )
         );
       },
       label(): string | undefined {
-        return this.multiple !== undefined
-          ? `${this.title} - ${(<object[]>this.selected).length}`
-          : this.selected !== undefined
-            ? this.selected.toString()
-            : this.title;
+        if (this.multiple !== undefined) {
+          return `${this.title} - ${
+            Array.isArray(this.selected) ? this.selected.length : 0
+          }`;
+        }
+
+        return this.selected !== undefined ? String(this.selected) : this.title;
       },
       filterRegex(): RegExp {
-        return new RegExp(this.filter.replace(/[^\w]/gi, '\\$&'), 'i');
+        return new RegExp(this.filter.replace(/[^A-Za-z0-9_]/g, '\\$&'), 'i');
       }
     },
     watch: {
-      value(newValue: object | object[] | undefined): void {
+      value(newValue: unknown): void {
         this.selected = newValue;
       }
     },
     methods: {
-      select(item: object): void {
+      select(item: unknown): void {
         if (this.multiple !== undefined) {
-          const selected = <object[]>this.selected;
+          const selected = Array.isArray(this.selected)
+            ? (this.selected as unknown[])
+            : [];
           const index = selected.indexOf(item);
           if (index === -1) selected.push(item);
           else selected.splice(index, 1);
-        } else this.selected = item;
+          this.selected = selected;
+        } else {
+          this.selected = item;
+        }
+
         this.$emit('input', this.selected);
       },
-      isSelected(option: object): boolean {
-        return (<object[]>this.selected).indexOf(option) !== -1;
+      isSelected(option: unknown): boolean {
+        if (Array.isArray(this.selected)) {
+          return this.selected.indexOf(option) !== -1;
+        }
+
+        return this.selected === option;
       },
       selectOpened() {
         this.$nextTick(() => {
@@ -134,6 +151,7 @@
   .filterable-select {
     .dropdown-items {
       max-height: 200px;
+
       .dropdown-item.selected {
         background-color: var(--bs-dropdown-link-active-bg);
         color: var(--bs-dropdown-link-active-color);
