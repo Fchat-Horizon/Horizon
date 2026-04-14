@@ -137,10 +137,66 @@
                   ></character-infotags>
                 </div>
                 <div role="tabpanel" v-show="tab === '2'">
+                  <div
+                    v-if="!loading"
+                    class="btn-group image-gallery-selector"
+                    role="group"
+                    :aria-label="l('settings.profileViewerGalleryType')"
+                  >
+                    <input
+                      type="radio"
+                      class="btn-check"
+                      name="btnradio"
+                      id="btnRadioCarousel"
+                      autocomplete="off"
+                      :checked="previewType === 'thumbnail'"
+                    />
+                    <label
+                      class="btn btn-sm btn-outline-primary"
+                      for="btnRadioCarousel"
+                      @click="updateGalleryType('thumbnail')"
+                      :title="l('settings.profileViewerGalleryType.thumbnail')"
+                      ><i
+                        class="fa-solid fa-up-right-and-down-left-from-center"
+                      ></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn-check"
+                      name="btnradio"
+                      id="btnRadioHover"
+                      autocomplete="off"
+                      :checked="previewType === 'hover'"
+                    />
+                    <label
+                      class="btn btn-sm btn-outline-primary"
+                      for="btnRadioHover"
+                      @click="updateGalleryType('hover')"
+                      :title="l('settings.profileViewerGalleryType.hover')"
+                    >
+                      <i class="fa-solid fa-picture-in-picture"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn-check"
+                      name="btnradio"
+                      id="btnRadioFull"
+                      autocomplete="off"
+                      :checked="previewType === 'full'"
+                    />
+                    <label
+                      class="btn btn-sm btn-outline-primary"
+                      for="btnRadioFull"
+                      @click="updateGalleryType('full')"
+                      :title="l('settings.profileViewerGalleryType.full')"
+                    >
+                      <i class="fa-solid fa-images"></i>
+                    </label>
+                  </div>
                   <character-images
                     :character="character"
                     ref="tab2"
-                    :use-preview="imagePreview"
+                    :previewType="previewType"
                     :animated-thumbs="animatedThumbs"
                     :injected-images="images"
                   ></character-images>
@@ -217,6 +273,7 @@
   import ProfileAnalysis from '../../learn/recommend/ProfileAnalysis.vue';
   import { CharacterImage, SimpleCharacter } from '../../interfaces';
   import l from '../../chat/localize';
+  import { ProfileViewerGalleryType } from '../utils';
 
   const CHARACTER_CACHE_EXPIRE = 7 * 24 * 60 * 60 * 1000; // 7 days (milliseconds)
   const CHARACTER_META_CACHE_EXPIRE = 7 * 24 * 60 * 60 * 1000; // 7 days (milliseconds)
@@ -247,7 +304,11 @@
       id: { type: Number },
       authenticated: { type: Boolean, required: true },
       oldApi: { type: Boolean, default: true },
-      imagePreview: { type: Boolean, default: true },
+
+      previewType: {
+        type: String as () => ProfileViewerGalleryType,
+        default: 'thumbnail'
+      },
       animatedThumbs: { type: Boolean, default: false }
     },
     data() {
@@ -647,6 +708,9 @@
         );
 
         // console.log('Match', this.selfCharacter.character.name, this.character.character.name, this.characterMatch);
+      },
+      updateGalleryType(profileGalleryType: ProfileViewerGalleryType): void {
+        this.$emit('gallery-type-updated', profileGalleryType);
       }
     }
   });
@@ -1107,6 +1171,7 @@
   .character-card-header {
     position: sticky;
     top: -1rem;
+    z-index: 1100;
     background: var(--headerBackgroundMaskColor) !important;
   }
 

@@ -69,11 +69,11 @@ class State implements Interfaces.State {
     let char = this.characters[key];
     if (char === undefined) {
       char = new Character(name);
-      char.isFriend = this.friendList.indexOf(name) !== -1;
-      char.isBookmarked = this.bookmarkList.indexOf(name) !== -1;
+      char.isFriend = this.friendList.some(f => f.toLowerCase() === key);
+      char.isBookmarked = this.bookmarkList.some(b => b.toLowerCase() === key);
       char.isChatOp = this.opList.indexOf(name) !== -1;
       char.isIgnored = this.ignoreList.indexOf(key) !== -1;
-      this.characters[key] = char;
+      Vue.set(this.characters, key, char);
     }
     return char;
   }
@@ -184,9 +184,10 @@ export default function (this: void, connection: Connection): Interfaces.State {
       };
     for (const key in state.characters) {
       const character = state.characters[key]!;
-      character.isFriend = state.friendList.indexOf(character.name) !== -1;
-      character.isBookmarked =
-        state.bookmarkList.indexOf(character.name) !== -1;
+      character.isFriend = state.friendList.some(f => f.toLowerCase() === key);
+      character.isBookmarked = state.bookmarkList.some(
+        b => b.toLowerCase() === key
+      );
       character.status = 'offline';
       character.statusText = '';
     }

@@ -590,17 +590,33 @@
                       <option value="thumbnail">
                         {{ l('settings.profileViewerGalleryType.thumbnail') }}
                       </option>
+                      <option value="hover">
+                        {{ l('settings.profileViewerGalleryType.hover') }}
+                      </option>
                       <option value="full">
                         {{ l('settings.profileViewerGalleryType.full') }}
                       </option>
                     </select>
                   </label>
+                  <div
+                    id="profileViewerGalleryTypeNote"
+                    class="form-text text-muted"
+                    v-if="settings.profileViewer"
+                  >
+                    {{
+                      l(
+                        `settings.profileViewerGalleryType.note.${settings.profileViewerGalleryType}`
+                      )
+                    }}
+                  </div>
                 </div>
+
                 <div
                   class="mb-3"
                   v-if="
                     settings.profileViewer &&
-                    settings.profileViewerGalleryType === 'thumbnail'
+                    (settings.profileViewerGalleryType === 'thumbnail' ||
+                      settings.profileViewerGalleryType === 'hover')
                   "
                 >
                   <div class="form-check">

@@ -212,24 +212,25 @@ export default Vue.extend({
                 if (isModern) {
                   // Pushes elm up three times rather than one with modern to make it parent to the top level of a message.
                   elm = elm.parentElement!.parentElement!.parentElement!;
-                  if (elm.scrollHeight > elm.offsetHeight) {
-                    const expand = document.createElement('div');
-                    expand.className = 'expand fas fa-caret-down';
-                    expand.addEventListener('click', function (): void {
-                      this.parentElement!.className += ' expanded';
-                    });
-                    elm.appendChild(expand);
-                  }
                 } else {
                   elm = elm.parentElement!;
-                  if (elm.scrollHeight > elm.offsetHeight) {
-                    const expand = document.createElement('div');
-                    expand.className = 'expand fas fa-caret-down';
-                    expand.addEventListener('click', function (): void {
-                      this.parentElement!.className += ' expanded';
-                    });
-                    elm.appendChild(expand);
-                  }
+                }
+                if (elm.scrollHeight > elm.offsetHeight) {
+                  const expand = document.createElement('div');
+                  expand.className = 'expand fas fa-caret-down';
+                  expand.addEventListener('click', function (): void {
+                    const ad = this.parentElement!;
+                    ad.className += ' expanded';
+                    // * Restart eicon GIF animations so mosaics re-sync
+                    const eicons =
+                      ad.querySelectorAll<HTMLImageElement>('img.eicon');
+                    for (const eicon of eicons) {
+                      const src = eicon.src;
+                      eicon.src = '';
+                      eicon.src = src;
+                    }
+                  });
+                  elm.appendChild(expand);
                 }
               });
             }

@@ -107,7 +107,7 @@
           >
             {{ conversations.consoleTab.name }}
             <span
-              class="badge rounded-pill text-bg-danger conversation-badge conversation-badge-inline-end"
+              class="badge rounded-pill text-bg-danger conversation-badge-inline-end"
               v-show="shouldShowNotificationBadge(conversations.consoleTab)"
               >{{ conversations.consoleTab.unreadCount }}</span
             >
@@ -162,7 +162,7 @@
                 "
               />
               <span
-                class="badge text-bg-danger conversation-badge"
+                class="badge text-bg-danger"
                 v-show="shouldShowNotificationBadge(conversation)"
                 >{{ conversation.unreadCount }}</span
               >
@@ -175,7 +175,7 @@
                   v-show="needsReply(conversation)"
                 ></span>
                 <span
-                  class="badge rounded-pill text-bg-danger conversation-badge"
+                  class="badge rounded-pill text-bg-danger"
                   v-if="!showAvatars"
                   v-show="shouldShowNotificationBadge(conversation)"
                   >{{ conversation.unreadCount }}</span
@@ -247,7 +247,7 @@
             <span class="name">{{ conversation.name }}</span>
             <span class="conversation-actions">
               <span
-                class="badge rounded-pill text-bg-danger conversation-badge"
+                class="badge rounded-pill text-bg-danger"
                 v-show="shouldShowNotificationBadge(conversation)"
                 >{{ conversation.unreadCount }}</span
               >
@@ -298,7 +298,7 @@
         >
           <span class="fas fa-home conversation-icon"></span>
           <span
-            class="badge text-bg-danger quick-switcher-badge"
+            class="badge text-bg-danger"
             v-if="shouldShowNotificationBadge(conversations.consoleTab)"
           >
             {{ conversations.consoleTab.unreadCount }}
@@ -323,7 +323,7 @@
           />
           <span class="far fa-user-circle conversation-icon" v-else></span>
           <span
-            class="badge text-bg-danger quick-switcher-badge"
+            class="badge text-bg-danger"
             v-if="shouldShowNotificationBadge(conversation)"
           >
             {{ conversation.unreadCount }}
@@ -349,7 +349,7 @@
             "
           ></span>
           <span
-            class="badge text-bg-danger quick-switcher-badge"
+            class="badge text-bg-danger"
             v-if="shouldShowNotificationBadge(conversation)"
           >
             {{ conversation.unreadCount }}
@@ -617,11 +617,7 @@
       },
 
       needsReply(conversation: Conversation): boolean {
-        if (
-          !core.state.settings.showNeedsReply ||
-          this.shouldShowNotificationBadge(conversation)
-        )
-          return false;
+        if (!core.state.settings.showNeedsReply) return false;
         for (let i = conversation.messages.length - 1; i >= 0; --i) {
           const sender = (<Partial<Conversation.ChatMessage>>(
             conversation.messages[i]
@@ -962,12 +958,14 @@
       color: var(--bs-success);
     }
 
-    .conversation-badge {
+    .badge {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
       min-width: 1.65em;
+      padding: 0;
+      height: 1.65em;
       line-height: 1;
       box-shadow: 0 0 0 2px var(--bs-body-bg);
     }
@@ -1042,16 +1040,16 @@
             margin: 0;
           }
 
-          .conversation-badge {
+          .badge {
             position: absolute;
             bottom: 0;
             right: -1px;
-            font-size: 9px;
-            min-width: 14px;
-            height: 14px;
+            font-size: 0.8em;
+            min-width: 1.7em;
+            height: 1.7em;
             padding: 0 3px;
             margin: 0;
-            border-radius: 7px;
+            border-radius: 90px;
             box-shadow: 0 0 0 2px var(--bs-list-group-bg, var(--bs-body-bg));
           }
         }
@@ -1157,13 +1155,13 @@
       height: 30px;
     }
 
-    .quick-switcher-badge {
+    .badge {
       position: absolute;
       top: 2px;
       right: 2px;
-      font-size: 11px;
-      min-width: 18px;
-      height: 18px;
+      font-size: 0.9em;
+      min-width: 2em;
+      height: 2em;
       padding: 0 4px;
       border-radius: 9px;
       display: inline-flex;

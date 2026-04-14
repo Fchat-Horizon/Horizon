@@ -203,8 +203,9 @@
         :authenticated="true"
         :oldApi="true"
         :name="profileName"
-        :image-preview="useProfileThumbViewer()"
+        :previewType="getProfileGalleryType()"
         :animated-thumbs="animateProfileViewerThumbs()"
+        @gallery-type-updated="galleryTypeUpdated"
         ref="characterPage"
       ></character-page>
       <template slot="title">
@@ -311,7 +312,6 @@
   import * as fs from 'fs';
   import * as path from 'path';
   import * as qs from 'querystring';
-  import Raven from 'raven-js';
   // import {promisify} from 'util';
   import Vue from 'vue';
   import Chat from '../chat/Chat.vue';
@@ -338,6 +338,7 @@
   import { BBCodeView } from '../bbcode/view';
   import { EIconStore } from '../learn/eicon/store';
   import { SecureStore } from './secure-store';
+  import { ProfileViewerGalleryType } from '../site/utils';
 
   // import ImagePreview from '../chat/preview/ImagePreview.vue';
   // import Bluebird from 'bluebird';
@@ -519,7 +520,9 @@
       electron.ipcRenderer.on(
         'open-profile',
         (_e: Electron.IpcRendererEvent, name: string) => {
-          const profileViewer = <Modal>this.$refs['profileViewer'];
+          const profileViewer = this.$refs['profileViewer'] as InstanceType<
+            typeof Modal
+          >;
 
           this.openProfile(name);
 
@@ -536,7 +539,9 @@
             this.profilePointer >= 0
           ) {
             const name = this.profileNameHistory[this.profilePointer];
-            const profileViewer = <Modal>this.$refs['profileViewer'];
+            const profileViewer = this.$refs['profileViewer'] as InstanceType<
+              typeof Modal
+            >;
 
             if (this.profileName === name && profileViewer.isShown) {
               profileViewer.hide();
@@ -552,7 +557,7 @@
       electron.ipcRenderer.on('fix-logs', async () => {
         this.fixCharacters = await core.settingsStore.getAvailableCharacters();
         this.fixCharacter = this.fixCharacters[0];
-        (<Modal>this.$refs['fixLogsModal']).show();
+        (this.$refs['fixLogsModal'] as InstanceType<typeof Modal>).show();
       });
 
       electron.ipcRenderer.on('ui-test', () => {
@@ -717,12 +722,14 @@
             ) {
               if (!confirm(l('importer.importGeneral')))
                 return core.settingsStore.set('settings', new Settings());
-              (<Modal>this.$refs['importModal']).show(true);
+              (this.$refs['importModal'] as InstanceType<typeof Modal>).show(
+                true
+              );
               await SlimcatImporter.importCharacter(
                 core.connection.character,
                 progress => (this.importProgress = progress)
               );
-              (<Modal>this.$refs['importModal']).hide();
+              (this.$refs['importModal'] as InstanceType<typeof Modal>).hide();
             }
           });
           core.connection.onEvent('connected', () => {
@@ -730,13 +737,14 @@
               () => core.conversations.hasNew,
               newValue => parent.send('has-new', webContents.id, newValue)
             );
-            Raven.setUserContext({ username: core.connection.character });
 
             EventBus.$on('word-definition', (data: any) => {
               this.wordDefinitionLookup = data.lookupWord;
 
               if (!!data.lookupWord) {
-                (<Modal>this.$refs.wordDefinitionViewer).show();
+                (
+                  this.$refs.wordDefinitionViewer as InstanceType<typeof Modal>
+                ).show();
               }
             });
           });
@@ -745,7 +753,6 @@
             electron.ipcRenderer.send('disconnect', this.character);
             this.character = undefined;
             parent.send('disconnect', webContents.id);
-            Raven.setUserContext();
           });
           core.connection.setCredentials(this.settings.account, this.password);
           this.characters = Object.keys(data.characters)
@@ -832,7 +839,9 @@
         (this.$refs.profileViewer as any).hide();
       },
       isRefreshingProfile(): boolean {
-        const cp = this.$refs.characterPage as CharacterPage;
+        const cp = this.$refs.characterPage as InstanceType<
+          typeof CharacterPage
+        >;
 
         return cp && cp.refreshing;
       },
@@ -909,8 +918,8 @@
 
         this.profileStatus = character.statusText || '';
       },
-      useProfileThumbViewer(): boolean {
-        return this.settings.profileViewerGalleryType === 'thumbnail';
+      getProfileGalleryType(): ProfileViewerGalleryType {
+        return this.settings.profileViewerGalleryType;
       },
       animateProfileViewerThumbs(): boolean {
         return this.settings.profileViewerThumbAnimate;
@@ -1013,10 +1022,10 @@
         }
       },
       showLogs(): void {
-        (<Logs>this.$refs['logsDialog']).show();
+        (this.$refs['logsDialog'] as InstanceType<typeof Logs>).show();
       },
       showUiTest(): void {
-        (<UITest>this.$refs['uiTestDialog']).show();
+        (this.$refs['uiTestDialog'] as InstanceType<typeof UITest>).show();
       },
       async openDefinitionWithDictionary(): Promise<void> {
         (this.$refs.wordDefinitionLookup as any).setMode('dictionary');
@@ -1041,7 +1050,7 @@
         (this.$refs.wordDefinitionViewer as any).hide();
       },
       unpinUrlPreview(e: Event): void {
-        const imagePreview = (this.$refs['chat'] as Chat)
+        const imagePreview = (this.$refs['chat'] as InstanceType<typeof Chat>)
           ?.getChatView()
           ?.getImagePreview();
 
@@ -1053,6 +1062,9 @@
 
           EventBus.$emit('imagepreview-toggle-stickyness', { force: true });
         }
+      },
+      galleryTypeUpdated(profileGalleryType: ProfileViewerGalleryType): void {
+        electron.ipcRenderer.send('profile-gallery-type', profileGalleryType);
       }
     }
   });

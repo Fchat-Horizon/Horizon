@@ -366,7 +366,10 @@ module.exports = function (mode) {
   };
 
   const cacheVersion = `${APP_VERSION}-${APP_COMMIT}`;
-  const watchOptions = { ignored: /node_modules/, aggregateTimeout: 300 };
+  const watchOptions = {
+    ignored: ['**/node_modules/**', '**/.git/**'],
+    aggregateTimeout: 300
+  };
   for (const cfg of [mainConfig, rendererConfig, storeWorkerEndpointConfig]) {
     Object.assign(cfg, sharedConfig);
     cfg.watchOptions = watchOptions;
