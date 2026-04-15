@@ -210,9 +210,8 @@ export async function runVanillaImport(vm: any): Promise<void> {
     );
     vm.showVanillaAutoPrompt = false;
 
-    const { refreshExportCharacters } = await import(
-      '../exporter/backup-export'
-    );
+    const { refreshExportCharacters } =
+      await import('../exporter/backup-export');
     refreshExportCharacters(vm);
   } catch (error) {
     log.error('settings.import.vanilla.error', error);

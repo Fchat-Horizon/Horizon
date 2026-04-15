@@ -156,9 +156,8 @@ EXAMPLES:
   }
 
   if (command === 'export') {
-    const { runExportCli } = await import(
-      './services/exporter/backup-export-cli'
-    );
+    const { runExportCli } =
+      await import('./services/exporter/backup-export-cli');
     const dataDir =
       get('--data-dir') || path.join(app.getPath('userData'), 'data');
     const out = get('--out') || path.join(process.cwd(), 'horizon-export.zip');
@@ -197,9 +196,8 @@ EXAMPLES:
   }
 
   if (command === 'import') {
-    const { runImportCli } = await import(
-      './services/importer/backup-import-cli'
-    );
+    const { runImportCli } =
+      await import('./services/importer/backup-import-cli');
     const zip = get('--zip');
     if (!zip) return false;
     const dataDir =
