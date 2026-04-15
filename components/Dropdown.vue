@@ -65,7 +65,8 @@
         default: 3
       }
     },
-    setup(props) {
+    emits: ['opened', 'closed'],
+    setup(props, { emit }) {
       const isOpen = ref(false);
       const menuRef = ref<HTMLElement>();
       const buttonRef = ref<HTMLElement>();
@@ -133,7 +134,12 @@
         }
       };
 
-      watch(isOpen, positionMenu);
+      watch(isOpen, (newValue: boolean) => {
+        positionMenu();
+        nextTick(() => {
+          emit(newValue ? 'opened' : 'closed');
+        });
+      });
 
       const blur = (event: FocusEvent) => {
         let elm = event.relatedTarget as HTMLElement | null;

@@ -15,6 +15,7 @@ import path from 'path';
 import { ipcRenderer } from 'electron';
 import log from 'electron-log';
 import AdmZip from 'adm-zip';
+import { GeneralSettings } from '../../common';
 
 /**
  * Information about a character found in a Horizon backup ZIP file.
@@ -445,7 +446,12 @@ function importGeneralSettings(
     stats.generalImported = true;
 
     try {
-      const newSettings = JSON.parse(generalData.toString('utf8'));
+      const newSettings: GeneralSettings = JSON.parse(
+        generalData.toString('utf8')
+      );
+      if (newSettings && newSettings.logDirectory) {
+        newSettings.logDirectory = vm.settings.logDirectory;
+      }
       Object.assign(vm.settings, newSettings);
     } catch (error) {
       log.warn('settings.import.zip.general.parse', error);
@@ -582,7 +588,7 @@ export async function runZipImport(vm: any): Promise<void> {
     fs.mkdirSync(dataDir, { recursive: true });
 
     const selectedCharacters = new Set(getSelectedImportCharacters(vm));
-    const characterInfo = new Map(
+    const characterInfo = new Map<string, BackupCharacterInfo>(
       vm.importCharacters.map((c: BackupCharacterInfo) => [c.name, c])
     );
 

@@ -55,6 +55,7 @@ import Axios from 'axios';
 import * as browserWindows from './browser_windows';
 import * as remoteMain from '@electron/remote/main';
 import { Event } from 'electron/main';
+import { ProfileViewerGalleryType } from '../site/utils';
 
 const configuredSessions = new WeakSet<electron.Session>();
 
@@ -450,6 +451,17 @@ async function onReady(): Promise<void> {
           return;
         }
 
+        if (
+          permission === 'clipboard-sanitized-write' &&
+          partitionName === 'persist:fchat'
+        ) {
+          log.debug('permissions.allowed.clipboard-sanitized-write', {
+            partition: partitionName
+          });
+          callback(true);
+          return;
+        }
+
         log.debug('permissions.blocked', {
           partition: partitionName,
           permission: permission
@@ -463,6 +475,13 @@ async function onReady(): Promise<void> {
       (_webContents, permission, _details) => {
         if (
           permission === 'notifications' &&
+          partitionName === 'persist:fchat'
+        ) {
+          return true;
+        }
+
+        if (
+          permission === 'clipboard-sanitized-write' &&
           partitionName === 'persist:fchat'
         ) {
           return true;
@@ -914,6 +933,14 @@ async function onReady(): Promise<void> {
     }
   );
 
+  electron.ipcMain.on(
+    'profile-gallery-type',
+    (_event: IpcMainEvent, profileGalleryType: ProfileViewerGalleryType) => {
+      settings.profileViewerGalleryType = profileGalleryType;
+      setGeneralSettings(settings);
+    }
+  );
+
   electron.ipcMain.handle('get-connected-characters', () => {
     return characters.slice();
   });
@@ -993,6 +1020,9 @@ async function onReady(): Promise<void> {
           settings.horizonCustomCssEnabled !==
             _options.horizonCustomCssEnabled ||
           settings.horizonCustomCss !== _options.horizonCustomCss;
+        let badgeChange =
+          settings.horizonShowNotificationBadge !==
+          _options.horizonShowNotificationBadge;
         Object.assign(settings, _options);
         //Now we save it to a file
         setGeneralSettings(_options);
@@ -1001,6 +1031,11 @@ async function onReady(): Promise<void> {
           browserWindows.updateCustomCssAllWindows(
             settings.horizonCustomCss,
             settings.horizonCustomCssEnabled
+          );
+        }
+        if (badgeChange) {
+          browserWindows.updateNotificationBadges(
+            settings.horizonShowNotificationBadge
           );
         }
       }

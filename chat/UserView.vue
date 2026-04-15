@@ -48,12 +48,11 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop, Watch } from '@f-list/vue-ts';
   import Vue from 'vue';
   import { Channel, Character } from '../fchat';
   import { Score } from '../learn/matcher';
   import core from './core';
-  import { EventBus } from './preview/event-bus';
+  import { CharacterDataEvent, EventBus } from './preview/event-bus';
   import { kinkMatchWeights, Scoring } from '../learn/matcher-types';
   import { characterImage } from './common';
   import {
@@ -325,61 +324,83 @@
     };
   }
 
-  @Component({
-    components: {}
-  })
-  export default class UserView extends Vue {
-    @Prop({ required: true })
-    readonly character!: Character;
-
-    @Prop()
-    readonly channel?: Channel;
-
-    @Prop()
-    readonly showStatus?: boolean = true;
-
-    @Prop({ default: true })
-    readonly bookmark?: boolean = true;
-
-    @Prop()
-    readonly match?: boolean = false;
-
-    @Prop({ default: true })
-    readonly preview: boolean = true;
-
-    @Prop({ default: false })
-    readonly avatar: boolean = false;
-
-    @Prop({ default: false })
-    readonly isMarkerShown: boolean = false;
-
-    @Prop({ default: false })
-    readonly useOriginalAvatar: boolean = false;
-
-    @Prop({ default: true })
-    readonly loadColor: boolean = true;
-
-    userClass = '';
-
-    rankIcon: string | null = null;
-    devIcon: string | null = null;
-    contributorIcon: string | null = null;
-    translatorIcon: string | null = null;
-    staffIcon: string | null = null;
-    supporterIcon: string | null = null;
-    sponsorIcon: string | null = null;
-    smartFilterIcon: string | null = null;
-    genderClass: string | null = null;
-    statusClass: string | null = null;
-    matchClass: string | null = null;
-    matchScore: number | string | null = null;
-    avatarUrl: string = '';
-
-    // tslint:disable-next-line no-any
-    scoreWatcher: ((event: any) => void) | null = null;
-
-    @Hook('mounted')
-    onMounted(): void {
+  export default Vue.extend({
+    components: {},
+    props: {
+      character: { type: Object as () => Character, required: true },
+      channel: { type: Object as () => Channel, required: false },
+      showStatus: { default: false },
+      bookmark: { default: true },
+      match: { default: false },
+      preview: { default: true },
+      avatar: { default: false },
+      isMarkerShown: { default: false },
+      useOriginalAvatar: { default: false },
+      loadColor: { default: true }
+    },
+    data() {
+      return {
+        userClass: '',
+        rankIcon: null as string | null,
+        devIcon: null as string | null,
+        contributorIcon: null as string | null,
+        translatorIcon: null as string | null,
+        staffIcon: null as string | null,
+        supporterIcon: null as string | null,
+        sponsorIcon: null as string | null,
+        smartFilterIcon: null as string | null,
+        genderClass: null as string | null,
+        statusClass: null as string | null,
+        matchClass: null as string | null,
+        matchScore: null as number | string | null,
+        avatarUrl: '',
+        // tslint:disable-next-line no-any
+        scoreWatcher: null as ((event: CharacterDataEvent) => void) | null
+      };
+    },
+    computed: {
+      safeAvatarUrl(): string {
+        return this.avatarUrl || '';
+      },
+      staffTitle(): string {
+        const alias = getStaffAlias(this.character.name);
+        const role = getStaffRole(this.character.name);
+        if (alias && role) return `Horizon Staff (${role}) "${alias}"`;
+        if (alias) return `Horizon Staff "${alias}"`;
+        return role ? `Horizon Staff (${role})` : 'Horizon Staff';
+      },
+      contributorTitle(): string {
+        const alias = getContributorAlias(this.character.name);
+        return alias ? `Horizon Contributor "${alias}"` : 'Horizon Contributor';
+      },
+      translatorTitle(): string {
+        const alias = getTranslatorAlias(this.character.name);
+        const langs = getTranslatorLanguages(this.character.name);
+        const langLabel = langs.length > 0 ? ` (${langs.join(', ')})` : '';
+        if (alias) return `Horizon Translator${langLabel} "${alias}"`;
+        return `Horizon Translator${langLabel}`;
+      },
+      supporterTitle(): string {
+        const alias = getSupporterAlias(this.character.name);
+        return alias ? `Horizon Supporter "${alias}"` : 'Horizon Supporter';
+      },
+      sponsorTitle(): string {
+        const alias = getSponsorAlias(this.character.name);
+        return alias ? `Horizon Sponsor "${alias}"` : 'Horizon Sponsor';
+      }
+    },
+    watch: {
+      'character.status'(): void {
+        this.update();
+      },
+      'character.overrides.avatarUrl'(): void {
+        this.update();
+      },
+      'character.overrides.characterColor'(): void {
+        this.update();
+      }
+    },
+    mounted(): void {
       this.update();
       // Refresh on global configuration changes (e.g., toggling developer badges)
       EventBus.$on('configuration-update', this.update);
@@ -389,8 +410,7 @@
           EventBus.$off('character-score', this.scoreWatcher);
         }
 
-        // tslint:disable-next-line no-unsafe-any no-any
-        this.scoreWatcher = (event: any): void => {
+        this.scoreWatcher = (event: CharacterDataEvent): void => {
           // console.log('scoreWatcher', event);
 
           // tslint:disable-next-line no-unsafe-any no-any
@@ -410,160 +430,105 @@
 
         EventBus.$on('character-score', this.scoreWatcher);
       }
-    }
-
-    @Hook('beforeDestroy')
-    onBeforeDestroy(): void {
+    },
+    beforeDestroy(): void {
       if (this.scoreWatcher)
         EventBus.$off('character-score', this.scoreWatcher);
       EventBus.$off('configuration-update', this.update);
 
       this.dismiss();
-    }
-
-    @Hook('deactivated')
-    deactivate(): void {
+    },
+    deactivated(): void {
       this.dismiss();
-    }
-
-    @Hook('beforeUpdate')
-    onBeforeUpdate(): void {
+    },
+    beforeUpdate(): void {
       this.update();
-    }
+    },
+    methods: {
+      update(): void {
+        // console.log('user.view.update', this.character.name);
 
-    @Watch('character.status')
-    onStatusUpdate(): void {
-      this.update();
-    }
+        const res = getStatusClasses(
+          this.character,
+          this.channel,
+          !!this.showStatus,
+          !!this.bookmark,
+          !!this.match,
+          this.loadColor
+        );
 
-    @Watch('character.overrides.avatarUrl')
-    onAvatarUrlUpdate(): void {
-      this.update();
-    }
+        this.rankIcon = res.rankIcon;
+        this.devIcon = res.devIcon;
+        this.contributorIcon = res.contributorIcon;
+        this.translatorIcon = res.translatorIcon;
+        this.staffIcon = res.staffIcon;
+        this.supporterIcon = res.supporterIcon;
+        this.sponsorIcon = res.sponsorIcon;
+        this.smartFilterIcon = res.smartFilterIcon;
+        this.genderClass = res.genderClass;
+        this.statusClass = res.statusClass;
+        this.matchClass = res.matchClass;
+        this.matchScore = res.matchScore;
+        this.userClass = res.userClass;
+        this.avatarUrl = characterImage(
+          this.character.name,
+          this.useOriginalAvatar
+        );
+      },
 
-    @Watch('character.overrides.characterColor')
-    onCharacterColorUpdate(): void {
-      this.update();
-    }
+      getMatchScoreTitle(score: number | string | null): string {
+        switch (score) {
+          case 'perfect':
+            return 'Perfect';
 
-    update(): void {
-      // console.log('user.view.update', this.character.name);
+          case Scoring.MATCH:
+            return 'Great';
 
-      const res = getStatusClasses(
-        this.character,
-        this.channel,
-        !!this.showStatus,
-        !!this.bookmark,
-        !!this.match,
-        this.loadColor
-      );
+          case Scoring.WEAK_MATCH:
+            return 'Good';
 
-      this.rankIcon = res.rankIcon;
-      this.devIcon = res.devIcon;
-      this.contributorIcon = res.contributorIcon;
-      this.translatorIcon = res.translatorIcon;
-      this.staffIcon = res.staffIcon;
-      this.supporterIcon = res.supporterIcon;
-      this.sponsorIcon = res.sponsorIcon;
-      this.smartFilterIcon = res.smartFilterIcon;
-      this.genderClass = res.genderClass;
-      this.statusClass = res.statusClass;
-      this.matchClass = res.matchClass;
-      this.matchScore = res.matchScore;
-      this.userClass = res.userClass;
-      this.avatarUrl = characterImage(
-        this.character.name,
-        this.useOriginalAvatar
-      );
-    }
+          case Scoring.WEAK_MISMATCH:
+            return 'Maybe';
 
-    getMatchScoreTitle(score: number | string | null): string {
-      switch (score) {
-        case 'perfect':
-          return 'Perfect';
+          case Scoring.MISMATCH:
+            return 'No';
+        }
 
-        case Scoring.MATCH:
-          return 'Great';
+        return '';
+      },
 
-        case Scoring.WEAK_MATCH:
-          return 'Good';
+      getCharacterUrl(): string {
+        return `flist-character://${this.character.name}`;
+      },
 
-        case Scoring.WEAK_MISMATCH:
-          return 'Maybe';
+      dismiss(force: boolean = false): void {
+        if (!this.preview) {
+          return;
+        }
 
-        case Scoring.MISMATCH:
-          return 'No';
+        EventBus.$emit('imagepreview-dismiss', {
+          url: this.getCharacterUrl(),
+          force
+        });
+      },
+
+      show(): void {
+        if (!this.preview) {
+          return;
+        }
+
+        EventBus.$emit('imagepreview-show', { url: this.getCharacterUrl() });
+      },
+
+      toggleStickyness(): void {
+        if (!this.preview) {
+          return;
+        }
+
+        EventBus.$emit('imagepreview-toggle-stickyness', {
+          url: this.getCharacterUrl()
+        });
       }
-
-      return '';
     }
-
-    getCharacterUrl(): string {
-      return `flist-character://${this.character.name}`;
-    }
-
-    dismiss(force: boolean = false): void {
-      if (!this.preview) {
-        return;
-      }
-
-      EventBus.$emit('imagepreview-dismiss', {
-        url: this.getCharacterUrl(),
-        force
-      });
-    }
-
-    show(): void {
-      if (!this.preview) {
-        return;
-      }
-
-      EventBus.$emit('imagepreview-show', { url: this.getCharacterUrl() });
-    }
-
-    toggleStickyness(): void {
-      if (!this.preview) {
-        return;
-      }
-
-      EventBus.$emit('imagepreview-toggle-stickyness', {
-        url: this.getCharacterUrl()
-      });
-    }
-
-    get safeAvatarUrl(): string {
-      return this.avatarUrl || '';
-    }
-
-    get staffTitle(): string {
-      const alias = getStaffAlias(this.character.name);
-      const role = getStaffRole(this.character.name);
-      if (alias && role) return `Horizon Staff (${role}) "${alias}"`;
-      if (alias) return `Horizon Staff "${alias}"`;
-      return role ? `Horizon Staff (${role})` : 'Horizon Staff';
-    }
-
-    get contributorTitle(): string {
-      const alias = getContributorAlias(this.character.name);
-      return alias ? `Horizon Contributor "${alias}"` : 'Horizon Contributor';
-    }
-
-    get translatorTitle(): string {
-      const alias = getTranslatorAlias(this.character.name);
-      const langs = getTranslatorLanguages(this.character.name);
-      const langLabel = langs.length > 0 ? ` (${langs.join(', ')})` : '';
-      if (alias) return `Horizon Translator${langLabel} "${alias}"`;
-      return `Horizon Translator${langLabel}`;
-    }
-
-    get supporterTitle(): string {
-      const alias = getSupporterAlias(this.character.name);
-      return alias ? `Horizon Supporter "${alias}"` : 'Horizon Supporter';
-    }
-
-    get sponsorTitle(): string {
-      const alias = getSponsorAlias(this.character.name);
-      return alias ? `Horizon Sponsor "${alias}"` : 'Horizon Sponsor';
-    }
-  }
+  });
 </script>

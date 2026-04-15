@@ -18,10 +18,10 @@
 
   const props = defineProps<{
     // Maintaining Vue 2 backwards-compat, remove after full Vue 3 migration
-    value: number;
+    value?: number;
 
     // Forward-compat for Vue 3
-    modelValue: number;
+    modelValue?: number;
   }>();
 
   const emit = defineEmits<{

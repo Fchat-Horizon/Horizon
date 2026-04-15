@@ -1,8 +1,7 @@
 name: PR Build
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 on:
   pull_request:
@@ -108,16 +107,15 @@ jobs:
           path: release_artifacts/**
           retention-days: 14
 
-  link:
-    name: Post Download Links
-    needs: build
-    runs-on: ubuntu-latest
-    if: always() && needs.build.result == 'success'
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - uses: beni69/artifact-link@v1
+      - name: Save PR number
+        if: matrix.platform == 'linux' && matrix.arch == 'x64'
+        shell: bash
+        run: echo "${{ github.event.pull_request.number }}" > pr_number.txt
+
+      - name: Upload PR number
+        if: matrix.platform == 'linux' && matrix.arch == 'x64'
+        uses: actions/upload-artifact@v4
         with:
-          token: ${{ github.token }}
-          group: '(?<row>[a-z]+)-(?<col>[a-z0-9]+)$'
+          name: pr-number
+          path: pr_number.txt
+          retention-days: 1

@@ -66,12 +66,14 @@ function createMergedSettingsProxy(
 }
 
 class State implements StateInterface {
+  generalSettings?: GeneralSettings | undefined;
   _settings: Settings | undefined = undefined;
   _globalSettings: Settings | undefined = undefined;
   _characterSettings: PartialSettings = {};
   needsSettingsMigration: boolean = false;
   hiddenUsers: string[] = [];
   favoriteEIcons: Record<string, boolean> = {};
+  recentEIcons: string[] = [];
 
   get settings(): Settings {
     if (this._settings === undefined) throw new Error('Settings load failed.');
@@ -202,6 +204,9 @@ const data = {
 
     const favoriteEIcons = await core.settingsStore.get('favoriteEIcons');
     state.favoriteEIcons = favoriteEIcons !== undefined ? favoriteEIcons : {};
+
+    const recentEIcons = await core.settingsStore.get('recentEIcons');
+    state.recentEIcons = recentEIcons !== undefined ? recentEIcons : [];
 
     //If migration needed, check for existing character settings to migrate
     if (needsMigration && characterRaw !== undefined) {

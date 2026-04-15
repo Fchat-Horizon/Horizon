@@ -96,15 +96,6 @@
             v-if="coreState.settings.risingShowUnreadOfflineCount"
           ></note-status>
         </div>
-
-        <!--
-        This is temporarily commented out until we properly merge the two ad centre modals into one.
-        <div>
-          <a href="#" @click.prevent="showAdLauncher()" class="btn"
-            ><span class="fas fa-fw fa-play"></span> Post Ads</a
-          >
-        </div>
-        -->
       </div>
       <div id="conversations" class="hidden-scrollbar">
         <div style="padding-top: 8px" class="list-group conversation-nav">
@@ -115,6 +106,11 @@
             class="list-group-item list-group-item-action"
           >
             {{ conversations.consoleTab.name }}
+            <span
+              class="badge rounded-pill text-bg-danger conversation-badge-inline-end"
+              v-show="shouldShowNotificationBadge(conversations.consoleTab)"
+              >{{ conversations.consoleTab.unreadCount }}</span
+            >
           </a>
         </div>
 
@@ -156,22 +152,34 @@
             :key="conversation.key"
             @click.middle.prevent.stop="conversation.close()"
           >
-            <img
-              :src="
-                characterImage(
-                  conversation.character.name,
-                  !coreState.settings.horizonMessagePortraitHighQuality
-                )
-              "
-              v-if="showAvatars"
-            />
+            <div class="avatar-wrapper" v-if="showAvatars">
+              <img
+                :src="
+                  characterImage(
+                    conversation.character.name,
+                    !coreState.settings.horizonMessagePortraitHighQuality
+                  )
+                "
+              />
+              <span
+                class="badge text-bg-danger"
+                v-show="shouldShowNotificationBadge(conversation)"
+                >{{ conversation.unreadCount }}</span
+              >
+            </div>
             <div class="name">
               <span>{{ conversation.character.name }}</span>
-              <div style="line-height: 0; display: flex">
+              <div class="conversation-meta">
                 <span
                   class="fas fa-reply"
                   v-show="needsReply(conversation)"
                 ></span>
+                <span
+                  class="badge rounded-pill text-bg-danger"
+                  v-if="!showAvatars"
+                  v-show="shouldShowNotificationBadge(conversation)"
+                  >{{ conversation.unreadCount }}</span
+                >
                 <span
                   class="online-status"
                   :class="getOnlineStatusIconClasses(conversation)"
@@ -237,7 +245,13 @@
             @click.middle.prevent.stop="conversation.close()"
           >
             <span class="name">{{ conversation.name }}</span>
-            <span>
+            <span class="conversation-actions">
+              <span
+                class="badge rounded-pill text-bg-danger"
+                v-show="shouldShowNotificationBadge(conversation)"
+                >{{ conversation.unreadCount }}</span
+              >
+
               <span
                 v-if="conversation.hasAutomatedAds()"
                 class="fas fa-ad ads"
@@ -271,38 +285,60 @@
         padding-bottom: 10px;
       "
     >
-      <div id="quick-switcher" class="list-group">
+      <div
+        id="quick-switcher"
+        class="list-group"
+        :class="{ forced: forceQuickConvoList }"
+      >
         <a
           :class="getClasses(conversations.consoleTab)"
           href="#"
           @click.prevent="conversations.consoleTab.show()"
-          class="list-group-item list-group-item-action"
+          class="list-group-item list-group-item-action quick-switcher-item"
         >
           <span class="fas fa-home conversation-icon"></span>
+          <span
+            class="badge text-bg-danger"
+            v-if="shouldShowNotificationBadge(conversations.consoleTab)"
+          >
+            {{ conversations.consoleTab.unreadCount }}
+          </span>
           {{ conversations.consoleTab.name }}
         </a>
         <a
           v-for="conversation in conversations.privateConversations"
           href="#"
           @click.prevent="conversation.show()"
+          @click.middle.prevent.stop="conversation.close()"
+          :data-character="conversation.character.name"
+          data-bs-touch="false"
           :class="getClasses(conversation)"
-          class="list-group-item list-group-item-action"
+          class="list-group-item list-group-item-action quick-switcher-item"
           :key="conversation.key"
+          :title="conversation.character.name"
         >
           <img
             :src="characterImage(conversation.character.name)"
             v-if="showAvatars"
           />
           <span class="far fa-user-circle conversation-icon" v-else></span>
+          <span
+            class="badge text-bg-danger"
+            v-if="shouldShowNotificationBadge(conversation)"
+          >
+            {{ conversation.unreadCount }}
+          </span>
           <div class="name">{{ conversation.character.name }}</div>
         </a>
         <a
           v-for="conversation in conversations.channelConversations"
           href="#"
           @click.prevent="conversation.show()"
+          @click.middle.prevent.stop="conversation.close()"
           :class="getClasses(conversation)"
-          class="list-group-item list-group-item-action"
+          class="list-group-item list-group-item-action quick-switcher-item"
           :key="conversation.key"
+          :title="conversation.name"
         >
           <span
             class="conversation-icon"
@@ -312,6 +348,12 @@
                 : 'fas fa-hashtag'
             "
           ></span>
+          <span
+            class="badge text-bg-danger"
+            v-if="shouldShowNotificationBadge(conversation)"
+          >
+            {{ conversation.unreadCount }}
+          </span>
           <div class="name">{{ conversation.name }}</div>
         </a>
       </div>
@@ -337,7 +379,6 @@
 <script lang="ts">
   import Sortable from 'sortablejs';
 
-  import { Component, Hook } from '@f-list/vue-ts';
   import Vue from 'vue';
   import { Keys } from '../keys';
   import ChannelList from './ChannelList.vue';
@@ -364,6 +405,7 @@
   // import { EventBus } from './preview/event-bus';
   import AdCenterDialog from './ads/AdCenter.vue';
   import AdLauncherDialog from './ads/AdLauncher.vue';
+  import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import QuickJump from './QuickJump.vue';
 
@@ -373,7 +415,7 @@
     [Conversation.UnreadState.Unread]: 'list-group-item-danger'
   };
 
-  @Component({
+  export default Vue.extend({
     components: {
       'user-list': UserList,
       channels: ChannelList,
@@ -392,33 +434,47 @@
       adLauncher: AdLauncherDialog,
       modal: Modal,
       'quick-jump': QuickJump
-    }
-  })
-  export default class ChatView extends Vue {
-    l = l;
-    sidebarExpanded = false;
-    characterImage = characterImage;
-    conversations = core.conversations;
-    getStatusIcon = getStatusIcon;
-    coreState = core.state;
-    keydownListener!: (e: KeyboardEvent) => void;
-    focusListener!: () => void;
-    blurListener!: () => void;
-    readonly isMac = process.platform === 'darwin';
-
-    channelConversations = core.conversations.channelConversations;
-    privateConversations = core.conversations.privateConversations;
-
-    privateCanGlow = !this.channelConversations?.length;
-    channelCanGlow = !this.privateConversations?.length;
-
-    historyNavigateHandleForward!: (e: KeyboardEvent) => boolean;
-    historyNavigateHandleBackward!: (e: KeyboardEvent) => boolean;
-
-    mouseButtonListener!: (e: MouseEvent) => void;
-
-    @Hook('mounted')
-    onMounted(): void {
+    },
+    data() {
+      return {
+        l: l,
+        sidebarExpanded: false,
+        characterImage: characterImage,
+        conversations: core.conversations,
+        getStatusIcon: getStatusIcon,
+        coreState: core.state,
+        keydownListener: undefined as any as (e: KeyboardEvent) => void,
+        focusListener: undefined as any as () => void,
+        blurListener: undefined as any as () => void,
+        isMac: process.platform === 'darwin',
+        channelConversations: core.conversations.channelConversations,
+        privateConversations: core.conversations.privateConversations,
+        privateCanGlow: !core.conversations.channelConversations?.length,
+        channelCanGlow: !core.conversations.privateConversations?.length,
+        historyNavigateHandleForward: undefined as any as (
+          e: KeyboardEvent
+        ) => boolean,
+        historyNavigateHandleBackward: undefined as any as (
+          e: KeyboardEvent
+        ) => boolean,
+        mouseButtonListener: undefined as any as (e: MouseEvent) => void
+      };
+    },
+    computed: {
+      showAvatars(): boolean {
+        return core.state.settings.showAvatars;
+      },
+      ownCharacter(): Character {
+        return core.characters.ownCharacter;
+      },
+      forceQuickConvoList(): boolean {
+        return core.state.settings.forceQuickConvoList;
+      },
+      ownCharacterLink(): string {
+        return profileLink(core.characters.ownCharacter.name);
+      }
+    },
+    mounted(): void {
       this.keydownListener = (e: KeyboardEvent) => this.onKeyDown(e);
       window.addEventListener('keydown', this.keydownListener);
       this.setFontSize(core.state.settings.fontSize);
@@ -445,13 +501,13 @@
         : (e: KeyboardEvent) => {
             return this.isControlOrCommand(e) && getKey(e) === Keys.BracketLeft;
           };
-      this.$watch('conversations.channelConversations', newVal => {
+      this.$watch('conversations.channelConversations', (newVal: any) => {
         if (newVal?.length) {
           this.channelCanGlow = false;
         }
       });
 
-      this.$watch('conversations.privateConversations', newVal => {
+      this.$watch('conversations.privateConversations', (newVal: any) => {
         if (newVal?.length) {
           this.privateCanGlow = false;
         }
@@ -542,343 +598,338 @@
       );
 
       void core.adCenter.load();
-    }
-
-    @Hook('destroyed')
+    },
     destroyed(): void {
       window.removeEventListener('keydown', this.keydownListener);
       window.removeEventListener('focus', this.focusListener);
       window.removeEventListener('blur', this.blurListener);
       window.removeEventListener('mouseup', this.mouseButtonListener);
-    }
+    },
+    methods: {
+      onMouseButton(e: MouseEvent): void {
+        // Mouse button 3 = back, 4 = forward
+        const navigated =
+          e.button === 3
+            ? this.conversations.navigateBack()
+            : e.button === 4
+              ? this.conversations.navigateForward()
+              : false;
+        if (navigated) e.preventDefault();
+      },
 
-    onMouseButton(e: MouseEvent): void {
-      // Mouse button 3 = back, 4 = forward
-      const navigated =
-        e.button === 3
-          ? this.conversations.navigateBack()
-          : e.button === 4
-            ? this.conversations.navigateForward()
-            : false;
-      if (navigated) e.preventDefault();
-    }
+      needsReply(conversation: Conversation): boolean {
+        if (!core.state.settings.showNeedsReply) return false;
+        for (let i = conversation.messages.length - 1; i >= 0; --i) {
+          const sender = (<Partial<Conversation.ChatMessage>>(
+            conversation.messages[i]
+          )).sender;
 
-    needsReply(conversation: Conversation): boolean {
-      if (!core.state.settings.showNeedsReply) return false;
-      for (let i = conversation.messages.length - 1; i >= 0; --i) {
-        const sender = (<Partial<Conversation.ChatMessage>>(
-          conversation.messages[i]
-        )).sender;
-
-        // noinspection TypeScriptValidateTypes
-        if (sender !== undefined)
-          return sender !== core.characters.ownCharacter;
-      }
-      return false;
-    }
-
-    onKeyDown(e: KeyboardEvent): void {
-      const selected = this.conversations.selectedConversation;
-      const pms = this.conversations.privateConversations;
-      const channels = this.conversations.channelConversations;
-      const console = this.conversations.consoleTab;
-      if (getKey(e) === Keys.ArrowUp) {
-        if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-          this.navigateChannelUpward(selected, console, channels, pms);
-        } else if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey) {
-          this.navigateChannelUpward(
-            selected,
-            console,
-            channels.filter(
-              channel =>
-                channel.unread != Conversation.UnreadState.None ||
-                channel === selected
-            ),
-            pms.filter(
-              pm =>
-                pm.unread != Conversation.UnreadState.None || pm === selected
-            )
-          );
-        } else if (e.altKey && e.shiftKey && this.isControlOrCommand(e)) {
-          this.navigateChannelUpward(
-            selected,
-            console,
-            channels.filter(
-              channel =>
-                channel.unread === Conversation.UnreadState.Mention ||
-                channel === selected
-            ),
-            pms.filter(
-              pm =>
-                pm.unread === Conversation.UnreadState.Mention ||
-                pm === selected
-            )
-          );
+          // noinspection TypeScriptValidateTypes
+          if (sender !== undefined)
+            return sender !== core.characters.ownCharacter;
         }
-      } else if (getKey(e) === Keys.ArrowDown) {
-        if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-          this.navigateChannelDownward(selected, console, channels, pms);
-        } else if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey) {
-          this.navigateChannelDownward(
-            selected,
-            console,
-            channels.filter(
-              channel =>
-                channel.unread != Conversation.UnreadState.None ||
-                channel === selected
-            ),
-            pms.filter(
-              pm =>
-                pm.unread != Conversation.UnreadState.None || pm === selected
-            )
-          );
-        } else if (e.altKey && e.shiftKey && this.isControlOrCommand(e)) {
-          this.navigateChannelDownward(
-            selected,
-            console,
-            channels.filter(
-              channel =>
-                channel.unread === Conversation.UnreadState.Mention ||
-                channel === selected
-            ),
-            pms.filter(
-              pm =>
-                pm.unread === Conversation.UnreadState.Mention ||
-                pm === selected
-            )
-          );
-        }
-        //"Oh my god, why would you do it this way?"
-        // We assign these specific functions in the component's mount handler,
-        // because different platforms have different expected keyboard shortcuts for this action.
-        //
-        // Now we can run only that platform's comparison in our keyboard handler
-        // without having to compare our platform every time. Because that'd make
-        // this if-else chain a nightmare for human eyes to parse
-        //
-        // You're welcome.
-      } else if (this.historyNavigateHandleBackward(e)) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.conversations.navigateBack();
-      } else if (this.historyNavigateHandleForward(e)) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.conversations.navigateForward();
-      } else if (
-        getKey(e) === Keys.KeyT &&
-        this.isControlOrCommand(e) &&
-        !e.shiftKey &&
-        !e.altKey
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.showQuickJump();
-      }
-    }
+        return false;
+      },
 
-    navigateChannelUpward(
-      selected: Conversation,
-      console: Conversation,
-      channels: readonly Conversation.ChannelConversation[],
-      pms: readonly Conversation.PrivateConversation[]
-    ): void {
-      if (selected === console) {
-        //tslint:disable-line:curly
-        if (channels.length > 0) channels[channels.length - 1].show();
-        else if (pms.length > 0) pms[pms.length - 1].show();
-      } else if (Conversation.isPrivate(selected)) {
-        const index = pms.indexOf(selected);
-        if (index === 0) console.show();
-        else pms[index - 1].show();
-      } else {
-        const index = channels.indexOf(
-          <Conversation.ChannelConversation>selected
-        );
-        if (index === 0)
-          if (pms.length > 0) pms[pms.length - 1].show();
+      onKeyDown(e: KeyboardEvent): void {
+        const selected = this.conversations.selectedConversation;
+        const pms = this.conversations.privateConversations;
+        const channels = this.conversations.channelConversations;
+        const console = this.conversations.consoleTab;
+        if (getKey(e) === Keys.ArrowUp) {
+          if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            this.navigateChannelUpward(selected, console, channels, pms);
+          } else if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            this.navigateChannelUpward(
+              selected,
+              console,
+              channels.filter(
+                channel =>
+                  channel.unread != Conversation.UnreadState.None ||
+                  channel === selected
+              ),
+              pms.filter(
+                pm =>
+                  pm.unread != Conversation.UnreadState.None || pm === selected
+              )
+            );
+          } else if (e.altKey && e.shiftKey && this.isControlOrCommand(e)) {
+            this.navigateChannelUpward(
+              selected,
+              console,
+              channels.filter(
+                channel =>
+                  channel.unread === Conversation.UnreadState.Mention ||
+                  channel === selected
+              ),
+              pms.filter(
+                pm =>
+                  pm.unread === Conversation.UnreadState.Mention ||
+                  pm === selected
+              )
+            );
+          }
+        } else if (getKey(e) === Keys.ArrowDown) {
+          if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            this.navigateChannelDownward(selected, console, channels, pms);
+          } else if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            this.navigateChannelDownward(
+              selected,
+              console,
+              channels.filter(
+                channel =>
+                  channel.unread != Conversation.UnreadState.None ||
+                  channel === selected
+              ),
+              pms.filter(
+                pm =>
+                  pm.unread != Conversation.UnreadState.None || pm === selected
+              )
+            );
+          } else if (e.altKey && e.shiftKey && this.isControlOrCommand(e)) {
+            this.navigateChannelDownward(
+              selected,
+              console,
+              channels.filter(
+                channel =>
+                  channel.unread === Conversation.UnreadState.Mention ||
+                  channel === selected
+              ),
+              pms.filter(
+                pm =>
+                  pm.unread === Conversation.UnreadState.Mention ||
+                  pm === selected
+              )
+            );
+          }
+          //"Oh my god, why would you do it this way?"
+          // We assign these specific functions in the component's mount handler,
+          // because different platforms have different expected keyboard shortcuts for this action.
+          //
+          // Now we can run only that platform's comparison in our keyboard handler
+          // without having to compare our platform every time. Because that'd make
+          // this if-else chain a nightmare for human eyes to parse
+          //
+          // You're welcome.
+        } else if (this.historyNavigateHandleBackward(e)) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.conversations.navigateBack();
+        } else if (this.historyNavigateHandleForward(e)) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.conversations.navigateForward();
+        } else if (
+          getKey(e) === Keys.KeyT &&
+          this.isControlOrCommand(e) &&
+          !e.shiftKey &&
+          !e.altKey
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.showQuickJump();
+        }
+      },
+
+      navigateChannelUpward(
+        selected: Conversation,
+        console: Conversation,
+        channels: readonly Conversation.ChannelConversation[],
+        pms: readonly Conversation.PrivateConversation[]
+      ): void {
+        if (selected === console) {
+          //tslint:disable-line:curly
+          if (channels.length > 0) channels[channels.length - 1].show();
+          else if (pms.length > 0) pms[pms.length - 1].show();
+        } else if (Conversation.isPrivate(selected)) {
+          const index = pms.indexOf(selected);
+          if (index === 0) console.show();
+          else pms[index - 1].show();
+        } else {
+          const index = channels.indexOf(
+            <Conversation.ChannelConversation>selected
+          );
+          if (index === 0)
+            if (pms.length > 0) pms[pms.length - 1].show();
+            else console.show();
+          else channels[index - 1].show();
+        }
+      },
+
+      navigateChannelDownward(
+        selected: Conversation,
+        console: Conversation,
+        channels: readonly Conversation.ChannelConversation[],
+        pms: readonly Conversation.PrivateConversation[]
+      ): void {
+        if (selected === console) {
+          //tslint:disable-line:curly - false positive
+          if (pms.length > 0) pms[0].show();
+          else if (channels.length > 0) channels[0].show();
+        } else if (Conversation.isPrivate(selected)) {
+          const index = pms.indexOf(selected);
+          if (index === pms.length - 1) {
+            if (channels.length > 0) channels[0].show();
+          } else pms[index + 1].show();
+        } else {
+          const index = channels.indexOf(
+            <Conversation.ChannelConversation>selected
+          );
+          if (index < channels.length - 1) channels[index + 1].show();
           else console.show();
-        else channels[index - 1].show();
-      }
-    }
-
-    navigateChannelDownward(
-      selected: Conversation,
-      console: Conversation,
-      channels: readonly Conversation.ChannelConversation[],
-      pms: readonly Conversation.PrivateConversation[]
-    ): void {
-      if (selected === console) {
-        //tslint:disable-line:curly - false positive
-        if (pms.length > 0) pms[0].show();
-        else if (channels.length > 0) channels[0].show();
-      } else if (Conversation.isPrivate(selected)) {
-        const index = pms.indexOf(selected);
-        if (index === pms.length - 1) {
-          if (channels.length > 0) channels[0].show();
-        } else pms[index + 1].show();
-      } else {
-        const index = channels.indexOf(
-          <Conversation.ChannelConversation>selected
-        );
-        if (index < channels.length - 1) channels[index + 1].show();
-        else console.show();
-      }
-    }
-
-    //Should this be a generic helper function that other components can use too?
-    //Right now they indiscriminately use the Ctrl or Meta key, even though it should ideally only be one.
-    isControlOrCommand(e: KeyboardEvent): boolean {
-      return this.isMac ? e.metaKey : e.ctrlKey;
-    }
-    setFontSize(fontSize: number): void {
-      let overrideEl = <HTMLStyleElement | null>(
-        document.getElementById('overrideFontSize')
-      );
-      if (overrideEl !== null) document.body.removeChild(overrideEl);
-      overrideEl = document.createElement('style');
-      overrideEl.id = 'overrideFontSize';
-      document.body.appendChild(overrideEl);
-      const sheet = <CSSStyleSheet>overrideEl.sheet;
-      sheet.insertRule(
-        `#chatView, .btn, .form-control, .form-label, .custom-select { font-size: ${fontSize}px; }`,
-        sheet.cssRules.length
-      );
-      sheet.insertRule(
-        `.form-control, select.form-control { line-height: 1.428571429 }`,
-        sheet.cssRules.length
-      );
-    }
-
-    getOnlineStatusIconClasses(
-      conversation: PrivateConversation
-    ): Record<string, any> {
-      const status = conversation.character.status;
-
-      if (
-        conversation.typingStatus === 'typing' ||
-        conversation.typingStatus === 'paused'
-      ) {
-        return {
-          'fas fa-comment-dots': conversation.typingStatus === 'typing',
-          'far fa-comment': conversation.typingStatus === 'paused'
-        };
-      }
-
-      const styling = {
-        crown: { color: 'online', icon: ['fas', 'fa-crown'] },
-        online: { color: 'online', icon: ['fas', 'fa-circle'] },
-        looking: { color: 'online', icon: ['fa', 'fa-eye'] },
-        offline: { color: 'offline', icon: ['fa', 'fa-ban'] },
-        busy: { color: 'away', icon: ['fa', 'fa-cog'] },
-        idle: { color: 'away', icon: ['far', 'fa-clock'] },
-        dnd: { color: 'dnd', icon: ['fa', 'fa-minus-circle'] },
-        away: { color: 'away', icon: ['far', 'fa-circle'] }
-      };
-
-      const cls = { [styling[status].color]: true };
-
-      _.forEach(styling[status].icon, (name: string) => (cls[name] = true));
-
-      return cls;
-    }
-
-    logOut(): void {
-      if (Dialog.confirmDialog(l('chat.confirmLeave'))) core.connection.close();
-    }
-
-    showSettings(): void {
-      (<SettingsView>this.$refs['settingsDialog']).show();
-    }
-
-    showSearch(): void {
-      (<CharacterSearch>this.$refs['searchDialog']).show();
-    }
-
-    showRecent(showChannels?: boolean): void {
-      (<RecentConversations>this.$refs['recentDialog']).show();
-
-      //Not particularly elegant, but it allows us to open the second tab without changing other function calls
-      (<RecentConversations>this.$refs['recentDialog']).setTab(
-        showChannels ? '1' : '0'
-      );
-    }
-
-    markAllAsRead(): void {
-      this.conversations.channelConversations.forEach(
-        (conversation: Conversation.ChannelConversation) => {
-          conversation.markRead();
         }
-      );
-    }
+      },
 
-    showChannels(): void {
-      (<ChannelList>this.$refs['channelsDialog']).show();
-    }
+      //Should this be a generic helper function that other components can use too?
+      //Right now they indiscriminately use the Ctrl or Meta key, even though it should ideally only be one.
+      isControlOrCommand(e: KeyboardEvent): boolean {
+        return this.isMac ? e.metaKey : e.ctrlKey;
+      },
+      setFontSize(fontSize: number): void {
+        let overrideEl = <HTMLStyleElement | null>(
+          document.getElementById('overrideFontSize')
+        );
+        if (overrideEl !== null) document.body.removeChild(overrideEl);
+        overrideEl = document.createElement('style');
+        overrideEl.id = 'overrideFontSize';
+        document.body.appendChild(overrideEl);
+        const sheet = <CSSStyleSheet>overrideEl.sheet;
+        sheet.insertRule(
+          `#chatView, .btn, .form-control, .form-label, .custom-select { font-size: ${fontSize}px; }`,
+          sheet.cssRules.length
+        );
+        sheet.insertRule(
+          `.form-control, select.form-control { line-height: 1.428571429 }`,
+          sheet.cssRules.length
+        );
+      },
 
-    showStatus(): void {
-      (<StatusSwitcher>this.$refs['statusDialog']).show();
-    }
+      getOnlineStatusIconClasses(
+        conversation: PrivateConversation
+      ): Record<string, any> {
+        const status = conversation.character.status;
 
-    showAdCenter(): void {
-      (<AdCenterDialog>this.$refs['adCenter']).show();
-    }
+        if (
+          conversation.typingStatus === 'typing' ||
+          conversation.typingStatus === 'paused'
+        ) {
+          return {
+            'fas fa-comment-dots': conversation.typingStatus === 'typing',
+            'far fa-comment': conversation.typingStatus === 'paused'
+          };
+        }
 
-    showAdLauncher(): void {
-      (<AdLauncherDialog>this.$refs['adLauncher']).show();
-    }
+        const styling = {
+          crown: { color: 'online', icon: ['fas', 'fa-crown'] },
+          online: { color: 'online', icon: ['fas', 'fa-circle'] },
+          looking: { color: 'online', icon: ['fa', 'fa-eye'] },
+          offline: { color: 'offline', icon: ['fa', 'fa-ban'] },
+          busy: { color: 'away', icon: ['fa', 'fa-cog'] },
+          idle: { color: 'away', icon: ['far', 'fa-clock'] },
+          dnd: { color: 'dnd', icon: ['fa', 'fa-minus-circle'] },
+          away: { color: 'away', icon: ['far', 'fa-circle'] }
+        };
 
-    showProfileAnalyzer(): void {
-      (this.$refs.profileAnalysis as any).show();
-      void (this.$refs.profileAnalysis as any).$children[0].analyze();
-    }
+        const cls = { [styling[status].color]: true };
 
-    showAddPmPartner(): void {
-      (<PmPartnerAdder>this.$refs['addPmPartnerDialog']).show();
-    }
+        _.forEach(styling[status].icon, (name: string) => (cls[name] = true));
 
-    userMenuHandle(e: MouseEvent | TouchEvent): void {
-      (<UserMenu>this.$refs['userMenu']).handleEvent(e);
-    }
+        return cls;
+      },
 
-    showQuickJump(): void {
-      (<QuickJump>this.$refs['quickJump']).show();
-    }
+      shouldShowNotificationBadge(conversation: Conversation): boolean {
+        return (
+          core.state.generalSettings
+            ?.horizonShowWindowAndChatNotificationBadge !== false &&
+          conversation.unreadCount > 0
+        );
+      },
 
-    get showAvatars(): boolean {
-      return core.state.settings.showAvatars;
-    }
+      logOut(): void {
+        if (Dialog.confirmDialog(l('chat.confirmLeave')))
+          core.connection.close();
+      },
 
-    get ownCharacter(): Character {
-      return core.characters.ownCharacter;
-    }
+      showSettings(): void {
+        (<SettingsView>this.$refs['settingsDialog']).show();
+      },
 
-    get ownCharacterLink(): string {
-      return profileLink(core.characters.ownCharacter.name);
-    }
+      showSearch(): void {
+        (<CharacterSearch>this.$refs['searchDialog']).show();
+      },
 
-    getClasses(conversation: Conversation): string {
-      return conversation === core.conversations.selectedConversation
-        ? ' active'
-        : unreadClasses[conversation.unread];
-    }
+      showRecent(showChannels?: boolean): void {
+        (<RecentConversations>this.$refs['recentDialog']).show();
 
-    isColorblindModeActive(): boolean {
-      return core.state.settings.risingColorblindMode;
-    }
+        //Not particularly elegant, but it allows us to open the second tab without changing other function calls
+        (<RecentConversations>this.$refs['recentDialog']).setTab(
+          showChannels ? '1' : '0'
+        );
+      },
 
-    getImagePreview(): ImagePreview | undefined {
-      return this.$refs['imagePreview'] as ImagePreview;
-    }
+      markAllAsRead(): void {
+        this.conversations.channelConversations.forEach(
+          (conversation: Conversation.ChannelConversation) => {
+            conversation.markRead();
+          }
+        );
+      },
 
-    adsAreRunning(): boolean {
-      return core.adCenter.adsAreRunning();
-    }
+      showChannels(): void {
+        (<ChannelList>this.$refs['channelsDialog']).show();
+      },
 
-    stopAllAds(): void {
-      core.adCenter.stopAllAds();
+      showStatus(): void {
+        (<StatusSwitcher>this.$refs['statusDialog']).show();
+      },
+
+      showAdCenter(): void {
+        (<InstanceType<typeof CustomDialog>>this.$refs['adCenter']).show();
+      },
+
+      showAdLauncher(): void {
+        (<InstanceType<typeof CustomDialog>>this.$refs['adLauncher']).show();
+      },
+
+      showProfileAnalyzer(): void {
+        (this.$refs.profileAnalysis as any).show();
+        void (this.$refs.profileAnalysis as any).$children[0].analyze();
+      },
+
+      showAddPmPartner(): void {
+        (<PmPartnerAdder>this.$refs['addPmPartnerDialog']).show();
+      },
+
+      userMenuHandle(e: MouseEvent | TouchEvent): void {
+        (<UserMenu>this.$refs['userMenu']).handleEvent(e);
+      },
+
+      showQuickJump(): void {
+        (<QuickJump>this.$refs['quickJump']).show();
+      },
+
+      getClasses(conversation: Conversation): string {
+        return conversation === core.conversations.selectedConversation
+          ? ' active'
+          : unreadClasses[conversation.unread];
+      },
+
+      isColorblindModeActive(): boolean {
+        return core.state.settings.risingColorblindMode;
+      },
+      getImagePreview(): ImagePreview | undefined {
+        return this.$refs['imagePreview'] as ImagePreview;
+      },
+
+      adsAreRunning(): boolean {
+        return core.adCenter.adsAreRunning();
+      },
+
+      stopAllAds(): void {
+        core.adCenter.stopAllAds();
+      }
     }
-  }
+  });
 </script>
 
 <style lang="scss">
@@ -908,6 +959,39 @@
       color: var(--bs-success);
     }
 
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      min-width: 1.65em;
+      padding: 0;
+      height: 1.65em;
+      line-height: 1;
+      box-shadow: 0 0 0 2px var(--bs-body-bg);
+    }
+
+    .conversation-badge-inline-end {
+      margin-left: auto;
+    }
+
+    .conversation-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      line-height: 1;
+      min-width: 0;
+      margin-top: 0.15rem;
+    }
+
+    .conversation-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      flex-shrink: 0;
+      margin-left: 0.5rem;
+    }
+
     .list-group-item {
       padding: 5px;
       display: flex;
@@ -917,6 +1001,11 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        .badge {
+          --bs-badge-padding-x: 0.45em;
+          --bs-badge-padding-y: 0.25em;
+          --bs-badge-font-size: 0.75em;
+        }
       }
       .pin,
       .leave,
@@ -940,6 +1029,31 @@
         padding-left: 1px;
         padding-top: 1px;
         padding-bottom: 1px;
+
+        .avatar-wrapper {
+          position: relative;
+          flex-shrink: 0;
+          margin-right: 5px;
+
+          img {
+            height: 40px;
+            width: 40px;
+            margin: 0;
+          }
+
+          .badge {
+            position: absolute;
+            bottom: 0;
+            right: -1px;
+            font-size: 0.8em;
+            min-width: 1.7em;
+            height: 1.7em;
+            padding: 0 3px;
+            margin: 0;
+            border-radius: 90px;
+            box-shadow: 0 0 0 2px var(--bs-list-group-bg, var(--bs-body-bg));
+          }
+        }
 
         .online-status {
           padding-left: 1px;
@@ -981,10 +1095,12 @@
         width: 40px;
         margin: -1px 5px -1px -1px;
       }
-      &:first-child img {
+      &:first-child img,
+      &:first-child .avatar-wrapper img {
         border-top-left-radius: 4px;
       }
-      &:last-child img {
+      &:last-child img,
+      &:last-child .avatar-wrapper img {
         border-bottom-left-radius: 4px;
       }
     }
@@ -1000,9 +1116,16 @@
     @media (max-width: breakpoint-max(md)) {
       display: flex;
     }
+    &.forced {
+      display: flex;
+      @media (min-width: breakpoint-min(md)) {
+        margin: 0 5px 5px;
+      }
+    }
 
     a {
       width: 40px;
+      position: relative;
       text-align: center;
       line-height: 1;
       padding: 5px 5px 0;
@@ -1029,8 +1152,25 @@
     }
 
     .conversation-icon {
-      font-size: 2em;
+      font-size: 1.6rem;
       height: 30px;
+    }
+
+    .badge {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      font-size: 0.9em;
+      min-width: 2em;
+      height: 2em;
+      padding: 0 4px;
+      border-radius: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      z-index: 1;
+      box-shadow: 0 0 0 3px var(--bs-list-group-bg, var(--bs-body-bg));
     }
   }
 

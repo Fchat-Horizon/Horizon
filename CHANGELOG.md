@@ -5,19 +5,153 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). You can also read it on our [website](https://fchat-horizon.github.io/docs/changelog.html).
 
-# [Unreleased]
+## [Unreleased]
 
-## [1.36.0] 19-02-2026
+## [2.1.1] - 2026-04-13
+
+### Fixed
+
+- Hotfix for the image previewer's zoom controls spanning two lines on Windows. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/29c52031359c5fd8a437d8370c2ba8295adaa385)
+
+## [2.1.0] - 2026-04-13
+
+### Added
+
+- Recently picked EIcons are now their own category in the EIcon picker. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8b34333993c8965be9f63be87314a660ad8e6cb7)
+- Extra options for viewing images in a profile's gallery: Full screen previews, mouse hover previews (similar to `[url]` tags), or just the expanded columns that you already know and love. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d887e8382d4a0648711b233e9adefdbd23cf50a3)
+
+### Changed
+
+- BBCode is now stripped from OS notifications. Spoilered text is hidden and eicons are shown as `:name:`. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3d525fc)
+- The 'quick switch' conversation list on the top of the window, for when you're in a narrow view mode, has had a few tweaks to bring it up to snuff with its widescreen counterpart: [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c756570aa4afdf8230177eb87e0aa36de4536f34)
+  - Middle clicking closes the relevant conversation.
+  - Right clicking a PM opens the user context menu.
+  - Unread message badges are visible.
+  - There is a setting to force the list to always be visible, regardless of how wide your window is.
+- Notification badges inside the chat window were tweaked in their design. They should look a lot less obnoxious now. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6e5b5b90f2a2d208450430c1119bdbfeed6d8a1f)
+
+### Fixed
+
+- Numbered notification badges. Again. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b4cc20669c57c36b4520ef847a40fb9cae743884)
+- Fixed issues where trying to load two characters' data at the same time (for instance, when hovering over one with the mouse preview while another one is being loaded) would cause the wrong character's images and guestbook posts to appear. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/eafad995937527b009912b66f2c3d4d91f23c3c9)
+  - If a profile is already cached with incorrect data from before this fix, you might need to manually refresh it by clicking the refresh button on the top left of the profile viewer.
+  - Thanks to @Kannamoris for helping resolve issues with this during testing.
+- Importing a backup from a different computer (with a different log directory saved) will no longer try and get logs from the old computer's saved folder. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/472649edd1635fb97025f01dc204c6e9792b6448)
+- Pinning a character preview with the middle mouse button now makes the buttons interactable again. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7e09975cdbddb070e8a727966929742dbbc5fb4c)
+- The bookmark button on the profile viewer is now based on the actual bookmark state, rather than pulled from the cache. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e79cf76cd2b1bfe8a4711d2c1cbe4b010eee9590)
+- Fixed setting a status and closing the dialogue popup briefly showing the old status during the animation. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/59741af4bbc0f1a65faa23c5fe88d950f10b7378)
+- Fixed a 3.0 issue, when exporting logs to HTML, where large messages wrapped entirely within `[sub]` or `[sup]` tags would have their entire contents overlapping on a single line. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a648b3b7808fe79a84266c1672cb7260229975ad)
+- Updating the "Animated [eicon]s" setting now no longer requires you to restart. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a28a2e3bf82623daddf12a6419ff04d18b22f558)
+- The bookmark button when right-clicking a user is no longer case sensitive. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/cda8da9)
+- Friend and bookmark matching on reconnect is now case-insensitive, matching the fix above. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0a273ea)
+- Character colors in the recent conversations list now update properly when a user logs in. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d096b44)
+- EIcon syncing is more consistent. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/cfe0440)
+- Reduced-motion users no longer experience scroll stutter in virtual lists, like the log viewer. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7d2eaec)
+- Fixed components that have both a vertical and horizontal scrollbar having a tiny white corner in the bottom right. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9218162acc52f60d95950ca8680285f6d6b038e1)
+
+### Development
+
+- Upgraded Electron to version 39.8.3 (from 39.2.7). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/51b77f4854aadc8228e1d6f0169dc30b16c136b3)
+  - This also includes an update to the packages used for the Nix development flake. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/84839173fcc1f8be1ab3ccd5d8e2babde2ca5d82)
+- Updated to FontAwesome 7.2.0 (from 7.1.0). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/921dd498681f4e4e80559a11733144b6766c1a8c)
+
+### Merged pull requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/707 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/711 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/712 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/713 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/725 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/726 by @Kannamoris
+  - This is their first contribution! 🎉
+
+## [2.0.2] - 2026-03-26
+
+### Fixed
+
+- Fixed 'Show numbered badges on the app icon' being disabled on Windows not really working. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2a667cb49e66106a1651dddfb6399cb53e9809f1)
+  - This is what happens when you write Windows-specific code and then proceed not to test on Windows, folks.
+
+## [2.0.1] - 2026-03-25
+
+### Added
+
+- You can now disable the numbered unread message counters, both for the app icon on the task bar/ dock or just the ones inside the window. It's in the app settings on the top left, under 'Notifications'. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/38584d3b6ca7f56cb3a7b6ec30bbf302958622a5)
+
+### Fixed
+
+- PMs you're actively looking at won't increase the amount of unread messages anymore. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/35c3fb4a00c7a26ed8b87f643d501a35c334a86c)
+- Fixed an issue for Electron 39.8.1+ builds from specific Linux package managers while using Wayland (what a mouthful!), where the image and profile preview would never disappear after moving your mouse cursor away. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/df26d5513d8838b4f3f240a1bec5ad5979c55920)
+
+## [2.0.0] - 2026-03-22
+
+### Changed
+
+- Migrated all Vue components from the class API to the options API. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ffc9425c81cabdda2233c29032d0fe5bba0ac4eb)
+- Upgraded to TypeScript 5. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ffc9425c81cabdda2233c29032d0fe5bba0ac4eb)
+- Upgraded Node.js requirement to v24.14.0. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9eea00de0642d166cfe690478f86432ce210d0df)
+
+### Added
+
+- Notification count badges on conversations, windows, and the tray icon, with redrawn icons on Windows for improved legibility on lower display scales and hiDPI screens. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9994f25fd5bf6553fcd7a639d1471015aaa55cf1) [[Commit 2]](https://github.com/Fchat-Horizon/Horizon/commit/3a4e4d1bd878f71c7c55f75de9fabf1a1464b6fd) [[Commit 3]](https://github.com/Fchat-Horizon/Horizon/commit/7ab8f8ca9619b7c8834e4e7d7b5b7594d1f080a5)
+- "No humans" and "no furries" smart filter options, which hide ads from characters who have marked themselves as not interested in your species. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0e8e6bcf95dc11f1c6556fb80778199b58d59d4a)
+- Filterable select dropdowns now show the selected value, auto-focus the filter input on open, and select the first result on Enter. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/32f2923ffb1cf7dbc1391c794dd2f2946a480cd0)
+
+### Fixed
+
+- Scrollbar thumb jitter during row measurement. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c3f2d8075d9c9664578a99329aa77b5259542b19)
+- Duplicate entries in the friend list when multiple characters share the same friend. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d26d31cb6789c974d8d002c6b744059c605627e7)
+- Link preview pins no longer block clicks on areas of the UI beneath them. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c64944b4dff2c10916bc7d4c33f430dc2d22e41a)
+- Regression where the eicon picker wouldn't load any extra eicons while scrolling anymore. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/beb19475be9bbf28b45c0da3195dcaa50b3d7157)
+- Click-dragging pinned eicons to sort them has been completely rewritten with a different dragging library, hopefully solving any remaining issues with this once and for all. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5bb5016b0aed38133c1ba4a64d3525d83e7e9d54)
+
+## [1.36.2] 12-03-2026
+
+### Fixed
+
+- Hotfix for a bug in 1.36.1 where switching tabs or windows while connecting in a second tab would keep you stuck connecting forever. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/cc24d1b874cc7c98424997038cbd7e59815a8dd6)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/690 by @freenutsxd
+
+## [1.36.1] 11-03-2026
+
+### Fixed
+
+- Fixed dragging pinned eicons reordering the visible list incorrectly when you have more eicons than are currently displayed. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4d6d53f63d99ea2c3efc44ed0af72b1674877075)
+- Fixed event messages (join/leave/status changes) picking up the modern layout styling in modern view, causing a weird hybrid look. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0e0513e3fc7a7154100750563ad95fe9f2d0746d)
+- Fixed the sound theme dropdown filter not showing a placeholder. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2c645f29afad2f38e646a2a4ca05381891fb0bba)
+- Fixed the app always opening on your primary display instead of where you left it when your saved window position happened to land at coordinate zero after being clamped to your screen's work area. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/59c0ef7ba6f99d83661608c27bf6a31ba019b594)
+- Fixed cases where CTRL+Z in the BBCode editor would sometimes remove more than the last BBCode tag if you recently undid and redid a change. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e068d8347a41a17da5ec96b8da5d603df2bf02db)
+- Fixed refreshing a profile not correctly saving the updated data to the local cache database. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/cfb10691318c971534234e0313d7343342510bac)
+- Your character's cache now refreshes when you connect, so you're always working with up-to-date profile data. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1456ef989db5e32b24f74dbce3d9a38506b7f674)
+- Fixed the 'Close and download' button in the update prompt being knocked onto a different row because of the Discord and Ko-Fi buttons. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b0365aad106a188b0d0d18271b6fbcb3dea81c70)
+
+### Development
+
+- Fixed PR artifact download links failing to post on pull requests from external forks. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1426a78ee5e4ce94654e7f6a7732873e5909d6fd)
+- Removed Turbo from the build toolchain. Workspace scripts now use pnpm directly. We never used turbo anyways, I don't remember why I even added it lol. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/44c7b75)
+- Updated dependencies (markdown-it, sass-embedded).
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/681 by @amonodrama
+- https://github.com/Fchat-Horizon/Horizon/pull/661 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/673 by @FatCatClient
+
+## [1.36.0] 10-03-2026
 
 ### Added
 
 - A whole bunch of stuff for the log viewer:
   - Performance has been massively improved, scrolling through long conversations no longer blows up your PC. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/fbd9b460b182914b1f83e52d73fb0b5a13be196f)
   - You can directly share messages with your PM partner through the log viewer. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/aeac29c7ff8a6c36bc5e0d6d674b63239f2b2e3c)
-  - While searching, you can instantly jump to a message in its proper context. [[Commit]]
+  - While searching, you can instantly jump to a message in its proper context. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6487deb53ccf992369b46d0fc3ac81fb48eb2d5a)
 - Added an app setting to force native window controls and frames. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4b231afa787c53c256eb15d151496b36d7e407a4)
 - Various places where character names show up (like the hidden ads/ ignore list, kick notifications, etc) now have clickable character names. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/da602e0dbeb8510b5dea466cb3c5ff64da624624)
 - Ignored users are now dimmed in channel lists [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d4151b598d2b5fa1c0f051ef7db6d97a6ee942d0)
+- Additional badges in chat for supporters, donators, and contributors! [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/00ed996e6425128b4a39ce3e5c7cc81213f689da)
 
 ### Fixed
 
@@ -26,17 +160,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Missing checks for specific species not having a category to be thrown in, even though the category exists.
   - Presumed kemonomimi (having your species field filled with an animal while using the "Human" bodytype) are no longer considered furries for the Furry/ Human preference check.
 - Sending a PM now clears it from your drafts. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c46bd79e01629c8aaa852aa912465239bd3faa67)
+- Fixed issues where sorting your pinned eicons while you have over 77 pinned eicons would unpin the additional ones if they hadn't loaded in yet though. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/501d85e2b2ba8f761bc807ea9df8d417208817e3)
+- Fixed issues on Windows where the chatbox and input fields would become nonresponsive until you alt-tab back in after viewing an alert. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/aafa177b7968772aed29dae5f1a7f4f0b5ca6ff4)
 - Fixed the filter for the spellcheck option not working. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/31eb84e584292ef1fc8dba816985e6c28c19652b)
 - Fixed some jank where having your window(s) closed to the tray while at the maximum amount of tabs would confuse people when they try to reopen the app. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/289274d8e21e5d9b82dd067be94ea18e38a1d769)
 - Fixed some ancient edge cases where the window's saved location would be completely outside of your screen, meaning the app would be unclickable if you restarted it. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5b403603b4da71ef4157d095166ced4e6a31ca10)
 - Fixed eicons being invisible in exported logs. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1d4018deba7c84fd0ab042a1f41f8e0e8cccc3c0)
-- Fixed cases where exporting/ importing data between different installations can mess up your intended log directory. [Commit]
 - An extra sanity check was added for making sure that dragging eicons doesn't delete your pins. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/694c57ceaae6cc119c92c906f482666276f9cd80)
+- Reverted the hidden users list in character settings to a lightweight, non-`UserView` rendering path. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ab0645d95a0dea66ed4bf937b975992d49b899ce)
 
 ### Changed
 
 - The user-specific channel ping notification now looks different from the PM one. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/df73cb16eda9c46789743960f719e5908d140f01)
 - Slight redesign for the status picker history button to make it more visible. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a38c873b95b14de2e9453744985d7ca788a73e46)
+- Added a quick warning for OneDrive-backed log directories to help prevent sync-related logging issues. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/90ca0db76175180c41ca2b72719c215ea97b8384)
+- Updated localization files (French, German, Hungarian, Italian, Spanish, and Cute Engwish).
 
 ### Development
 
@@ -55,8 +193,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/631 by @CodingWithAnxiety
 - https://github.com/Fchat-Horizon/Horizon/pull/634 by @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/639 by @FatCatClient
-
-# [Releases]
 
 ## [1.35.7] 25-01-2026
 
@@ -78,7 +214,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Imgur is no longer supported as a host for your high-quality portraits. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/571949d8f92a896b99a390054c2ed04d46fda63b)
-- Opening the "Open conversation" and channel search dialogs now automatically focus the text input. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1c2d4ad307e97d16b7cc0c5123d6e444072fcc51)
+- Opening the "Open conversation" and channel search dialogs now automatically focuses the text input. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1c2d4ad307e97d16b7cc0c5123d6e444072fcc51)
 - The user right-click menu has some of its old separator borders returned. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4c464f87f4e5af4c14ba032f0ac6b3b30627ad4a)
 - Some common misconfigurations (incorrect log folders and custom chat host URLs) now show actual error message when connecting inevitably fails. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/62dc89378b3000576c8768dd30050bb3b8ccae09) [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5e84da60f25bd52495c4dfa430888472770b8b4d)
 
@@ -128,7 +264,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Drastically improved detection of your browser for the "Open in incognito mode" right click option. Linux is now supported as well [[Improvements]](https://github.com/Fchat-Horizon/Horizon/commit/3737b0ea3ad8039a9faba690256b3c6847095a28) [[Linux]](https://github.com/Fchat-Horizon/Horizon/commit/e82f2b0028801608cf91028346e578f2bd51fcd6)
+- Drastically improved detection of your browser for the "Open in incognito mode" right click option. Linux is now supported as well. [[Improvements]](https://github.com/Fchat-Horizon/Horizon/commit/3737b0ea3ad8039a9faba690256b3c6847095a28) [[Linux]](https://github.com/Fchat-Horizon/Horizon/commit/e82f2b0028801608cf91028346e578f2bd51fcd6)
   - If the browser you have set in the advanced app options is different from your computer's default browser, Horizon will try to open incognito links using your custom browser path too.
   - Due to Safari not supporting Private Mode flags for the command line, MacOS support for this feature has not yet been added.
 - If you try and change the server host, you'll now get a warning asking you if you are _really_ sure. This is an advanced option after all. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8c626f023e42842077574afad81fca4de1537044)
@@ -383,13 +519,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Right-clicking an eicon in chat now gives you a context menu to copy it or add it to your favourites. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2e975d516aa5b8f7a3cbe2e2cd98af2f3726855b)
 - You can now pin statuses in the Status History window for easy access. We also increased the limit of statuses your history saves to 15. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8a15570fa0d002fb9fb5ef700bc96e7c1c3445db)
 - You can now toggle whether the small profile pictures next to messages or PMs use the HQ avatar or not. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a282312ba0617b46fda075e9a84b40a0e3ae5139)
-- Added a setting for supporting transparent windows in custom CSS. [[Commit]](440c8ae978ffcfa2e6ad43a13a48b24a73d6fbd0)
+- Added a setting for supporting transparent windows in custom CSS. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ 440c8ae978ffcfa2e6ad43a13a48b24a73d6fbd0)
 
 ### Changed
 
 - Removed the ping sound from channel warnings. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ff1bca7833e87fe99b621946e2ae00c3b4dded58)
   - We originally brought this back, because it was a feature in F-Chat 1.0 and 2.0. But this was a bad decision.
-- The black BBCode color is no longer just a dark version of the theme's color. [[Commit]](303df63e43c4e887213a2596e07768f7f11100ba)
+- The black BBCode color is no longer just a dark version of the theme's color. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ 303df63e43c4e887213a2596e07768f7f11100ba)
   - It's still not the vanilla color by default though. If you want that one, enable "Use vanilla BBCode colors" in the app settings.
 - If you send an eicon collage but accidentally mess it up by forgetting to add a new line at the start, it will now automatically add it before you send it. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a108c103506ff90e5068a80834a9f6ff37d5ef25)
 - Importing character settings to a new character now also imports your pinned eicons and hidden ads. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4477fdbd9988ab97af6ef0b6a2e9b600666efa6b)
@@ -1126,3 +1262,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - IOS build removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814)]
 - Webchat removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/b894a180b9be31f68d1458aaa3c59f9c4470da89)]
+
+[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.1...development
+[2.1.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.0...v2.1.1
+[2.1.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.3-beta.2...v2.1.0
+[2.0.3-beta.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.3-beta.1...v2.0.3-beta.2
+[2.0.3-beta.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.3-beta.0...v2.0.3-beta.1
+[2.0.3-beta.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.2...v2.0.3-beta.0
+[2.0.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.1...v2.0.2
+[2.0.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.0-beta.3...v2.0.0
+[2.0.0-beta.3]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.0-beta.2...v2.0.0-beta.3
+[2.0.0-beta.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.0-dev.0...v2.0.0-beta.2
+[2.0.0-beta.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.0-beta.0...v2.0.0-beta.1
+[2.0.0-beta.0]: https://github.com/Fchat-Horizon/Horizon/compare/v1.36.2...v2.0.0-beta.0

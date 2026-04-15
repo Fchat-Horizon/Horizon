@@ -12,13 +12,14 @@
     ></tabs>
     <div>
       <div v-show="selectedTab === '0'" class="recent-conversations">
-        <user-view
-          v-for="recent in recentPrivate"
-          v-if="recent.character"
-          :key="recent.character"
-          :character="getCharacter(recent.character)"
-          :isMarkerShown="shouldShowMarker"
-        ></user-view>
+        <template v-for="recent in recentPrivate">
+          <user-view
+            v-if="recent.character"
+            :key="recent.character"
+            :character="getCharacter(recent.character)"
+            :isMarkerShown="shouldShowMarker"
+          ></user-view>
+        </template>
       </div>
       <div v-show="selectedTab === '1'" class="recent-conversations">
         <channel-view
@@ -33,7 +34,6 @@
 </template>
 
 <script lang="ts">
-  import { Component } from '@f-list/vue-ts';
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import Tabs from '../components/tabs';
@@ -43,38 +43,39 @@
   import l from './localize';
   import UserView from './UserView.vue';
 
-  @Component({
+  export default CustomDialog.extend({
     components: {
       'user-view': UserView,
       'channel-view': ChannelView,
       modal: Modal,
       tabs: Tabs
+    },
+    data() {
+      return {
+        l,
+        selectedTab: '0'
+      };
+    },
+    computed: {
+      recentPrivate(): ReadonlyArray<Conversation.RecentPrivateConversation> {
+        return core.conversations.recent;
+      },
+      recentChannels(): ReadonlyArray<Conversation.RecentChannelConversation> {
+        return core.conversations.recentChannels;
+      },
+      shouldShowMarker(): boolean {
+        return core.state.settings.horizonShowGenderMarker;
+      }
+    },
+    methods: {
+      getCharacter(name: string): Character {
+        return core.characters.get(name);
+      },
+      setTab(key: string) {
+        this.selectedTab = key;
+      }
     }
-  })
-  export default class RecentConversations extends CustomDialog {
-    l = l;
-    selectedTab = '0';
-
-    get recentPrivate(): ReadonlyArray<Conversation.RecentPrivateConversation> {
-      return core.conversations.recent;
-    }
-
-    get recentChannels(): ReadonlyArray<Conversation.RecentChannelConversation> {
-      return core.conversations.recentChannels;
-    }
-
-    getCharacter(name: string): Character {
-      return core.characters.get(name);
-    }
-
-    get shouldShowMarker(): boolean {
-      return core.state.settings.horizonShowGenderMarker;
-    }
-
-    setTab(key: string) {
-      this.selectedTab = key;
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

@@ -69,11 +69,11 @@ class State implements Interfaces.State {
     let char = this.characters[key];
     if (char === undefined) {
       char = new Character(name);
-      char.isFriend = this.friendList.indexOf(name) !== -1;
-      char.isBookmarked = this.bookmarkList.indexOf(name) !== -1;
+      char.isFriend = this.friendList.some(f => f.toLowerCase() === key);
+      char.isBookmarked = this.bookmarkList.some(b => b.toLowerCase() === key);
       char.isChatOp = this.opList.indexOf(name) !== -1;
       char.isIgnored = this.ignoreList.indexOf(key) !== -1;
-      this.characters[key] = char;
+      Vue.set(this.characters, key, char);
     }
     return char;
   }
@@ -184,9 +184,10 @@ export default function (this: void, connection: Connection): Interfaces.State {
       };
     for (const key in state.characters) {
       const character = state.characters[key]!;
-      character.isFriend = state.friendList.indexOf(character.name) !== -1;
-      character.isBookmarked =
-        state.bookmarkList.indexOf(character.name) !== -1;
+      character.isFriend = state.friendList.some(f => f.toLowerCase() === key);
+      character.isBookmarked = state.bookmarkList.some(
+        b => b.toLowerCase() === key
+      );
       character.status = 'offline';
       character.statusText = '';
     }
@@ -262,6 +263,10 @@ export default function (this: void, connection: Connection): Interfaces.State {
       // tslint:disable-next-line no-unnecessary-type-assertion
       core.cache.setProfile(state.ownProfile as CharacterProfile);
 
+      await core.cache.profileCache.register(state.ownProfile as any);
+
+      core.cache.profileCache.updateOverrides(state.ownProfile as any);
+
       const hqPortraitUrl = ProfileCache.extractHighQualityPortraitURL(
         state.ownProfile.character.description
       );
@@ -320,10 +325,17 @@ export default function (this: void, connection: Connection): Interfaces.State {
           state.bookmarks.splice(state.bookmarks.indexOf(character), 1);
         break;
       case 'friendadd':
-        // Always add to global friends
-        state.friendList.push(data.name);
+        // Always add to global friends (guard against duplicates when multiple characters share a friend)
+        if (state.friendList.indexOf(data.name) === -1) {
+          state.friendList.push(data.name);
+        }
         character.isFriend = true;
-        if (character.status !== 'offline') state.friends.push(character);
+        if (
+          character.status !== 'offline' &&
+          state.friends.indexOf(character) === -1
+        ) {
+          state.friends.push(character);
+        }
 
         // Always update character-specific friends list. This shouldn't add any excessive overhead.
         const friendAddResponse = await connection.queryApi<{

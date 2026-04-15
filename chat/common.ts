@@ -133,6 +133,7 @@ export class Settings implements ISettings {
 
   chatLayoutMode: 'classic' | 'modern' = 'classic';
   messageGrouping = true;
+  forceQuickConvoList = false;
 
   horizonCacheDraftMessages = true;
   horizonSaveDraftMessagesToDiskTimer = 60;
@@ -169,6 +170,8 @@ export class Settings implements ISettings {
       intersex: false,
       male: false,
       microMacro: false,
+      noFurries: false,
+      noHumans: false,
       obesity: false,
       pokemon: false,
       pregnancy: false,

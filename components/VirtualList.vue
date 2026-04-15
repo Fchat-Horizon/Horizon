@@ -25,103 +25,88 @@
 </template>
 
 <script lang="ts">
-  import { Component, Hook, Prop, Watch } from '@f-list/vue-ts';
   import Vue from 'vue';
 
-  @Component
-  export default class VirtualList extends Vue {
-    @Prop({ required: true })
-    readonly items!: ReadonlyArray<any>;
-    @Prop({ required: true })
-    readonly itemHeight!: number;
-    @Prop({ default: 8 })
-    readonly overscan!: number;
-    @Prop()
-    readonly keyField?: string;
-    @Prop()
-    readonly keyFunc?: (item: any, index: number) => string | number;
-    @Prop()
-    readonly rowClass?: string;
-    @Prop()
-    readonly resetKey?: unknown;
-    scrollTop = 0;
-    containerHeight = 0;
-    visibleStart = 0;
-    visibleEnd = 0;
-    scrollRaf: number | undefined;
-    resizeListener = () => this.onResize();
-    isScrolling = false;
-    scrollbarHeld = false;
-    settleTimer: ReturnType<typeof setTimeout> | undefined;
-    mouseUpListener = () => this.onMouseUp();
-
-    heightCache: Map<string | number, number> = new Map();
-    totalHeight = 0;
-    offset = 0;
-
-    prefixSums: number[] = [0];
-    prefixSumsDirty = true;
-    programmaticScroll = false;
-    measureCooldown = false;
-
-    get visibleItems(): ReadonlyArray<any> {
-      return this.items.slice(this.visibleStart, this.visibleEnd);
-    }
-
-    getItemHeight(index: number): number {
-      const key = this.getItemKey(this.items[index], index);
-      return this.heightCache.get(key) ?? this.itemHeight;
-    }
-
-    rebuildPrefixSums(): void {
-      if (!this.prefixSumsDirty) return;
-      const len = this.items.length;
-      const sums = new Array(len + 1);
-      sums[0] = 0;
-      for (let i = 0; i < len; i++) {
-        sums[i + 1] = sums[i] + this.getItemHeight(i);
+  export default Vue.extend({
+    props: {
+      items: { type: Array, required: true as const },
+      itemHeight: { type: Number, required: true as const },
+      overscan: { type: Number, default: 5 },
+      keyField: { type: String, required: false },
+      keyFunc: { type: Function, required: false },
+      rowClass: { type: [String, Function], required: false },
+      resetKey: { type: [String, Number], required: false }
+    },
+    data() {
+      return {
+        scrollTop: 0,
+        containerHeight: 0,
+        visibleStart: 0,
+        visibleEnd: 0,
+        scrollRequestAnimFrame: undefined as number | undefined,
+        resizeListener: (() => {}) as () => void,
+        isScrolling: false,
+        scrollbarHeld: false,
+        settleTimer: undefined as ReturnType<typeof setTimeout> | undefined,
+        mouseUpListener: (() => {}) as () => void,
+        resizeObserver: undefined as ResizeObserver | undefined,
+        heightCache: new Map<string | number, number>(),
+        totalHeight: 0,
+        offset: 0,
+        prefixSums: [0] as number[],
+        prefixSumsDirty: true,
+        programmaticScroll: false,
+        measureCooldown: false,
+        scrollLockedToBottom: false
+      };
+    },
+    computed: {
+      visibleItems(): ReadonlyArray<any> {
+        return this.items.slice(this.visibleStart, this.visibleEnd);
+      },
+      scroller(): HTMLElement | undefined {
+        return this.$refs['scroller'] as HTMLElement | undefined;
       }
-      this.prefixSums = sums;
-      this.prefixSumsDirty = false;
-    }
-
-    getCumHeight(index: number): number {
-      if (index <= 0) return 0;
-      if (index < this.prefixSums.length) return this.prefixSums[index];
-      return this.prefixSums[this.prefixSums.length - 1];
-    }
-
-    findStartIndex(scrollTop: number): number {
-      const sums = this.prefixSums;
-      let lo = 0;
-      let hi = sums.length - 1;
-      while (lo < hi) {
-        const mid = (lo + hi) >>> 1;
-        if (sums[mid + 1] <= scrollTop) {
-          lo = mid + 1;
-        } else {
-          hi = mid;
-        }
+    },
+    watch: {
+      items(): void {
+        this.prefixSumsDirty = true;
+        this.$nextTick(() => {
+          this.updateContainerHeight();
+          this.updateVisibleRange();
+        });
+      },
+      itemHeight(): void {
+        this.prefixSumsDirty = true;
+        this.updateVisibleRange();
+      },
+      overscan(): void {
+        this.updateVisibleRange();
+      },
+      resetKey(): void {
+        (this.heightCache as Map<string | number, number>).clear();
+        this.prefixSumsDirty = true;
+        this.resetScroll();
       }
-      return lo;
-    }
-
-    @Hook('mounted')
+    },
     mounted(): void {
+      this.resizeListener = () => this.onResize();
+      this.mouseUpListener = () => this.onMouseUp();
       this.updateContainerHeight();
       this.updateVisibleRange();
       window.addEventListener('resize', this.resizeListener);
-    }
-
-    @Hook('updated')
-    onUpdated(): void {
+      const el = this.scroller;
+      if (el && typeof ResizeObserver !== 'undefined') {
+        this.resizeObserver = new ResizeObserver(() => this.onResize());
+        this.resizeObserver.observe(el);
+      }
+    },
+    updated(): void {
       this.measureRows();
-    }
-
-    @Hook('beforeDestroy')
+    },
     beforeDestroy(): void {
-      if (this.scrollRaf !== undefined) {
-        window.cancelAnimationFrame(this.scrollRaf);
+      if (this.scrollRequestAnimFrame !== undefined) {
+        window.cancelAnimationFrame(this.scrollRequestAnimFrame);
       }
       if (this.settleTimer !== undefined) {
         clearTimeout(this.settleTimer);
@@ -129,236 +114,308 @@
       window.removeEventListener('resize', this.resizeListener);
       if (this.scrollbarHeld)
         window.removeEventListener('mouseup', this.mouseUpListener);
-    }
+      if (this.resizeObserver) this.resizeObserver.disconnect();
+    },
+    methods: {
+      getItemHeight(index: number): number {
+        const key = this.getItemKey(this.items[index], index);
+        return (
+          (this.heightCache as Map<string | number, number>).get(key) ??
+          this.itemHeight
+        );
+      },
 
-    @Watch('items')
-    onItemsChange(): void {
-      this.prefixSumsDirty = true;
-      this.$nextTick(() => {
-        this.updateContainerHeight();
-        this.updateVisibleRange();
-      });
-    }
-
-    @Watch('itemHeight')
-    onItemHeightChange(): void {
-      this.prefixSumsDirty = true;
-      this.updateVisibleRange();
-    }
-
-    @Watch('overscan')
-    onOverscanChange(): void {
-      this.updateVisibleRange();
-    }
-
-    @Watch('resetKey')
-    onResetKeyChange(): void {
-      this.heightCache.clear();
-      this.prefixSumsDirty = true;
-      this.resetScroll();
-    }
-
-    get scroller(): HTMLElement | undefined {
-      return this.$refs['scroller'] as HTMLElement | undefined;
-    }
-
-    onResize(): void {
-      this.updateContainerHeight();
-      this.updateVisibleRange();
-    }
-
-    resetScroll(): void {
-      const el = this.scroller;
-      if (!el) return;
-      this.scrollTop = 0;
-      this.programmaticScroll = true;
-      el.scrollTop = 0;
-      this.isScrolling = false;
-      this.updateVisibleRange();
-    }
-
-    invalidate(): void {
-      this.heightCache.clear();
-      this.prefixSumsDirty = true;
-      this.updateVisibleRange();
-    }
-
-    onMouseDown(e: MouseEvent): void {
-      const el = this.scroller;
-      if (!el) return;
-      const scrollbarStart = el.getBoundingClientRect().left + el.clientWidth;
-      if (e.clientX < scrollbarStart) return;
-      this.scrollbarHeld = true;
-      window.addEventListener('mouseup', this.mouseUpListener, {
-        once: true
-      });
-    }
-
-    onMouseUp(): void {
-      this.scrollbarHeld = false;
-      if (this.settleTimer !== undefined) clearTimeout(this.settleTimer);
-      this.settleTimer = setTimeout(() => {
-        this.isScrolling = false;
-      }, 150);
-    }
-
-    onScroll(): void {
-      if (this.programmaticScroll) {
-        this.programmaticScroll = false;
-        return;
-      }
-      if (this.settleTimer !== undefined) clearTimeout(this.settleTimer);
-      if (!this.scrollbarHeld) {
-        this.settleTimer = setTimeout(() => {
-          if (this.isScrolling) this.isScrolling = false;
-        }, 100);
-      }
-      if (this.scrollRaf !== undefined) return;
-      this.scrollRaf = window.requestAnimationFrame(() => {
-        this.scrollRaf = undefined;
-        const el = this.scroller;
-        if (!el) return;
-        const prev = this.scrollTop;
-        this.scrollTop = el.scrollTop;
-        if (this.containerHeight !== el.clientHeight) {
-          this.containerHeight = el.clientHeight;
+      rebuildPrefixSums(): void {
+        if (!this.prefixSumsDirty) return;
+        const len = this.items.length;
+        const sums = new Array(len + 1);
+        sums[0] = 0;
+        for (let i = 0; i < len; i++) {
+          sums[i + 1] = sums[i] + this.getItemHeight(i);
         }
-        const delta = Math.abs(this.scrollTop - prev);
-        if (delta > this.containerHeight * 1.5 && !this.isScrolling) {
-          this.isScrolling = true;
-        }
-        this.updateVisibleRange();
-        this.$emit('scroll', this.scrollTop);
-        if (
-          !this.scrollbarHeld &&
-          this.scrollTop < this.containerHeight * 0.5
-        ) {
-          this.$emit('near-top');
-        }
-      });
-    }
+        this.prefixSums = sums;
+        this.prefixSumsDirty = false;
+      },
 
-    updateContainerHeight(): void {
-      const el = this.scroller;
-      if (el) this.containerHeight = el.clientHeight;
-    }
-
-    updateVisibleRange(): void {
-      this.rebuildPrefixSums();
-      this.totalHeight = this.getCumHeight(this.items.length);
-      const listLength = this.items.length;
-      const containerHeight = this.containerHeight;
-      const total = this.totalHeight;
-      const maxScrollTop = Math.max(0, total - containerHeight);
-      const nextScrollTop = Math.min(this.scrollTop, maxScrollTop);
-      if (nextScrollTop !== this.scrollTop) {
-        this.scrollTop = nextScrollTop;
+      syncSpacerHeight(): void {
+        this.rebuildPrefixSums();
+        this.totalHeight = this.getCumHeight(this.items.length);
         const el = this.scroller;
         if (el) {
-          this.programmaticScroll = true;
-          el.scrollTop = nextScrollTop;
+          const spacer = el.querySelector('.virtual-list-spacer') as
+            | HTMLElement
+            | undefined;
+          if (spacer) {
+            spacer.style.height = this.totalHeight + 'px';
+          }
         }
-      }
+      },
 
-      let start = this.findStartIndex(nextScrollTop);
-      start = Math.max(0, start - this.overscan);
+      getCumHeight(index: number): number {
+        if (index <= 0) return 0;
+        if (index < this.prefixSums.length) return this.prefixSums[index];
+        return this.prefixSums[this.prefixSums.length - 1];
+      },
 
-      const endThreshold = nextScrollTop + containerHeight;
-      let end = start;
-      let cum = this.getCumHeight(start);
-      while (end < listLength) {
-        if (cum >= endThreshold + this.overscan * this.itemHeight) break;
-        cum += this.getItemHeight(end);
-        end++;
-      }
-      end = Math.min(listLength, end);
-
-      this.visibleStart = start;
-      this.offset = this.getCumHeight(start);
-      this.visibleEnd = end;
-    }
-
-    measureRows(): void {
-      if (this.isScrolling || this.measureCooldown) return;
-      const el = this.scroller;
-      if (!el) return;
-      const listWindow = el.querySelector('.virtual-list-window');
-      if (!listWindow) return;
-      const rows = listWindow.children;
-      let changed = false;
-
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[i] as HTMLElement;
-        const actualIndex = this.visibleStart + i;
-        if (actualIndex >= this.items.length) break;
-        const key = this.getItemKey(this.items[actualIndex], actualIndex);
-        const measured = row.offsetHeight;
-        if (measured > 0 && this.heightCache.get(key) !== measured) {
-          this.heightCache.set(key, measured);
-          changed = true;
+      findStartIndex(scrollTop: number): number {
+        const sums = this.prefixSums;
+        let lo = 0;
+        let hi = sums.length - 1;
+        while (lo < hi) {
+          const mid = (lo + hi) >>> 1;
+          if (sums[mid + 1] <= scrollTop) {
+            lo = mid + 1;
+          } else {
+            hi = mid;
+          }
         }
-      }
+        return lo;
+      },
 
-      if (changed) {
-        this.prefixSumsDirty = true;
-        this.measureCooldown = true;
+      onResize(): void {
+        this.updateContainerHeight();
         this.updateVisibleRange();
-        this.$nextTick(() => {
-          this.measureCooldown = false;
+      },
+
+      resetScroll(): void {
+        const el = this.scroller;
+        if (!el) return;
+        this.scrollLockedToBottom = false;
+        this.syncSpacerHeight();
+        this.scrollTop = 0;
+        this.programmaticScroll = true;
+        el.scrollTop = 0;
+        this.isScrolling = false;
+        this.updateVisibleRange();
+      },
+
+      invalidate(): void {
+        this.updateContainerHeight();
+        (this.heightCache as Map<string | number, number>).clear();
+        this.prefixSumsDirty = true;
+        this.updateVisibleRange();
+      },
+
+      onMouseDown(e: MouseEvent): void {
+        const el = this.scroller;
+        if (!el) return;
+        const scrollbarStart = el.getBoundingClientRect().left + el.clientWidth;
+        if (e.clientX < scrollbarStart) return;
+        this.scrollbarHeld = true;
+        window.addEventListener('mouseup', this.mouseUpListener, {
+          once: true
         });
+      },
+
+      onMouseUp(): void {
+        this.scrollbarHeld = false;
+        if (this.settleTimer !== undefined) clearTimeout(this.settleTimer);
+        this.settleTimer = setTimeout(() => {
+          this.isScrolling = false;
+        }, 150);
+      },
+
+      onScroll(): void {
+        if (this.programmaticScroll) {
+          this.programmaticScroll = false;
+          return;
+        }
+        const el = this.scroller;
+        if (el) {
+          this.scrollLockedToBottom =
+            Math.abs(el.scrollHeight - el.scrollTop - el.clientHeight) <= 1;
+        } else {
+          this.scrollLockedToBottom = false;
+        }
+        if (this.settleTimer !== undefined) clearTimeout(this.settleTimer);
+        if (!this.scrollbarHeld) {
+          this.settleTimer = setTimeout(() => {
+            if (this.isScrolling) this.isScrolling = false;
+          }, 100);
+        }
+        if (this.scrollRequestAnimFrame !== undefined) return;
+        this.scrollRequestAnimFrame = window.requestAnimationFrame(() => {
+          this.scrollRequestAnimFrame = undefined;
+          const el = this.scroller;
+          if (!el) return;
+          const prev = this.scrollTop;
+          this.scrollTop = el.scrollTop;
+          if (this.containerHeight !== el.clientHeight) {
+            this.containerHeight = el.clientHeight;
+          }
+          const delta = Math.abs(this.scrollTop - prev);
+          if (delta > this.containerHeight * 1.5 && !this.isScrolling) {
+            this.isScrolling = true;
+          }
+          this.updateVisibleRange();
+          this.$emit('scroll', this.scrollTop);
+          if (
+            !this.scrollbarHeld &&
+            this.scrollTop < this.containerHeight * 0.5
+          ) {
+            this.$emit('near-top');
+          }
+        });
+      },
+
+      updateContainerHeight(): void {
+        const el = this.scroller;
+        if (el) this.containerHeight = el.clientHeight;
+      },
+
+      updateVisibleRange(): void {
+        this.syncSpacerHeight();
+        if (this.scrollLockedToBottom) {
+          const targetScrollTop = Math.max(
+            0,
+            this.totalHeight - this.containerHeight
+          );
+          this.scrollTop = targetScrollTop;
+          const el = this.scroller;
+          if (el) {
+            this.programmaticScroll = true;
+            el.scrollTop = el.scrollHeight - el.clientHeight;
+          }
+        }
+
+        const listLength = this.items.length;
+        const containerHeight = this.containerHeight;
+        const total = this.totalHeight;
+        const maxScrollTop = Math.max(0, total - containerHeight);
+        const nextScrollTop = Math.min(this.scrollTop, maxScrollTop);
+        if (nextScrollTop !== this.scrollTop) {
+          this.scrollTop = nextScrollTop;
+        }
+
+        let start = this.findStartIndex(nextScrollTop);
+        start = Math.max(0, start - this.overscan);
+
+        const endThreshold = nextScrollTop + containerHeight;
+        let end = start;
+        let cum = this.getCumHeight(start);
+        while (end < listLength) {
+          if (cum >= endThreshold + this.overscan * this.itemHeight) break;
+          cum += this.getItemHeight(end);
+          end++;
+        }
+        end = Math.min(listLength, end);
+
+        this.visibleStart = start;
+        this.visibleEnd = end;
+
+        if (this.scrollLockedToBottom && end === listLength) {
+          let windowHeight = 0;
+          for (let i = start; i < end; i++) {
+            windowHeight += this.getItemHeight(i);
+          }
+          this.offset = Math.max(0, this.totalHeight - windowHeight);
+        } else {
+          this.offset = this.getCumHeight(start);
+        }
+      },
+
+      measureRows(): void {
+        if (this.isScrolling || this.scrollbarHeld || this.measureCooldown)
+          return;
+        const el = this.scroller;
+        if (!el) return;
+        const listWindow = el.querySelector('.virtual-list-window');
+        if (!listWindow) return;
+        const rows = listWindow.children;
+        let changed = false;
+        let heightDiff = 0;
+        const firstVisible = this.findStartIndex(this.scrollTop);
+
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i] as HTMLElement;
+          const actualIndex = this.visibleStart + i;
+          if (actualIndex >= this.items.length) break;
+          const key = this.getItemKey(this.items[actualIndex], actualIndex);
+          const measured = row.getBoundingClientRect().height;
+          const oldHeight =
+            (this.heightCache as Map<string | number, number>).get(key) ??
+            this.itemHeight;
+          if (measured > 0 && oldHeight !== measured) {
+            (this.heightCache as Map<string | number, number>).set(
+              key,
+              measured
+            );
+            changed = true;
+            if (actualIndex < firstVisible) {
+              heightDiff += measured - oldHeight;
+            }
+          }
+        }
+
+        if (changed) {
+          this.prefixSumsDirty = true;
+          this.measureCooldown = true;
+          if (heightDiff !== 0 && !this.scrollLockedToBottom) {
+            this.syncSpacerHeight();
+            this.scrollTop += heightDiff;
+            this.programmaticScroll = true;
+            el.scrollTop += heightDiff;
+          }
+          this.updateVisibleRange();
+          this.$nextTick(() => {
+            this.measureCooldown = false;
+            if (this.scrollLockedToBottom) {
+              this.measureRows();
+            }
+          });
+        }
+      },
+
+      scrollToBottom(): void {
+        const el = this.scroller;
+        if (!el) return;
+        this.updateContainerHeight();
+        this.prefixSumsDirty = true;
+        this.scrollLockedToBottom = true;
+        this.updateVisibleRange();
+      },
+
+      scrollToIndex(index: number, block: 'start' | 'center' = 'center'): void {
+        const el = this.scroller;
+        if (!el) return;
+        this.scrollLockedToBottom = false;
+        this.syncSpacerHeight();
+        let top = this.getCumHeight(index);
+        if (block === 'center') {
+          top = Math.max(
+            0,
+            top - this.containerHeight / 2 + this.getItemHeight(index) / 2
+          );
+        }
+        this.scrollTop = top;
+        this.programmaticScroll = true;
+        el.scrollTop = top;
+        this.updateVisibleRange();
+      },
+
+      adjustScrollForPrepend(addedCount: number): void {
+        const el = this.scroller;
+        if (!el) return;
+        this.syncSpacerHeight();
+        let added = 0;
+        for (let i = 0; i < addedCount; i++) {
+          added += this.getItemHeight(i);
+        }
+        this.scrollTop += added;
+        this.programmaticScroll = true;
+        el.scrollTop += added;
+        this.updateVisibleRange();
+      },
+
+      getItemKey(item: any, index: number): string | number {
+        if (this.keyFunc) return this.keyFunc(item, index);
+        if (this.keyField && item && item[this.keyField] !== undefined) {
+          return item[this.keyField];
+        }
+        return index;
       }
     }
-
-    scrollToBottom(): void {
-      const el = this.scroller;
-      if (!el) return;
-      this.prefixSumsDirty = true;
-      this.rebuildPrefixSums();
-      this.totalHeight = this.getCumHeight(this.items.length);
-      this.scrollTop = this.totalHeight;
-      this.programmaticScroll = true;
-      el.scrollTop = this.totalHeight;
-      this.updateVisibleRange();
-    }
-
-    scrollToIndex(index: number, block: 'start' | 'center' = 'center'): void {
-      const el = this.scroller;
-      if (!el) return;
-      this.rebuildPrefixSums();
-      let top = this.getCumHeight(index);
-      if (block === 'center') {
-        top = Math.max(
-          0,
-          top - this.containerHeight / 2 + this.getItemHeight(index) / 2
-        );
-      }
-      this.scrollTop = top;
-      this.programmaticScroll = true;
-      el.scrollTop = top;
-      this.updateVisibleRange();
-    }
-
-    adjustScrollForPrepend(addedCount: number): void {
-      const el = this.scroller;
-      if (!el) return;
-      let added = 0;
-      for (let i = 0; i < addedCount; i++) {
-        added += this.getItemHeight(i);
-      }
-      this.scrollTop += added;
-      this.programmaticScroll = true;
-      el.scrollTop += added;
-      this.updateVisibleRange();
-    }
-
-    getItemKey(item: any, index: number): string | number {
-      if (this.keyFunc) return this.keyFunc(item, index);
-      if (this.keyField && item && item[this.keyField] !== undefined) {
-        return item[this.keyField];
-      }
-      return index;
-    }
-  }
+  });
 </script>
 
 <style lang="scss">

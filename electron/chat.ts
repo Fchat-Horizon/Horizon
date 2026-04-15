@@ -382,7 +382,7 @@ webContents.on('context-menu', (_, props) => {
     );
   else if (
     props.linkURL.length > 0 &&
-    props.linkURL.substr(0, props.pageURL.length) !== props.pageURL
+    props.linkURL.slice(0, props.pageURL.length) !== props.pageURL
   ) {
     if (props.mediaType === 'none') {
       menuTemplate.push({
@@ -565,7 +565,7 @@ electron.ipcRenderer.on(
 );
 
 const params = <{ [key: string]: string | undefined }>(
-  qs.parse(window.location.search.substr(1))
+  qs.parse(window.location.search.slice(1))
 );
 let settings = <GeneralSettings>JSON.parse(params['settings']!);
 

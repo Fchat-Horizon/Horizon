@@ -15,7 +15,7 @@
       - [AppImage](#appimage)
       - [Tarball (tar.gz)](#tarball-targz)
       - [Arch-based (AUR)](#arch-based-aur)
-  - [From source](#from-source)
+  - [From Source](#from-source)
 - [Usage](#usage)
   - [Getting started](#getting-started)
   - [Wiki](#wiki)
@@ -27,11 +27,11 @@
 
 # Download
 
-[![Windows x64](https://img.shields.io/badge/Windows%20x64-%230079d5.svg?style=for-the-badge&logo=Windows%2011&logoColor=white)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-win-x64.exe)
-[![Windows ARM64](https://img.shields.io/badge/Windows%20arm64-%230079d5.svg?style=for-the-badge&logo=Windows%2011&logoColor=white)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-win-arm64.exe)
-[![MacOS (Universal)](https://img.shields.io/badge/macOS%20Universal-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-universal.dmg)
-[![Linux x64](https://img.shields.io/badge/Linux%20x64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x86_64.AppImage)
-[![Linux arm64](https://img.shields.io/badge/Linux%20arm64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-arm64.AppImage)
+[![Windows x64](https://img.shields.io/badge/Windows%20x64-%230079d5.svg?style=for-the-badge&logo=Windows%2011&logoColor=white)](https://github.com/Fchat-Horizon/Horizon/releases/latest)
+[![Windows ARM64](https://img.shields.io/badge/Windows%20arm64-%230079d5.svg?style=for-the-badge&logo=Windows%2011&logoColor=white)](https://github.com/Fchat-Horizon/Horizon/releases/latest)
+[![MacOS (Universal)](https://img.shields.io/badge/macOS%20Universal-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)](https://github.com/Fchat-Horizon/Horizon/releases/latest)
+[![Linux x64](https://img.shields.io/badge/Linux%20x64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/Fchat-Horizon/Horizon/releases/latest)
+[![Linux arm64](https://img.shields.io/badge/Linux%20arm64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/Fchat-Horizon/Horizon/releases/latest)
 
 Also check out [Frolic Chat](https://github.com/Frolic-chat/Frolic)! It's another F-Chat Rising fork, and we're big fans on it ourselves.
 
@@ -83,8 +83,8 @@ Horizon can be installed on all _major_ operating systems (Minus BSDs.)
 ## Windows
 
 1. Download the installer for your architecture:
-   - [Windows x64](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-win-x64.exe)
-   - [Windows arm64](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-win-arm64.exe)
+   - [Windows x64](https://github.com/Fchat-Horizon/Horizon/releases/latest)
+   - [Windows arm64](https://github.com/Fchat-Horizon/Horizon/releases/latest)
 2. Run the downloaded installer and follow the on-screen instructions.
 
 (Maybe one day we'll support winget~)
@@ -97,9 +97,9 @@ Horizon can be installed on all _major_ operating systems (Minus BSDs.)
 Since we currently don't have a paid developer license (and MacOS by default blocks unsigned apps downloaded from the internet), you may need to manually allow the app in your command line or System Settings.
 
 1. Download the installer. There are both versions specific to Intel (pre-2020) and Apple Sillicon Macs, and a 'Universal' one that works on both.
-   - [MacOS (Apple Sillicon)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-arm64.dmg)
-   - [MacOS (Intel)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-arm64.dmg)
-   - [MacOS (Universal)](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-mac-universal.dmg)
+   - [MacOS (Apple Sillicon)](https://github.com/Fchat-Horizon/Horizon/releases/latest)
+   - [MacOS (Intel)](https://github.com/Fchat-Horizon/Horizon/releases/latest)
+   - [MacOS (Universal)](https://github.com/Fchat-Horizon/Horizon/releases/latest)
 
 2. Open the downloaded .dmg file and drag the application to your Applications folder.
    If you get a warning saying `"Horizon" is damaged and can't be opened. You should move it to the Bin.` while attempting to open Horizon, continue past step 2:
@@ -141,9 +141,8 @@ Horizon has excellent Linux support. Read more at [horizon-packages](https://git
 
 #### Debian/Ubuntu (deb)
 
-1. Download the `.deb` file for your architecture.
-   - [Linux x64 .deb](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-amd64.deb)
-   - [Linux arm64 .deb](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-arm64.deb)
+1. Download the `.deb` file for your architecture from the [latest release](https://github.com/Fchat-Horizon/Horizon/releases/latest).
+   Look for `F-Chat.Horizon-*-linux-amd64.deb` (x64) or `F-Chat.Horizon-*-linux-arm64.deb` (arm64).
 2. Install:
    ```bash
    sudo dpkg -i F-Chat.Horizon-linux-<arch>.deb
@@ -151,9 +150,8 @@ Horizon has excellent Linux support. Read more at [horizon-packages](https://git
 
 #### Fedora/RPM-based (rpm)
 
-1. Download the `.rpm` file for your architecture:
-   - [Linux x64 .rpm](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x86_64.rpm)
-   - [Linux arm64 .rpm](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-arm64.rpm)
+1. Download the `.rpm` file for your architecture from the [latest release](https://github.com/Fchat-Horizon/Horizon/releases/latest).
+   Look for `F-Chat.Horizon-*-linux-x86_64.rpm` (x64) or `F-Chat.Horizon-*-linux-aarch64.rpm` (arm64).
 2. Install using your package manager:
    - **Fedora/RHEL/CentOS:**
      ```bash
@@ -170,9 +168,8 @@ Horizon has excellent Linux support. Read more at [horizon-packages](https://git
 
 #### AppImage
 
-1. Download the AppImage for your architecture:
-   - [Linux x64 .AppImage](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x86_64.AppImage)
-   - [Linux arm64 .AppImage](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-arm64.AppImage)
+1. Download the AppImage for your architecture from the [latest release](https://github.com/Fchat-Horizon/Horizon/releases/latest).
+   Look for `F-Chat.Horizon-*-linux-x86_64.AppImage` (x64) or `F-Chat.Horizon-*-linux-arm64.AppImage` (arm64).
 2. Make it executable, then run:
    ```bash
    chmod +x F-Chat.Horizon-linux-<arch>.AppImage
@@ -181,9 +178,8 @@ Horizon has excellent Linux support. Read more at [horizon-packages](https://git
 
 #### Tarball (tar.gz)
 
-1. Download the `.tar.gz` for your architecture:
-   - [Linux x64 .tar.gz](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-x64.tar.gz)
-   - [Linux arm64 .tar.gz](https://github.com/Fchat-Horizon/Horizon/releases/latest/download/F-Chat.Horizon-linux-arm64.tar.gz)
+1. Download the `.tar.gz` for your architecture from the [latest release](https://github.com/Fchat-Horizon/Horizon/releases/latest).
+   Look for `F-Chat.Horizon-*-linux-x64.tar.gz` (x64) or `F-Chat.Horizon-*-linux-arm64.tar.gz` (arm64).
 2. Extract and run:
    ```bash
    tar -xzf F-Chat.Horizon-linux-<arch>.tar.gz

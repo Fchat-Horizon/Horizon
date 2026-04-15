@@ -107,29 +107,32 @@ export class CoreBBCodeParser extends BBCodeParser {
           parser.warning('Unexpected parameter on eicon tag.');
         const uregex = /^[a-zA-Z0-9_\-\s]+$/;
         if (!uregex.test(content)) return;
-        let extension = '.gif';
-        if (!Utils.settings.animateEicons) extension = '.png';
+        const extension =
+          core.connection.isOpen && !core.state.settings.animatedEicons
+            ? '.png'
+            : '.gif';
         const img = parser.createElement('img');
         img.src = `https://static.f-list.net/images/eicon/${content.toLowerCase()}${extension}`;
         img.title = img.alt = content;
         img.className = 'character-avatar eicon';
         if (Utils.settings.animateEicons && Utils.settings.smoothMosaics) {
           img.classList.add('loading');
-          img.addEventListener('load', evt => {
-            //whenever an image is loaded, check if every other image in the span has been loaded. Only then should you show them all
-            let imgs = [];
-            for (let i of (evt.target as Node).parentElement?.children || []) {
-              if (i.tagName == 'IMG') {
-                imgs.push(i);
-                if (!(i as HTMLImageElement).complete) {
-                  return;
-                }
-              }
+          const syncMosaic = () => {
+            // * Walk up to the .bbcode container so eicons sync together
+            // * even when nested inside different BBCode tags (e.g. [color], [b])
+            const container = img.closest('.bbcode') || img.parentElement;
+            if (!container) return;
+            const eicons =
+              container.querySelectorAll<HTMLImageElement>('img.eicon.loading');
+            for (const eicon of eicons) {
+              if (!eicon.complete) return;
             }
-            for (let i of imgs) {
-              i.classList.remove('loading'); //perhaps we could use a spinner here instead of that. Tried it but it looks terrible on mosaics and the transition is smooth
+            for (const eicon of eicons) {
+              eicon.classList.remove('loading');
             }
-          });
+          };
+          img.addEventListener('load', syncMosaic);
+          img.addEventListener('error', syncMosaic);
         }
         parent.appendChild(img);
         return img;
