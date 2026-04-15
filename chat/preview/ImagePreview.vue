@@ -536,7 +536,7 @@
         const characterName = decodeURIComponent(
           match[2].replace(/\+/g, '%20')
         );
-        return `flist-character://${characterName}`;
+        return `flist-character://${characterName.replace(/[\r\n]/g, '')}`;
       },
       isMediaUrl(url: string): boolean {
         const cleanUrl = url.split('?')[0].toLowerCase();

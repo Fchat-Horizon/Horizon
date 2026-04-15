@@ -498,7 +498,7 @@
       },
 
       getCharacterUrl(): string {
-        return `flist-character://${this.character.name}`;
+        return `flist-character://${this.character.name.replace(/[\r\n]/g, '')}`;
       },
 
       dismiss(force: boolean = false): void {
