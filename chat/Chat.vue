@@ -186,6 +186,7 @@
   import log from 'electron-log'; //tslint:disable-line:match-default-export-name
   import Vue from 'vue';
   import { getKey } from './common';
+  import Modal from '../components/Modal.vue';
   import CustomDialog from '../components/custom_dialog';
   import { InlineDisplayMode, SimpleCharacter } from '../interfaces';
   import { Keys } from '../keys';
