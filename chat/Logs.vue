@@ -26,15 +26,32 @@
         l('logs.character')
       }}</label>
       <div :class="canZip ? 'col-sm-8 col-10 col-xl-9' : 'col-sm-10'">
-        <select
-          class="form-select"
+        <filterable-select
           v-model="selectedCharacter"
-          id="character"
-          @change="loadCharacter"
+          :options="characters"
+          :placeholder="l('filter')"
+          @input="loadCharacter"
         >
-          <option value="">{{ l('logs.selectCharacter') }}</option>
-          <option v-for="character in characters">{{ character }}</option>
-        </select>
+          <template slot-scope="s">
+            <template v-if="s.option">
+              <img
+                :src="getAvatarUrl(s.option)"
+                style="
+                  width: 20px;
+                  height: 20px;
+                  border-radius: 3px;
+                  margin-right: 6px;
+                  object-fit: cover;
+                "
+                loading="lazy"
+              />
+              {{ s.option }}
+            </template>
+            <template v-else>
+              {{ l('logs.selectCharacter') }}
+            </template>
+          </template>
+        </filterable-select>
       </div>
       <div class="col-2 col-xl-1" v-if="canZip">
         <button
@@ -58,11 +75,35 @@
           :placeholder="l('filter')"
         >
           <template slot-scope="s">
-            {{
-              (s.option &&
-                (s.option.key[0] == '#' ? '#' : '') + s.option.name) ||
-              l('logs.selectConversation')
-            }}
+            <template v-if="s.option">
+              <i
+                v-if="s.option.key === '_'"
+                class="fas fa-home fa-fw"
+                style="margin-right: 6px; opacity: 0.5"
+              ></i>
+              <i
+                v-else-if="s.option.key[0] === '#'"
+                class="fas fa-hashtag fa-fw"
+                style="margin-right: 6px; opacity: 0.5"
+              ></i>
+              <img
+                v-else
+                :src="getAvatarUrl(s.option.name)"
+                style="
+                  width: 20px;
+                  height: 20px;
+                  border-radius: 3px;
+                  margin-right: 6px;
+                  object-fit: cover;
+                "
+                @error="$event.target.style.display = 'none'"
+                loading="lazy"
+              />
+              {{ (s.option.key[0] == '#' ? '#' : '') + s.option.name }}
+            </template>
+            <template v-else>
+              {{ l('logs.selectConversation') }}
+            </template>
           </template>
         </filterable-select>
       </div>
@@ -862,6 +903,10 @@
           this.nearTopDebounce = undefined;
           this.loadNextDate();
         }, 250);
+      },
+
+      getAvatarUrl(character: string): string {
+        return `https://static.f-list.net/images/avatar/${encodeURIComponent(character.toLowerCase())}.png`;
       }
     }
   });
