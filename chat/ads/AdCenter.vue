@@ -99,7 +99,11 @@
       async submit(): Promise<void> {
         await core.adCenter.set(this.ads);
         const parent = this.$parent as Vue | null;
-        const refObj = parent && (parent.$refs['adLauncher'] as any);
+        const refObj =
+          parent &&
+          (parent.$refs['adLauncher'] as
+            | InstanceType<typeof CustomDialog>
+            | undefined);
         if (refObj && typeof refObj.show === 'function') refObj.show();
       },
       addAd(): void {

@@ -225,7 +225,8 @@
     Component as VueComponent,
     ComponentOptions,
     CreateElement,
-    VNode
+    VNode,
+    PropType
   } from 'vue';
   import DateDisplay from '../../components/date_display.vue';
   import { Infotag } from '../../interfaces';
@@ -234,7 +235,6 @@
   import FriendDialog from './friend_dialog.vue';
   import InfotagView from './infotag.vue';
   import { Character, CONTACT_GROUP_ID, SharedStore } from './interfaces';
-  import { MatchReport } from '../../learn/matcher';
   import MemoDialog from './memo_dialog.vue';
   import ReportDialog from './report_dialog.vue';
   import core from '../../chat/core';
@@ -247,6 +247,7 @@
     getStaffRole,
     getSupporterAlias
   } from '../../chat/profile_api';
+  import { MatchReport } from '../../learn/matcher';
 
   interface ShowableVueDialog extends Vue {
     show(): void;
@@ -283,9 +284,12 @@
       'report-dialog': ReportDialog
     },
     props: {
-      character: { required: true as const },
-      oldApi: {},
-      characterMatch: { required: true as const }
+      character: {
+        type: Object as PropType<Character>,
+        required: true
+      },
+      oldApi: { type: Boolean },
+      characterMatch: { type: Object as PropType<MatchReport>, required: true }
     },
     data() {
       return {
@@ -297,7 +301,7 @@
     },
     computed: {
       displayBadges(): string[] {
-        const char = this.character as Character;
+        const char = this.character;
         if (!char.badges) return [];
         if (core.state.settings?.horizonShowDeveloperBadges) return char.badges;
         return char.badges.filter(
@@ -312,13 +316,13 @@
         );
       },
       editUrl(): string {
-        return `${Utils.siteDomain}character_edit.php?id=${(this.character as Character).character.id}`;
+        return `${Utils.siteDomain}character_edit.php?id=${this.character.character.id}`;
       },
       noteUrl(): string {
-        return methods.sendNoteUrl((this.character as Character).character);
+        return methods.sendNoteUrl(this.character.character);
       },
       contactMethods(): { id: number; value?: string }[] {
-        const char = this.character as Character;
+        const char = this.character;
         return Object.keys(Store.shared.infotags)
           .map(x => Store.shared.infotags[x])
           .filter(
@@ -333,14 +337,14 @@
       },
       bookmarked(): boolean {
         return (
-          core.characters.get((this.character as Character).character.name)
-            ?.isBookmarked || false
+          core.characters.get(this.character.character.name)?.isBookmarked ||
+          false
         );
       }
     },
     methods: {
       getAvatarUrl(): string {
-        const char = this.character as Character;
+        const char = this.character;
         const onlineCharacter = core.characters.get(char.character.name);
 
         if (onlineCharacter && onlineCharacter.overrides.avatarUrl) {
@@ -371,7 +375,7 @@
         return badgeName in classMap ? classMap[badgeName] : '';
       },
       badgeTitle(badgeName: string): string {
-        const char = this.character as Character;
+        const char = this.character;
         if (badgeName === 'contributor') {
           const alias = getContributorAlias(char.character.name);
           return alias
@@ -437,7 +441,7 @@
         //TODO implement this
       },
       async toggleBookmark(): Promise<void> {
-        const char = this.character as Character;
+        const char = this.character;
         try {
           await methods.bookmarkUpdate(char.character.id, !char.bookmarked);
           char.bookmarked = !char.bookmarked;

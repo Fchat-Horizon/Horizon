@@ -60,6 +60,9 @@
   import StatusPicker from './StatusPicker.vue';
   import * as _ from 'lodash';
 
+  //Yes, you also need to update this in StatusPicker.vue, because I really cannot
+  //be assed to write a system for shared constants right now.
+  //That component only uses it to display the string that shows how many statuses you have saved though.
   const MAX_STATUS_COUNT: number = 15;
 
   export default CustomDialog.extend({
@@ -71,9 +74,6 @@
     },
     data() {
       return {
-        //Yes, you also need to update this in StatusPicker.vue, because I really cannot
-        //be assed to write a system for shared constants right now.
-        //That component only uses it to display the string that shows how many statuses you have saved though.
         selectedStatus: undefined as Character.Status | undefined,
         enteredText: undefined as string | undefined,
         statuses: userStatuses,

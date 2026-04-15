@@ -29,13 +29,13 @@
 
   export default Vue.extend({
     props: {
-      items: { required: true as const },
-      itemHeight: { required: true as const },
-      overscan: { default: 8 },
-      keyField: {},
-      keyFunc: {},
-      rowClass: {},
-      resetKey: {}
+      items: { type: Array, required: true as const },
+      itemHeight: { type: Number, required: true as const },
+      overscan: { type: Number, default: 5 },
+      keyField: { type: String, required: false },
+      keyFunc: { type: Function, required: false },
+      rowClass: { type: [String, Function], required: false },
+      resetKey: { type: [String, Number], required: false }
     },
     data() {
       return {
@@ -43,7 +43,7 @@
         containerHeight: 0,
         visibleStart: 0,
         visibleEnd: 0,
-        scrollRaf: undefined as number | undefined,
+        scrollRequestAnimFrame: undefined as number | undefined,
         resizeListener: (() => {}) as () => void,
         isScrolling: false,
         scrollbarHeld: false,
@@ -105,8 +105,8 @@
       this.measureRows();
     },
     beforeDestroy(): void {
-      if (this.scrollRaf !== undefined) {
-        window.cancelAnimationFrame(this.scrollRaf);
+      if (this.scrollRequestAnimFrame !== undefined) {
+        window.cancelAnimationFrame(this.scrollRequestAnimFrame);
       }
       if (this.settleTimer !== undefined) {
         clearTimeout(this.settleTimer);
@@ -204,7 +204,7 @@
         this.scrollbarHeld = true;
         window.addEventListener('mouseup', this.mouseUpListener, {
           once: true
-        } as any);
+        });
       },
 
       onMouseUp(): void {
@@ -233,9 +233,9 @@
             if (this.isScrolling) this.isScrolling = false;
           }, 100);
         }
-        if (this.scrollRaf !== undefined) return;
-        this.scrollRaf = window.requestAnimationFrame(() => {
-          this.scrollRaf = undefined;
+        if (this.scrollRequestAnimFrame !== undefined) return;
+        this.scrollRequestAnimFrame = window.requestAnimationFrame(() => {
+          this.scrollRequestAnimFrame = undefined;
           const el = this.scroller;
           if (!el) return;
           const prev = this.scrollTop;

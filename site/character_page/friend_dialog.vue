@@ -132,11 +132,12 @@
   import { methods } from './data_store';
   import { Character, Friend, FriendRequest } from './interfaces';
   import l from './../../chat/localize';
+  import { PropType } from 'vue';
 
   export default CustomDialog.extend({
     components: { Modal },
     props: {
-      character: { required: true as const }
+      character: { type: Object as PropType<Character>, required: true }
     },
     data() {
       return {

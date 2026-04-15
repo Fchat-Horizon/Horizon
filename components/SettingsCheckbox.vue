@@ -47,6 +47,6 @@
 
   defineProps<Props>();
   defineEmits<{
-    input: [value: boolean];
+    (e: 'input', value: boolean): void;
   }>();
 </script>

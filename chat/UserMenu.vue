@@ -232,7 +232,10 @@
       'ad-view': CharacterAdView
     },
     props: {
-      reportDialog: { required: true as const }
+      reportDialog: {
+        type: Object as () => InstanceType<typeof ReportDialog>,
+        required: true
+      }
     },
     data() {
       return {
@@ -299,7 +302,7 @@
         else core.state.hiddenUsers.push(this.character!.name);
       },
       report(): void {
-        (this.reportDialog as any).report(this.character!);
+        this.reportDialog.report(this.character!);
       },
       channelKick(): void {
         core.connection.send('CKU', {
@@ -315,7 +318,7 @@
         this.memo = '';
         this.memoManager = new MemoManager(this.character!.name);
 
-        (<Modal>this.$refs['memo']).show();
+        (this.$refs['memo'] as InstanceType<typeof Modal>).show();
 
         try {
           await this.memoManager.load();
@@ -336,7 +339,9 @@
           return;
         }
 
-        (<CharacterAdView>this.$refs['adViewDialog']).show();
+        (
+          this.$refs['adViewDialog'] as InstanceType<typeof CharacterAdView>
+        ).show();
       },
       hasAdLogs(): boolean {
         if (!this.character) {

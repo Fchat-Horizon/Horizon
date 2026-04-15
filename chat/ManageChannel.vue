@@ -89,6 +89,9 @@
   import l from './localize';
   import UserView from './UserView.vue';
 
+  const isPublicChannel = (channel: Channel): boolean =>
+    core.channels.openRooms[channel.id] !== undefined;
+
   export default CustomDialog.extend({
     components: {
       modal: Modal,
@@ -96,25 +99,22 @@
       'user-view': UserView
     },
     props: {
-      channel: { required: true as const }
+      channel: { type: Object as () => Channel, required: true }
     },
     data() {
       return {
         modes: channelModes,
-        isPublic: (this as any).channelIsPublic,
-        mode: (this as any).channel.mode,
-        description: (this as any).channel.description,
+        isPublic: isPublicChannel(this.channel),
+        mode: this.channel.mode,
+        description: this.channel.description,
         l: l,
         getByteLength: getByteLength,
         modAddName: '',
-        opList: (this as any).channel.opList.slice(),
+        opList: this.channel.opList.slice(),
         maxLength: core.connection.vars.cds_max
       };
     },
     computed: {
-      channelIsPublic(): boolean {
-        return core.channels.openRooms[this.channel.id] !== undefined;
-      },
       isChannelOwner(): boolean {
         return (
           this.channel.owner === core.connection.character ||
@@ -125,7 +125,7 @@
     methods: {
       onOpen(): void {
         this.mode = this.channel.mode;
-        this.isPublic = this.channelIsPublic;
+        this.isPublic = isPublicChannel(this.channel);
         this.description = this.channel.description;
         this.opList = this.channel.opList.slice();
       },
@@ -143,7 +143,7 @@
             description: this.description
           });
         if (!this.isChannelOwner) return;
-        if (this.isPublic !== this.channelIsPublic)
+        if (this.isPublic !== isPublicChannel(this.channel))
           core.connection.send('RST', {
             channel: this.channel.id,
             status: this.isPublic ? 'public' : 'private'

@@ -97,8 +97,8 @@
 
   export default Vue.extend({
     props: {
-      characterName: { required: true as const },
-      characterId: { required: true as const }
+      characterName: { type: String, required: true },
+      characterId: { type: Number, required: true }
     },
     data() {
       return {
@@ -121,8 +121,8 @@
         this.recommendations = [];
 
         const char = await methods.characterData(
-          this.characterName as string,
-          this.characterId as number,
+          this.characterName,
+          this.characterId,
           true
         );
         const profile = new CharacterAnalysis(char.character);

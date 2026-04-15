@@ -85,19 +85,18 @@
   import { Editor } from '../bbcode';
   import core from '../core';
   import { Dialog } from '../../helpers/dialog';
-  import AdCenterDialog from './AdCenter.vue';
   import _ from 'lodash';
 
   export default CustomDialog.extend({
     components: { modal: Modal, editor: Editor },
     props: {
-      conversation: { required: true as const }
+      conversation: { type: Object as () => Conversation, required: true }
     },
     data() {
       return {
         l: l,
         setting: Conversation.Setting,
-        ads: undefined as any as string[],
+        ads: [] as string[],
         randomOrder: false,
         core: core
       };
@@ -149,7 +148,7 @@
         const r =
           this.$parent && this.$parent.$parent && this.$parent.$parent.$refs
             ? (this.$parent.$parent.$refs['adCenter'] as
-                | AdCenterDialog
+                | InstanceType<typeof CustomDialog>
                 | undefined)
             : undefined;
         r?.show();
@@ -159,7 +158,7 @@
         const r =
           this.$parent && this.$parent.$parent && this.$parent.$parent.$refs
             ? (this.$parent.$parent.$refs['adLauncher'] as
-                | AdCenterDialog
+                | InstanceType<typeof CustomDialog>
                 | undefined)
             : undefined;
         r?.show();

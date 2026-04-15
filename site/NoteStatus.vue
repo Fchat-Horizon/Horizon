@@ -7,7 +7,7 @@
         :key="`report-${index}`"
         @click="dismissReport(report)"
         :title="
-          report.count + ' ' + report.count !== 1
+          report.count + ' ' + (report.count !== 1)
             ? report.title
             : report.title.substr(0, report.title.length - 1)
         "

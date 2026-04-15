@@ -31,7 +31,7 @@
 
   export default Vue.extend({
     props: {
-      expression: {}
+      expression: { type: String, required: true }
     },
     data() {
       return {
@@ -82,8 +82,7 @@
         }
       },
       getCleanedWordDefinition(expression?: string): string {
-        const expr =
-          expression !== undefined ? expression : (this.expression as string);
+        const expr = expression !== undefined ? expression : this.expression;
         return anyAscii(expr || '')
           .toLowerCase()
           .replace(/[^a-z0-9\-]/g, ' ')
