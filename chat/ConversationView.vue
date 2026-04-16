@@ -130,17 +130,6 @@
           >
         </div>
 
-        <!--                <ul class="nav nav-pills mode-switcher">-->
-        <!--                    <li v-for="mode in modes" class="nav-item">-->
-        <!--                        <a :class="isChannel(conversation) ? {active: conversation.mode == mode, disabled: conversation.channel.mode != 'both'} : undefined"-->
-        <!--                            class="nav-link" href="#" @click.prevent="setMode(mode)">{{l('channel.mode.' + mode)}}</a>-->
-        <!--                    </li>-->
-        <!--                    <li>-->
-        <!--                        <a @click.prevent="toggleNonMatchingAds()" :class="{active: showNonMatchingAds}" v-show="(conversation.mode == 'both' || conversation.mode == 'ads')"-->
-        <!--                            class="nav-link" href="#">Non-Matching</a>-->
-        <!--                    </li>-->
-        <!--                </ul>-->
-
         <div class="btn-toolbar">
           <dropdown
             :keep-open="false"
@@ -456,9 +445,6 @@
               >{{ adsMode }}</a
             >
           </li>
-          <!--                    <li class="nav-item">-->
-          <!--                        <a href="#" :class="{active: conversation.adManager.isActive()}" class="nav-link toggle-autopost" @click="toggleAutoPostAds()">{{l('admgr.toggleAutoPost')}}</a>-->
-          <!--                    </li>-->
         </ul>
         <div
           class="btn btn-sm btn-primary"
@@ -545,7 +531,6 @@
   import * as _ from 'lodash';
   import Dropdown from '../components/Dropdown.vue';
   import { EventBus } from './preview/event-bus';
-  // import { CharacterMemo } from '../site/character_page/interfaces';
   import { MemoManager } from './character/memo';
   import { CharacterMemo } from '../site/character_page/interfaces';
   import { UserInterfaceBBCodeParser } from '../bbcode/user-interface';
@@ -1206,10 +1191,6 @@
 
     .send-ads-switcher a {
       padding: 3px 10px;
-    }
-
-    .toggle-autopost {
-      margin-left: 1px;
     }
 
     .auto-ads {

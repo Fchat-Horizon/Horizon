@@ -411,8 +411,6 @@
         }
 
         this.scoreWatcher = (event: CharacterDataEvent): void => {
-          // console.log('scoreWatcher', event);
-
           // tslint:disable-next-line no-unsafe-any no-any
           if (
             event.character &&
@@ -446,8 +444,6 @@
     },
     methods: {
       update(): void {
-        // console.log('user.view.update', this.character.name);
-
         const res = getStatusClasses(
           this.character,
           this.channel,

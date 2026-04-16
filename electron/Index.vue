@@ -312,24 +312,21 @@
   import * as fs from 'fs';
   import * as path from 'path';
   import * as qs from 'querystring';
-  // import {promisify} from 'util';
   import Vue from 'vue';
   import Chat from '../chat/Chat.vue';
   import { Settings } from '../chat/common';
-  import core /*, { init as initCore }*/ from '../chat/core';
+  import core from '../chat/core';
   import l from '../chat/localize';
   import Logs from '../chat/Logs.vue';
   import UITest from '../chat/UITest.vue';
   import Socket from '../chat/WebSocket';
   import Modal from '../components/Modal.vue';
   import { SimpleCharacter } from '../interfaces';
-  // import { BetterSqliteStore } from '../learn/store/better-sqlite3';
-  // import { Sqlite3Store } from '../learn/store/sqlite3';
   import CharacterPage from '../site/character_page/character_page.vue';
   import WordDefinition from '../learn/dictionary/WordDefinition.vue';
   import ProfileAnalysis from '../learn/recommend/ProfileAnalysis.vue';
   import { defaultHost, GeneralSettings } from './common';
-  import { fixLogs /*SettingsStore, Logs as FSLogs*/ } from './filesystem';
+  import { fixLogs } from './filesystem';
   import { SlimcatImporter } from './services';
   import _ from 'lodash';
   import { EventBus } from '../chat/preview/event-bus';
@@ -339,11 +336,6 @@
   import { EIconStore } from '../learn/eicon/store';
   import { SecureStore } from './secure-store';
   import { ProfileViewerGalleryType } from '../site/utils';
-
-  // import ImagePreview from '../chat/preview/ImagePreview.vue';
-  // import Bluebird from 'bluebird';
-  // import Connection from '../fchat/connection';
-  // import Notifications from './notifications';
 
   // import VueLazyload from 'vue-lazyload';
   //

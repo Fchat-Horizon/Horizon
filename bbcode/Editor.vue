@@ -272,7 +272,6 @@
       }
     },
     created(): void {
-      // console.log('EDITOR', 'created');
       this.parser = new CoreBBCodeParser();
       this.resizeListener = () => {
         const styles = getComputedStyle(this.element);
@@ -281,7 +280,6 @@
       };
     },
     mounted(): void {
-      // console.log('EDITOR', 'mounted');
       this.element = <HTMLTextAreaElement>this.$refs['input'];
       const styles = getComputedStyle(this.element);
       this.maxHeight = parseInt(styles.maxHeight, 10) || 250;
@@ -312,7 +310,6 @@
     //tslint:enable
 
     destroyed(): void {
-      // console.log('EDITOR', 'destroyed');
       window.removeEventListener('resize', this.resizeListener);
     },
     methods: {

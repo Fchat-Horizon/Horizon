@@ -144,7 +144,6 @@
       this.jsMutator.init();
 
       EventBus.$on('imagepreview-dismiss', (eventData: EventBusEvent) => {
-        // console.log('Event dismiss', eventData.url);
         this.dismiss(
           this.negotiateUrl((eventData.url as string) || ''),
           eventData.force as boolean
@@ -152,8 +151,6 @@
       });
 
       EventBus.$on('imagepreview-show', (eventData: EventBusEvent) => {
-        // console.log('Event show', eventData.url);
-
         const url = this.negotiateUrl((eventData.url as string) || '');
         const isInternalPreview =
           CharacterPreviewHelper.FLIST_CHARACTER_PROTOCOL_TESTER.test(url);
@@ -251,25 +248,8 @@
             return;
           }
 
-          // console.error('DID FAIL LOAD', event);
-          // const url = this.getUrl() || '';
-          //
-          // const qjs = this.jsMutator.getMutatorJsForSite(url, 'update-target-url')
-          //   || this.jsMutator.getMutatorJsForSite(url, 'dom-ready');
-          //
-          // // tslint:disable-next-line
-          // this.executeJavaScript(qjs, 'did-fail-load-but-still-loading', event);
           return;
         }
-
-        // if (e.errorCode < 100) {
-        //   const url = webview.getURL();
-        //   const js = this.jsMutator.getMutatorJsForSite(url, 'update-target-url');
-        //
-        //   this.executeJavaScript(js, 'did-fail-load-but-still-loading', event);
-        //
-        //   return;
-        // }
 
         const js = this.jsMutator.getErrorMutator(
           e.errorCode,
@@ -711,8 +691,6 @@
 
         if (this.sticky) return;
 
-        // console.log('DISMISS');
-
         const due = this.visible
           ? this.MinTimePreviewVisible -
             Math.min(this.MinTimePreviewVisible, Date.now() - this.visibleSince)
@@ -767,8 +745,6 @@
           this.sticky,
           url
         );
-
-        // console.log('SHOW');
 
         if (this.visible && !this.exitInterval && !this.hasMouseMovedSince()) {
           this.debugLog('ImagePreview: show cancel: visible & not moved');
@@ -868,8 +844,6 @@
         context: string = 'unknown',
         logDetails?: any
       ): Promise<any> {
-        // console.log('EXECUTE JS', js);
-
         if (!this.runJs) return;
 
         const webview = this.getWebview();
