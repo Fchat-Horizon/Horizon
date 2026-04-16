@@ -17,19 +17,12 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
     if (wasVisible) {
       const webview = this.parent.getWebview();
 
-      // if (this.allowCachedUrl) {
-      //     // tslint:disable-next-line:no-floating-promises
-      //     webview.executeJavaScript(this.parent.jsMutator.getHideMutator());
-      // } else {
-
       // tslint:disable-next-line:no-floating-promises
       webview.stop();
 
       webview.loadURL('about:blank').catch((err: any) => {
         console.warn('webview.loadURL() in hide()', err);
       });
-
-      //}
 
       this.visible = false;
     }
@@ -72,24 +65,11 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
       throw new Error('Empty URL!');
     }
 
-    // const oldUrl = this.url;
-    // const oldLastExternalUrl = this.lastExternalUrl;
-
     this.url = url;
     this.lastExternalUrl = url;
     this.visible = true;
 
     try {
-      // if ((this.allowCachedUrl) && ((webview.getURL() === url) || (url === oldLastExternalUrl))) {
-      //     if (this.debug)
-      //         console.log('ImagePreview: exec re-show mutator');
-      //
-      //     // tslint:disable-next-line:no-floating-promises
-      //     webview.executeJavaScript(this.parent.jsMutator.getReShowMutator());
-      // } else {
-      //     if (this.debug)
-      //         console.log('ImagePreview: must load; skip re-show because urls don\'t match', this.url, webview.getURL());
-
       this.ratio = null;
 
       webview.stop();

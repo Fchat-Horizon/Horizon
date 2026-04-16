@@ -8,9 +8,7 @@ import {
   BBCodeSimpleTag
 } from '../bbcode/parser';
 import ChannelView from './ChannelTagView.vue';
-// import {characterImage} from './common';
 import core from './core';
-// import {Character} from './interfaces';
 import UserView from './UserView.vue';
 
 export class Editor extends BaseEditor {
