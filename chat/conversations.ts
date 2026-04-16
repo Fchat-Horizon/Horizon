@@ -287,6 +287,15 @@ abstract class Conversation implements Interfaces.Conversation {
   protected formatEiconMessage(message: string): string {
     const eIconRegex =
       /^(?!\n)(?=.*\[eicon\].*\[\/eicon\].*\n.*\[eicon\].*\[\/eicon\])(.*\n\[eicon\].*\[\/eicon\].*)\s*/;
+
+    if (/^\/me\s+/i.test(message)) {
+      const body = message.replace(/^\/me\s+/i, '');
+      if (eIconRegex.test(body)) {
+        return '/me\n' + body;
+      }
+      return message;
+    }
+
     if (eIconRegex.test(message)) {
       return '\n' + message;
     }
