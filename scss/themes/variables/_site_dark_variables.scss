@@ -1,0 +1,121 @@
+@use 'sass:color';
+
+// Base colors, used for pretty much everything.
+// On dark based themes these are inverted in order to cooperate with bootstrap which assumes that all themes are light based.
+$gray-base: #050404;
+$white: $gray-base;
+$gray-100: color.scale($gray-base, $lightness: 10%);
+$gray-200: color.scale($gray-base, $lightness: 15.1%, $saturation: -40%);
+$gray-300: color.scale($gray-base, $lightness: 25%, $saturation: -40%);
+$gray-400: color.scale($gray-base, $lightness: 40%, $saturation: -40%);
+$gray-500: color.scale($gray-base, $lightness: 50%, $saturation: -40%);
+$gray-600: color.scale($gray-base, $lightness: 60%, $saturation: -40%);
+$gray-700: color.scale($gray-base, $lightness: 70%, $saturation: -40%);
+$gray-800: color.scale($gray-base, $lightness: 80%, $saturation: -40%);
+$gray-900: color.scale($gray-base, $lightness: 90%, $saturation: -40%);
+$black: #fff;
+
+// Bootstrap 5 contrast colors
+$light-color: $black;
+$dark-color: $gray-base;
+$component-active-color: $light-color;
+
+// Theme and brand colors
+$primary: rgb(62, 110, 62);
+$secondary: $gray-400;
+$success: rgb(89, 230, 89);
+$info: #0447af;
+$warning: #f29c00;
+$danger: #930300;
+$light: $gray-200;
+$text-muted: $gray-500;
+$text-dark: $gray-600;
+$component-active-color: $gray-900;
+
+// Core page element colors
+$body-bg: $gray-100;
+$body-color: $gray-800;
+$link-color: $gray-800;
+$link-hover-color: color.scale($link-color, $lightness: 15%);
+$dropdown-bg: $gray-200;
+$dropdown-divider-bg: $gray-300;
+
+// Modal Dialogs
+$modal-backdrop-bg: $white;
+$modal-content-bg: $gray-200;
+$modal-header-border-color: $gray-300;
+
+// Reduce default padding slightly between columns in grids.
+$grid-gutter-width: 20px;
+
+// Form Elements
+$input-bg: $gray-200;
+$input-color: $black;
+$custom-select-bg: $gray-200;
+
+// List groups
+$list-group-bg: $gray-200;
+
+// Pagination
+$pagination-active-color: $link-color;
+
+// F-List specific color helpers to help make monochromatic themes easier to deal with.
+$text-background-color: $gray-200;
+$text-background-color-disabled: $gray-100;
+
+// F-List Rising
+$scorePerfectMatchBg: rgb(0, 173, 173);
+$scorePerfectMatchFg: rgb(29, 154, 154);
+$scoreMatchBg: rgb(0, 142, 0);
+$scoreMatchFg: rgb(0, 113, 0);
+$scoreWeakMatchBg: rgb(0, 80, 0);
+$scoreWeakMatchFg: rgb(0, 64, 0);
+$scoreWeakMismatchBg: rgb(152, 134, 0);
+$scoreWeakMismatchFg: rgb(142, 126, 0);
+$scoreMismatchBg: rgb(171, 0, 0);
+$scoreMismatchFg: rgb(128, 0, 0);
+$scoreTitleColor: white;
+$scoreMinimizeButtonFg: rgba(255, 255, 255, 0.7);
+$scoreMinimizeButtonBg: rgba(0, 0, 0, 0.2);
+$scoreReportBg: rgba(0, 0, 0, 0.2);
+
+$scoreFadedPerfectMatchBg: color.scale($scorePerfectMatchBg, $alpha: -60%);
+$scoreFadedPerfectMatchFg: color.scale($scorePerfectMatchFg, $alpha: -60%);
+$scoreFadedMatchBg: color.scale($scoreMatchBg, $alpha: -60%);
+$scoreFadedMatchFg: color.scale($scoreMatchFg, $alpha: -60%);
+$scoreFadedWeakMatchBg: color.scale($scoreWeakMatchBg, $alpha: -60%);
+$scoreFadedWeakMatchFg: color.scale($scoreWeakMatchFg, $alpha: -60%);
+$scoreFadedWeakMismatchBg: color.scale($scoreWeakMismatchBg, $alpha: -60%);
+$scoreFadedWeakMismatchFg: color.scale($scoreWeakMismatchFg, $alpha: -60%);
+$scoreFadedMismatchBg: color.scale($scoreMismatchBg, $alpha: -60%);
+$scoreFadedMismatchFg: color.scale($scoreMismatchFg, $alpha: -60%);
+
+$scoreStandoutMatchBorderColor: #048a04;
+$scoreStandoutMatchBgColor: rgba(0, 110, 0, 0.47);
+$scoreStandoutWeakMatchBorderColor: #014a01;
+$scoreStandoutWeakMatchBgColor: rgba(0, 79, 0, 0.4);
+$scoreStandoutNeutralBorderColor: #555;
+$scoreStandoutWeakMismatchBorderColor: rgb(138, 123, 0);
+$scoreStandoutWeakMismatchBgColor: rgba(208, 188, 0, 0);
+$scoreStandoutMismatchBorderColor: #841a1a;
+
+$characterImageWrapperBg: rgba(0, 0, 0, 0.2);
+$characterGuestbookPostBg: rgba(0, 0, 0, 0.15);
+$characterGuestbookPostBorderColor: rgba(255, 255, 255, 0.1);
+$characterGuestbookReplyBg: rgba(0, 0, 0, 0.1);
+$characterGuestbookTimestampFg: rgba(255, 255, 255, 0.3);
+$characterKinkCustomColor: #f8db36;
+$characterKinkCustomBorderColor: rgba(255, 255, 255, 0.1);
+$characterKinkStockColor: #ededf6;
+$characterKinkStockHighlightedColor: #ffffff;
+$characterInfotagColor: rgba(255, 255, 255, 0.7);
+
+$messageTimeBgColor: #4f4f61;
+$messageTimeFgColor: #dadada;
+
+$headerBackgroundMaskColor: $gray-200;
+
+$linkForcedColor: $gray-800;
+$tabSecondaryFgColor: rgba(255, 255, 255, 0.5);
+
+@import 'invert';
