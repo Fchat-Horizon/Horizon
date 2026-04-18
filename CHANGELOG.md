@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Dropdown items in the log viewer now have an icon for the character or channel in question. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7e0e1d11d724d485416db99b77ad0f8c8c80387b)
+  - This was a contribution by SmileyTatsu.
+- Updated the OpenMoji fallback font to version 16.0, which supports more of the new emoji. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8860e1d68506ec8e3db2e5d179c0f1d1704e964d)
+
+### Development
+
+- Improved type safety checks for a bunch of Vue components, where they'd be using the `any` type for various fields and props. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/62cf2d7ed0060bb17fcb0af9a19e76f2c3aef72d)
+- Cleaned up a bunch of dead, commented code we don't need. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4b4c6311ce2f4260d5e6a556f39dc077020bc13c)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/716 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/724 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/729 by @FatCatClient (authored by SmileyTatsu)
+- https://github.com/Fchat-Horizon/Horizon/pull/735 by @Kannamoris
+
 ## [2.1.1] - 2026-04-13
 
 ### Fixed
