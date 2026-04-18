@@ -243,7 +243,7 @@
         {{ l('chat.consoleTab') }}
       </h5>
 
-      <a href="#" @click.prevent="showLogs()" class="btn">
+      <a href="#" @click.prevent="showLogs()" class="btn btn-link">
         <span class="fa fa-file-alt"></span>
         <span class="btn-text">{{ l('logs.title') }}</span>
       </a>

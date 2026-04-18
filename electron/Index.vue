@@ -44,7 +44,7 @@
           <a
             href="#"
             @click.prevent="showLogs()"
-            class="btn"
+            class="btn btn-link"
             style="flex: 1; text-align: right"
           >
             <span class="fa fa-file-alt"></span>
