@@ -1,0 +1,88 @@
+@use 'sass:color';
+@import '~bootstrap/scss/functions';
+@import '../../functions';
+@import '../variables/site_dark_variables';
+@import '~bootstrap/scss/variables';
+@import '../../flist_derived';
+@import '../variables/default_derived';
+
+$white-color: $black;
+$red-color: #fe4949;
+$green-color: #00cc66;
+$blue-color: #548ce1;
+$yellow-color: #f2dc5d;
+$purple-color: #cc66ff;
+$cyan-color: #5ad8ed;
+$black-color: #666565;
+$brown-color: #bf7c60;
+$pink-color: #ff6699;
+$gray-color: #999999;
+$orange-color: #ee8822;
+
+// Apply variables to theme.
+@import '../chat';
+.colorblindMode {
+  @import '../colorblind';
+  @import '../../rising';
+
+  @each $varName, $value in $risingVariables {
+    --#{$varName}: #{$value};
+  }
+}
+
+.btn:not(
+  .btn-link,
+  .btn-close,
+  .userInfo-button-item,
+  #windowButtons .btn,
+  .bbcode-toolbar .btn,
+  .favorite-toggle,
+  .modal-title .btn
+),
+.list-group-item.active,
+.form-check-input:checked,
+.quick-jump-result.selected {
+  box-shadow:
+    inset 0em 0.1em 0.1em 0 rgba(255, 255, 255, 0.5),
+    inset -0.1em -0.1em 0.1em -0.1em rgba(0, 0, 0, 0.5);
+  &:active {
+    box-shadow:
+      inset 0em 0.1em 0.1em 0 rgba(0, 0, 0, 0.5),
+      inset -0.1em -0.1em 0.1em 0 rgba(255, 255, 255, 0.5);
+  }
+}
+
+.search-buttons .btn.active {
+  background-color: color.scale($primary, $lightness: 10%);
+}
+
+$genders: (
+  'shemale': $purple-color,
+  'herm': #ac92f0,
+  'none': $black-color,
+  'female': $pink-color,
+  'male': $blue-color,
+  'male-herm': #007fff,
+  'transgender': $orange-color,
+  'cunt-boy': $green-color
+);
+
+@each $gender, $color in $genders {
+  .gender-#{$gender},
+  .gender-icon-#{$gender} {
+    --gender-color: #{$color};
+  }
+
+  .gender-icon-#{$gender},
+  .message-event .gender-icon-#{gender} {
+    color: var(--gender-color);
+  }
+
+  .message-event .gender-#{$gender} {
+    --gender-color: #{color.scale($color, $lightness: 5%)};
+  }
+}
+
+:root {
+  color-scheme: dark;
+}
