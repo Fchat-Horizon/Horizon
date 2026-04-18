@@ -31,30 +31,34 @@
             :match="true"
             :isMarkerShown="shouldShowMarker"
           ></user>
-          <a href="#" @click.prevent="showLogs()" class="btn">
+          <a href="#" @click.prevent="showLogs()" class="btn btn-link">
             <span class="fa fa-file-alt"></span>
             <span class="btn-text">{{ l('logs.title') }}</span>
           </a>
-          <a href="#" @click.prevent="showSettings()" class="btn">
+          <a href="#" @click.prevent="showSettings()" class="btn btn-link">
             <span class="fa fa-cog"></span>
             <span class="btn-text">{{ l('conversationSettings.title') }}</span>
           </a>
-          <a href="#" @click.prevent="reportDialog.report()" class="btn">
+          <a
+            href="#"
+            @click.prevent="reportDialog.report()"
+            class="btn btn-link"
+          >
             <span class="fa fa-exclamation-triangle"></span
             ><span class="btn-text">{{ l('chat.report') }}</span></a
           >
 
-          <a href="#" @click.prevent="showAds()" class="btn">
+          <a href="#" @click.prevent="showAds()" class="btn btn-link">
             <span class="fa fa-ad"></span
             ><span class="btn-text">{{ l('conversation.ads') }}</span>
           </a>
 
-          <a href="#" @click.prevent="showChannels()" class="btn">
+          <a href="#" @click.prevent="showChannels()" class="btn btn-link">
             <span class="fa fa-tv"></span
             ><span class="btn-text">{{ l('conversation.channels') }}</span>
           </a>
 
-          <a href="#" @click.prevent="showMemo()" class="btn">
+          <a href="#" @click.prevent="showMemo()" class="btn btn-link">
             <span class="fas fa-edit"></span
             ><span class="btn-text">{{ l('conversation.memo') }}</span>
           </a>
@@ -96,7 +100,7 @@
           <a
             href="#"
             @click.prevent="descriptionExpanded = !descriptionExpanded"
-            class="btn"
+            class="btn btn-link"
           >
             <span
               class="fa"
@@ -111,20 +115,24 @@
             href="#"
             @click.prevent="showManage()"
             v-show="isChannelMod"
-            class="btn"
+            class="btn btn-link"
           >
             <span class="fa fa-edit"></span>
             <span class="btn-text">{{ l('manageChannel.open') }}</span>
           </a>
-          <a href="#" @click.prevent="showLogs()" class="btn">
+          <a href="#" @click.prevent="showLogs()" class="btn btn-link">
             <span class="fa fa-file-alt"></span>
             <span class="btn-text">{{ l('logs.title') }}</span>
           </a>
-          <a href="#" @click.prevent="showSettings()" class="btn">
+          <a href="#" @click.prevent="showSettings()" class="btn btn-link">
             <span class="fa fa-cog"></span>
             <span class="btn-text">{{ l('conversationSettings.title') }}</span>
           </a>
-          <a href="#" @click.prevent="reportDialog.report()" class="btn">
+          <a
+            href="#"
+            @click.prevent="reportDialog.report()"
+            class="btn btn-link"
+          >
             <span class="fa fa-exclamation-triangle"></span
             ><span class="btn-text">{{ l('chat.report') }}</span></a
           >

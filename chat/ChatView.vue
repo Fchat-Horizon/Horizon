@@ -46,19 +46,24 @@
         </div>
         <div>
           <div class="userInfo-buttons-container">
-            <a
+            <button
               href="#"
               role="button"
-              class="userInfo-button-item"
+              class="userInfo-button-item btn btn-outline-secondary"
               :title="l('characterSearch.open')"
               @click.prevent="showSearch()"
             >
               <i class="fa-solid fa-search fa-fw"></i>
-            </a>
-            <a
+            </button>
+            <button
               href="#"
               role="button"
-              class="userInfo-button-item"
+              class="userInfo-button-item btn"
+              :class="
+                adsAreRunning()
+                  ? 'btn-outline-success'
+                  : 'btn-outline-secondary'
+              "
               :title="l('admgr.open')"
               @click.prevent="showAdLauncher()"
             >
@@ -70,27 +75,27 @@
                   @click.stop="stopAllAds()"
                 ></span>
               </a>
-            </a>
+            </button>
 
-            <a
+            <button
               href="#"
               role="button"
-              class="userInfo-button-item"
+              class="userInfo-button-item btn btn-outline-secondary"
               :title="l('settings.character')"
               @click.prevent="showSettings()"
             >
               <i class="fa-solid fa-user-gear fa-fw"></i>
-            </a>
+            </button>
 
-            <a
+            <button
               href="#"
               role="button"
-              class="userInfo-button-item"
+              class="userInfo-button-item btn btn-outline-secondary"
               :title="l('chat.logout')"
               @click.prevent="logOut()"
             >
               <i class="fa-solid fa-sign-out-alt fa-fw"></i>
-            </a>
+            </button>
           </div>
           <note-status
             v-if="coreState.settings.risingShowUnreadOfflineCount"
@@ -116,7 +121,11 @@
 
         <div style="clear: both" class="conversationList-header d-flex">
           <span class="flex-grow-1">
-            <a href="#" @click.prevent="showAddPmPartner()" class="btn">
+            <a
+              href="#"
+              @click.prevent="showAddPmPartner()"
+              class="btn btn-link"
+            >
               {{ l('chat.pms.short') }}</a
             >
           </span>
@@ -125,7 +134,7 @@
             href="#"
             @click.prevent="showRecent()"
             :title="l('chat.recentConversations')"
-            class="btn"
+            class="btn btn-link"
             ><span class="fas fa-fw fa-history"></span> </a
           ><a
             :class="{
@@ -136,7 +145,7 @@
             href="#"
             @click.prevent="showQuickJump()"
             :title="l('quickJump.action')"
-            class="btn"
+            class="btn btn-link"
             ><span class="fas fa-fw fa-shuffle"></span
           ></a>
         </div>
@@ -203,7 +212,7 @@
 
         <div style="clear: both" class="conversationList-header d-flex">
           <span class="flex-grow-1">
-            <a href="#" @click.prevent="showChannels()" class="btn">
+            <a href="#" @click.prevent="showChannels()" class="btn btn-link">
               {{ l('chat.channels') }}</a
             >
           </span>
@@ -211,19 +220,19 @@
           <a
             href="#"
             @click.prevent="markAllAsRead()"
-            class="btn"
+            class="btn btn-link"
             :title="l('action.markAsRead')"
             ><span class="fas fa-fw fa-list-check"></span> </a
           ><a
             href="#"
             @click.prevent="showRecent(true)"
-            class="btn"
+            class="btn btn-link"
             :title="l('chat.recentConversations')"
             ><span class="fas fa-fw fa-history"></span> </a
           ><a
             href="#"
             @click.prevent="showChannels()"
-            class="btn"
+            class="btn btn-link"
             :title="l('chat.channelJoin')"
             :class="{
               glowing:
@@ -1198,16 +1207,6 @@
 
       .expander {
         display: none;
-      }
-    }
-
-    .adControls {
-      position: absolute;
-      color: var(--bs-danger);
-      z-index: 12;
-      top: 0px;
-      &:hover {
-        color: var(--bs-danger-text-emphasis);
       }
     }
 
