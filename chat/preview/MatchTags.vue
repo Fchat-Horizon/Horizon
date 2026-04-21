@@ -21,28 +21,11 @@
         merged: undefined as any as MatchResultScores
       };
     },
-    // @Watch('match', { deep: true })
-    // onMatchUpdate(match: MatchReport): void {
-    //   // console.log('ON UPDATED ETA', match);
-    //   this.merged = match.merged;
-    // }
     mounted(): void {
       this.merged = this.match.merged;
-      // this.humanized = false;
-      // this.furryPreferenceId = TagId.FurryPreference.toString();
-      //
-      // const furryPreference = Matcher.getTagValueList(TagId.FurryPreference, this.match.you.you);
-      //
-      // if (this.match.you.info.species === Species.Human && furryPreference === FurryPreference.HumansOnly) {
-      //   this.humanized = true;
-      // }
     },
     methods: {
       getTagDesc(key: any): any {
-        // if (key === this.furryPreferenceId) {
-        //   return this.humanized ? 'Humans' : 'Anthros';
-        // }
-
         return TagId[key]
           .toString()
           .replace(/([A-Z])/g, ' $1')

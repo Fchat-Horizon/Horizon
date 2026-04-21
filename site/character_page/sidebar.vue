@@ -51,7 +51,7 @@
             <button
               @click.prevent="toggleBookmark()"
               href="#"
-              class="btn col-3"
+              class="btn col-3 character-page-bookmark-link"
               :title="
                 l(
                   bookmarked ? 'userProfile.unbookmark' : 'userProfile.bookmark'

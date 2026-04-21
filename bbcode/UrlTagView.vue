@@ -21,7 +21,6 @@
 <script lang="ts">
   import Vue from 'vue';
   import { EventBus } from '../chat/preview/event-bus';
-  // import core from './core';
 
   export default Vue.extend({
     props: {

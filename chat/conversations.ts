@@ -1,6 +1,5 @@
 import { queuedJoin } from '../fchat/channels';
 import { decodeHTML } from '../fchat/common';
-// import { CharacterCacheRecord } from '../learn/profile-cache';
 import { AdManager } from './ads/ad-manager';
 import {
   characterImage,
@@ -74,7 +73,6 @@ abstract class Conversation implements Interfaces.Conversation {
   protected allMessages: Interfaces.Message[] = [];
   readonly reportMessages: Interfaces.Message[] = [];
   private lastSent = '';
-  // private loadedMore = false;
   adManager: AdManager;
   cacheActive = false;
   protected cacheInterval: ReturnType<typeof setInterval> | undefined;
@@ -161,7 +159,6 @@ abstract class Conversation implements Interfaces.Conversation {
   loadMore(): boolean {
     if (this.messages.length >= this.allMessages.length) return false;
     this.maxMessages += 50;
-    // this.loadedMore = true;
     this.messages = this.allMessages.slice(-this.maxMessages);
 
     EventBus.$emit('conversation-load-more', { conversation: this });
@@ -178,7 +175,6 @@ abstract class Conversation implements Interfaces.Conversation {
     this.lastRead = this.messages[this.messages.length - 1];
     this.maxMessages = 50;
     this.messages = this.allMessages.slice(-this.maxMessages);
-    // this.loadedMore = false;
     this.insertCount = 0;
   }
 
@@ -259,8 +255,6 @@ abstract class Conversation implements Interfaces.Conversation {
 
   public static async testPostDelay(): Promise<void> {
     const lastPostDelta = Date.now() - core.cache.getLastPost().getTime();
-
-    // console.log('Last Post Delta', lastPostDelta, ((lastPostDelta < Conversation.POST_DELAY) && (lastPostDelta > 0)));
 
     if (lastPostDelta < Conversation.POST_DELAY && lastPostDelta > 0) {
       await Bluebird.delay(Conversation.POST_DELAY - lastPostDelta);
