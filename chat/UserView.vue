@@ -4,6 +4,7 @@
     :class="userClass"
     v-bind:bbcodeTag.prop="'user'"
     v-bind:character.prop="character"
+    v-bind:displayName.prop="resolvedDisplayName"
     v-bind:channel.prop="channel"
     @mouseover.prevent="show()"
     @mouseenter.prevent="show()"
@@ -40,7 +41,7 @@
       :title="sponsorTitle"
     ></span
     ><span v-if="!!smartFilterIcon" :class="smartFilterIcon"></span
-    >{{ character.name
+    >{{ resolvedDisplayName
     }}<span v-if="!!matchClass" :class="matchClass">{{
       getMatchScoreTitle(matchScore)
     }}</span></span
@@ -54,7 +55,7 @@
   import core from './core';
   import { CharacterDataEvent, EventBus } from './preview/event-bus';
   import { kinkMatchWeights, Scoring } from '../learn/matcher-types';
-  import { characterImage } from './common';
+  import { characterImage, normalizeCharacterName } from './common';
   import {
     getContributorAlias,
     getTranslatorAlias,
@@ -328,6 +329,7 @@
     components: {},
     props: {
       character: { type: Object as () => Character, required: true },
+      displayName: { type: String, required: false },
       channel: { type: Object as () => Channel, required: false },
       showStatus: { default: false },
       bookmark: { default: true },
@@ -359,6 +361,9 @@
       };
     },
     computed: {
+      resolvedDisplayName(): string {
+        return this.displayName ?? this.character.name;
+      },
       safeAvatarUrl(): string {
         return this.avatarUrl || '';
       },
@@ -498,7 +503,7 @@
       },
 
       getCharacterUrl(): string {
-        return `flist-character://${this.character.name.replace(/[\r\n]/g, '')}`;
+        return `flist-character://${normalizeCharacterName(this.character.name)}`;
       },
 
       dismiss(force: boolean = false): void {

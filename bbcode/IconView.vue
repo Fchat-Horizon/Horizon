@@ -23,7 +23,7 @@
   import Vue, { PropType } from 'vue';
   import { EventBus } from '../chat/preview/event-bus';
   import * as Utils from '../site/utils';
-  import { characterImage } from '../chat/common';
+  import { characterImage, normalizeCharacterName } from '../chat/common';
   import { Character } from '../fchat';
 
   export default Vue.extend({
@@ -48,7 +48,7 @@
     },
     methods: {
       getCharacterUrl(): string {
-        return `flist-character://${this.character.name.replace(/[\r\n]/g, '')}`;
+        return `flist-character://${normalizeCharacterName(this.character.name)}`;
       },
       dismiss(force: boolean = false): void {
         EventBus.$emit('imagepreview-dismiss', {
