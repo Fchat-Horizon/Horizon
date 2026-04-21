@@ -7,11 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added the "Site Dark" theme. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ab249d7a2e2548dc09e5841aee5df97b2f72db3a)
+  - This one's for everyone whose inline _really_ depends on the website's dark mode colour scheme.
+
 ### Changed
 
 - Dropdown items in the log viewer now have an icon for the character or channel in question. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7e0e1d11d724d485416db99b77ad0f8c8c80387b)
   - This was a contribution by SmileyTatsu.
 - Updated the OpenMoji fallback font to version 16.0, which supports more of the new emoji. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8860e1d68506ec8e3db2e5d179c0f1d1704e964d)
+
+### Fixed
+
+- The character mouse hover preview now deals with line breaks in names appropriately, instead of cutting off. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6ff32c78877eb03b601809843fe2e37c9bd95b3e)
+- Fixed `/me` messages being thrown onto a new line when trying to automatically fix an eicon collage. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6e2eb216851ee77024264a62c9021841953df425)
+- Fixed issues with the user right-click menu when opening it from a `[user]` or `[icon]` tag with a newline character. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/82665f883b251f828eff54ef14e462ae14f2200b)
 
 ### Development
 
@@ -23,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/716 by @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/724 by @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/729 by @FatCatClient (authored by SmileyTatsu)
+- https://github.com/Fchat-Horizon/Horizon/pull/734 by @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/735 by @Kannamoris
 
 ## [2.1.1] - 2026-04-13
