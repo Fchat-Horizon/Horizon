@@ -1,1156 +1,1386 @@
 <template>
   <modal
-    :action="l('settings.character')"
-    :buttonText="l('settings.action')"
+    :action="l('settings.action')"
+    :buttonText="l('action.save')"
     @submit="submit"
     @open="load()"
     id="settings"
     dialogClass="modal-70"
     iconClass="fas fa-user-gear"
   >
-    <tabs
-      style="flex-shrink: 0; margin-bottom: 10px"
-      v-model="settingsMode"
-      :fullWidth="true"
-      :tabs="[
-        l('settings.tab.global'),
-        l('settings.tab.character', currentCharacter || '')
-      ]"
-    ></tabs>
-    <tabs
-      style="flex-shrink: 0; margin-bottom: 10px"
-      v-model="selectedTab"
-      :fullWidth="true"
-      :tabs="[
-        l('settings.tabs.chat'),
-        l('settings.tabs.appearance'),
-        l('settings.tabs.notifications'),
-        l('settings.tabs.profiles'),
-        l('settings.tabs.smartFilters'),
-        l('settings.tabs.import')
-      ]"
-    ></tabs>
-    <div class="warning" v-if="settingsMode === '0'">
-      <h5>{{ l('warning.info') }}</h5>
-      <div>
-        {{ l('settings.chat.mode.global') }}
-      </div>
-    </div>
+    <div class="d-flex h-100 overflow-hidden">
+      <tabs
+        style="flex-shrink: 0; margin-bottom: 10px"
+        v-model="selectedTab"
+        :tabs="[
+          //discord icon is a placeholder because icba to make a css class with the horizon icon right now
+          {
+            type: 'label',
+            label: l('settings.tabs.app'),
+            iconClass: 'fa-brands fa-discord'
+          },
+          { id: 'app.general', label: l('settings.tabs.general') },
+          { id: 'app.look', label: l('settings.tabs.look') },
+          { id: 'app.notifications', label: l('settings.tabs.notifications') },
+          { id: 'app.behavior', label: l('settings.tabs.behavior') },
+          { id: 'app.accessibility', label: l('settings.tabs.accessibility') },
+          { id: 'app.advanced', label: l('settings.tabs.advanced') },
+          { type: 'divider' },
+          {
+            type: 'label',
+            label: l('settings.tabs.chat'),
+            iconClass: 'fas fa-comments'
+          },
+          { id: 'chat.bbcode', label: l('settings.chat.bbcode') },
+          { id: 'chat.textBox', label: l('settings.chat.textBox') },
+          { id: 'chat.behavior', label: l('settings.chat.behavior') },
+          { id: 'chat.logging', label: l('settings.chat.logging') },
+          {
+            id: 'chat.draftMessages',
+            label: l('settings.horizonDraftMessages')
+          },
+          { id: 'chat.preview', label: l('settings.preview') },
 
-    <div class="warning" v-else>
-      <h5>{{ l('warning.info') }}</h5>
-      <div>
-        {{ l('settings.chat.mode.character') }}
-      </div>
-    </div>
+          {
+            type: 'label',
+            label: l('settings.tabs.appearance'),
+            iconClass: 'fas fa-paint-roller'
+          },
+          { id: 'appearance.layout', label: l('settings.appearance.layout') },
+          {
+            id: 'appearance.messages',
+            label: l('settings.appearance.messages')
+          },
+          { id: 'appearance.users', label: l('settings.appearance.users') },
 
-    <div v-show="selectedTab === '0'">
-      <h5>{{ l('settings.chat.bbcode') }}</h5>
+          {
+            type: 'label',
+            label: l('settings.tabs.pings'),
+            iconClass: 'fas fa-bell'
+          },
+          {
+            id: 'notifications.behavior',
+            label: l('settings.chat.behavior')
+          },
+          {
+            id: 'notifications.pings',
+            label: l('settings.notifications.pings')
+          },
+          {
+            id: 'notifications.console',
+            label: l('settings.notifications.console')
+          },
 
-      <div class="mb-3 p-2">
-        <label class="control-label" for="disallowedTags">{{
-          l('settings.disallowedTags')
-        }}</label>
-        <input
-          id="disallowedTags"
-          class="form-control"
-          v-model="disallowedTags"
-        />
-      </div>
+          {
+            type: 'label',
+            label: l('settings.tabs.profiles'),
+            iconClass: 'fas fa-id-card'
+          },
+          { id: 'profiles.hiddenAds', label: l('settings.tabs.hideAds') },
+          { id: 'profiles.matching', label: l('settings.matching') },
+          { id: 'profiles.viewer', label: l('settings.profile.viewer') },
+          {
+            id: 'profiles.ignoredList',
+            label: l('settings.profile.ignoredList')
+          },
 
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="animatedEicons">
-              {{ l('settings.animatedEicons') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-if="settingsMode === '0'"
-            v-model="animatedEicons"
-            :name="'animatedEicons'"
-          ></settings-checkbox>
-          <settings-tristate
-            v-else
-            v-model="characterOverrides.animatedEicons"
-            :globalValue="animatedEicons"
-            :name="'animatedEicons-override'"
-          ></settings-tristate>
-        </div>
-      </div>
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="smoothMosaics">
-              {{ l('settings.smoothMosaics') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-if="settingsMode === '0'"
-            v-model="smoothMosaics"
-            :name="'smoothMosaics'"
-          ></settings-checkbox>
-          <settings-tristate
-            v-else
-            v-model="characterOverrides.smoothMosaics"
-            :globalValue="smoothMosaics"
-            :name="'smoothMosaics-override'"
-          ></settings-tristate>
-        </div>
-      </div>
+          {
+            type: 'label',
+            label: l('settings.tabs.smartFilters'),
+            iconClass: 'fas fa-filter'
+          },
+          { id: 'smartFilters.dangerZone', label: l('settings.dangerZone') },
+          { id: 'smartFilters.visibility', label: l('settings.visibility') },
+          {
+            id: 'smartFilters.channelMembersFilters',
+            label: l('settings.channelMembersFilters')
+          },
+          { id: 'smartFilters.ageMatch', label: l('settings.ageMatch') },
+          { id: 'smartFilters.typeMatch', label: l('settings.typeMatch') },
+          {
+            id: 'smartFilters.automaticReplies',
+            label: l('settings.automaticReplies')
+          },
+          {
+            id: 'smartFilters.exceptionList',
+            label: l('settings.exceptionList')
+          },
 
-      <h5>{{ l('settings.chat.textBox') }}</h5>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="bbCodeBar">
-              {{ l('settings.bbCodeBar') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="bbCodeBar"
-            :name="'bbCodeBar'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="enterSend">
-              {{ l('settings.enterSend') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="enterSend"
-            :name="'enterSend'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="horizonUseColorPicker">
-              {{ l('settings.horizonUseColorPicker') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="horizonUseColorPicker"
-            :name="'horizonUseColorPicker'"
-            :disabled="!bbCodeBar"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="risingShowPortraitNearInput">
-              {{ l('settings.showPortraitNearInput') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="risingShowPortraitNearInput"
-            :name="'risingShowPortraitNearInput'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <h5>{{ l('settings.chat.behavior') }}</h5>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="clickOpensMessage">
-              {{ l('settings.clickOpensMessage') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="clickOpensMessage"
-            :name="'clickOpensMessage'"
-          ></settings-checkbox>
-        </div>
-      </div>
-      <div class="mb-3 p-2">
-        <label class="control-label" for="idleTimer">{{
-          l('settings.idleTimer')
-        }}</label>
-        <input
-          id="idleTimer"
-          class="form-control"
-          type="number"
-          v-model="idleTimer"
-          min="0"
-          max="1440"
-        />
-      </div>
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="showNeedsReply">
-              {{ l('settings.showNeedsReply') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="showNeedsReply"
-            :name="'showNeedsReply'"
-          ></settings-checkbox>
-        </div>
-      </div>
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="risingShowUnreadOfflineCount">
-              {{ l('settings.risingShowUnreadOfflineCount') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="risingShowUnreadOfflineCount"
-            :name="'risingShowUnreadOfflineCount'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="colorBookmarks">
-              {{ l('settings.colorBookmarks') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="colorBookmarks"
-            :name="'colorBookmarks'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="showPerCharacterFriends">
-              {{ l('settings.showPerCharacterFriends') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="showPerCharacterFriends"
-            :name="'showPerCharacterFriends'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="hideNonCharacterFriends">
-              {{ l('settings.hideNonCharacterFriends') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="hideNonCharacterFriends"
-            :name="'hideNonCharacterFriends'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <h5>{{ l('settings.chat.logging') }}</h5>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="logMessages">
-              {{ l('settings.logMessages') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="logMessages"
-            :name="'logMessages'"
-          ></settings-checkbox>
-        </div>
-      </div>
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="logAds">
-              {{ l('settings.logAds') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="logAds"
-            :name="'logAds'"
-          ></settings-checkbox>
-        </div>
-      </div>
-      <h5>{{ l('settings.horizonDraftMessages') }}</h5>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="horizonCacheDraftMessages">
-              {{ l('settings.horizonCacheDraftMessages') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="horizonCacheDraftMessages"
-            :name="'horizonCacheDraftMessages'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3 p-2">
-        <label class="control-label" for="horizonSaveDraftMessagesToDiskTimer">
-          {{ l('settings.horizonSaveDraftMessagesToDiskTimer') }}
-        </label>
-        <input
-          id="horizonSaveDraftMessagesToDiskTimer"
-          type="number"
-          class="form-control"
-          v-model="horizonSaveDraftMessagesToDiskTimer"
-          :placeholder="'60'"
-          min="5"
-        />
-      </div>
-
-      <h5>{{ l('settings.preview') }}</h5>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="risingLinkPreview">
-              {{ l('settings.preview.link') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="risingLinkPreview"
-            :name="'risingLinkPreview'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="risingCharacterPreview">
-              {{ l('settings.preview.character') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="risingCharacterPreview"
-            :name="'risingCharacterPreview'"
-          ></settings-checkbox>
-        </div>
-      </div>
-    </div>
-
-    <div v-show="selectedTab === '1'">
-      <h5>{{ l('settings.appearance.layout') }}</h5>
-
-      <div class="mb-3 p-2">
-        <label class="control-label" for="fontSize">{{
-          l('settings.experimental', l('settings.fontSize'))
-        }}</label>
-        <input
-          id="fontSize"
-          type="number"
-          min="10"
-          max="24"
-          class="form-control"
-          v-model="fontSize"
-        />
-      </div>
-      <div class="mb-3 p-2">
-        <label class="control-label" for="risingCharacterTheme">
-          {{ l('settings.overrideCharacterTheme') }}
-          <select
-            id="risingCharacterTheme"
-            class="form-select"
-            v-model="risingCharacterTheme"
-            style="flex: 1; margin-right: 10px"
-          >
-            <option value="undefined">
-              {{ l('settings.useDefaultTheme') }}
-            </option>
-            <option disabled>---</option>
-            <option v-for="theme in risingAvailableThemes" :value="theme">
-              {{ theme }}
-            </option>
-          </select>
-        </label>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="showAvatars">
-              {{ l('settings.showAvatars') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="showAvatars"
-            :name="'showAvatars'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="risingShowHighQualityPortraits">
-              {{ l('settings.showHighQualityPortraits') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="risingShowHighQualityPortraits"
-            :name="'risingShowHighQualityPortraits'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="forceQuickConvoList">
-              {{ l('settings.forceQuickConvoList') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="forceQuickConvoList"
-            :name="'forceQuickConvoList'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <h5>{{ l('settings.appearance.messages') }}</h5>
-
-      <div class="mb-3 p-2">
-        <label class="control-label" for="chatLayoutMode">{{
-          l('settings.experimental', l('settings.chatLayoutMode'))
-        }}</label>
-        <select
-          id="chatLayoutMode"
-          class="form-select"
-          v-model="chatLayoutMode"
+          { type: 'divider' },
+          { id: 'import.main', label: l('settings.tabs.import') }
+        ]"
+        tab-class="flex-column nav-pills"
+        class="overflow-y-scroll hidden-scrollbar"
+      ></tabs>
+      <div
+        class="settings-tab-content flex-grow-1 ms-3 h-100 d-flex flex-column"
+      >
+        <div
+          class="mb-3"
+          v-if="
+            selectedTab !== 'app.general' &&
+            selectedTab !== 'app.look' &&
+            selectedTab !== 'app.notifications' &&
+            selectedTab !== 'app.behavior' &&
+            selectedTab !== 'app.accessibility' &&
+            selectedTab !== 'app.advanced'
+          "
         >
-          <option value="classic">
-            {{ l('settings.chatLayoutMode.classic') }}
-          </option>
-          <option value="modern">
-            {{ l('settings.chatLayoutMode.modern') }}
-          </option>
-        </select>
-        <small class="form-text text-muted">{{
-          l('settings.chatLayoutMode.modernDescription')
-        }}</small>
-      </div>
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="messageGrouping">
-              {{ l('settings.messageGrouping') }}
-            </label>
-            <div class="form-text text-muted">
-              {{ l('settings.messageGrouping.description') }}
+          <tabs
+            style="flex-shrink: 0; margin-bottom: 10px"
+            v-model="settingsMode"
+            :fullWidth="true"
+            :tabs="[
+              l('settings.tab.global'),
+              l('settings.tab.character', currentCharacter || '')
+            ]"
+          ></tabs>
+          <div class="warning" v-if="settingsMode === '0'">
+            <h5>{{ l('warning.info') }}</h5>
+            <div>
+              {{ l('settings.chat.mode.global') }}
             </div>
           </div>
-          <settings-checkbox
-            v-model="messageGrouping"
-            :name="'messageGrouping'"
-            :disabled="chatLayoutMode !== 'modern'"
-          ></settings-checkbox>
-        </div>
-      </div>
 
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="messageSeparators">
-              {{ l('settings.messageSeparators') }}
-            </label>
+          <div class="warning" v-else>
+            <h5>{{ l('warning.info') }}</h5>
+            <div>
+              {{ l('settings.chat.mode.character') }}
+            </div>
           </div>
-          <settings-checkbox
-            v-model="messageSeparators"
-            :name="'messageSeparators'"
-          ></settings-checkbox>
         </div>
-      </div>
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="risingShowPortraitInMessage">
-              {{ l('settings.showPortraitInMessage') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="risingShowPortraitInMessage"
-            :name="'risingShowPortraitInMessage'"
-          ></settings-checkbox>
-        </div>
-      </div>
 
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label
-              class="control-label"
-              for="horizonMessagePortraitHighQuality"
-            >
-              {{ l('settings.messagePortraitHighQuality') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="horizonMessagePortraitHighQuality"
-            :name="'horizonMessagePortraitHighQuality'"
-            :disabled="!risingShowHighQualityPortraits"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <h5>{{ l('settings.appearance.users') }}</h5>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="horizonShowCustomCharacterColors">
-              {{ l('settings.showCustomCharacterColors') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="horizonShowCustomCharacterColors"
-            :name="'horizonShowCustomCharacterColors'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="risingColorblindMode">
-              {{ l('settings.colorblindMode') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="risingColorblindMode"
-            :name="'risingColorblindMode'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="horizonShowDeveloperBadges">
-              {{ l('settings.showDeveloperBadges') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="horizonShowDeveloperBadges"
-            :name="'horizonShowDeveloperBadges'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="horizonShowGenderMarker">
-              {{ l('settings.showGenderIcon') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="horizonShowGenderMarker"
-            :name="'horizonShowGenderMarker'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="horizonGenderMarkerOrigColor">
-              {{ l('settings.genderIconUseOriginalColor') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="horizonGenderMarkerOrigColor"
-            :name="'horizonGenderMarkerOrigColor'"
-            :disabled="
-              !horizonShowGenderMarker || !horizonShowCustomCharacterColors
+        <div class="overflow-auto h-100">
+          <div
+            v-show="
+              selectedTab === 'app.general' ||
+              selectedTab === 'app.look' ||
+              selectedTab === 'app.notifications' ||
+              selectedTab === 'app.behavior' ||
+              selectedTab === 'app.accessibility' ||
+              selectedTab === 'app.advanced'
             "
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="horizonChangeOfflineColor">
-              {{ l('settings.changeOfflineColor') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="horizonChangeOfflineColor"
-            :name="'horizonChangeOfflineColor'"
-          ></settings-checkbox>
-        </div>
-      </div>
-    </div>
-
-    <div v-show="selectedTab === '2'">
-      <h5>{{ l('settings.chat.behavior') }}</h5>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="playSound">
-              {{ l('settings.playSound') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="playSound"
-            :name="'playSound'"
-          ></settings-checkbox>
-        </div>
-      </div>
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="alwaysNotify">
-              {{ l('settings.alwaysNotify') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="alwaysNotify"
-            :name="'alwaysNotify'"
-            :disabled="!playSound"
-          ></settings-checkbox>
-        </div>
-      </div>
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="notifications">
-              {{ l('settings.notifications') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="notifications"
-            :name="'notifications'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <h5>{{ l('settings.notifications.pings') }}</h5>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="highlight">
-              {{ l('settings.highlight') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="highlight"
-            :name="'highlight'"
-          ></settings-checkbox>
-        </div>
-      </div>
-      <div class="mb-3 p-2">
-        <label class="control-label" for="highlightWords">{{
-          l('settings.highlightWords')
-        }}</label>
-        <input
-          id="highlightWords"
-          class="form-control"
-          v-model="highlightWords"
-        />
-      </div>
-      <div class="mb-3 p-2">
-        <label class="control-label" for="horizonHighlightUsers">{{
-          l('settings.highlightUsers')
-        }}</label>
-        <input
-          id="highlightUsers"
-          class="form-control"
-          v-model="horizonHighlightUsers"
-        />
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="horizonNotifyFriendSignIn">
-              {{ l('settings.notifyFriendSignIn') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="horizonNotifyFriendSignIn"
-            :name="'horizonNotifyFriendSignIn'"
-            :disabled="!horizonShowSigninNotifications"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <h5>{{ l('settings.notifications.console') }}</h5>
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="eventMessages">
-              {{ l('settings.eventMessages') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="eventMessages"
-            :name="'eventMessages'"
-          ></settings-checkbox>
-        </div>
-      </div>
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="joinMessages">
-              {{ l('settings.joinMessages') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="joinMessages"
-            :name="'joinMessages'"
-          ></settings-checkbox>
-        </div>
-      </div>
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="horizonShowSigninNotifications">
-              {{ l('settings.showSigninNotifications') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="horizonShowSigninNotifications"
-            :name="'horizonShowSigninNotifications'"
-          ></settings-checkbox>
-        </div>
-      </div>
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label
-              class="control-label"
-              for="horizonShowDuplicateStatusNotifications"
-            >
-              {{ l('settings.showDuplicateStatusNotifications') }}
-            </label>
-            <div class="form-text text-muted">
-              {{ l('settings.showDuplicateStatusNotifications.note') }}
+          >
+            <div class="mb-3 alert alert-warning">
+              <h5>{{ l('warning.info') }}</h5>
+              <div>
+                Placeholder for global app settings. These are still in the
+                bespoke window for now.
+              </div>
             </div>
           </div>
-          <settings-checkbox
-            v-model="horizonShowDuplicateStatusNotifications"
-            :name="'horizonShowDuplicateStatusNotifications'"
-          ></settings-checkbox>
-        </div>
-      </div>
-    </div>
+          <div v-show="selectedTab === 'chat.bbcode'">
+            <h5>{{ l('settings.chat.bbcode') }}</h5>
 
-    <div v-show="selectedTab === '3'">
-      <h5>{{ l('settings.tabs.hideAds') }}</h5>
-      <div class="mb-3 p-2">
-        <template v-if="hidden.length">
-          <div v-for="(user, i) in hidden" :key="`hidden-${user}-${i}`">
-            <span
-              class="fa fa-times"
-              style="cursor: pointer"
-              @click.stop="hidden.splice(i, 1)"
-            ></span>
-            <span class="ms-2">{{ user }}</span>
-          </div>
-        </template>
-        <template v-else>{{ l('settings.hideAds.empty') }}</template>
-      </div>
+            <div class="mb-3 p-2">
+              <label class="control-label" for="disallowedTags">{{
+                l('settings.disallowedTags')
+              }}</label>
+              <input
+                id="disallowedTags"
+                class="form-control"
+                v-model="disallowedTags"
+              />
+            </div>
 
-      <h5>{{ l('settings.matching') }}</h5>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="risingAdScore">
-              {{ l('settings.matching.adScore') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="risingAdScore"
-            :name="'risingAdScore'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="risingComparisonInUserMenu">
-              {{ l('settings.matching.comparisonInUserMenu') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="risingComparisonInUserMenu"
-            :name="'risingComparisonInUserMenu'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="risingComparisonInSearch">
-              {{ l('settings.matching.comparisonInSearch') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="risingComparisonInSearch"
-            :name="'risingComparisonInSearch'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <!--            <div class="mb-3">-->
-      <!--                <label class="control-label" for="hideProfileComparisonSummary">-->
-      <!--                    <input type="checkbox" id="hideProfileComparisonSummary" :checked="!hideProfileComparisonSummary" @input="hideProfileComparisonSummary = !$event.target.checked"/>-->
-      <!--                    Show quick match results at the top of the character profile-->
-      <!--                </label>-->
-      <!--            </div>-->
-
-      <h5>{{ l('settings.profile.viewer') }}</h5>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="risingAutoCompareKinks">
-              {{ l('settings.profile.autoCompareKinks') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="risingAutoCompareKinks"
-            :name="'risingAutoCompareKinks'"
-          ></settings-checkbox>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="risingAutoExpandCustomKinks">
-              {{ l('settings.profile.autoExpandCustoms') }}
-            </label>
-          </div>
-          <settings-checkbox
-            v-model="risingAutoExpandCustomKinks"
-            :name="'risingAutoExpandCustomKinks'"
-          ></settings-checkbox>
-        </div>
-      </div>
-      <h5>{{ l('settings.profile.ignoredList') }}</h5>
-      <div class="mb-3 p-2">
-        <template v-if="ignored.length">
-          <div v-for="user in ignored">
-            <span
-              class="fa fa-times"
-              style="cursor: pointer"
-              role="button"
-              :aria-label="l('user.unignore')"
-              @click.stop="unignore(user)"
-            ></span>
-            <user-view :character="getCharacter(user)"></user-view>
-          </div>
-        </template>
-        <template v-else>{{
-          l('settings.profile.ignoredList.empty')
-        }}</template>
-      </div>
-    </div>
-
-    <div v-show="selectedTab === '4'">
-      <div class="warning">
-        <h5>{{ l('settings.dangerZone') }}</h5>
-        <div>
-          {{ l('settings.filteringWarning1') }}
-        </div>
-
-        <div>
-          {{ l('settings.filteringWarning2') }}
-        </div>
-      </div>
-
-      <h5>{{ l('settings.visibility') }}</h5>
-
-      <div class="mb-3 filters">
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="risingFilter.hideAds"
-            v-model="risingFilter.hideAds"
-          />
-          <label class="form-check-label" for="risingFilter.hideAds">
-            <bbcode :text="l('settings.filter.hideAds')"></bbcode>
-          </label>
-        </div>
-
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="risingFilter.hideSearchResults"
-            v-model="risingFilter.hideSearchResults"
-          />
-          <label class="form-check-label" for="risingFilter.hideSearchResults">
-            <bbcode :text="l('settings.filter.hideSearchResults')"></bbcode>
-          </label>
-        </div>
-
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="risingFilter.hideChannelMembers"
-            v-model="risingFilter.hideChannelMembers"
-          />
-          <label class="form-check-label" for="risingFilter.hideChannelMembers">
-            <bbcode :text="l('settings.filter.hideChannelMembers')"></bbcode>
-          </label>
-        </div>
-
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="risingFilter.hidePublicChannelMessages"
-            v-model="risingFilter.hidePublicChannelMessages"
-          />
-          <label
-            class="form-check-label"
-            for="risingFilter.hidePublicChannelMessages"
-          >
-            <bbcode
-              :text="l('settings.filter.hidePublicChannelMessages')"
-            ></bbcode>
-          </label>
-        </div>
-
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="risingFilter.hidePrivateChannelMessages"
-            v-model="risingFilter.hidePrivateChannelMessages"
-          />
-          <label
-            class="form-check-label"
-            for="risingFilter.hidePrivateChannelMessages"
-          >
-            <bbcode
-              :text="l('settings.filter.hidePrivateChannelMessages')"
-            ></bbcode>
-          </label>
-        </div>
-
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="risingFilter.hidePrivateMessages"
-            v-model="risingFilter.hidePrivateMessages"
-          />
-          <label
-            class="form-check-label"
-            for="risingFilter.hidePrivateMessages"
-          >
-            <bbcode :text="l('settings.filter.hidePrivateMessages')"></bbcode>
-          </label>
-        </div>
-
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="risingFilter.showFilterIcon"
-            v-model="risingFilter.showFilterIcon"
-          />
-          <label class="form-check-label" for="risingFilter.showFilterIcon">
-            <bbcode :text="l('settings.filter.showFilterIcon')"></bbcode>
-          </label>
-        </div>
-      </div>
-
-      <div class="mb-3 filters">
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="risingFilter.penalizeMatches"
-            v-model="risingFilter.penalizeMatches"
-          />
-          <label class="form-check-label" for="risingFilter.penalizeMatches">
-            <bbcode :text="l('settings.filter.penalizeMatches')"></bbcode>
-          </label>
-        </div>
-
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="risingFilter.rewardNonMatches"
-            v-model="risingFilter.rewardNonMatches"
-          />
-          <label class="form-check-label" for="risingFilter.rewardNonMatches">
-            <bbcode :text="l('settings.filter.rewardNonMatches')"></bbcode>
-          </label>
-        </div>
-      </div>
-
-      <h5>{{ l('settings.channelMembersFilters') }}</h5>
-
-      <div class="mb-3">
-        <div class="d-flex p-2 justify-content-between align-items-start">
-          <div class="w-50">
-            <label class="control-label" for="horizonPersistentMemberFilters">
-              {{ l('settings.horizon.persistentMemberFilters') }}
-            </label>
-            <div class="form-text text-muted">
-              {{ l('settings.horizon.persistentMemberFilters.help') }}
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="animatedEicons">
+                    {{ l('settings.animatedEicons') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-if="settingsMode === '0'"
+                  v-model="animatedEicons"
+                  :name="'animatedEicons'"
+                ></settings-checkbox>
+                <settings-tristate
+                  v-else
+                  v-model="characterOverrides.animatedEicons"
+                  :globalValue="animatedEicons"
+                  :name="'animatedEicons-override'"
+                ></settings-tristate>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="smoothMosaics">
+                    {{ l('settings.smoothMosaics') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-if="settingsMode === '0'"
+                  v-model="smoothMosaics"
+                  :name="'smoothMosaics'"
+                ></settings-checkbox>
+                <settings-tristate
+                  v-else
+                  v-model="characterOverrides.smoothMosaics"
+                  :globalValue="smoothMosaics"
+                  :name="'smoothMosaics-override'"
+                ></settings-tristate>
+              </div>
             </div>
           </div>
-          <settings-checkbox
-            v-model="horizonPersistentMemberFilters"
-            :name="'horizonPersistentMemberFilters'"
-          ></settings-checkbox>
+
+          <div v-show="selectedTab === 'chat.textBox'">
+            <h5>{{ l('settings.chat.textBox') }}</h5>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="bbCodeBar">
+                    {{ l('settings.bbCodeBar') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="bbCodeBar"
+                  :name="'bbCodeBar'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="enterSend">
+                    {{ l('settings.enterSend') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="enterSend"
+                  :name="'enterSend'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="horizonUseColorPicker">
+                    {{ l('settings.horizonUseColorPicker') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="horizonUseColorPicker"
+                  :name="'horizonUseColorPicker'"
+                  :disabled="!bbCodeBar"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="risingShowPortraitNearInput"
+                  >
+                    {{ l('settings.showPortraitNearInput') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="risingShowPortraitNearInput"
+                  :name="'risingShowPortraitNearInput'"
+                ></settings-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'chat.behavior'">
+            <h5>{{ l('settings.chat.behavior') }}</h5>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="clickOpensMessage">
+                    {{ l('settings.clickOpensMessage') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="clickOpensMessage"
+                  :name="'clickOpensMessage'"
+                ></settings-checkbox>
+              </div>
+            </div>
+            <div class="mb-3 p-2">
+              <label class="control-label" for="idleTimer">{{
+                l('settings.idleTimer')
+              }}</label>
+              <input
+                id="idleTimer"
+                class="form-control"
+                type="number"
+                v-model="idleTimer"
+                min="0"
+                max="1440"
+              />
+            </div>
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="showNeedsReply">
+                    {{ l('settings.showNeedsReply') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="showNeedsReply"
+                  :name="'showNeedsReply'"
+                ></settings-checkbox>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="risingShowUnreadOfflineCount"
+                  >
+                    {{ l('settings.risingShowUnreadOfflineCount') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="risingShowUnreadOfflineCount"
+                  :name="'risingShowUnreadOfflineCount'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="colorBookmarks">
+                    {{ l('settings.colorBookmarks') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="colorBookmarks"
+                  :name="'colorBookmarks'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="showPerCharacterFriends">
+                    {{ l('settings.showPerCharacterFriends') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="showPerCharacterFriends"
+                  :name="'showPerCharacterFriends'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="hideNonCharacterFriends">
+                    {{ l('settings.hideNonCharacterFriends') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="hideNonCharacterFriends"
+                  :name="'hideNonCharacterFriends'"
+                ></settings-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'chat.logging'">
+            <h5>{{ l('settings.chat.logging') }}</h5>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="logMessages">
+                    {{ l('settings.logMessages') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="logMessages"
+                  :name="'logMessages'"
+                ></settings-checkbox>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="logAds">
+                    {{ l('settings.logAds') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="logAds"
+                  :name="'logAds'"
+                ></settings-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'chat.draftMessages'">
+            <h5>{{ l('settings.horizonDraftMessages') }}</h5>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="horizonCacheDraftMessages">
+                    {{ l('settings.horizonCacheDraftMessages') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="horizonCacheDraftMessages"
+                  :name="'horizonCacheDraftMessages'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3 p-2">
+              <label
+                class="control-label"
+                for="horizonSaveDraftMessagesToDiskTimer"
+              >
+                {{ l('settings.horizonSaveDraftMessagesToDiskTimer') }}
+              </label>
+              <input
+                id="horizonSaveDraftMessagesToDiskTimer"
+                type="number"
+                class="form-control"
+                v-model="horizonSaveDraftMessagesToDiskTimer"
+                :placeholder="'60'"
+                min="5"
+              />
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'chat.preview'">
+            <h5>{{ l('settings.preview') }}</h5>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="risingLinkPreview">
+                    {{ l('settings.preview.link') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="risingLinkPreview"
+                  :name="'risingLinkPreview'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="risingCharacterPreview">
+                    {{ l('settings.preview.character') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="risingCharacterPreview"
+                  :name="'risingCharacterPreview'"
+                ></settings-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'appearance.layout'">
+            <h5>{{ l('settings.appearance.layout') }}</h5>
+
+            <div class="mb-3 p-2">
+              <label class="control-label" for="fontSize">{{
+                l('settings.experimental', l('settings.fontSize'))
+              }}</label>
+              <input
+                id="fontSize"
+                type="number"
+                min="10"
+                max="24"
+                class="form-control"
+                v-model="fontSize"
+              />
+            </div>
+            <div class="mb-3 p-2">
+              <label class="control-label" for="risingCharacterTheme">
+                {{ l('settings.overrideCharacterTheme') }}
+                <select
+                  id="risingCharacterTheme"
+                  class="form-select"
+                  v-model="risingCharacterTheme"
+                  style="flex: 1; margin-right: 10px"
+                >
+                  <option value="undefined">
+                    {{ l('settings.useDefaultTheme') }}
+                  </option>
+                  <option disabled>---</option>
+                  <option v-for="theme in risingAvailableThemes" :value="theme">
+                    {{ theme }}
+                  </option>
+                </select>
+              </label>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="showAvatars">
+                    {{ l('settings.showAvatars') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="showAvatars"
+                  :name="'showAvatars'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="risingShowHighQualityPortraits"
+                  >
+                    {{ l('settings.showHighQualityPortraits') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="risingShowHighQualityPortraits"
+                  :name="'risingShowHighQualityPortraits'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="forceQuickConvoList">
+                    {{ l('settings.forceQuickConvoList') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="forceQuickConvoList"
+                  :name="'forceQuickConvoList'"
+                ></settings-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'appearance.messages'">
+            <h5>{{ l('settings.appearance.messages') }}</h5>
+
+            <div class="mb-3 p-2">
+              <label class="control-label" for="chatLayoutMode">{{
+                l('settings.experimental', l('settings.chatLayoutMode'))
+              }}</label>
+              <select
+                id="chatLayoutMode"
+                class="form-select"
+                v-model="chatLayoutMode"
+              >
+                <option value="classic">
+                  {{ l('settings.chatLayoutMode.classic') }}
+                </option>
+                <option value="modern">
+                  {{ l('settings.chatLayoutMode.modern') }}
+                </option>
+              </select>
+              <small class="form-text text-muted">{{
+                l('settings.chatLayoutMode.modernDescription')
+              }}</small>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="messageGrouping">
+                    {{ l('settings.messageGrouping') }}
+                  </label>
+                  <div class="form-text text-muted">
+                    {{ l('settings.messageGrouping.description') }}
+                  </div>
+                </div>
+                <settings-checkbox
+                  v-model="messageGrouping"
+                  :name="'messageGrouping'"
+                  :disabled="chatLayoutMode !== 'modern'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="messageSeparators">
+                    {{ l('settings.messageSeparators') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="messageSeparators"
+                  :name="'messageSeparators'"
+                ></settings-checkbox>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="risingShowPortraitInMessage"
+                  >
+                    {{ l('settings.showPortraitInMessage') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="risingShowPortraitInMessage"
+                  :name="'risingShowPortraitInMessage'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="horizonMessagePortraitHighQuality"
+                  >
+                    {{ l('settings.messagePortraitHighQuality') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="horizonMessagePortraitHighQuality"
+                  :name="'horizonMessagePortraitHighQuality'"
+                  :disabled="!risingShowHighQualityPortraits"
+                ></settings-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'appearance.users'">
+            <h5>{{ l('settings.appearance.users') }}</h5>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="horizonShowCustomCharacterColors"
+                  >
+                    {{ l('settings.showCustomCharacterColors') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="horizonShowCustomCharacterColors"
+                  :name="'horizonShowCustomCharacterColors'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="risingColorblindMode">
+                    {{ l('settings.colorblindMode') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="risingColorblindMode"
+                  :name="'risingColorblindMode'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="horizonShowDeveloperBadges">
+                    {{ l('settings.showDeveloperBadges') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="horizonShowDeveloperBadges"
+                  :name="'horizonShowDeveloperBadges'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="horizonShowGenderMarker">
+                    {{ l('settings.showGenderIcon') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="horizonShowGenderMarker"
+                  :name="'horizonShowGenderMarker'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="horizonGenderMarkerOrigColor"
+                  >
+                    {{ l('settings.genderIconUseOriginalColor') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="horizonGenderMarkerOrigColor"
+                  :name="'horizonGenderMarkerOrigColor'"
+                  :disabled="
+                    !horizonShowGenderMarker ||
+                    !horizonShowCustomCharacterColors
+                  "
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="horizonChangeOfflineColor">
+                    {{ l('settings.changeOfflineColor') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="horizonChangeOfflineColor"
+                  :name="'horizonChangeOfflineColor'"
+                ></settings-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'notifications.behavior'">
+            <h5>{{ l('settings.chat.behavior') }}</h5>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="playSound">
+                    {{ l('settings.playSound') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="playSound"
+                  :name="'playSound'"
+                ></settings-checkbox>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="alwaysNotify">
+                    {{ l('settings.alwaysNotify') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="alwaysNotify"
+                  :name="'alwaysNotify'"
+                  :disabled="!playSound"
+                ></settings-checkbox>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="notifications">
+                    {{ l('settings.notifications') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="notifications"
+                  :name="'notifications'"
+                ></settings-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'notifications.pings'">
+            <h5>{{ l('settings.notifications.pings') }}</h5>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="highlight">
+                    {{ l('settings.highlight') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="highlight"
+                  :name="'highlight'"
+                ></settings-checkbox>
+              </div>
+            </div>
+            <div class="mb-3 p-2">
+              <label class="control-label" for="highlightWords">{{
+                l('settings.highlightWords')
+              }}</label>
+              <input
+                id="highlightWords"
+                class="form-control"
+                v-model="highlightWords"
+              />
+            </div>
+            <div class="mb-3 p-2">
+              <label class="control-label" for="horizonHighlightUsers">{{
+                l('settings.highlightUsers')
+              }}</label>
+              <input
+                id="highlightUsers"
+                class="form-control"
+                v-model="horizonHighlightUsers"
+              />
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="horizonNotifyFriendSignIn">
+                    {{ l('settings.notifyFriendSignIn') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="horizonNotifyFriendSignIn"
+                  :name="'horizonNotifyFriendSignIn'"
+                  :disabled="!horizonShowSigninNotifications"
+                ></settings-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'notifications.console'">
+            <h5>{{ l('settings.notifications.console') }}</h5>
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="eventMessages">
+                    {{ l('settings.eventMessages') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="eventMessages"
+                  :name="'eventMessages'"
+                ></settings-checkbox>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="joinMessages">
+                    {{ l('settings.joinMessages') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="joinMessages"
+                  :name="'joinMessages'"
+                ></settings-checkbox>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="horizonShowSigninNotifications"
+                  >
+                    {{ l('settings.showSigninNotifications') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="horizonShowSigninNotifications"
+                  :name="'horizonShowSigninNotifications'"
+                ></settings-checkbox>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="horizonShowDuplicateStatusNotifications"
+                  >
+                    {{ l('settings.showDuplicateStatusNotifications') }}
+                  </label>
+                  <div class="form-text text-muted">
+                    {{ l('settings.showDuplicateStatusNotifications.note') }}
+                  </div>
+                </div>
+                <settings-checkbox
+                  v-model="horizonShowDuplicateStatusNotifications"
+                  :name="'horizonShowDuplicateStatusNotifications'"
+                ></settings-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'profiles.hiddenAds'">
+            <h5>{{ l('settings.tabs.hideAds') }}</h5>
+            <div class="mb-3 p-2">
+              <template v-if="hidden.length">
+                <div v-for="(user, i) in hidden" :key="`hidden-${user}-${i}`">
+                  <span
+                    class="fa fa-times"
+                    style="cursor: pointer"
+                    @click.stop="hidden.splice(i, 1)"
+                  ></span>
+                  <span class="ms-2">{{ user }}</span>
+                </div>
+              </template>
+              <template v-else>{{ l('settings.hideAds.empty') }}</template>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'profiles.matching'">
+            <h5>{{ l('settings.matching') }}</h5>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="risingAdScore">
+                    {{ l('settings.matching.adScore') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="risingAdScore"
+                  :name="'risingAdScore'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="risingComparisonInUserMenu">
+                    {{ l('settings.matching.comparisonInUserMenu') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="risingComparisonInUserMenu"
+                  :name="'risingComparisonInUserMenu'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="risingComparisonInSearch">
+                    {{ l('settings.matching.comparisonInSearch') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="risingComparisonInSearch"
+                  :name="'risingComparisonInSearch'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <!--            <div class="mb-3">-->
+            <!--                <label class="control-label" for="hideProfileComparisonSummary">-->
+            <!--                    <input type="checkbox" id="hideProfileComparisonSummary" :checked="!hideProfileComparisonSummary" @input="hideProfileComparisonSummary = !$event.target.checked"/>-->
+            <!--                    Show quick match results at the top of the character profile-->
+            <!--                </label>-->
+            <!--            </div>-->
+          </div>
+
+          <div v-show="selectedTab === 'profiles.viewer'">
+            <h5>{{ l('settings.profile.viewer') }}</h5>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="risingAutoCompareKinks">
+                    {{ l('settings.profile.autoCompareKinks') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="risingAutoCompareKinks"
+                  :name="'risingAutoCompareKinks'"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="risingAutoExpandCustomKinks"
+                  >
+                    {{ l('settings.profile.autoExpandCustoms') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="risingAutoExpandCustomKinks"
+                  :name="'risingAutoExpandCustomKinks'"
+                ></settings-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'profiles.ignoredList'">
+            <h5>{{ l('settings.profile.ignoredList') }}</h5>
+            <div class="mb-3 p-2">
+              <template v-if="ignored.length">
+                <div v-for="user in ignored">
+                  <span
+                    class="fa fa-times"
+                    style="cursor: pointer"
+                    role="button"
+                    :aria-label="l('user.unignore')"
+                    @click.stop="unignore(user)"
+                  ></span>
+                  <user-view :character="getCharacter(user)"></user-view>
+                </div>
+              </template>
+              <template v-else>{{
+                l('settings.profile.ignoredList.empty')
+              }}</template>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'smartFilters.dangerZone'">
+            <div class="warning">
+              <h5>{{ l('settings.dangerZone') }}</h5>
+              <div>
+                {{ l('settings.filteringWarning1') }}
+              </div>
+
+              <div>
+                {{ l('settings.filteringWarning2') }}
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'smartFilters.visibility'">
+            <h5>{{ l('settings.visibility') }}</h5>
+
+            <div class="mb-3 filters">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risingFilter.hideAds"
+                  v-model="risingFilter.hideAds"
+                />
+                <label class="form-check-label" for="risingFilter.hideAds">
+                  <bbcode :text="l('settings.filter.hideAds')"></bbcode>
+                </label>
+              </div>
+
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risingFilter.hideSearchResults"
+                  v-model="risingFilter.hideSearchResults"
+                />
+                <label
+                  class="form-check-label"
+                  for="risingFilter.hideSearchResults"
+                >
+                  <bbcode
+                    :text="l('settings.filter.hideSearchResults')"
+                  ></bbcode>
+                </label>
+              </div>
+
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risingFilter.hideChannelMembers"
+                  v-model="risingFilter.hideChannelMembers"
+                />
+                <label
+                  class="form-check-label"
+                  for="risingFilter.hideChannelMembers"
+                >
+                  <bbcode
+                    :text="l('settings.filter.hideChannelMembers')"
+                  ></bbcode>
+                </label>
+              </div>
+
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risingFilter.hidePublicChannelMessages"
+                  v-model="risingFilter.hidePublicChannelMessages"
+                />
+                <label
+                  class="form-check-label"
+                  for="risingFilter.hidePublicChannelMessages"
+                >
+                  <bbcode
+                    :text="l('settings.filter.hidePublicChannelMessages')"
+                  ></bbcode>
+                </label>
+              </div>
+
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risingFilter.hidePrivateChannelMessages"
+                  v-model="risingFilter.hidePrivateChannelMessages"
+                />
+                <label
+                  class="form-check-label"
+                  for="risingFilter.hidePrivateChannelMessages"
+                >
+                  <bbcode
+                    :text="l('settings.filter.hidePrivateChannelMessages')"
+                  ></bbcode>
+                </label>
+              </div>
+
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risingFilter.hidePrivateMessages"
+                  v-model="risingFilter.hidePrivateMessages"
+                />
+                <label
+                  class="form-check-label"
+                  for="risingFilter.hidePrivateMessages"
+                >
+                  <bbcode
+                    :text="l('settings.filter.hidePrivateMessages')"
+                  ></bbcode>
+                </label>
+              </div>
+
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risingFilter.showFilterIcon"
+                  v-model="risingFilter.showFilterIcon"
+                />
+                <label
+                  class="form-check-label"
+                  for="risingFilter.showFilterIcon"
+                >
+                  <bbcode :text="l('settings.filter.showFilterIcon')"></bbcode>
+                </label>
+              </div>
+            </div>
+
+            <div class="mb-3 filters">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risingFilter.penalizeMatches"
+                  v-model="risingFilter.penalizeMatches"
+                />
+                <label
+                  class="form-check-label"
+                  for="risingFilter.penalizeMatches"
+                >
+                  <bbcode :text="l('settings.filter.penalizeMatches')"></bbcode>
+                </label>
+              </div>
+
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risingFilter.rewardNonMatches"
+                  v-model="risingFilter.rewardNonMatches"
+                />
+                <label
+                  class="form-check-label"
+                  for="risingFilter.rewardNonMatches"
+                >
+                  <bbcode
+                    :text="l('settings.filter.rewardNonMatches')"
+                  ></bbcode>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'smartFilters.channelMembersFilters'">
+            <h5>{{ l('settings.channelMembersFilters') }}</h5>
+
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="horizonPersistentMemberFilters"
+                  >
+                    {{ l('settings.horizon.persistentMemberFilters') }}
+                  </label>
+                  <div class="form-text text-muted">
+                    {{ l('settings.horizon.persistentMemberFilters.help') }}
+                  </div>
+                </div>
+                <settings-checkbox
+                  v-model="horizonPersistentMemberFilters"
+                  :name="'horizonPersistentMemberFilters'"
+                ></settings-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'smartFilters.ageMatch'">
+            <h5>{{ l('settings.ageMatch') }}</h5>
+            <div class="mb-3">{{ l('settings.leaveEmptyNoLimit') }}</div>
+
+            <div class="mb-3">
+              <label class="control-label" for="risingFilter.minAge">{{
+                l('settings.minAge')
+              }}</label>
+              <input
+                id="risingFilter.minAge"
+                type="number"
+                class="form-control"
+                v-model="risingFilter.minAge"
+                :placeholder="l('settings.enterAge')"
+              />
+
+              <label class="control-label" for="risingFilter.maxAge">{{
+                l('settings.maxAge')
+              }}</label>
+              <input
+                id="risingFilter.maxAge"
+                type="number"
+                class="form-control"
+                v-model="risingFilter.maxAge"
+                :placeholder="l('settings.enterAge')"
+              />
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'smartFilters.typeMatch'">
+            <h5>{{ l('settings.typeMatch') }}</h5>
+            <div class="mb-3 filters">
+              <div class="form-check" v-for="(value, key) in smartFilterTypes">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  :id="'risingFilter.smartFilters.' + key"
+                  v-bind:checked="getSmartFilter(key)"
+                  @change="v => setSmartFilter(key, v)"
+                />
+                <label
+                  class="form-check-label"
+                  :for="'risingFilter.smartFilters.' + key"
+                >
+                  {{ value.name }}
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'smartFilters.automaticReplies'">
+            <h5>{{ l('settings.automaticReplies') }}</h5>
+            <div class="mb-3 filters">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risingFilter.autoReply"
+                  v-model="risingFilter.autoReply"
+                />
+                <label class="form-check-label" for="risingFilter.autoReply">
+                  {{ l('settings.autoReply') }}
+                </label>
+              </div>
+
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risingFilter.autoReplyCustom"
+                  v-model="risingFilter.autoReplyCustom"
+                  :disabled="!risingFilter.autoReply"
+                />
+                <label
+                  class="form-check-label"
+                  for="risingFilter.autoReplyCustom"
+                >
+                  {{ l('settings.autoReplyCustom') }}
+                </label>
+              </div>
+
+              <editor
+                v-model="risingFilter.autoReplyCustomMessage"
+                :hasToolbar="true"
+                :classes="'form-control'"
+                rows="5"
+                :disabled="
+                  !risingFilter.autoReplyCustom || !risingFilter.autoReply
+                "
+                :placeholder="l('settings.autoReplyPlaceholder')"
+                maxlength="10000"
+              >
+              </editor>
+
+              <div class="mb-3">
+                {{ l('settings.autoReplyNote') }}
+              </div>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'smartFilters.exceptionList'">
+            <h5>{{ l('settings.exceptionList') }}</h5>
+            <div class="mb-3">
+              {{ l('settings.exceptionList.help') }}
+            </div>
+
+            <div class="mb-3">
+              <textarea
+                class="form-control"
+                :value="getExceptionList()"
+                @change="v => setExceptionList(v)"
+                :placeholder="l('settings.enterNames')"
+              ></textarea>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'import.main'">
+            <div style="display: flex; padding-top: 10px">
+              <select
+                id="import"
+                class="form-select"
+                v-model="importCharacter"
+                style="flex: 1; margin-right: 10px"
+              >
+                <option value="">
+                  {{ l('settings.import.selectCharacter') }}
+                </option>
+                <option
+                  v-for="character in availableImports"
+                  :value="character"
+                >
+                  {{ character }}
+                </option>
+              </select>
+              <button
+                class="btn btn-secondary"
+                @click="doImport"
+                :disabled="!importCharacter"
+              >
+                {{ l('settings.import') }}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <h5>{{ l('settings.ageMatch') }}</h5>
-      <div class="mb-3">{{ l('settings.leaveEmptyNoLimit') }}</div>
-
-      <div class="mb-3">
-        <label class="control-label" for="risingFilter.minAge">{{
-          l('settings.minAge')
-        }}</label>
-        <input
-          id="risingFilter.minAge"
-          type="number"
-          class="form-control"
-          v-model="risingFilter.minAge"
-          :placeholder="l('settings.enterAge')"
-        />
-
-        <label class="control-label" for="risingFilter.maxAge">{{
-          l('settings.maxAge')
-        }}</label>
-        <input
-          id="risingFilter.maxAge"
-          type="number"
-          class="form-control"
-          v-model="risingFilter.maxAge"
-          :placeholder="l('settings.enterAge')"
-        />
-      </div>
-
-      <h5>{{ l('settings.typeMatch') }}</h5>
-      <div class="mb-3 filters">
-        <div class="form-check" v-for="(value, key) in smartFilterTypes">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            :id="'risingFilter.smartFilters.' + key"
-            v-bind:checked="getSmartFilter(key)"
-            @change="v => setSmartFilter(key, v)"
-          />
-          <label
-            class="form-check-label"
-            :for="'risingFilter.smartFilters.' + key"
-          >
-            {{ value.name }}
-          </label>
-        </div>
-      </div>
-
-      <h5>{{ l('settings.automaticReplies') }}</h5>
-      <div class="mb-3 filters">
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="risingFilter.autoReply"
-            v-model="risingFilter.autoReply"
-          />
-          <label class="form-check-label" for="risingFilter.autoReply">
-            {{ l('settings.autoReply') }}
-          </label>
-        </div>
-
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="risingFilter.autoReplyCustom"
-            v-model="risingFilter.autoReplyCustom"
-            :disabled="!risingFilter.autoReply"
-          />
-          <label class="form-check-label" for="risingFilter.autoReplyCustom">
-            {{ l('settings.autoReplyCustom') }}
-          </label>
-        </div>
-
-        <editor
-          v-model="risingFilter.autoReplyCustomMessage"
-          :hasToolbar="true"
-          :classes="'form-control'"
-          rows="5"
-          :disabled="!risingFilter.autoReplyCustom || !risingFilter.autoReply"
-          :placeholder="l('settings.autoReplyPlaceholder')"
-          maxlength="10000"
-        >
-        </editor>
-
-        <div class="mb-3">
-          {{ l('settings.autoReplyNote') }}
-        </div>
-      </div>
-
-      <h5>{{ l('settings.exceptionList') }}</h5>
-      <div class="mb-3">
-        {{ l('settings.exceptionList.help') }}
-      </div>
-
-      <div class="mb-3">
-        <textarea
-          class="form-control"
-          :value="getExceptionList()"
-          @change="v => setExceptionList(v)"
-          :placeholder="l('settings.enterNames')"
-        ></textarea>
-      </div>
-    </div>
-
-    <div v-show="selectedTab === '5'">
-      <div style="display: flex; padding-top: 10px">
-        <select
-          id="import"
-          class="form-select"
-          v-model="importCharacter"
-          style="flex: 1; margin-right: 10px"
-        >
-          <option value="">{{ l('settings.import.selectCharacter') }}</option>
-          <option v-for="character in availableImports" :value="character">
-            {{ character }}
-          </option>
-        </select>
-        <button
-          class="btn btn-secondary"
-          @click="doImport"
-          :disabled="!importCharacter"
-        >
-          {{ l('settings.import') }}
-        </button>
       </div>
     </div>
   </modal>
@@ -1200,7 +1430,7 @@
       return {
         l,
         availableImports: [] as ReadonlyArray<string>,
-        selectedTab: '0',
+        selectedTab: 'chat.bbcode',
         settingsMode: '0',
         importCharacter: '',
         characterOverrides: {} as PartialSettings,
