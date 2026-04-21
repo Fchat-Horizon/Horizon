@@ -70,6 +70,7 @@
   import * as _ from 'lodash';
   import Vue from 'vue';
   import core from '../core';
+  import { normalizeCharacterName } from '../common';
   import { EventBus, EventBusEvent } from './event-bus';
   import { domain } from '../../bbcode/core';
   import { ImageDomMutator } from './image-dom-mutator';
@@ -516,7 +517,7 @@
         const characterName = decodeURIComponent(
           match[2].replace(/\+/g, '%20')
         );
-        return `flist-character://${characterName}`;
+        return `flist-character://${normalizeCharacterName(characterName)}`;
       },
       isMediaUrl(url: string): boolean {
         const cleanUrl = url.split('?')[0].toLowerCase();

@@ -8,6 +8,7 @@ import {
   BBCodeSimpleTag
 } from '../bbcode/parser';
 import ChannelView from './ChannelTagView.vue';
+import { normalizeCharacterName } from './common';
 import core from './core';
 import UserView from './UserView.vue';
 
@@ -46,12 +47,14 @@ export default class BBCodeParser extends CoreBBCodeParser {
           parser.warning('Unexpected parameter on user tag.');
         const uregex = /^[a-zA-Z0-9_\-\s]+$/;
         if (!uregex.test(content)) return;
+        const characterName = normalizeCharacterName(content);
         const el = parser.createElement('span');
         parent.appendChild(el);
         const view = new UserView({
           el,
           propsData: {
-            character: core.characters.get(content),
+            character: core.characters.get(characterName),
+            displayName: content, // added so that the non-normalized names are displayed
             isMarkerShown: core.connection.character
               ? core.state.settings.horizonShowGenderMarker
               : false

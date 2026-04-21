@@ -7,6 +7,7 @@ import {
 import * as Utils from '../site/utils';
 import { default as IconView } from '../bbcode/IconView.vue';
 import UrlTagView from './UrlTagView.vue';
+import { normalizeCharacterName } from '../chat/common';
 import core from '../chat/core';
 
 const urlFormat = '((?:https?|ftps?|irc)://[^\\s/$.?#"\']+\\.[^\\s"]+)';
@@ -86,6 +87,7 @@ export class CoreBBCodeParser extends BBCodeParser {
           parser.warning('Unexpected parameter on icon tag.');
         const uregex = /^[a-zA-Z0-9_\-\s]+$/;
         if (!uregex.test(content)) return;
+        const characterName = normalizeCharacterName(content);
         const root = parser.createElement('span');
         const el = parser.createElement('span');
         parent.appendChild(root);
@@ -93,7 +95,7 @@ export class CoreBBCodeParser extends BBCodeParser {
         const view = new IconView({
           el,
           propsData: {
-            character: core.characters.get(content)
+            character: core.characters.get(characterName)
           }
         });
 

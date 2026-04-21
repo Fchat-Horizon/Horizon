@@ -25,7 +25,7 @@
         />
         <div id="userMenu-userInfo">
           <h4 style="margin: 0; line-height: 1" class="userInfo-name">
-            {{ character.name }}
+            {{ displayName || character.name }}
           </h4>
           <span class="userInfo-status">{{
             l('status.' + character.status)
@@ -243,6 +243,7 @@
         showContextMenu: false,
         getByteLength,
         character: undefined as Character | undefined,
+        displayName: undefined as string | undefined,
         position: { left: '', top: '' },
         characterImage: undefined as string | undefined,
         touchedElement: undefined as HTMLElement | undefined,
@@ -365,6 +366,7 @@
           HTMLElement & {
             character?: Character;
             channel?: Channel;
+            displayName?: string;
             touched?: boolean;
           }
         >touch.target;
@@ -398,7 +400,12 @@
             if (node.dataset['character'] === undefined)
               if (node === this.touchedElement)
                 // tslint:disable-next-line no-floating-promises
-                this.openMenu(touch, node.character, node.channel || undefined);
+                this.openMenu(
+                  touch,
+                  node.character,
+                  node.channel || undefined,
+                  node.displayName
+                );
               else this.onClick(node.character);
             e.preventDefault();
             break;
@@ -407,7 +414,12 @@
             break;
           case 'contextmenu':
             // tslint:disable-next-line no-floating-promises
-            this.openMenu(touch, node.character, node.channel || undefined);
+            this.openMenu(
+              touch,
+              node.character,
+              node.channel || undefined,
+              node.displayName
+            );
             e.preventDefault();
         }
       },
@@ -426,10 +438,12 @@
       async openMenu(
         touch: MouseEvent | Touch,
         character: Character,
-        channel: Channel | undefined
+        channel: Channel | undefined,
+        displayName?: string
       ): Promise<void> {
         this.channel = channel;
         this.character = character;
+        this.displayName = displayName;
         this.characterImage = undefined;
         this.showContextMenu = true;
         this.position = {
