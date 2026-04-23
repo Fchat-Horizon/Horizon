@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.2] - 2026-04-23
+
 ### Added
 
 - Added the "Site Dark" theme. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ab249d7a2e2548dc09e5841aee5df97b2f72db3a)
@@ -1295,7 +1297,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - IOS build removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814)]
 - Webchat removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/b894a180b9be31f68d1458aaa3c59f9c4470da89)]
 
-[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.1...development
+[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.2...development
+[2.1.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.3-beta.2...v2.1.0
 [2.0.3-beta.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.3-beta.1...v2.0.3-beta.2
