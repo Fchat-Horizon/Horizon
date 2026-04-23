@@ -263,7 +263,8 @@
         return member !== undefined && member.rank > Channel.Rank.Member;
       },
       isHidden(): boolean {
-        return core.state.hiddenUsers.indexOf(this.character!.name) !== -1;
+        void core.state.hiddenUsers;
+        return core.isHidden(this.character!.name);
       },
       isChatOp(): boolean {
         return core.characters.ownCharacter.isChatOp;
@@ -298,9 +299,7 @@
           .catch((e: object) => core.notifications.alert(errorToString(e)));
       },
       setHidden(): void {
-        const index = core.state.hiddenUsers.indexOf(this.character!.name);
-        if (index !== -1) core.state.hiddenUsers.splice(index, 1);
-        else core.state.hiddenUsers.push(this.character!.name);
+        core.toggleHidden(this.character!.name);
       },
       report(): void {
         this.reportDialog.report(this.character!);

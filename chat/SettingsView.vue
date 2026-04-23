@@ -731,14 +731,31 @@
       <h5>{{ l('settings.tabs.hideAds') }}</h5>
       <div class="mb-3 p-2">
         <template v-if="hidden.length">
-          <div v-for="(user, i) in hidden" :key="`hidden-${user}-${i}`">
-            <span
-              class="fa fa-times"
-              style="cursor: pointer"
-              @click.stop="hidden.splice(i, 1)"
-            ></span>
-            <span class="ms-2">{{ user }}</span>
-          </div>
+          <input
+            type="text"
+            class="form-control mb-2"
+            :placeholder="l('filter')"
+            v-model="hiddenFilter"
+          />
+          <virtual-list
+            style="overflow: auto; height: 300px"
+            :items="filteredHidden"
+            :itemHeight="28"
+            :overscan="5"
+            keyField="name"
+            :resetKey="hiddenFilter"
+          >
+            <template slot-scope="{ item: entry }">
+              <div>
+                <span
+                  class="fa fa-times"
+                  style="cursor: pointer"
+                  @click.stop="unhide(entry.name)"
+                ></span>
+                <span class="ms-2">{{ entry.name }}</span>
+              </div>
+            </template>
+          </virtual-list>
         </template>
         <template v-else>{{ l('settings.hideAds.empty') }}</template>
       </div>
@@ -1152,6 +1169,7 @@
   import { matchesSmartFilters } from '../learn/filter/smart-filter';
   import { EventBus } from './preview/event-bus';
   import UserView from './UserView.vue';
+  import VirtualList from '../components/VirtualList.vue';
 
   const bbcodeParser = new UserInterfaceBBCodeParser();
 
@@ -1162,7 +1180,8 @@
       tabs: Tabs,
       bbcode: BBCodeView(bbcodeParser),
       'settings-checkbox': SettingsCheckbox,
-      'user-view': UserView
+      'user-view': UserView,
+      'virtual-list': VirtualList
     },
     data() {
       return {
@@ -1233,12 +1252,25 @@
         risingAvailableThemes: [] as ReadonlyArray<string>,
         risingCharacterTheme: undefined as string | undefined,
 
-        smartFilterTypes: smartFilterTypesOrigin
+        smartFilterTypes: smartFilterTypesOrigin,
+        hiddenFilter: ''
       };
     },
     computed: {
       hidden(): string[] {
         return core.state.hiddenUsers;
+      },
+      filteredHidden(): ReadonlyArray<{ name: string }> {
+        // ^ Wrap entries as objects so VirtualList's keyField="name" can index
+        // them; filter is case-insensitive substring on the raw name.
+        const q = this.hiddenFilter.trim().toLowerCase();
+        const list = this.hidden;
+        if (q === '') return list.map(name => ({ name }));
+        const out: { name: string }[] = [];
+        for (const name of list) {
+          if (name.toLowerCase().indexOf(q) !== -1) out.push({ name });
+        }
+        return out;
       },
       ignored(): readonly string[] {
         return core.characters.ignoreList;
@@ -1357,6 +1389,9 @@
       },
       unignore(character: string): void {
         core.connection.send('IGN', { action: 'delete', character });
+      },
+      unhide(name: string): void {
+        core.toggleHidden(name);
       },
       async submit(): Promise<void> {
         const oldRisingFilter = JSON.parse(

@@ -363,9 +363,7 @@
         const results = data.characters
           .map(x => ({ character: core.characters.get(x), profile: null }))
           .filter(
-            x =>
-              core.state.hiddenUsers.indexOf(x.character.name) === -1 &&
-              !x.character.isIgnored
+            x => !core.isHidden(x.character.name) && !x.character.isIgnored
           )
           .filter(
             x =>

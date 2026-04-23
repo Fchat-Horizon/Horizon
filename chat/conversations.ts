@@ -1357,8 +1357,7 @@ export default function (this: any): Interfaces.State {
     const char = core.characters.get(data.character);
     const conv = state.channelMap[data.channel.toLowerCase()];
     if (conv === undefined) return core.channels.leave(data.channel);
-    if (char.isIgnored || core.state.hiddenUsers.indexOf(char.name) !== -1)
-      return;
+    if (char.isIgnored || core.isHidden(char.name)) return;
 
     const msg = new Message(
       MessageType.Ad,
