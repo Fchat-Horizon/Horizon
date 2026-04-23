@@ -17,11 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropdown items in the log viewer now have an icon for the character or channel in question. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7e0e1d11d724d485416db99b77ad0f8c8c80387b)
   - This was a contribution by SmileyTatsu.
 - Updated the OpenMoji fallback font to version 16.0, which supports more of the new emoji. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8860e1d68506ec8e3db2e5d179c0f1d1704e964d)
+- Added an option to open links in the browser without going to private mode in the URL context menu. [[Commit]](1c410c94a3e2ba607082e29d47be9748969706d0)
 
 ### Fixed
 
 - The character mouse hover preview now deals with line breaks in names appropriately, instead of cutting off. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6ff32c78877eb03b601809843fe2e37c9bd95b3e)
 - Fixed `/me` messages being thrown onto a new line when trying to automatically fix an eicon collage. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6e2eb216851ee77024264a62c9021841953df425)
+- Fixed various performance issues when your hidden ads list is massive. [[Commit]](ef3cc77c332d6d9b809500fe60d84c21d52adef3)
 - Fixed issues with the user right-click menu when opening it from a `[user]` or `[icon]` tag with a newline character. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/82665f883b251f828eff54ef14e462ae14f2200b)
 
 ### Development
