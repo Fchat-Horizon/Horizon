@@ -63,8 +63,7 @@
       options: { type: Array, required: true as const },
       filterFunc: {
         type: Function,
-        default: () => (filter: RegExp, value: unknown) =>
-          filter.test(String(value))
+        default: (filter: RegExp, value: unknown) => filter.test(String(value))
       },
       multiple: { type: Boolean, default: undefined },
       value: { default: undefined },
