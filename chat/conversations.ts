@@ -363,7 +363,9 @@ class PrivateConversation
       }
       if (this !== state.selectedConversation || !state.windowFocused) {
         this.unread = unreadState;
-        this.unreadCount++;
+        if (this.unread === Interfaces.UnreadState.Mention) {
+          this.unreadCount++;
+        }
       }
       this.typingStatus = 'clear';
     }
