@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Gender icons (if enabled) will no longer turn into an X if the user goes offline, unless you specifically enable 'Make color in chat change to grey when a user goes offline' for user names. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c5b50b28f32ef988c3f5187b43284e7ce43fccc0)
+  - This was technically an intended feature, but it proved confusing enough to make people think it was actually a bug.
+
+### Fixed
+
+- Fixed issues where some filterable select dropdowns would no longer let you filter. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/312de4bb6276555ad96f2fb207982213bb7ab172)
+- Fixed issues where conversations settings with override values (Yes/ Default/ No) would no longer save or visually update in the conversation settings dialog. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a130626f7e9572b50cab28d4812e9df0360ee2cf)
+- Fixed PMs you turned notifcations off for still increasing the ping counter. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ca499ecd7d3cc74ba0672c7e3e2c956befe22d71)
+
 ## [2.1.2] - 2026-04-23
 
 ### Added
