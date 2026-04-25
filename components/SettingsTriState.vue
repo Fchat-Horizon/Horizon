@@ -2,7 +2,7 @@
   <div
     class="btn-group"
     role="group input-group"
-    aria-label="Settings tri-state toggle"
+    :aria-label="l('settings.checkbox.override')"
   >
     <input
       type="radio"
@@ -31,7 +31,7 @@
       @change="emitUndefined"
     />
     <label class="btn btn-outline-secondary" :for="`${name}-default`">
-      <i class="fa-solid fa-minus"></i>
+      <i class="fa-solid" :class="globalValue ? 'fa-check' : 'fa-xmark'"> </i>
     </label>
 
     <input

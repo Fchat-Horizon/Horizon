@@ -138,14 +138,14 @@
           <div class="warning" v-if="settingsMode === '0'">
             <h5>{{ l('warning.info') }}</h5>
             <div>
-              {{ l('settings.chat.mode.global') }}
+              {{ l('settings.mode.global') }}
             </div>
           </div>
 
           <div class="warning" v-else>
             <h5>{{ l('warning.info') }}</h5>
             <div>
-              {{ l('settings.chat.mode.character') }}
+              {{ l('settings.mode.character', currentCharacter || '') }}
             </div>
           </div>
         </div>
@@ -190,17 +190,16 @@
                     {{ l('settings.animatedEicons') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-if="settingsMode === '0'"
-                  v-model="animatedEicons"
-                  :name="'animatedEicons'"
-                ></settings-checkbox>
-                <settings-tristate
-                  v-else
-                  v-model="characterOverrides.animatedEicons"
+                <settings-override
                   :globalValue="animatedEicons"
-                  :name="'animatedEicons-override'"
-                ></settings-tristate>
+                  :overrideValue="characterOverrides.animatedEicons"
+                  :usingGlobal="isUsingGlobal()"
+                  name="animatedEicons"
+                  @update:globalValue="animatedEicons = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'animatedEicons', $event)
+                  "
+                ></settings-override>
               </div>
             </div>
             <div class="mb-3">
@@ -210,17 +209,16 @@
                     {{ l('settings.smoothMosaics') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-if="settingsMode === '0'"
-                  v-model="smoothMosaics"
-                  :name="'smoothMosaics'"
-                ></settings-checkbox>
-                <settings-tristate
-                  v-else
-                  v-model="characterOverrides.smoothMosaics"
+                <settings-override
                   :globalValue="smoothMosaics"
-                  :name="'smoothMosaics-override'"
-                ></settings-tristate>
+                  :overrideValue="characterOverrides.smoothMosaics"
+                  :usingGlobal="isUsingGlobal()"
+                  name="smoothMosaics"
+                  @update:globalValue="smoothMosaics = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'smoothMosaics', $event)
+                  "
+                ></settings-override>
               </div>
             </div>
           </div>
@@ -532,10 +530,16 @@
                     {{ l('settings.showAvatars') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="showAvatars"
-                  :name="'showAvatars'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="showAvatars"
+                  :overrideValue="characterOverrides.showAvatars"
+                  :usingGlobal="isUsingGlobal()"
+                  name="showAvatars"
+                  @update:globalValue="showAvatars = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'showAvatars', $event)
+                  "
+                ></settings-override>
               </div>
             </div>
 
@@ -1000,13 +1004,6 @@
                 ></settings-checkbox>
               </div>
             </div>
-
-            <!--            <div class="mb-3">-->
-            <!--                <label class="control-label" for="hideProfileComparisonSummary">-->
-            <!--                    <input type="checkbox" id="hideProfileComparisonSummary" :checked="!hideProfileComparisonSummary" @input="hideProfileComparisonSummary = !$event.target.checked"/>-->
-            <!--                    Show quick match results at the top of the character profile-->
-            <!--                </label>-->
-            <!--            </div>-->
           </div>
 
           <div v-show="selectedTab === 'profiles.viewer'">
@@ -1413,6 +1410,7 @@
   import { BBCodeView } from '../bbcode/view';
   import SettingsCheckbox from '../components/SettingsCheckbox.vue';
   import SettingsTriState from '../components/SettingsTriState.vue';
+  import SettingsOverride from '../components/SettingsOverride.vue';
   import { UserInterfaceBBCodeParser } from '../bbcode/user-interface';
   import core from './core';
   import {
@@ -1445,7 +1443,8 @@
       'settings-tristate': SettingsTriState,
 
       'user-view': UserView,
-      'virtual-list': VirtualList
+      'virtual-list': VirtualList,
+      'settings-override': SettingsOverride
     },
     data() {
       return {
@@ -1546,6 +1545,9 @@
       }
     },
     methods: {
+      isUsingGlobal(): boolean {
+        return this.settingsMode === '0';
+      },
       async load(): Promise<void> {
         const globalSettings = core.state.globalSettings;
         this.playSound = globalSettings.playSound;
