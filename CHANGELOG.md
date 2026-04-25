@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.3] - 2026-04-25
+
+### Changed
+
+- Gender icons (if enabled) will no longer turn into an X if the user goes offline, unless you specifically enable 'Make color in chat change to grey when a user goes offline' for user names. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c5b50b28f32ef988c3f5187b43284e7ce43fccc0)
+  - This was technically an intended feature, but it proved confusing enough to make people think it was a bug.
+
+### Fixed
+
+- Fixed issues where some filterable select dropdowns would no longer let you filter. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/312de4bb6276555ad96f2fb207982213bb7ab172)
+- Fixed issues where conversation settings with override values (Yes/ Default/ No) would no longer save or visually update in the conversation settings dialog. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a130626f7e9572b50cab28d4812e9df0360ee2cf)
+- Fixed PMs with disabled notifications still increasing the ping counter. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ca499ecd7d3cc74ba0672c7e3e2c956befe22d71)
+
+## [2.1.2] - 2026-04-23
+
+### Added
+
+- Added the "Site Dark" theme. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ab249d7a2e2548dc09e5841aee5df97b2f72db3a)
+  - This one's for everyone whose inline _really_ depends on the website's dark mode colour scheme.
+
+### Changed
+
+- Dropdown items in the log viewer now have an icon for the character or channel in question. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7e0e1d11d724d485416db99b77ad0f8c8c80387b)
+  - This was a contribution by SmileyTatsu.
+- Updated the OpenMoji fallback font to version 16.0, which supports more of the new emoji. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8860e1d68506ec8e3db2e5d179c0f1d1704e964d)
+- Added an option to open links in the browser without going to private mode in the URL context menu. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1c410c94a3e2ba607082e29d47be9748969706d0)
+
+### Fixed
+
+- The character mouse hover preview now deals with line breaks in names appropriately, instead of cutting off. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6ff32c78877eb03b601809843fe2e37c9bd95b3e)
+- Fixed `/me` messages being thrown onto a new line when trying to automatically fix an eicon collage. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6e2eb216851ee77024264a62c9021841953df425)
+- Fixed various performance issues when your hidden ads list is massive. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ef3cc77c332d6d9b809500fe60d84c21d52adef3)
+- Fixed issues with the user right-click menu when opening it from a `[user]` or `[icon]` tag with a newline character. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/82665f883b251f828eff54ef14e462ae14f2200b)
+
+### Development
+
+- Improved type safety checks for a bunch of Vue components, where they'd be using the `any` type for various fields and props. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/62cf2d7ed0060bb17fcb0af9a19e76f2c3aef72d)
+- Cleaned up a bunch of dead, commented code we don't need. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4b4c6311ce2f4260d5e6a556f39dc077020bc13c)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/716 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/724 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/729 by @FatCatClient (authored by SmileyTatsu)
+- https://github.com/Fchat-Horizon/Horizon/pull/734 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/735 by @Kannamoris
+
 ## [2.1.1] - 2026-04-13
 
 ### Fixed
@@ -1263,7 +1310,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - IOS build removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814)]
 - Webchat removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/b894a180b9be31f68d1458aaa3c59f9c4470da89)]
 
-[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.1...development
+[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.3...development
+[2.1.3]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.2...v2.1.3
+[2.1.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.3-beta.2...v2.1.0
 [2.0.3-beta.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.3-beta.1...v2.0.3-beta.2

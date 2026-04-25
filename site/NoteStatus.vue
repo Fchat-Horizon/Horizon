@@ -2,7 +2,7 @@
   <div class="userInfo-buttons-container">
     <template v-for="(report, index) in reports">
       <a
-        class="userInfo-button-item userInfo-pager-button"
+        class="userInfo-button-item userInfo-pager-button btn btn-outline-secondary"
         :href="report.url"
         :key="`report-${index}`"
         @click="dismissReport(report)"
@@ -11,22 +11,21 @@
             ? report.title
             : report.title.substr(0, report.title.length - 1)
         "
-        :class="`status-report ${report.type} ${report.count > 0 && report.count !== report.dismissedCount ? 'active' : ''}`"
+        :class="`status-report ${report.type} ${report.count > 0 && report.count !== report.dismissedCount ? 'visible' : ''}`"
       >
         <i :class="getIconClass(report)"></i>
         <span class="badge text-bg-primary rounded-pill">{{
           report.count
         }}</span
-        ><a
-          :class="`status-report ${report.type} ${report.count > 0 && report.count !== report.dismissedCount ? 'active' : ''}`"
+        ><span
+          :class="`status-report ${report.type} ${report.count > 0 && report.count !== report.dismissedCount ? 'visible' : ''}`"
           class="dismiss"
           role="button"
           :title="l('action.dismiss')"
-          ><i
-            @click.prevent="dismissReport(report)"
-            class="fas fa-times-circle"
-          ></i
-        ></a>
+          @click.stop.prevent="dismissReport(report)"
+          tabindex="0"
+          ><i class="fas fa-times-circle"></i
+        ></span>
       </a>
 
       <!--This was part of the original design, where the NoteStatus component floated on the bottom left
@@ -132,56 +131,3 @@
     }
   });
 </script>
-<style lang="scss">
-  #note-status {
-    position: absolute;
-    right: 3em;
-    bottom: 0;
-    z-index: 1000;
-    opacity: 0;
-    transition: all 0.25s;
-
-    border: 1px solid var(--input-color);
-    background-color: var(--input-bg);
-    padding: 0;
-    border-radius: 3px;
-
-    &.active {
-      opacity: 1;
-      right: 0;
-    }
-  }
-  .userInfo-buttons-container {
-    .userInfo-button-item.userInfo-pager-button {
-      display: inline-block;
-      .badge {
-        display: none;
-        margin-left: 4px;
-        vertical-align: text-top;
-      }
-      &:hover .dismiss {
-        opacity: 0.6;
-      }
-      & .dismiss {
-        display: none;
-        position: absolute;
-        opacity: 0;
-        //color: var(--bs-danger);
-        z-index: 12;
-        top: 0px;
-        right: 0px;
-
-        &:hover {
-          opacity: 1;
-        }
-        &.active {
-          display: block;
-        }
-      }
-
-      &.active .badge {
-        display: initial;
-      }
-    }
-  }
-</style>

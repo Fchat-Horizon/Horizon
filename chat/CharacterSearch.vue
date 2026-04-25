@@ -363,9 +363,7 @@
         const results = data.characters
           .map(x => ({ character: core.characters.get(x), profile: null }))
           .filter(
-            x =>
-              core.state.hiddenUsers.indexOf(x.character.name) === -1 &&
-              !x.character.isIgnored
+            x => !core.isHidden(x.character.name) && !x.character.isIgnored
           )
           .filter(
             x =>
@@ -397,8 +395,6 @@
 
       // tslint:disable-next-line no-unsafe-any no-any
       this.scoreWatcher = (event: any): void => {
-        // console.log('scoreWatcher', event);
-
         if (
           this.state === 'results' &&
           // tslint:disable-next-line no-unsafe-any no-any
@@ -501,7 +497,6 @@
 
         return (
           (isSearchingForAnthro && _.indexOf(nonAnthroSpecies, species) < 0) ||
-          // || ((isSearchingForMammal) && (_.indexOf(mammalSpecies, s.id) >= 0))
           !!_.find(this.data.species, (s: SearchSpecies) => s.id === species)
         );
       },
@@ -535,7 +530,6 @@
         const species = _.map(
           speciesMapping,
           (keywords: string[], speciesIdStr: Species): SearchSpecies => {
-            // const speciesId: number = Species[speciesName];
             const keywordsStr = `${keywords.join(', ')}`;
             const details = `${keywordsStr.substr(0, 24)}...`;
             const speciesId = parseInt(speciesIdStr.toString(), 10);
@@ -564,12 +558,9 @@
           }
         ) as unknown[] as SearchSpecies[];
 
-        // console.log('SPECIES', species);
-
         return _.sortBy(species, 'name');
       },
       countPendingResults(names?: string[], results = this.results): number {
-        // console.log('COUNTPENDINGRESULTS', names);
         if (!this.shouldShowMatch) return 0;
         return _.reduce(
           results,
@@ -615,9 +606,6 @@
       },
       updateSearch(data?: ExtendedSearchData): void {
         if (data) {
-          // this.data = {kinks: [], genders: [], orientations: [], languages: [], furryprefs: [], roles: [], positions: []};
-          // this.data = data;
-
           this.data = _.mapValues(data, (category, categoryName) =>
             _.map(category, selection => {
               const jsonSelection = JSON.stringify(selection);
@@ -744,9 +732,6 @@
     }
 
     .results {
-      .user-view {
-        // display: block;
-      }
       & > .search-result {
         clear: both;
       }

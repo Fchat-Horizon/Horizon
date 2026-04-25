@@ -19,7 +19,9 @@ class Character implements Interfaces.Character {
   overrides: CharacterOverrides = {};
   previousStatusText = '';
 
-  constructor(public name: string) {}
+  constructor(public name: string) {
+    Vue.observable(this.overrides);
+  }
 
   hasStatusTextChanged(): boolean {
     return this.previousStatusText !== this.statusText;
@@ -73,7 +75,7 @@ class State implements Interfaces.State {
       char.isBookmarked = this.bookmarkList.some(b => b.toLowerCase() === key);
       char.isChatOp = this.opList.indexOf(name) !== -1;
       char.isIgnored = this.ignoreList.indexOf(key) !== -1;
-      Vue.set(this.characters, key, char);
+      this.characters[key] = char;
     }
     return char;
   }

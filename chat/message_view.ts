@@ -28,14 +28,6 @@ export default Vue.extend({
     const isModern = layoutMode === 'modern';
     let modernInner: VNode | null = null; // track modern inner wrapper
 
-    // setTimeout(
-    //     () => {
-    //         console.log('Now scoring high!', message.text.substr(0, 64));
-    //         message.score = Scoring.MATCH;
-    //     },
-    //     5000
-    // );
-
     // Classic layout: existing inline format.
     // Modern layout: avatar-first with header (name + time) and bubble content.
     let children: VNodeChildrenArrayContents;
@@ -190,10 +182,15 @@ export default Vue.extend({
 
     //3.0 (and Horizon's classic view) users often prepend their message with an empty linefeed to format things like eicon collages
     //Therefore, we filter that out in modern view mode, since it's unnecessary there.
+    const hadLeadingNewline = message.text.startsWith('\n');
     let messageAdjustment = message.text.replace(/^\n/, '');
     switch (message.type) {
       case Conversation.Message.Type.Action:
-        messageAdjustment = ' ' + message.sender.name + messageAdjustment;
+        messageAdjustment =
+          ' ' +
+          message.sender.name +
+          (hadLeadingNewline ? '\n' : '') +
+          messageAdjustment;
         break;
       case Conversation.Message.Type.Roll:
         messageAdjustment = ' ' + message.sender.name + ' ' + messageAdjustment;
@@ -319,11 +316,7 @@ export default Vue.extend({
     };
   },
   beforeDestroy() {
-    // console.log('onbeforedestroy');
-
     if (this.scoreWatcher) {
-      // console.log('onbeforedestroy killed');
-
       this.scoreWatcher(); // stop watching
       this.scoreWatcher = null;
     }
@@ -345,8 +338,6 @@ export default Vue.extend({
       }
 
       if (this.scoreWatcher) {
-        // console.log('watch killed');
-
         this.scoreWatcher(); // stop watching
         this.scoreWatcher = null;
       }

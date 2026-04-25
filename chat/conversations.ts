@@ -1,6 +1,5 @@
 import { queuedJoin } from '../fchat/channels';
 import { decodeHTML } from '../fchat/common';
-// import { CharacterCacheRecord } from '../learn/profile-cache';
 import { AdManager } from './ads/ad-manager';
 import {
   characterImage,
@@ -74,7 +73,6 @@ abstract class Conversation implements Interfaces.Conversation {
   protected allMessages: Interfaces.Message[] = [];
   readonly reportMessages: Interfaces.Message[] = [];
   private lastSent = '';
-  // private loadedMore = false;
   adManager: AdManager;
   cacheActive = false;
   protected cacheInterval: ReturnType<typeof setInterval> | undefined;
@@ -161,7 +159,6 @@ abstract class Conversation implements Interfaces.Conversation {
   loadMore(): boolean {
     if (this.messages.length >= this.allMessages.length) return false;
     this.maxMessages += 50;
-    // this.loadedMore = true;
     this.messages = this.allMessages.slice(-this.maxMessages);
 
     EventBus.$emit('conversation-load-more', { conversation: this });
@@ -178,7 +175,6 @@ abstract class Conversation implements Interfaces.Conversation {
     this.lastRead = this.messages[this.messages.length - 1];
     this.maxMessages = 50;
     this.messages = this.allMessages.slice(-this.maxMessages);
-    // this.loadedMore = false;
     this.insertCount = 0;
   }
 
@@ -260,8 +256,6 @@ abstract class Conversation implements Interfaces.Conversation {
   public static async testPostDelay(): Promise<void> {
     const lastPostDelta = Date.now() - core.cache.getLastPost().getTime();
 
-    // console.log('Last Post Delta', lastPostDelta, ((lastPostDelta < Conversation.POST_DELAY) && (lastPostDelta > 0)));
-
     if (lastPostDelta < Conversation.POST_DELAY && lastPostDelta > 0) {
       await Bluebird.delay(Conversation.POST_DELAY - lastPostDelta);
     }
@@ -287,6 +281,15 @@ abstract class Conversation implements Interfaces.Conversation {
   protected formatEiconMessage(message: string): string {
     const eIconRegex =
       /^(?!\n)(?=.*\[eicon\].*\[\/eicon\].*\n.*\[eicon\].*\[\/eicon\])(.*\n\[eicon\].*\[\/eicon\].*)\s*/;
+
+    if (/^\/me\s+/i.test(message)) {
+      const body = message.replace(/^\/me\s+/i, '');
+      if (eIconRegex.test(body)) {
+        return '/me\n' + body;
+      }
+      return message;
+    }
+
     if (eIconRegex.test(message)) {
       return '\n' + message;
     }
@@ -360,7 +363,9 @@ class PrivateConversation
       }
       if (this !== state.selectedConversation || !state.windowFocused) {
         this.unread = unreadState;
-        this.unreadCount++;
+        if (this.unread === Interfaces.UnreadState.Mention) {
+          this.unreadCount++;
+        }
       }
       this.typingStatus = 'clear';
     }
@@ -1354,8 +1359,7 @@ export default function (this: any): Interfaces.State {
     const char = core.characters.get(data.character);
     const conv = state.channelMap[data.channel.toLowerCase()];
     if (conv === undefined) return core.channels.leave(data.channel);
-    if (char.isIgnored || core.state.hiddenUsers.indexOf(char.name) !== -1)
-      return;
+    if (char.isIgnored || core.isHidden(char.name)) return;
 
     const msg = new Message(
       MessageType.Ad,

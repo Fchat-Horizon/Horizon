@@ -8,8 +8,15 @@ import {
 } from './interfaces';
 import core from './core';
 
+export function normalizeCharacterName(
+  this: any | never,
+  character: string
+): string {
+  return character.replace(/[\r\n]/g, '');
+}
+
 export function profileLink(this: any | never, character: string): string {
-  return `https://www.f-list.net/c/${character}`;
+  return `https://www.f-list.net/c/${normalizeCharacterName(character)}`;
 }
 
 /**
@@ -35,13 +42,14 @@ export function characterImage(
   character: string,
   useOriginalAvatar: boolean = false
 ): string {
-  const c = core.characters.get(character);
+  const normalizedCharacter = normalizeCharacterName(character);
+  const c = core.characters.get(normalizedCharacter);
 
   if (c.overrides.avatarUrl && !useOriginalAvatar) {
     return c.overrides.avatarUrl;
   }
 
-  return `https://static.f-list.net/images/avatar/${character.toLowerCase()}.png`;
+  return `https://static.f-list.net/images/avatar/${normalizedCharacter.toLowerCase()}.png`;
 }
 
 /**

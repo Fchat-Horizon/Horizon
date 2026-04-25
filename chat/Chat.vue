@@ -33,7 +33,7 @@
             href="https://discord.gg/JYuxqNVNtP"
             target="_blank"
             rel="noopener"
-            class="btn"
+            class="btn btn-link"
             :title="l('chat.joinDiscord')"
           >
             <span class="fab fa-discord"></span>
@@ -42,7 +42,7 @@
             href="https://ko-fi.com/thehorizonteam"
             target="_blank"
             rel="noopener"
-            class="btn"
+            class="btn btn-link"
             title="Support us on Ko-Fi"
           >
             <span class="fa fa-coffee"></span>
@@ -51,7 +51,7 @@
             href="https://chat.f-list.net/stats/"
             target="_blank"
             rel="noopener"
-            class="btn"
+            class="btn btn-link"
           >
             <span class="fa fa-chart-line"></span>
             <span class="btn-text">{{ l('chat.stats') }}</span>
@@ -60,7 +60,7 @@
           <a
             href="#"
             @click.prevent="showLogs()"
-            class="btn"
+            class="btn btn-link"
             style="text-align: right"
           >
             <span class="fa fa-file-alt"></span>

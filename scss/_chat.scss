@@ -214,18 +214,19 @@ $bookmark-color: #66cc33 !default;
   flex-wrap: wrap;
   justify-content: space-around;
   .userInfo-button-item {
-    &:hover,
-    &:active {
-      text-decoration: none;
-      background-color: $gray-200;
+    --bs-btn-border-width: 0px;
+    color: var(--bs-link-color);
+    flex: 1 1 0;
+    padding: 5px 0px;
+    min-width: 40px;
+    font-size: 1.25rem;
+    --bs-btn-hover-bg: var(--bs-secondary-bg);
+    &.btn-outline-success {
+      color: var(--bs-success);
+      &:hover {
+        color: var(--bs-success-text-emphasis);
+      }
     }
-    flex: auto;
-    padding: 5px 3px 5px 3px;
-    min-width: 50px;
-    text-align: center;
-    font-size: 1.15rem;
-    display: inline-block;
-    border-radius: 6px;
     transition: $transition-base;
     @media (prefers-reduced-motion: reduce) {
       transition: none;
@@ -234,6 +235,66 @@ $bookmark-color: #66cc33 !default;
     .userInfo-pager-text {
       font-size: 1rem;
       color: var(--gray-dark);
+    }
+    .adControls {
+      position: absolute;
+      color: var(--bs-danger);
+      z-index: 12;
+      top: 0px;
+      right: 2px;
+      font-size: 1rem;
+      &:hover {
+        color: var(--bs-danger-text-emphasis);
+      }
+    }
+  }
+
+  .userInfo-button-item.userInfo-pager-button {
+    gap: 0.35rem;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 3px !important;
+
+    .badge {
+      display: none;
+      margin-left: 0;
+      font-size: 0.75rem;
+      vertical-align: middle;
+      pointer-events: none;
+    }
+
+    &:hover .dismiss {
+      opacity: 0.6;
+    }
+
+    .dismiss {
+      display: none;
+      position: absolute;
+      transition: opacity 0.2s;
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
+      opacity: 0;
+      z-index: 12;
+      top: 1px;
+      right: 2px;
+      line-height: 1;
+      font-size: 1rem;
+
+      &:hover {
+        opacity: 1;
+        color: var(--bs-danger-text-emphasis);
+      }
+
+      &.visible {
+        display: block;
+      }
+    }
+
+    &.visible .badge {
+      display: inline-flex;
     }
   }
 }
@@ -250,7 +311,7 @@ $bookmark-color: #66cc33 !default;
   &:hover,
   &:active {
     text-decoration: none;
-    background-color: $gray-200;
+    background-color: var(--bs-secondary-bg);
     cursor: pointer;
   }
 }
@@ -263,6 +324,7 @@ $bookmark-color: #66cc33 !default;
 }
 #sidebarUserInfo {
   padding-bottom: 7px;
+  padding-right: 8px;
   flex-shrink: 0;
   .sidebarUserInfo-status {
     opacity: 0.7;

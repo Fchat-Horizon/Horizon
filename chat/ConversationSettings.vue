@@ -20,6 +20,7 @@
         </div>
         <settings-radio
           :value="notify"
+          @input="notify = $event"
           :name="'notify' + conversation.key"
           :id="'notify' + conversation.key"
         ></settings-radio>
@@ -32,6 +33,7 @@
         </div>
         <settings-radio
           :value="highlight"
+          @input="highlight = $event"
           :name="'highlight' + conversation.key"
         ></settings-radio>
       </div>
@@ -104,6 +106,7 @@
         </div>
         <settings-radio
           :value="joinMessages"
+          @input="joinMessages = $event"
           :name="'joinMessages' + conversation.key"
         ></settings-radio>
       </div>
@@ -117,6 +120,7 @@
         </div>
         <settings-radio
           :value="logMessages"
+          @input="logMessages = $event"
           :name="'logMessages' + conversation.key"
         ></settings-radio>
       </div>

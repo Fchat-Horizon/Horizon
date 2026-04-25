@@ -112,6 +112,15 @@ a {
   }
 }
 
+.btn-link {
+  color: var(--bs-link-color);
+  text-decoration: none;
+  --bs-btn-active-border-color: var(--bs-link-color);
+  &:hover {
+    color: var(--bs-link-hover-color);
+  }
+}
+
 sub {
   position: static;
   vertical-align: sub;

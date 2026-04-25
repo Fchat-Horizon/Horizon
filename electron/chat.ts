@@ -396,6 +396,13 @@ webContents.on('context-menu', (_, props) => {
       });
     }
     menuTemplate.push({
+      id: 'openLink',
+      label: l('action.openBrowser'),
+      click(): void {
+        electron.ipcRenderer.send('open-url-externally', props.linkURL);
+      }
+    });
+    menuTemplate.push({
       id: 'copyLink',
       label: l('action.copyLink'),
       click(): void {
