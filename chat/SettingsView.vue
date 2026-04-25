@@ -173,13 +173,18 @@
             <h5>{{ l('settings.chat.bbcode') }}</h5>
 
             <div class="mb-3 p-2">
-              <label class="control-label" for="disallowedTags">{{
-                l('settings.disallowedTags')
-              }}</label>
-              <input
+              <settings-array
                 id="disallowedTags"
-                class="form-control"
                 v-model="disallowedTags"
+                :placeholder="l('settings.disallowedTagsPlaceholder')"
+                :globalValue="disallowedTags"
+                :overrideValue="characterOverrides.disallowedTags"
+                :usingGlobal="isUsingGlobal()"
+                @update:globalValue="disallowedTags = $event"
+                @update:overrideValue="
+                  $set(characterOverrides, 'disallowedTags', $event)
+                "
+                :name="l('settings.disallowedTags')"
               />
             </div>
 
@@ -233,10 +238,16 @@
                     {{ l('settings.bbCodeBar') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="bbCodeBar"
-                  :name="'bbCodeBar'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="bbCodeBar"
+                  :overrideValue="characterOverrides.bbCodeBar"
+                  :usingGlobal="isUsingGlobal()"
+                  name="bbCodeBar"
+                  @update:globalValue="bbCodeBar = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'bbCodeBar', $event)
+                  "
+                ></settings-override>
               </div>
             </div>
 
@@ -247,10 +258,16 @@
                     {{ l('settings.enterSend') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="enterSend"
-                  :name="'enterSend'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="enterSend"
+                  :overrideValue="characterOverrides.enterSend"
+                  :usingGlobal="isUsingGlobal()"
+                  name="enterSend"
+                  @update:globalValue="enterSend = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'enterSend', $event)
+                  "
+                ></settings-override>
               </div>
             </div>
 
@@ -307,13 +324,16 @@
               <label class="control-label" for="idleTimer">{{
                 l('settings.idleTimer')
               }}</label>
-              <input
+              <settings-input
                 id="idleTimer"
-                class="form-control"
                 type="number"
-                v-model="idleTimer"
-                min="0"
-                max="1440"
+                :globalValue="idleTimer"
+                :overrideValue="characterOverrides.idleTimer"
+                :usingGlobal="isUsingGlobal()"
+                @update:globalValue="idleTimer = $event"
+                @update:overrideValue="
+                  $set(characterOverrides, 'idleTimer', $event)
+                "
               />
             </div>
             <div class="mb-3">
@@ -825,23 +845,31 @@
               </div>
             </div>
             <div class="mb-3 p-2">
-              <label class="control-label" for="highlightWords">{{
-                l('settings.highlightWords')
-              }}</label>
-              <input
+              <settings-array
                 id="highlightWords"
-                class="form-control"
                 v-model="highlightWords"
+                :globalValue="highlightWords"
+                :overrideValue="characterOverrides.highlightWords"
+                :usingGlobal="isUsingGlobal()"
+                @update:globalValue="highlightWords = $event"
+                @update:overrideValue="
+                  $set(characterOverrides, 'highlightWords', $event)
+                "
+                :name="l('settings.highlightWords')"
               />
             </div>
             <div class="mb-3 p-2">
-              <label class="control-label" for="horizonHighlightUsers">{{
-                l('settings.highlightUsers')
-              }}</label>
-              <input
-                id="highlightUsers"
-                class="form-control"
+              <settings-array
+                id="horizonHighlightUsers"
                 v-model="horizonHighlightUsers"
+                :globalValue="horizonHighlightUsers"
+                :overrideValue="characterOverrides.horizonHighlightUsers"
+                :usingGlobal="isUsingGlobal()"
+                @update:globalValue="horizonHighlightUsers = $event"
+                @update:overrideValue="
+                  $set(characterOverrides, 'horizonHighlightUsers', $event)
+                "
+                :name="l('settings.highlightUsers')"
               />
             </div>
 
@@ -1411,7 +1439,10 @@
   import SettingsCheckbox from '../components/SettingsCheckbox.vue';
   import SettingsTriState from '../components/SettingsTriState.vue';
   import SettingsOverride from '../components/SettingsOverride.vue';
+  import SettingsInput from '../components/SettingsInput.vue';
+  import SettingsArray from '../components/SettingsArray.vue';
   import { UserInterfaceBBCodeParser } from '../bbcode/user-interface';
+  import { Settings as DefaultSettings } from './common';
   import core from './core';
   import {
     Settings as SettingsInterface,
@@ -1439,14 +1470,16 @@
       tabs: Tabs,
       bbcode: BBCodeView(bbcodeParser),
       'settings-checkbox': SettingsCheckbox,
-
       'settings-tristate': SettingsTriState,
-
       'user-view': UserView,
       'virtual-list': VirtualList,
-      'settings-override': SettingsOverride
+      'settings-override': SettingsOverride,
+      'settings-input': SettingsInput,
+      'settings-array': SettingsArray
     },
     data() {
+      const defaultSettings = new DefaultSettings();
+
       return {
         l,
         availableImports: [] as ReadonlyArray<string>,
@@ -1454,66 +1487,80 @@
         settingsMode: '0',
         importCharacter: '',
         characterOverrides: {} as PartialSettings,
-        playSound: undefined as any as boolean,
-        clickOpensMessage: undefined as any as boolean,
-        disallowedTags: undefined as any as string,
-        notifications: undefined as any as boolean,
-        highlight: undefined as any as boolean,
-        highlightWords: undefined as any as string,
-        showAvatars: undefined as any as boolean,
-        animatedEicons: undefined as any as boolean,
-        smoothMosaics: undefined as any as boolean,
-        idleTimer: undefined as any as string,
-        messageSeparators: undefined as any as boolean,
-        eventMessages: undefined as any as boolean,
-        joinMessages: undefined as any as boolean,
-        alwaysNotify: undefined as any as boolean,
-        logMessages: undefined as any as boolean,
-        logAds: undefined as any as boolean,
-        fontSize: undefined as any as string,
-        showNeedsReply: undefined as any as boolean,
-        enterSend: undefined as any as boolean,
-        colorBookmarks: undefined as any as boolean,
-        showPerCharacterFriends: undefined as any as boolean,
-        hideNonCharacterFriends: undefined as any as boolean,
-        bbCodeBar: undefined as any as boolean,
+        playSound: defaultSettings.playSound,
+        clickOpensMessage: defaultSettings.clickOpensMessage,
+        disallowedTags: [] as ReadonlyArray<string>,
+        notifications: defaultSettings.notifications,
+        highlight: defaultSettings.highlight,
+        highlightWords: [] as ReadonlyArray<string>,
+        showAvatars: defaultSettings.showAvatars,
+        animatedEicons: defaultSettings.animatedEicons,
+        smoothMosaics: defaultSettings.smoothMosaics,
+        idleTimer: 0 as number,
+        messageSeparators: defaultSettings.messageSeparators,
+        eventMessages: defaultSettings.eventMessages,
+        joinMessages: defaultSettings.joinMessages,
+        alwaysNotify: defaultSettings.alwaysNotify,
+        logMessages: defaultSettings.logMessages,
+        logAds: defaultSettings.logAds,
+        fontSize: defaultSettings.fontSize,
+        showNeedsReply: defaultSettings.showNeedsReply,
+        enterSend: defaultSettings.enterSend,
+        colorBookmarks: defaultSettings.colorBookmarks,
+        showPerCharacterFriends: defaultSettings.showPerCharacterFriends,
+        hideNonCharacterFriends: defaultSettings.hideNonCharacterFriends,
+        bbCodeBar: defaultSettings.bbCodeBar,
 
-        risingAdScore: undefined as any as boolean,
-        risingLinkPreview: undefined as any as boolean,
-        risingAutoCompareKinks: undefined as any as boolean,
+        risingAdScore: defaultSettings.risingAdScore,
+        risingLinkPreview: defaultSettings.risingLinkPreview,
+        risingAutoCompareKinks: defaultSettings.risingAutoCompareKinks,
 
-        risingAutoExpandCustomKinks: undefined as any as boolean,
-        risingCharacterPreview: undefined as any as boolean,
-        risingComparisonInUserMenu: undefined as any as boolean,
-        risingComparisonInSearch: undefined as any as boolean,
+        risingAutoExpandCustomKinks:
+          defaultSettings.risingAutoExpandCustomKinks,
+        risingCharacterPreview: defaultSettings.risingCharacterPreview,
+        risingComparisonInUserMenu: defaultSettings.risingComparisonInUserMenu,
+        risingComparisonInSearch: defaultSettings.risingComparisonInSearch,
 
-        risingShowUnreadOfflineCount: undefined as any as boolean,
-        risingColorblindMode: undefined as any as boolean,
+        risingShowUnreadOfflineCount:
+          defaultSettings.risingShowUnreadOfflineCount,
+        risingColorblindMode: defaultSettings.risingColorblindMode,
 
-        risingShowPortraitNearInput: undefined as any as boolean,
-        risingShowPortraitInMessage: undefined as any as boolean,
-        risingShowHighQualityPortraits: undefined as any as boolean,
-        horizonMessagePortraitHighQuality: undefined as any as boolean,
-        horizonShowCustomCharacterColors: undefined as any as boolean,
-        horizonShowDeveloperBadges: undefined as any as boolean,
-        horizonShowGenderMarker: undefined as any as boolean,
-        horizonGenderMarkerOrigColor: undefined as any as boolean,
-        horizonChangeOfflineColor: undefined as any as boolean,
-        horizonNotifyFriendSignIn: undefined as any as boolean,
-        horizonShowSigninNotifications: undefined as any as boolean,
-        horizonShowDuplicateStatusNotifications: undefined as any as boolean,
-        horizonHighlightUsers: undefined as any as string,
-        chatLayoutMode: undefined as any as 'classic' | 'modern',
-        messageGrouping: undefined as any as boolean,
-        forceQuickConvoList: undefined as any as boolean,
-        horizonUseColorPicker: undefined as any as boolean,
+        risingShowPortraitNearInput:
+          defaultSettings.risingShowPortraitNearInput,
+        risingShowPortraitInMessage:
+          defaultSettings.risingShowPortraitInMessage,
+        risingShowHighQualityPortraits:
+          defaultSettings.risingShowHighQualityPortraits,
+        horizonMessagePortraitHighQuality:
+          defaultSettings.horizonMessagePortraitHighQuality,
+        horizonShowCustomCharacterColors:
+          defaultSettings.horizonShowCustomCharacterColors,
+        horizonShowDeveloperBadges: defaultSettings.horizonShowDeveloperBadges,
+        horizonShowGenderMarker: defaultSettings.horizonShowGenderMarker,
+        horizonGenderMarkerOrigColor:
+          defaultSettings.horizonGenderMarkerOrigColor,
+        horizonChangeOfflineColor: defaultSettings.horizonChangeOfflineColor,
+        horizonNotifyFriendSignIn: defaultSettings.horizonNotifyFriendSignIn,
+        horizonShowSigninNotifications:
+          defaultSettings.horizonShowSigninNotifications,
+        horizonShowDuplicateStatusNotifications:
+          defaultSettings.horizonShowDuplicateStatusNotifications,
+        horizonHighlightUsers: [] as ReadonlyArray<string>,
+        chatLayoutMode: defaultSettings.chatLayoutMode,
+        messageGrouping: defaultSettings.messageGrouping,
+        forceQuickConvoList: defaultSettings.forceQuickConvoList,
+        horizonUseColorPicker: defaultSettings.horizonUseColorPicker,
 
-        horizonCacheDraftMessages: undefined as any as boolean,
-        horizonSaveDraftMessagesToDiskTimer: undefined as any as string,
+        horizonCacheDraftMessages: defaultSettings.horizonCacheDraftMessages,
+        horizonSaveDraftMessagesToDiskTimer:
+          defaultSettings.horizonSaveDraftMessagesToDiskTimer,
 
-        risingFilter: {} as any as SmartFilterSettings,
+        risingFilter: _.cloneDeep(
+          defaultSettings.risingFilter
+        ) as SmartFilterSettings,
 
-        horizonPersistentMemberFilters: undefined as any as boolean,
+        horizonPersistentMemberFilters:
+          defaultSettings.horizonPersistentMemberFilters,
         risingAvailableThemes: [] as ReadonlyArray<string>,
         risingCharacterTheme: undefined as string | undefined,
 
@@ -1549,24 +1596,30 @@
         return this.settingsMode === '0';
       },
       async load(): Promise<void> {
-        const globalSettings = core.state.globalSettings;
+        const globalSettings = core.state.globalSettings as any;
+        const defaultSettings = new DefaultSettings();
+
+        for (const [key, value] of Object.entries(defaultSettings)) {
+          if (globalSettings[key] === undefined) globalSettings[key] = value;
+        }
+
         this.playSound = globalSettings.playSound;
         this.clickOpensMessage = globalSettings.clickOpensMessage;
-        this.disallowedTags = globalSettings.disallowedTags.join(',');
+        this.disallowedTags = globalSettings.disallowedTags ?? [];
         this.notifications = globalSettings.notifications;
         this.highlight = globalSettings.highlight;
-        this.highlightWords = globalSettings.highlightWords.join(',');
+        this.highlightWords = globalSettings.highlightWords ?? [];
         this.showAvatars = globalSettings.showAvatars;
         this.animatedEicons = globalSettings.animatedEicons;
         this.smoothMosaics = globalSettings.smoothMosaics;
-        this.idleTimer = globalSettings.idleTimer.toString();
+        this.idleTimer = globalSettings.idleTimer ?? 0;
         this.messageSeparators = globalSettings.messageSeparators;
         this.eventMessages = globalSettings.eventMessages;
         this.joinMessages = globalSettings.joinMessages;
         this.alwaysNotify = globalSettings.alwaysNotify;
         this.logMessages = globalSettings.logMessages;
         this.logAds = globalSettings.logAds;
-        this.fontSize = globalSettings.fontSize.toString();
+        this.fontSize = globalSettings.fontSize;
         this.showNeedsReply = globalSettings.showNeedsReply;
         this.enterSend = globalSettings.enterSend;
         this.colorBookmarks = globalSettings.colorBookmarks;
@@ -1618,7 +1671,7 @@
         this.horizonCacheDraftMessages =
           globalSettings.horizonCacheDraftMessages;
         this.horizonSaveDraftMessagesToDiskTimer =
-          globalSettings.horizonSaveDraftMessagesToDiskTimer.toString();
+          globalSettings.horizonSaveDraftMessagesToDiskTimer;
 
         this.horizonNotifyFriendSignIn =
           globalSettings.horizonNotifyFriendSignIn;
@@ -1626,8 +1679,7 @@
           globalSettings.horizonShowSigninNotifications;
         this.horizonShowDuplicateStatusNotifications =
           globalSettings.horizonShowDuplicateStatusNotifications;
-        this.horizonHighlightUsers =
-          globalSettings.horizonHighlightUsers.join(',');
+        this.horizonHighlightUsers = globalSettings.horizonHighlightUsers ?? [];
         this.risingFilter = globalSettings.risingFilter;
 
         this.risingAvailableThemes = fs
@@ -1689,9 +1741,6 @@
           JSON.stringify(core.state.settings.risingFilter)
         );
 
-        const idleTimer = parseInt(this.idleTimer, 10);
-        const fontSize = parseFloat(this.fontSize);
-
         const minAge = this.getAsNumber(this.risingFilter.minAge);
         const maxAge = this.getAsNumber(this.risingFilter.maxAge);
 
@@ -1706,39 +1755,27 @@
           soundTheme: previousSettings.soundTheme || 'default',
           soundThemeSoundVolumes: previousSettings.soundThemeSoundVolumes,
           clickOpensMessage: this.clickOpensMessage,
-          disallowedTags: this.disallowedTags
-            .split(',')
-            .map(x => x.trim())
-            .filter(x => x.length),
+          disallowedTags: this.disallowedTags,
           notifications: this.notifications,
           highlight: this.highlight,
-          highlightWords: this.highlightWords
-            .split(',')
-            .map(x => x.trim())
-            .filter(x => x.length),
+          highlightWords: this.highlightWords,
           showAvatars: this.showAvatars,
           animatedEicons: this.animatedEicons,
           smoothMosaics: this.smoothMosaics,
-          idleTimer: isNaN(idleTimer)
-            ? 0
-            : idleTimer < 0
+          idleTimer:
+            this.idleTimer < 0
               ? 0
-              : idleTimer > 1440
+              : this.idleTimer > 1440
                 ? 1440
-                : idleTimer,
+                : this.idleTimer,
           messageSeparators: this.messageSeparators,
           eventMessages: this.eventMessages,
           joinMessages: this.joinMessages,
           alwaysNotify: this.alwaysNotify,
           logMessages: this.logMessages,
           logAds: this.logAds,
-          fontSize: isNaN(fontSize)
-            ? 14
-            : fontSize < 10
-              ? 10
-              : fontSize > 24
-                ? 24
-                : fontSize,
+          fontSize:
+            this.fontSize < 10 ? 10 : this.fontSize > 24 ? 24 : this.fontSize,
           showNeedsReply: this.showNeedsReply,
           enterSend: this.enterSend,
           colorBookmarks: this.colorBookmarks,
@@ -1777,10 +1814,7 @@
           horizonShowSigninNotifications: this.horizonShowSigninNotifications,
           horizonShowDuplicateStatusNotifications:
             this.horizonShowDuplicateStatusNotifications,
-          horizonHighlightUsers: this.horizonHighlightUsers
-            .split(',')
-            .map(x => x.trim())
-            .filter(x => x.length),
+          horizonHighlightUsers: this.horizonHighlightUsers,
           chatLayoutMode: this.chatLayoutMode,
           messageGrouping: this.messageGrouping,
           forceQuickConvoList: this.forceQuickConvoList,
