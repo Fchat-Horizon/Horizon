@@ -98,24 +98,28 @@
     gender: Character.Gender,
     status: Character.Status
   ): string {
-    switch (gender) {
-      case 'None':
-        return status !== 'offline' ? 'fa-fw fa-genderless' : 'fa-fw fa-times';
-      case 'Male':
-        return 'fa-fw fa-mars';
-      case 'Female':
-        return 'fa-fw fa-venus';
-      case 'Shemale':
-        return 'fa-fw fa-mars-and-venus';
-      case 'Herm':
-        return 'fa-fw fa-mercury';
-      case 'Male-Herm':
-        return 'fa-fw fa-mars-stroke-v';
-      case 'Cunt-boy':
-        return 'fa-fw fa-mars-stroke-h';
-      case 'Transgender':
-        return 'fa-fw fa-transgender';
+    if (status !== 'offline') {
+      switch (gender) {
+        case 'None':
+          return 'fa-fw fa-genderless';
+        case 'Male':
+          return 'fa-fw fa-mars';
+        case 'Female':
+          return 'fa-fw fa-venus';
+        case 'Shemale':
+          return 'fa-fw fa-mars-and-venus';
+        case 'Herm':
+          return 'fa-fw fa-mercury';
+        case 'Male-Herm':
+          return 'fa-fw fa-mars-stroke-v';
+        case 'Cunt-boy':
+          return 'fa-fw fa-mars-stroke-h';
+        case 'Transgender':
+          return 'fa-fw fa-transgender';
+      }
     }
+
+    return 'fa-fw fa-times';
   }
 
   export interface StatusClasses {
@@ -150,7 +154,7 @@
     let matchScore = null;
     let smartFilterIcon: string | null = null;
     let genderClass = null;
-    let gender: Character.Gender = 'None';
+    let gender = 'none';
     let useOfflineColor = false;
 
     if (character.isChatOp) {
@@ -268,15 +272,17 @@
 
       const baseGender = character.overrides.gender || character.gender;
       gender =
-        baseGender !== undefined && !useOfflineColor ? baseGender : 'None';
+        baseGender !== undefined && !useOfflineColor
+          ? baseGender.toLowerCase()
+          : 'none';
 
       if (character.gender) {
         if (!core.state.settings.horizonGenderMarkerOrigColor) {
-          genderClass = `fa ${getGenderIcon(gender, character.status)}`;
+          genderClass = `fa ${getGenderIcon(character.gender, character.status)}`;
         } else {
           genderClass =
-            `fa ${getGenderIcon(gender, character.status)}` +
-            ` gender-icon-${gender.toLowerCase()}`;
+            `fa ${getGenderIcon(character.gender, character.status)}` +
+            ` gender-icon-${gender}`;
         }
       }
     }
@@ -294,7 +300,7 @@
       !useOfflineColor &&
       character.overrides.characterColor !== CharacterColor.none
         ? ` ${CharacterColor[character.overrides.characterColor]}NameText`
-        : ` gender-${gender.toLowerCase()}`);
+        : ` gender-${gender}`);
     // `user-view gender-${gender}${isBookmark ? ' user-bookmark' : ''}`;
 
     return {
