@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.3] - 2026-04-25
+
 ### Changed
 
 - Gender icons (if enabled) will no longer turn into an X if the user goes offline, unless you specifically enable 'Make color in chat change to grey when a user goes offline' for user names. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c5b50b28f32ef988c3f5187b43284e7ce43fccc0)
@@ -1308,7 +1310,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - IOS build removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814)]
 - Webchat removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/b894a180b9be31f68d1458aaa3c59f9c4470da89)]
 
-[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.2...development
+[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.3...development
+[2.1.3]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.2...v2.1.3
 [2.1.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.0.3-beta.2...v2.1.0
