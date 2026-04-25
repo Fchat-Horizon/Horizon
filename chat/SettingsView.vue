@@ -204,7 +204,7 @@
                   @update:overrideValue="
                     $set(characterOverrides, 'animatedEicons', $event)
                   "
-                ></settings-override>
+                />
               </div>
             </div>
             <div class="mb-3">
@@ -223,7 +223,7 @@
                   @update:overrideValue="
                     $set(characterOverrides, 'smoothMosaics', $event)
                   "
-                ></settings-override>
+                />
               </div>
             </div>
           </div>
@@ -247,7 +247,7 @@
                   @update:overrideValue="
                     $set(characterOverrides, 'bbCodeBar', $event)
                   "
-                ></settings-override>
+                />
               </div>
             </div>
 
@@ -267,7 +267,7 @@
                   @update:overrideValue="
                     $set(characterOverrides, 'enterSend', $event)
                   "
-                ></settings-override>
+                />
               </div>
             </div>
 
@@ -278,11 +278,17 @@
                     {{ l('settings.horizonUseColorPicker') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="horizonUseColorPicker"
-                  :name="'horizonUseColorPicker'"
+                <settings-override
+                  :globalValue="horizonUseColorPicker"
+                  :overrideValue="characterOverrides.horizonUseColorPicker"
+                  :usingGlobal="isUsingGlobal()"
+                  name="horizonUseColorPicker"
+                  @update:globalValue="horizonUseColorPicker = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'horizonUseColorPicker', $event)
+                  "
                   :disabled="!bbCodeBar"
-                ></settings-checkbox>
+                />
               </div>
             </div>
 
@@ -296,10 +302,22 @@
                     {{ l('settings.showPortraitNearInput') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="risingShowPortraitNearInput"
-                  :name="'risingShowPortraitNearInput'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="risingShowPortraitNearInput"
+                  :overrideValue="
+                    characterOverrides.risingShowPortraitNearInput
+                  "
+                  :usingGlobal="isUsingGlobal()"
+                  name="risingShowPortraitNearInput"
+                  @update:globalValue="risingShowPortraitNearInput = $event"
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'risingShowPortraitNearInput',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
           </div>
@@ -314,10 +332,16 @@
                     {{ l('settings.clickOpensMessage') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="clickOpensMessage"
-                  :name="'clickOpensMessage'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="clickOpensMessage"
+                  :overrideValue="characterOverrides.clickOpensMessage"
+                  :usingGlobal="isUsingGlobal()"
+                  name="clickOpensMessage"
+                  @update:globalValue="clickOpensMessage = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'clickOpensMessage', $event)
+                  "
+                />
               </div>
             </div>
             <div class="mb-3 p-2">
@@ -343,10 +367,16 @@
                     {{ l('settings.showNeedsReply') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="showNeedsReply"
-                  :name="'showNeedsReply'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="showNeedsReply"
+                  :overrideValue="characterOverrides.showNeedsReply"
+                  :usingGlobal="isUsingGlobal()"
+                  name="showNeedsReply"
+                  @update:globalValue="showNeedsReply = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'showNeedsReply', $event)
+                  "
+                />
               </div>
             </div>
             <div class="mb-3">
@@ -359,10 +389,22 @@
                     {{ l('settings.risingShowUnreadOfflineCount') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="risingShowUnreadOfflineCount"
-                  :name="'risingShowUnreadOfflineCount'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="risingShowUnreadOfflineCount"
+                  :overrideValue="
+                    characterOverrides.risingShowUnreadOfflineCount
+                  "
+                  :usingGlobal="isUsingGlobal()"
+                  name="risingShowUnreadOfflineCount"
+                  @update:globalValue="risingShowUnreadOfflineCount = $event"
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'risingShowUnreadOfflineCount',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
 
@@ -373,10 +415,16 @@
                     {{ l('settings.colorBookmarks') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="colorBookmarks"
-                  :name="'colorBookmarks'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="colorBookmarks"
+                  :overrideValue="characterOverrides.colorBookmarks"
+                  :usingGlobal="isUsingGlobal()"
+                  name="colorBookmarks"
+                  @update:globalValue="colorBookmarks = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'colorBookmarks', $event)
+                  "
+                />
               </div>
             </div>
 
@@ -387,10 +435,16 @@
                     {{ l('settings.showPerCharacterFriends') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="showPerCharacterFriends"
-                  :name="'showPerCharacterFriends'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="showPerCharacterFriends"
+                  :overrideValue="characterOverrides.showPerCharacterFriends"
+                  :usingGlobal="isUsingGlobal()"
+                  name="showPerCharacterFriends"
+                  @update:globalValue="showPerCharacterFriends = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'showPerCharacterFriends', $event)
+                  "
+                />
               </div>
             </div>
 
@@ -401,10 +455,16 @@
                     {{ l('settings.hideNonCharacterFriends') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="hideNonCharacterFriends"
-                  :name="'hideNonCharacterFriends'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="hideNonCharacterFriends"
+                  :overrideValue="characterOverrides.hideNonCharacterFriends"
+                  :usingGlobal="isUsingGlobal()"
+                  name="hideNonCharacterFriends"
+                  @update:globalValue="hideNonCharacterFriends = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'hideNonCharacterFriends', $event)
+                  "
+                />
               </div>
             </div>
           </div>
@@ -419,10 +479,16 @@
                     {{ l('settings.logMessages') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="logMessages"
-                  :name="'logMessages'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="logMessages"
+                  :overrideValue="characterOverrides.logMessages"
+                  :usingGlobal="isUsingGlobal()"
+                  name="logMessages"
+                  @update:globalValue="logMessages = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'logMessages', $event)
+                  "
+                />
               </div>
             </div>
             <div class="mb-3">
@@ -432,10 +498,16 @@
                     {{ l('settings.logAds') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="logAds"
-                  :name="'logAds'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="logAds"
+                  :overrideValue="characterOverrides.logAds"
+                  :usingGlobal="isUsingGlobal()"
+                  name="logAds"
+                  @update:globalValue="logAds = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'logAds', $event)
+                  "
+                />
               </div>
             </div>
           </div>
@@ -450,10 +522,20 @@
                     {{ l('settings.horizonCacheDraftMessages') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="horizonCacheDraftMessages"
-                  :name="'horizonCacheDraftMessages'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="horizonCacheDraftMessages"
+                  :overrideValue="characterOverrides.horizonCacheDraftMessages"
+                  :usingGlobal="isUsingGlobal()"
+                  name="horizonCacheDraftMessages"
+                  @update:globalValue="horizonCacheDraftMessages = $event"
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'horizonCacheDraftMessages',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
 
@@ -464,13 +546,24 @@
               >
                 {{ l('settings.horizonSaveDraftMessagesToDiskTimer') }}
               </label>
-              <input
+              <settings-input
                 id="horizonSaveDraftMessagesToDiskTimer"
                 type="number"
-                class="form-control"
-                v-model="horizonSaveDraftMessagesToDiskTimer"
-                :placeholder="'60'"
-                min="5"
+                :globalValue="horizonSaveDraftMessagesToDiskTimer"
+                :overrideValue="
+                  characterOverrides.horizonSaveDraftMessagesToDiskTimer
+                "
+                :usingGlobal="isUsingGlobal()"
+                @update:globalValue="
+                  horizonSaveDraftMessagesToDiskTimer = $event
+                "
+                @update:overrideValue="
+                  $set(
+                    characterOverrides,
+                    'horizonSaveDraftMessagesToDiskTimer',
+                    $event
+                  )
+                "
               />
             </div>
           </div>
@@ -485,10 +578,16 @@
                     {{ l('settings.preview.link') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="risingLinkPreview"
-                  :name="'risingLinkPreview'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="risingLinkPreview"
+                  :overrideValue="characterOverrides.risingLinkPreview"
+                  :usingGlobal="isUsingGlobal()"
+                  name="risingLinkPreview"
+                  @update:globalValue="risingLinkPreview = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'risingLinkPreview', $event)
+                  "
+                />
               </div>
             </div>
 
@@ -499,10 +598,16 @@
                     {{ l('settings.preview.character') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="risingCharacterPreview"
-                  :name="'risingCharacterPreview'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="risingCharacterPreview"
+                  :overrideValue="characterOverrides.risingCharacterPreview"
+                  :usingGlobal="isUsingGlobal()"
+                  name="risingCharacterPreview"
+                  @update:globalValue="risingCharacterPreview = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'risingCharacterPreview', $event)
+                  "
+                />
               </div>
             </div>
           </div>
@@ -514,13 +619,16 @@
               <label class="control-label" for="fontSize">{{
                 l('settings.experimental', l('settings.fontSize'))
               }}</label>
-              <input
+              <settings-input
                 id="fontSize"
                 type="number"
-                min="10"
-                max="24"
-                class="form-control"
-                v-model="fontSize"
+                :globalValue="fontSize"
+                :overrideValue="characterOverrides.fontSize"
+                :usingGlobal="isUsingGlobal()"
+                @update:globalValue="fontSize = $event"
+                @update:overrideValue="
+                  $set(characterOverrides, 'fontSize', $event)
+                "
               />
             </div>
             <div class="mb-3 p-2">
@@ -573,10 +681,22 @@
                     {{ l('settings.showHighQualityPortraits') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="risingShowHighQualityPortraits"
-                  :name="'risingShowHighQualityPortraits'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="risingShowHighQualityPortraits"
+                  :overrideValue="
+                    characterOverrides.risingShowHighQualityPortraits
+                  "
+                  :usingGlobal="isUsingGlobal()"
+                  name="risingShowHighQualityPortraits"
+                  @update:globalValue="risingShowHighQualityPortraits = $event"
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'risingShowHighQualityPortraits',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
 
@@ -587,10 +707,16 @@
                     {{ l('settings.forceQuickConvoList') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="forceQuickConvoList"
-                  :name="'forceQuickConvoList'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="forceQuickConvoList"
+                  :overrideValue="characterOverrides.forceQuickConvoList"
+                  :usingGlobal="isUsingGlobal()"
+                  name="forceQuickConvoList"
+                  @update:globalValue="forceQuickConvoList = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'forceQuickConvoList', $event)
+                  "
+                />
               </div>
             </div>
           </div>
@@ -602,6 +728,9 @@
               <label class="control-label" for="chatLayoutMode">{{
                 l('settings.experimental', l('settings.chatLayoutMode'))
               }}</label>
+              <!--TODO
+              Do this for global settings too. Maybe with a parent component or something.
+              -->
               <select
                 id="chatLayoutMode"
                 class="form-select"
@@ -628,11 +757,16 @@
                     {{ l('settings.messageGrouping.description') }}
                   </div>
                 </div>
-                <settings-checkbox
-                  v-model="messageGrouping"
-                  :name="'messageGrouping'"
-                  :disabled="chatLayoutMode !== 'modern'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="messageGrouping"
+                  :overrideValue="characterOverrides.messageGrouping"
+                  :usingGlobal="isUsingGlobal()"
+                  name="messageGrouping"
+                  @update:globalValue="messageGrouping = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'messageGrouping', $event)
+                  "
+                />
               </div>
             </div>
 
@@ -643,10 +777,16 @@
                     {{ l('settings.messageSeparators') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="messageSeparators"
-                  :name="'messageSeparators'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="messageSeparators"
+                  :overrideValue="characterOverrides.messageSeparators"
+                  :usingGlobal="isUsingGlobal()"
+                  name="messageSeparators"
+                  @update:globalValue="messageSeparators = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'messageSeparators', $event)
+                  "
+                />
               </div>
             </div>
             <div class="mb-3">
@@ -659,10 +799,22 @@
                     {{ l('settings.showPortraitInMessage') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="risingShowPortraitInMessage"
-                  :name="'risingShowPortraitInMessage'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="risingShowPortraitInMessage"
+                  :overrideValue="
+                    characterOverrides.risingShowPortraitInMessage
+                  "
+                  :usingGlobal="isUsingGlobal()"
+                  name="risingShowPortraitInMessage"
+                  @update:globalValue="risingShowPortraitInMessage = $event"
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'risingShowPortraitInMessage',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
 
@@ -676,11 +828,24 @@
                     {{ l('settings.messagePortraitHighQuality') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="horizonMessagePortraitHighQuality"
-                  :name="'horizonMessagePortraitHighQuality'"
-                  :disabled="!risingShowHighQualityPortraits"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="horizonMessagePortraitHighQuality"
+                  :overrideValue="
+                    characterOverrides.horizonMessagePortraitHighQuality
+                  "
+                  :usingGlobal="isUsingGlobal()"
+                  name="horizonMessagePortraitHighQuality"
+                  @update:globalValue="
+                    horizonMessagePortraitHighQuality = $event
+                  "
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'horizonMessagePortraitHighQuality',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
           </div>
@@ -698,10 +863,24 @@
                     {{ l('settings.showCustomCharacterColors') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="horizonShowCustomCharacterColors"
-                  :name="'horizonShowCustomCharacterColors'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="horizonShowCustomCharacterColors"
+                  :overrideValue="
+                    characterOverrides.horizonShowCustomCharacterColors
+                  "
+                  :usingGlobal="isUsingGlobal()"
+                  name="horizonShowCustomCharacterColors"
+                  @update:globalValue="
+                    horizonShowCustomCharacterColors = $event
+                  "
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'horizonShowCustomCharacterColors',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
 
@@ -712,10 +891,16 @@
                     {{ l('settings.colorblindMode') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="risingColorblindMode"
-                  :name="'risingColorblindMode'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="risingColorblindMode"
+                  :overrideValue="characterOverrides.risingColorblindMode"
+                  :usingGlobal="isUsingGlobal()"
+                  name="risingColorblindMode"
+                  @update:globalValue="risingColorblindMode = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'risingColorblindMode', $event)
+                  "
+                />
               </div>
             </div>
 
@@ -726,10 +911,20 @@
                     {{ l('settings.showDeveloperBadges') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="horizonShowDeveloperBadges"
-                  :name="'horizonShowDeveloperBadges'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="horizonShowDeveloperBadges"
+                  :overrideValue="characterOverrides.horizonShowDeveloperBadges"
+                  :usingGlobal="isUsingGlobal()"
+                  name="horizonShowDeveloperBadges"
+                  @update:globalValue="horizonShowDeveloperBadges = $event"
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'horizonShowDeveloperBadges',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
 
@@ -740,10 +935,16 @@
                     {{ l('settings.showGenderIcon') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="horizonShowGenderMarker"
-                  :name="'horizonShowGenderMarker'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="horizonShowGenderMarker"
+                  :overrideValue="characterOverrides.horizonShowGenderMarker"
+                  :usingGlobal="isUsingGlobal()"
+                  name="horizonShowGenderMarker"
+                  @update:globalValue="horizonShowGenderMarker = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'horizonShowGenderMarker', $event)
+                  "
+                />
               </div>
             </div>
 
@@ -757,14 +958,23 @@
                     {{ l('settings.genderIconUseOriginalColor') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="horizonGenderMarkerOrigColor"
-                  :name="'horizonGenderMarkerOrigColor'"
-                  :disabled="
-                    !horizonShowGenderMarker ||
-                    !horizonShowCustomCharacterColors
+                <settings-override
+                  :globalValue="horizonGenderMarkerOrigColor"
+                  :overrideValue="
+                    characterOverrides.horizonGenderMarkerOrigColor
                   "
-                ></settings-checkbox>
+                  :usingGlobal="isUsingGlobal()"
+                  name="horizonGenderMarkerOrigColor"
+                  @update:globalValue="horizonGenderMarkerOrigColor = $event"
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'horizonGenderMarkerOrigColor',
+                      $event
+                    )
+                  "
+                  :disabled="!horizonShowGenderMarker"
+                />
               </div>
             </div>
 
@@ -775,10 +985,20 @@
                     {{ l('settings.changeOfflineColor') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="horizonChangeOfflineColor"
-                  :name="'horizonChangeOfflineColor'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="horizonChangeOfflineColor"
+                  :overrideValue="characterOverrides.horizonChangeOfflineColor"
+                  :usingGlobal="isUsingGlobal()"
+                  name="horizonChangeOfflineColor"
+                  @update:globalValue="horizonChangeOfflineColor = $event"
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'horizonChangeOfflineColor',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
           </div>
@@ -793,10 +1013,16 @@
                     {{ l('settings.playSound') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="playSound"
-                  :name="'playSound'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="playSound"
+                  :overrideValue="characterOverrides.playSound"
+                  :usingGlobal="isUsingGlobal()"
+                  name="playSound"
+                  @update:globalValue="playSound = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'playSound', $event)
+                  "
+                />
               </div>
             </div>
             <div class="mb-3">
@@ -806,11 +1032,17 @@
                     {{ l('settings.alwaysNotify') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="alwaysNotify"
-                  :name="'alwaysNotify'"
+                <settings-override
+                  :globalValue="alwaysNotify"
+                  :overrideValue="characterOverrides.alwaysNotify"
+                  :usingGlobal="isUsingGlobal()"
+                  name="alwaysNotify"
+                  @update:globalValue="alwaysNotify = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'alwaysNotify', $event)
+                  "
                   :disabled="!playSound"
-                ></settings-checkbox>
+                />
               </div>
             </div>
             <div class="mb-3">
@@ -820,10 +1052,17 @@
                     {{ l('settings.notifications') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="notifications"
-                  :name="'notifications'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="notifications"
+                  :overrideValue="characterOverrides.notifications"
+                  :usingGlobal="isUsingGlobal()"
+                  name="notifications"
+                  @update:globalValue="notifications = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'notifications', $event)
+                  "
+                  :disabled="!playSound"
+                />
               </div>
             </div>
           </div>
@@ -838,10 +1077,17 @@
                     {{ l('settings.highlight') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="highlight"
-                  :name="'highlight'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="highlight"
+                  :overrideValue="characterOverrides.highlight"
+                  :usingGlobal="isUsingGlobal()"
+                  name="highlight"
+                  @update:globalValue="highlight = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'highlight', $event)
+                  "
+                  :disabled="!playSound"
+                />
               </div>
             </div>
             <div class="mb-3 p-2">
@@ -880,11 +1126,20 @@
                     {{ l('settings.notifyFriendSignIn') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="horizonNotifyFriendSignIn"
-                  :name="'horizonNotifyFriendSignIn'"
-                  :disabled="!horizonShowSigninNotifications"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="horizonNotifyFriendSignIn"
+                  :overrideValue="characterOverrides.horizonNotifyFriendSignIn"
+                  :usingGlobal="isUsingGlobal()"
+                  name="horizonNotifyFriendSignIn"
+                  @update:globalValue="horizonNotifyFriendSignIn = $event"
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'horizonNotifyFriendSignIn',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
           </div>
@@ -898,10 +1153,16 @@
                     {{ l('settings.eventMessages') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="eventMessages"
-                  :name="'eventMessages'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="eventMessages"
+                  :overrideValue="characterOverrides.eventMessages"
+                  :usingGlobal="isUsingGlobal()"
+                  name="eventMessages"
+                  @update:globalValue="eventMessages = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'eventMessages', $event)
+                  "
+                />
               </div>
             </div>
             <div class="mb-3">
@@ -911,10 +1172,16 @@
                     {{ l('settings.joinMessages') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="joinMessages"
-                  :name="'joinMessages'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="joinMessages"
+                  :overrideValue="characterOverrides.joinMessages"
+                  :usingGlobal="isUsingGlobal()"
+                  name="joinMessages"
+                  @update:globalValue="joinMessages = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'joinMessages', $event)
+                  "
+                />
               </div>
             </div>
             <div class="mb-3">
@@ -927,10 +1194,22 @@
                     {{ l('settings.showSigninNotifications') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="horizonShowSigninNotifications"
-                  :name="'horizonShowSigninNotifications'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="horizonShowSigninNotifications"
+                  :overrideValue="
+                    characterOverrides.horizonShowSigninNotifications
+                  "
+                  :usingGlobal="isUsingGlobal()"
+                  name="horizonShowSigninNotifications"
+                  @update:globalValue="horizonShowSigninNotifications = $event"
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'horizonShowSigninNotifications',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
             <div class="mb-3">
@@ -946,10 +1225,24 @@
                     {{ l('settings.showDuplicateStatusNotifications.note') }}
                   </div>
                 </div>
-                <settings-checkbox
-                  v-model="horizonShowDuplicateStatusNotifications"
-                  :name="'horizonShowDuplicateStatusNotifications'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="horizonShowDuplicateStatusNotifications"
+                  :overrideValue="
+                    characterOverrides.horizonShowDuplicateStatusNotifications
+                  "
+                  :usingGlobal="isUsingGlobal()"
+                  name="horizonShowDuplicateStatusNotifications"
+                  @update:globalValue="
+                    horizonShowDuplicateStatusNotifications = $event
+                  "
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'horizonShowDuplicateStatusNotifications',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
           </div>
@@ -957,6 +1250,10 @@
           <div v-show="selectedTab === 'profiles.hiddenAds'">
             <h5>{{ l('settings.tabs.hideAds') }}</h5>
             <div class="mb-3 p-2">
+              <!--TODO
+              Oh my god, I do not want to do this for global settings too.
+              Let's figure this out after the new friends list shite gets merged.
+              -->
               <template v-if="hidden.length">
                 <input
                   type="text"
@@ -998,10 +1295,16 @@
                     {{ l('settings.matching.adScore') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="risingAdScore"
-                  :name="'risingAdScore'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="risingAdScore"
+                  :overrideValue="characterOverrides.risingAdScore"
+                  :usingGlobal="isUsingGlobal()"
+                  name="risingAdScore"
+                  @update:globalValue="risingAdScore = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'risingAdScore', $event)
+                  "
+                />
               </div>
             </div>
 
@@ -1012,10 +1315,20 @@
                     {{ l('settings.matching.comparisonInUserMenu') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="risingComparisonInUserMenu"
-                  :name="'risingComparisonInUserMenu'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="risingComparisonInUserMenu"
+                  :overrideValue="characterOverrides.risingComparisonInUserMenu"
+                  :usingGlobal="isUsingGlobal()"
+                  name="risingComparisonInUserMenu"
+                  @update:globalValue="risingComparisonInUserMenu = $event"
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'risingComparisonInUserMenu',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
 
@@ -1026,10 +1339,16 @@
                     {{ l('settings.matching.comparisonInSearch') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="risingComparisonInSearch"
-                  :name="'risingComparisonInSearch'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="risingComparisonInSearch"
+                  :overrideValue="characterOverrides.risingComparisonInSearch"
+                  :usingGlobal="isUsingGlobal()"
+                  name="risingComparisonInSearch"
+                  @update:globalValue="risingComparisonInSearch = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'risingComparisonInSearch', $event)
+                  "
+                />
               </div>
             </div>
           </div>
@@ -1044,10 +1363,16 @@
                     {{ l('settings.profile.autoCompareKinks') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="risingAutoCompareKinks"
-                  :name="'risingAutoCompareKinks'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="risingAutoCompareKinks"
+                  :overrideValue="characterOverrides.risingAutoCompareKinks"
+                  :usingGlobal="isUsingGlobal()"
+                  name="risingAutoCompareKinks"
+                  @update:globalValue="risingAutoCompareKinks = $event"
+                  @update:overrideValue="
+                    $set(characterOverrides, 'risingAutoCompareKinks', $event)
+                  "
+                />
               </div>
             </div>
 
@@ -1061,10 +1386,22 @@
                     {{ l('settings.profile.autoExpandCustoms') }}
                   </label>
                 </div>
-                <settings-checkbox
-                  v-model="risingAutoExpandCustomKinks"
-                  :name="'risingAutoExpandCustomKinks'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="risingAutoExpandCustomKinks"
+                  :overrideValue="
+                    characterOverrides.risingAutoExpandCustomKinks
+                  "
+                  :usingGlobal="isUsingGlobal()"
+                  name="risingAutoExpandCustomKinks"
+                  @update:globalValue="risingAutoExpandCustomKinks = $event"
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'risingAutoExpandCustomKinks',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
           </div>
@@ -1271,10 +1608,22 @@
                     {{ l('settings.horizon.persistentMemberFilters.help') }}
                   </div>
                 </div>
-                <settings-checkbox
-                  v-model="horizonPersistentMemberFilters"
-                  :name="'horizonPersistentMemberFilters'"
-                ></settings-checkbox>
+                <settings-override
+                  :globalValue="horizonPersistentMemberFilters"
+                  :overrideValue="
+                    characterOverrides.horizonPersistentMemberFilters
+                  "
+                  :usingGlobal="isUsingGlobal()"
+                  name="horizonPersistentMemberFilters"
+                  @update:globalValue="horizonPersistentMemberFilters = $event"
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'horizonPersistentMemberFilters',
+                      $event
+                    )
+                  "
+                />
               </div>
             </div>
           </div>
@@ -1436,7 +1785,6 @@
   import { Editor } from './bbcode';
   import Tabs from '../components/tabs';
   import { BBCodeView } from '../bbcode/view';
-  import SettingsCheckbox from '../components/SettingsCheckbox.vue';
   import SettingsTriState from '../components/SettingsTriState.vue';
   import SettingsOverride from '../components/SettingsOverride.vue';
   import SettingsInput from '../components/SettingsInput.vue';
@@ -1469,7 +1817,6 @@
       editor: Editor,
       tabs: Tabs,
       bbcode: BBCodeView(bbcodeParser),
-      'settings-checkbox': SettingsCheckbox,
       'settings-tristate': SettingsTriState,
       'user-view': UserView,
       'virtual-list': VirtualList,
