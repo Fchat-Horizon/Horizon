@@ -58,12 +58,7 @@
             <button
               href="#"
               role="button"
-              class="userInfo-button-item btn"
-              :class="
-                adsAreRunning()
-                  ? 'btn-outline-success'
-                  : 'btn-outline-secondary'
-              "
+              class="userInfo-button-item btn btn-outline-secondary"
               :title="l('admgr.open')"
               @click.prevent="showAdLauncher()"
             >
