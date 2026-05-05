@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Reverted the gender icon change from 2.1.3, where the icon would remain a gender symbol (instead of turning into an X) if a user logged out. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6631b3f15dc15f55ab8bc5df9424083617616d4d)
+  - This was originally changed for accessibility reasons, but it was clear that a lot of people weren't happy with this change. We'll try and find a solution that pleases both groups of people soon.
+- Reverted a change in 2.1.3 that turned the big Ads button green when posting ads. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/663ffb0abfee0b75f7c3dcca2ba25efc3e7b1ab9)
+  - This wasn't as useful as we had hoped it would be. The big, red stop button above it was enough of an indicator.
+- The carousel gallery image viewer now has a close button in the top right corner. A quick click on the image itself should also still work though. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c66bf8db18fd49116843b64162cdce70f8a4d78f)
+
+### Fixed
+
+- Fixed pressing Esc in the gallery image viewer closing both the image and the profile at the same time. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/91dffcacc573db526139a8b51367d2e4c2b5ae43)
+
+### Development
+
+- Updated Prettier to 3.8.3 (from 3.8.2). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/aed8da7ddee520939c44071930adf47ec16f13e9)
+
 ## [2.1.3] - 2026-04-25
 
 ### Changed
