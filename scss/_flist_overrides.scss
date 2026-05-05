@@ -166,6 +166,31 @@ input:checked {
   margin-bottom: -1px;
 }
 
+.nav-tabs .nav-item.nav-divider {
+  align-self: stretch;
+  width: 1px;
+  margin: 0 0.35rem;
+  border-left: 1px solid $gray-300;
+  pointer-events: none;
+}
+
+.nav.flex-column .nav-item.nav-divider {
+  width: auto;
+  height: 1px;
+  border-left: none;
+  border-top: 1px solid $gray-300;
+  margin: 0.35rem 0;
+}
+.nav.flex-column .nav-item.nav-divider:first-child {
+  margin-top: 0;
+}
+.nav.flex-column .nav-item.nav-divider:last-child {
+  margin-bottom: 0;
+}
+.nav.flex-column .nav-link:not(.disabled) {
+  margin-left: 1em;
+}
+
 #window-tabs .nav-tabs .nav-link.active {
   border-bottom: 1px solid $body-bg;
 }
