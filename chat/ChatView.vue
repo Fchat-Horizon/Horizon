@@ -626,7 +626,7 @@
             document.body.classList.add('channel-dragging');
             currentDragId = (e.item as HTMLElement).dataset?.channelId ?? null;
           },
-          onMove: () => (inCenterZone ? false : true),
+          onMove: () => !inCenterZone,
           onEnd: async (e: any) => {
             document.body.classList.remove('channel-dragging');
             const confirmed = mergeConfirmedId;
