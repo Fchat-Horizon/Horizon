@@ -57,12 +57,6 @@
             :aria-label="l('chat.toggleAds')"
             @click.stop="conversation.toggleAutomatedAds()"
           ></span>
-          <group-picker
-            :groups="allGroups"
-            :current-group-id="group.id"
-            @assign="id => onAssign(conversation, id)"
-            @create="onCreateAndAssign(conversation)"
-          ></group-picker>
           <span
             class="fas fa-times leave"
             @click.stop="conversation.close()"
@@ -80,7 +74,6 @@
   import core from './core';
   import { Conversation } from './interfaces';
   import l from './localize';
-  import GroupPicker from './GroupPicker.vue';
 
   const unreadClasses = {
     [Conversation.UnreadState.None]: '',
@@ -90,7 +83,6 @@
 
   export default Vue.extend({
     name: 'ChannelGroupSection',
-    components: { 'group-picker': GroupPicker },
     props: {
       group: { required: true as const },
       conversations: { required: true as const },
@@ -188,14 +180,6 @@
             ?.horizonShowWindowAndChatNotificationBadge !== false &&
           conversation.unreadCount > 0
         );
-      },
-      onAssign(conversation: any, groupId: string | null) {
-        core.conversations.setChannelGroup(conversation.channel.id, groupId);
-      },
-      onCreateAndAssign(conversation: any) {
-        const id = core.conversations.createChannelGroup('New Group');
-        core.conversations.setChannelGroup(conversation.channel.id, id);
-        this.$emit('create-and-rename', id);
       }
     }
   });
