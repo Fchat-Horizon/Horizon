@@ -129,6 +129,12 @@
           <i class="fa-solid fa-arrow-right preview-arrow"></i>
         </div>
       </div>
+      <div class="image-preview-close-outer">
+        <button
+          class="btn btn-close preview-close"
+          @click="hidePreview()"
+        ></button>
+      </div>
       <div class="image-preview-info-outer d-flex align-items-end">
         <div
           class="image-preview-info d-flex flex-grow-1"

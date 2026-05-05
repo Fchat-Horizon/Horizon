@@ -350,6 +350,33 @@
       }
     }
   }
+  .image-preview-close-outer {
+    opacity: 0;
+    transition: opacity linear 0.15s;
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    min-height: 20%;
+    z-index: 1501;
+
+    .btn-close.preview-close {
+      --spacing: 1rem;
+      position: fixed;
+      z-index: 1501;
+      font-size: 1.5rem;
+      right: var(--spacing);
+      top: var(--spacing);
+      border-radius: 90px;
+      opacity: 0.5;
+      &:hover {
+        opacity: 1;
+      }
+    }
+    &:hover {
+      opacity: 1;
+    }
+  }
   .image-preview-buttons-container {
     position: fixed;
     pointer-events: none;
