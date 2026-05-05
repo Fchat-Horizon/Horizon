@@ -161,10 +161,30 @@
         href="#"
         @click.prevent="channelKick()"
         class="list-group-item list-group-item-action"
+        style="border-top-width: 1px"
         v-if="isChannelMod"
       >
         <span class="fa fa-fw fa-ban"></span
         ><span class="action-label">{{ l('user.channelKick') }}</span></a
+      >
+      <a
+        tabindex="-1"
+        href="#"
+        @click.prevent="promptTimeout()"
+        class="list-group-item list-group-item-action"
+        v-if="isChannelMod"
+      >
+        <span class="fa fa-fw fas fa-stopwatch"></span
+        ><span class="action-label">{{ l('user.channelTimeout') }}</span></a
+      ><a
+        tabindex="-1"
+        href="#"
+        @click.prevent="channelBan()"
+        class="list-group-item list-group-item-action list-group-item-danger"
+        v-if="isChannelMod"
+      >
+        <span class="fa fa-fw fa-trash-can"></span
+        ><span class="action-label">{{ l('user.channelBan') }}</span></a
       >
       <a
         tabindex="-1"
@@ -196,6 +216,29 @@
         maxlength="1000"
       ></textarea>
     </modal>
+    <modal
+      :action="l('user.channelTimeout.name', displayName)"
+      ref="timeoutPrompt"
+      @submit="channelTimeout"
+      :buttonText="l('user.channelTimeout')"
+      dialogClass="w-100"
+      iconClass="fas fa-stopwatch"
+    >
+      <label for="timeoutValue" class="form-label">{{
+        l('user.channelTimeout.prompt', displayName, channel.name)
+      }}</label>
+      <div class="input-group mb-3">
+        <input
+          id="inputPassword5"
+          class="form-control"
+          type="number"
+          v-model="timeoutLength"
+          min="1"
+          max="90"
+        />
+        <span class="input-group-text">{{ l('unit.minutes') }}</span>
+      </div>
+    </modal>
     <ad-view
       ref="adViewDialog"
       :character="character"
@@ -216,6 +259,7 @@
     profileLink
   } from './common';
   import core from './core';
+  import { Dialog } from '../helpers/dialog';
   import { Channel, Character } from './interfaces';
   import l from './localize';
   import ReportDialog from './ReportDialog.vue';
@@ -249,6 +293,7 @@
         touchedElement: undefined as HTMLElement | undefined,
         channel: undefined as Channel | undefined,
         memo: '',
+        timeoutLength: 1,
         // memoId: 0,
         memoLoading: false,
         match: null as MatchReport | null,
@@ -310,6 +355,35 @@
           character: this.character!.name
         });
       },
+      channelBan(): void {
+        if (
+          this.displayName &&
+          this.channel &&
+          Dialog.confirmDialog(
+            l('user.channelBan.confirm', this.displayName, this.channel.name),
+            true
+          )
+        ) {
+          core.connection.send('CBU', {
+            channel: this.channel!.id,
+            character: this.character!.name
+          });
+        }
+      },
+      promptTimeout(): void {
+        this.timeoutLength = 1;
+        (this.$refs['timeoutPrompt'] as InstanceType<typeof Modal>).show();
+      },
+      channelTimeout(): void {
+        if (this.timeoutLength && !isNaN(this.timeoutLength)) {
+          core.connection.send('CTU', {
+            channel: this.channel!.id,
+            character: this.character!.name,
+            length: this.timeoutLength
+          });
+        }
+      },
+
       chatKick(): void {
         core.connection.send('KIK', { character: this.character!.name });
       },
