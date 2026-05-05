@@ -223,6 +223,7 @@
       :buttonText="l('user.channelTimeout')"
       dialogClass="w-100"
       iconClass="fas fa-stopwatch"
+      v-if="channel"
     >
       <label for="timeoutValue" class="form-label">{{
         l('user.channelTimeout.prompt', displayName, channel.name)
