@@ -983,6 +983,22 @@ class State implements Interfaces.State {
     )) || { groups: [], assignments: {} };
     this.channelGroups = channelGroupData.groups;
     this.channelGroupAssignments = channelGroupData.assignments;
+    const ungroupedPinned = this.pinned.channels.filter(
+      (id: string) => !(id in this.channelGroupAssignments)
+    );
+    if (ungroupedPinned.length > 0) {
+      const groupId = `group_${Date.now()}`;
+      this.channelGroups.push({
+        id: groupId,
+        name: 'Pinned',
+        collapsed: false,
+        order: this.channelGroups.length
+      });
+      for (const id of ungroupedPinned)
+        this.channelGroupAssignments[id] = groupId;
+      await this.saveChannelGroups();
+    }
+    this.pinned.channels = Object.keys(this.channelGroupAssignments);
     //tslint:enable
   }
 }
