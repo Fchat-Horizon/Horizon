@@ -238,14 +238,30 @@
           ></a>
         </div>
 
-        <div class="list-group conversation-nav" ref="channelConversations">
+        <channel-group-section
+          v-for="group in sortedChannelGroups"
+          :key="group.id"
+          :group="group"
+          :conversations="channelsInGroup(group.id)"
+          :all-groups="conversations.channelGroups"
+          :start-editing="pendingRenameGroupId === group.id"
+          @editing-started="pendingRenameGroupId = null"
+          @create-and-rename="id => (pendingRenameGroupId = id)"
+        ></channel-group-section>
+
+        <div
+          class="list-group conversation-nav"
+          ref="channelConversations"
+          :style="sortedChannelGroups.length ? 'margin-top: 6px' : ''"
+        >
           <a
-            v-for="conversation in conversations.channelConversations"
+            v-for="conversation in ungroupedChannels"
             href="#"
             @click.prevent="conversation.show()"
             :class="getClasses(conversation)"
             class="list-group-item list-group-item-action item-channel"
             :key="conversation.key"
+            :data-channel-id="conversation.channel.id"
             @click.middle.prevent.stop="conversation.close()"
           >
             <span class="name">{{ conversation.name }}</span>
@@ -263,13 +279,16 @@
                 :aria-label="l('chat.toggleAds')"
                 @click.stop="conversation.toggleAutomatedAds()"
               ></span>
-              <span
-                class="pin fas fa-thumbtack"
-                :class="{ active: conversation.isPinned }"
-                :aria-label="l('chat.pinTab')"
-                @click.stop="conversation.isPinned = !conversation.isPinned"
-                @mousedown.prevent
-              ></span>
+              <group-picker
+                :groups="conversations.channelGroups"
+                :current-group-id="
+                  conversations.channelGroupAssignments[
+                    conversation.channel.id
+                  ] || null
+                "
+                @assign="id => setChannelGroup(conversation, id)"
+                @create="promptCreateAndAssign(conversation)"
+              ></group-picker>
               <span
                 class="fas fa-times leave"
                 @click.stop="conversation.close()"
@@ -408,6 +427,8 @@
   import { Dialog } from '../helpers/dialog';
   import AdCenterDialog from './ads/AdCenter.vue';
   import AdLauncherDialog from './ads/AdLauncher.vue';
+  import GroupPicker from './GroupPicker.vue';
+  import ChannelGroupSection from './ChannelGroupSection.vue';
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import QuickJump from './QuickJump.vue';
@@ -436,7 +457,9 @@
       adCenter: AdCenterDialog,
       adLauncher: AdLauncherDialog,
       modal: Modal,
-      'quick-jump': QuickJump
+      'quick-jump': QuickJump,
+      'group-picker': GroupPicker,
+      'channel-group-section': ChannelGroupSection
     },
     data() {
       return {
@@ -460,10 +483,21 @@
         historyNavigateHandleBackward: undefined as any as (
           e: KeyboardEvent
         ) => boolean,
-        mouseButtonListener: undefined as any as (e: MouseEvent) => void
+        mouseButtonListener: undefined as any as (e: MouseEvent) => void,
+        pendingRenameGroupId: null as string | null
       };
     },
     computed: {
+      sortedChannelGroups(): any[] {
+        return [...core.conversations.channelGroups].sort(
+          (a, b) => a.order - b.order
+        );
+      },
+      ungroupedChannels(): any[] {
+        return core.conversations.channelConversations.filter(
+          (c: any) => !core.conversations.channelGroupAssignments[c.channel.id]
+        );
+      },
       showAvatars(): boolean {
         return core.state.settings.showAvatars;
       },
@@ -525,16 +559,110 @@
           );
         }
       });
-      Sortable.create(<HTMLElement>this.$refs['channelConversations'], {
-        animation: 50,
-        fallbackTolerance: 5,
-        onEnd: async e => {
-          if (e.oldIndex === e.newIndex) return;
-          return core.conversations.channelConversations[e.oldIndex!].sort(
-            e.newIndex!
-          );
-        }
-      });
+      {
+        const ungroupedEl = <HTMLElement>this.$refs['channelConversations'];
+        let mergeTargetId: string | null = null;
+        let mergeTimer: ReturnType<typeof setTimeout> | null = null;
+        let mergeConfirmedId: string | null = null;
+        let currentDragId: string | null = null;
+        let inCenterZone = false;
+
+        const clearMerge = () => {
+          if (mergeTimer) {
+            clearTimeout(mergeTimer);
+            mergeTimer = null;
+          }
+          if (mergeTargetId) {
+            ungroupedEl
+              .querySelector(`[data-channel-id="${mergeTargetId}"]`)
+              ?.classList.remove('channel-merge-hover');
+          }
+          mergeTargetId = null;
+          mergeConfirmedId = null;
+        };
+
+        ungroupedEl.addEventListener('dragover', (e: DragEvent) => {
+          e.preventDefault();
+          const channelEl = (e.target as HTMLElement).closest(
+            '[data-channel-id]'
+          ) as HTMLElement | null;
+          const hoveredId = channelEl?.dataset?.channelId;
+          if (!hoveredId || hoveredId === currentDragId || !channelEl) {
+            inCenterZone = false;
+            clearMerge();
+            return;
+          }
+          const rect = channelEl.getBoundingClientRect();
+          const ratio = (e.clientY - rect.top) / rect.height;
+          if (ratio >= 0.3 && ratio <= 0.7) {
+            inCenterZone = true;
+            if (hoveredId !== mergeTargetId) {
+              clearMerge();
+              mergeTargetId = hoveredId;
+              mergeTimer = setTimeout(() => {
+                mergeConfirmedId = hoveredId;
+                channelEl.classList.add('channel-merge-hover');
+              }, 600);
+            }
+          } else {
+            inCenterZone = false;
+            clearMerge();
+          }
+        });
+
+        ungroupedEl.addEventListener('dragleave', (e: DragEvent) => {
+          if (!ungroupedEl.contains(e.relatedTarget as Node)) {
+            inCenterZone = false;
+            clearMerge();
+          }
+        });
+
+        Sortable.create(ungroupedEl, {
+          group: { name: 'channels', pull: true, put: true },
+          sort: true,
+          animation: 150,
+          fallbackTolerance: 5,
+          onStart: (e: any) => {
+            document.body.classList.add('channel-dragging');
+            currentDragId = (e.item as HTMLElement).dataset?.channelId ?? null;
+          },
+          onMove: () => (inCenterZone ? false : true),
+          onEnd: async (e: any) => {
+            document.body.classList.remove('channel-dragging');
+            const confirmed = mergeConfirmedId;
+            inCenterZone = false;
+            clearMerge();
+            currentDragId = null;
+            const draggedId = (e.item as HTMLElement).dataset?.channelId;
+            if (!draggedId) return;
+            if (confirmed && confirmed !== draggedId) {
+              const dragged = core.conversations.channelConversations.find(
+                (c: any) => c.channel.id === draggedId
+              );
+              const target = core.conversations.channelConversations.find(
+                (c: any) => c.channel.id === confirmed
+              );
+              if (dragged && target) {
+                const id = core.conversations.createChannelGroup('New Group');
+                core.conversations.setChannelGroup(dragged.channel.id, id);
+                core.conversations.setChannelGroup(target.channel.id, id);
+                this.pendingRenameGroupId = id;
+              }
+              return;
+            }
+            if (e.to !== e.from || e.oldIndex === e.newIndex) return;
+            const allConvs = core.conversations.channelConversations;
+            const ungrouped = allConvs.filter(
+              (c: any) =>
+                !core.conversations.channelGroupAssignments[c.channel.id]
+            );
+            const conv = ungrouped.find((c: any) => c.channel.id === draggedId);
+            const targetConv = ungrouped[e.newIndex!];
+            if (!conv || !targetConv) return;
+            return conv.sort(allConvs.indexOf(targetConv));
+          }
+        });
+      }
       const ownCharacter = core.characters.ownCharacter;
       let idleTimer: number | undefined,
         idleStatus: Connection.ClientCommands['STA'] | undefined,
@@ -846,6 +974,23 @@
             ?.horizonShowWindowAndChatNotificationBadge !== false &&
           conversation.unreadCount > 0
         );
+      },
+
+      channelsInGroup(groupId: string): any[] {
+        return core.conversations.channelConversations.filter(
+          (c: any) =>
+            core.conversations.channelGroupAssignments[c.channel.id] === groupId
+        );
+      },
+
+      setChannelGroup(conversation: any, groupId: string | null): void {
+        core.conversations.setChannelGroup(conversation.channel.id, groupId);
+      },
+
+      promptCreateAndAssign(conversation: any): void {
+        const id = core.conversations.createChannelGroup('New Group');
+        core.conversations.setChannelGroup(conversation.channel.id, id);
+        this.pendingRenameGroupId = id;
       },
 
       logOut(): void {
@@ -1238,5 +1383,32 @@
         color: var(--yellow);
       }
     }
+  }
+
+  // Drag-to-group styles
+  // Show collapsed group lists as drop zones while dragging
+  body.channel-dragging .channel-group-list {
+    display: block !important;
+    min-height: 28px;
+  }
+  body.channel-dragging .channel-group-list:empty::before {
+    content: 'Drop here';
+    display: block;
+    text-align: center;
+    font-size: 0.75rem;
+    padding: 5px 0;
+    opacity: 0.5;
+  }
+  .item-channel.channel-merge-hover {
+    outline: 2px solid var(--bs-primary, #0d6efd);
+    outline-offset: -2px;
+    background: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.12) !important;
+  }
+  // Sortable ghost/chosen states for channels
+  .item-channel.sortable-ghost {
+    opacity: 0.4;
+  }
+  .item-channel.sortable-chosen {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   }
 </style>

@@ -254,6 +254,15 @@ export namespace Settings {
     hideProfileComparisonSummary: boolean;
     hideProfileAnalysis: boolean;
     ads: Ad[];
+    channelGroups: {
+      groups: Array<{
+        id: string;
+        name: string;
+        collapsed: boolean;
+        order: number;
+      }>;
+      assignments: { [channelId: string]: string };
+    };
   };
 
   export interface Store {
