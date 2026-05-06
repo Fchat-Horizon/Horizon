@@ -128,6 +128,19 @@ export namespace Conversation {
       character: Character,
       noCreate: boolean
     ): PrivateConversation | undefined;
+
+    channelGroups: Array<{
+      id: string;
+      name: string;
+      collapsed: boolean;
+      order: number;
+    }>;
+    channelGroupAssignments: { [channelId: string]: string };
+    createChannelGroup(name: string): string;
+    deleteChannelGroup(id: string): void;
+    renameChannelGroup(id: string, name: string): void;
+    setChannelGroup(channelId: string, groupId: string | null): void;
+    saveChannelGroups(): Promise<void>;
   }
 
   export enum Setting {
@@ -254,6 +267,15 @@ export namespace Settings {
     hideProfileComparisonSummary: boolean;
     hideProfileAnalysis: boolean;
     ads: Ad[];
+    channelGroups: {
+      groups: Array<{
+        id: string;
+        name: string;
+        collapsed: boolean;
+        order: number;
+      }>;
+      assignments: { [channelId: string]: string };
+    };
   };
 
   export interface Store {
