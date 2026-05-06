@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - If you're a channel mod, you can now directly time-out or ban users from the right-click menu too. After confirming it in a prompt of course. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9d2e51a15605eb611f802bde8446bc54d975aab5)
+- Added the 'Fluxer' sound theme. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6b70426c4de99392a6d4303d825967b978f99d50)
 
 ### Changed
 
@@ -28,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Development
 
 - Updated Prettier to 3.8.3 (from 3.8.2). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/aed8da7ddee520939c44071930adf47ec16f13e9)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/719 by @CodingWithAnxiety
+- https://github.com/Fchat-Horizon/Horizon/pull/745 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/746 by @Kannamoris
 
 ## [2.1.3] - 2026-04-25
 
