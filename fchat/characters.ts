@@ -65,6 +65,7 @@ class State implements Interfaces.State {
   friendList: string[] = [];
   characterFriendList: string[] = [];
   bookmarkList: string[] = [];
+  friendSourceMap: { [key: string]: string[] } = {};
 
   get(name: string): Character {
     const key = name.toLowerCase();
@@ -167,6 +168,19 @@ let state: State;
 export default function (this: void, connection: Connection): Interfaces.State {
   state = new State();
   let reconnectStatus: Connection.ClientCommands['STA'];
+  const updateFriendSourceMap = (response: {
+    friends: { source: string; dest: string; last_online: number }[];
+  }): void => {
+    const map: { [key: string]: string[] } = {};
+    response.friends.forEach(friend => {
+      const key = friend.dest.toLowerCase();
+      const list = map[key] || (map[key] = []);
+      if (list.indexOf(friend.source) === -1) {
+        list.push(friend.source);
+      }
+    });
+    state.friendSourceMap = map;
+  };
   connection.onEvent('connecting', async isReconnect => {
     state.friends = [];
     state.bookmarks = [];
@@ -178,6 +192,7 @@ export default function (this: void, connection: Connection): Interfaces.State {
       friends: { source: string; dest: string; last_online: number }[];
     }>('friend-list.php');
     state.friendList = friendResponse.friends.map(x => x.dest);
+    updateFriendSourceMap(friendResponse);
     state.characterFriendList = [];
     if (isReconnect && <Character | undefined>state.ownCharacter !== undefined)
       reconnectStatus = {
@@ -245,6 +260,7 @@ export default function (this: void, connection: Connection): Interfaces.State {
       const friendResponse = await connection.queryApi<{
         friends: { source: string; dest: string; last_online: number }[];
       }>('friend-list.php');
+      updateFriendSourceMap(friendResponse);
       state.characterFriendList = friendResponse.friends
         .filter(x => x.source === state.ownCharacter.name)
         .map(x => x.dest);
@@ -343,6 +359,7 @@ export default function (this: void, connection: Connection): Interfaces.State {
         const friendAddResponse = await connection.queryApi<{
           friends: { source: string; dest: string; last_online: number }[];
         }>('friend-list.php');
+        updateFriendSourceMap(friendAddResponse);
         state.characterFriendList = ownName
           ? friendAddResponse.friends
               .filter(x => x.source === ownName)
@@ -373,6 +390,7 @@ export default function (this: void, connection: Connection): Interfaces.State {
         const friendRemoveResponse = await connection.queryApi<{
           friends: { source: string; dest: string; last_online: number }[];
         }>('friend-list.php');
+        updateFriendSourceMap(friendRemoveResponse);
         state.characterFriendList = ownName
           ? friendRemoveResponse.friends
               .filter(x => x.source === ownName)

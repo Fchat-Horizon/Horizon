@@ -100,6 +100,14 @@
       <div id="conversations" class="hidden-scrollbar">
         <div style="padding-top: 8px" class="list-group conversation-nav">
           <a
+            :class="getClasses(conversations.friendsTab)"
+            href="#"
+            @click.prevent="conversations.friendsTab.show()"
+            class="list-group-item list-group-item-action"
+          >
+            {{ l('users.friends') }}
+          </a>
+          <a
             :class="getClasses(conversations.consoleTab)"
             href="#"
             @click.prevent="conversations.consoleTab.show()"
@@ -295,6 +303,15 @@
         :class="{ forced: forceQuickConvoList }"
       >
         <a
+          :class="getClasses(conversations.friendsTab)"
+          href="#"
+          @click.prevent="conversations.friendsTab.show()"
+          class="list-group-item list-group-item-action"
+        >
+          <span class="fas fa-users conversation-icon"></span>
+          {{ l('users.friends') }}
+        </a>
+        <a
           :class="getClasses(conversations.consoleTab)"
           href="#"
           @click.prevent="conversations.consoleTab.show()"
@@ -361,7 +378,8 @@
           <div class="name">{{ conversation.name }}</div>
         </a>
       </div>
-      <conversation :reportDialog="$refs['reportDialog']"></conversation>
+      <friends-view v-if="isFriendsTab"></friends-view>
+      <conversation v-else :reportDialog="$refs['reportDialog']"></conversation>
     </div>
     <user-list></user-list>
     <channels ref="channelsDialog"></channels>
@@ -411,6 +429,7 @@
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import QuickJump from './QuickJump.vue';
+  import FriendsView from './FriendsView.vue';
 
   const unreadClasses = {
     [Conversation.UnreadState.None]: '',
@@ -436,7 +455,8 @@
       adCenter: AdCenterDialog,
       adLauncher: AdLauncherDialog,
       modal: Modal,
-      'quick-jump': QuickJump
+      'quick-jump': QuickJump,
+      'friends-view': FriendsView
     },
     data() {
       return {
@@ -475,6 +495,12 @@
       },
       ownCharacterLink(): string {
         return profileLink(core.characters.ownCharacter.name);
+      },
+      isFriendsTab(): boolean {
+        return (
+          this.conversations.selectedConversation ===
+          this.conversations.friendsTab
+        );
       }
     },
     mounted(): void {
@@ -639,12 +665,20 @@
         const pms = this.conversations.privateConversations;
         const channels = this.conversations.channelConversations;
         const console = this.conversations.consoleTab;
+        const friends = this.conversations.friendsTab;
         if (getKey(e) === Keys.ArrowUp) {
           if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-            this.navigateChannelUpward(selected, console, channels, pms);
+            this.navigateChannelUpward(
+              selected,
+              friends,
+              console,
+              channels,
+              pms
+            );
           } else if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey) {
             this.navigateChannelUpward(
               selected,
+              friends,
               console,
               channels.filter(
                 channel =>
@@ -659,6 +693,7 @@
           } else if (e.altKey && e.shiftKey && this.isControlOrCommand(e)) {
             this.navigateChannelUpward(
               selected,
+              friends,
               console,
               channels.filter(
                 channel =>
@@ -674,10 +709,17 @@
           }
         } else if (getKey(e) === Keys.ArrowDown) {
           if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-            this.navigateChannelDownward(selected, console, channels, pms);
+            this.navigateChannelDownward(
+              selected,
+              friends,
+              console,
+              channels,
+              pms
+            );
           } else if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey) {
             this.navigateChannelDownward(
               selected,
+              friends,
               console,
               channels.filter(
                 channel =>
@@ -692,6 +734,7 @@
           } else if (e.altKey && e.shiftKey && this.isControlOrCommand(e)) {
             this.navigateChannelDownward(
               selected,
+              friends,
               console,
               channels.filter(
                 channel =>
@@ -736,14 +779,18 @@
 
       navigateChannelUpward(
         selected: Conversation,
+        friends: Conversation,
         console: Conversation,
         channels: readonly Conversation.ChannelConversation[],
         pms: readonly Conversation.PrivateConversation[]
       ): void {
-        if (selected === console) {
+        if (selected === friends) {
           //tslint:disable-line:curly
           if (channels.length > 0) channels[channels.length - 1].show();
           else if (pms.length > 0) pms[pms.length - 1].show();
+          else console.show();
+        } else if (selected === console) {
+          friends.show();
         } else if (Conversation.isPrivate(selected)) {
           const index = pms.indexOf(selected);
           if (index === 0) console.show();
@@ -761,11 +808,14 @@
 
       navigateChannelDownward(
         selected: Conversation,
+        friends: Conversation,
         console: Conversation,
         channels: readonly Conversation.ChannelConversation[],
         pms: readonly Conversation.PrivateConversation[]
       ): void {
-        if (selected === console) {
+        if (selected === friends) {
+          console.show();
+        } else if (selected === console) {
           //tslint:disable-line:curly - false positive
           if (pms.length > 0) pms[0].show();
           else if (channels.length > 0) channels[0].show();

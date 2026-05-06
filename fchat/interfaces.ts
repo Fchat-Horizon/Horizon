@@ -321,6 +321,9 @@ export namespace Character {
     readonly friendList: ReadonlyArray<string>;
     readonly characterFriendList: ReadonlyArray<string>;
     readonly bookmarkList: ReadonlyArray<string>;
+    readonly friendSourceMap: Readonly<{
+      [key: string]: ReadonlyArray<string>;
+    }>;
 
     readonly ownProfile: CharacterProfile;
 
