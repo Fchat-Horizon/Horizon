@@ -37,6 +37,10 @@
       },
       "Kara": {
         "characters": ["Kara Ross"]
+      },
+      "Joy-Con": {
+        "alias": "Joy-Con",
+        "characters": ["Joy-Con", "JoCat", "Ms Maheswaran", "Terrible Teacher"]
       }
     },
     "translators": {
