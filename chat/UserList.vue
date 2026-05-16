@@ -30,8 +30,8 @@
       </h4>
       <div
         v-if="showPerCharacterFriends"
-        v-for="character in characterFriends"
-        :key="'char-' + character.name"
+        v-for="(character, index) in characterFriends"
+        :key="'char-' + character.name + '-' + index"
         class="userlist-item"
         :class="{ dimmed: character.isIgnored }"
       >
@@ -50,8 +50,8 @@
         }}
       </h4>
       <div
-        v-for="character in friends"
-        :key="'friend-' + character.name"
+        v-for="(character, index) in friends"
+        :key="'friend-' + character.name + '-' + index"
         class="userlist-item"
         :class="{ dimmed: character.isIgnored }"
       >
@@ -64,8 +64,8 @@
       </div>
       <h4 v-if="bookmarks.length > 0">{{ l('users.bookmarks') }}</h4>
       <div
-        v-for="character in bookmarks"
-        :key="'bookmark-' + character.name"
+        v-for="(character, index) in bookmarks"
+        :key="'bookmark-' + character.name + '-' + index"
         class="userlist-item"
         :class="{ dimmed: character.isIgnored }"
       >
@@ -283,8 +283,8 @@
       </h4>
       <div
         v-if="showPerCharacterFriends"
-        v-for="character in allCharacterFriends"
-        :key="'char-friends-all-' + character.name"
+        v-for="(character, index) in allCharacterFriends"
+        :key="'char-friends-all-' + character.name + '-' + index"
         class="userlist-item"
         :class="{ dimmed: character.isIgnored }"
       >
@@ -304,8 +304,8 @@
         }}
       </h4>
       <div
-        v-for="character in allFriends"
-        :key="'friend-all' + character.name"
+        v-for="(character, index) in allFriends"
+        :key="'friend-all-' + character.name + '-' + index"
         class="userlist-item"
         :class="{ dimmed: character.isIgnored }"
       >
@@ -321,8 +321,8 @@
       <h4>{{ l('users.bookmarks.all') }}</h4>
 
       <div
-        v-for="character in allBookmarks"
-        :key="'bookmarks-all' + character.name"
+        v-for="(character, index) in allBookmarks"
+        :key="'bookmarks-all-' + character.name + '-' + index"
         class="userlist-item"
         :class="{ dimmed: character.isIgnored }"
       >

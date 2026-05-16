@@ -768,12 +768,39 @@ class ConsoleConversation extends Conversation {
   }
 }
 
+class FriendsConversation extends Conversation {
+  readonly context = CommandContext.Console;
+  readonly name = l('users.friends');
+  readonly maxMessageLength = undefined;
+  enteredText = '';
+
+  constructor() {
+    super('_friends', false);
+    this.allMessages = [];
+
+    initConversationCache.call(this);
+  }
+
+  close(): void {
+    clearInterval(this.cacheInterval);
+  }
+
+  async addMessage(_message: Interfaces.Message): Promise<void> {
+    return;
+  }
+
+  protected doSend(): void {
+    this.errorText = l('chat.consoleChat');
+  }
+}
+
 class State implements Interfaces.State {
   privateConversations: PrivateConversation[] = [];
   channelConversations: ChannelConversation[] = [];
   privateMap: { [key: string]: PrivateConversation | undefined } = {};
   channelMap: { [key: string]: ChannelConversation | undefined } = {};
   consoleTab!: ConsoleConversation;
+  friendsTab!: FriendsConversation;
   selectedConversation: Conversation = this.consoleTab;
   lastConversation: Conversation = this.selectedConversation;
   recent: Interfaces.RecentPrivateConversation[] = [];
@@ -825,6 +852,7 @@ class State implements Interfaces.State {
 
   byKey(key: string): Conversation | undefined {
     if (key === '_') return this.consoleTab;
+    if (key === '_friends') return this.friendsTab;
     key = key.toLowerCase();
     return key[0] === '#'
       ? this.channelMap[key.substr(1)]
@@ -946,7 +974,8 @@ async function addEventMessage(
   await state.consoleTab.addMessage(message);
   if (
     core.state.settings.eventMessages &&
-    state.selectedConversation !== state.consoleTab
+    state.selectedConversation !== state.consoleTab &&
+    state.selectedConversation !== state.friendsTab
   )
     await state.selectedConversation.addMessage(message);
 }
@@ -1153,9 +1182,17 @@ export default function (this: any): Interfaces.State {
     state.channelMap = {};
     if (!isReconnect) {
       state.consoleTab = new ConsoleConversation();
+      state.friendsTab = new FriendsConversation();
       state.privateConversations = [];
       state.privateMap = {};
-    } else state.consoleTab.unread = Interfaces.UnreadState.None;
+    } else {
+      state.consoleTab.unread = Interfaces.UnreadState.None;
+      if (!state.friendsTab) {
+        state.friendsTab = new FriendsConversation();
+      } else {
+        state.friendsTab.unread = Interfaces.UnreadState.None;
+      }
+    }
     state.selectedConversation = state.consoleTab;
     EventBus.$emit('select-conversation', {
       conversation: state.selectedConversation

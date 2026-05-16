@@ -113,6 +113,7 @@ export namespace Conversation {
     readonly privateConversations: ReadonlyArray<PrivateConversation>;
     readonly channelConversations: ReadonlyArray<ChannelConversation>;
     readonly consoleTab: Conversation;
+    readonly friendsTab: Conversation;
     readonly recent: ReadonlyArray<RecentPrivateConversation>;
     readonly recentChannels: ReadonlyArray<RecentChannelConversation>;
     readonly selectedConversation: Conversation;

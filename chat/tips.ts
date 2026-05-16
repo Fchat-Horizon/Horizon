@@ -6,7 +6,7 @@ import Vue from 'vue';
  * The amount of tips we have. Based on this number (minus one),
  * we will fetch tips from the localization files.
  */
-const TIP_COUNT = 30;
+const TIP_COUNT = 32;
 /*
  * The modifier key for keyboard shortcuts based on the user's platform.
  */
