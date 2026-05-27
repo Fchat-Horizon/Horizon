@@ -159,9 +159,12 @@ export class AdManager {
     );
 
     // tslint:disable-next-line: no-unnecessary-type-assertion
-    this.interval = setTimeout(async () => {
-      await this.sendNextPost();
-    }, nextInMs) as Timer;
+    this.interval = setTimeout(
+      async () => {
+        await this.sendNextPost();
+      },
+      Math.max(0, this.nextPostDue.getTime() - Date.now())
+    ) as Timer;
   }
 
   generateAdMap(): number[] {
