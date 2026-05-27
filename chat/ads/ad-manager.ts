@@ -27,6 +27,7 @@ export interface RecoverableAd {
   nextPostDue: Date | undefined;
   firstPost: Date | undefined;
   expireDue: Date | undefined;
+  minPostDelaySeconds: number;
 }
 
 export class AdManager {
@@ -306,7 +307,8 @@ export class AdManager {
           index: adManager.adIndex,
           nextPostDue: adManager.nextPostDue,
           firstPost: adManager.firstPost,
-          expireDue: adManager.expireDue
+          expireDue: adManager.expireDue,
+          minPostDelaySeconds: adManager.minPostDelaySeconds
         };
       }
     );
@@ -340,7 +342,7 @@ export class AdManager {
     const adManager = channel.adManager;
 
     adManager.stop();
-    adManager.start();
+    adManager.start(AdManager.POSTING_PERIOD, ra.minPostDelaySeconds);
 
     adManager.adIndex = ra.index;
     adManager.firstPost = ra.firstPost;
