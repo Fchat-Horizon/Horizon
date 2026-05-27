@@ -34,13 +34,6 @@
       },
       "Grimokk": {
         "characters": ["Grimokk", "Greyhoof"]
-      },
-      "Kara": {
-        "characters": ["Kara Ross"]
-      },
-      "Joy-Con": {
-        "alias": "Joy-Con",
-        "characters": ["Joy-Con", "JoCat", "Ms Maheswaran", "Terrible Teacher"]
       }
     },
     "translators": {
@@ -98,11 +91,6 @@
         ],
         "roles": ["Community Lead"]
       },
-      "Bootsie": {
-        "alias": "Bootsie",
-        "characters": ["BootsieWootsie", "Isla Barnes"],
-        "roles": ["Assistant Development"]
-      },
       "Pankake": {
         "alias": "Pankake",
         "characters": [
@@ -115,6 +103,32 @@
           "Lilly Whitman"
         ],
         "roles": ["Community Lead"]
+      },
+      "Bootsie": {
+        "alias": "Bootsie",
+        "characters": ["BootsieWootsie", "Isla Barnes"],
+        "roles": ["Assistant Development"]
+      },
+      "Kara": {
+        "alias": "Kara",
+        "characters": ["Kara Ross"],
+        "roles": ["Assistant Development"]
+      },
+      "Joy-Con": {
+        "alias": "Joy-Con",
+        "characters": [
+          "Joy-Con",
+          "JoCat",
+          "Ms Maheswaran",
+          "Terrible Teacher",
+          "Erasa",
+          "Bluemers",
+          "Panty and Backlace",
+          "Thanks to Them",
+          "Stardew Abi",
+          "Nicotine"
+        ],
+        "roles": ["Assistant Development"]
       }
     },
     "supporters": {},
