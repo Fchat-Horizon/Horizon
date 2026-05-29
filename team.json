@@ -32,6 +32,10 @@
           "Brindle Maycot"
         ]
       },
+      "SmileyTatsu": {
+        "alias": "SmileyTatsu",
+        "characters": ["happyrockhub"]
+      },
       "Grimokk": {
         "characters": ["Grimokk", "Greyhoof"]
       }
