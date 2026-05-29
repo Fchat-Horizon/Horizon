@@ -31,7 +31,11 @@ export default Vue.extend({
     // Classic layout: existing inline format.
     // Modern layout: avatar-first with header (name + time) and bubble content.
     let children: VNodeChildrenArrayContents;
-    if (isModern && message.type !== Conversation.Message.Type.Event) {
+    if (
+      isModern &&
+      message.type !== Conversation.Message.Type.Event &&
+      message.type !== Conversation.Message.Type.Bcast
+    ) {
       children = [];
     } else {
       children = [
@@ -59,13 +63,17 @@ export default Vue.extend({
       `message message-${Conversation.Message.Type[message.type].toLowerCase()}` +
       (separators ? ' message-block' : ' message-blockless') +
       (message.type !== Conversation.Message.Type.Event &&
+      message.type !== Conversation.Message.Type.Bcast &&
       message.sender.name === core.connection.character
         ? ' message-own'
         : '') +
       (this.classes !== undefined ? ` ${this.classes}` : '') +
       ` ${this.scoreClasses}` +
       ` ${this.filterClasses}`;
-    if (message.type !== Conversation.Message.Type.Event) {
+    if (
+      message.type !== Conversation.Message.Type.Event &&
+      message.type !== Conversation.Message.Type.Bcast
+    ) {
       if (isModern) {
         // Modern layout: separate avatar column so time can sit directly after name
         const headerChildren: VNodeChildrenArrayContents = [];
@@ -271,7 +279,11 @@ export default Vue.extend({
       children.push(bbcodeNode);
     }
 
-    if (isModern && message.type !== Conversation.Message.Type.Event)
+    if (
+      isModern &&
+      message.type !== Conversation.Message.Type.Event &&
+      message.type !== Conversation.Message.Type.Bcast
+    )
       classes += ' message-modern';
     if (this.selectable) {
       classes += ' message-selectable';
