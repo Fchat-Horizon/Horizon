@@ -974,6 +974,25 @@
                     l('settings.browserOptionArgumentsHelp')
                   }}</small>
                 </label>
+
+                <div class="mb-3" v-if="!isMac">
+                  <label class="control-label" for="alwaysOpenIncognito">
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="alwaysOpenIncognito"
+                        v-model="settings.horizonAlwaysOpenIncognito"
+                      />
+                      <label class="form-check-label" for="alwaysOpenIncognito">
+                        {{ l('settings.alwaysOpenIncognito') }}
+                      </label>
+                    </div>
+                    <small class="form-text text-muted">{{
+                      l('settings.alwaysOpenIncognito.help')
+                    }}</small>
+                  </label>
+                </div>
                 <h5>
                   {{ l('settings.experimental', l('settings.customCss')) }}
                 </h5>
