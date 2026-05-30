@@ -653,7 +653,7 @@
   "settings.browserOptionSave": "Save",
   "settings.browserOptionTitle": "Browser Path",
   "settings.alwaysOpenIncognito": "Always open links in incognito/private mode",
-  "settings.alwaysOpenIncognito.help": "When enabled, left-clicking any URL link in chat opens it in your browser's incognito/private window instead of a normal tab.",
+  "settings.alwaysOpenIncognito.help": "When enabled, left-clicking any URL link in chat opens it in your browser's incognito/private window instead of a normal tab. Also applies when opening an image from the profile viewer or the profile itself in your browser.",
   "settings.cache": "Profile cache",
   "settings.cache.expiryDays": "Maximum age",
   "settings.cache.expiryDays.description": "The amount of days that a profile's data will be kept on your computer. If a profile's data hasn't been used since then, it will be cleared to make space.",
