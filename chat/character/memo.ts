@@ -1,6 +1,7 @@
 import core from '../core';
 import { CharacterMemo } from '../../site/character_page/interfaces';
 import { EventBus } from '../preview/event-bus';
+import { decodeHTML } from '../../fchat/common';
 
 export class MemoManager {
   memo?: CharacterMemo;
@@ -25,7 +26,7 @@ export class MemoManager {
       note: message
     });
 
-    this.memo!.memo = (response as any).note;
+    this.memo!.memo = decodeHTML((response as any).note || '');
 
     await this.updateStores();
   }
@@ -50,7 +51,7 @@ export class MemoManager {
       note: string | null;
       id: number;
     }>('character-memo-get2.php', { target: this.character });
-    this.memo = { id: memo.id, memo: memo.note || '' };
+    this.memo = { id: memo.id, memo: decodeHTML(memo.note || '') };
 
     if (!skipStoreUpdate) {
       await this.updateStores();
