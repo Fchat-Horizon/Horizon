@@ -632,7 +632,7 @@
         }
       });
       Sortable.create(<HTMLElement>this.$refs['channelConversations'], {
-        group: { name: 'channels', pull: true, put: true },
+        group: { name: 'channels', pull: true, put: ['channels'] },
         sort: true,
         animation: 150,
         fallbackTolerance: 5,
