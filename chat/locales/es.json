@@ -452,6 +452,7 @@
   "friends.pendingFrom": "Peticiones de Amistad pendientes del Personaje",
   "friends.pendingTo": "Solicitudes pendientes para el Personaje",
   "friends.remove": "Eliminar",
+  "friends.remove.confirm": "¿Seguro que quieres eliminar a {0} de tu lista de amigos?",
   "friends.request": "Petición de Amistad",
   "friends.requestButton": "Petición",
   "friends.sent": "Enviado:",
