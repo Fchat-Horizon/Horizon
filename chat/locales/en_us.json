@@ -452,6 +452,7 @@
   "friends.pendingFrom": "Pending Requests From Character",
   "friends.pendingTo": "Pending Requests To Character",
   "friends.remove": "Remove",
+  "friends.remove.confirm": "Are you sure you want to remove {0} as a friend?",
   "friends.request": "Request Friendship",
   "friends.requestButton": "Request",
   "friends.sent": "Sent:",
