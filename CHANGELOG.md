@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Removing a friend via the profile viewer now gives you a confirmation prompt first. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/717b95f7655a4b77a132733361ee6e43d15013d5)
+
+### Fixed
+
+- Fixed issues where you could group PMs into channel groups. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6f56acf664f7cb18915edf4a5279344c821efc17)
+  - We do actually love this idea as a feature, but since it was only possible due to an oversight it had a lot of nasty and buggy side-effects. We'll try and bring it back as an actual feature in the future.
+- Fixed a tab freezing if you tried to filter messages in the log viewer before opening a conversation. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f1993e2cb990ba7d7454dad58fa1d35a1f41b17d)
+
 ## [2.2.0] - 2026-06-04
 
 ### Added
