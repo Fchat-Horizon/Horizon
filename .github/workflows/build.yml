@@ -114,10 +114,28 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           VERSION="${TAG#v}"
-          # Extract the section between ## [VERSION] and the next ## [
-          NOTES=$(awk "/^## \\[${VERSION}\\]/{found=1; next} /^## \\[/{if(found) exit} found" CHANGELOG.md)
-          # Write to file to preserve formatting
-          echo "$NOTES" > /tmp/release-notes.md
+
+          # Print the body of a "## [<header>]" section, up to the next "## [".
+          # Matches the header literally so version dots aren't treated as regex.
+          extract_section() {
+            awk -v hdr="## [$1]" '
+              index($0, hdr) == 1 { found = 1; next }
+              /^## \[/ { if (found) exit }
+              found
+            ' CHANGELOG.md
+          }
+
+          has_text() { [ -n "$(printf '%s' "$1" | tr -d '[:space:]')" ]; }
+
+          # Stable tags have a rolled "## [version]" section. Prereleases (e.g.
+          # 1.2.0-dev.3) don't, so fall back to the Unreleased section rather than
+          # an older, already-released version's notes.
+          NOTES="$(extract_section "$VERSION")"
+          if ! has_text "$NOTES"; then NOTES="$(extract_section "Unreleased")"; fi
+
+          # Write to file to preserve formatting. This was changed from echo to printf
+          # to be a little more... 'reliable.' 
+          printf '%s\n' "$NOTES" > /tmp/release-notes.md
 
       - name: Detect release type
         id: release_type
