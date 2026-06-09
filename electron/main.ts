@@ -398,30 +398,6 @@ function maybeShowUpdatePrompt(
   lastPromptedUpdateTag = updateTag;
 }
 
-function maybePromptRestartAndInstallUpdate(
-  connectedCharacterCount: number,
-  targetWindow?: electron.BrowserWindow | null
-): void {
-  const window = getPreferredWindow(targetWindow);
-  if (!window) {
-    log.warn('update.restart.noWindow');
-    return;
-  }
-  const message =
-    connectedCharacterCount > 0
-      ? l('update.restart.confirmConnected')
-      : l('update.restart.message');
-  const confirmRestart = electron.dialog.showMessageBoxSync(window, {
-    message,
-    title: l('title'),
-    buttons: [l('confirmYes'), l('confirmNo')],
-    cancelId: 1
-  });
-  if (confirmRestart !== 0) return;
-  isUpdateRestarting = true;
-  autoUpdater.quitAndInstall(true, true);
-}
-
 async function checkForGitRelease(
   semVer: string,
   releaseUrl: string,
@@ -1167,6 +1143,7 @@ async function onReady(): Promise<void> {
       );
       if (button !== 0) return;
     }
+    isUpdateRestarting = true;
     autoUpdater.quitAndInstall(true, true);
   });
   electron.ipcMain.on('enable-auto-download-updates', () => {
