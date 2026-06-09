@@ -109,6 +109,7 @@
   "changelog.manualUpdate": "This install can’t auto-update. Update with your package manager or download the latest release.",
   "update.installOnQuit.note": "Updates install when you quit the app.",
   "update.autoInstall": "Automatically download and install updates in the future",
+  "update.restart.confirmConnected": "You are still connected to chat. \nAre you sure you want to restart and install the update right now?",
   "update.titlebar.downloading": "Downloading update: {0}%",
   "update.titlebar.ready": "Update ready, click to install",
   "channel.description": "Description",

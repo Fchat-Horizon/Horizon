@@ -281,7 +281,8 @@ let suppressAutoUpdaterPrompt = 0;
 let lastPromptedUpdateTag: string | undefined;
 let isUpdateRestarting = false;
 // Tracks an in-flight download so re-fired update-available events can't start a
-// second one.
+// second one, and the tag already downloaded so periodic checks don't re-fetch it.
+let downloadingUpdate = false;
 let downloadedUpdateTag: string | undefined;
 
 if (!fs.existsSync(settingsFile)) {
@@ -489,7 +490,7 @@ function confirmUpdateWhileConnected(): boolean {
   if (getConnectedCharacterCount() === 0) return true;
   const focusedWindow = electron.BrowserWindow.getFocusedWindow();
   const options = {
-    message: l('changelog.quitAndDownload.confirm'),
+    message: l('update.restart.confirmConnected'),
     title: l('title'),
     buttons: [l('confirmYes'), l('confirmNo')],
     cancelId: 1
