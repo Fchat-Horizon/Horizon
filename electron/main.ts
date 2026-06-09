@@ -280,6 +280,9 @@ let showChangelogOnBoot = false;
 let suppressAutoUpdaterPrompt = 0;
 let lastPromptedUpdateTag: string | undefined;
 let isUpdateRestarting = false;
+// Tracks an in-flight download so re-fired update-available events can't start a
+// second one.
+let downloadedUpdateTag: string | undefined;
 
 if (!fs.existsSync(settingsFile)) {
   shouldImportSettings = true;
@@ -458,7 +461,9 @@ async function runAutoUpdateCheck(): Promise<void> {
 async function requestUpdateDownload(expectedTag?: string): Promise<void> {
   if (!supportsAutoUpdates()) return;
   if (!isProductionMode()) return;
+  if (downloadingUpdate) return;
   suppressAutoUpdaterPrompt += 1;
+  downloadingUpdate = true;
   try {
     autoUpdater.allowPrerelease = settings.beta;
     const result = await autoUpdater.checkForUpdates();
@@ -466,6 +471,7 @@ async function requestUpdateDownload(expectedTag?: string): Promise<void> {
     const updateTag = normalizeVersionToTag(result.updateInfo?.version);
     if (expectedTag && updateTag && expectedTag !== updateTag) {
       log.info('autoUpdater.update.mismatch', { expectedTag, updateTag });
+      return;
     }
     if (updateTag && settings.horizonSkippedUpdateVersion === updateTag) {
       settings.horizonSkippedUpdateVersion = '';
@@ -476,8 +482,24 @@ async function requestUpdateDownload(expectedTag?: string): Promise<void> {
     log.error('autoUpdater.download.failed', e);
   } finally {
     suppressAutoUpdaterPrompt = Math.max(0, suppressAutoUpdaterPrompt - 1);
+    downloadingUpdate = false;
   }
 }
+function confirmUpdateWhileConnected(): boolean {
+  if (getConnectedCharacterCount() === 0) return true;
+  const focusedWindow = electron.BrowserWindow.getFocusedWindow();
+  const options = {
+    message: l('changelog.quitAndDownload.confirm'),
+    title: l('title'),
+    buttons: [l('confirmYes'), l('confirmNo')],
+    cancelId: 1
+  };
+  const button = focusedWindow
+    ? electron.dialog.showMessageBoxSync(focusedWindow, options)
+    : electron.dialog.showMessageBoxSync(options);
+  return button === 0;
+}
+
 // Schemes safe to hand to a spawned browser; anything else goes to the OS.
 const EXTERNAL_BROWSER_SCHEMES = ['http:', 'https:'];
 
@@ -711,6 +733,8 @@ async function onReady(): Promise<void> {
     if (updateMode === 'auto') {
       autoUpdater.on('error', err => {
         log.error('autoUpdater.error', err);
+        downloadingUpdate = false;
+        browserWindows.toggleUpdateNotice(false);
       });
 
       autoUpdater.on('update-available', info => {
@@ -718,6 +742,11 @@ async function onReady(): Promise<void> {
         if (!updateTag) return;
         if (settings.horizonSkippedUpdateVersion === updateTag) {
           log.info('autoUpdater.update.skipped', updateTag);
+          return;
+        }
+        if (downloadedUpdateTag === updateTag) {
+          browserWindows.toggleUpdateNotice(true, updateTag);
+          browserWindows.sendUpdateProgress(100, true);
           return;
         }
         browserWindows.toggleUpdateNotice(true, updateTag);
@@ -737,7 +766,9 @@ async function onReady(): Promise<void> {
         browserWindows.sendUpdateProgress(progress.percent);
       });
 
-      autoUpdater.on('update-downloaded', () => {
+      autoUpdater.on('update-downloaded', info => {
+        downloadedUpdateTag = normalizeVersionToTag(info.version);
+        downloadingUpdate = false;
         browserWindows.sendUpdateProgress(100, true);
       });
 
@@ -1093,25 +1124,6 @@ async function onReady(): Promise<void> {
   });
 
   electron.ipcMain.on(
-    'update-and-exit',
-    (_event: IpcMainEvent, updateVersion: string) => {
-      if (getConnectedCharacterCount() > 0) {
-        const button = electron.dialog.showMessageBoxSync(
-          //Yes this could technically fail if this event is ever emitted from something that's not a user interaction.
-          electron.BrowserWindow.getFocusedWindow()!,
-          {
-            message: l('changelog.quitAndDownload.confirm'),
-            title: l('title'),
-            buttons: [l('confirmYes'), l('confirmNo')],
-            cancelId: 1
-          }
-        );
-        if (button !== 0) return;
-      }
-      void requestUpdateDownload(updateVersion);
-    }
-  );
-  electron.ipcMain.on(
     'update-now',
     (_event: IpcMainEvent, updateVersion: string) => {
       void requestUpdateDownload(updateVersion);
@@ -1126,28 +1138,17 @@ async function onReady(): Promise<void> {
       browserWindows.toggleUpdateNotice(false);
     }
   );
-  electron.ipcMain.on('hide-auto-updater', () => {
-    settings.horizonHideAutoUpdater = true;
-    setGeneralSettings(settings);
-  });
   electron.ipcMain.on('install-update', () => {
-    if (getConnectedCharacterCount() > 0) {
-      const button = electron.dialog.showMessageBoxSync(
-        electron.BrowserWindow.getFocusedWindow()!,
-        {
-          message: l('changelog.quitAndDownload.confirm'),
-          title: l('title'),
-          buttons: [l('confirmYes'), l('confirmNo')],
-          cancelId: 1
-        }
-      );
-      if (button !== 0) return;
-    }
+    if (!confirmUpdateWhileConnected()) return;
     isUpdateRestarting = true;
     autoUpdater.quitAndInstall(true, true);
   });
   electron.ipcMain.on('enable-auto-download-updates', () => {
     settings.horizonAutoDownloadUpdates = true;
+    setGeneralSettings(settings);
+  });
+  electron.ipcMain.on('disable-auto-download-updates', () => {
+    settings.horizonAutoDownloadUpdates = false;
     setGeneralSettings(settings);
   });
   electron.ipcMain.on(

@@ -40,7 +40,7 @@
         <div
           v-if="updateDownloading"
           class="btn btn-outline-info btn-update-progress"
-          :title="'Downloading update: ' + updateDownloadPercent + '%'"
+          :title="l('update.titlebar.downloading', updateDownloadPercent)"
         >
           <div
             class="btn-update-progress-fill"
@@ -54,7 +54,7 @@
           v-else-if="updateDownloaded"
           class="btn btn-success btn-update-done"
           @click="installUpdate"
-          title="Update ready — click to install"
+          :title="l('update.titlebar.ready')"
         >
           <i class="fa fa-check"></i>
         </div>
@@ -358,6 +358,9 @@
             if (version) this.updateVersion = version;
           } else {
             this.updateVersion = '';
+            this.updateDownloading = false;
+            this.updateDownloaded = false;
+            this.updateDownloadPercent = 0;
           }
         }
       );

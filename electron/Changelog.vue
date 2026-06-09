@@ -244,6 +244,9 @@
         }
       }
     },
+    created(): void {
+      this.autoDownloadChecked = !!this.settings.horizonAutoDownloadUpdates;
+    },
     async mounted(): Promise<void> {
       remote.nativeTheme.on('updated', () => {
         this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
@@ -343,14 +346,6 @@
           };
         }
       },
-      goToDownload() {
-        this.externalUrlHandler(
-          'https://horizn.moe/download.html?ver=' + this.updateVersion
-        );
-      },
-      closeAndDownload(): void {
-        electron.ipcRenderer.send('update-and-exit', this.updateVersion);
-      },
       skipUpdate(): void {
         if (!this.updateVersion) return;
         electron.ipcRenderer.send('skip-update-version', this.updateVersion);
@@ -362,9 +357,11 @@
         this.close();
       },
       toggleAutoDownload(): void {
-        if (this.autoDownloadChecked) {
-          electron.ipcRenderer.send('enable-auto-download-updates');
-        }
+        electron.ipcRenderer.send(
+          this.autoDownloadChecked
+            ? 'enable-auto-download-updates'
+            : 'disable-auto-download-updates'
+        );
       }
     }
   });
@@ -513,30 +510,6 @@
   }
   .markdown-alert-warning {
     border-color: var(--bs-warning);
-  }
-
-  .update-banner {
-    display: flex;
-    flex-direction: column;
-    flex: 0 0 auto;
-    gap: 8px;
-    padding: 10px 12px;
-    border-radius: 10px;
-  }
-  .update-banner__text {
-    font-size: 0.95rem;
-    line-height: 1.4;
-  }
-  .update-banner__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 0;
-    position: static;
-    justify-content: end;
-  }
-  .update-banner__note {
-    font-size: 0.85rem;
   }
 
   /*This override exists because we allow the user to resize the window, which potentially resizes the footer otherwise*/
