@@ -37,7 +37,6 @@ export class ImageDomMutator {
   private scripts: DomMutatorScripts = { processor: '' };
 
   constructor(debug: boolean) {
-    // this.debug = debug;
     this.debug = debug || true;
   }
 
@@ -61,8 +60,6 @@ export class ImageDomMutator {
     }
 
     if (!mutator || mutator.eventName !== eventName) return;
-
-    // console.log(`Mutator match: ${mutator.match}`, (mutator === this.hostMutators['default']), url);
 
     return this.wrapJs(mutator.injectJs) + this.getReShowMutator();
   }
@@ -182,7 +179,6 @@ export class ImageDomMutator {
       undefined,
       'dom-ready'
     );
-    // this.add('redirect.media.tumblr.com', this.getBaseJsMutatorScript(['picture video', 'picture img']));
     this.add(
       /^[a-zA-Z0-9-]+\.media\.tumblr\.com$/,
       this.getBaseJsMutatorScript([
@@ -219,7 +215,6 @@ export class ImageDomMutator {
       this.getBaseJsMutatorScript(['video', '#main-image'])
     );
     this.add('gifsauce.com', this.getBaseJsMutatorScript(['video']));
-    // this.add('motherless.com', this.getBaseJsMutatorScript(['.content video', '.content img']));
     this.add(
       /^media[0-9]\.giphy\.com$/,
       this.getBaseJsMutatorScript(['video', 'img[alt]'])

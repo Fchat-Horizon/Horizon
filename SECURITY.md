@@ -10,7 +10,7 @@ Only the **latest release** of Horizon receives security fixes. Please verify th
 
 ### Vulnerabilities that only impact Horizon
 
-Email: `dev@hoizn.moe`
+Email: `dev@horizn.moe`
 
 Please allow **60 days** from the initial report before public disclosure.
 

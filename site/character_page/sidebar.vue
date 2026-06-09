@@ -1,10 +1,21 @@
 <template>
   <div id="character-page-sidebar" class="card bg-light">
     <div class="card-body">
-      <img
-        :src="getAvatarUrl()"
-        class="character-page-avatar character-avatar"
-      />
+      <div
+        class="character-page-avatar-bg d-inline-block"
+        :class="smallDefaultAvatar ? 'small-default-avatar' : ''"
+        :style="
+          smallDefaultAvatar &&
+          getAvatarUrl().startsWith('https://static.f-list.net/images/avatar')
+            ? `--character-avatar-bg: url('${getAvatarUrl()}')`
+            : ''
+        "
+      >
+        <img
+          :src="getAvatarUrl()"
+          class="character-page-avatar character-avatar"
+        />
+      </div>
 
       <div v-if="character.character.title" class="character-title">
         {{ character.character.title }}
@@ -51,25 +62,28 @@
             <button
               @click.prevent="toggleBookmark()"
               href="#"
-              class="btn col-3"
+              class="btn col-3 character-page-bookmark-link"
               :title="
                 l(
-                  character.bookmarked
-                    ? 'userProfile.unbookmark'
-                    : 'userProfile.bookmark'
+                  bookmarked ? 'userProfile.unbookmark' : 'userProfile.bookmark'
                 )
               "
-              :class="{
-                'btn-outline-success': character.bookmarked,
-                'btn-outline-secondary': !character.bookmarked
-              }"
+              :class="
+                bookmarked ? 'btn-outline-success' : 'btn-outline-secondary'
+              "
             >
+              <div
+                v-if="bookmarkPending"
+                class="bookmark-pending-spinner spinner-border spinner-border-sm"
+                role="status"
+                :title="
+                  l(`user.${bookmarked ? 'unbookmark' : 'bookmark'}.pending`)
+                "
+              ></div>
               <i
+                v-else
                 class="fa fa-fw"
-                :class="{
-                  'fa-bookmark': character.bookmarked,
-                  'far fa-bookmark': !character.bookmarked
-                }"
+                :class="bookmarked ? 'fa-bookmark' : 'far fa-bookmark'"
               ></i>
             </button>
 
@@ -231,7 +245,8 @@
     Component as VueComponent,
     ComponentOptions,
     CreateElement,
-    VNode
+    VNode,
+    PropType
   } from 'vue';
   import DateDisplay from '../../components/date_display.vue';
   import { Infotag } from '../../interfaces';
@@ -240,7 +255,6 @@
   import FriendDialog from './friend_dialog.vue';
   import InfotagView from './infotag.vue';
   import { Character, CONTACT_GROUP_ID, SharedStore } from './interfaces';
-  import { MatchReport } from '../../learn/matcher';
   import MemoDialog from './memo_dialog.vue';
   import ReportDialog from './report_dialog.vue';
   import core from '../../chat/core';
@@ -253,6 +267,7 @@
     getStaffRole,
     getSupporterAlias
   } from '../../chat/profile_api';
+  import { MatchReport } from '../../learn/matcher';
 
   interface ShowableVueDialog extends Vue {
     show(): void;
@@ -289,21 +304,30 @@
       'report-dialog': ReportDialog
     },
     props: {
-      character: { required: true as const },
-      oldApi: {},
-      characterMatch: { required: true as const }
+      character: {
+        type: Object as PropType<Character>,
+        required: true
+      },
+      oldApi: { type: Boolean },
+      characterMatch: { type: Object as PropType<MatchReport>, required: true }
     },
     data() {
       return {
         l: l,
         shared: Store as SharedStore,
         quickInfoIds: [1, 3, 2, 49, 9, 29, 15, 41, 25] as ReadonlyArray<number>,
-        avatarUrl: Utils.avatarURL
+        avatarUrl: Utils.avatarURL,
+        bookmarkPending: false
       };
+    },
+    mounted() {
+      this.character.bookmarked =
+        core.characters.get(this.character.character.name)?.isBookmarked ||
+        false;
     },
     computed: {
       displayBadges(): string[] {
-        const char = this.character as Character;
+        const char = this.character;
         if (!char.badges) return [];
         if (core.state.settings?.horizonShowDeveloperBadges) return char.badges;
         return char.badges.filter(
@@ -318,13 +342,13 @@
         );
       },
       editUrl(): string {
-        return `${Utils.siteDomain}character_edit.php?id=${(this.character as Character).character.id}`;
+        return `${Utils.siteDomain}character_edit.php?id=${this.character.character.id}`;
       },
       noteUrl(): string {
-        return methods.sendNoteUrl((this.character as Character).character);
+        return methods.sendNoteUrl(this.character.character);
       },
       contactMethods(): { id: number; value?: string }[] {
-        const char = this.character as Character;
+        const char = this.character;
         return Object.keys(Store.shared.infotags)
           .map(x => Store.shared.infotags[x])
           .filter(
@@ -336,11 +360,20 @@
       },
       authenticated(): boolean {
         return Store.authenticated;
+      },
+      bookmarked(): boolean {
+        return this.character.bookmarked || false;
+      },
+      smallDefaultAvatar(): boolean {
+        return (
+          core.state.generalSettings?.profileViewerSmallerDefaultAvatars ===
+          true
+        );
       }
     },
     methods: {
       getAvatarUrl(): string {
-        const char = this.character as Character;
+        const char = this.character;
         const onlineCharacter = core.characters.get(char.character.name);
 
         if (onlineCharacter && onlineCharacter.overrides.avatarUrl) {
@@ -371,7 +404,7 @@
         return badgeName in classMap ? classMap[badgeName] : '';
       },
       badgeTitle(badgeName: string): string {
-        const char = this.character as Character;
+        const char = this.character;
         if (badgeName === 'contributor') {
           const alias = getContributorAlias(char.character.name);
           return alias
@@ -437,12 +470,18 @@
         //TODO implement this
       },
       async toggleBookmark(): Promise<void> {
-        const char = this.character as Character;
+        this.bookmarkPending = true;
+        const char = this.character;
         try {
           await methods.bookmarkUpdate(char.character.id, !char.bookmarked);
           char.bookmarked = !char.bookmarked;
         } catch (e) {
           Utils.ajaxError(e, 'Unable to change bookmark state.');
+          //just in case we run into some awful desync with f-list's API and the fserv tracking messages
+          this.character.bookmarked =
+            core.characters.get(char.character.name)?.isBookmarked || false;
+        } finally {
+          this.bookmarkPending = false;
         }
       },
       getInfotag(id: number): Infotag {

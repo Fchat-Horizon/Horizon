@@ -394,8 +394,6 @@ export class ImageUrlMutator {
         ? await match.solver(url, url.match(match.matcher) as RegExpMatchArray)
         : url
     );
-
-    // return this.attachSuppressor(await match.solver(url, url.match(match.matcher) as RegExpMatchArray));
   }
 
   attachSuppressor(url: string): string {

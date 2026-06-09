@@ -62,7 +62,7 @@
         </transition>
       </div>
     </div>
-    <transition name="dimmer" v-on:after-leave="hasFinishedHiding = true"
+    <transition name="dimmer" v-on:after-leave="afterLeave"
       ><div v-show="isShown" class="modal-backdrop show"></div
     ></transition>
   </span>
@@ -161,6 +161,10 @@
       hideWithCheck(): void {
         if (this.keepOpen) return;
         this.hide();
+      },
+      afterLeave(): void {
+        this.hasFinishedHiding = true;
+        this.$emit('after-leave');
       }
     }
   });

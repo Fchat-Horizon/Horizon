@@ -81,7 +81,7 @@
           class="btn btn-light btn-sm"
           v-for="button in buttons"
           :class="button.outerClass"
-          :title="button.title"
+          :title="l(button.titleKey, shortcutModifierKey)"
           @click.prevent.stop="apply(button)"
         >
           <i
@@ -94,8 +94,8 @@
           :class="preview ? 'active' : ''"
           :title="
             preview
-              ? l('editor.closePreview', `${this.shortcutModifierKey}+Shift+P`)
-              : l('editor.preview', `${this.shortcutModifierKey}+Shift+P`)
+              ? l('editor.closePreview', `${shortcutModifierKey}+Shift+P`)
+              : l('editor.preview', `${shortcutModifierKey}+Shift+P`)
           "
         >
           <i class="fa" :class="preview ? 'fa-eye' : 'far fa-eye'"></i>
@@ -113,7 +113,7 @@
       @click="previewBBCode"
       v-if="preview && !hasToolbar"
       class="btn btn-light btn-sm bbcode-editor-preview active"
-      :title="l('editor.closePreview', `${this.shortcutModifierKey}+Shift+P`)"
+      :title="l('editor.closePreview', `${shortcutModifierKey}+Shift+P`)"
     >
       <i class="fa fa-eye-slash"></i>
     </div>
@@ -163,7 +163,6 @@
   import { default as IconView } from './IconView.vue';
   import { default as EIconSelector } from './EIconSelector.vue';
   import Modal from '../components/Modal.vue';
-  import { Character } from '../fchat';
   import l from '../chat/localize';
 
   export default Vue.extend({
@@ -177,8 +176,8 @@
       maxlength: { default: 1000 },
       classes: {},
       value: { default: undefined },
-      disabled: {},
-      placeholder: {},
+      disabled: { type: Boolean, default: false },
+      placeholder: { type: String, default: '' },
       hasToolbar: { default: true },
       invalid: { default: false, type: Boolean },
       characterName: { default: null },
@@ -273,7 +272,6 @@
       }
     },
     created(): void {
-      // console.log('EDITOR', 'created');
       this.parser = new CoreBBCodeParser();
       this.resizeListener = () => {
         const styles = getComputedStyle(this.element);
@@ -282,7 +280,6 @@
       };
     },
     mounted(): void {
-      // console.log('EDITOR', 'mounted');
       this.element = <HTMLTextAreaElement>this.$refs['input'];
       const styles = getComputedStyle(this.element);
       this.maxHeight = parseInt(styles.maxHeight, 10) || 250;
@@ -313,7 +310,6 @@
     //tslint:enable
 
     destroyed(): void {
-      // console.log('EDITOR', 'destroyed');
       window.removeEventListener('resize', this.resizeListener);
     },
     methods: {
@@ -488,7 +484,7 @@
         // noinspection TypeScriptValidateTypes
         if (button.handler !== undefined) {
           // tslint:ignore-next-line:no-any
-          return button.handler.call(this as any, this);
+          return button.handler.call(this, this);
         }
         const startText =
           button.startText === undefined || withArgument

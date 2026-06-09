@@ -73,7 +73,7 @@
   import Vue from 'vue';
   import * as Utils from '../utils';
   import { methods, Store } from './data_store';
-  import { Character, GuestbookPost, Guestbook } from './interfaces';
+  import { GuestbookPost, Guestbook } from './interfaces';
 
   import GuestbookPostView from './guestbook_post.vue';
   import core from '../../chat/core';

@@ -12,6 +12,8 @@ export function setFlashMessageImplementation(impl: FlashMessageImpl): void {
   flashImpl = impl;
 }
 
+export type ProfileViewerGalleryType = 'hover' | 'thumbnail' | 'full';
+
 export function avatarURL(name: string): string {
   const uregex = /^[a-zA-Z0-9_\-\s]+$/;
   if (!uregex.test(name)) return '#';

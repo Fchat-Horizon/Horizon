@@ -396,7 +396,7 @@ export class ProfileRecommendationAnalyzer {
         'GENDER',
         ProfileRecommendationLevel.INFO,
         'No gender',
-        'Characters with no defined gender are treated the same way as if you had selected the genderloss option.'
+        'Characters with no defined gender are treated the same way as if you had selected the genderless option.'
       );
     }
   }

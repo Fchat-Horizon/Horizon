@@ -25,9 +25,9 @@
         <div
           class="form-label mb-0"
           :style="`
-            width: 2.4em;
-            height: 2.4em;
-            background-size: contain;
+            aspect-ratio: 1;
+            height: 100%;
+            background-size: cover;
             background-repeat: no-repeat;
             background-position: center;
             background-image: url(${getCompareAvatarUrl()});
@@ -52,9 +52,17 @@
           "
           @click.stop="toggleSort"
           :aria-pressed="sortByViewerPriorities"
-          :title="l('profile.sortByMyPriorities')"
+          :title="
+            l(
+              `profile.sortKinks.${sortByViewerPriorities ? 'alphabetical' : 'priorities'}`
+            )
+          "
         >
-          <i class="fa-solid fa-filter"></i>
+          <i
+            class="fa-solid"
+            :class="`fa-${sortByViewerPriorities ? 'arrow-up-wide-short' : 'arrow-up-a-z'}`"
+            style="font-size: 1.5em"
+          ></i>
         </button>
 
         <!-- Compare / Refresh button (highlights when comparison is active) -->

@@ -54,8 +54,8 @@
           <a
             href="#"
             class="list-group-item list-group-item-action item-channel"
-            ><span class="name">Penthouse</span
-            ><span
+            ><span class="name">Penthouse</span>
+            <span class="conversation-actions"
               ><span
                 aria-label="Pin this tab"
                 class="pin fas fa-thumbtack"
@@ -68,8 +68,8 @@
           <a
             href="#"
             class="list-group-item list-group-item-action item-channel"
-            ><span class="name">Penthouse</span
-            ><span
+            ><span class="name">Penthouse</span>
+            <span class="conversation-actions"
               ><span
                 aria-label="Pin this tab"
                 class="pin fas fa-thumbtack active"
@@ -82,9 +82,10 @@
           <a
             href="#"
             class="list-group-item list-group-item-action item-channel list-group-item-danger"
-            ><span class="name">Penthouse</span
-            ><span
-              ><span
+            ><span class="name">Penthouse</span>
+            <span class="conversation-actions"
+              ><span class="badge rounded-pill text-bg-danger">9</span>
+              <span
                 aria-label="Pin this tab"
                 class="pin fas fa-thumbtack active"
               ></span
@@ -96,8 +97,8 @@
           <a
             href="#"
             class="list-group-item list-group-item-action item-channel list-group-item-danger"
-            ><span class="name">Penthouse</span
-            ><span
+            ><span class="name">Penthouse</span>
+            <span class="conversation-actions"
               ><span
                 aria-label="Pin this tab"
                 class="pin fas fa-thumbtack"
@@ -110,8 +111,8 @@
           <a
             href="#"
             class="list-group-item list-group-item-action item-channel list-group-item-warning"
-            ><span class="name">Penthouse</span
-            ><span
+            ><span class="name">Penthouse</span>
+            <span class="conversation-actions"
               ><span
                 aria-label="Pin this tab"
                 class="pin fas fa-thumbtack active"
@@ -124,8 +125,52 @@
           <a
             href="#"
             class="list-group-item list-group-item-action item-channel list-group-item-warning"
-            ><span class="name">Penthouse</span
-            ><span
+            ><span class="name">Penthouse</span>
+            <span class="conversation-actions"
+              ><span
+                aria-label="Pin this tab"
+                class="pin fas fa-thumbtack"
+              ></span
+              ><span
+                aria-label="Close this tab"
+                class="fas fa-times leave"
+              ></span></span
+          ></a>
+          <a
+            href="#"
+            class="list-group-item list-group-item-action item-channel list-group-item-warning"
+            ><span class="name">Penthouse</span>
+            <span class="conversation-actions"
+              ><span class="badge rounded-pill text-bg-danger">3</span>
+              <span
+                aria-label="Pin this tab"
+                class="pin fas fa-thumbtack active"
+              ></span
+              ><span
+                aria-label="Close this tab"
+                class="fas fa-times leave"
+              ></span></span
+          ></a>
+          <a
+            href="#"
+            class="list-group-item list-group-item-action item-channel list-group-item-warning"
+            ><span class="name">Penthouse</span>
+            <span class="conversation-actions"
+              ><span class="badge rounded-pill text-bg-danger">18</span>
+              <span
+                aria-label="Pin this tab"
+                class="pin fas fa-thumbtack"
+              ></span
+              ><span
+                aria-label="Close this tab"
+                class="fas fa-times leave"
+              ></span></span
+          ></a>
+          <a
+            href="#"
+            class="list-group-item list-group-item-action item-channel active"
+            ><span class="name">Penthouse</span>
+            <span class="conversation-actions"
               ><span
                 aria-label="Pin this tab"
                 class="pin fas fa-thumbtack"
@@ -138,22 +183,8 @@
           <a
             href="#"
             class="list-group-item list-group-item-action item-channel active"
-            ><span class="name">Penthouse</span
-            ><span
-              ><span
-                aria-label="Pin this tab"
-                class="pin fas fa-thumbtack"
-              ></span
-              ><span
-                aria-label="Close this tab"
-                class="fas fa-times leave"
-              ></span></span
-          ></a>
-          <a
-            href="#"
-            class="list-group-item list-group-item-action item-channel active"
-            ><span class="name">Penthouse</span
-            ><span
+            ><span class="name">Penthouse</span>
+            <span class="conversation-actions"
               ><span
                 aria-label="Pin this tab"
                 class="pin fas fa-thumbtack active"
@@ -173,13 +204,16 @@
             data-character="Active"
             data-bs-touch="false"
             class="list-group-item list-group-item-action item-private active"
-            ><img src="https://static.f-list.net/images/avatar/m.png" />
+            ><div class="avatar-wrapper">
+              <img src="https://static.f-list.net/images/avatar/m.png" />
+              <span class="badge text-bg-danger">44</span>
+            </div>
             <div class="name">
               <span>Mr. Test</span>
-              <div style="line-height: 0; display: flex">
+              <div class="conversation-meta">
                 <span class="fas fa-reply"></span
                 ><span class="online-status offline fa fa-ban"></span
-                ><span style="flex: 1 1 0%"></span
+                ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
                   class="pin fas fa-thumbtack"
@@ -194,13 +228,15 @@
             href="#"
             data-bs-touch="false"
             class="list-group-item list-group-item-action item-private"
-            ><img src="https://static.f-list.net/images/avatar/m.png" />
+            ><div class="avatar-wrapper">
+              <img src="https://static.f-list.net/images/avatar/m.png" />
+            </div>
             <div class="name">
               <span>Offline user</span>
-              <div style="line-height: 0; display: flex">
+              <div class="conversation-meta">
                 <span class="fas fa-reply"></span
                 ><span class="online-status offline fa fa-ban"></span
-                ><span style="flex: 1 1 0%"></span
+                ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
                   class="pin fas fa-thumbtack"
@@ -215,13 +251,15 @@
             href="#"
             data-bs-touch="false"
             class="list-group-item list-group-item-action item-private"
-            ><img src="https://static.f-list.net/images/avatar/m.png" />
+            ><div class="avatar-wrapper">
+              <img src="https://static.f-list.net/images/avatar/m.png" />
+            </div>
             <div class="name">
               <span>Online</span>
-              <div style="line-height: 0; display: flex">
+              <div class="conversation-meta">
                 <span class="fas fa-reply"></span
                 ><span class="online-status online fas fa-circle"></span
-                ><span style="flex: 1 1 0%"></span
+                ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
                   class="pin fas fa-thumbtack"
@@ -236,13 +274,15 @@
             href="#"
             data-bs-touch="false"
             class="list-group-item list-group-item-action item-private"
-            ><img src="https://static.f-list.net/images/avatar/m.png" />
+            ><div class="avatar-wrapper">
+              <img src="https://static.f-list.net/images/avatar/m.png" />
+            </div>
             <div class="name">
               <span>Looking</span>
-              <div style="line-height: 0; display: flex">
+              <div class="conversation-meta">
                 <span class="fas fa-reply"></span
                 ><span class="online-status online fa fa-eye"></span
-                ><span style="flex: 1 1 0%"></span
+                ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
                   class="pin fas fa-thumbtack"
@@ -257,13 +297,15 @@
             href="#"
             data-bs-touch="false"
             class="list-group-item list-group-item-action item-private"
-            ><img src="https://static.f-list.net/images/avatar/m.png" />
+            ><div class="avatar-wrapper">
+              <img src="https://static.f-list.net/images/avatar/m.png" />
+            </div>
             <div class="name">
               <span>Crown</span>
-              <div style="line-height: 0; display: flex">
+              <div class="conversation-meta">
                 <span class="fas fa-reply"></span
                 ><span class="online-status online fas fa-crown"></span
-                ><span style="flex: 1 1 0%"></span
+                ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
                   class="pin fas fa-thumbtack"
@@ -278,13 +320,15 @@
             href="#"
             data-bs-touch="false"
             class="list-group-item list-group-item-action item-private"
-            ><img src="https://static.f-list.net/images/avatar/m.png" />
+            ><div class="avatar-wrapper">
+              <img src="https://static.f-list.net/images/avatar/m.png" />
+            </div>
             <div class="name">
               <span>Busy</span>
-              <div style="line-height: 0; display: flex">
+              <div class="conversation-meta">
                 <span class="fas fa-reply"></span
                 ><span class="online-status away fa fa-cog"></span
-                ><span style="flex: 1 1 0%"></span
+                ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
                   class="pin fas fa-thumbtack"
@@ -299,13 +343,15 @@
             href="#"
             data-bs-touch="false"
             class="list-group-item list-group-item-action item-private"
-            ><img src="https://static.f-list.net/images/avatar/m.png" />
+            ><div class="avatar-wrapper">
+              <img src="https://static.f-list.net/images/avatar/m.png" />
+            </div>
             <div class="name">
               <span>Idle</span>
-              <div style="line-height: 0; display: flex">
+              <div class="conversation-meta">
                 <span class="fas fa-reply"></span
                 ><span class="online-status away far fa-clock"></span
-                ><span style="flex: 1 1 0%"></span
+                ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
                   class="pin fas fa-thumbtack"
@@ -320,13 +366,15 @@
             href="#"
             data-bs-touch="false"
             class="list-group-item list-group-item-action item-private"
-            ><img src="https://static.f-list.net/images/avatar/m.png" />
+            ><div class="avatar-wrapper">
+              <img src="https://static.f-list.net/images/avatar/m.png" />
+            </div>
             <div class="name">
               <span>Away</span>
-              <div style="line-height: 0; display: flex">
+              <div class="conversation-meta">
                 <span class="fas fa-reply"></span
                 ><span class="online-status away far fa-circle"></span
-                ><span style="flex: 1 1 0%"></span
+                ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
                   class="pin fas fa-thumbtack"
@@ -341,13 +389,15 @@
             href="#"
             data-bs-touch="false"
             class="list-group-item list-group-item-action item-private"
-            ><img src="https://static.f-list.net/images/avatar/m.png" />
+            ><div class="avatar-wrapper">
+              <img src="https://static.f-list.net/images/avatar/m.png" />
+            </div>
             <div class="name">
               <span>Do not disturb</span>
-              <div style="line-height: 0; display: flex">
+              <div class="conversation-meta">
                 <span class="fas fa-reply"></span
                 ><span class="online-status dnd fa fa-minus-circle"></span
-                ><span style="flex: 1 1 0%"></span
+                ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
                   class="pin fas fa-thumbtack"

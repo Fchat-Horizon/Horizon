@@ -62,7 +62,7 @@
       },
       onEnter(): void {
         this.submit();
-        (this.$refs['dialog'] as any).hide();
+        (this.$refs['dialog'] as InstanceType<typeof CustomDialog>).hide();
       }
     }
   });

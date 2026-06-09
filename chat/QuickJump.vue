@@ -30,8 +30,12 @@
             </span>
 
             <span class="result-name">{{ result.name }} </span>
-            <span v-if="hasMentions(result)" class="badge text-bg-warning"
-              ><i class="fa-fw fa-solid fa-exclamation"></i
+            <span v-if="hasMentions(result)" class="badge text-bg-warning">
+              <span v-if="showUnreadAmount()">
+                {{ result.conversation?.unreadCount }}
+              </span>
+
+              <i v-else class="fa-fw fa-solid fa-exclamation"></i
             ></span>
             <span v-else-if="isUnread(result)" class="badge text-bg-danger"
               ><i class="fa-fw fa-solid fa-ellipsis"></i
@@ -384,6 +388,12 @@
         return (
           result.conversation !== undefined &&
           result.conversation.unread === Conversation.UnreadState.Mention
+        );
+      },
+      showUnreadAmount(): boolean {
+        return (
+          core.state.generalSettings
+            ?.horizonShowWindowAndChatNotificationBadge === true
         );
       },
       isUnread(result: SearchResult): boolean {

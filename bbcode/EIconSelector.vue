@@ -48,6 +48,17 @@
               </div>
 
               <div
+                class="btn btn-light recent"
+                @click.prevent.stop="searchWithString('category:recent')"
+                :class="{ active: search === 'category:recent' }"
+                :title="l('eicon.category.recent')"
+                role="button"
+                tabindex="0"
+              >
+                <i class="fas fa-history"></i>
+              </div>
+
+              <div
                 class="btn btn-light expressions"
                 @click.prevent.stop="searchWithString('category:expressions')"
                 :class="{ active: search === 'category:expressions' }"
@@ -196,6 +207,16 @@
               :aria-label="eicon"
               tabindex="0"
             >
+              <div
+                class="btn recent-delete"
+                @click.prevent.stop="deleteRecent(eicon)"
+                role="button"
+                :aria-label="l('eicon.deleteRecent')"
+                v-if="search === 'category:recent'"
+              >
+                <i class="fas fa-times"></i>
+              </div>
+
               <img
                 class="eicon"
                 :alt="eicon"
@@ -256,7 +277,7 @@
   export default CustomDialog.extend({
     components: { modal, draggable },
     props: {
-      onSelect: {}
+      onSelect: Function
     },
     data() {
       return {
@@ -266,28 +287,32 @@
         allResults: [] as string[],
         displayedCount: 77 as number,
         loadIncrement: 77 as number,
+        recentMax: 55 as number,
         random_max: 2000,
         search: '' as string,
         refreshing: false,
         isLoadingMore: false,
-        searchUpdateDebounce: debounce(() => {
-          this.runSearch();
-        }, 350),
-        handleScroll: debounce(() => {
-          const resultsContainer = this.$refs[
-            'resultsContainer'
-          ] as HTMLElement;
-          if (!resultsContainer || this.isLoadingMore) return;
-
-          const scrollTop = resultsContainer.scrollTop;
-          const scrollHeight = resultsContainer.scrollHeight;
-          const clientHeight = resultsContainer.clientHeight;
-
-          if (scrollTop + clientHeight >= scrollHeight - 200) {
-            this.loadMoreResults();
-          }
-        }, 100)
+        searchUpdateDebounce: (() => {}) as () => void,
+        handleScroll: (() => {}) as () => void
       };
+    },
+    created(): void {
+      this.searchUpdateDebounce = debounce(() => {
+        this.runSearch();
+      }, 350);
+
+      this.handleScroll = debounce(() => {
+        const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
+        if (!resultsContainer || this.isLoadingMore) return;
+
+        const scrollTop = resultsContainer.scrollTop;
+        const scrollHeight = resultsContainer.scrollHeight;
+        const clientHeight = resultsContainer.clientHeight;
+
+        if (scrollTop + clientHeight >= scrollHeight - 200) {
+          this.loadMoreResults();
+        }
+      }, 100);
     },
     async mounted(): Promise<void> {
       store = await EIconStore.getSharedStore();
@@ -768,6 +793,8 @@
 
           case 'favorites':
             return Object.keys(core.state.favoriteEIcons);
+          case 'recent':
+            return core.state.recentEIcons;
         }
 
         return [];
@@ -779,6 +806,13 @@
         if (this.onSelect) {
           this.onSelect(eicon, shift);
         }
+
+        const index = core.state.recentEIcons.indexOf(eicon);
+        if (index !== -1) core.state.recentEIcons.splice(index, 1);
+        if (core.state.recentEIcons.length > this.recentMax)
+          core.state.recentEIcons.pop();
+        core.state.recentEIcons.unshift(eicon);
+        core.settingsStore.set('recentEIcons', core.state.recentEIcons);
       },
 
       async refreshIcons(): Promise<void> {
@@ -800,8 +834,8 @@
       },
 
       setFocus(): void {
-        (this.$refs['search'] as any).focus();
-        (this.$refs['search'] as any).select();
+        (this.$refs['search'] as HTMLInputElement).focus();
+        (this.$refs['search'] as HTMLInputElement).select();
       },
 
       isFavorite(eicon: string): boolean {
@@ -821,6 +855,15 @@
         );
 
         this.$forceUpdate();
+      },
+
+      deleteRecent(eicon: string): void {
+        const index = core.state.recentEIcons.indexOf(eicon);
+        if (index !== -1) {
+          core.state.recentEIcons.splice(index, 1);
+          void core.settingsStore.set('recentEIcons', core.state.recentEIcons);
+          this.runSearch();
+        }
       },
 
       forceAddFavorite(eicon: string): void {
@@ -927,8 +970,32 @@
                 background-color: var(--bs-light) !important;
                 border: solid 1px var(--bs-light) !important;
               }
-              .favorite-toggle {
+              .favorite-toggle,
+              .recent-delete {
                 visibility: visible;
+              }
+            }
+
+            .recent-delete {
+              position: absolute;
+              left: 0;
+              top: 0;
+              border: none;
+              margin: 0;
+              padding: 4px;
+              border-radius: 0;
+              visibility: hidden;
+
+              i {
+                color: var(--bs-danger);
+                opacity: 0.85;
+                -webkit-text-stroke-width: thin;
+                -webkit-text-stroke-color: var(--bs-secondary-color);
+
+                &:hover {
+                  opacity: 1;
+                  filter: brightness(1.1);
+                }
               }
             }
 

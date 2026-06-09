@@ -37,11 +37,12 @@
   import { Conversation } from '../interfaces';
   import UserView from '../UserView.vue';
   import ChannelConversation = Conversation.ChannelConversation;
+  import { PropType } from 'vue';
 
   export default CustomDialog.extend({
     components: { modal: Modal, user: UserView },
     props: {
-      character: { required: true as const }
+      character: { type: Object as PropType<Character>, required: true }
     },
     data() {
       return {

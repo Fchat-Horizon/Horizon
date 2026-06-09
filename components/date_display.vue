@@ -8,7 +8,7 @@
   import core from '../chat/core';
 
   interface Props {
-    time?: string | number;
+    time?: string | number | null;
   }
 
   const props = withDefaults(defineProps<Props>(), { time: 0 });

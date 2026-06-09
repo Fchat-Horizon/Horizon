@@ -199,8 +199,6 @@
         character: Character;
         score: number;
       }): void => {
-        // console.log('scoreWatcher', event);
-
         if (
           event.character &&
           this.characterName &&
@@ -411,10 +409,6 @@
         const rawSpecies = Matcher.getTagValue(TagId.Species, c);
         const rawAge = Matcher.getTagValue(TagId.Age, c);
 
-        // if ((a.species) && (!Species[a.species])) {
-        // console.log('SPECIES', a.species, rawSpecies);
-        // }
-
         if (a.orientation && !Orientation[a.orientation]) {
           console.error('Missing Orientation', a.orientation, c.name);
         }
@@ -450,19 +444,6 @@
       },
       byScore(_tagId: any): string {
         return '';
-
-        // too much
-        // if (!this.match) {
-        //   return '';
-        // }
-        //
-        // const score = this.match.merged[tagId];
-        //
-        // if (!score) {
-        //   return '';
-        // }
-        //
-        // return score.getRecommendedClass();
       },
       getOnlineStatus(): string {
         if (!this.onlineCharacter) {

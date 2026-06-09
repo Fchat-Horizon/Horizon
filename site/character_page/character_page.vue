@@ -124,7 +124,7 @@
 
                   <character-kinks
                     :character="character"
-                    :oldApi="oldApi"
+                    :oldApi="true"
                     ref="tab0"
                     :autoExpandCustoms="autoExpandCustoms"
                   ></character-kinks>
@@ -137,10 +137,67 @@
                   ></character-infotags>
                 </div>
                 <div role="tabpanel" v-show="tab === '2'">
+                  <div
+                    v-if="!loading"
+                    class="btn-group image-gallery-selector"
+                    role="group"
+                    :aria-label="l('settings.profileViewerGalleryType')"
+                  >
+                    <input
+                      type="radio"
+                      class="btn-check"
+                      name="btnradio"
+                      id="btnRadioCarousel"
+                      autocomplete="off"
+                      :checked="previewType === 'thumbnail'"
+                    />
+                    <label
+                      class="btn btn-sm btn-outline-primary"
+                      for="btnRadioCarousel"
+                      @click="updateGalleryType('thumbnail')"
+                      :title="l('settings.profileViewerGalleryType.thumbnail')"
+                      ><i
+                        class="fa-solid fa-up-right-and-down-left-from-center"
+                      ></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn-check"
+                      name="btnradio"
+                      id="btnRadioHover"
+                      autocomplete="off"
+                      :checked="previewType === 'hover'"
+                    />
+                    <label
+                      class="btn btn-sm btn-outline-primary"
+                      for="btnRadioHover"
+                      @click="updateGalleryType('hover')"
+                      :title="l('settings.profileViewerGalleryType.hover')"
+                    >
+                      <i class="fa-solid fa-picture-in-picture"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn-check"
+                      name="btnradio"
+                      id="btnRadioFull"
+                      autocomplete="off"
+                      :checked="previewType === 'full'"
+                    />
+                    <label
+                      class="btn btn-sm btn-outline-primary"
+                      for="btnRadioFull"
+                      @click="updateGalleryType('full')"
+                      :title="l('settings.profileViewerGalleryType.full')"
+                    >
+                      <i class="fa-solid fa-images"></i>
+                    </label>
+                  </div>
                   <character-images
                     :character="character"
                     ref="tab2"
-                    :use-preview="imagePreview"
+                    :previewType="previewType"
+                    :animated-thumbs="animatedThumbs"
                     :injected-images="images"
                   ></character-images>
                 </div>
@@ -216,6 +273,7 @@
   import ProfileAnalysis from '../../learn/recommend/ProfileAnalysis.vue';
   import { CharacterImage, SimpleCharacter } from '../../interfaces';
   import l from '../../chat/localize';
+  import { ProfileViewerGalleryType } from '../utils';
 
   const CHARACTER_CACHE_EXPIRE = 7 * 24 * 60 * 60 * 1000; // 7 days (milliseconds)
   const CHARACTER_META_CACHE_EXPIRE = 7 * 24 * 60 * 60 * 1000; // 7 days (milliseconds)
@@ -242,16 +300,21 @@
       bbcode: BBCodeView(standardParser)
     },
     props: {
-      name: {},
-      id: {},
-      authenticated: { required: true as const },
-      oldApi: {},
-      imagePreview: {}
+      name: { type: String },
+      id: { type: Number },
+      authenticated: { type: Boolean, required: true },
+      oldApi: { type: Boolean, default: true },
+
+      previewType: {
+        type: String as () => ProfileViewerGalleryType,
+        default: 'thumbnail'
+      },
+      animatedThumbs: { type: Boolean, default: false }
     },
     data() {
       return {
         shared: Store as SharedStore,
-        character: undefined as any as Character | undefined,
+        character: undefined as Character | undefined,
         loading: true,
         refreshing: false,
         error: '',
@@ -262,8 +325,8 @@
         groups: null as CharacterGroup[] | null,
         images: null as CharacterImage[] | null,
         l: l,
-        selfCharacter: undefined as any as Character | undefined,
-        characterMatch: undefined as any as MatchReport | undefined
+        selfCharacter: undefined as Character | undefined,
+        characterMatch: undefined as MatchReport | undefined
       };
     },
     computed: {
@@ -288,10 +351,7 @@
         }
 
         // Friends tab - key '4'
-        if (
-          (this as any).character?.is_self ||
-          (this as any).character?.settings?.show_friends
-        ) {
+        if (this.character?.is_self || this.character?.settings?.show_friends) {
           const friendsCount =
             this.friends !== null ? ` (${this.friends.length})` : '';
           labels['4'] = this.l('profile.tab.friends') + friendsCount;
@@ -305,7 +365,7 @@
     },
     watch: {
       tab(): void {
-        const target = <ShowableVueTab>(this.$refs as any)[`tab${this.tab}`];
+        const target = <ShowableVueTab>this.$refs[`tab${this.tab}`];
         //tslint:disable-next-line:no-unbound-method
         if (typeof target.show === 'function') target.show();
       },
@@ -332,7 +392,7 @@
       }
     },
     beforeMount(): void {
-      this.shared.authenticated = (this as any).authenticated;
+      this.shared.authenticated = this.authenticated;
 
       // console.log('Beforemount');
     },
@@ -348,7 +408,7 @@
       async reload(): Promise<void> {
         await this.load(true, true);
 
-        const target = <ShowableVueTab>(this.$refs as any)[`tab${this.tab}`];
+        const target = <ShowableVueTab>this.$refs[`tab${this.tab}`];
 
         //tslint:disable-next-line:no-unbound-method
         if (typeof target.show === 'function') target.show();
@@ -364,11 +424,7 @@
         try {
           const due: Promise<void>[] = [];
 
-          if (
-            (this as any).name === undefined ||
-            (this as any).name.length === 0
-          )
-            return;
+          if (this.name === undefined || this.name.length === 0) return;
 
           await methods.fieldsGet();
 
@@ -396,36 +452,46 @@
 
         this.loading = false;
       },
-      async updateGuestbook(): Promise<void> {
+      async updateGuestbook(expectedName: string): Promise<void> {
         try {
           if (!this.character || !_.get(this.character, 'settings.guestbook')) {
             this.guestbook = null;
             return;
           }
 
-          this.guestbook = await methods.guestbookPageGet(
+          const result = await methods.guestbookPageGet(
             this.character.character.id,
             1
           );
+
+          if (this.name !== expectedName) return;
+
+          this.guestbook = result;
         } catch (err) {
+          if (this.name !== expectedName) return;
           console.error(err);
           this.guestbook = null;
         }
       },
-      async updateGroups(): Promise<void> {
+      async updateGroups(expectedName: string): Promise<void> {
         try {
           if (!this.character || (this as any).oldApi) {
             this.groups = null;
             return;
           }
 
-          this.groups = await methods.groupsGet(this.character.character.id);
+          const result = await methods.groupsGet(this.character.character.id);
+
+          if (this.name !== expectedName) return;
+
+          this.groups = result;
         } catch (err) {
+          if (this.name !== expectedName) return;
           console.error('Update groups', err);
           this.groups = null;
         }
       },
-      async updateFriends(): Promise<void> {
+      async updateFriends(expectedName: string): Promise<void> {
         try {
           if (
             !this.character ||
@@ -435,32 +501,46 @@
             return;
           }
 
-          this.friends = await methods.friendsGet(this.character.character.id);
+          const result = await methods.friendsGet(this.character.character.id);
+
+          if (this.name !== expectedName) return;
+
+          this.friends = result;
         } catch (err) {
+          if (this.name !== expectedName) return;
           console.error('Update friends', err);
           this.friends = null;
         }
       },
-      async updateImages(): Promise<void> {
+      async updateImages(expectedName: string): Promise<void> {
         try {
           if (!this.character) {
             this.images = null;
             return;
           }
 
-          this.images = await methods.imagesGet(this.character.character.id);
+          const fetchedImages = await methods.imagesGet(
+            this.character.character.id
+          );
+
+          if (this.name !== expectedName) return;
+
+          this.images = fetchedImages;
         } catch (err) {
+          if (this.name !== expectedName) return;
           console.error('Update images', err);
           this.images = null;
         }
       },
       async updateMeta(name: string): Promise<void> {
         await Promise.all([
-          this.updateImages(),
-          this.updateGuestbook(),
-          this.updateFriends(),
-          this.updateGroups()
+          this.updateImages(name),
+          this.updateGuestbook(name),
+          this.updateFriends(name),
+          this.updateGroups(name)
         ]);
+
+        if ((this as any).name !== name) return;
 
         await core.cache.profileCache.registerMeta(name, {
           lastMetaFetched: new Date(),
@@ -493,15 +573,15 @@
         this.updateMatches();
       },
       async fetchCharacterCache(): Promise<CharacterCacheRecord | null> {
-        if (!(this as any).name) {
+        if (!this.name) {
           throw new Error('A man must have a name');
         }
 
         // tslint:disable-next-line: await-promise
-        return (await core.cache.profileCache.get((this as any).name)) || null;
+        return (await core.cache.profileCache.get(this.name)) || null;
       },
       async _getCharacter(skipCache: boolean = false): Promise<void> {
-        log.debug('profile.getCharacter', { name: (this as any).name });
+        log.debug('profile.getCharacter', { name: this.name });
 
         this.character = undefined;
         this.friends = null;
@@ -509,7 +589,7 @@
         this.guestbook = null;
         this.images = null;
 
-        if (!(this as any).name) {
+        if (!this.name) {
           return;
         }
 
@@ -518,11 +598,7 @@
         this.character =
           cache && !skipCache
             ? cache.character
-            : await methods.characterData(
-                (this as any).name,
-                (this as any).id,
-                false
-              );
+            : await methods.characterData(this.name, this.id, false);
 
         standardParser.inlines = this.character!.character.inlines;
 
@@ -557,7 +633,7 @@
 
           // No await on purpose:
           // tslint:disable-next-line no-floating-promises
-          this.updateMeta((this as any).name).catch((err: any) =>
+          this.updateMeta(this.name).catch((err: any) =>
             console.error('profile.updateMeta', err)
           );
         }
@@ -582,15 +658,12 @@
 
         try {
           const character = await methods.characterData(
-            (this as any).name,
-            (this as any).id,
+            this.name,
+            this.id,
             false
           );
 
-          if (
-            !this.refreshing ||
-            (this as any).name !== character.character.name
-          ) {
+          if (!this.refreshing || this.name !== character.character.name) {
             return;
           }
 
@@ -604,7 +677,7 @@
 
           // No awaits on these on purpose:
           // tslint:disable-next-line no-floating-promises
-          this.updateMeta((this as any).name);
+          this.updateMeta(this.name);
         } finally {
           this.refreshing = false;
         }
@@ -635,6 +708,9 @@
         );
 
         // console.log('Match', this.selfCharacter.character.name, this.character.character.name, this.characterMatch);
+      },
+      updateGalleryType(profileGalleryType: ProfileViewerGalleryType): void {
+        this.$emit('gallery-type-updated', profileGalleryType);
       }
     }
   });
@@ -702,9 +778,8 @@
   }
 
   .expanded-custom-kink {
-    .custom-kink {
-      margin-top: 14px;
-      margin-bottom: 14px;
+    &.custom-kink {
+      border: 1px var(--characterKinkCustomBorderColor) solid;
     }
   }
 
@@ -730,7 +805,7 @@
     margin-bottom: 7px;
     margin-left: -6px;
     margin-right: -6px;
-    border: 1px var(--characterKinkCustomBorderColor) solid;
+
     border-radius: 2px;
     /* border-collapse: collapse; */
     padding: 5px;
@@ -874,6 +949,17 @@
     column-width: auto;
     column-count: 2;
     column-gap: 0.5rem;
+
+    &.thumbnails {
+      column-count: auto;
+    }
+
+    .character-image-thumb-wrapper {
+      display: inline-block;
+      a {
+        cursor: pointer;
+      }
+    }
 
     .character-image-wrapper {
       display: inline-block;
@@ -1084,7 +1170,7 @@
   .character-card-header {
     position: sticky;
     top: -1rem;
-    z-index: 1000;
+    z-index: 1100;
     background: var(--headerBackgroundMaskColor) !important;
   }
 

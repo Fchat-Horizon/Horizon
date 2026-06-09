@@ -127,16 +127,18 @@
 
 <script lang="ts">
   import CustomDialog from '../../components/custom_dialog';
+  import { Dialog } from '../../helpers/dialog';
   import Modal from '../../components/Modal.vue';
   import * as Utils from '../utils';
   import { methods } from './data_store';
   import { Character, Friend, FriendRequest } from './interfaces';
   import l from './../../chat/localize';
+  import { PropType } from 'vue';
 
   export default CustomDialog.extend({
     components: { Modal },
     props: {
-      character: { required: true as const }
+      character: { type: Object as PropType<Character>, required: true }
     },
     data() {
       return {
@@ -179,12 +181,19 @@
         this.requesting = false;
       },
       async dissolve(friendship: Friend): Promise<void> {
-        try {
-          await methods.friendDissolve(friendship);
-          this.existing.splice(this.existing.indexOf(friendship), 1);
-        } catch (e) {
-          if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
-          Utils.ajaxError(e, 'Unable to dissolve friendship');
+        if (
+          Dialog.confirmDialog(
+            l('friends.remove.confirm', friendship.target.name)
+          )
+        ) {
+          try {
+            await methods.friendDissolve(friendship);
+            this.existing.splice(this.existing.indexOf(friendship), 1);
+          } catch (e) {
+            if (Utils.isJSONError(e))
+              this.error = <string>e.response.data.error;
+            Utils.ajaxError(e, 'Unable to dissolve friendship');
+          }
         }
       },
       async accept(request: FriendRequest): Promise<void> {

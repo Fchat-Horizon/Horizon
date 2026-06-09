@@ -247,25 +247,6 @@ const previewInitiationTime = Date.now();
 
 (() => {
   try {
-    if (window.location.href.match(/^https?:\/\/(www.)?pornhub.com/)) {
-      // Inject JQuery
-      const el = document.createElement('script');
-      el.type = 'text/javascript';
-      el.text =
-        "console.log('JQuery Injection'); window.$ = window.jQuery = require('jquery');";
-      document.appendChild(el);
-
-      if (!window.zest) {
-        window.zest = q => document.querySelectorAll(q);
-      }
-    }
-  } catch (err) {
-    console.error('PornHub integration', err);
-  }
-})();
-
-(() => {
-  try {
     const clear = () => {
       if (window.location.href.match(/^https?:\/\/(www\.)?redgifs\.com/)) {
         return;

@@ -33,7 +33,7 @@
             href="https://discord.gg/JYuxqNVNtP"
             target="_blank"
             rel="noopener"
-            class="btn"
+            class="btn btn-link"
             :title="l('chat.joinDiscord')"
           >
             <span class="fab fa-discord"></span>
@@ -42,7 +42,7 @@
             href="https://ko-fi.com/thehorizonteam"
             target="_blank"
             rel="noopener"
-            class="btn"
+            class="btn btn-link"
             title="Support us on Ko-Fi"
           >
             <span class="fa fa-coffee"></span>
@@ -51,7 +51,7 @@
             href="https://chat.f-list.net/stats/"
             target="_blank"
             rel="noopener"
-            class="btn"
+            class="btn btn-link"
           >
             <span class="fa fa-chart-line"></span>
             <span class="btn-text">{{ l('chat.stats') }}</span>
@@ -60,7 +60,7 @@
           <a
             href="#"
             @click.prevent="showLogs()"
-            class="btn"
+            class="btn btn-link"
             style="text-align: right"
           >
             <span class="fa fa-file-alt"></span>
@@ -187,6 +187,7 @@
   import Vue from 'vue';
   import { getKey } from './common';
   import Modal from '../components/Modal.vue';
+  import CustomDialog from '../components/custom_dialog';
   import { InlineDisplayMode, SimpleCharacter } from '../interfaces';
   import { Keys } from '../keys';
   import ChatView from './ChatView.vue';
@@ -272,8 +273,8 @@
   export default Vue.extend({
     components: { chat: ChatView, modal: Modal, logs: Logs, tips: Tips },
     props: {
-      ownCharacters: { required: true as const },
-      defaultCharacter: { required: true as const },
+      ownCharacters: { type: Array as () => SimpleCharacter[], required: true },
+      defaultCharacter: { type: Number, required: true },
       version: {}
     },
     data() {
@@ -400,7 +401,10 @@
           isReconnect
         });
 
-        if (isReconnect) (<Modal>this.$refs['reconnecting']).show(true);
+        if (isReconnect)
+          (
+            this.$refs['reconnecting'] as InstanceType<typeof CustomDialog>
+          ).show(true);
         if (this.connected) core.notifications.playSound('logout');
         this.connected = false;
         this.connecting = false;
@@ -440,7 +444,9 @@
           character: core.characters.ownCharacter?.name
         });
 
-        (<Modal>this.$refs['reconnecting']).hide();
+        (
+          this.$refs['reconnecting'] as InstanceType<typeof CustomDialog>
+        ).hide();
         this.error = '';
         await core.cache.start((core.state as any).generalSettings, true);
         this.connecting = false;
@@ -481,7 +487,9 @@
     methods: {
       cancelReconnect(): void {
         core.connection.close();
-        (<Modal>this.$refs['reconnecting']).hide();
+        (
+          this.$refs['reconnecting'] as InstanceType<typeof CustomDialog>
+        ).hide();
       },
 
       selectCharacter(character: SimpleCharacter): void {
@@ -536,7 +544,7 @@
       // The top input is a simple filter; selecting a tile is done by clicking it.
 
       showLogs(): void {
-        (<Logs>this.$refs['logsDialog']).show();
+        (this.$refs['logsDialog'] as InstanceType<typeof Logs>).show();
       },
 
       async connect(): Promise<void> {
@@ -560,7 +568,7 @@
       },
 
       getChatView(): ChatView | undefined {
-        return this.$refs['chatview'] as ChatView;
+        return this.$refs['chatview'] as typeof ChatView;
       }
     }
   });

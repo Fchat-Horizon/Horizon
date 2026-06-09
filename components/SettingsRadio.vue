@@ -58,8 +58,9 @@
   }
 
   defineProps<Props>();
+
   defineEmits<{
-    input: [value: Interfaces.Setting];
+    (e: 'input', value: Interfaces.Setting): void;
   }>();
 
   const setting = Interfaces.Setting;

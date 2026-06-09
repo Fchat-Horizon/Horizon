@@ -39,7 +39,7 @@ export default class Zip {
                   ? 5
                   : 6;
       length += l;
-      let byte = l === 1 ? c : (0xff00 >> l) % 256 | (c >>> ((l - 1) * 6));
+      let byte = l === 1 ? c : ((0xff00 >> l) % 256) | (c >>> ((l - 1) * 6));
       --l;
       while (true) {
         crc = (crc >>> 8) ^ crcTable[(crc ^ byte) & 0xff];

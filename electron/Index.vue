@@ -44,7 +44,7 @@
           <a
             href="#"
             @click.prevent="showLogs()"
-            class="btn"
+            class="btn btn-link"
             style="flex: 1; text-align: right"
           >
             <span class="fa fa-file-alt"></span>
@@ -203,7 +203,9 @@
         :authenticated="true"
         :oldApi="true"
         :name="profileName"
-        :image-preview="true"
+        :previewType="getProfileGalleryType()"
+        :animated-thumbs="animateProfileViewerThumbs()"
+        @gallery-type-updated="galleryTypeUpdated"
         ref="characterPage"
       ></character-page>
       <template slot="title">
@@ -298,6 +300,13 @@
 
     <logs ref="logsDialog"></logs>
     <ui-test ref="uiTestDialog" v-if="isDevMode"> </ui-test>
+
+    <toast
+      v-for="t in toasts"
+      :key="t.id"
+      v-bind="t"
+      @dismiss="dismissToast(t.id)"
+    />
   </div>
 </template>
 
@@ -310,25 +319,23 @@
   import * as fs from 'fs';
   import * as path from 'path';
   import * as qs from 'querystring';
-  import Raven from 'raven-js';
-  // import {promisify} from 'util';
   import Vue from 'vue';
   import Chat from '../chat/Chat.vue';
   import { Settings } from '../chat/common';
-  import core /*, { init as initCore }*/ from '../chat/core';
+  import core from '../chat/core';
   import l from '../chat/localize';
   import Logs from '../chat/Logs.vue';
   import UITest from '../chat/UITest.vue';
   import Socket from '../chat/WebSocket';
   import Modal from '../components/Modal.vue';
+  import Toast from '../components/Toast.vue';
+  import { toasts, showToast, updateToast, dismissToast } from '../chat/toast';
   import { SimpleCharacter } from '../interfaces';
-  // import { BetterSqliteStore } from '../learn/store/better-sqlite3';
-  // import { Sqlite3Store } from '../learn/store/sqlite3';
   import CharacterPage from '../site/character_page/character_page.vue';
   import WordDefinition from '../learn/dictionary/WordDefinition.vue';
   import ProfileAnalysis from '../learn/recommend/ProfileAnalysis.vue';
   import { defaultHost, GeneralSettings } from './common';
-  import { fixLogs /*SettingsStore, Logs as FSLogs*/ } from './filesystem';
+  import { fixLogs } from './filesystem';
   import { SlimcatImporter } from './services';
   import _ from 'lodash';
   import { EventBus } from '../chat/preview/event-bus';
@@ -337,11 +344,7 @@
   import { BBCodeView } from '../bbcode/view';
   import { EIconStore } from '../learn/eicon/store';
   import { SecureStore } from './secure-store';
-
-  // import ImagePreview from '../chat/preview/ImagePreview.vue';
-  // import Bluebird from 'bluebird';
-  // import Connection from '../fchat/connection';
-  // import Notifications from './notifications';
+  import { ProfileViewerGalleryType } from '../site/utils';
 
   // import VueLazyload from 'vue-lazyload';
   //
@@ -402,6 +405,7 @@
     components: {
       chat: Chat,
       modal: Modal,
+      toast: Toast,
       characterPage: CharacterPage,
       logs: Logs,
       'ui-test': UITest,
@@ -438,7 +442,14 @@
         profilePointer: 0,
         isDevMode: (process.env.NODE_ENV !== 'production') as boolean,
         themeWatchHandle: undefined as fs.FSWatcher | undefined,
-        themeWatchTimer: undefined as NodeJS.Timeout | undefined
+        themeWatchTimer: undefined as NodeJS.Timeout | undefined,
+        toasts: toasts,
+        dismissToast: dismissToast,
+        autoBackupStatusListener: undefined as any as (
+          e: Electron.IpcRendererEvent,
+          status: string,
+          progress?: number
+        ) => void
       };
     },
     computed: {
@@ -469,6 +480,47 @@
       this.setupThemeHotReload();
     },
     async created(): Promise<void> {
+      // Register the auto-backup toast listener as early as possible. It used to
+      // live in ChatView, which is only mounted once a character is connected -
+      // so a backup triggered "on connect" in the tab that triggered it would
+      // fire before the listener existed and the toast was silently missed.
+      this.autoBackupStatusListener = (_e, status, progress) => {
+        const id = 'auto-backup';
+        if (status === 'started') {
+          showToast({
+            id,
+            message: l('settings.autoBackup.toastInProgress'),
+            icon: 'fa-sync',
+            iconSpin: true,
+            progress: 0
+          });
+        } else if (status === 'progress' && typeof progress === 'number') {
+          updateToast(id, { progress });
+        } else if (status === 'success') {
+          updateToast(id, {
+            message: l('settings.autoBackup.toastComplete'),
+            icon: 'fa-check',
+            iconSpin: false,
+            variant: 'success',
+            progress: 1,
+            autoDismiss: 5000
+          });
+        } else if (status === 'error') {
+          updateToast(id, {
+            message: l('settings.autoBackup.toastFailed'),
+            icon: 'fa-exclamation-triangle',
+            iconSpin: false,
+            variant: 'error',
+            progress: undefined,
+            autoDismiss: 5000
+          });
+        }
+      };
+      electron.ipcRenderer.on(
+        'auto-backup-status',
+        this.autoBackupStatusListener
+      );
+
       await this.startAndUpgradeCache();
 
       if (this.settings.account.length > 0) this.saveLogin = true;
@@ -518,7 +570,9 @@
       electron.ipcRenderer.on(
         'open-profile',
         (_e: Electron.IpcRendererEvent, name: string) => {
-          const profileViewer = <Modal>this.$refs['profileViewer'];
+          const profileViewer = this.$refs['profileViewer'] as InstanceType<
+            typeof Modal
+          >;
 
           this.openProfile(name);
 
@@ -535,7 +589,9 @@
             this.profilePointer >= 0
           ) {
             const name = this.profileNameHistory[this.profilePointer];
-            const profileViewer = <Modal>this.$refs['profileViewer'];
+            const profileViewer = this.$refs['profileViewer'] as InstanceType<
+              typeof Modal
+            >;
 
             if (this.profileName === name && profileViewer.isShown) {
               profileViewer.hide();
@@ -551,7 +607,7 @@
       electron.ipcRenderer.on('fix-logs', async () => {
         this.fixCharacters = await core.settingsStore.getAvailableCharacters();
         this.fixCharacter = this.fixCharacters[0];
-        (<Modal>this.$refs['fixLogsModal']).show();
+        (this.$refs['fixLogsModal'] as InstanceType<typeof Modal>).show();
       });
 
       electron.ipcRenderer.on('ui-test', () => {
@@ -601,6 +657,11 @@
     },
     beforeDestroy(): void {
       this.stopThemeWatch();
+      if (this.autoBackupStatusListener)
+        electron.ipcRenderer.removeListener(
+          'auto-backup-status',
+          this.autoBackupStatusListener
+        );
     },
     methods: {
       async startAndUpgradeCache(): Promise<void> {
@@ -716,12 +777,14 @@
             ) {
               if (!confirm(l('importer.importGeneral')))
                 return core.settingsStore.set('settings', new Settings());
-              (<Modal>this.$refs['importModal']).show(true);
+              (this.$refs['importModal'] as InstanceType<typeof Modal>).show(
+                true
+              );
               await SlimcatImporter.importCharacter(
                 core.connection.character,
                 progress => (this.importProgress = progress)
               );
-              (<Modal>this.$refs['importModal']).hide();
+              (this.$refs['importModal'] as InstanceType<typeof Modal>).hide();
             }
           });
           core.connection.onEvent('connected', () => {
@@ -729,13 +792,14 @@
               () => core.conversations.hasNew,
               newValue => parent.send('has-new', webContents.id, newValue)
             );
-            Raven.setUserContext({ username: core.connection.character });
 
             EventBus.$on('word-definition', (data: any) => {
               this.wordDefinitionLookup = data.lookupWord;
 
               if (!!data.lookupWord) {
-                (<Modal>this.$refs.wordDefinitionViewer).show();
+                (
+                  this.$refs.wordDefinitionViewer as InstanceType<typeof Modal>
+                ).show();
               }
             });
           });
@@ -744,7 +808,6 @@
             electron.ipcRenderer.send('disconnect', this.character);
             this.character = undefined;
             parent.send('disconnect', webContents.id);
-            Raven.setUserContext();
           });
           core.connection.setCredentials(this.settings.account, this.password);
           this.characters = Object.keys(data.characters)
@@ -831,7 +894,9 @@
         (this.$refs.profileViewer as any).hide();
       },
       isRefreshingProfile(): boolean {
-        const cp = this.$refs.characterPage as CharacterPage;
+        const cp = this.$refs.characterPage as InstanceType<
+          typeof CharacterPage
+        >;
 
         return cp && cp.refreshing;
       },
@@ -907,6 +972,12 @@
         const character = core.characters.get(name);
 
         this.profileStatus = character.statusText || '';
+      },
+      getProfileGalleryType(): ProfileViewerGalleryType {
+        return this.settings.profileViewerGalleryType;
+      },
+      animateProfileViewerThumbs(): boolean {
+        return this.settings.profileViewerThumbAnimate;
       },
       getActiveThemeName(): string {
         return (
@@ -1006,10 +1077,10 @@
         }
       },
       showLogs(): void {
-        (<Logs>this.$refs['logsDialog']).show();
+        (this.$refs['logsDialog'] as InstanceType<typeof Logs>).show();
       },
       showUiTest(): void {
-        (<UITest>this.$refs['uiTestDialog']).show();
+        (this.$refs['uiTestDialog'] as InstanceType<typeof UITest>).show();
       },
       async openDefinitionWithDictionary(): Promise<void> {
         (this.$refs.wordDefinitionLookup as any).setMode('dictionary');
@@ -1034,7 +1105,7 @@
         (this.$refs.wordDefinitionViewer as any).hide();
       },
       unpinUrlPreview(e: Event): void {
-        const imagePreview = (this.$refs['chat'] as Chat)
+        const imagePreview = (this.$refs['chat'] as InstanceType<typeof Chat>)
           ?.getChatView()
           ?.getImagePreview();
 
@@ -1046,6 +1117,9 @@
 
           EventBus.$emit('imagepreview-toggle-stickyness', { force: true });
         }
+      },
+      galleryTypeUpdated(profileGalleryType: ProfileViewerGalleryType): void {
+        electron.ipcRenderer.send('profile-gallery-type', profileGalleryType);
       }
     }
   });

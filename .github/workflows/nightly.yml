@@ -111,6 +111,11 @@ jobs:
         env:
           NIGHTLY_VERSION: nightly-${{ github.run_number }}
           BUILD_ARCH: ${{ matrix.arch }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           chmod +x electron/release-scripts/macos-dev.sh
           electron/release-scripts/macos-dev.sh "$NIGHTLY_VERSION" "$GITHUB_WORKSPACE/release_artifacts/macos/$NIGHTLY_VERSION" "$BUILD_ARCH"

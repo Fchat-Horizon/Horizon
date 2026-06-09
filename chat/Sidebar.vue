@@ -31,16 +31,16 @@
 
   export default Vue.extend({
     props: {
-      right: {},
-      label: {},
-      icon: { required: true as const },
-      open: { default: false }
+      right: { type: Boolean, default: false },
+      label: { type: String, required: true },
+      icon: { type: String, required: true },
+      open: { type: Boolean, default: false }
     },
     data() {
       return {
-        expanded: this.open as boolean,
+        expanded: this.open,
         bodyWidth: 0,
-        bodyElement: undefined as any as HTMLElement,
+        bodyElement: null as HTMLElement | null,
         isResizing: false,
         startX: 0,
         startWidth: 0
@@ -48,7 +48,7 @@
     },
     watch: {
       open(): void {
-        this.expanded = this.open as boolean;
+        this.expanded = this.open;
       }
     },
     mounted(): void {
@@ -77,7 +77,7 @@
         this.isResizing = false;
         document.removeEventListener('mousemove', this.onResize);
         document.removeEventListener('mouseup', this.stopResize);
-        this.bodyWidth = this.bodyElement.offsetWidth;
+        if (this.bodyElement) this.bodyWidth = this.bodyElement.offsetWidth;
       }
     }
   });

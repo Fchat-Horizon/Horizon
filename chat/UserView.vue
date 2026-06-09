@@ -4,6 +4,7 @@
     :class="userClass"
     v-bind:bbcodeTag.prop="'user'"
     v-bind:character.prop="character"
+    v-bind:displayName.prop="resolvedDisplayName"
     v-bind:channel.prop="channel"
     @mouseover.prevent="show()"
     @mouseenter.prevent="show()"
@@ -40,7 +41,7 @@
       :title="sponsorTitle"
     ></span
     ><span v-if="!!smartFilterIcon" :class="smartFilterIcon"></span
-    >{{ character.name
+    >{{ resolvedDisplayName
     }}<span v-if="!!matchClass" :class="matchClass">{{
       getMatchScoreTitle(matchScore)
     }}</span></span
@@ -52,9 +53,9 @@
   import { Channel, Character } from '../fchat';
   import { Score } from '../learn/matcher';
   import core from './core';
-  import { EventBus } from './preview/event-bus';
+  import { CharacterDataEvent, EventBus } from './preview/event-bus';
   import { kinkMatchWeights, Scoring } from '../learn/matcher-types';
-  import { characterImage } from './common';
+  import { characterImage, normalizeCharacterName } from './common';
   import {
     getContributorAlias,
     getTranslatorAlias,
@@ -106,9 +107,9 @@
         case 'Female':
           return 'fa-fw fa-venus';
         case 'Shemale':
-          return 'fa-fw fa-mars-and-venus';
-        case 'Herm':
           return 'fa-fw fa-mercury';
+        case 'Herm':
+          return 'fa-fw fa-mars-and-venus';
         case 'Male-Herm':
           return 'fa-fw fa-mars-stroke-v';
         case 'Cunt-boy':
@@ -327,8 +328,9 @@
   export default Vue.extend({
     components: {},
     props: {
-      character: { required: true as const },
-      channel: {},
+      character: { type: Object as () => Character, required: true },
+      displayName: { type: String, required: false },
+      channel: { type: Object as () => Channel, required: false },
       showStatus: { default: false },
       bookmark: { default: true },
       match: { default: false },
@@ -355,37 +357,40 @@
         matchScore: null as number | string | null,
         avatarUrl: '',
         // tslint:disable-next-line no-any
-        scoreWatcher: null as ((event: any) => void) | null
+        scoreWatcher: null as ((event: CharacterDataEvent) => void) | null
       };
     },
     computed: {
+      resolvedDisplayName(): string {
+        return this.displayName ?? this.character.name;
+      },
       safeAvatarUrl(): string {
         return this.avatarUrl || '';
       },
       staffTitle(): string {
-        const alias = getStaffAlias((this as any).character.name);
-        const role = getStaffRole((this as any).character.name);
+        const alias = getStaffAlias(this.character.name);
+        const role = getStaffRole(this.character.name);
         if (alias && role) return `Horizon Staff (${role}) "${alias}"`;
         if (alias) return `Horizon Staff "${alias}"`;
         return role ? `Horizon Staff (${role})` : 'Horizon Staff';
       },
       contributorTitle(): string {
-        const alias = getContributorAlias((this as any).character.name);
+        const alias = getContributorAlias(this.character.name);
         return alias ? `Horizon Contributor "${alias}"` : 'Horizon Contributor';
       },
       translatorTitle(): string {
-        const alias = getTranslatorAlias((this as any).character.name);
-        const langs = getTranslatorLanguages((this as any).character.name);
+        const alias = getTranslatorAlias(this.character.name);
+        const langs = getTranslatorLanguages(this.character.name);
         const langLabel = langs.length > 0 ? ` (${langs.join(', ')})` : '';
         if (alias) return `Horizon Translator${langLabel} "${alias}"`;
         return `Horizon Translator${langLabel}`;
       },
       supporterTitle(): string {
-        const alias = getSupporterAlias((this as any).character.name);
+        const alias = getSupporterAlias(this.character.name);
         return alias ? `Horizon Supporter "${alias}"` : 'Horizon Supporter';
       },
       sponsorTitle(): string {
-        const alias = getSponsorAlias((this as any).character.name);
+        const alias = getSponsorAlias(this.character.name);
         return alias ? `Horizon Sponsor "${alias}"` : 'Horizon Sponsor';
       }
     },
@@ -405,19 +410,16 @@
       // Refresh on global configuration changes (e.g., toggling developer badges)
       EventBus.$on('configuration-update', this.update);
 
-      if ((this as any).match && !this.matchClass) {
+      if (this.match && !this.matchClass) {
         if (this.scoreWatcher) {
           EventBus.$off('character-score', this.scoreWatcher);
         }
 
-        // tslint:disable-next-line no-unsafe-any no-any
-        this.scoreWatcher = (event: any): void => {
-          // console.log('scoreWatcher', event);
-
+        this.scoreWatcher = (event: CharacterDataEvent): void => {
           // tslint:disable-next-line no-unsafe-any no-any
           if (
             event.character &&
-            event.character.character.name === (this as any).character.name
+            event.character.character.name === this.character.name
           ) {
             this.update();
 
@@ -447,15 +449,13 @@
     },
     methods: {
       update(): void {
-        // console.log('user.view.update', this.character.name);
-
         const res = getStatusClasses(
-          (this as any).character,
-          (this as any).channel,
-          !!(this as any).showStatus,
-          !!(this as any).bookmark,
-          !!(this as any).match,
-          (this as any).loadColor
+          this.character,
+          this.channel,
+          !!this.showStatus,
+          !!this.bookmark,
+          !!this.match,
+          this.loadColor
         );
 
         this.rankIcon = res.rankIcon;
@@ -472,8 +472,8 @@
         this.matchScore = res.matchScore;
         this.userClass = res.userClass;
         this.avatarUrl = characterImage(
-          (this as any).character.name,
-          (this as any).useOriginalAvatar
+          this.character.name,
+          this.useOriginalAvatar
         );
       },
 
@@ -499,11 +499,11 @@
       },
 
       getCharacterUrl(): string {
-        return `flist-character://${(this as any).character.name}`;
+        return `flist-character://${normalizeCharacterName(this.character.name)}`;
       },
 
       dismiss(force: boolean = false): void {
-        if (!(this as any).preview) {
+        if (!this.preview) {
           return;
         }
 
@@ -514,7 +514,7 @@
       },
 
       show(): void {
-        if (!(this as any).preview) {
+        if (!this.preview) {
           return;
         }
 
@@ -522,7 +522,7 @@
       },
 
       toggleStickyness(): void {
-        if (!(this as any).preview) {
+        if (!this.preview) {
           return;
         }
 

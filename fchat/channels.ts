@@ -1,4 +1,4 @@
-import { decodeHTML } from './common';
+import { decodeHTML, emptyMap } from './common';
 import { Channel as Interfaces, Character, Connection } from './interfaces';
 import core from '../chat/core';
 
@@ -43,7 +43,7 @@ class Channel implements Interfaces.Channel {
   opList: string[] = [];
   owner = '';
   mode: Interfaces.Mode = 'both';
-  members: { [key: string]: SortableMember | undefined } = {};
+  members: { [key: string]: SortableMember | undefined } = emptyMap();
   sortedMembers: SortableMember[] = [];
 
   constructor(
@@ -100,10 +100,11 @@ class ListItem implements Interfaces.ListItem {
 }
 
 class State implements Interfaces.State {
-  officialChannels: { readonly [key: string]: ListItem | undefined } = {};
-  openRooms: { readonly [key: string]: ListItem | undefined } = {};
+  officialChannels: { readonly [key: string]: ListItem | undefined } =
+    emptyMap();
+  openRooms: { readonly [key: string]: ListItem | undefined } = emptyMap();
   joinedChannels: Channel[] = [];
-  joinedMap: { [key: string]: Channel | undefined } = {};
+  joinedMap: { [key: string]: Channel | undefined } = emptyMap();
   handlers: Interfaces.EventHandler[] = [];
   lastRequest = 0;
 
@@ -153,7 +154,7 @@ export default function (
     if (isReconnect && rejoin === undefined)
       rejoin = Object.keys(state.joinedMap);
     state.joinedChannels = [];
-    state.joinedMap = {};
+    state.joinedMap = emptyMap();
   });
   connection.onEvent('connected', () => {
     if (rejoin !== undefined) {
@@ -163,7 +164,7 @@ export default function (
   });
 
   connection.onMessage('CHA', data => {
-    const channels: { [key: string]: ListItem } = {};
+    const channels: { [key: string]: ListItem } = emptyMap();
     for (const channel of data.channels) {
       const id = channel.name.toLowerCase();
       const item = new ListItem(id, channel.name, channel.characters);
@@ -173,7 +174,7 @@ export default function (
     state.officialChannels = channels;
   });
   connection.onMessage('ORS', data => {
-    const channels: { [key: string]: ListItem } = {};
+    const channels: { [key: string]: ListItem } = emptyMap();
     for (const channel of data.channels) {
       const id = channel.name.toLowerCase();
       const item = new ListItem(
@@ -212,7 +213,7 @@ export default function (
     const channel = state.getChannel(data.channel);
     if (channel === undefined) return state.leave(data.channel);
     channel.mode = data.mode;
-    const members: { [key: string]: SortableMember } = {};
+    const members: { [key: string]: SortableMember } = emptyMap();
     const sorted: SortableMember[] = [];
     for (const user of data.users) {
       const name = user.identity;
@@ -246,6 +247,7 @@ export default function (
 
       state.joinedChannels.splice(state.joinedChannels.indexOf(channel), 1);
       delete state.joinedMap[channel.id];
+      core.conversations.setChannelGroup(channel.id, null);
       for (const handler of state.handlers) await handler('leave', channel);
       if (item !== undefined) item.isJoined = false;
     } else {

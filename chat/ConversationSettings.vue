@@ -19,7 +19,8 @@
           </div>
         </div>
         <settings-radio
-          v-model="notify"
+          :value="notify"
+          @input="notify = $event"
           :name="'notify' + conversation.key"
           :id="'notify' + conversation.key"
         ></settings-radio>
@@ -31,7 +32,8 @@
           }}</label>
         </div>
         <settings-radio
-          v-model="highlight"
+          :value="highlight"
+          @input="highlight = $event"
           :name="'highlight' + conversation.key"
         ></settings-radio>
       </div>
@@ -103,7 +105,8 @@
           >
         </div>
         <settings-radio
-          v-model="joinMessages"
+          :value="joinMessages"
+          @input="joinMessages = $event"
           :name="'joinMessages' + conversation.key"
         ></settings-radio>
       </div>
@@ -116,7 +119,8 @@
           >
         </div>
         <settings-radio
-          v-model="logMessages"
+          :value="logMessages"
+          @input="logMessages = $event"
           :name="'logMessages' + conversation.key"
         ></settings-radio>
       </div>
@@ -139,20 +143,20 @@
       'settings-checkbox': SettingsCheckbox
     },
     props: {
-      conversation: { required: true as const }
+      conversation: { type: Object as () => Conversation, required: true }
     },
     data() {
       return {
         l: l,
         setting: Conversation.Setting,
-        notify: undefined as any as Conversation.Setting,
-        highlight: undefined as any as Conversation.Setting,
-        highlightWords: undefined as any as string,
-        horizonHighlightUsers: undefined as any as string,
-        joinMessages: undefined as any as Conversation.Setting,
-        defaultHighlights: undefined as any as boolean,
-        logMessages: undefined as any as Conversation.Setting,
-        muted: undefined as any as boolean
+        notify: Conversation.Setting.Default,
+        highlight: Conversation.Setting.Default,
+        highlightWords: '',
+        horizonHighlightUsers: '',
+        joinMessages: Conversation.Setting.Default,
+        defaultHighlights: true,
+        logMessages: Conversation.Setting.Default,
+        muted: false
       };
     },
     methods: {

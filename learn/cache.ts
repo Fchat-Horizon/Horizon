@@ -9,12 +9,14 @@
  * @see {@link https://github.com/Fchat-Horizon/Horizon|GitHub repo}
  */
 
+import { emptyMap } from '../fchat/common';
+
 export interface CacheCollection<RecordType> {
   [key: string]: RecordType;
 }
 
 export abstract class Cache<RecordType> {
-  protected cache: CacheCollection<RecordType> = {};
+  protected cache: CacheCollection<RecordType> = emptyMap();
 
   get(name: string): RecordType | null {
     const key = Cache.nameKey(name);

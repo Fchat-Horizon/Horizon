@@ -4,6 +4,7 @@
  */
 
 import { Cache } from './cache';
+import { emptyMap, toMap } from '../fchat/common';
 import { getDrafts, saveDrafts } from '../electron/filesystem';
 import core from '../chat/core';
 
@@ -81,7 +82,7 @@ export class ConversationDraftCache extends Cache<ConversationDraftRecord> {
       this.diskSaveTimerInSeconds = MIN_CACHE_DISK_SAVE_IN_SECONDS;
 
     const drafts = getDrafts();
-    this.cache = drafts || {};
+    this.cache = toMap(drafts);
 
     this.cacheAlreadyLoaded = true;
     this.currentlyCachedCharacter = core.connection.character;
@@ -109,7 +110,7 @@ export class ConversationDraftCache extends Cache<ConversationDraftRecord> {
       }
       // In the future, we could consider keeping all characters in-memory as people jump around in one tab and just reference the "current"
       // cache. A cacheCache, if you will. For now, the on-disk cache should be sufficient, but it's an option for later.
-      this.cache = {};
+      this.cache = emptyMap();
       this.cacheAlreadyLoaded = false;
     }
 

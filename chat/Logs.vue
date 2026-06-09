@@ -26,15 +26,32 @@
         l('logs.character')
       }}</label>
       <div :class="canZip ? 'col-sm-8 col-10 col-xl-9' : 'col-sm-10'">
-        <select
-          class="form-select"
+        <filterable-select
           v-model="selectedCharacter"
-          id="character"
-          @change="loadCharacter"
+          :options="characters"
+          :placeholder="l('filter')"
+          @input="loadCharacter"
         >
-          <option value="">{{ l('logs.selectCharacter') }}</option>
-          <option v-for="character in characters">{{ character }}</option>
-        </select>
+          <template slot-scope="s">
+            <template v-if="s.option">
+              <img
+                :src="getAvatarUrl(s.option)"
+                style="
+                  width: 20px;
+                  height: 20px;
+                  border-radius: 3px;
+                  margin-right: 6px;
+                  object-fit: cover;
+                "
+                loading="lazy"
+              />
+              {{ s.option }}
+            </template>
+            <template v-else>
+              {{ l('logs.selectCharacter') }}
+            </template>
+          </template>
+        </filterable-select>
       </div>
       <div class="col-2 col-xl-1" v-if="canZip">
         <button
@@ -58,11 +75,35 @@
           :placeholder="l('filter')"
         >
           <template slot-scope="s">
-            {{
-              (s.option &&
-                (s.option.key[0] == '#' ? '#' : '') + s.option.name) ||
-              l('logs.selectConversation')
-            }}
+            <template v-if="s.option">
+              <i
+                v-if="s.option.key === '_'"
+                class="fas fa-home fa-fw"
+                style="margin-right: 6px; opacity: 0.5"
+              ></i>
+              <i
+                v-else-if="s.option.key[0] === '#'"
+                class="fas fa-hashtag fa-fw"
+                style="margin-right: 6px; opacity: 0.5"
+              ></i>
+              <img
+                v-else
+                :src="getAvatarUrl(s.option.name)"
+                style="
+                  width: 20px;
+                  height: 20px;
+                  border-radius: 3px;
+                  margin-right: 6px;
+                  object-fit: cover;
+                "
+                @error="$event.target.style.display = 'none'"
+                loading="lazy"
+              />
+              {{ (s.option.key[0] == '#' ? '#' : '') + s.option.name }}
+            </template>
+            <template v-else>
+              {{ l('logs.selectConversation') }}
+            </template>
           </template>
         </filterable-select>
       </div>
@@ -166,6 +207,7 @@
         :placeholder="l('filter')"
         v-show="messages"
         type="text"
+        :disabled="selectedConversation === undefined || messages.length === 0"
       />
       <span v-if="searching" class="input-group-text">
         <span class="fas fa-spinner fa-spin"></span>
@@ -222,26 +264,30 @@
     messages: ReadonlyArray<Conversation.Message>,
     html: boolean
   ): string {
+    //The CSS rules for these are normally found in a Vue SFC.
+    //That's why we need to include this manually, otherwise multiline sub/sup tags fuck up and don't span multiple lines
+    const exportCssFix =
+      'sub, sup { line-height: 1em; } .bbcode sub p, .bbcode sup p { margin: 0; }';
     const start = html
-      ? `<meta charset="utf-8"><style>body { padding: 10px; }${document.getElementById('themeStyle')!.innerText}</style>`
+      ? `<meta charset="utf-8"><style>body { padding: 10px; }${document.getElementById('themeStyle')!.innerText}${exportCssFix}</style>`
       : '';
     return (
       '<div class="messages bbcode">' +
       messages.reduce(
-        (acc, x) =>
-          acc +
+        (accumilated, currentMessage) =>
+          accumilated +
           messageToString(
-            x,
+            currentMessage,
             date => formatTime(date, true),
             html
-              ? c => {
-                  const gender = core.characters.get(c).gender;
-                  return `<span class="user-view gender-${gender ? gender.toLowerCase() : 'none'}">${c}</span>`;
+              ? character => {
+                  const gender = core.characters.get(character).gender;
+                  return `<span class="user-view gender-${gender ? gender.toLowerCase() : 'none'}">${character}</span>`;
                 }
               : undefined,
             html
-              ? t => {
-                  const parsedElement = core.bbCodeParser.parseEverything(t);
+              ? text => {
+                  const parsedElement = core.bbCodeParser.parseEverything(text);
                   //TODO: If we want to instead use a custom BBCode parser (so we can also have a different kind of Spoiler tag for logs
                   //Then we would need to remove this
                   parsedElement
@@ -438,6 +484,7 @@
       },
 
       onFilterChanged(): void {
+        if (this.selectedConversation === undefined) return;
         if (this.filterDebounce !== undefined)
           clearTimeout(this.filterDebounce);
         this.filterDebounce = setTimeout(() => {
@@ -858,6 +905,10 @@
           this.nearTopDebounce = undefined;
           this.loadNextDate();
         }, 250);
+      },
+
+      getAvatarUrl(character: string): string {
+        return `https://static.f-list.net/images/avatar/${encodeURIComponent(character.toLowerCase())}.png`;
       }
     }
   });

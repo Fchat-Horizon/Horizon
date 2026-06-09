@@ -1,7 +1,8 @@
 import { Cache, CacheCollection } from './cache';
+import { emptyMap } from '../fchat/common';
 
 export abstract class AsyncCache<RecordType> {
-  protected cache: CacheCollection<RecordType> = {};
+  protected cache: CacheCollection<RecordType> = emptyMap();
 
   abstract get(name: string): Promise<RecordType | null>;
 
@@ -13,6 +14,6 @@ export abstract class AsyncCache<RecordType> {
   }
 
   clear(): void {
-    this.cache = {};
+    this.cache = emptyMap();
   }
 }

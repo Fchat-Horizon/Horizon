@@ -20,15 +20,15 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import Vue, { PropType } from 'vue';
   import { EventBus } from '../chat/preview/event-bus';
   import * as Utils from '../site/utils';
-  import { characterImage } from '../chat/common';
+  import { characterImage, normalizeCharacterName } from '../chat/common';
   import { Character } from '../fchat';
 
   export default Vue.extend({
     props: {
-      character: { required: true as const },
+      character: { type: Object as PropType<Character>, required: true },
       useOriginalAvatar: { default: false }
     },
     data() {
@@ -48,7 +48,7 @@
     },
     methods: {
       getCharacterUrl(): string {
-        return `flist-character://${(this.character as Character).name}`;
+        return `flist-character://${normalizeCharacterName(this.character.name)}`;
       },
       dismiss(force: boolean = false): void {
         EventBus.$emit('imagepreview-dismiss', {
@@ -65,7 +65,7 @@
         });
       },
       onImageError(): void {
-        (this.character as Character).overrides.avatarUrl = undefined;
+        this.character.overrides.avatarUrl = undefined;
       }
     }
   });

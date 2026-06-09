@@ -46,6 +46,12 @@
                 class="card-body settings-content"
                 style="height: 100%; width: 100%"
               >
+                <div class="h5 pb-2 border-bottom border-warning w-75 mb-0">
+                  {{ l('admgr.prepareToMove') }}
+                </div>
+                <div class="text-muted mb-4 w-75 bg-light p-3 bg-opacity-10">
+                  {{ l('settings.charactersToGeneral.generalInfo') }}
+                </div>
                 <h5>
                   {{ l('settings.tabs.general') }}
                 </h5>
@@ -607,6 +613,79 @@
                     />
                     <label class="form-check-label" for="profileViewer">
                       {{ l('settings.profileViewer') }}
+                    </label>
+                  </div>
+                </div>
+                <div class="mb-3" v-if="settings.profileViewer">
+                  <label class="control-label" for="profileViewerGalleryType">
+                    {{ l('settings.profileViewerGalleryType') }}
+                    <select
+                      id="profileViewerGalleryType"
+                      class="form-select"
+                      style="flex: 1; margin-right: 10px"
+                      v-model="settings.profileViewerGalleryType"
+                    >
+                      <option value="thumbnail">
+                        {{ l('settings.profileViewerGalleryType.thumbnail') }}
+                      </option>
+                      <option value="hover">
+                        {{ l('settings.profileViewerGalleryType.hover') }}
+                      </option>
+                      <option value="full">
+                        {{ l('settings.profileViewerGalleryType.full') }}
+                      </option>
+                    </select>
+                  </label>
+                  <div
+                    id="profileViewerGalleryTypeNote"
+                    class="form-text text-muted"
+                    v-if="settings.profileViewer"
+                  >
+                    {{
+                      l(
+                        `settings.profileViewerGalleryType.note.${settings.profileViewerGalleryType}`
+                      )
+                    }}
+                  </div>
+                </div>
+
+                <div
+                  class="mb-3"
+                  v-if="
+                    settings.profileViewer &&
+                    (settings.profileViewerGalleryType === 'thumbnail' ||
+                      settings.profileViewerGalleryType === 'hover')
+                  "
+                >
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="profileViewerThumbAnimate"
+                      v-model="settings.profileViewerThumbAnimate"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="profileViewerThumbAnimate"
+                    >
+                      {{ l('settings.profileViewerThumbAnimate') }}
+                    </label>
+                  </div>
+                </div>
+
+                <div class="mb-3" v-if="settings.profileViewer">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="profileViewerSmallerDefaultAvatars"
+                      v-model="settings.profileViewerSmallerDefaultAvatars"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="profileViewerSmallerDefaultAvatars"
+                    >
+                      {{ l('settings.profileViewer.smallerDefaultAvatars') }}
                     </label>
                   </div>
                 </div>

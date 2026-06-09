@@ -474,7 +474,8 @@
           tab.hasNew = hasNew;
           electron.ipcRenderer.send(
             'has-new',
-            this.tabs.reduce((cur, t) => cur + t.hasNew, 0)
+            this.tabs.reduce((cur, t) => cur + t.hasNew, 0),
+            this.settings.horizonShowNotificationBadge
           );
         }
       );
@@ -731,7 +732,8 @@
         this.tabs.splice(this.tabs.indexOf(tab), 1);
         electron.ipcRenderer.send(
           'has-new',
-          this.tabs.reduce((cur, t) => cur + t.hasNew, 0)
+          this.tabs.reduce((cur, t) => cur + t.hasNew, 0),
+          this.settings.horizonShowNotificationBadge
         );
         delete this.tabMap[tab.view.webContents.id];
         if (this.tabs.length === 0) {

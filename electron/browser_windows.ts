@@ -99,7 +99,7 @@ const winIcon: string = path.join(
 );
 
 /**
- * Badge icon path for the app icion overlay. Used for when there are new messages and numbered badges are disabled.
+ * Badge icon path for the app icon overlay. Used for when there are new messages and numbered badges are disabled.
  */
 const badge: electron.NativeImage = electron.nativeImage.createFromPath(
   path.join(__dirname, <string>require('./build/badge.png').default)
@@ -155,6 +155,7 @@ const badges: electron.NativeImage[] = [
 electron.ipcMain.on(
   'has-new',
   (e: IpcMainEvent, hasNew: number, numberedBadges: boolean) => {
+    log.debug('app.hasNew', { hasNew, numberedBadges });
     const window = electron.BrowserWindow.fromWebContents(e.sender);
     if (window !== undefined && window !== null) {
       newMessagesMap[window.id] = hasNew;
@@ -163,7 +164,7 @@ electron.ipcMain.on(
   }
 );
 
-export function updateNotificationBadges(numberedBadges = true) {
+export function updateNotificationBadges(numberedBadges: boolean) {
   const totalCount = windows.reduce(
     (sum, item) => sum + newMessagesMap[item.id],
     0
@@ -173,12 +174,12 @@ export function updateNotificationBadges(numberedBadges = true) {
       app.setBadgeCount(totalCount);
     } else {
       if (app.dock) {
-        app.dock.setBadge(totalCount > 0 ? '*' : '');
+        app.dock.setBadge(totalCount > 0 ? '.' : '');
       }
     }
   } else {
-    windows.forEach(item => {
-      applyWin32OverlayIcon(item, totalCount, numberedBadges);
+    windows.forEach(browserWindow => {
+      applyWin32OverlayIcon(browserWindow, totalCount, numberedBadges);
     });
     tray.setImage(totalCount > 0 ? trayIconNotif : trayIcon);
   }
@@ -187,19 +188,25 @@ export function updateNotificationBadges(numberedBadges = true) {
 /**
  * Apply an overlay icon to the given window based on whether there are new messages.
  * @function
- * @param {electron.BrowserWindow} window
+ * @param {electron.BrowserWindow} browserWindow
  * The window to apply the overlay icon to.
  * @param {number} badgeCount
  * The amount of new messages accumilated across all active tabs. If this value is below 1, no badge is drawn.
+ * @param {boolean} numberedBadges
+ * Whether to show the number of new messages in the badge or just a dot indicating that there are new messages. If true, the badge will show the number of new messages up to 10, with 10 representing any value above 9. If false, the badge will just show a dot if there are any new messages.
  * @internal
  */
 function applyWin32OverlayIcon(
-  window: electron.BrowserWindow,
+  browserWindow: electron.BrowserWindow,
   badgeCount: number,
   numberedBadges: boolean
 ) {
-  window.setOverlayIcon(
-    numberedBadges ? badges[Math.max(Math.min(badgeCount, 10), 0)] : badge,
+  browserWindow.setOverlayIcon(
+    numberedBadges
+      ? badges[Math.max(Math.min(badgeCount, 10), 0)]
+      : badgeCount > 0
+        ? badge
+        : null,
     badgeCount > 0 ? ` ${badgeCount} new messages` : ''
   );
 }

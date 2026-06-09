@@ -28,14 +28,6 @@ export default Vue.extend({
     const isModern = layoutMode === 'modern';
     let modernInner: VNode | null = null; // track modern inner wrapper
 
-    // setTimeout(
-    //     () => {
-    //         console.log('Now scoring high!', message.text.substr(0, 64));
-    //         message.score = Scoring.MATCH;
-    //     },
-    //     5000
-    // );
-
     // Classic layout: existing inline format.
     // Modern layout: avatar-first with header (name + time) and bubble content.
     let children: VNodeChildrenArrayContents;
@@ -190,10 +182,15 @@ export default Vue.extend({
 
     //3.0 (and Horizon's classic view) users often prepend their message with an empty linefeed to format things like eicon collages
     //Therefore, we filter that out in modern view mode, since it's unnecessary there.
+    const hadLeadingNewline = message.text.startsWith('\n');
     let messageAdjustment = message.text.replace(/^\n/, '');
     switch (message.type) {
       case Conversation.Message.Type.Action:
-        messageAdjustment = ' ' + message.sender.name + messageAdjustment;
+        messageAdjustment =
+          ' ' +
+          message.sender.name +
+          (hadLeadingNewline ? '\n' : '') +
+          messageAdjustment;
         break;
       case Conversation.Message.Type.Roll:
         messageAdjustment = ' ' + message.sender.name + ' ' + messageAdjustment;
@@ -212,24 +209,25 @@ export default Vue.extend({
                 if (isModern) {
                   // Pushes elm up three times rather than one with modern to make it parent to the top level of a message.
                   elm = elm.parentElement!.parentElement!.parentElement!;
-                  if (elm.scrollHeight > elm.offsetHeight) {
-                    const expand = document.createElement('div');
-                    expand.className = 'expand fas fa-caret-down';
-                    expand.addEventListener('click', function (): void {
-                      this.parentElement!.className += ' expanded';
-                    });
-                    elm.appendChild(expand);
-                  }
                 } else {
                   elm = elm.parentElement!;
-                  if (elm.scrollHeight > elm.offsetHeight) {
-                    const expand = document.createElement('div');
-                    expand.className = 'expand fas fa-caret-down';
-                    expand.addEventListener('click', function (): void {
-                      this.parentElement!.className += ' expanded';
-                    });
-                    elm.appendChild(expand);
-                  }
+                }
+                if (elm.scrollHeight > elm.offsetHeight) {
+                  const expand = document.createElement('div');
+                  expand.className = 'expand fas fa-caret-down';
+                  expand.addEventListener('click', function (): void {
+                    const ad = this.parentElement!;
+                    ad.className += ' expanded';
+                    // * Restart eicon GIF animations so mosaics re-sync
+                    const eicons =
+                      ad.querySelectorAll<HTMLImageElement>('img.eicon');
+                    for (const eicon of eicons) {
+                      const src = eicon.src;
+                      eicon.src = '';
+                      eicon.src = src;
+                    }
+                  });
+                  elm.appendChild(expand);
                 }
               });
             }
@@ -318,11 +316,7 @@ export default Vue.extend({
     };
   },
   beforeDestroy() {
-    // console.log('onbeforedestroy');
-
     if (this.scoreWatcher) {
-      // console.log('onbeforedestroy killed');
-
       this.scoreWatcher(); // stop watching
       this.scoreWatcher = null;
     }
@@ -344,8 +338,6 @@ export default Vue.extend({
       }
 
       if (this.scoreWatcher) {
-        // console.log('watch killed');
-
         this.scoreWatcher(); // stop watching
         this.scoreWatcher = null;
       }

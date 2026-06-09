@@ -1,7 +1,7 @@
 import core from '../chat/core';
 import { EventMessage } from '../chat/common';
 import { methods } from '../site/character_page/data_store';
-import { decodeHTML } from './common';
+import { decodeHTML, emptyMap } from './common';
 import { Character as Interfaces, Connection } from './interfaces';
 import { Character as CharacterProfile } from '../site/character_page/interfaces';
 import { ProfileCache } from '../learn/profile-cache';
@@ -19,7 +19,9 @@ class Character implements Interfaces.Character {
   overrides: CharacterOverrides = {};
   previousStatusText = '';
 
-  constructor(public name: string) {}
+  constructor(public name: string) {
+    Vue.observable(this.overrides);
+  }
 
   hasStatusTextChanged(): boolean {
     return this.previousStatusText !== this.statusText;
@@ -50,7 +52,7 @@ export enum CharacterColor {
 }
 
 class State implements Interfaces.State {
-  characters: { [key: string]: Character | undefined } = {};
+  characters: { [key: string]: Character | undefined } = emptyMap();
 
   ownCharacter: Character = <any>undefined; /*tslint:disable-line:no-any*/ //hack
   ownProfile: CharacterProfile = <any>undefined; /*tslint:disable-line:no-any*/ //hack
@@ -69,8 +71,8 @@ class State implements Interfaces.State {
     let char = this.characters[key];
     if (char === undefined) {
       char = new Character(name);
-      char.isFriend = this.friendList.indexOf(name) !== -1;
-      char.isBookmarked = this.bookmarkList.indexOf(name) !== -1;
+      char.isFriend = this.friendList.some(f => f.toLowerCase() === key);
+      char.isBookmarked = this.bookmarkList.some(b => b.toLowerCase() === key);
       char.isChatOp = this.opList.indexOf(name) !== -1;
       char.isIgnored = this.ignoreList.indexOf(key) !== -1;
       this.characters[key] = char;
@@ -184,9 +186,10 @@ export default function (this: void, connection: Connection): Interfaces.State {
       };
     for (const key in state.characters) {
       const character = state.characters[key]!;
-      character.isFriend = state.friendList.indexOf(character.name) !== -1;
-      character.isBookmarked =
-        state.bookmarkList.indexOf(character.name) !== -1;
+      character.isFriend = state.friendList.some(f => f.toLowerCase() === key);
+      character.isBookmarked = state.bookmarkList.some(
+        b => b.toLowerCase() === key
+      );
       character.status = 'offline';
       character.statusText = '';
     }
@@ -301,7 +304,6 @@ export default function (this: void, connection: Connection): Interfaces.State {
     char.isChatOp = false;
   });
   connection.onMessage('RTB', async data => {
-    console.log('got rtb:', data);
     if (
       data.type !== 'trackadd' &&
       data.type !== 'trackrem' &&

@@ -55,6 +55,18 @@ $selection-color: color-contrast($primary);
   color: var(--bs-secondary-text-emphasis);
 }
 
+.list-group-item,
+.list-group-item-action {
+  --transition-time: 0.2s;
+  transition:
+    var(--transition-time) background-color,
+    var(--transition-time) color;
+
+  @media (prefers-reduced-motion: reduce) {
+    --transition-time: 0s;
+  }
+}
+
 // Map list-group-action colors to their list-group-item equivalents
 @each $color, $value in $theme-colors {
   .list-group-item-action.list-group-item-#{$color} {
@@ -126,6 +138,10 @@ $selection-color: color-contrast($primary);
   &::-webkit-scrollbar-track {
     box-shadow: inset 0 0 8px var(--bs-border-color);
     border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
   }
 
   &::-webkit-scrollbar {

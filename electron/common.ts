@@ -1,5 +1,6 @@
 import * as electron from 'electron';
 import * as path from 'path';
+import { ProfileViewerGalleryType } from '../site/utils';
 
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 
@@ -26,6 +27,9 @@ export class GeneralSettings {
   account = '';
   closeToTray = true;
   profileViewer = true;
+  profileViewerGalleryType: ProfileViewerGalleryType = 'thumbnail';
+  profileViewerThumbAnimate = false;
+  profileViewerSmallerDefaultAvatars = false;
   proxy: string = '';
   host = defaultHost;
   logDirectory = path.join(electron.app.getPath('userData'), 'data');
@@ -72,6 +76,20 @@ export class GeneralSettings {
   hasImportedVanillaLogs: boolean = false;
   hasDismissedVanillaImport: boolean = false;
   vanillaCustomBaseDir: string | undefined = undefined;
+  autoBackupEnabled: boolean = false;
+  autoBackupTriggers: string[] = ['launch'];
+  autoBackupIntervalHours: number = 6;
+  autoBackupCronTimes: string[] = ['02:00'];
+  autoBackupIncludeGeneralSettings: boolean = true;
+  autoBackupIncludeCharacterSettings: boolean = true;
+  autoBackupIncludeLogs: boolean = true;
+  autoBackupIncludeDrafts: boolean = true;
+  autoBackupIncludePinnedConversations: boolean = true;
+  autoBackupIncludePinnedEicons: boolean = true;
+  autoBackupIncludeRecents: boolean = true;
+  autoBackupIncludeHidden: boolean = true;
+  autoBackupRetention: number = 5;
+  autoBackupDirectory: string = '';
   horizonShowNotificationBadge: boolean = true;
   horizonShowWindowAndChatNotificationBadge: boolean = true;
 }

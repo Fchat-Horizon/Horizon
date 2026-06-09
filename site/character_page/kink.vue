@@ -39,7 +39,13 @@
       <div class="arrow" style="left: 10%"></div>
       <h5 class="popover-header">{{ kink.name }}</h5>
       <div class="popover-body">
-        <p>{{ kink.description }}</p>
+        <p>
+          {{
+            kink.description.length > 0
+              ? kink.description
+              : l('profile.noDescription')
+          }}
+        </p>
       </div>
     </div>
   </div>
@@ -58,6 +64,7 @@
   import core from '../../chat/core';
   import { DisplayKink } from './interfaces';
   import { kinkComparisonSwaps } from '../../learn/matcher-types';
+  import l from '../../chat/localize';
 
   export default defineComponent({
     name: 'kink',
@@ -150,7 +157,8 @@
         showTooltip,
         toggleSubkinks,
         kinkClasses,
-        customId
+        customId,
+        l
       };
     }
   });

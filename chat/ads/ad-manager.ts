@@ -269,9 +269,6 @@ export class AdManager {
 
     this.active = false;
     this.adIndex = 0;
-
-    // const message = new EventMessage(`Advertisements on channel [channel]${this.conversation.name}[/channel] have expired.`);
-    // addEventMessage(message);
   }
 
   renew(): void {

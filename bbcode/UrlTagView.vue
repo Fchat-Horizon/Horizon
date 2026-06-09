@@ -21,13 +21,12 @@
 <script lang="ts">
   import Vue from 'vue';
   import { EventBus } from '../chat/preview/event-bus';
-  // import core from './core';
 
   export default Vue.extend({
     props: {
-      url: { required: true as const },
-      text: { required: true as const },
-      domain: { required: true as const }
+      url: { type: String, required: true },
+      text: { type: String, required: true },
+      domain: { type: String, required: true }
     },
     data() {
       return {

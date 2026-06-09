@@ -244,7 +244,6 @@ async function characterData(
   id: number = -1,
   skipEvent: boolean = false
 ): Promise<Character> {
-  // console.log('CharacterDataquery', name);
   return characterDataThroat(async () =>
     executeCharacterData(name, id, skipEvent)
   );

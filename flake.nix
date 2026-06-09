@@ -12,8 +12,8 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         nodejs = pkgs.nodejs_24;
-        pnpm = nodejs.pkgs. pnpm;
-        electron = pkgs.electron_39;
+        pnpm = pkgs.pnpm;
+        electron = pkgs.electron_40;
       in
       {
         devShells.default = pkgs. mkShell {

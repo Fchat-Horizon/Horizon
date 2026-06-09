@@ -153,7 +153,7 @@
         }
       },
       submit(e: Event): void {
-        (<Modal>this.$refs.dialog).submit(e);
+        (this.$refs.dialog as InstanceType<typeof Modal>).submit(e);
       },
       selectStatus(): void {
         if (this.selectedStatus !== null) {
