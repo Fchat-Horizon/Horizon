@@ -186,7 +186,7 @@
   import l from '../chat/localize';
   import { GeneralSettings } from './common';
   import { getSafeLanguages, updateSupportedLanguages } from './language';
-  import log from 'electron-log';
+  import log from 'electron-log/renderer';
   import { Dialog } from '../helpers/dialog';
 
   const browserWindow = remote.getCurrentWindow();
@@ -331,8 +331,8 @@
 
           this.settings = settings;
 
-          log.transports.file.level = settings.risingSystemLogLevel;
           log.transports.console.level = settings.risingSystemLogLevel;
+          log.transports.ipc.level = settings.risingSystemLogLevel;
         }
       );
 

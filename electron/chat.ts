@@ -64,7 +64,7 @@ import { Logs, SettingsStore } from './filesystem';
 import Notifications from './notifications';
 import { handleStartupImport } from './services';
 import Index from './Index.vue';
-import log from 'electron-log'; // tslint:disable-line: match-default-export-name
+import log from 'electron-log/renderer'; // tslint:disable-line: match-default-export-name
 import { WordPosSearch } from '../learn/dictionary/word-pos-search';
 import { MenuItemConstructorOptions } from 'electron/main';
 
@@ -552,8 +552,8 @@ if (process.platform === 'win32')
 function onSettings(s: GeneralSettings): void {
   settings = s;
 
-  log.transports.file.level = settings.risingSystemLogLevel;
   log.transports.console.level = settings.risingSystemLogLevel;
+  log.transports.ipc.level = settings.risingSystemLogLevel;
 
   // spellchecker.setDictionary(s.spellcheckLang, dictDir);
   // for(const word of s.customDictionary) spellchecker.add(word);

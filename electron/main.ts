@@ -40,7 +40,7 @@
 
 import * as electron from 'electron';
 
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import log from 'electron-log/main'; //tslint:disable-line:match-default-export-name
 import * as fs from 'fs';
 import * as path from 'path';
 import { execFile } from 'child_process';
@@ -75,6 +75,8 @@ const app = electron.app;
 let mainWindow: electron.BrowserWindow | undefined;
 
 remoteMain.initialize();
+
+log.initialize();
 
 const characters: string[] = [];
 let autoBackupScheduler:

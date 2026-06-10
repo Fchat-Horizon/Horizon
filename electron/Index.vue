@@ -314,7 +314,7 @@
   import Axios from 'axios';
   import * as electron from 'electron';
   import * as remote from '@electron/remote';
-  import settings from 'electron-settings';
+  import { JsonStore } from './json-store';
   import log from 'electron-log'; //tslint:disable-line:match-default-export-name
   import * as fs from 'fs';
   import * as path from 'path';
@@ -391,8 +391,14 @@
   //   }
   // >('keytar/build/Release/keytar.node');
 
-  settings.configure({ electron: remote as any });
-  const keyStore = new SecureStore('fchat-rising-accounts', remote, settings);
+  const settingsStore = new JsonStore(
+    path.join(remote.app.getPath('userData'), 'settings.json')
+  );
+  const keyStore = new SecureStore(
+    'fchat-rising-accounts',
+    remote,
+    settingsStore
+  );
 
   // const keyStore = import('keytar');
   //

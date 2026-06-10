@@ -1,8 +1,10 @@
+import { KeyValueStore } from './json-store';
+
 export class SecureStore {
   constructor(
     protected storeName: string,
     protected electronRemote: any,
-    protected settings: any
+    protected settings: KeyValueStore
   ) {}
 
   private getKey(domain: string, account: string): string {
@@ -52,11 +54,11 @@ export class SecureStore {
 
     const pw = await this.settings.get(this.getKey(domain, account));
 
-    if (!pw) {
+    if (typeof pw !== 'string' || pw === '') {
       return null;
     }
 
-    const buffer = Buffer.from(pw.toString(), 'binary');
+    const buffer = Buffer.from(pw, 'binary');
     const decrypted = (this.electronRemote as any).safeStorage.decryptString(
       buffer
     );
