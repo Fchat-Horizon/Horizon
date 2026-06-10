@@ -3,7 +3,9 @@ import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 import throat from 'throat';
 import { NoteChecker } from './note-checker';
 
-import request from 'request-promise'; //tslint:disable-line:match-default-export-name
+import Axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { wrapper as addCookieJar } from 'axios-cookiejar-support';
+import { CookieJar } from 'tough-cookie';
 
 /* tslint:disable:no-unsafe-any */
 
@@ -30,9 +32,19 @@ export class SiteSession {
   private account = '';
   private password = '';
 
-  private request: request.RequestPromiseAPI = request.defaults({
-    jar: request.jar()
-  });
+  private request: AxiosInstance = SiteSession.createRequest();
+
+  private static createRequest(): AxiosInstance {
+    // Cookie jar support requires the Node http adapter; the default XHR
+    // adapter in the renderer ignores it.
+    return addCookieJar(
+      Axios.create({
+        baseURL: 'https://www.f-list.net',
+        adapter: 'http',
+        jar: new CookieJar()
+      })
+    );
+  }
 
   private csrf = '';
 
@@ -70,16 +82,16 @@ export class SiteSession {
   private async init(): Promise<void> {
     log.debug('sitesession.init');
 
-    this.request = request.defaults({ jar: request.jar() });
+    this.request = SiteSession.createRequest();
     this.csrf = '';
 
     const res = await this.get('/');
 
-    if (res.statusCode !== 200) {
+    if (res.status !== 200) {
       throw new Error(`SiteSession.init: Invalid status code: ${res.status}`);
     }
 
-    const input = res.body.match(/<input.*?csrf_token.*?>/);
+    const input = res.data.match(/<input.*?csrf_token.*?>/);
 
     if (!input || input.length < 1) {
       throw new Error('SiteSession.init: Missing csrf token');
@@ -110,12 +122,12 @@ export class SiteSession {
       },
       false,
       {
-        followRedirect: false,
-        simple: false
+        maxRedirects: 0,
+        validateStatus: null
       }
     );
 
-    if (res.statusCode !== 302) {
+    if (res.status !== 302) {
       throw new Error('Invalid status code');
     }
 
@@ -133,29 +145,22 @@ export class SiteSession {
 
   private async prepareRequest(
     method: string,
-    uri: string,
+    url: string,
     mustBeLoggedIn: boolean,
-    config: Partial<request.Options>
-  ): Promise<request.OptionsWithUri> {
+    config: AxiosRequestConfig
+  ): Promise<AxiosRequestConfig> {
     if (mustBeLoggedIn) {
       await this.ensureLogin();
     }
 
-    return _.merge(
-      {
-        method,
-        uri: `https://www.f-list.net${uri}`,
-        resolveWithFullResponse: true
-      },
-      config
-    );
+    return _.merge({ method, url }, config);
   }
 
   async get(
     uri: string,
     mustBeLoggedIn: boolean = false,
-    config: Partial<request.Options> = {}
-  ): Promise<request.RequestPromise> {
+    config: AxiosRequestConfig = {}
+  ): Promise<AxiosResponse> {
     return this.sessionThroat(async () => {
       const finalConfig = await this.prepareRequest(
         'get',
@@ -164,7 +169,7 @@ export class SiteSession {
         config
       );
 
-      return this.request(finalConfig);
+      return this.request.request(finalConfig);
     });
   }
 
@@ -172,17 +177,17 @@ export class SiteSession {
     uri: string,
     data: Record<string, any>,
     mustBeLoggedIn: boolean = false,
-    config: Partial<request.Options> = {}
-  ): Promise<request.RequestPromise> {
+    config: AxiosRequestConfig = {}
+  ): Promise<AxiosResponse> {
     return this.sessionThroat(async () => {
       const finalConfig = await this.prepareRequest(
         'post',
         uri,
         mustBeLoggedIn,
-        _.merge({ form: data }, config)
+        _.merge({ data: new URLSearchParams(data) }, config)
       );
 
-      return this.request(finalConfig);
+      return this.request.request(finalConfig);
     });
   }
 

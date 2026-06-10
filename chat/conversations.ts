@@ -22,7 +22,7 @@ import {
 import MessageType = Interfaces.Message.Type;
 import { EventBus } from './preview/event-bus';
 import throat from 'throat';
-import Bluebird from 'bluebird';
+import { delay } from '../helpers/async';
 import log from 'electron-log';
 import isChannel = Interfaces.isChannel;
 
@@ -257,7 +257,7 @@ abstract class Conversation implements Interfaces.Conversation {
     const lastPostDelta = Date.now() - core.cache.getLastPost().getTime();
 
     if (lastPostDelta < Conversation.POST_DELAY && lastPostDelta > 0) {
-      await Bluebird.delay(Conversation.POST_DELAY - lastPostDelta);
+      await delay(Conversation.POST_DELAY - lastPostDelta);
     }
   }
 

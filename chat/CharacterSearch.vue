@@ -172,7 +172,7 @@
     TagId
   } from '../learn/matcher-types';
   import { CharacterCacheRecord } from '../learn/profile-cache';
-  import Bluebird from 'bluebird';
+  import { delay } from '../helpers/async';
 
   type Options = {
     kinks: SearchKink[];
@@ -374,9 +374,9 @@
           .sort(sort);
 
         // pre-warm cache
-        await Bluebird.mapSeries(results, c =>
-          core.cache.profileCache.get(c.character.name)
-        );
+        for (const c of results) {
+          await core.cache.profileCache.get(c.character.name);
+        }
 
         this.resultsPending = this.countPendingResults(undefined, results);
 
@@ -438,12 +438,12 @@
 
         this.results = [];
 
-        await Bluebird.delay(10);
+        await delay(10);
 
         // pre-warm cache
-        await Bluebird.mapSeries(results, c =>
-          core.cache.profileCache.get(c.character.name)
-        );
+        for (const c of results) {
+          await core.cache.profileCache.get(c.character.name);
+        }
 
         this.resultsPending = this.countPendingResults(undefined, results);
 

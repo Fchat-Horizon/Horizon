@@ -1,5 +1,5 @@
 import throat from 'throat';
-import Bluebird from 'bluebird';
+import { delay } from '../../helpers/async';
 import { IpcMainEvent } from 'electron';
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 
@@ -19,7 +19,7 @@ export class AdCoordinatorHost {
 
       log.debug('adid.request.host', { adId, sinceLastPost, waitTime });
 
-      await Bluebird.delay(waitTime);
+      await delay(waitTime);
 
       log.debug('adid.request.host.grant', { adId, sinceLastPost, waitTime });
 
