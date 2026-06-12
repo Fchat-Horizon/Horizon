@@ -1,13 +1,22 @@
 import _ from 'lodash';
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 import throat from 'throat';
+import { ipcRenderer } from 'electron';
 import { NoteChecker } from './note-checker';
 
-import Axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { wrapper as addCookieJar } from 'axios-cookiejar-support';
-import { CookieJar } from 'tough-cookie';
+import { AxiosRequestConfig } from 'axios';
 
 /* tslint:disable:no-unsafe-any */
+
+/**
+ * The serializable subset of an Axios response returned by the main-process
+ * transport (electron/site-session-host.ts). Cookie-jar requests need the
+ * Node http adapter, which only exists in the main-process bundle.
+ */
+export interface SiteSessionResponse {
+  status: number;
+  data: any;
+}
 
 export interface SiteSessionInterface {
   start(): Promise<void>;
@@ -31,20 +40,6 @@ export class SiteSession {
   private state: 'active' | 'inactive' = 'inactive';
   private account = '';
   private password = '';
-
-  private request: AxiosInstance = SiteSession.createRequest();
-
-  private static createRequest(): AxiosInstance {
-    // Cookie jar support requires the Node http adapter; the default XHR
-    // adapter in the renderer ignores it.
-    return addCookieJar(
-      Axios.create({
-        baseURL: 'https://www.f-list.net',
-        adapter: 'http',
-        jar: new CookieJar()
-      })
-    );
-  }
 
   private csrf = '';
 
@@ -82,7 +77,8 @@ export class SiteSession {
   private async init(): Promise<void> {
     log.debug('sitesession.init');
 
-    this.request = SiteSession.createRequest();
+    // & Fresh cookie jar in the main process for this tab.
+    await ipcRenderer.invoke('site-session-reset');
     this.csrf = '';
 
     const res = await this.get('/');
@@ -160,7 +156,7 @@ export class SiteSession {
     uri: string,
     mustBeLoggedIn: boolean = false,
     config: AxiosRequestConfig = {}
-  ): Promise<AxiosResponse> {
+  ): Promise<SiteSessionResponse> {
     return this.sessionThroat(async () => {
       const finalConfig = await this.prepareRequest(
         'get',
@@ -169,7 +165,7 @@ export class SiteSession {
         config
       );
 
-      return this.request.request(finalConfig);
+      return ipcRenderer.invoke('site-session-request', finalConfig);
     });
   }
 
@@ -178,16 +174,25 @@ export class SiteSession {
     data: Record<string, any>,
     mustBeLoggedIn: boolean = false,
     config: AxiosRequestConfig = {}
-  ): Promise<AxiosResponse> {
+  ): Promise<SiteSessionResponse> {
     return this.sessionThroat(async () => {
+      // ~ Form-encoded as a string: URLSearchParams cannot cross IPC.
       const finalConfig = await this.prepareRequest(
         'post',
         uri,
         mustBeLoggedIn,
-        _.merge({ data: new URLSearchParams(data) }, config)
+        _.merge(
+          {
+            data: new URLSearchParams(data).toString(),
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          },
+          config
+        )
       );
 
-      return this.request.request(finalConfig);
+      return ipcRenderer.invoke('site-session-request', finalConfig);
     });
   }
 

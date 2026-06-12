@@ -1242,19 +1242,15 @@
 </template>
 
 <script lang="ts">
-  import * as remote from '@electron/remote';
   import Vue from 'vue';
   import l from '../chat/localize';
   import { GeneralSettings } from './common';
-  import fs from 'fs';
   import path from 'path';
   import { ipcRenderer } from 'electron';
   import * as ImportExport from './services';
   import type { VanillaContext } from './services/importer/vanilla-importer';
   import type { BackupCharacterInfo } from './services/importer/backup-import';
   import type { ExportManifest } from './services';
-
-  const browserWindow = remote.getCurrentWindow();
 
   export default Vue.extend({
     data() {
@@ -1267,7 +1263,7 @@
           | 'slimcat'
           | undefined,
         l: l,
-        osIsDark: remote.nativeTheme.shouldUseDarkColors as boolean,
+        osIsDark: ipcRenderer.sendSync('native-theme-dark-sync') as boolean,
         selectedSection: 'auto-backup' as
           | 'auto-backup'
           | 'export'
@@ -1358,7 +1354,10 @@
         );
       },
       defaultBackupDir(): string {
-        return path.join(remote.app.getPath('userData'), 'backups');
+        return path.join(
+          ipcRenderer.sendSync('app-path-sync', 'userData') as string,
+          'backups'
+        );
       },
       estimatedRetentionSize(): string | undefined {
         if (!this.autoBackups.length) return undefined;
@@ -1373,23 +1372,17 @@
         return `${(total / (1024 * 1024 * 1024)).toFixed(2)} GB`;
       },
       styling(): string {
-        try {
-          return `<style>${fs
-            .readFileSync(
-              path.join(__dirname, `themes/${this.getSyncedTheme()}.css`),
-              'utf8'
-            )
-            .toString()}</style>`;
-        } catch (e) {
-          if (
-            (<Error & { code: string }>e).code === 'ENOENT' &&
-            this.settings.theme !== 'default'
-          ) {
+        const css = <string | null>(
+          ipcRenderer.sendSync('themes-read-sync', this.getSyncedTheme())
+        );
+        if (css === null) {
+          if (this.settings.theme !== 'default') {
             this.settings.theme = 'default';
             return this.styling;
           }
-          throw e;
+          throw new Error('Default theme is missing');
         }
+        return `<style>${css}</style>`;
       },
       canRunVanillaImport(): boolean {
         if (!this.vanillaImportAvailable || this.vanillaImportInProgress)
@@ -1531,9 +1524,12 @@
       }
     },
     async mounted(): Promise<void> {
-      remote.nativeTheme.on('updated', () => {
-        this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
-      });
+      ipcRenderer.on(
+        'native-theme-updated',
+        (_e: Electron.IpcRendererEvent, isDark: boolean) => {
+          this.osIsDark = isDark;
+        }
+      );
 
       window.addEventListener('beforeunload', e => {
         if (this.exportInProgress || this.importInProgress) {
@@ -1686,7 +1682,7 @@
         return ImportExport.runZipImport(this);
       },
       async chooseAutoBackupDir(): Promise<void> {
-        const result = await remote.dialog.showOpenDialog(browserWindow, {
+        const result = await ipcRenderer.invoke('dialog-open', {
           properties: ['openDirectory'],
           defaultPath:
             this.settings.autoBackupDirectory || this.defaultBackupDir
@@ -1754,7 +1750,7 @@
       },
       close(): void {
         if (this.exportInProgress || this.importInProgress) {
-          const choice = remote.dialog.showMessageBoxSync(browserWindow, {
+          const choice = ipcRenderer.sendSync('dialog-message-box-sync', {
             type: 'warning',
             buttons: [
               l('settings.dataManager.closeWhileBusyCancel'),
@@ -1767,7 +1763,7 @@
           });
           if (choice === 0) return;
         }
-        browserWindow.close();
+        ipcRenderer.send('window-close');
       },
       toggleVanillaCharacters(): void {
         this.setVanillaCharacters(!this.allVanillaCharactersSelected);
@@ -1796,7 +1792,7 @@
         this.exportAnimatedDots = '';
       },
       close(): void {
-        browserWindow.close();
+        ipcRenderer.send('window-close');
       },
       getThemeClass() {
         try {

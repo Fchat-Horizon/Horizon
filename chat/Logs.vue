@@ -253,7 +253,7 @@
   import l from './localize';
   import MessageView from './message_view';
   import VirtualList from '../components/VirtualList.vue';
-  import AdmZip from 'adm-zip';
+  import { ipcRenderer } from 'electron';
   import { Dialog } from '../helpers/dialog';
 
   function formatDate(this: void, date: Date): string {
@@ -605,22 +605,25 @@
 
       async downloadConversation(): Promise<void> {
         if (this.selectedConversation === undefined) return;
-        const zip = new AdmZip();
         const html = Dialog.confirmDialog(l('logs.html'));
+        const files: { name: string; content: string }[] = [];
         for (const date of this.dates) {
           const messages = await core.logs.getLogs(
             this.selectedCharacter,
             this.selectedConversation.key,
             date
           );
-          zip.addFile(
-            `${formatDate(date)}.${html ? 'html' : 'txt'}`,
-            Buffer.from(getLogs(messages, html), 'utf-8')
-          );
+          files.push({
+            name: `${formatDate(date)}.${html ? 'html' : 'txt'}`,
+            content: getLogs(messages, html)
+          });
         }
+        const zipped = <Uint8Array>(
+          await ipcRenderer.invoke('zip-create', files)
+        );
         this.download(
           `${this.sanitizeConversationName(this.selectedConversation.name)}.zip`,
-          URL.createObjectURL(new Blob([zip.toBuffer()]))
+          URL.createObjectURL(new Blob([zipped]))
         );
       },
 
@@ -630,8 +633,8 @@
           !Dialog.confirmDialog(l('logs.confirmExport', this.selectedCharacter))
         )
           return;
-        const zip = new AdmZip();
         const html = Dialog.confirmDialog(l('logs.html'));
+        const files: { name: string; content: string }[] = [];
         const existingConversationNames = new Array<string>();
         for (const conv of this.conversations) {
           const dates = await core.logs.getLogDates(
@@ -649,15 +652,18 @@
               conv.key,
               date
             );
-            zip.addFile(
-              `${sanitizedConvName}/${formatDate(date)}.${html ? 'html' : 'txt'}`,
-              Buffer.from(getLogs(messages, html), 'utf-8')
-            );
+            files.push({
+              name: `${sanitizedConvName}/${formatDate(date)}.${html ? 'html' : 'txt'}`,
+              content: getLogs(messages, html)
+            });
           }
         }
+        const zipped = <Uint8Array>(
+          await ipcRenderer.invoke('zip-create', files)
+        );
         this.download(
           `${this.selectedCharacter}.zip`,
-          URL.createObjectURL(new Blob([zip.toBuffer()]))
+          URL.createObjectURL(new Blob([zipped]))
         );
       },
 

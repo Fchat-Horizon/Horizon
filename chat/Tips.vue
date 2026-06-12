@@ -72,6 +72,13 @@
       const calculateHeight = async () => {
         await nextTick();
         if (!tipContent.value) return;
+        /*
+        ! The chat view starts out hidden until it has finished loading; any
+        ! height measured in that state can be garbage (the layout may not
+        ! have its final size yet). The visibilitychange listener
+        ! below re-measures once the view is actually shown.
+        */
+        if (document.hidden) return;
         const { scrollHeight } = tipContent.value;
         const { paddingTop, paddingBottom } = window.getComputedStyle(
           tipContainer.value
@@ -82,6 +89,10 @@
             parseFloat(paddingBottom),
           44
         );
+      };
+
+      const recalculate = () => {
+        void calculateHeight();
       };
 
       const handleNext = () => {
@@ -98,6 +109,15 @@
 
       onMounted(() => {
         calculateHeight();
+        // ~ The pinned height depends on the laid-out text width, so it has
+        // ~ to follow resizes and the view's hidden-until-loaded reveal.
+        window.addEventListener('resize', recalculate);
+        document.addEventListener('visibilitychange', recalculate);
+      });
+
+      onBeforeUnmount(() => {
+        window.removeEventListener('resize', recalculate);
+        document.removeEventListener('visibilitychange', recalculate);
       });
 
       return {

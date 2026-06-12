@@ -1,11 +1,9 @@
-import * as remote from '@electron/remote';
+import { ipcRenderer } from 'electron';
 import core from '../chat/core';
 import { Conversation } from '../chat/interfaces';
 //tslint:disable-next-line:match-default-export-name
 import BaseNotifications from '../chat/notifications';
 import l from '../chat/localize';
-
-const browserWindow = remote.getCurrentWindow();
 
 export default class Notifications extends BaseNotifications {
   async notify(
@@ -27,28 +25,24 @@ export default class Notifications extends BaseNotifications {
       process.platform !== 'darwin' &&
       core.state.generalSettings?.flashWindow
     )
-      browserWindow.flashFrame(true);
+      ipcRenderer.send('window-flash');
     if (core.state.settings.notifications) {
       const notification = new Notification(
         title,
         this.getOptions(conversation, body, icon)
       );
       notification.onclick = () => {
-        browserWindow.webContents.send(
-          'show-tab',
-          remote.getCurrentWebContents().id
-        );
+        // ~ The main process raises our tab in the host window and restores
+        // ~ and focuses the window itself.
+        ipcRenderer.send('tab-notification-clicked');
         conversation.show();
-        if (browserWindow.isMinimized()) browserWindow.restore();
-        browserWindow.focus();
         notification.close();
       };
     }
   }
 
-  //My bad this also uses Electron remote (for now). We will have to restructure it to use IPC messaging later, but for now at least you can be glad it's only a single reference I added
   alert(message: string) {
-    remote.dialog.showMessageBox(browserWindow, {
+    ipcRenderer.send('show-message-box', {
       title: l('title'),
       message
     });

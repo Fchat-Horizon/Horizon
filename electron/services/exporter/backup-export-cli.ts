@@ -83,7 +83,7 @@ function getCharacters(dataDir: string, filter?: string[]): string[] {
   return list.filter(n => set.has(n.toLowerCase()));
 }
 
-function listFilesRecursive(rootDir: string): string[] {
+export function listFilesRecursive(rootDir: string): string[] {
   const results: string[] = [];
   const stack: string[] = [rootDir];
   while (stack.length > 0) {

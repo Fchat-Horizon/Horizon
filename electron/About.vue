@@ -196,16 +196,11 @@
 </template>
 
 <script lang="ts">
-  import * as remote from '@electron/remote';
-  import { clipboard } from 'electron';
+  import { clipboard, ipcRenderer } from 'electron';
   import Vue from 'vue';
   import l, { setLanguage } from '../chat/localize';
   import { GeneralSettings } from './common';
-  import os from 'os';
-  import fs from 'fs';
-  import path from 'path';
 
-  const browserWindow = remote.getCurrentWindow();
   // tslint:disable-next-line:no-require-imports
   const logoSrc = require('./build/icon.png').default;
   // tslint:disable-next-line:no-require-imports
@@ -213,36 +208,38 @@
 
   export default Vue.extend({
     data() {
+      const versions = <{ [key: string]: string | undefined }>(
+        ((ipcRenderer.sendSync('os-info-sync') as any).versions ?? {})
+      );
       return {
         settings: undefined as any as GeneralSettings,
         appCommit: '',
         appVersion: '',
-        osIsDark: remote.nativeTheme.shouldUseDarkColors,
+        osIsDark: ipcRenderer.sendSync('native-theme-dark-sync') as boolean,
         l,
         platform: process.platform,
         isMac: process.platform === 'darwin',
         logoSrc,
         aboutIconSrc,
-        electronVersion: process.versions.electron || 'N/A',
-        chromiumVersion: process.versions.chrome || 'N/A',
-        nodeVersion: process.versions.node || 'N/A',
+        electronVersion: versions.electron || 'N/A',
+        chromiumVersion: versions.chrome || 'N/A',
+        nodeVersion: versions.node || 'N/A',
         copySuccess: false
       };
     },
     computed: {
       styling(): string {
-        try {
-          return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
-        } catch (e) {
-          if (
-            (<Error & { code: string }>e).code === 'ENOENT' &&
-            this.settings.theme !== 'default'
-          ) {
+        const css = <string | null>(
+          ipcRenderer.sendSync('themes-read-sync', this.getSyncedTheme())
+        );
+        if (css === null) {
+          if (this.settings.theme !== 'default') {
             this.settings.theme = 'default';
             return this.styling;
           }
-          throw e;
+          throw new Error('Default theme is missing');
         }
+        return `<style>${css}</style>`;
       },
       displayCommit(): string {
         return this.appCommit && this.appCommit !== 'unknown'
@@ -254,8 +251,11 @@
         return `https://github.com/Fchat-Horizon/Horizon/commit/${this.appCommit}`;
       },
       platformDetails(): string {
+        const osInfo = <{ platform: string; arch: string; release: string }>(
+          ipcRenderer.sendSync('os-info-sync')
+        );
         const platformName = (() => {
-          switch (os.platform()) {
+          switch (osInfo.platform) {
             case 'win32':
               return 'Windows';
             case 'darwin':
@@ -263,11 +263,11 @@
             case 'linux':
               return 'Linux';
             default:
-              return os.platform();
+              return osInfo.platform;
           }
         })();
         const archLabel = (() => {
-          switch (os.arch()) {
+          switch (osInfo.arch) {
             case 'x64':
               return '64-bit';
             case 'ia32':
@@ -275,10 +275,10 @@
             case 'arm64':
               return 'ARM64';
             default:
-              return os.arch();
+              return osInfo.arch;
           }
         })();
-        const release = os.release();
+        const release = osInfo.release;
         return `${platformName} ${archLabel}${release ? ` (${release})` : ''}`;
       },
       versionInfoText(): string {
@@ -299,9 +299,12 @@
       }
     },
     async mounted(): Promise<void> {
-      remote.nativeTheme.on('updated', () => {
-        this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
-      });
+      ipcRenderer.on(
+        'native-theme-updated',
+        (_e: Electron.IpcRendererEvent, isDark: boolean) => {
+          this.osIsDark = isDark;
+        }
+      );
       try {
         setLanguage(this.settings.displayLanguage);
       } catch (e) {
@@ -328,7 +331,7 @@
           : this.settings.themeSyncLight;
       },
       close(): void {
-        browserWindow.close();
+        ipcRenderer.send('window-close');
       },
       copyVersionInfo(): void {
         clipboard.writeText(this.versionInfoText);

@@ -1,7 +1,6 @@
 /* tslint:disable:quotemark */
 
 import * as _ from 'lodash';
-import * as urlHelper from 'url';
 
 import { domain as extractDomain } from '../../bbcode/core';
 
@@ -387,16 +386,13 @@ export class ImageDomMutator {
       'hentai-foundry.com',
       this.getBaseJsMutatorScript(['#picBox video', '#picBox img']),
       (url: string): string => {
-        const u = urlHelper.parse(url, true);
-
-        if (!u) return url;
-
-        // tslint:disable-next-line no-any
-        (u.query as any).enterAgree = 1;
-
-        u.search = null;
-
-        return urlHelper.format(u);
+        try {
+          const u = new URL(url);
+          u.searchParams.set('enterAgree', '1');
+          return u.toString();
+        } catch {
+          return url;
+        }
       }
     );
 

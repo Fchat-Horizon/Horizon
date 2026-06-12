@@ -1120,11 +1120,9 @@
 </template>
 
 <script lang="ts">
-  import * as remote from '@electron/remote';
   import Vue from 'vue';
   import l, { setLanguage, availableDisplayLanguages } from '../chat/localize';
   import { GeneralSettings } from './common';
-  import fs from 'fs';
   import path from 'path';
   import { ipcRenderer } from 'electron';
   import log from 'electron-log';
@@ -1138,15 +1136,13 @@
   } from './language';
   import _ from 'lodash';
 
-  const browserWindow = remote.getCurrentWindow();
-
   export default Vue.extend({
     components: { tabs: Tabs, 'filterable-select': FilterableSelect },
     data() {
       return {
         sortedLangs: [] as string[],
         settings: undefined as any as GeneralSettings,
-        osIsDark: remote.nativeTheme.shouldUseDarkColors as boolean,
+        osIsDark: ipcRenderer.sendSync('native-theme-dark-sync') as boolean,
         selectedTab: '0',
         isMaximized: false,
         l: l,
@@ -1177,37 +1173,36 @@
     },
     computed: {
       styling(): string {
-        try {
-          return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
-        } catch (e) {
-          if (
-            (<Error & { code: string }>e).code === 'ENOENT' &&
-            this.settings.theme !== 'default'
-          ) {
+        const css = <string | null>(
+          ipcRenderer.sendSync('themes-read-sync', this.getSyncedTheme())
+        );
+        if (css === null) {
+          if (this.settings.theme !== 'default') {
             this.settings.theme = 'default';
             return this.styling;
           }
-          throw e;
+          throw new Error('Default theme is missing');
         }
+        return `<style>${css}</style>`;
       }
     },
     async mounted(): Promise<void> {
       updateSupportedLanguages(
-        browserWindow.webContents.session.availableSpellCheckerLanguages
+        ipcRenderer.sendSync('spellcheck-languages-sync') as string[]
       );
       this.browserPath = this.settings.browserPath;
       this.browserArgs = this.settings.browserArgs;
       this.logDirectory = this.settings.logDirectory;
       this.logLevel = this.settings.risingSystemLogLevel;
       this.showTitle = this.settings.forceNativeWindowControls && !this.isMac;
-      this.availableThemes = fs
-        .readdirSync(path.join(__dirname, 'themes'))
-        .filter(x => x.substr(-4) === '.css')
-        .map(x => x.slice(0, -4));
+      this.availableThemes = <string[]>ipcRenderer.sendSync('themes-list-sync');
 
-      remote.nativeTheme.on('updated', () => {
-        this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
-      });
+      ipcRenderer.on(
+        'native-theme-updated',
+        (_e: Electron.IpcRendererEvent, isDark: boolean) => {
+          this.osIsDark = isDark;
+        }
+      );
 
       // Load available sound themes
       this.loadAvailableSoundThemes();
@@ -1224,7 +1219,7 @@
 
       this.selectedLang = getSafeLanguages(this.settings.spellcheckLang);
       let availableLanguages = getSafeLanguages(
-        remote.session.defaultSession.availableSpellCheckerLanguages
+        ipcRenderer.sendSync('spellcheck-languages-sync') as string[]
       );
       this.sortedLangs = _.sortBy(availableLanguages, 'name');
       try {
@@ -1261,7 +1256,7 @@
       },
 
       minimize(): void {
-        browserWindow.minimize();
+        ipcRenderer.send('window-minimize');
       },
 
       formatLanguage(lang: string): string {
@@ -1284,38 +1279,19 @@
       },
 
       loadAvailableSoundThemes(): void {
-        try {
-          const soundThemesPath = path.join(__dirname, 'sound-themes');
-          this.availableSoundThemes = fs
-            .readdirSync(soundThemesPath, { withFileTypes: true })
-            .filter(dirent => dirent.isDirectory())
-            .map(dirent => dirent.name)
-            .filter(name => {
-              const soundJsonPath = path.join(
-                soundThemesPath,
-                name,
-                'sound.json'
-              );
-              return fs.existsSync(soundJsonPath);
-            });
-        } catch (error) {
-          console.error('Error loading sound themes:', error);
-          this.availableSoundThemes = ['default'];
-        }
+        this.availableSoundThemes = <string[]>(
+          ipcRenderer.sendSync('sound-themes-list-sync')
+        );
       },
 
       async loadSelectedSoundThemeDetails(): Promise<void> {
         const theme = this.settings.soundTheme || 'default';
         // Load metadata (sound.json) if present
         try {
-          const themeJsonPath = path.join(
-            __dirname,
-            'sound-themes',
-            theme,
-            'sound.json'
+          const raw = <string | null>(
+            ipcRenderer.sendSync('sound-theme-read-sync', theme)
           );
-          const raw = fs.readFileSync(themeJsonPath, 'utf8');
-          this.currentSoundThemeDetails = JSON.parse(raw);
+          this.currentSoundThemeDetails = raw === null ? null : JSON.parse(raw);
         } catch (err) {
           this.currentSoundThemeDetails = null;
         }
@@ -1384,46 +1360,14 @@
         };
 
         try {
-          // Prefer themed sound files from the selected sound theme
-          if (this.currentSoundThemeDetails?.sounds?.[sound]) {
-            const soundPath = this.currentSoundThemeDetails.sounds[sound];
-            const formats = [
-              this.currentSoundThemeDetails.formats?.preferred,
-              ...(this.currentSoundThemeDetails.formats?.fallback || [])
-            ].filter(Boolean);
-            for (const format of formats) {
-              const ext = format === 'mpeg' ? 'mp3' : format;
-              const abs = path.join(
-                __dirname,
-                'sound-themes',
-                this.settings.soundTheme,
-                `${soundPath}.${ext}`
-              );
-              pushSource(`file://${abs}`, `audio/${format}`);
-            }
-          } else {
-            // Fallback: look for assets on disk in common locations
-            const codecOrder = ['wav', 'mp3', 'ogg'];
-            for (const ext of codecOrder) {
-              const candidate1 = path.join(
-                __dirname,
-                '..',
-                'chat',
-                'assets',
-                `${sound}.${ext}`
-              );
-              const candidate2 = path.join(
-                __dirname,
-                '..',
-                'assets',
-                `${sound}.${ext}`
-              );
-              if (fs.existsSync(candidate1))
-                pushSource(`file://${candidate1}`, `audio/${ext}`);
-              else if (fs.existsSync(candidate2))
-                pushSource(`file://${candidate2}`, `audio/${ext}`);
-            }
-          }
+          const sources = <{ url: string; type: string }[]>(
+            ipcRenderer.sendSync(
+              'sound-sources-sync',
+              this.settings.soundTheme || 'default',
+              sound
+            )
+          );
+          for (const source of sources) pushSource(source.url, source.type);
         } catch (err) {
           console.warn('Preview load failed', err);
         }
@@ -1442,7 +1386,7 @@
       },
 
       close(): void {
-        browserWindow.close();
+        ipcRenderer.send('window-close');
       },
 
       getThemeClass(): any {
@@ -1492,13 +1436,18 @@
       },
 
       browseForLogDir(): void {
-        const dir = remote.dialog.showOpenDialogSync({
+        const dir = ipcRenderer.sendSync('dialog-open-sync', {
           defaultPath: this.settings.logDirectory,
           properties: ['openDirectory']
-        });
+        }) as string[] | undefined;
         if (dir !== undefined) {
-          if (dir[0].startsWith(path.dirname(remote.app.getPath('exe'))))
-            return remote.dialog.showErrorBox(
+          const exePath = ipcRenderer.sendSync(
+            'app-path-sync',
+            'exe'
+          ) as string;
+          if (dir[0].startsWith(path.dirname(exePath)))
+            return ipcRenderer.send(
+              'show-error-box',
               l('settings.logDir'),
               l('settings.logDir.inAppDir')
             );
