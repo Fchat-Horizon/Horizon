@@ -192,16 +192,22 @@
               </button>
 
               <label
-                class="input-group-text bg-body-tertiary zoom-number font-monospace"
+                class="input-group-text bg-body-tertiary zoom-number font-monospace placeholder-glow"
               >
-                {{ `${displayedZoomPercent()}%` }}
+                <span v-if="previewLoading" class="placeholder w-100"></span>
+                <span v-else>{{ `${displayedZoomPercent()}%` }}</span>
               </label>
               <label
-                class="input-group-text bg-body-tertiary zoom-range-container"
+                class="input-group-text bg-body-tertiary zoom-range-container placeholder-glow"
               >
+                <span
+                  v-if="previewLoading"
+                  class="placeholder zoom-range-placeholder"
+                ></span>
                 <input
                   type="range"
                   class="form-range zoom-range"
+                  :class="previewLoading ? 'invisible' : ''"
                   :min="getZoomMin()"
                   :max="getZoomMax()"
                   v-model.number="zoomLevel"

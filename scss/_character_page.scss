@@ -530,10 +530,12 @@
         .zoom-number {
           flex-grow: 0;
           max-width: 20%;
+          min-width: 4.8em;
+          justify-content: center;
           display: none;
           font-size: 0.9em;
           @include media-breakpoint-up(xl) {
-            display: inline-block;
+            display: flex;
           }
         }
 
@@ -541,13 +543,26 @@
           @include media-breakpoint-down(lg) {
             width: 100% !important;
           }
+          .placeholder {
+            background-color: var(--bs-secondary-bg);
+          }
         }
 
         .zoom-range-container {
           flex-grow: 1;
+          position: relative;
           .zoom-range {
             height: 1em;
             //width: 80%;
+          }
+          .zoom-range-placeholder {
+            position: absolute;
+            left: $input-group-addon-padding-x;
+            right: $input-group-addon-padding-x;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 1em;
+            min-height: 0;
           }
         }
       }
