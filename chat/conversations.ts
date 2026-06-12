@@ -1022,7 +1022,7 @@ class State implements Interfaces.State {
       const groupId = `group_${Date.now()}`;
       this.channelGroups.push({
         id: groupId,
-        name: 'Pinned',
+        name: l('channel.group.pinned'),
         collapsed: false,
         order: this.channelGroups.length,
         channels: ungroupedPinned

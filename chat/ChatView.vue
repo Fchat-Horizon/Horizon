@@ -1118,7 +1118,7 @@
         let groupId = '';
         if (core.conversations.channelGroups.length < 1) {
           groupId = core.conversations.createChannelGroup(
-            l('channel.group.ungrouped')
+            l('channel.group.pinned')
           );
         } else {
           groupId = core.conversations.channelGroups[0].id;
