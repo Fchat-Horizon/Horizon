@@ -118,6 +118,7 @@
   "channel.group.newGroup": "Nuevo grupo",
   "channel.group.newGroup.counter": "Nuevo Grupo ({0})",
   "channel.group.noticePinned": "[b]Tus canales fijados han recibido una mejora y ahora puedes organizarlos en grupos.\n\nHaz clic en el botón + de la lista para crear uno nuevo. También puedes arrastrar y soltar los elementos, o hacer clic derecho sobre ellos para ver más opciones. ¡Adelante, pruébalo!\n\nVisita [url=https://horizn.moe/docs/channel-groups.html]nuestro sitio[/url] para más info.[/b]",
+  "channel.group.pinned": "Fijado",
   "channel.menu.addToNewGroup": "Añadir a nuevo grupo",
   "channel.menu.copyCode": "Copiar código de canal",
   "channel.menu.markRead": "Marcar como leído",
