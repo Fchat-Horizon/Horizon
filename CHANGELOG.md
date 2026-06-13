@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Added
+
+- Updates now automatically download, and you can easily install them with the click of a button. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4139ac84c1a19453d5e89383c7aada609346862b)
+  - On Linux, this requires using the AppImage builds. Unless you were using a package manager managed version of Horizon, in which case you always had this ability.
+
+### Changed
+
+- Images in the profile viewer's gallery view can now be zoomed out if their actual size is smaller than the window's size. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ccc39526b6d32f9332dc5c855f33ad87dd7d112d)
+- Swapped the websites used for the "Lookup `[Word]`" dialog with the following options: [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/88680ca78b114171a48cee2acc3ed1ed5392c684)
+  - Merriam-Webster
+  - Wiktionary
+  - Urban Dictionary (was already an option originally)
+- The character matcher now knows how to handle plant and plantlike species. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2652a2ba3ac5916383a55d9968b767be5c043c66)
+
+### Fixed
+
+- Fixed a bug that would let you create an unnamed channel group if you somehow deleted all of your groups and created a new one by directly pinning a channel. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e66d1a6e51f43609fb5e440df000d17b40dec96c)
+- Fixed issues where F-List character memos would be saved with HTML entity characters (like `&amp;` or `&gt;`) if saved inside the app. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/871195c0bb87d9fd8060c3f80bfbe3facc8b12fa)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/602 by @CodingWithAnxiety
+- https://github.com/Fchat-Horizon/Horizon/pull/795 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/807 by @Kannamoris
+- https://github.com/Fchat-Horizon/Horizon/pull/809 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/811 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/820 by @freenutsxd
+
 ## [2.2.1] - 2026-06-08
 
 ### Changed
