@@ -1,11 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import archiver from 'archiver';
+import { createManifest, shouldIncludeSettingsFile } from './manifest';
 
 /**
  * Configuration options for CLI-based export operations.
  *
- * @property dataDir - Absolute path to the Horizon data directory
+ * @property dataDir - Absolute path to the Horizon data directory (character data / logs)
+ * @property settingsDir - Absolute path to the general settings directory; defaults to dataDir. Pass the fixed `{userData}/data` when the log directory is custom.
  * @property out - Absolute path where the output ZIP file will be created
  * @property includeGeneral - Include general application settings
  * @property includeCharacterSettings - Include all character-specific settings files
@@ -20,6 +22,7 @@ import archiver from 'archiver';
  */
 export interface ExportCliOptions {
   dataDir: string;
+  settingsDir?: string;
   out: string;
   includeGeneral: boolean;
   includeCharacterSettings: boolean;
@@ -31,6 +34,37 @@ export interface ExportCliOptions {
   includeHidden: boolean;
   characters?: string[];
   dryRun?: boolean;
+  onProgress?: (fraction: number) => void;
+}
+
+export function binaryLogToJson(
+  buffer: Buffer
+): { time: number; type: number; sender: string; text: string }[] {
+  const messages: {
+    time: number;
+    type: number;
+    sender: string;
+    text: string;
+  }[] = [];
+  let offset = 0;
+  while (offset + 10 <= buffer.length) {
+    const time = buffer.readUInt32LE(offset);
+    const type = buffer.readUInt8(offset + 4);
+    const senderLength = buffer.readUInt8(offset + 5);
+    if (offset + 6 + senderLength + 2 > buffer.length) break;
+    const sender = buffer.toString(
+      'utf8',
+      offset + 6,
+      offset + 6 + senderLength
+    );
+    const textLength = buffer.readUInt16LE(offset + 6 + senderLength);
+    const textStart = offset + 6 + senderLength + 2;
+    if (textStart + textLength + 2 > buffer.length) break;
+    const text = buffer.toString('utf8', textStart, textStart + textLength);
+    messages.push({ time, type, sender, text });
+    offset = textStart + textLength + 2;
+  }
+  return messages;
 }
 
 function getCharacters(dataDir: string, filter?: string[]): string[] {
@@ -80,34 +114,11 @@ function addCharacterSettings(
   const settingsDir = path.join(characterDir, 'settings');
   if (!fs.existsSync(settingsDir)) return;
 
-  if (opts.includeCharacterSettings) {
-    const files = listFilesRecursive(settingsDir);
-    for (const abs of files) {
-      const rel = path.relative(settingsDir, abs).replace(/\\/g, '/');
-      const zipPath = path.posix.join('characters', character, 'settings', rel);
-      archive.file(abs, { name: zipPath });
-    }
-  } else {
-    const includeFiles = new Set<string>();
-    if (opts.includePinnedConversations) includeFiles.add('pinned');
-    if (opts.includePinnedEicons) includeFiles.add('favoriteEIcons');
-    if (opts.includeRecents) {
-      includeFiles.add('recent');
-      includeFiles.add('recentChannels');
-    }
-    if (opts.includeHidden) includeFiles.add('hiddenUsers');
-    for (const file of Array.from(includeFiles)) {
-      const filePath = path.join(settingsDir, file);
-      if (fs.existsSync(filePath)) {
-        const zipPath = path.posix.join(
-          'characters',
-          character,
-          'settings',
-          file
-        );
-        archive.file(filePath, { name: zipPath });
-      }
-    }
+  for (const abs of listFilesRecursive(settingsDir)) {
+    const rel = path.relative(settingsDir, abs).replace(/\\/g, '/');
+    if (!shouldIncludeSettingsFile(rel, opts)) continue;
+    const zipPath = path.posix.join('characters', character, 'settings', rel);
+    archive.file(abs, { name: zipPath });
   }
 }
 
@@ -153,7 +164,10 @@ function logDryRunDetails(
   console.log('');
 
   console.log('Export options:');
-  const generalSettingsFile = path.join(dataDir, 'settings');
+  const generalSettingsFile = path.join(
+    opts.settingsDir ?? dataDir,
+    'settings'
+  );
   const hasGeneral = fs.existsSync(generalSettingsFile);
   console.log(
     `  - General settings: ${opts.includeGeneral && hasGeneral ? 'YES' : 'NO'}`
@@ -181,6 +195,48 @@ function logDryRunDetails(
   }
 }
 
+function countEntries(
+  dataDir: string,
+  characters: string[],
+  opts: ExportCliOptions
+): number {
+  let count = 0;
+
+  if (opts.includeGeneral) {
+    const generalSettingsFile = path.join(
+      opts.settingsDir ?? dataDir,
+      'settings'
+    );
+    if (fs.existsSync(generalSettingsFile)) count++;
+  }
+
+  for (const character of characters) {
+    const characterDir = path.join(dataDir, character);
+    if (!fs.existsSync(characterDir)) continue;
+
+    if (opts.includeLogs) {
+      const logsDir = path.join(characterDir, 'logs');
+      if (fs.existsSync(logsDir)) {
+        count += listFilesRecursive(logsDir).length;
+      }
+    }
+
+    if (opts.includeDrafts) {
+      if (fs.existsSync(path.join(characterDir, 'drafts.txt'))) count++;
+    }
+
+    const settingsDir = path.join(characterDir, 'settings');
+    if (fs.existsSync(settingsDir)) {
+      for (const abs of listFilesRecursive(settingsDir)) {
+        const rel = path.relative(settingsDir, abs).replace(/\\/g, '/');
+        if (shouldIncludeSettingsFile(rel, opts)) count++;
+      }
+    }
+  }
+
+  return count;
+}
+
 async function createArchive(
   opts: ExportCliOptions,
   dataDir: string,
@@ -196,8 +252,33 @@ async function createArchive(
   const output = fs.createWriteStream(opts.out);
   archive.pipe(output);
 
+  // Write manifest
+  const expectedFiles = countEntries(dataDir, characters, opts);
+  const manifest = createManifest(
+    characters,
+    {
+      generalSettings: opts.includeGeneral,
+      logs: opts.includeLogs,
+      drafts: opts.includeDrafts,
+      characterSettings: opts.includeCharacterSettings,
+      pinned: opts.includePinnedConversations,
+      eicons: opts.includePinnedEicons,
+      recents: opts.includeRecents,
+      hidden: opts.includeHidden,
+      jsonLogs: opts.includeLogs ? false : undefined
+    },
+    expectedFiles,
+    dataDir
+  );
+  archive.append(JSON.stringify(manifest, null, 2), {
+    name: 'manifest.json'
+  });
+
   if (opts.includeGeneral) {
-    const generalSettingsFile = path.join(dataDir, 'settings');
+    const generalSettingsFile = path.join(
+      opts.settingsDir ?? dataDir,
+      'settings'
+    );
     if (fs.existsSync(generalSettingsFile)) {
       archive.file(generalSettingsFile, { name: 'settings' });
     }
@@ -205,6 +286,15 @@ async function createArchive(
 
   for (const c of characters) {
     addCharacterToArchive(archive, dataDir, c, opts);
+  }
+
+  if (opts.onProgress) {
+    const total = expectedFiles + 1; // +1 for manifest
+    const cb = opts.onProgress;
+    archive.on('progress', (progressData: any) => {
+      const processed = progressData.entries?.processed || 0;
+      cb(Math.min(0.99, processed / total));
+    });
   }
 
   const result = new Promise<{ characters: string[]; out: string }>(

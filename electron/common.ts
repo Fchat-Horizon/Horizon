@@ -29,6 +29,7 @@ export class GeneralSettings {
   profileViewer = true;
   profileViewerGalleryType: ProfileViewerGalleryType = 'thumbnail';
   profileViewerThumbAnimate = false;
+  profileViewerSmallerDefaultAvatars = false;
   proxy: string = '';
   host = defaultHost;
   logDirectory = path.join(electron.app.getPath('userData'), 'data');
@@ -41,6 +42,9 @@ export class GeneralSettings {
   version = electron.app.getVersion();
   beta = false;
   updateCheck = true;
+  horizonHideAutoUpdater = false;
+  horizonAutoDownloadUpdates = false;
+  horizonSkippedUpdateVersion = '';
   customDictionary: string[] = [];
   hwAcceleration = true;
   reducedMotion = false;
@@ -72,6 +76,20 @@ export class GeneralSettings {
   hasImportedVanillaLogs: boolean = false;
   hasDismissedVanillaImport: boolean = false;
   vanillaCustomBaseDir: string | undefined = undefined;
+  autoBackupEnabled: boolean = false;
+  autoBackupTriggers: string[] = ['launch'];
+  autoBackupIntervalHours: number = 6;
+  autoBackupCronTimes: string[] = ['02:00'];
+  autoBackupIncludeGeneralSettings: boolean = true;
+  autoBackupIncludeCharacterSettings: boolean = true;
+  autoBackupIncludeLogs: boolean = true;
+  autoBackupIncludeDrafts: boolean = true;
+  autoBackupIncludePinnedConversations: boolean = true;
+  autoBackupIncludePinnedEicons: boolean = true;
+  autoBackupIncludeRecents: boolean = true;
+  autoBackupIncludeHidden: boolean = true;
+  autoBackupRetention: number = 5;
+  autoBackupDirectory: string = '';
   horizonShowNotificationBadge: boolean = true;
   horizonShowWindowAndChatNotificationBadge: boolean = true;
 }

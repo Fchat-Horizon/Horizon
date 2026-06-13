@@ -1,21 +1,23 @@
 <template>
   <div class="infotags row">
-    <div
-      class="infotag-group col-sm-6 col-lg-3"
-      v-for="group in groups"
-      :key="group.id"
-      style="margin-top: 5px"
-    >
-      <div class="infotag-title">{{ group.name }}</div>
-      <hr />
-      <infotag
-        :infotag="item.infotag"
-        v-for="item in getInfotags(group.id)"
-        :key="item.infotag.id"
-        :characterMatch="characterMatch"
-        :data="item.data"
-      ></infotag>
-    </div>
+    <template v-for="group in groups">
+      <div
+        class="infotag-group col-sm-6 col-lg-3"
+        v-if="getInfotags(group.id).length > 0"
+        style="margin-top: 5px"
+        :key="group.id"
+      >
+        <div class="infotag-title">{{ group.name }}</div>
+        <hr />
+        <infotag
+          :infotag="item.infotag"
+          v-for="item in getInfotags(group.id)"
+          :key="item.infotag.id"
+          :characterMatch="characterMatch"
+          :data="item.data"
+        ></infotag>
+      </div>
+    </template>
   </div>
 </template>
 

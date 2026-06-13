@@ -174,6 +174,7 @@ export class CoreBBCodeParser extends BBCodeParser {
         link.onclick = e => {
           const target = e.target as HTMLElement;
           target.parentElement!.replaceChild(content, target);
+          e.stopPropagation();
           return false;
         };
         link.appendChild(document.createTextNode('[click to show spoiler]'));

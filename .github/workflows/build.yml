@@ -58,6 +58,12 @@ jobs:
 
       - name: Run Build Script (macOS)
         if: matrix.os == 'macos-26'
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           # ! Execute macOS build script
           chmod +x electron/release-scripts/macos.sh
@@ -82,6 +88,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
@@ -99,6 +108,34 @@ jobs:
           find . -type f -not -name "SHASUMS256.txt" -exec sha256sum {} \; | sort > SHASUMS256.txt
 
           cat SHASUMS256.txt
+
+      - name: Extract release notes from CHANGELOG.md
+        id: changelog
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+
+          # Print the body of a "## [<header>]" section, up to the next "## [".
+          # Matches the header literally so version dots aren't treated as regex.
+          extract_section() {
+            awk -v hdr="## [$1]" '
+              index($0, hdr) == 1 { found = 1; next }
+              /^## \[/ { if (found) exit }
+              found
+            ' CHANGELOG.md
+          }
+
+          has_text() { [ -n "$(printf '%s' "$1" | tr -d '[:space:]')" ]; }
+
+          # Stable tags have a rolled "## [version]" section. Prereleases (e.g.
+          # 1.2.0-dev.3) don't, so fall back to the Unreleased section rather than
+          # an older, already-released version's notes.
+          NOTES="$(extract_section "$VERSION")"
+          if ! has_text "$NOTES"; then NOTES="$(extract_section "Unreleased")"; fi
+
+          # Write to file to preserve formatting. This was changed from echo to printf
+          # to be a little more... 'reliable.' 
+          printf '%s\n' "$NOTES" > /tmp/release-notes.md
 
       - name: Detect release type
         id: release_type
@@ -123,6 +160,7 @@ jobs:
           name: Release ${{ github.ref_name }}
           draft: ${{ steps.release_type.outputs.draft }}
           prerelease: ${{ steps.release_type.outputs.prerelease }}
+          body_path: /tmp/release-notes.md
           files: final_release/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

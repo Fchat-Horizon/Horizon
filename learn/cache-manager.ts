@@ -21,6 +21,7 @@ import {
 import ChannelConversation = Conversation.ChannelConversation;
 import Message = Conversation.Message;
 import { Character } from '../fchat/interfaces';
+import { emptyMap } from '../fchat/common';
 import Bluebird from 'bluebird';
 import ChatMessage = Conversation.ChatMessage;
 import { GeneralSettings } from '../electron/common';
@@ -69,8 +70,8 @@ export class CacheManager {
 
   protected lastFetch = Date.now();
 
-  protected fetchLog: Record<string, number> = {};
-  protected ongoingLog: Record<string, true> = {};
+  protected fetchLog: Record<string, number> = emptyMap();
+  protected ongoingLog: Record<string, true> = emptyMap();
 
   protected isActiveTab = true;
 
@@ -508,7 +509,7 @@ export class CacheManager {
     );
 
     if (channel) {
-      const checkedNames: Record<string, boolean> = {};
+      const checkedNames: Record<string, boolean> = emptyMap();
 
       // Add fetchers for unknown profiles in ads
       await Bluebird.each(

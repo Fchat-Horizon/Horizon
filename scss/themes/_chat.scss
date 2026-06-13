@@ -24,6 +24,7 @@
 @import '~bootstrap/scss/popover';
 @import '~bootstrap/scss/badge';
 @import '~bootstrap/scss/spinners';
+@import '~bootstrap/scss/placeholders';
 @import '~bootstrap/scss/utilities';
 @import '~bootstrap/scss/utilities/api';
 @import '~bootstrap/scss/helpers/color-bg';
@@ -53,6 +54,18 @@ $selection-color: color-contrast($primary);
 .list-group-item-action:not(.active):hover,
 .list-group-item-action:not(.active):focus {
   color: var(--bs-secondary-text-emphasis);
+}
+
+.list-group-item,
+.list-group-item-action {
+  --transition-time: 0.2s;
+  transition:
+    var(--transition-time) background-color,
+    var(--transition-time) color;
+
+  @media (prefers-reduced-motion: reduce) {
+    --transition-time: 0s;
+  }
 }
 
 // Map list-group-action colors to their list-group-item equivalents

@@ -109,6 +109,14 @@ export namespace Conversation {
     return (<Partial<ChannelConversation>>conversation).channel !== undefined;
   }
 
+  export interface ChannelGroup {
+    id: string;
+    name: string;
+    collapsed: boolean;
+    order: number;
+    channels: string[];
+  }
+
   export interface State {
     readonly privateConversations: ReadonlyArray<PrivateConversation>;
     readonly channelConversations: ReadonlyArray<ChannelConversation>;
@@ -128,6 +136,14 @@ export namespace Conversation {
       character: Character,
       noCreate: boolean
     ): PrivateConversation | undefined;
+
+    channelGroups: ChannelGroup[];
+    channelGroupAssignments: { [channelId: string]: string };
+    createChannelGroup(name: string): string;
+    deleteChannelGroup(id: string): void;
+    renameChannelGroup(id: string, name: string): void;
+    setChannelGroup(channelId: string, groupId: string | null): void;
+    saveChannelGroups(): Promise<void>;
   }
 
   export enum Setting {
@@ -255,6 +271,10 @@ export namespace Settings {
     hideProfileComparisonSummary: boolean;
     hideProfileAnalysis: boolean;
     ads: Ad[];
+    channelGroups: {
+      groups: Conversation.ChannelGroup[];
+      assignments?: { [channelId: string]: string };
+    };
   };
 
   export interface Store {

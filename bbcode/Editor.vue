@@ -81,7 +81,7 @@
           class="btn btn-light btn-sm"
           v-for="button in buttons"
           :class="button.outerClass"
-          :title="button.title"
+          :title="l(button.titleKey, shortcutModifierKey)"
           @click.prevent.stop="apply(button)"
         >
           <i

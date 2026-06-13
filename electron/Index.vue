@@ -276,19 +276,18 @@
       <template slot="title">
         {{ wordDefinitionLookup }}
         <a
-          class="btn wordDefBtn dictionary"
-          @click="openDefinitionWithDictionary"
-          ><i>D</i></a
-        >
-        <a class="btn wordDefBtn thesaurus" @click="openDefinitionWithThesaurus"
-          ><i>T</i></a
+          class="btn wordDefBtn merriam-webster"
+          @click="openDefinitionWithMerriamWebster"
+          ><i>MW</i></a
         >
         <a
           class="btn wordDefBtn urbandictionary"
           @click="openDefinitionWithUrbanDictionary"
           ><i>UD</i></a
         >
-        <a class="btn wordDefBtn wikipedia" @click="openDefinitionWithWikipedia"
+        <a
+          class="btn wordDefBtn wiktionary"
+          @click="openDefinitionWithWiktionary"
           ><i>W</i></a
         >
 
@@ -300,6 +299,13 @@
 
     <logs ref="logsDialog"></logs>
     <ui-test ref="uiTestDialog" v-if="isDevMode"> </ui-test>
+
+    <toast
+      v-for="t in toasts"
+      :key="t.id"
+      v-bind="t"
+      @dismiss="dismissToast(t.id)"
+    />
   </div>
 </template>
 
@@ -321,9 +327,13 @@
   import UITest from '../chat/UITest.vue';
   import Socket from '../chat/WebSocket';
   import Modal from '../components/Modal.vue';
+  import Toast from '../components/Toast.vue';
+  import { toasts, showToast, updateToast, dismissToast } from '../chat/toast';
   import { SimpleCharacter } from '../interfaces';
   import CharacterPage from '../site/character_page/character_page.vue';
-  import WordDefinition from '../learn/dictionary/WordDefinition.vue';
+  import WordDefinition, {
+    DictionaryMode
+  } from '../learn/dictionary/WordDefinition.vue';
   import ProfileAnalysis from '../learn/recommend/ProfileAnalysis.vue';
   import { defaultHost, GeneralSettings } from './common';
   import { fixLogs } from './filesystem';
@@ -396,6 +406,7 @@
     components: {
       chat: Chat,
       modal: Modal,
+      toast: Toast,
       characterPage: CharacterPage,
       logs: Logs,
       'ui-test': UITest,
@@ -432,7 +443,14 @@
         profilePointer: 0,
         isDevMode: (process.env.NODE_ENV !== 'production') as boolean,
         themeWatchHandle: undefined as fs.FSWatcher | undefined,
-        themeWatchTimer: undefined as NodeJS.Timeout | undefined
+        themeWatchTimer: undefined as NodeJS.Timeout | undefined,
+        toasts: toasts,
+        dismissToast: dismissToast,
+        autoBackupStatusListener: undefined as any as (
+          e: Electron.IpcRendererEvent,
+          status: string,
+          progress?: number
+        ) => void
       };
     },
     computed: {
@@ -463,6 +481,47 @@
       this.setupThemeHotReload();
     },
     async created(): Promise<void> {
+      // Register the auto-backup toast listener as early as possible. It used to
+      // live in ChatView, which is only mounted once a character is connected -
+      // so a backup triggered "on connect" in the tab that triggered it would
+      // fire before the listener existed and the toast was silently missed.
+      this.autoBackupStatusListener = (_e, status, progress) => {
+        const id = 'auto-backup';
+        if (status === 'started') {
+          showToast({
+            id,
+            message: l('settings.autoBackup.toastInProgress'),
+            icon: 'fa-sync',
+            iconSpin: true,
+            progress: 0
+          });
+        } else if (status === 'progress' && typeof progress === 'number') {
+          updateToast(id, { progress });
+        } else if (status === 'success') {
+          updateToast(id, {
+            message: l('settings.autoBackup.toastComplete'),
+            icon: 'fa-check',
+            iconSpin: false,
+            variant: 'success',
+            progress: 1,
+            autoDismiss: 5000
+          });
+        } else if (status === 'error') {
+          updateToast(id, {
+            message: l('settings.autoBackup.toastFailed'),
+            icon: 'fa-exclamation-triangle',
+            iconSpin: false,
+            variant: 'error',
+            progress: undefined,
+            autoDismiss: 5000
+          });
+        }
+      };
+      electron.ipcRenderer.on(
+        'auto-backup-status',
+        this.autoBackupStatusListener
+      );
+
       await this.startAndUpgradeCache();
 
       if (this.settings.account.length > 0) this.saveLogin = true;
@@ -599,6 +658,11 @@
     },
     beforeDestroy(): void {
       this.stopThemeWatch();
+      if (this.autoBackupStatusListener)
+        electron.ipcRenderer.removeListener(
+          'auto-backup-status',
+          this.autoBackupStatusListener
+        );
     },
     methods: {
       async startAndUpgradeCache(): Promise<void> {
@@ -1019,17 +1083,20 @@
       showUiTest(): void {
         (this.$refs['uiTestDialog'] as InstanceType<typeof UITest>).show();
       },
-      async openDefinitionWithDictionary(): Promise<void> {
-        (this.$refs.wordDefinitionLookup as any).setMode('dictionary');
-      },
-      async openDefinitionWithThesaurus(): Promise<void> {
-        (this.$refs.wordDefinitionLookup as any).setMode('thesaurus');
+      async openDefinitionWithMerriamWebster(): Promise<void> {
+        (this.$refs.wordDefinitionLookup as any).setMode(
+          DictionaryMode.MerriamWebster
+        );
       },
       async openDefinitionWithUrbanDictionary(): Promise<void> {
-        (this.$refs.wordDefinitionLookup as any).setMode('urbandictionary');
+        (this.$refs.wordDefinitionLookup as any).setMode(
+          DictionaryMode.UrbanDictionary
+        );
       },
-      async openDefinitionWithWikipedia(): Promise<void> {
-        (this.$refs.wordDefinitionLookup as any).setMode('wikipedia');
+      async openDefinitionWithWiktionary(): Promise<void> {
+        (this.$refs.wordDefinitionLookup as any).setMode(
+          DictionaryMode.Wiktionary
+        );
       },
       async openWordDefinitionInBrowser(): Promise<void> {
         electron.ipcRenderer.send(
@@ -1165,10 +1232,6 @@
       font-weight: bold;
     }
 
-    &.thesaurus {
-      background-color: #f44725;
-    }
-
     &.urbandictionary {
       background-color: #d96a36;
 
@@ -1179,12 +1242,12 @@
       }
     }
 
-    &.dictionary {
-      background-color: #314ca7;
+    &.merriam-webster {
+      background-color: #0f3850;
     }
 
-    &.wikipedia {
-      background-color: white;
+    &.wiktionary {
+      background-color: #ddd8d8;
 
       i {
         color: black;

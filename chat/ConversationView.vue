@@ -680,8 +680,7 @@
 
       this.extraButtons = [
         {
-          title:
-            'Help\n\nClick this button for a quick overview of slash commands.',
+          titleKey: 'editor.help',
           tag: '?',
           icon: 'fa-question',
           handler: () => (<CommandHelp>this.$refs['helpDialog']).show()

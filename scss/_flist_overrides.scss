@@ -222,6 +222,13 @@ input:checked {
   margin-bottom: 0;
 }
 
+.context-menu .list-group-item-action {
+  &.list-group-item-danger {
+    color: $list-group-action-color;
+    background-color: $list-group-bg;
+  }
+}
+
 @font-face {
   font-family: 'OpenMoji';
   //The url is checked from the theme file, so we have to use this absolutely bonkers relative path.

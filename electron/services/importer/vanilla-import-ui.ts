@@ -4,7 +4,7 @@ import path from 'path';
 import { ipcRenderer } from 'electron';
 import log from 'electron-log';
 import l from '../../../chat/localize';
-import { getSafeLanguages } from '../../language';
+import type { ExporterVm } from '../exporter-vm';
 import * as VanillaImporter from './vanilla-importer';
 
 /**
@@ -13,7 +13,7 @@ import * as VanillaImporter from './vanilla-importer';
  * @param vm - Vue component instance managing vanilla import state
  * @returns A promise that resolves when initialization is complete
  */
-export async function initializeVanillaImport(vm: any): Promise<void> {
+export async function initializeVanillaImport(vm: ExporterVm): Promise<void> {
   await refreshVanillaContext(vm);
   vm.showVanillaAutoPrompt =
     ((vm.importHint === 'auto' || vm.importHint === 'vanilla') &&
@@ -22,8 +22,7 @@ export async function initializeVanillaImport(vm: any): Promise<void> {
       vm.vanillaImportAvailable) ||
     vm.importHint === 'advanced';
   if (vm.showVanillaAutoPrompt) {
-    const targetTab = vm.vanillaTabId ?? '6';
-    vm.selectedTab = targetTab;
+    vm.selectedSection = 'vanilla';
   }
 }
 
@@ -33,7 +32,7 @@ export async function initializeVanillaImport(vm: any): Promise<void> {
  * @param vm - Vue component instance managing vanilla import state
  * @returns A promise that resolves when context is refreshed
  */
-export async function refreshVanillaContext(vm: any): Promise<void> {
+export async function refreshVanillaContext(vm: ExporterVm): Promise<void> {
   const ctx = VanillaImporter.resolveContext(vm.settings.vanillaCustomBaseDir);
   const chars = ctx ? VanillaImporter.listCharacters(ctx) : [];
   const canGeneral = ctx && VanillaImporter.canImport(ctx);
@@ -57,7 +56,7 @@ export async function refreshVanillaContext(vm: any): Promise<void> {
  * @param vm - Vue component instance with settings containing vanillaCustomBaseDir
  * @returns A promise that resolves when normalization and refresh are complete
  */
-export async function normalizeVanillaBaseDir(vm: any): Promise<void> {
+export async function normalizeVanillaBaseDir(vm: ExporterVm): Promise<void> {
   if (vm.vanillaImportInProgress) return;
   let v = vm.settings.vanillaCustomBaseDir?.trim() || '';
   if (v.startsWith('~'))
@@ -73,7 +72,7 @@ export async function normalizeVanillaBaseDir(vm: any): Promise<void> {
  * @param vm - Vue component instance managing vanilla import state
  * @returns A promise that resolves when directory is selected and normalized
  */
-export async function chooseVanillaImportDir(vm: any): Promise<void> {
+export async function chooseVanillaImportDir(vm: ExporterVm): Promise<void> {
   if (vm.vanillaImportInProgress) return;
   const r = await remote.dialog.showOpenDialog({
     title: l('settings.import.vanilla.customDirDialogTitle'),
@@ -90,7 +89,7 @@ export async function chooseVanillaImportDir(vm: any): Promise<void> {
  * @param vm - Vue component instance managing vanilla import state
  * @returns A promise that resolves when reset and refresh are complete
  */
-export async function resetVanillaImportDir(vm: any): Promise<void> {
+export async function resetVanillaImportDir(vm: ExporterVm): Promise<void> {
   if (vm.vanillaImportInProgress) return;
   vm.settings.vanillaCustomBaseDir = undefined;
   await normalizeVanillaBaseDir(vm);
@@ -102,7 +101,7 @@ export async function resetVanillaImportDir(vm: any): Promise<void> {
  * @param vm - Vue component instance managing vanilla import state
  * @returns A promise that resolves when input is processed
  */
-export async function handleVanillaBaseDirInput(vm: any): Promise<void> {
+export async function handleVanillaBaseDirInput(vm: ExporterVm): Promise<void> {
   await normalizeVanillaBaseDir(vm);
 }
 
@@ -112,8 +111,8 @@ export async function handleVanillaBaseDirInput(vm: any): Promise<void> {
  * @param vm - Vue component instance with vanillaCharacters array
  * @param selected - Whether to select (true) or deselect (false) all characters
  */
-export function setVanillaCharacters(vm: any, selected: boolean): void {
-  vm.vanillaCharacters.forEach((c: any) => (c.selected = selected));
+export function setVanillaCharacters(vm: ExporterVm, selected: boolean): void {
+  vm.vanillaCharacters.forEach(c => (c.selected = selected));
 }
 
 /**
@@ -122,10 +121,8 @@ export function setVanillaCharacters(vm: any, selected: boolean): void {
  * @param vm - Vue component instance with vanillaCharacters array
  * @returns Array of character names where selected is true
  */
-export function getSelectedVanillaCharacters(vm: any): string[] {
-  return vm.vanillaCharacters
-    .filter((c: any) => c.selected)
-    .map((c: any) => c.name);
+export function getSelectedVanillaCharacters(vm: ExporterVm): string[] {
+  return vm.vanillaCharacters.filter(c => c.selected).map(c => c.name);
 }
 
 /**
@@ -135,11 +132,11 @@ export function getSelectedVanillaCharacters(vm: any): string[] {
  * @param vm - Vue component instance managing vanilla import state and user selections
  * @returns A promise that resolves when import completes
  */
-export async function runVanillaImport(vm: any): Promise<void> {
+export async function runVanillaImport(vm: ExporterVm): Promise<void> {
   if (!vm.canRunVanillaImport) return;
 
   try {
-    const connected: string[] = await (ipcRenderer as any).invoke(
+    const connected: string[] = await ipcRenderer.invoke(
       'get-connected-characters'
     );
     if (connected?.length > 0) return;
@@ -173,7 +170,7 @@ export async function runVanillaImport(vm: any): Promise<void> {
       logsSkip = 0,
       settings = 0,
       settingsSkip = 0;
-    summaries.forEach((s: any) => {
+    summaries.forEach(s => {
       logs += s.logsCopied;
       logsSkip += s.logsSkipped;
       settings += s.settingsCopied;
@@ -187,13 +184,6 @@ export async function runVanillaImport(vm: any): Promise<void> {
       );
       if (imported) {
         Object.assign(vm.settings, imported);
-        Object.assign(vm, {
-          logLevel: vm.settings.vanillaSystemLogLevel,
-          browserPath: vm.settings.browserPath,
-          browserArgs: vm.settings.browserArgs,
-          logDirectory: vm.settings.logDirectory,
-          selectedLang: getSafeLanguages(vm.settings.spellcheckLang)
-        });
       }
     }
 
@@ -210,13 +200,13 @@ export async function runVanillaImport(vm: any): Promise<void> {
     );
     vm.showVanillaAutoPrompt = false;
 
-    const { refreshExportCharacters } = await import(
-      '../exporter/backup-export'
-    );
+    const { refreshExportCharacters } =
+      await import('../exporter/backup-export');
     refreshExportCharacters(vm);
   } catch (error) {
     log.error('settings.import.vanilla.error', error);
-    vm.vanillaImportError = l('settings.import.vanilla.errorGeneric');
+    const reason = error instanceof Error ? error.message : String(error);
+    vm.vanillaImportError = `${l('settings.import.vanilla.errorGeneric')}: ${reason}`;
   } finally {
     vm.vanillaImportInProgress = false;
   }

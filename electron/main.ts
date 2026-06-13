@@ -43,6 +43,7 @@ import * as electron from 'electron';
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 import * as fs from 'fs';
 import * as path from 'path';
+import { execFile } from 'child_process';
 // import * as url from 'url';
 import l from '../chat/localize';
 import { defaultHost, GeneralSettings } from './common';
@@ -51,10 +52,11 @@ import MenuItemConstructorOptions = electron.MenuItemConstructorOptions;
 import * as _ from 'lodash';
 import { AdCoordinatorHost } from '../chat/ads/ad-coordinator-host';
 import { IpcMainEvent, session } from 'electron';
-import Axios from 'axios';
 import * as browserWindows from './browser_windows';
 import * as remoteMain from '@electron/remote/main';
 import { Event } from 'electron/main';
+import { autoUpdater } from 'electron-updater';
+import Axios from 'axios';
 import { ProfileViewerGalleryType } from '../site/utils';
 
 const configuredSessions = new WeakSet<electron.Session>();
@@ -70,10 +72,14 @@ const resolvePartition = (
 
 // Module to control application life.
 const app = electron.app;
+let mainWindow: electron.BrowserWindow | undefined;
 
 remoteMain.initialize();
 
 const characters: string[] = [];
+let autoBackupScheduler:
+  | import('./services/exporter/auto-backup').AutoBackupScheduler
+  | undefined;
 
 async function tryHandleCli(): Promise<boolean> {
   const argv = process.argv.slice(1);
@@ -156,9 +162,8 @@ EXAMPLES:
   }
 
   if (command === 'export') {
-    const { runExportCli } = await import(
-      './services/exporter/backup-export-cli'
-    );
+    const { runExportCli } =
+      await import('./services/exporter/backup-export-cli');
     const dataDir =
       get('--data-dir') || path.join(app.getPath('userData'), 'data');
     const out = get('--out') || path.join(process.cwd(), 'horizon-export.zip');
@@ -167,6 +172,7 @@ EXAMPLES:
     const dryRun = has('-n') || has('--dry-run');
     const exportResult = await runExportCli({
       dataDir,
+      settingsDir: path.join(app.getPath('userData'), 'data'),
       out,
       includeGeneral: include('--include-general', true),
       includeCharacterSettings: include('--include-character-settings', true),
@@ -197,9 +203,8 @@ EXAMPLES:
   }
 
   if (command === 'import') {
-    const { runImportCli } = await import(
-      './services/importer/backup-import-cli'
-    );
+    const { runImportCli } =
+      await import('./services/importer/backup-import-cli');
     const zip = get('--zip');
     if (!zip) return false;
     const dataDir =
@@ -211,6 +216,7 @@ EXAMPLES:
     const importResult = await runImportCli({
       zip,
       dataDir,
+      settingsDir: path.join(app.getPath('userData'), 'data'),
       includeGeneral: include('--include-general', true),
       includeCharacterSettings: include('--include-character-settings', true),
       includeLogs: include('--include-logs', true),
@@ -254,6 +260,8 @@ function broadcastConnectedCharacters(): void {
 const baseDir = app.getPath('userData');
 fs.mkdirSync(baseDir, { recursive: true });
 let shouldImportSettings = false;
+const updateCheckFirstDelay = 10_000; // 10 seconds
+const updateCheckInterval = 60 * 60 * 1000; // 1 hour in milliseconds
 const releasesUrl =
   'https://api.github.com/repos/Fchat-Horizon/Horizon/releases';
 type ReleaseInfo = {
@@ -261,8 +269,6 @@ type ReleaseInfo = {
   tag_name: string;
   prerelease: boolean | undefined;
 };
-const updateCheckFirstDelay = 10000;
-const updateCheckInterval = 3600000;
 
 const settingsDir = path.join(baseDir, 'data');
 fs.mkdirSync(settingsDir, { recursive: true });
@@ -270,6 +276,14 @@ const settingsFile = path.join(settingsDir, 'settings');
 const settings = new GeneralSettings();
 //We need this, since displaying the changelog is done through a child window instead of an external link
 let showChangelogOnBoot = false;
+// Reference count so overlapping update requests don't re-enable prompts early.
+let suppressAutoUpdaterPrompt = 0;
+let lastPromptedUpdateTag: string | undefined;
+let isUpdateRestarting = false;
+// Tracks an in-flight download so re-fired update-available events can't start a
+// second one, and the tag already downloaded so periodic checks don't re-fetch it.
+let downloadingUpdate = false;
+let downloadedUpdateTag: string | undefined;
 
 if (!fs.existsSync(settingsFile)) {
   shouldImportSettings = true;
@@ -315,9 +329,83 @@ function setGeneralSettings(value: GeneralSettings): void {
   log.transports.console.level = settings.risingSystemLogLevel;
 }
 
+function normalizeVersionToTag(version?: string): string | undefined {
+  if (!version) return undefined;
+  return version.startsWith('v') ? version : `v${version}`;
+}
+
+function supportsAutoUpdates(): boolean {
+  if (process.platform === 'linux') {
+    return Boolean(process.env.APPIMAGE);
+  }
+  return true;
+}
+
+function isProductionMode(): boolean {
+  return process.env.NODE_ENV === 'production';
+}
+
+function getConnectedCharacterCount(): number {
+  return characters.length;
+}
+
+function isUsableWindow(
+  win: electron.BrowserWindow | undefined | null
+): win is electron.BrowserWindow {
+  return Boolean(win && !win.isDestroyed());
+}
+
+function setMainWindow(win: electron.BrowserWindow | undefined): void {
+  mainWindow = win;
+  if (!win) return;
+  win.on('closed', () => {
+    if (mainWindow === win) {
+      mainWindow = undefined;
+    }
+  });
+}
+
+function getMainWindow(): electron.BrowserWindow | undefined {
+  if (mainWindow && mainWindow.isDestroyed()) {
+    mainWindow = undefined;
+  }
+  if (isUsableWindow(mainWindow)) return mainWindow;
+  return electron.BrowserWindow.getAllWindows().find(w => isUsableWindow(w));
+}
+
+function getPreferredWindow(
+  targetWindow?: electron.BrowserWindow | null
+): electron.BrowserWindow | undefined {
+  if (isUsableWindow(targetWindow)) return targetWindow;
+  const focused = electron.BrowserWindow.getFocusedWindow();
+  if (isUsableWindow(focused)) return focused;
+  return getMainWindow();
+}
+
+function maybeShowUpdatePrompt(
+  updateTag: string,
+  updateMode: 'auto' | 'manual',
+  targetWindow?: electron.BrowserWindow | null
+): void {
+  if (settings.horizonHideAutoUpdater || suppressAutoUpdaterPrompt !== 0)
+    return;
+  if (lastPromptedUpdateTag === updateTag) return;
+  const window = getPreferredWindow(targetWindow);
+  if (!window) return;
+  browserWindows.createChangelogWindow(
+    settings,
+    'none',
+    window,
+    updateTag,
+    updateMode
+  );
+  lastPromptedUpdateTag = updateTag;
+}
+
 async function checkForGitRelease(
   semVer: string,
-  releaseUrl: string
+  releaseUrl: string,
+  updateMode: 'auto' | 'manual'
 ): Promise<void> {
   if (!settings.updateCheck) {
     return;
@@ -333,6 +421,17 @@ async function checkForGitRelease(
       if (release.prerelease && !settings.beta) {
         continue;
       }
+      if (
+        settings.horizonSkippedUpdateVersion &&
+        release.tag_name === settings.horizonSkippedUpdateVersion
+      ) {
+        log.info(
+          'updateCheck.state.skipped',
+          `Update skipped: ${release.tag_name}`
+        );
+        browserWindows.toggleUpdateNotice(false);
+        return;
+      }
       if (release.tag_name == semVer) {
         log.info('updateCheck.state.upToDate', `Horizon up to date: ${semVer}`);
         return;
@@ -343,63 +442,132 @@ async function checkForGitRelease(
       );
 
       browserWindows.toggleUpdateNotice(true, release.tag_name);
+      maybeShowUpdatePrompt(release.tag_name, updateMode);
       return;
     }
   } catch (e) {
     log.error(`Error checking for update: ${e}`);
   }
 }
-export function openURLExternally(linkUrl: string): void {
-  // check if user set a path and whether it exists
-  const pathIsValid =
-    settings.browserPath !== '' && fs.existsSync(settings.browserPath);
 
-  if (pathIsValid) {
-    // also check if the user can execute whatever is located at the selected path
-    let fileIsExecutable = false;
-    try {
-      fs.accessSync(settings.browserPath, fs.constants.X_OK);
-      fileIsExecutable = true;
-    } catch (err) {
-      log.error(
-        `Selected browser is not executable by user. Path: "${settings.browserPath}"`
-      );
-    }
-
-    if (fileIsExecutable) {
-      // regular expression that looks for an encoded % symbol followed by two hexadecimal characters
-      // using this expression, we can find parts of the URL that were encoded twice
-      const re = /%25([0-9a-f]{2})/gi;
-
-      // encode the URL no matter what
-      linkUrl = encodeURI(linkUrl);
-
-      // eliminate double-encoding using expression above
-      linkUrl = linkUrl.replace(re, '%$1');
-
-      if (!settings.browserArgs.includes('%s')) {
-        // append %s to params if it is not already there
-        settings.browserArgs += ' %s';
-      }
-
-      // replace %s in arguments with URL and encapsulate in quotes to prevent issues with spaces and special characters in the path
-      let link = settings.browserArgs.replace('%s', '"' + linkUrl + '"');
-
-      const execFile = require('child_process').exec;
-      if (process.platform === 'darwin') {
-        // NOTE: This is seemingly bugged on MacOS when setting Safari as the external browser while using a different default browser.
-        // In that case, this will open the URL in both the selected application AND the default browser.
-        // Other browsers work fine. (Tested with Chrome with Firefox as the default browser.)
-        // https://developer.apple.com/forums/thread/685385
-        execFile(`open -a "${settings.browserPath}" ${link}`);
-      } else {
-        execFile(`"${settings.browserPath}" ${link}`);
-      }
+async function runAutoUpdateCheck(): Promise<void> {
+  if (!settings.updateCheck) return;
+  try {
+    autoUpdater.allowPrerelease = settings.beta;
+    await autoUpdater.checkForUpdates();
+  } catch (e) {
+    log.error('autoUpdater.check.failed', e);
+  }
+}
+async function requestUpdateDownload(expectedTag?: string): Promise<void> {
+  if (!supportsAutoUpdates()) return;
+  if (!isProductionMode()) return;
+  if (downloadingUpdate) return;
+  suppressAutoUpdaterPrompt += 1;
+  downloadingUpdate = true;
+  try {
+    autoUpdater.allowPrerelease = settings.beta;
+    const result = await autoUpdater.checkForUpdates();
+    if (!result) return;
+    const updateTag = normalizeVersionToTag(result.updateInfo?.version);
+    if (expectedTag && updateTag && expectedTag !== updateTag) {
+      log.info('autoUpdater.update.mismatch', { expectedTag, updateTag });
       return;
     }
+    if (updateTag && settings.horizonSkippedUpdateVersion === updateTag) {
+      settings.horizonSkippedUpdateVersion = '';
+      setGeneralSettings(settings);
+    }
+    await autoUpdater.downloadUpdate();
+  } catch (e) {
+    log.error('autoUpdater.download.failed', e);
+  } finally {
+    suppressAutoUpdaterPrompt = Math.max(0, suppressAutoUpdaterPrompt - 1);
+    downloadingUpdate = false;
+  }
+}
+function confirmUpdateWhileConnected(): boolean {
+  if (getConnectedCharacterCount() === 0) return true;
+  const focusedWindow = electron.BrowserWindow.getFocusedWindow();
+  const options = {
+    message: l('update.restart.confirmConnected'),
+    title: l('title'),
+    buttons: [l('confirmYes'), l('confirmNo')],
+    cancelId: 1
+  };
+  const button = focusedWindow
+    ? electron.dialog.showMessageBoxSync(focusedWindow, options)
+    : electron.dialog.showMessageBoxSync(options);
+  return button === 0;
+}
+
+// Schemes safe to hand to a spawned browser; anything else goes to the OS.
+const EXTERNAL_BROWSER_SCHEMES = ['http:', 'https:'];
+
+function resolveCustomBrowser(): string | null {
+  const browserPath = settings.browserPath;
+  if (browserPath === '' || !fs.existsSync(browserPath)) return null;
+
+  try {
+    fs.accessSync(browserPath, fs.constants.X_OK);
+  } catch {
+    log.error(
+      `Selected browser is not executable by user. Path: "${browserPath}"`
+    );
+    return null;
   }
 
-  electron.shell.openExternal(linkUrl);
+  return browserPath;
+}
+
+function isWebUrl(linkUrl: string): boolean {
+  try {
+    return EXTERNAL_BROWSER_SCHEMES.includes(new URL(linkUrl).protocol);
+  } catch {
+    return false;
+  }
+}
+
+// Encode the URL once, undoing any accidental double-encoding (%25xx -> %xx).
+function normalizeUrl(linkUrl: string): string {
+  return encodeURI(linkUrl).replace(/%25([0-9a-f]{2})/gi, '%$1');
+}
+
+export function openURLExternally(linkUrl: string): void {
+  const browserPath = resolveCustomBrowser();
+
+  // No custom browser, or not a web link: let the OS handle it.
+  if (browserPath === null || !isWebUrl(linkUrl)) {
+    electron.shell.openExternal(linkUrl);
+    return;
+  }
+
+  const url = normalizeUrl(linkUrl);
+  const argTokens = settings.browserArgs.split(/\s+/).filter(Boolean);
+
+  // execFile uses no shell, so the URL is an inert argument: it cannot inject
+  // commands, and the http(s) guard keeps it from being read as a flag.
+  if (process.platform === 'darwin') {
+    // `open -a <app>`: args before --args are documents (the URL); flags follow
+    // --args. NOTE: Safari-as-browser with a different OS default opens the URL
+    // twice. https://developer.apple.com/forums/thread/685385
+    const flags = argTokens.filter(arg => !arg.includes('%s'));
+    const openArgs = ['-a', browserPath, url];
+    if (flags.length > 0) openArgs.push('--args', ...flags);
+    execFile('open', openArgs);
+    return;
+  }
+
+  // Substitute the URL into %s (e.g. --app=%s), or append it if absent.
+  let urlSubstituted = false;
+  const launchArgs = argTokens.map(arg => {
+    if (!arg.includes('%s')) return arg;
+    urlSubstituted = true;
+    return arg.replace('%s', url);
+  });
+  if (!urlSubstituted) launchArgs.push(url);
+
+  execFile(browserPath, launchArgs);
 }
 
 let zoomLevel = settings.zoomLevel;
@@ -538,18 +706,87 @@ async function onReady(): Promise<void> {
   //     repo: 'https://github.com/Fchat-Horizon/Horizon.git',
   //     updateInterval: '3 hours',
   //     logger: require('electron-log')
-  //   }
   // );
-  if (process.env.NODE_ENV === 'production') {
-    setTimeout(
-      () => checkForGitRelease(`v${app.getVersion()}`, releasesUrl),
-      updateCheckFirstDelay
-    );
+  if (isProductionMode()) {
+    const updateMode = supportsAutoUpdates() ? 'auto' : 'manual';
+    autoUpdater.logger = log;
+    autoUpdater.autoDownload = false;
+    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.allowPrerelease = settings.beta;
 
-    setInterval(
-      () => checkForGitRelease(`v${app.getVersion()}`, releasesUrl),
-      updateCheckInterval
+    /**
+     * Optional override for the auto-update feed URL.
+     *
+     * When set, HORIZON_UPDATE_URL must be a fully-qualified HTTP(S) URL
+     * pointing to a generic update server compatible with electron-updater's
+     * `generic` provider (for example: "http://localhost:8080" when testing).
+     */
+    log.debug(
+      'autoUpdater.feed.env',
+      'Optional environment variable HORIZON_UPDATE_URL can override the generic auto-update feed URL.'
     );
+    const updateFeedUrl = process.env.HORIZON_UPDATE_URL;
+    if (updateFeedUrl && updateMode === 'auto') {
+      autoUpdater.setFeedURL({ provider: 'generic', url: updateFeedUrl });
+      log.info('autoUpdater.feed.override', updateFeedUrl);
+    }
+
+    if (updateMode === 'auto') {
+      autoUpdater.on('error', err => {
+        log.error('autoUpdater.error', err);
+        downloadingUpdate = false;
+        browserWindows.toggleUpdateNotice(false);
+      });
+
+      autoUpdater.on('update-available', info => {
+        const updateTag = normalizeVersionToTag(info.version);
+        if (!updateTag) return;
+        if (settings.horizonSkippedUpdateVersion === updateTag) {
+          log.info('autoUpdater.update.skipped', updateTag);
+          return;
+        }
+        if (downloadedUpdateTag === updateTag) {
+          browserWindows.toggleUpdateNotice(true, updateTag);
+          browserWindows.sendUpdateProgress(100, true);
+          return;
+        }
+        browserWindows.toggleUpdateNotice(true, updateTag);
+        if (settings.horizonAutoDownloadUpdates) {
+          log.info('autoUpdater.autoDownload', updateTag);
+          void requestUpdateDownload(updateTag);
+        } else {
+          maybeShowUpdatePrompt(updateTag, updateMode);
+        }
+      });
+
+      autoUpdater.on('update-not-available', () => {
+        browserWindows.toggleUpdateNotice(false);
+      });
+
+      autoUpdater.on('download-progress', progress => {
+        browserWindows.sendUpdateProgress(progress.percent);
+      });
+
+      autoUpdater.on('update-downloaded', info => {
+        downloadedUpdateTag = normalizeVersionToTag(info.version);
+        downloadingUpdate = false;
+        browserWindows.sendUpdateProgress(100, true);
+      });
+
+      setTimeout(() => runAutoUpdateCheck(), updateCheckFirstDelay);
+      setInterval(() => runAutoUpdateCheck(), updateCheckInterval);
+    } else {
+      setTimeout(
+        () =>
+          checkForGitRelease(`v${app.getVersion()}`, releasesUrl, updateMode),
+        updateCheckFirstDelay
+      );
+      setInterval(
+        () =>
+          checkForGitRelease(`v${app.getVersion()}`, releasesUrl, updateMode),
+        updateCheckInterval
+      );
+    }
   }
 
   const viewItem = {
@@ -618,13 +855,55 @@ async function onReady(): Promise<void> {
       { role: 'togglefullscreen' }
     ]
   };
-  if (process.env.NODE_ENV !== 'production')
-    viewItem.submenu.unshift(
+  const devItem: MenuItemConstructorOptions = {
+    label: l('action.developer'),
+    submenu: [
       { role: 'reload' },
       { role: 'forceReload' },
       { role: 'toggleDevTools' },
-      { type: 'separator' }
-    );
+      { type: 'separator' },
+      {
+        label: 'Show update notice',
+        click: (_menu, _window) => {
+          browserWindows.toggleUpdateNotice(true, `v${app.getVersion()}`);
+        }
+      },
+      {
+        label: 'Show update menu (auto)',
+        click: (_menu, window) => {
+          browserWindows.createChangelogWindow(
+            settings,
+            'none',
+            window as electron.BrowserWindow,
+            `v${app.getVersion()}`,
+            'auto'
+          );
+        }
+      },
+      {
+        label: 'Show update menu (manual)',
+        click: (_menu, window) => {
+          browserWindows.createChangelogWindow(
+            settings,
+            'none',
+            window as electron.BrowserWindow,
+            `v${app.getVersion()}`,
+            'manual'
+          );
+        }
+      },
+      {
+        type: 'separator'
+      },
+      {
+        label: 'Test UI items',
+        click: (_m, window) => {
+          (window as electron.BrowserWindow).webContents.send('ui-test');
+        },
+        id: 'uiTest'
+      }
+    ]
+  };
   const windowItem: MenuItemConstructorOptions = {
     label: l('window'),
     role: 'window',
@@ -724,18 +1003,26 @@ async function onReady(): Promise<void> {
             accelerator: 'CmdOrCtrl+,'
           },
           {
-            label: l('settings.export.title'),
-            click: (_m, window: electron.BrowserWindow) => {
-              browserWindows.createExporterWindow(settings, 'none', window);
-            }
-          },
-          {
             label: l('fixLogs.action'),
             click: (_m, window: electron.BrowserWindow) =>
               window.webContents.send('fix-logs'),
             id: 'fixLogs'
           },
-
+          ...(process.platform === 'darwin'
+            ? [
+                {
+                  label: `&${l('settings.export.manageData')}`,
+                  click: (_m, w) => {
+                    if (w)
+                      browserWindows.createExporterWindow(
+                        settings,
+                        'none',
+                        w as electron.BrowserWindow
+                      );
+                  }
+                } as MenuItemConstructorOptions
+              ]
+            : []),
           {
             label: 'Show/hide current profile',
             click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
@@ -776,6 +1063,17 @@ async function onReady(): Promise<void> {
           { role: 'selectall' }
         ] as MenuItemConstructorOptions[]
       },
+      {
+        label: `&${l('settings.export.manageData')}`,
+        click: (_m, w) => {
+          if (w)
+            browserWindows.createExporterWindow(
+              settings,
+              'none',
+              w as electron.BrowserWindow
+            );
+        }
+      } as MenuItemConstructorOptions,
       viewItem,
       windowItem,
       {
@@ -808,17 +1106,10 @@ async function onReady(): Promise<void> {
               openURLExternally(
                 'https://wiki.f-list.net/How_to_Report_a_User#In_chat'
               )
-          },
-          {
-            label: 'Test UI items',
-            click: (_m, window: electron.BrowserWindow, _e: KeyboardEvent) => {
-              window.webContents.send('ui-test');
-            },
-            id: 'uiTest',
-            visible: process.env.NODE_ENV !== 'production'
           }
         ] as MenuItemConstructorOptions[]
-      }
+      },
+      ...(process.env.NODE_ENV !== 'production' ? [devItem] : [])
     ])
   );
 
@@ -834,35 +1125,43 @@ async function onReady(): Promise<void> {
   });
 
   electron.ipcMain.on(
-    'update-and-exit',
+    'update-now',
     (_event: IpcMainEvent, updateVersion: string) => {
-      if (characters.length > 0) {
-        const button = electron.dialog.showMessageBoxSync(
-          //Yes this could technically fail if this event is ever emitted from something that's not a user interaction.
-          electron.BrowserWindow.getFocusedWindow()!,
-          {
-            message: l('changelog.quitAndDownload.confirm'),
-            title: l('title'),
-            buttons: [l('confirmYes'), l('confirmNo')],
-            cancelId: 1
-          }
-        );
-        if (button !== 0) return;
-      }
-      openURLExternally(
-        'https://horizn.moe/download.html?ver=' + updateVersion
-      );
-      browserWindows.quitAllWindows();
+      void requestUpdateDownload(updateVersion);
     }
   );
   electron.ipcMain.on(
+    'skip-update-version',
+    (_event: IpcMainEvent, updateVersion: string) => {
+      if (!updateVersion) return;
+      settings.horizonSkippedUpdateVersion = updateVersion;
+      setGeneralSettings(settings);
+      browserWindows.toggleUpdateNotice(false);
+    }
+  );
+  electron.ipcMain.on('install-update', () => {
+    if (!confirmUpdateWhileConnected()) return;
+    isUpdateRestarting = true;
+    autoUpdater.quitAndInstall(true, true);
+  });
+  electron.ipcMain.on('enable-auto-download-updates', () => {
+    settings.horizonAutoDownloadUpdates = true;
+    setGeneralSettings(settings);
+  });
+  electron.ipcMain.on('disable-auto-download-updates', () => {
+    settings.horizonAutoDownloadUpdates = false;
+    setGeneralSettings(settings);
+  });
+  electron.ipcMain.on(
     'open-update-changelog',
     (_event: IpcMainEvent, updateVersion: string) => {
+      const updateMode = supportsAutoUpdates() ? 'auto' : 'manual';
       browserWindows.createChangelogWindow(
         settings,
         'none',
         electron.BrowserWindow.getFocusedWindow()!,
-        updateVersion
+        updateVersion,
+        updateMode
       );
     }
   );
@@ -906,6 +1205,7 @@ async function onReady(): Promise<void> {
       characters.push(character);
       e.returnValue = true;
       broadcastConnectedCharacters();
+      if (autoBackupScheduler) autoBackupScheduler.runOnConnect();
     }
   );
   electron.ipcMain.on(
@@ -943,6 +1243,28 @@ async function onReady(): Promise<void> {
 
   electron.ipcMain.handle('get-connected-characters', () => {
     return characters.slice();
+  });
+
+  electron.ipcMain.handle('list-auto-backups', () => {
+    const backupDir =
+      settings.autoBackupDirectory || path.join(baseDir, 'backups');
+    try {
+      return fs
+        .readdirSync(backupDir)
+        .filter(f => /^auto-backup-.*\.zip$/.test(f))
+        .map(f => {
+          const stat = fs.statSync(path.join(backupDir, f));
+          return {
+            name: f,
+            path: path.join(backupDir, f),
+            mtime: stat.mtimeMs,
+            size: stat.size
+          };
+        })
+        .sort((a, b) => b.mtime - a.mtime);
+    } catch {
+      return [];
+    }
   });
 
   const adCoordinator = new AdCoordinatorHost();
@@ -1033,6 +1355,12 @@ async function onReady(): Promise<void> {
             settings.horizonCustomCssEnabled
           );
         }
+        if (!settings.updateCheck) {
+          browserWindows.toggleUpdateNotice(false);
+        }
+        if (autoBackupScheduler) {
+          autoBackupScheduler.reload();
+        }
         if (badgeChange) {
           browserWindows.updateNotificationBadges(
             settings.horizonShowNotificationBadge
@@ -1046,19 +1374,29 @@ async function onReady(): Promise<void> {
     openURLExternally(_url);
   });
 
-  let window = browserWindows.createMainWindow(
-    settings,
-    shouldImportSettings ? 'auto' : 'none',
-    baseDir
+  setMainWindow(
+    browserWindows.createMainWindow(
+      settings,
+      shouldImportSettings ? 'auto' : 'none',
+      baseDir
+    )
   );
-  if (showChangelogOnBoot && window) {
+  const bootWindow = getMainWindow();
+  if (showChangelogOnBoot && bootWindow) {
     browserWindows.createChangelogWindow(
       settings,
       shouldImportSettings ? 'auto' : 'none',
-      window
+      bootWindow
     );
     showChangelogOnBoot = false;
   }
+
+  import('./services/exporter/auto-backup').then(({ AutoBackupScheduler }) => {
+    autoBackupScheduler = new AutoBackupScheduler(settings, baseDir);
+    if (settings.autoBackupEnabled) {
+      autoBackupScheduler.start();
+    }
+  });
 }
 
 // Twitter fix
@@ -1082,10 +1420,14 @@ else
     });
   });
 app.on('second-instance', () => {
-  browserWindows.createMainWindow(settings, 'none', baseDir);
+  setMainWindow(browserWindows.createMainWindow(settings, 'none', baseDir));
 });
 app.on('before-quit', (event: Event) => {
-  if (characters.length !== 0) {
+  if (isUpdateRestarting) {
+    browserWindows.quitAllWindows();
+    return;
+  }
+  if (getConnectedCharacterCount() !== 0) {
     const focusedWindow = electron.BrowserWindow.getFocusedWindow();
     //forcing a window to be focused is weird. Let's just make it so that it floats otherwise.
     const options = {
@@ -1104,5 +1446,24 @@ app.on('before-quit', (event: Event) => {
     }
   }
   browserWindows.quitAllWindows();
+});
+let willQuitHandled = false;
+app.on('will-quit', (event: Event) => {
+  if (
+    !willQuitHandled &&
+    autoBackupScheduler &&
+    settings.autoBackupEnabled &&
+    Array.isArray(settings.autoBackupTriggers) &&
+    settings.autoBackupTriggers.includes('close')
+  ) {
+    willQuitHandled = true;
+    event.preventDefault();
+    autoBackupScheduler.runOnClose().finally(() => {
+      if (autoBackupScheduler) autoBackupScheduler.stop();
+      app.quit();
+    });
+  } else if (autoBackupScheduler) {
+    autoBackupScheduler.stop();
+  }
 });
 app.on('window-all-closed', () => app.quit());

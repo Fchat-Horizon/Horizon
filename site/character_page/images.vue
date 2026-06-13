@@ -129,6 +129,12 @@
           <i class="fa-solid fa-arrow-right preview-arrow"></i>
         </div>
       </div>
+      <div class="image-preview-close-outer">
+        <button
+          class="btn btn-close preview-close"
+          @click="hidePreview()"
+        ></button>
+      </div>
       <div class="image-preview-info-outer d-flex align-items-end">
         <div
           class="image-preview-info d-flex flex-grow-1"
@@ -186,16 +192,22 @@
               </button>
 
               <label
-                class="input-group-text bg-body-tertiary zoom-number font-monospace"
+                class="input-group-text bg-body-tertiary zoom-number font-monospace placeholder-glow"
               >
-                {{ `${zoomLevel}%` }}
+                <span v-if="previewLoading" class="placeholder w-100"></span>
+                <span v-else>{{ `${displayedZoomPercent()}%` }}</span>
               </label>
               <label
-                class="input-group-text bg-body-tertiary zoom-range-container"
+                class="input-group-text bg-body-tertiary zoom-range-container placeholder-glow"
               >
+                <span
+                  v-if="previewLoading"
+                  class="placeholder zoom-range-placeholder"
+                ></span>
                 <input
                   type="range"
                   class="form-range zoom-range"
+                  :class="previewLoading ? 'invisible' : ''"
                   :min="getZoomMin()"
                   :max="getZoomMax()"
                   v-model.number="zoomLevel"
@@ -277,6 +289,7 @@
   const previewNaturalWidth = ref(0);
   const previewNaturalHeight = ref(0);
   const zoomLevel = ref(ZOOM_LEVEL_MIN);
+  const fitPercent = ref(100);
   const forceShowInfo = ref(false);
   const copySuccess = ref(false);
   const images = ref<CharacterImage[]>([]);
@@ -389,6 +402,7 @@
     previewDisplayHeight.value = Math.floor(
       previewNaturalHeight.value * fitScale
     );
+    fitPercent.value = fitScale * 100;
   };
 
   const showAsync = async (): Promise<void> => {
@@ -441,7 +455,7 @@
   const showPreview = (image: CharacterImage): void => {
     ignoreNextClick.value = false;
     setPreviewImage(image);
-    window.addEventListener('keydown', handleKeydown);
+    window.addEventListener('keydown', handleKeydown, { capture: true });
     window.addEventListener('resize', updatePreviewDimensions);
     browseTimeOut();
   };
@@ -462,6 +476,7 @@
     previewNaturalHeight.value = 0;
     previewDisplayWidth.value = 0;
     previewDisplayHeight.value = 0;
+    fitPercent.value = 100;
 
     const url = imageUrl(image);
     const pre = new Image();
@@ -498,9 +513,10 @@
     previewDisplayHeight.value = 0;
     stopPreviewPan(true);
     ignoreNextClick.value = false;
-    window.removeEventListener('keydown', handleKeydown);
+    window.removeEventListener('keydown', handleKeydown, { capture: true });
     window.removeEventListener('resize', updatePreviewDimensions);
     zoomLevel.value = ZOOM_LEVEL_MIN;
+    fitPercent.value = 100;
   };
 
   const handleImageClick = (e: MouseEvent, image: CharacterImage): void => {
@@ -511,11 +527,9 @@
   };
 
   const zoomOutClicked = (_e: MouseEvent): void => {
-    if (zoomLevel.value <= ZOOM_LEVEL_MIN) return;
-    zoomLevel.value = Math.max(
-      ZOOM_LEVEL_MIN,
-      zoomLevel.value - ZOOM_LEVEL_STEP
-    );
+    const min = getZoomMin();
+    if (zoomLevel.value <= min) return;
+    zoomLevel.value = Math.max(min, zoomLevel.value - ZOOM_LEVEL_STEP);
   };
 
   const zoomInClicked = (_e: MouseEvent): void => {
@@ -625,6 +639,8 @@
 
     if (key === Keys.Escape) {
       hidePreview();
+      e.stopImmediatePropagation();
+      e.preventDefault();
     } else if (key === Keys.ArrowLeft) {
       previewPrev();
       e.preventDefault();
@@ -681,11 +697,18 @@
   };
 
   const getZoomMin = (): number => {
+    // if the image is smaller than the window, allow zooming out to 100% of actual size
+    if (fitPercent.value > ZOOM_LEVEL_MIN) {
+      return (ZOOM_LEVEL_MIN * ZOOM_LEVEL_MIN) / fitPercent.value;
+    }
     return ZOOM_LEVEL_MIN;
   };
   const getZoomMax = (): number => {
     return ZOOM_LEVEL_MAX;
   };
+
+  const displayedZoomPercent = (): number =>
+    Math.round((zoomLevel.value * fitPercent.value) / 100);
 
   const getPreviewLinkStyle = (): Record<string, string | number> => {
     //This is kind of ugly, but it keeps the image size itself CSS driven. Which I like.

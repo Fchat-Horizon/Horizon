@@ -778,9 +778,8 @@
   }
 
   .expanded-custom-kink {
-    .custom-kink {
-      margin-top: 14px;
-      margin-bottom: 14px;
+    &.custom-kink {
+      border: 1px var(--characterKinkCustomBorderColor) solid;
     }
   }
 
@@ -806,7 +805,7 @@
     margin-bottom: 7px;
     margin-left: -6px;
     margin-right: -6px;
-    border: 1px var(--characterKinkCustomBorderColor) solid;
+
     border-radius: 2px;
     /* border-collapse: collapse; */
     padding: 5px;
@@ -1013,6 +1012,7 @@
   .match-report {
     background-color: var(--scoreReportBg);
     /* width: 100%; */
+    position: relative;
     margin-top: -1.2rem;
     margin-left: -1.2rem;
     margin-right: -1.2rem;
@@ -1027,12 +1027,9 @@
     }
 
     &.minimized {
-      height: 0;
-      overflow: hidden;
+      min-height: 2rem;
       background-color: transparent;
-
-      .vs,
-      .scores {
+      & > *:not(.minimize-btn) {
         display: none;
       }
     }
@@ -1047,7 +1044,8 @@
     .minimize-btn {
       position: absolute;
       display: block;
-      right: 0.5rem;
+      top: 0.5rem;
+      right: 1.2rem;
       padding: 0.4rem;
       padding-top: 0.2rem;
       padding-bottom: 0.2rem;

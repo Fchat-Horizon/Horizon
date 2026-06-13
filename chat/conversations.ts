@@ -1,5 +1,5 @@
 import { queuedJoin } from '../fchat/channels';
-import { decodeHTML } from '../fchat/common';
+import { decodeHTML, emptyMap, toMap } from '../fchat/common';
 import { AdManager } from './ads/ad-manager';
 import {
   characterImage,
@@ -500,10 +500,7 @@ class ChannelConversation
   });
 
   constructor(readonly channel: Channel) {
-    super(
-      `#${channel.id.replace(/[^\w- ]/gi, '')}`,
-      state.pinned.channels.indexOf(channel.id) !== -1
-    );
+    super(`#${channel.id.replace(/[^\w- ]/gi, '')}`, false);
     core.watch<Channel.Mode | undefined>(
       function (): Channel.Mode | undefined {
         const c = this.channels.getChannel(channel.id);
@@ -628,6 +625,8 @@ class ChannelConversation
       1
     );
     state.channelConversations.splice(newIndex, 0, this);
+    state.syncGroupChannels();
+    void state.saveChannelGroups();
     return state.savePinned();
   }
 
@@ -771,8 +770,8 @@ class ConsoleConversation extends Conversation {
 class State implements Interfaces.State {
   privateConversations: PrivateConversation[] = [];
   channelConversations: ChannelConversation[] = [];
-  privateMap: { [key: string]: PrivateConversation | undefined } = {};
-  channelMap: { [key: string]: ChannelConversation | undefined } = {};
+  privateMap: { [key: string]: PrivateConversation | undefined } = emptyMap();
+  channelMap: { [key: string]: ChannelConversation | undefined } = emptyMap();
   consoleTab!: ConsoleConversation;
   selectedConversation: Conversation = this.consoleTab;
   lastConversation: Conversation = this.selectedConversation;
@@ -781,6 +780,14 @@ class State implements Interfaces.State {
   pinned!: { channels: string[]; private: string[] };
   settings!: { [key: string]: Interfaces.Settings };
   modes!: { [key: string]: Channel.Mode | undefined };
+  channelGroups: Interfaces.ChannelGroup[] = [];
+
+  get channelGroupAssignments(): { [channelId: string]: string } {
+    const map: { [id: string]: string } = emptyMap();
+    for (const g of this.channelGroups)
+      for (const id of g.channels) map[id] = g.id;
+    return map;
+  }
   windowFocused = document.hasFocus();
 
   navigationHistory: Conversation[] = [];
@@ -831,14 +838,76 @@ class State implements Interfaces.State {
       : this.privateMap[key];
   }
 
+  syncGroupChannels(): void {
+    const assignments = this.channelGroupAssignments;
+    for (const group of this.channelGroups)
+      group.channels = this.channelConversations
+        .filter(c => assignments[c.channel.id] === group.id)
+        .map(c => c.channel.id);
+  }
+
   async savePinned(): Promise<void> {
-    this.pinned.channels = this.channelConversations
-      .filter(x => x.isPinned)
-      .map(x => x.channel.id);
+    this.pinned.channels = this.channelGroups.flatMap(g => g.channels);
     this.pinned.private = this.privateConversations
       .filter(x => x.isPinned)
       .map(x => x.name);
     await core.settingsStore.set('pinned', this.pinned);
+  }
+
+  async saveChannelGroups(): Promise<void> {
+    await core.settingsStore.set('channelGroups', {
+      groups: this.channelGroups
+    });
+  }
+
+  createChannelGroup(name: string): string {
+    const id = `group_${Date.now()}`;
+    this.channelGroups.push({
+      id,
+      name,
+      collapsed: false,
+      order: this.channelGroups.length,
+      channels: []
+    });
+    void this.saveChannelGroups();
+    return id;
+  }
+
+  private removeChannelFromGroups(channelId: string): void {
+    for (const g of this.channelGroups) {
+      const i = g.channels.indexOf(channelId);
+      if (i !== -1) {
+        g.channels.splice(i, 1);
+        return;
+      }
+    }
+  }
+
+  deleteChannelGroup(id: string): void {
+    const idx = this.channelGroups.findIndex(g => g.id === id);
+    if (idx === -1) return;
+    this.channelGroups.splice(idx, 1);
+    this.channelGroups.forEach((g, i) => (g.order = i));
+    void this.saveChannelGroups();
+    void this.savePinned();
+  }
+
+  renameChannelGroup(id: string, name: string): void {
+    const group = this.channelGroups.find(g => g.id === id);
+    if (group) {
+      group.name = name;
+      void this.saveChannelGroups();
+    }
+  }
+
+  setChannelGroup(channelId: string, groupId: string | null): void {
+    this.removeChannelFromGroups(channelId);
+    if (groupId !== null) {
+      const group = this.channelGroups.find(g => g.id === groupId);
+      if (group) group.channels.push(channelId);
+    }
+    void this.saveChannelGroups();
+    void this.savePinned();
   }
 
   async saveModes(): Promise<void> {
@@ -913,26 +982,57 @@ class State implements Interfaces.State {
       private: [],
       channels: []
     };
-    this.modes = (await core.settingsStore.get('modes')) || {};
-    for (const conversation of this.channelConversations)
-      conversation._isPinned =
-        this.pinned.channels.indexOf(conversation.channel.id) !== -1;
+    this.modes = toMap(await core.settingsStore.get('modes'));
     for (const conversation of this.privateConversations)
       conversation._isPinned =
         this.pinned.private.indexOf(conversation.name) !== -1;
     this.recent = (await core.settingsStore.get('recent')) || [];
     this.recentChannels =
       (await core.settingsStore.get('recentChannels')) || [];
-    const settings =
+    const settings = toMap(
       <{ [key: string]: ConversationSettings }>(
         await core.settingsStore.get('conversationSettings')
-      ) || {};
+      )
+    );
     for (const key in settings) {
       settings[key] = Object.assign(new ConversationSettings(), settings[key]);
       const conv = this.byKey(key);
       if (conv !== undefined) conv._settings = settings[key];
     }
     this.settings = settings;
+    const channelGroupData = (await core.settingsStore.get(
+      'channelGroups'
+    )) || { groups: [] };
+    this.channelGroups = channelGroupData.groups;
+    // Migrate from old format where channel assignments were stored separately
+    if (channelGroupData.assignments !== undefined) {
+      const oldAssignments = channelGroupData.assignments;
+      for (const g of this.channelGroups) {
+        g.channels = Object.entries(oldAssignments)
+          .filter(([, gid]) => gid === g.id)
+          .map(([cid]) => cid);
+      }
+      await this.saveChannelGroups();
+    }
+    for (const g of this.channelGroups) if (!g.channels) g.channels = [];
+    const ungroupedPinned = this.pinned.channels.filter(
+      (id: string) => !this.channelGroups.some(g => g.channels.includes(id))
+    );
+    if (ungroupedPinned.length > 0) {
+      const groupId = `group_${Date.now()}`;
+      this.channelGroups.push({
+        id: groupId,
+        name: l('channel.group.pinned'),
+        collapsed: false,
+        order: this.channelGroups.length,
+        channels: ungroupedPinned
+      });
+      await this.saveChannelGroups();
+      this.consoleTab.addMessage(
+        new EventMessage(l('channel.group.noticePinned'))
+      );
+    }
+    this.pinned.channels = this.channelGroups.flatMap(g => g.channels);
     //tslint:enable
   }
 }
@@ -1150,11 +1250,11 @@ export default function (this: any): Interfaces.State {
   const connection = core.connection;
   connection.onEvent('connecting', async isReconnect => {
     state.channelConversations = [];
-    state.channelMap = {};
+    state.channelMap = emptyMap();
     if (!isReconnect) {
       state.consoleTab = new ConsoleConversation();
       state.privateConversations = [];
-      state.privateMap = {};
+      state.privateMap = emptyMap();
     } else state.consoleTab.unread = Interfaces.UnreadState.None;
     state.selectedConversation = state.consoleTab;
     EventBus.$emit('select-conversation', {
@@ -1174,6 +1274,7 @@ export default function (this: any): Interfaces.State {
         const conv = new ChannelConversation(channel);
         state.channelMap[channel.id] = conv;
         state.channelConversations.push(conv);
+        void state.savePinned();
         const index = state.recentChannels.findIndex(
           c => c.channel === channel.id
         );
