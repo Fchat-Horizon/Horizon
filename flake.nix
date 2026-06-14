@@ -102,7 +102,7 @@
 
         #horizon-electron for the end user
         #horizon-electron-dev for the devs.
-        packages = {
+        packages = rec {
           horizon-electron = makeHorizon { isDev = false; };
           horizon-electron-dev = makeHorizon { isDev = true; };
           default = horizon-electron;
