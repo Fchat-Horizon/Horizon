@@ -2,8 +2,6 @@
   description = "Nix flakes for both devs and users";
 
   inputs = {
-    # why is NixPKGS stable only on Electron 33 as of writing?? (2026-01-06)
-    # Electron moved up to 41.7.1 in stable If that matters
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
@@ -15,11 +13,9 @@
         nodejs = pkgs.nodejs_24;
         pnpm = pkgs.pnpm;
         electron = pkgs.electron_40;
-      in
-      {
-        #This is the version I think most users will be using. Since it builds normally
-        packages.default = pkgs.stdenv.mkDerivation rec {
-          pname = "fchat-horizon";
+
+        makeHorizon = { isDev ? false }: pkgs.stdenv.mkDerivation rec {
+          pname = if isDev then "horizon-electron-dev" else "horizon-electron";
           version = "latest";
           src = self;
 
@@ -46,16 +42,15 @@
 
           desktopItems = [
             (pkgs.makeDesktopItem {
-              name = "fchat-horizon";
-              exec = "@out@/bin/fchat-horizon %U";
-              icon = "fchat-horizon";
-              desktopName = "Fchat Horizon";
-              comment = "F-chat desktop client";
+              name = pname;
+              exec = "@out@/bin/${pname} %U";
+              icon = pname;
+              desktopName = if isDev then "Horizon Dev" else "Horizon";
+              comment = "The F-Chat Horizon Client";
               categories = [ "Network" "Chat" "InstantMessaging" ];
               mimeTypes = [ "x-scheme-handler/fchat" ];
             })
           ];
-
 
           autoPatchelfIgnoreMissingDeps = true;
           ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
@@ -63,40 +58,30 @@
           buildPhase = ''
             runHook preBuild
             autoPatchelf node_modules
-            pnpm build:dist
+            ${if isDev then "pnpm build" else "pnpm build:dist"}
             runHook postBuild
           '';
 
           installPhase = ''
             runHook preInstall
 
-            mkdir -p $out/lib/fchat-horizon
+            mkdir -p $out/lib/${pname}
             mkdir -p $out/bin
             mkdir -p $out/share/icons/hicolor/256x256/apps
             mkdir -p $out/share/applications
 
-            cp -r . $out/lib/fchat-horizon/
-#I don't know if this part is actually needed. I just remember the app image didn't have an icon last time I tried. But I changed some other stuff locally, so I don't know either way TBH
-            find . -name "icon.png" -exec cp {} $out/share/icons/hicolor/256x256/apps/horizon-electron.png \;
+            cp -r . $out/lib/${pname}/
+            find . -name "icon.png" -exec cp {} $out/share/icons/hicolor/256x256/apps/${pname}.png \;
 
-            cat << 'EOF' > $out/bin/fchat-horizon
+            cat << 'EOF' > $out/bin/${pname}
             #!/bin/sh
 
-            PASSWORD_STORE="detect"
-#This might be a bit unusual, but it works.
-            if pgrep -f "gnome-keyring-daemon" >/dev/null 2>&1 || pgrep -f "keepassxc" >/dev/null 2>&1 || [ -n "$GNOME_KEYRING_CONTROL" ]; then
-              PASSWORD_STORE="gnome-libsecret"
-            elif pgrep -f "kwallet" >/dev/null 2>&1; then
-              PASSWORD_STORE="kwallet"
-            fi
-
-            export NODE_ENV=production
+            export NODE_ENV=${if isDev then "development" else "production"}
             export NIXOS_OZONE_WL=1
 
             exec ${electron}/bin/electron \
-              "@OUT@/lib/fchat-horizon/electron/app" \
+              "@OUT@/lib/${pname}/electron/app" \
               --ozone-platform=wayland \
-              --password-store="$PASSWORD_STORE" \
               "$@"
             EOF
 
@@ -104,22 +89,27 @@
           '';
 
           postFixup = ''
-            substituteInPlace $out/bin/fchat-horizon \
+            substituteInPlace $out/bin/${pname} \
               --replace-fail "@OUT@" "$out"
-            chmod +x $out/bin/fchat-horizon
-            cp $out/lib/fchat-horizon/electron/build/horizon.desktop $out/share/applications/fchat-horizon.desktop
-            substituteInPlace $out/share/applications/fchat-horizon.desktop \
-              --replace-fail "/opt/horizon/horizon-electron" "$out/bin/fchat-horizon"
+            chmod +x $out/bin/${pname}
+            substituteInPlace $out/share/applications/${pname}.desktop \
+              --replace-fail "@out@" "$out" \
+              --replace-fail "Icon=${pname}" "Icon=$out/share/icons/hicolor/256x256/apps/${pname}.png"
           '';
+        };
+      in
+      {
 
-
-
-
-
-
+        #horizon-electron for the end user
+        #horizon-electron-dev for the devs.
+        packages = {
+          horizon-electron = makeHorizon { isDev = false; };
+          horizon-electron-dev = makeHorizon { isDev = true; };
+          default = horizon-electron;
         };
 
-        # I'm leaving this here for dev shell reasons.
+
+        # The dev version parts.
         devShells.default = pkgs.mkShell {
           name = "fchat-horizon-dev";
 
