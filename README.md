@@ -148,10 +148,9 @@ Horizon has excellent Linux support. Read more at [horizon-packages](https://git
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    environment.systemPackages = [
-      inputs.horizon.packages.\${pkgs.system}.horizon-electron
-      inputs.horizon.packages.\${pkgs.system}.horizon-electron-dev
-     ];
+      environment.systemPackages = [
+        inputs.horizon.packages.\${pkgs.system}.horizon-electron
+      ];
       
 
 

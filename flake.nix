@@ -1,5 +1,5 @@
 {
-  description = "Nix flakes for both devs and users";
+  description = "Nix Flake for us, and the Dev shell is still there";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -13,103 +13,97 @@
         nodejs = pkgs.nodejs_24;
         pnpm = pkgs.pnpm;
         electron = pkgs.electron_40;
-
-        makeHorizon = { isDev ? false }: pkgs.stdenv.mkDerivation rec {
-          pname = if isDev then "horizon-electron-dev" else "horizon-electron";
-          version = "latest";
-          src = self;
-
-          pnpmDeps = pkgs.fetchPnpmDeps {
-            inherit pname version src;
-            hash = "sha256-iFzSKQ32vYVREc3kXjzQxgAot+kF7hf1anYEf8SEuBc=";
-            pnpm = pkgs.pnpm_9;
-            fetcherVersion = 3;
-          };
-
-          nativeBuildInputs = [
-            pkgs.pnpm_9
-            (pkgs.pnpmConfigHook.override { pnpm = pkgs.pnpm_9; })
-            nodejs
-            pkgs.autoPatchelfHook
-            pkgs.copyDesktopItems
-          ];
-
-          buildInputs = [
-            pkgs.stdenv.cc.cc.lib
-            pkgs.libsecret
-            pkgs.glib
-          ];
-
-          desktopItems = [
-            (pkgs.makeDesktopItem {
-              name = pname;
-              exec = "@out@/bin/${pname} %U";
-              icon = pname;
-              desktopName = if isDev then "Horizon Dev" else "Horizon";
-              comment = "The F-Chat Horizon Client";
-              categories = [ "Network" "Chat" "InstantMessaging" ];
-              mimeTypes = [ "x-scheme-handler/fchat" ];
-            })
-          ];
-
-          autoPatchelfIgnoreMissingDeps = true;
-          ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
-
-          buildPhase = ''
-            runHook preBuild
-            autoPatchelf node_modules
-            ${if isDev then "pnpm build" else "pnpm build:dist"}
-            runHook postBuild
-          '';
-
-          installPhase = ''
-            runHook preInstall
-
-            mkdir -p $out/lib/${pname}
-            mkdir -p $out/bin
-            mkdir -p $out/share/icons/hicolor/256x256/apps
-            mkdir -p $out/share/applications
-
-            cp -r . $out/lib/${pname}/
-            find . -name "icon.png" -exec cp {} $out/share/icons/hicolor/256x256/apps/${pname}.png \;
-
-            cat << 'EOF' > $out/bin/${pname}
-            #!/bin/sh
-
-            export NODE_ENV=${if isDev then "development" else "production"}
-            export NIXOS_OZONE_WL=1
-
-            exec ${electron}/bin/electron \
-              "@OUT@/lib/${pname}/electron/app" \
-              --ozone-platform=wayland \
-              "$@"
-            EOF
-
-            runHook postInstall
-          '';
-
-          postFixup = ''
-            substituteInPlace $out/bin/${pname} \
-              --replace-fail "@OUT@" "$out"
-            chmod +x $out/bin/${pname}
-            substituteInPlace $out/share/applications/${pname}.desktop \
-              --replace-fail "@out@" "$out" \
-              --replace-fail "Icon=${pname}" "Icon=$out/share/icons/hicolor/256x256/apps/${pname}.png"
-          '';
-        };
       in
       {
-
-        #horizon-electron for the end user
-        #horizon-electron-dev for the devs.
         packages = rec {
-          horizon-electron = makeHorizon { isDev = false; };
-          horizon-electron-dev = makeHorizon { isDev = true; };
+          horizon-electron = pkgs.stdenv.mkDerivation rec {
+            pname = "horizon-electron";
+            version = "latest";
+            src = self;
+
+            pnpmDeps = pkgs.fetchPnpmDeps {
+              inherit pname version src;
+              hash = "sha256-iFzSKQ32vYVREc3kXjzQxgAot+kF7hf1anYEf8SEuBc=";
+              pnpm = pkgs.pnpm_9;
+              fetcherVersion = 3;
+            };
+
+            nativeBuildInputs = [
+              pkgs.pnpm_9
+              (pkgs.pnpmConfigHook.override { pnpm = pkgs.pnpm_9; })
+              nodejs
+              pkgs.autoPatchelfHook
+              pkgs.copyDesktopItems
+            ];
+
+            buildInputs = [
+              pkgs.stdenv.cc.cc.lib
+              pkgs.libsecret
+              pkgs.glib
+            ];
+
+            desktopItems = [
+              (pkgs.makeDesktopItem {
+                name = "horizon-electron";
+                exec = "@out@/bin/horizon-electron %U";
+                icon = "horizon-electron";
+                desktopName = "Horizon";
+                comment = "The F-Chat Horizon Client";
+                categories = [ "Network" "Chat" "InstantMessaging" ];
+                mimeTypes = [ "x-scheme-handler/fchat" ];
+              })
+            ];
+
+            autoPatchelfIgnoreMissingDeps = true;
+            ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
+
+            buildPhase = ''
+              runHook preBuild
+              autoPatchelf node_modules
+              pnpm build:dist
+              runHook postBuild
+            '';
+
+            installPhase = ''
+              runHook preInstall
+
+              mkdir -p $out/lib/horizon-electron
+              mkdir -p $out/bin
+              mkdir -p $out/share/icons/hicolor/256x256/apps
+              mkdir -p $out/share/applications
+
+              cp -r . $out/lib/horizon-electron/
+              find . -name "icon.png" -exec cp {} $out/share/icons/hicolor/256x256/apps/horizon-electron.png \;
+
+
+              cat << 'EOF' > $out/bin/horizon-electron
+              #!/bin/sh
+
+              export NODE_ENV=production
+              export NIXOS_OZONE_WL=1
+
+              exec ${electron}/bin/electron \
+                "@OUT@/lib/horizon-electron/electron/app" \
+                --ozone-platform=wayland \
+                "$@"
+              EOF
+
+              runHook postInstall
+            '';
+
+            postFixup = ''
+              substituteInPlace $out/bin/horizon-electron \
+                --replace-fail "@OUT@" "$out"
+              chmod +x $out/bin/horizon-electron
+              substituteInPlace $out/share/applications/horizon-electron.desktop \
+                --replace-fail "@out@" "$out" \
+                --replace-fail "Icon=horizon-electron" "Icon=$out/share/icons/hicolor/256x256/apps/horizon-electron.png"
+            '';
+          };
           default = horizon-electron;
         };
 
-
-        # The dev version parts.
+        #The dev stuff, it's full of voodoo hoodoo and things I've not even tried. For my friends on the other side.
         devShells.default = pkgs.mkShell {
           name = "fchat-horizon-dev";
 
