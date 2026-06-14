@@ -1,5 +1,5 @@
 {
-  description = "Nix Flake for us, and the Dev shell is still there";
+  description = "Nix Flake for Horizon, including a dev shell for development.";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -35,6 +35,10 @@
               pkgs.autoPatchelfHook
               pkgs.copyDesktopItems
             ];
+
+            env = {
+              APP_COMMIT = builtins.substring 0 7 (self.dirtyRev or self.rev or "0000000");
+            };
 
             buildInputs = [
               pkgs.stdenv.cc.cc.lib
