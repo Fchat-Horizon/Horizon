@@ -111,6 +111,7 @@ Horizon has excellent Linux support. Read more at [horizon-packages](https://git
 | ![Debian](https://img.shields.io/badge/Debian-D70A53?style=for-the-badge&logo=debian&logoColor=white) <br> ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)          | [Available under releases](https://github.com/Fchat-Horizon/Horizon/releases/latest)                                                     | The Horizon Developers                         |
 | ![Fedora](https://img.shields.io/badge/Fedora-294172?style=for-the-badge&logo=fedora&logoColor=white) <br> ![openSUSE](https://img.shields.io/badge/openSUSE-%2364B345?style=for-the-badge&logo=openSUSE&logoColor=white) | [Available under releases](https://github.com/Fchat-Horizon/Horizon/releases/latest)                                                     | The Horizon Developers                         |
 | ![Alpine](https://img.shields.io/badge/Alpine%20Linux-1793D1?logo=alpine-linux&logoColor=fff&style=for-the-badge)                                                                                                         | [link](https://codeberg.org/akatsukilevi/fchat-horizon)                                                                                  | @akatsukilevi                                  |
+| ![NixOS](https://img.shields.io/badge/NixOS-1793D1?logo=nixos&logoColor=fff&style=for-the-badge)                                                                                                         | [Flake Below](https://github.com/Fchat-Horizon/Horizon/releases/latest](https://github.com/MoonBurst/Horizon/edit/nix-flake-development/README.md#nixos))                                                                                   | The Horizon Developers                               |
 
 ### Additional installation instructions
 
@@ -140,6 +141,19 @@ Horizon has excellent Linux support. Read more at [horizon-packages](https://git
      ```bash
      sudo rpm -i F-Chat.Horizon-linux-<arch>.rpm
      ```
+ ##### NixOS
+  
+    horizon = {
+      url = "github:Fchat-Horizon/Horizon";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
+    environment.systemPackages = [
+      inputs.horizon.packages.\${pkgs.system}.horizon-electron
+      inputs.horizon.packages.\${pkgs.system}.horizon-electron-dev
+     ];
+      
+
 
 #### AppImage
 
