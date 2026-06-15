@@ -1348,7 +1348,7 @@
         this.horizonShowDuplicateStatusNotifications =
           settings.horizonShowDuplicateStatusNotifications;
         this.horizonHighlightUsers = settings.horizonHighlightUsers.join(',');
-        this.risingFilter = settings.risingFilter;
+        this.risingFilter = JSON.parse(JSON.stringify(settings.risingFilter));
 
         this.risingAvailableThemes = fs
           .readdirSync(path.join(__dirname, 'themes'))

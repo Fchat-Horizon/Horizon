@@ -307,10 +307,11 @@ export default Vue.extend({
       filterClasses: (this as any).getMessageFilterClasses(
         (this as any).message
       ),
-      scoreWatcher: ((this as any).message.type ===
-        Conversation.Message.Type.Ad && (this as any).message.score === 0
-        ? (this as any).$watch('message.score', () =>
-            (this as any).scoreUpdate()
+      scoreWatcher: ((this as any).message.type === Conversation.Message.Type.Ad
+        ? (this as any).$watch(
+            () =>
+              `${(this as any).message.score}|${(this as any).message.filterMatch}`,
+            () => (this as any).scoreUpdate()
           )
         : null) as (() => void) | null
     };
@@ -335,11 +336,6 @@ export default Vue.extend({
         this.filterClasses !== oldFilterClasses
       ) {
         this.$forceUpdate();
-      }
-
-      if (this.scoreWatcher) {
-        this.scoreWatcher(); // stop watching
-        this.scoreWatcher = null;
       }
     },
 
