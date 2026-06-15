@@ -116,7 +116,7 @@ export class CacheManager {
     skipCacheCheck: boolean = false,
     channelId?: string
   ): Promise<void> {
-    if (!core.state.settings.risingAdScore) {
+    if (!core.state.settings.requiresProfileMatching) {
       return;
     }
 
