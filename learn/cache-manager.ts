@@ -8,6 +8,7 @@ import {
   SelectConversationEvent
 } from '../chat/preview/event-bus';
 import { Channel, Conversation } from '../chat/interfaces';
+import { requiresProfileMatching } from '../chat/common';
 import { methods } from '../site/character_page/data_store';
 import { Character as ComplexCharacter } from '../site/character_page/interfaces';
 import { AdCache } from './ad-cache';
@@ -116,7 +117,7 @@ export class CacheManager {
     skipCacheCheck: boolean = false,
     channelId?: string
   ): Promise<void> {
-    if (!core.state.settings.requiresProfileMatching) {
+    if (!requiresProfileMatching(core.state.settings)) {
       return;
     }
 
@@ -689,6 +690,29 @@ export class CacheManager {
         });
       }
     );
+  }
+
+  // refreshes the filtered and matching status for any profiles that were no longer in memory
+  // should help cases where your filters changed in a way that'd change their match status
+  async rematchStaleAdsInConversations(): Promise<void> {
+    const ownName = core.characters.ownCharacter.name;
+    const seen = new Set<string>();
+
+    for (const conv of core.conversations.channelConversations) {
+      for (const m of conv.messages) {
+        if (m.type !== Message.Type.Ad || !m.sender) continue;
+
+        const name = m.sender.name;
+        if (name === ownName || seen.has(name)) continue;
+        seen.add(name);
+
+        if (this.profileCache.getSync(name)) continue;
+
+        // loads profile from disk store, then recalculates filter status
+        const p = await this.resolveProfileScore(false, m.sender, conv, m);
+        if (!p) await this.queueForFetching(name, false, conv.channel.id);
+      }
+    }
   }
 
   async stop(): Promise<void> {

@@ -200,24 +200,24 @@ export class Settings implements ISettings {
   soundTheme = 'default';
   // Per-theme per-sound volume overrides. Structure: { [themeName]: { [soundName]: volumeNumber(0-1) } }
   soundThemeSoundVolumes: { [theme: string]: { [sound: string]: number } } = {};
+}
 
-  // settings that still require filtering even if the "colorize ads" setting is disabled
-  get requiresProfileMatching(): boolean {
-    const f = this.risingFilter;
-    return (
-      this.risingAdScore ||
-      f.hideAds ||
-      f.hideSearchResults ||
-      f.hideChannelMembers ||
-      f.hidePublicChannelMessages ||
-      f.hidePrivateChannelMessages ||
-      f.hidePrivateMessages ||
-      f.showFilterIcon ||
-      f.penalizeMatches ||
-      f.rewardNonMatches ||
-      f.autoReply
-    );
-  }
+// settings that still require filtering even if the "colorize ads" setting is disabled
+export function requiresProfileMatching(settings: ISettings): boolean {
+  const f = settings.risingFilter;
+  return (
+    settings.risingAdScore ||
+    f.hideAds ||
+    f.hideSearchResults ||
+    f.hideChannelMembers ||
+    f.hidePublicChannelMessages ||
+    f.hidePrivateChannelMessages ||
+    f.hidePrivateMessages ||
+    f.showFilterIcon ||
+    f.penalizeMatches ||
+    f.rewardNonMatches ||
+    f.autoReply
+  );
 }
 
 export class AdSettings implements Conversation.AdSettings {

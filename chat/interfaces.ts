@@ -348,7 +348,6 @@ export namespace Settings {
     readonly horizonUseColorPicker: boolean;
 
     readonly risingFilter: SmartFilterSettings;
-    readonly requiresProfileMatching: boolean;
 
     readonly risingCharacterTheme: string | undefined;
     readonly soundTheme: string;

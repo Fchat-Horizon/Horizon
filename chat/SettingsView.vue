@@ -1551,6 +1551,9 @@
             );
           }
         });
+
+        // if a sender's filtered status is stale (not in memory), rematch them
+        void core.cache.rematchStaleAdsInConversations();
       },
       getAsNumber(input: any): number | null {
         if (_.isNil(input) || input === '') {
