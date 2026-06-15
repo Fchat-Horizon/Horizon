@@ -323,9 +323,17 @@ export class CacheManager {
   }
 
   calculateScore(e: ProfileCacheQueueEntry): number {
-    return this.characterProfiler
-      ? this.characterProfiler.calculateInterestScoreForQueueEntry(e)
-      : 0;
+    // adds FIFO ranking so that older calculation attempts are prioritized
+    const ageBonus = (Date.now() - e.added.getTime()) / 10000;
+
+    // if ad colorization is off, just check for filtering by FIFO
+    if (!core.state.settings.risingAdScore || !this.characterProfiler) {
+      return ageBonus;
+    }
+
+    return (
+      this.characterProfiler.calculateInterestScoreForQueueEntry(e) + ageBonus
+    );
   }
 
   async start(settings: GeneralSettings, skipFlush: boolean): Promise<void> {
