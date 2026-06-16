@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updates now automatically download, and you can easily install them with the click of a button. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4139ac84c1a19453d5e89383c7aada609346862b)
   - On Linux, this requires using the AppImage builds. Unless you were using a package manager managed version of Horizon, in which case you always had this ability.
+  - For NixOS users, this also includes a new Nix Flake you can now use to easily install Horizon. With special thanks to Moonburst! [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/999c34c5e0c0d9395605243b45f4b160bc9c92cc)
 
 ### Changed
 
@@ -20,20 +21,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Wiktionary
   - Urban Dictionary (was already an option originally)
 - The character matcher now knows how to handle plant and plantlike species. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2652a2ba3ac5916383a55d9968b767be5c043c66)
+- Debug info copied from the 'About Horizon' window is now more detailed. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7f5b579e4ca55cb76490a53782714dcaf2ad0573)
 
 ### Fixed
 
 - Fixed a bug that would let you create an unnamed channel group if you somehow deleted all of your groups and created a new one by directly pinning a channel. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e66d1a6e51f43609fb5e440df000d17b40dec96c)
 - Fixed issues where F-List character memos would be saved with HTML entity characters (like `&amp;` or `&gt;`) if saved inside the app. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/871195c0bb87d9fd8060c3f80bfbe3facc8b12fa)
+- Fixed left clicking the tray icon not reopening your window(s). This was a bug apparently. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9eab9b42664ba9d2e74ad165c1ab847f66a82ec1)
 
 ### Merged Pull Requests
 
 - https://github.com/Fchat-Horizon/Horizon/pull/602 by @CodingWithAnxiety
 - https://github.com/Fchat-Horizon/Horizon/pull/795 by @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/807 by @Kannamoris
+- https://github.com/Fchat-Horizon/Horizon/pull/808 by @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/809 by @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/811 by @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/820 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/824 by @MoonBurst
 
 ## [2.2.1] - 2026-06-08
 
