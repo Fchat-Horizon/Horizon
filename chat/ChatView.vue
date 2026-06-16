@@ -1400,6 +1400,8 @@
 
     img {
       width: 30px;
+      height: 30px;
+      object-fit: contain;
     }
 
     .name {
