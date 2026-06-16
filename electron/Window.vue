@@ -511,7 +511,13 @@
       electron.ipcRenderer.on(
         'show-tab',
         (_e: Electron.IpcRendererEvent, id: number) => {
-          this.show(this.tabMap[id]);
+          const tab = this.tabMap[id];
+          // finds which window has which specific character when opening via context menu
+          if (!tab) return;
+          if (browserWindow.isMinimized()) browserWindow.restore();
+          if (!browserWindow.isVisible()) browserWindow.show();
+          browserWindow.focus();
+          this.show(tab);
         }
       );
       document.addEventListener('click', () =>

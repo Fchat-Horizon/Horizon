@@ -453,7 +453,22 @@ export function createMainWindow(
   if (!tray) {
     tray = new electron.Tray(trayIcon);
     tray.setToolTip(l('title'));
-    tray.on('click', _e => showAllWindows());
+    // single click opens context menu, double click opens all windows
+    let clickTimeout: NodeJS.Timeout | undefined;
+    tray.on('click', _e => {
+      if (clickTimeout) clearTimeout(clickTimeout);
+      clickTimeout = setTimeout(() => {
+        clickTimeout = undefined;
+        tray.popUpContextMenu();
+      }, 200);
+    });
+    tray.on('double-click', _e => {
+      if (clickTimeout) {
+        clearTimeout(clickTimeout);
+        clickTimeout = undefined;
+      }
+      showAllWindows();
+    });
 
     tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
     log.debug('init.window.add.tray');
@@ -565,13 +580,9 @@ function createTrayMenu(): electron.MenuItemConstructorOptions[] {
   ).map(([tabId, webContents]) => ({
     label: tabId,
     click: () => {
-      // Example: focus this tab, or any action you want
-      windows.forEach(winow => {
-        winow.webContents.focus();
-        winow.show();
-        winow.webContents.send('show-tab', webContents.id);
+      windows.forEach(window => {
+        window.webContents.send('show-tab', webContents.id);
       });
-      webContents.focus();
     }
   }));
   return [
