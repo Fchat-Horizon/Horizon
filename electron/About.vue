@@ -35,24 +35,30 @@
             <div class="about-container d-flex flex-column align-items-center">
               <div class="image-container">
                 <div class="image-bg"></div>
-                <img class="about-logo" :src="logoSrc" alt="Horizon logo" />
+                <img
+                  class="about-logo"
+                  :src="logoSrc"
+                  :alt="l('about.logoAlt')"
+                />
               </div>
               <h1 class="h5 fw-semibold mb-1 text-body">Horizon</h1>
-              <p class="text-muted mb-2">
-                A modern, community-driven F-Chat client
-              </p>
+              <p class="text-muted mb-2">{{ l('about.tagline') }}</p>
 
               <div class="row g-2 w-100 version-grid">
                 <div
                   class="col-6 d-flex justify-content-between align-items-baseline"
                 >
-                  <span class="text-muted small me-4">Version</span>
+                  <span class="text-muted small me-4">{{
+                    l('about.version')
+                  }}</span>
                   <span class="small text-body">{{ appVersion }}</span>
                 </div>
                 <div
                   class="col-6 d-flex justify-content-between align-items-baseline"
                 >
-                  <span class="text-muted small me-4">Commit</span>
+                  <span class="text-muted small me-4">{{
+                    l('about.commit')
+                  }}</span>
                   <span class="small text-body about-mono">
                     <a
                       v-if="commitUrl"
@@ -86,7 +92,9 @@
                 <div
                   class="col-6 d-flex justify-content-between align-items-baseline"
                 >
-                  <span class="text-muted small me-4">Platform</span>
+                  <span class="text-muted small me-4">{{
+                    l('about.platform')
+                  }}</span>
                   <span
                     class="small text-body text-end platform-value ms-2"
                     :title="platformDetails"
@@ -99,11 +107,16 @@
               <div class="d-flex flex-wrap justify-content-center gap-2 mt-2">
                 <button
                   type="button"
-                  class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-2 text-nowrap"
+                  class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-2 text-nowrap report-bug-btn"
+                  :title="l('about.opensInBrowser')"
                   @click="reportBug()"
                 >
                   <span class="fa fa-bug"></span>
-                  <span>Report a bug</span>
+                  <span>{{ l('about.reportBug') }}</span>
+                  <span
+                    class="fa fa-arrow-up-right-from-square report-bug-external"
+                    aria-hidden="true"
+                  ></span>
                 </button>
                 <button
                   type="button"
@@ -113,7 +126,11 @@
                   <span
                     :class="copySuccess ? 'fa fa-check' : 'fa fa-copy'"
                   ></span>
-                  <span>{{ copySuccess ? 'Copied!' : 'Copy debug info' }}</span>
+                  <span>{{
+                    copySuccess
+                      ? l('action.copy.success')
+                      : l('about.copyDebugInfo')
+                  }}</span>
                 </button>
                 <button
                   type="button"
@@ -121,7 +138,7 @@
                   @click="openLogs()"
                 >
                   <span class="fa fa-folder-open"></span>
-                  <span>Open logs</span>
+                  <span>{{ l('about.openLogs') }}</span>
                 </button>
               </div>
 
@@ -144,7 +161,7 @@
                   rel="noopener"
                 >
                   <span class="fa fa-users"></span>
-                  <span>Contributors</span>
+                  <span>{{ l('about.contributors') }}</span>
                 </a>
                 <a
                   class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2 text-nowrap"
@@ -169,7 +186,7 @@
               <hr class="w-100 my-3" />
 
               <p class="text-muted small mb-2">
-                Licensed under the
+                {{ l('about.licensedUnder') }}
                 <a
                   href="https://mozilla.org/MPL/2.0/"
                   target="_blank"
@@ -179,7 +196,8 @@
               </p>
 
               <p class="text-muted mb-0">
-                Made with <span class="heart">❤</span> by
+                {{ madeWithParts[0] }}<span class="heart">❤</span
+                >{{ madeWithParts[1] }}
                 <a href="https://github.com/CodingWithAnxiety" target="_blank"
                   >CodingWithAnxiety</a
                 >,
@@ -189,7 +207,7 @@
                 <a href="https://github.com/kawinski" target="_blank"
                   >kawinski</a
                 >. <br />
-                Thank you for using Horizon!
+                {{ l('about.thankYou') }}
               </p>
             </div>
 
@@ -396,6 +414,12 @@
           maskImage: `url(${this.aboutIconSrc})`,
           WebkitMaskImage: `url(${this.aboutIconSrc})`
         };
+      },
+      // The {0} placeholder is the animated heart, kept as markup; split the
+      // localized string around it so translators still get a whole phrase.
+      madeWithParts(): string[] {
+        const parts = l('about.madeWith').split('{0}');
+        return [parts[0] || '', parts[1] || ''];
       }
     },
     async mounted(): Promise<void> {
@@ -783,6 +807,21 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .report-bug-btn {
+    position: relative;
+  }
+
+  // Corner glyph marking the external (browser) action; absolute so it adds
+  // no width to the button.
+  .report-bug-external {
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    font-size: 0.5em;
+    opacity: 0.65;
+    pointer-events: none;
   }
 
   .about-mono {
