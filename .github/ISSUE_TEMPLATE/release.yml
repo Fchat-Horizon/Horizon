@@ -6,7 +6,7 @@ projects: ['FChat-Horizon/Horizon']
 body:
   - type: markdown
     attributes:
-      value: One checklist per release. Steps follow VERSIONING.md. You should file this *prior* to a release and fill it out as you go.
+      value: One checklist per release. Steps follow docs/VERSIONING.md. You should file this *prior* to a release and fill it out as you go.
   - type: input
     id: version
     attributes:

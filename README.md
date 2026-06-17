@@ -60,7 +60,7 @@ Horizon aims to be an opinionated fork of F-Chat Rising. Instead of aiming solel
   Prioritize features, usability, and reliability over appearance. Adopt modern feature sets and evolving standards.
 
 - **Be Community-Driven**  
-  Foster an open, collaborative development environment guided by the community. See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
+  Foster an open, collaborative development environment guided by the community. See [CONTRIBUTING.md](./.github/CONTRIBUTING.md) for details.
 
 - **Have Safe and High-Quality Code**  
   Enforce strict code quality standards, specifically in readability, maintainability, and safety.
@@ -192,7 +192,7 @@ Horizon has excellent Linux support. Read more at [horizon-packages](https://git
 
 ## From Source
 
-If you want to compile and install Horizon from the source code yourself, please see the build and packaging instructions in the [contributing document](./CONTRIBUTING.md).
+If you want to compile and install Horizon from the source code yourself, please see the build and packaging instructions in the [contributing document](./.github/CONTRIBUTING.md).
 
 # Usage
 
@@ -218,7 +218,7 @@ When you first load F-Chat Horizon, you'll notice its interface is closely simil
 
 # Development
 
-Please read [CONTRIBUTING.md](./CONTRIBUTING.md)
+Please read [CONTRIBUTING.md](./.github/CONTRIBUTING.md)
 
 # Credits
 

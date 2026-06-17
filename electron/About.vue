@@ -144,7 +144,7 @@
                 </a>
                 <a
                   class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2 text-nowrap"
-                  href="https://github.com/Fchat-Horizon/Horizon/blob/main/CONTRIBUTORS.md"
+                  href="https://github.com/Fchat-Horizon/Horizon/blob/main/docs/CONTRIBUTORS.md"
                   target="_blank"
                   rel="noopener"
                 >
