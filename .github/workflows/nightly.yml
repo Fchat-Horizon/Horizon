@@ -15,7 +15,7 @@ jobs:
     outputs:
       skip: ${{ steps.check.outputs.skip }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: development
           fetch-depth: 0
@@ -68,16 +68,16 @@ jobs:
             arch: arm64
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: development
           fetch-depth: 0
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
@@ -130,7 +130,7 @@ jobs:
           .\electron\release-scripts\windows-dev.ps1 -ReleaseVersion "$env:NIGHTLY_VERSION" -ReleasePath "$env:GITHUB_WORKSPACE\release_artifacts\windows\$env:NIGHTLY_VERSION" -Arch "$env:BUILD_ARCH"
 
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Horizon-nightly-${{ github.run_number }}-${{ matrix.platform }}-${{ matrix.arch }}
           path: release_artifacts/**
