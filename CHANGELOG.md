@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Development
+
+- Upgraded to Electron 42 (`v42.4.1`) from `40.10.0`.
+- Upgraded the pinned package manager to pnpm 11 (`v11.7.0`) from `10.33.0`. pnpm settings moved into `pnpm-workspace.yaml`, using the new `allowBuilds` map for build approvals and disabling the release-age cooldown.
+
 ## [2.2.2-beta.0] - 2026-06-16
 
 ### Added
