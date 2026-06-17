@@ -1381,7 +1381,7 @@
     }
 
     a {
-      width: 54px;
+      width: 50px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -1401,18 +1401,22 @@
       &:last-child {
         border-radius: 0 4px 4px 0;
       }
+      &.active {
+        z-index: 1;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+      }
     }
 
     img {
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       flex-shrink: 0;
     }
 
     .conversation-icon {
-      font-size: 1.7rem;
-      width: 34px;
-      height: 34px;
+      font-size: 1.6rem;
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
