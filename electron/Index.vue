@@ -276,19 +276,18 @@
       <template slot="title">
         {{ wordDefinitionLookup }}
         <a
-          class="btn wordDefBtn dictionary"
-          @click="openDefinitionWithDictionary"
-          ><i>D</i></a
-        >
-        <a class="btn wordDefBtn thesaurus" @click="openDefinitionWithThesaurus"
-          ><i>T</i></a
+          class="btn wordDefBtn merriam-webster"
+          @click="openDefinitionWithMerriamWebster"
+          ><i>MW</i></a
         >
         <a
           class="btn wordDefBtn urbandictionary"
           @click="openDefinitionWithUrbanDictionary"
           ><i>UD</i></a
         >
-        <a class="btn wordDefBtn wikipedia" @click="openDefinitionWithWikipedia"
+        <a
+          class="btn wordDefBtn wiktionary"
+          @click="openDefinitionWithWiktionary"
           ><i>W</i></a
         >
 
@@ -329,7 +328,9 @@
   import { toasts, showToast, updateToast, dismissToast } from '../chat/toast';
   import { SimpleCharacter } from '../interfaces';
   import CharacterPage from '../site/character_page/character_page.vue';
-  import WordDefinition from '../learn/dictionary/WordDefinition.vue';
+  import WordDefinition, {
+    DictionaryMode
+  } from '../learn/dictionary/WordDefinition.vue';
   import ProfileAnalysis from '../learn/recommend/ProfileAnalysis.vue';
   import { defaultHost, GeneralSettings } from './common';
   import { fixLogs } from './filesystem';
@@ -1049,17 +1050,20 @@
       showUiTest(): void {
         (this.$refs['uiTestDialog'] as InstanceType<typeof UITest>).show();
       },
-      async openDefinitionWithDictionary(): Promise<void> {
-        (this.$refs.wordDefinitionLookup as any).setMode('dictionary');
-      },
-      async openDefinitionWithThesaurus(): Promise<void> {
-        (this.$refs.wordDefinitionLookup as any).setMode('thesaurus');
+      async openDefinitionWithMerriamWebster(): Promise<void> {
+        (this.$refs.wordDefinitionLookup as any).setMode(
+          DictionaryMode.MerriamWebster
+        );
       },
       async openDefinitionWithUrbanDictionary(): Promise<void> {
-        (this.$refs.wordDefinitionLookup as any).setMode('urbandictionary');
+        (this.$refs.wordDefinitionLookup as any).setMode(
+          DictionaryMode.UrbanDictionary
+        );
       },
-      async openDefinitionWithWikipedia(): Promise<void> {
-        (this.$refs.wordDefinitionLookup as any).setMode('wikipedia');
+      async openDefinitionWithWiktionary(): Promise<void> {
+        (this.$refs.wordDefinitionLookup as any).setMode(
+          DictionaryMode.Wiktionary
+        );
       },
       async openWordDefinitionInBrowser(): Promise<void> {
         electron.ipcRenderer.send(
@@ -1195,10 +1199,6 @@
       font-weight: bold;
     }
 
-    &.thesaurus {
-      background-color: #f44725;
-    }
-
     &.urbandictionary {
       background-color: #d96a36;
 
@@ -1209,12 +1209,12 @@
       }
     }
 
-    &.dictionary {
-      background-color: #314ca7;
+    &.merriam-webster {
+      background-color: #0f3850;
     }
 
-    &.wikipedia {
-      background-color: white;
+    &.wiktionary {
+      background-color: #ddd8d8;
 
       i {
         color: black;

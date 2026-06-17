@@ -248,11 +248,6 @@ const mainConfig = {
           'clearImmediate'
         ]
       }),
-      new ForkTsCheckerWebpackPlugin({
-        typescript: {
-          configFile: path.join(__dirname, 'tsconfig-renderer.json')
-        }
-      }),
       new VueLoaderPlugin(),
       new MiniCssExtractPlugin({
         filename: '[name].css'
@@ -419,6 +414,19 @@ module.exports = function (mode) {
     ...rendererConfig.entry,
     ...themeEntries
   };
+
+  // Block one-shot builds on type errors; keep watch async for fast rebuilds
+  rendererConfig.plugins = rendererConfig.plugins.filter(
+    p => !(p instanceof ForkTsCheckerWebpackPlugin)
+  );
+  rendererConfig.plugins.push(
+    new ForkTsCheckerWebpackPlugin({
+      async: mode === 'watch',
+      typescript: {
+        configFile: path.join(__dirname, 'tsconfig-renderer.json')
+      }
+    })
+  );
 
   const cacheVersion = `${APP_VERSION}-${APP_COMMIT}`;
   const watchOptions = {

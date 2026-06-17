@@ -96,18 +96,37 @@
                 </div>
               </div>
 
-              <div class="d-flex justify-content-center mt-2">
+              <div class="d-flex flex-wrap justify-content-center gap-2 mt-2">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-2 text-nowrap report-bug-btn"
+                  title="Opens in your browser"
+                  @click="reportBug()"
+                >
+                  <span class="fa fa-bug"></span>
+                  <span>Report a bug</span>
+                  <span
+                    class="fa fa-arrow-up-right-from-square report-bug-external"
+                    aria-hidden="true"
+                  ></span>
+                </button>
                 <button
                   type="button"
                   class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-2 text-nowrap"
-                  @click="copyVersionInfo()"
+                  @click="copyDebugInfo()"
                 >
                   <span
                     :class="copySuccess ? 'fa fa-check' : 'fa fa-copy'"
                   ></span>
-                  <span>{{
-                    copySuccess ? 'Copied!' : 'Copy version info'
-                  }}</span>
+                  <span>{{ copySuccess ? 'Copied!' : 'Copy debug info' }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-2 text-nowrap"
+                  @click="openLogs()"
+                >
+                  <span class="fa fa-folder-open"></span>
+                  <span>Open logs</span>
                 </button>
               </div>
 
@@ -199,12 +218,90 @@
   import { clipboard, ipcRenderer } from 'electron';
   import Vue from 'vue';
   import l, { setLanguage } from '../chat/localize';
-  import { GeneralSettings } from './common';
+  import { GeneralSettings, defaultHost } from './common';
 
   // tslint:disable-next-line:no-require-imports
   const logoSrc = require('./build/icon.png').default;
   // tslint:disable-next-line:no-require-imports
   const aboutIconSrc = require('../assets/images/logo.svg').default;
+
+  const PLATFORM_NAMES: Record<string, string> = {
+    win32: 'Windows',
+    darwin: 'macOS',
+    linux: 'Linux'
+  };
+
+  /** Shape returned by the main-process `debug-info-collect` IPC handler. */
+  interface DebugInfo {
+    homedir: string;
+    v8: string;
+    cpuModel: string;
+    cpuThreads: number;
+    totalMem: number;
+    arch: string;
+    kernel: string;
+    osVersion: string;
+    locale: string;
+    isDark: boolean;
+    distro: string;
+    linuxEnv: [string, string][];
+    packaging: string;
+    logFolder: string;
+    gpu: {
+      glVendor: string;
+      glRenderer: string;
+      glVersion: string;
+      devices: {
+        vendorId: number | null;
+        deviceId: number | null;
+        active: boolean;
+      }[];
+    };
+    gpuFeatureStatus: Record<string, string>;
+    displays: {
+      index: number;
+      primary: boolean;
+      width: number;
+      height: number;
+      scaleFactor: number;
+      colorDepth: number;
+    }[];
+  }
+
+  /* GPU vendor/renderer strings read from WebGL. getGPUInfo's GL strings are
+     often empty on Linux under Wayland/EGL/ANGLE, so this is the more reliable
+     source; it stays renderer-side because it is pure DOM, not Node. */
+  function readWebglInfo(): {
+    vendor: string;
+    renderer: string;
+    version: string;
+  } {
+    const result = { vendor: '', renderer: '', version: '' };
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = (canvas.getContext('webgl') ||
+        canvas.getContext(
+          'experimental-webgl'
+        )) as WebGLRenderingContext | null;
+      if (!gl) return result;
+      const debugExt = gl.getExtension('WEBGL_debug_renderer_info');
+      if (debugExt) {
+        result.vendor = String(
+          gl.getParameter(debugExt.UNMASKED_VENDOR_WEBGL) || ''
+        );
+        result.renderer = String(
+          gl.getParameter(debugExt.UNMASKED_RENDERER_WEBGL) || ''
+        );
+      }
+      if (!result.vendor)
+        result.vendor = String(gl.getParameter(gl.VENDOR) || '');
+      if (!result.renderer)
+        result.renderer = String(gl.getParameter(gl.RENDERER) || '');
+      result.version = String(gl.getParameter(gl.VERSION) || '');
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
+    } catch (e) {}
+    return result;
+  }
 
   export default Vue.extend({
     data() {
@@ -281,16 +378,6 @@
         const release = osInfo.release;
         return `${platformName} ${archLabel}${release ? ` (${release})` : ''}`;
       },
-      versionInfoText(): string {
-        return [
-          `Version: ${this.appVersion || 'N/A'}`,
-          `Commit: ${this.displayCommit}`,
-          `Electron: ${this.electronVersion}`,
-          `Chromium: ${this.chromiumVersion}`,
-          `Node.js: ${this.nodeVersion}`,
-          `Platform: ${this.platformDetails}`
-        ].join('\n');
-      },
       aboutIconStyle(): Record<string, string> {
         return {
           maskImage: `url(${this.aboutIconSrc})`,
@@ -333,12 +420,186 @@
       close(): void {
         ipcRenderer.send('window-close');
       },
-      copyVersionInfo(): void {
-        clipboard.writeText(this.versionInfoText);
+      openLogs(): void {
+        try {
+          const logs = ipcRenderer.sendSync('app-path-sync', 'logs') as string;
+          if (logs) ipcRenderer.send('open-dir', logs);
+        } catch (e) {
+          console.warn('Failed to open logs folder', e);
+        }
+      },
+      async reportBug(): Promise<void> {
+        const base = 'https://github.com/Fchat-Horizon/Horizon/issues/new';
+        let info = '';
+        try {
+          info = await this.buildDebugInfo();
+        } catch (e) {
+          console.warn('Failed to build debug info', e);
+        }
+        const params = new URLSearchParams({ template: 'bug.yml' });
+        if (info) params.set('version-info', info);
+        let url = `${base}?${params.toString()}`;
+        // ! Browsers/GitHub reject very long URLs; if the prefilled form would
+        // ! overflow, copy the report to the clipboard and open a blank form so
+        // ! the user can paste into the field (its placeholder says to).
+        if (info && url.length > 6000) {
+          clipboard.writeText(info);
+          url = `${base}?template=bug.yml`;
+        }
+        ipcRenderer.send('open-url-externally', url);
+      },
+      async copyDebugInfo(): Promise<void> {
+        let text: string;
+        try {
+          text = await this.buildDebugInfo();
+        } catch (e) {
+          console.warn('Failed to build debug info', e);
+          text = `Version: ${this.appVersion || 'N/A'}\nCommit: ${this.displayCommit}`;
+        }
+        clipboard.writeText(text);
         this.copySuccess = true;
         window.setTimeout(() => {
           this.copySuccess = false;
         }, 1500);
+      },
+      // Formats a privacy-scrubbed diagnostics report. All main-process data
+      // comes from the `debug-info-collect` IPC handler; only the WebGL probe
+      // and `this.settings` are read here in the renderer.
+      async buildDebugInfo(): Promise<string> {
+        const d = (await ipcRenderer.invoke('debug-info-collect')) as DebugInfo;
+
+        // ! Scrub the home dir for privacy; deliberately not the bare username,
+        // ! which collides with real values (e.g. theme "wilted-rose").
+        const home = d.homedir || '';
+        const scrub = (value: string): string =>
+          home ? String(value).split(home).join('~') : String(value);
+
+        const section = (
+          title: string,
+          rows: [string, string][]
+        ): string | null => {
+          const filtered = rows.filter(
+            ([, v]) => v != null && String(v).trim() !== ''
+          );
+          if (!filtered.length) return null;
+          return (
+            `[${title}]\n` +
+            filtered.map(([k, v]) => `${k}: ${scrub(String(v))}`).join('\n')
+          );
+        };
+
+        const versions: [string, string][] = [
+          ['Version', this.appVersion || 'N/A'],
+          ['Commit', this.displayCommit],
+          ['Electron', this.electronVersion],
+          ['Chromium', this.chromiumVersion],
+          ['Node.js', this.nodeVersion],
+          ['V8', d.v8 || 'N/A']
+        ];
+
+        // ! Allow-listed: account, proxy value and on-disk paths are excluded
+        // ! so this never carries personal data.
+        const s = this.settings;
+        const config: [string, string][] = [];
+        if (s) {
+          config.push(
+            ['Release channel', s.beta ? 'beta' : 'stable'],
+            ['Hardware acceleration', String(s.hwAcceleration)],
+            [
+              'Theme',
+              s.themeSync
+                ? `sync (light: ${s.themeSyncLight}, dark: ${s.themeSyncDark})`
+                : s.theme
+            ],
+            ['Display language', s.displayLanguage],
+            ['Zoom level', String(s.zoomLevel)],
+            ['Reduced motion', String(s.reducedMotion)],
+            ['Window transparency', String(s.allowWindowTransparency)],
+            ['Native window controls', String(s.forceNativeWindowControls)],
+            ['Custom CSS', s.horizonCustomCssEnabled ? 'enabled' : 'disabled'],
+            ['Sound theme', s.soundTheme],
+            ['Log level', String(s.risingSystemLogLevel)],
+            ['Proxy', s.proxy ? 'configured' : 'none']
+          );
+          if (s.host && s.host !== defaultHost) config.push(['Host', s.host]);
+        }
+
+        const totalMemGb = d.totalMem
+          ? `${(d.totalMem / 1024 ** 3).toFixed(1)} GB`
+          : '';
+        // getSystemVersion means different things per OS: the kernel on Linux,
+        // the build on Windows, the product version on macOS (where os.release
+        // is separately the Darwin kernel). Label each so none reads as "Kernel"
+        // on Windows.
+        const versionRowsByOs: Record<string, [string, string][]> = {
+          darwin: [
+            ['OS version', d.osVersion],
+            ['Kernel', d.kernel]
+          ],
+          linux: [['Kernel', d.kernel]]
+        };
+        const versionRows = versionRowsByOs[this.platform] || [
+          ['OS version', d.osVersion || d.kernel]
+        ];
+        const system: [string, string][] = [
+          ['OS', PLATFORM_NAMES[this.platform] || this.platform],
+          ...versionRows,
+          ['Arch', d.arch],
+          ['Distro', d.distro],
+          ['CPU', d.cpuModel ? `${d.cpuModel} (${d.cpuThreads} threads)` : ''],
+          ['Memory', totalMemGb],
+          ['Locale', d.locale],
+          ['Color scheme', d.isDark ? 'dark' : 'light'],
+          ['Log folder', d.logFolder]
+        ];
+
+        const linux: [string, string][] = [];
+        if (this.platform === 'linux') {
+          for (const [k, v] of d.linuxEnv) linux.push([k, v]);
+          linux.push(['Packaging', d.packaging]);
+        }
+
+        const gpu: [string, string][] = [];
+        const webgl = readWebglInfo();
+        const glVendor = webgl.vendor || d.gpu.glVendor;
+        const glRenderer = webgl.renderer || d.gpu.glRenderer;
+        const glVersion = webgl.version || d.gpu.glVersion;
+        if (glVendor) gpu.push(['Vendor', glVendor]);
+        if (glRenderer) gpu.push(['Renderer', glRenderer]);
+        if (glVersion) gpu.push(['GL Version', glVersion]);
+        d.gpu.devices.forEach((dev, i) => {
+          if (dev.vendorId == null && dev.deviceId == null) return;
+          const parts = [
+            dev.vendorId != null && `vendor 0x${dev.vendorId.toString(16)}`,
+            dev.deviceId != null && `device 0x${dev.deviceId.toString(16)}`,
+            dev.active && 'active'
+          ].filter(Boolean);
+          gpu.push([
+            d.gpu.devices.length > 1 ? `Device ${i + 1}` : 'Device',
+            parts.join(', ')
+          ]);
+        });
+        for (const [k, v] of Object.entries(d.gpuFeatureStatus || {})) {
+          gpu.push([k, String(v)]);
+        }
+
+        const displays: [string, string][] = d.displays.map(
+          (disp): [string, string] => [
+            `Display ${disp.index + 1}${disp.primary ? ' (primary)' : ''}`,
+            `${disp.width}x${disp.height} @ ${disp.scaleFactor}x, ${disp.colorDepth}-bit`
+          ]
+        );
+
+        return [
+          section('Horizon', versions),
+          section('Horizon Config', config),
+          section('System', system),
+          section('Linux Desktop', linux),
+          section('GPU', gpu),
+          section('Displays', displays)
+        ]
+          .filter(Boolean)
+          .join('\n\n');
       },
       getThemeClass() {
         try {
@@ -449,6 +710,21 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .report-bug-btn {
+    position: relative;
+  }
+
+  // Corner glyph marking the external (browser) action; absolute so it adds
+  // no width to the button.
+  .report-bug-external {
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    font-size: 0.5em;
+    opacity: 0.65;
+    pointer-events: none;
   }
 
   .about-mono {

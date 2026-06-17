@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.2-beta.0] - 2026-06-16
+
+### Added
+
+- Updates now automatically download, and you can easily install them with the click of a button. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4139ac84c1a19453d5e89383c7aada609346862b)
+  - On Linux, this requires using the AppImage builds. Unless you were using a package manager managed version of Horizon, in which case you always had this ability.
+  - For NixOS users, this also includes a new Nix Flake you can now use to easily install Horizon. With special thanks to Moonburst! [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/999c34c5e0c0d9395605243b45f4b160bc9c92cc)
+
+### Changed
+
+- Images in the profile viewer's gallery view can now be zoomed out if their actual size is smaller than the window's size. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ccc39526b6d32f9332dc5c855f33ad87dd7d112d)
+- Swapped the websites used for the "Lookup `[Word]`" dialog with the following options: [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/88680ca78b114171a48cee2acc3ed1ed5392c684)
+  - Merriam-Webster
+  - Wiktionary
+  - Urban Dictionary (was already an option originally)
+- The character matcher now knows how to handle plant and plantlike species. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2652a2ba3ac5916383a55d9968b767be5c043c66)
+- Debug info copied from the 'About Horizon' window is now more detailed. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7f5b579e4ca55cb76490a53782714dcaf2ad0573)
+
+### Fixed
+
+- Fixed a bug that would let you create an unnamed channel group if you somehow deleted all of your groups and created a new one by directly pinning a channel. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e66d1a6e51f43609fb5e440df000d17b40dec96c)
+- Fixed issues where F-List character memos would be saved with HTML entity characters (like `&amp;` or `&gt;`) if saved inside the app. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/871195c0bb87d9fd8060c3f80bfbe3facc8b12fa)
+- Fixed left clicking the tray icon not reopening your window(s). This was a bug apparently. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9eab9b42664ba9d2e74ad165c1ab847f66a82ec1)
+- Fixed message drafts not clearing after you send them. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7248e57e06c778d78983225f1642958f744a65e3)
+- Fixed the automatic ad poster not always respecting your minimum delay between ads, including after a manual ad or a reconnect. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c469ced99205b9cc27e5ca2fbff0e46d72694f05)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/602 by @CodingWithAnxiety
+- https://github.com/Fchat-Horizon/Horizon/pull/795 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/796 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/807 by @Kannamoris
+- https://github.com/Fchat-Horizon/Horizon/pull/808 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/809 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/811 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/820 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/824 by @MoonBurst
+- https://github.com/Fchat-Horizon/Horizon/pull/825 by @freenutsxd
+
 ## [2.2.1] - 2026-06-08
 
 ### Changed
@@ -1416,7 +1455,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - IOS build removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814)]
 - Webchat removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/b894a180b9be31f68d1458aaa3c59f9c4470da89)]
 
-[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.2.1...development
+[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.2.2-beta.0...development
+[2.2.2-beta.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.2.1...v2.2.2-beta.0
 [2.2.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.2.0-beta.3...v2.2.0
 [2.2.0-beta.3]: https://github.com/Fchat-Horizon/Horizon/compare/v2.2.0-beta.2...v2.2.0-beta.3

@@ -133,7 +133,8 @@ abstract class Conversation implements Interfaces.Conversation {
   }
 
   async send(): Promise<void> {
-    if (this.enteredText.length === 0) return;
+    // Block empty or whitespace/newline-only messages from being sent.
+    if (this.enteredText.trim().length === 0) return;
 
     if (isCommand(this.enteredText)) {
       const parsed = parseCommand(this.enteredText, this.context);
@@ -1022,7 +1023,7 @@ class State implements Interfaces.State {
       const groupId = `group_${Date.now()}`;
       this.channelGroups.push({
         id: groupId,
-        name: 'Pinned',
+        name: l('channel.group.pinned'),
         collapsed: false,
         order: this.channelGroups.length,
         channels: ungroupedPinned

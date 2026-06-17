@@ -395,6 +395,7 @@ export enum Species {
   Vampire = 182,
   Naga = 619,
   Monster = 483,
+  Plant = 249,
 
   Minotaur = 12121212,
   Giraffe = 13131313,
@@ -426,7 +427,8 @@ export const nonAnthroSpecies = [
   Species.Fae,
   Species.Vampire,
   Species.Monster,
-  Species.Hub
+  Species.Hub,
+  Species.Plant
 ];
 
 export const mammalSpecies = [
@@ -479,7 +481,8 @@ export const speciesNames: SpeciesStrMap = {
   [Species.Fish]: 'fishes',
   [Species.Mephitidae]: 'mephitis',
   [Species.Rhinoceros]: 'rhinoceros',
-  [Species.Suidae]: 'swine'
+  [Species.Suidae]: 'swine',
+  [Species.Plant]: 'plants'
 };
 
 const humanLikeNekoSpecies = [
@@ -1922,6 +1925,35 @@ export const speciesMapping: SpeciesMap = {
     'flexible',
     'any',
     'partner preference'
+  ],
+
+  [Species.Plant]: [
+    'floran',
+    'fungus',
+    'fungi',
+    'mushroom',
+    'vine',
+    'flower',
+    'moss',
+    'fern',
+    'cactus',
+    'succulent',
+    'sprout',
+    'seedling',
+    'mycelium',
+    'spore',
+    'vegetable',
+    'vegetal',
+    'chlorophyll',
+    'living[ -]?wood',
+    'wood[ -]?sprite',
+    'nature[ -]?spirit',
+    '🪴',
+    '🌱',
+    '🌻',
+    '🍄',
+    '🍄‍🟫',
+    gen('(plant|flora|dryad|treant|myconid)')
   ]
 };
 

@@ -118,6 +118,7 @@
   "channel.group.newGroup": "Nouveau groupe",
   "channel.group.newGroup.counter": "Nouveau groupe ({0})",
   "channel.group.noticePinned": "[b]Vos salons épinglées ont été améliorées, et vous pouvez désormais les classer par groupes.\n\nCliquez sur le bouton + dans la liste des salons pour créer un nouveau groupe. Vous pouvez également déplacer vos salons ou clique-droit sur les salons et les groupes, si vous en avez. N'hésitez pas à essayer !\n\nRendez-vous sur [url=https://horizn.moe/docs/channel-groups.html]notre site web[/url] pour plus d'informations.[/b]",
+  "channel.group.pinned": "Épinglé",
   "channel.menu.addToNewGroup": "Ajouter au nouveau groupe",
   "channel.menu.copyCode": "Copier le code du salon",
   "channel.menu.markRead": "Marquer comme lu",

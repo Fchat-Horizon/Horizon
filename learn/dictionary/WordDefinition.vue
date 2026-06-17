@@ -29,17 +29,19 @@
     mutator: mutatorScript
   };
 
+  export enum DictionaryMode {
+    MerriamWebster = 'merriam-webster',
+    UrbanDictionary = 'urbandictionary',
+    Wiktionary = 'wiktionary'
+  }
+
   export default Vue.extend({
     props: {
       expression: { type: String, required: true }
     },
     data() {
       return {
-        mode: 'dictionary' as
-          | 'dictionary'
-          | 'thesaurus'
-          | 'urbandictionary'
-          | 'wikipedia'
+        mode: DictionaryMode.MerriamWebster
       };
     },
     async mounted(): Promise<void> {
@@ -57,9 +59,7 @@
       // await remote.webContents.fromId(webview.getWebContentsId()).session.clearStorageData({storages: ['cookies', 'indexdb']});
     },
     methods: {
-      setMode(
-        mode: 'dictionary' | 'thesaurus' | 'urbandictionary' | 'wikipedia'
-      ): void {
+      setMode(mode: DictionaryMode): void {
         this.mode = mode;
       },
       getWebUrl(): string {
@@ -68,17 +68,14 @@
         }
 
         switch (this.mode) {
-          case 'dictionary':
-            return `https://www.dictionary.com/browse/${encodeURI(this.getCleanedWordDefinition())}`;
+          case DictionaryMode.MerriamWebster:
+            return `https://www.merriam-webster.com/dictionary/${encodeURI(this.getCleanedWordDefinition())}`;
 
-          case 'thesaurus':
-            return `https://www.thesaurus.com/browse/${encodeURI(this.getCleanedWordDefinition())}`;
-
-          case 'urbandictionary':
+          case DictionaryMode.UrbanDictionary:
             return `https://www.urbandictionary.com/define.php?term=${encodeURIComponent(this.getCleanedWordDefinition())}`;
 
-          case 'wikipedia':
-            return `https://en.m.wikipedia.org/wiki/${encodeURI(this.getCleanedWordDefinition())}`;
+          case DictionaryMode.Wiktionary:
+            return `https://en.wiktionary.org/wiki/${encodeURI(this.getCleanedWordDefinition())}`;
         }
       },
       getCleanedWordDefinition(expression?: string): string {
