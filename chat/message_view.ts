@@ -207,6 +207,10 @@ export default Vue.extend({
         messageAdjustment = ' ' + messageAdjustment;
         break;
     }
+    // A newline-only message collapses to empty after the strip above and renders
+    // as a broken, empty bubble in modern view; fall back to the raw text so it
+    // shows as a blank line like classic view does.
+    if (messageAdjustment === '') messageAdjustment = message.text;
     const isAd = message.type == Conversation.Message.Type.Ad && !this.logs;
     const bbcodeNode = createElement(BBCodeView(core.bbCodeParser), {
       props: {
