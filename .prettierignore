@@ -1,11 +1,10 @@
 node_modules/
-/electron/app
-/electron/dist
-/mobile
+/src/electron/app
+/src/electron/dist
 /webchat/dist
 
-/electron/adblocker.bin
-electron/release_artifacts/**
+/src/electron/adblocker.bin
+src/electron/release_artifacts/**
 .idea/
 .husky/**
 

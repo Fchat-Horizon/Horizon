@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "useDefineForClassFields": false,
+    "module": "commonjs",
+    "sourceMap": true,
+    "allowJs": true,
+    "noEmitHelpers": true,
+    "importHelpers": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@horizon/shared/*": ["../shared/src/*"],
+      "@/*": ["../shared/src/*"]
+    }
+  },
+  "include": ["main.ts", "preload.ts"]
+}

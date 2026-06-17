@@ -1,0 +1,1916 @@
+<template>
+  <div
+    class="card-full"
+    style="display: flex; flex-direction: column; height: 100%"
+    :class="getThemeClass()"
+    @auxclick.prevent
+  >
+    <div v-html="styling"></div>
+    <div class="window-modal modal" :class="getThemeClass()" tabindex="-1">
+      <div class="modal-dialog modal-xl" style="height: 100vh">
+        <div class="modal-content" style="height: 100vh">
+          <div
+            class="modal-header"
+            v-if="!settings.forceNativeWindowControls || isMac"
+          >
+            <h5 class="modal-title" style="-webkit-app-region: drag">
+              <i class="fas fa-fw fa-database"></i>
+              {{ l('settings.export.manageData') }}
+            </h5>
+            <a
+              type="button"
+              class="btn-close"
+              :aria-label="l('action.close')"
+              v-if="!isMac"
+              @click.stop="close()"
+            >
+              <span class="fas fa-times"></span>
+            </a>
+          </div>
+          <div class="modal-body">
+            <div class="d-flex" style="flex: 1; min-height: 0">
+              <div class="data-manager-sidebar">
+                <a
+                  class="nav-link"
+                  :class="{ active: selectedSection === 'auto-backup' }"
+                  href="#"
+                  @click.prevent="selectedSection = 'auto-backup'"
+                >
+                  <i class="fas fa-fw fa-clock-rotate-left me-2"></i
+                  >{{ l('settings.dataManager.section.autoBackup') }}
+                </a>
+                <a
+                  class="nav-link"
+                  :class="{ active: selectedSection === 'export' }"
+                  href="#"
+                  @click.prevent="selectedSection = 'export'"
+                >
+                  <i class="fas fa-fw fa-file-export me-2"></i
+                  >{{ l('settings.dataManager.section.export') }}
+                </a>
+                <a
+                  class="nav-link"
+                  :class="{ active: selectedSection === 'import' }"
+                  href="#"
+                  @click.prevent="selectedSection = 'import'"
+                >
+                  <i class="fas fa-fw fa-file-import me-2"></i
+                  >{{ l('settings.dataManager.section.import') }}
+                </a>
+                <a
+                  class="nav-link"
+                  :class="{ active: selectedSection === 'vanilla' }"
+                  href="#"
+                  @click.prevent="selectedSection = 'vanilla'"
+                >
+                  <i class="fas fa-fw fa-file-arrow-down me-2"></i
+                  >{{ l('settings.dataManager.section.vanilla') }}
+                </a>
+              </div>
+              <div class="data-manager-content hidden-scrollbar">
+                <div
+                  v-show="selectedSection === 'auto-backup'"
+                  class="settings-content"
+                >
+                  <h5>{{ l('settings.autoBackup.title') }}</h5>
+                  <p class="text-muted">
+                    {{ l('settings.autoBackup.description') }}
+                  </p>
+                  <div class="form-check mb-2">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="autoBackupEnabled"
+                      v-model="settings.autoBackupEnabled"
+                    />
+                    <label class="form-check-label" for="autoBackupEnabled">
+                      {{ l('settings.autoBackup.enable') }}
+                    </label>
+                  </div>
+                  <div v-if="settings.autoBackupEnabled" class="mb-3 ms-3">
+                    <label class="form-label fw-semibold">
+                      {{ l('settings.autoBackup.triggers') }}
+                    </label>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="triggerLaunch"
+                        :checked="hasTrigger('launch')"
+                        @change="toggleTrigger('launch')"
+                      />
+                      <label class="form-check-label" for="triggerLaunch">
+                        {{ l('settings.autoBackup.triggerLaunch') }}
+                        <small class="text-muted">
+                          - {{ l('settings.autoBackup.triggerLaunchHelp') }}
+                        </small>
+                      </label>
+                    </div>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="triggerClose"
+                        :checked="hasTrigger('close')"
+                        @change="toggleTrigger('close')"
+                      />
+                      <label class="form-check-label" for="triggerClose">
+                        {{ l('settings.autoBackup.triggerClose') }}
+                        <small class="text-muted">
+                          - {{ l('settings.autoBackup.triggerCloseHelp') }}
+                        </small>
+                      </label>
+                    </div>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="triggerInterval"
+                        :checked="hasTrigger('interval')"
+                        @change="toggleTrigger('interval')"
+                      />
+                      <label class="form-check-label" for="triggerInterval">
+                        {{ l('settings.autoBackup.triggerInterval') }}
+                        <small class="text-muted">
+                          - {{ l('settings.autoBackup.triggerIntervalHelp') }}
+                        </small>
+                      </label>
+                    </div>
+                    <div
+                      v-if="hasTrigger('interval')"
+                      class="ms-4 mb-2"
+                      style="max-width: 180px"
+                    >
+                      <label
+                        class="form-label small"
+                        for="autoBackupIntervalHours"
+                      >
+                        {{ l('settings.autoBackup.intervalHours') }}
+                      </label>
+                      <input
+                        class="form-control form-control-sm"
+                        type="number"
+                        id="autoBackupIntervalHours"
+                        v-model.number="settings.autoBackupIntervalHours"
+                        min="0.5"
+                        max="168"
+                        step="0.5"
+                      />
+                    </div>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="triggerCron"
+                        :checked="hasTrigger('cron')"
+                        @change="toggleTrigger('cron')"
+                      />
+                      <label class="form-check-label" for="triggerCron">
+                        {{ l('settings.autoBackup.triggerCron') }}
+                        <small class="text-muted">
+                          - {{ l('settings.autoBackup.triggerCronHelp') }}
+                        </small>
+                      </label>
+                    </div>
+                    <div v-if="hasTrigger('cron')" class="ms-4 mb-2">
+                      <div
+                        v-for="(time, idx) in settings.autoBackupCronTimes"
+                        :key="idx"
+                        class="d-flex align-items-center gap-2 mb-1"
+                      >
+                        <input
+                          class="form-control form-control-sm"
+                          type="time"
+                          :value="time"
+                          @input="setCronTime(idx, $event.target.value)"
+                          style="max-width: 140px"
+                        />
+                        <button
+                          class="btn btn-outline-secondary btn-sm"
+                          type="button"
+                          @click="removeCronTime(idx)"
+                        >
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                      <button
+                        class="btn btn-outline-secondary btn-sm"
+                        type="button"
+                        @click="addCronTime"
+                      >
+                        <i class="fas fa-plus me-1"></i
+                        >{{ l('settings.autoBackup.addTime') }}
+                      </button>
+                    </div>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="triggerConnect"
+                        :checked="hasTrigger('connect')"
+                        @change="toggleTrigger('connect')"
+                      />
+                      <label class="form-check-label" for="triggerConnect">
+                        {{ l('settings.autoBackup.triggerConnect') }}
+                        <small class="text-muted">
+                          - {{ l('settings.autoBackup.triggerConnectHelp') }}
+                        </small>
+                      </label>
+                    </div>
+                  </div>
+                  <div v-if="settings.autoBackupEnabled">
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="autoBackupIncludeGeneralSettings"
+                        v-model="settings.autoBackupIncludeGeneralSettings"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="autoBackupIncludeGeneralSettings"
+                      >
+                        {{ l('settings.export.includeGeneral') }}
+                      </label>
+                    </div>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="autoBackupIncludeCharacterSettings"
+                        v-model="settings.autoBackupIncludeCharacterSettings"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="autoBackupIncludeCharacterSettings"
+                      >
+                        {{ l('settings.export.includeCharacterSettings') }}
+                      </label>
+                    </div>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="autoBackupIncludeLogs"
+                        v-model="settings.autoBackupIncludeLogs"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="autoBackupIncludeLogs"
+                      >
+                        {{ l('settings.export.includeLogs') }}
+                      </label>
+                    </div>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="autoBackupIncludeDrafts"
+                        v-model="settings.autoBackupIncludeDrafts"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="autoBackupIncludeDrafts"
+                      >
+                        {{ l('settings.export.includeDrafts') }}
+                      </label>
+                    </div>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="autoBackupIncludePinnedConversations"
+                        v-model="settings.autoBackupIncludePinnedConversations"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="autoBackupIncludePinnedConversations"
+                      >
+                        {{ l('settings.export.includePinnedConversations') }}
+                      </label>
+                    </div>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="autoBackupIncludePinnedEicons"
+                        v-model="settings.autoBackupIncludePinnedEicons"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="autoBackupIncludePinnedEicons"
+                      >
+                        {{ l('settings.export.includePinnedEicons') }}
+                      </label>
+                    </div>
+                    <div class="form-check mb-1">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="autoBackupIncludeRecents"
+                        v-model="settings.autoBackupIncludeRecents"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="autoBackupIncludeRecents"
+                      >
+                        {{ l('settings.export.includeRecents') }}
+                      </label>
+                    </div>
+                    <div class="form-check mb-2">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="autoBackupIncludeHidden"
+                        v-model="settings.autoBackupIncludeHidden"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="autoBackupIncludeHidden"
+                      >
+                        {{ l('settings.export.includeHidden') }}
+                      </label>
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label" for="autoBackupRetention">
+                        {{ l('settings.autoBackup.retention') }}
+                      </label>
+                      <input
+                        class="form-control"
+                        type="number"
+                        id="autoBackupRetention"
+                        v-model.number="settings.autoBackupRetention"
+                        min="1"
+                        max="50"
+                        style="max-width: 120px"
+                      />
+                      <small
+                        v-if="estimatedRetentionSize"
+                        class="form-text text-muted"
+                      >
+                        {{
+                          l(
+                            'settings.autoBackup.estimatedUsage',
+                            estimatedRetentionSize
+                          )
+                        }}
+                      </small>
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label" for="autoBackupDirectory">
+                        {{ l('settings.autoBackup.directoryLabel') }}
+                      </label>
+                      <div class="input-group">
+                        <input
+                          class="form-control"
+                          type="text"
+                          id="autoBackupDirectory"
+                          v-model="settings.autoBackupDirectory"
+                          :placeholder="defaultBackupDir"
+                        />
+                        <button
+                          class="btn btn-outline-secondary"
+                          type="button"
+                          @click="chooseAutoBackupDir"
+                        >
+                          {{ l('settings.autoBackup.directoryBrowse') }}
+                        </button>
+                        <button
+                          v-if="settings.autoBackupDirectory"
+                          class="btn btn-outline-secondary"
+                          type="button"
+                          @click="settings.autoBackupDirectory = ''"
+                        >
+                          {{ l('settings.autoBackup.directoryReset') }}
+                        </button>
+                      </div>
+                      <small class="form-text text-muted">
+                        {{
+                          l(
+                            'settings.autoBackup.directoryDefault',
+                            defaultBackupDir
+                          )
+                        }}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div v-if="settings.autoBackupEnabled" class="mt-3 mb-2">
+                    <h6>{{ l('settings.autoBackup.restoreTitle') }}</h6>
+                    <p class="text-muted small">
+                      {{ l('settings.autoBackup.restoreDescription') }}
+                    </p>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                      <select
+                        class="form-select"
+                        style="max-width: 400px"
+                        v-model="selectedAutoBackup"
+                        :disabled="importInProgress"
+                      >
+                        <option :value="undefined" disabled>
+                          {{
+                            autoBackups.length === 0
+                              ? l('settings.autoBackup.noBackups')
+                              : l('settings.autoBackup.chooseBackup')
+                          }}
+                        </option>
+                        <option
+                          v-for="backup in autoBackups"
+                          :key="backup.path"
+                          :value="backup.path"
+                        >
+                          {{ formatBackupLabel(backup) }}
+                        </option>
+                      </select>
+                      <button
+                        class="btn btn-outline-secondary btn-sm"
+                        type="button"
+                        :disabled="importInProgress"
+                        @click="refreshAutoBackups"
+                      >
+                        <i class="fas fa-sync-alt"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  v-show="selectedSection === 'export'"
+                  class="settings-content"
+                >
+                  <h5>{{ l('settings.export.title') }}</h5>
+                  <p class="text-muted">
+                    {{ l('settings.export.description') }}
+                  </p>
+                  <div class="form-check mb-2">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="exportIncludeGeneralSettings"
+                      v-model="exportIncludeGeneralSettings"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="exportIncludeGeneralSettings"
+                    >
+                      {{ l('settings.export.includeGeneral') }}
+                    </label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="exportIncludeCharacterSettings"
+                      v-model="exportIncludeCharacterSettings"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="exportIncludeCharacterSettings"
+                    >
+                      {{ l('settings.export.includeCharacterSettings') }}
+                    </label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="exportIncludeLogs"
+                      v-model="exportIncludeLogs"
+                    />
+                    <label class="form-check-label" for="exportIncludeLogs">
+                      {{ l('settings.export.includeLogs') }}
+                    </label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="exportIncludeDrafts"
+                      v-model="exportIncludeDrafts"
+                    />
+                    <label class="form-check-label" for="exportIncludeDrafts">
+                      {{ l('settings.export.includeDrafts') }}
+                    </label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="exportIncludePinnedConversations"
+                      v-model="exportIncludePinnedConversations"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="exportIncludePinnedConversations"
+                    >
+                      {{ l('settings.export.includePinnedConversations') }}
+                    </label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="exportIncludePinnedEicons"
+                      v-model="exportIncludePinnedEicons"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="exportIncludePinnedEicons"
+                    >
+                      {{ l('settings.export.includePinnedEicons') }}
+                    </label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="exportIncludeRecents"
+                      v-model="exportIncludeRecents"
+                    />
+                    <label class="form-check-label" for="exportIncludeRecents">
+                      {{ l('settings.export.includeRecents') }}
+                    </label>
+                  </div>
+                  <div class="form-check mb-3">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="exportIncludeHidden"
+                      v-model="exportIncludeHidden"
+                    />
+                    <label class="form-check-label" for="exportIncludeHidden">
+                      {{ l('settings.export.includeHidden') }}
+                    </label>
+                  </div>
+                  <fieldset class="character-box mb-3">
+                    <legend>{{ l('settings.import.charactersLegend') }}</legend>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                      <button
+                        class="btn btn-outline-secondary btn-sm"
+                        type="button"
+                        @click="toggleExportCharacters"
+                      >
+                        {{
+                          allExportCharactersSelected
+                            ? l('settings.import.deselectAll')
+                            : l('action.selectAll')
+                        }}
+                      </button>
+                    </div>
+                    <div
+                      class="overflow-auto d-flex flex-column gap-1 py-2"
+                      style="max-height: 200px"
+                    >
+                      <label
+                        class="form-check mb-0"
+                        v-for="character in exportCharacters"
+                        :key="`export-${character.name}`"
+                      >
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          v-model="character.selected"
+                        />
+                        <span class="form-check-label">{{
+                          character.name
+                        }}</span>
+                      </label>
+                      <div
+                        v-if="exportCharacters.length === 0"
+                        class="text-muted"
+                      >
+                        {{ l('settings.export.noCharacters') }}
+                      </div>
+                    </div>
+                  </fieldset>
+                  <div class="mb-3">
+                    <button
+                      class="btn btn-primary"
+                      type="button"
+                      :disabled="!canRunExport || exportInProgress"
+                      @click="runExport"
+                    >
+                      <span
+                        v-if="exportInProgress"
+                        class="spinner-border spinner-border-sm me-2"
+                        role="status"
+                      ></span>
+                      {{
+                        exportInProgress
+                          ? l('settings.export.inProgress')
+                          : l('settings.export.button')
+                      }}
+                    </button>
+                    <div v-if="exportInProgress" class="mt-2">
+                      <progress
+                        :value="(exportProgress ?? 0) * 100"
+                        max="100"
+                        style="width: 100%; height: 8px"
+                      ></progress>
+                      <small class="form-text text-muted">
+                        {{ Math.round((exportProgress ?? 0) * 100) }}%
+                        <span v-if="exportTotal">
+                          · {{ exportCount || 0 }}/{{ exportTotal }}
+                        </span>
+                        <span v-if="(exportProgress ?? 0) >= 0.98">
+                          · {{ l('settings.export.zipping')
+                          }}{{ exportAnimatedDots }}
+                        </span>
+                      </small>
+                    </div>
+                  </div>
+                  <div v-if="exportSummary" class="alert alert-success">
+                    {{ exportSummary }}
+                  </div>
+                  <div v-if="exportError" class="alert alert-danger">
+                    {{ exportError }}
+                  </div>
+                </div>
+                <div
+                  v-show="selectedSection === 'import'"
+                  class="settings-content"
+                >
+                  <h5>{{ l('settings.import.zip.title') }}</h5>
+                  <p class="text-muted">
+                    {{ l('settings.import.zip.description') }}
+                  </p>
+                  <div class="mb-3">
+                    <button
+                      class="btn btn-outline-secondary"
+                      type="button"
+                      :disabled="importInProgress"
+                      @click="chooseImportZip"
+                    >
+                      {{ l('settings.import.zip.choose') }}
+                    </button>
+                    <div class="form-text" v-if="importZipName">
+                      {{ l('settings.import.zip.selected', importZipName) }}
+                    </div>
+                    <div class="form-text text-muted" v-else>
+                      {{ l('settings.import.zip.noFile') }}
+                    </div>
+                  </div>
+                  <div v-if="importZipError" class="alert alert-danger">
+                    {{ importZipError }}
+                  </div>
+                  <div
+                    v-if="
+                      importZipName &&
+                      !importZipError &&
+                      importZipHasManifest &&
+                      importZipManifest
+                    "
+                    class="alert alert-info small mb-3"
+                  >
+                    {{
+                      l(
+                        'settings.import.zip.manifestBanner',
+                        importZipManifest.version,
+                        importZipManifest.characters.length,
+                        importZipManifest.expectedFiles,
+                        new Date(importZipManifest.createdAt).toLocaleString(),
+                        importZipManifest.includes &&
+                          importZipManifest.includes.jsonLogs
+                          ? l('settings.import.zip.manifestBannerJson')
+                          : l('settings.import.zip.manifestBannerBinary')
+                      )
+                    }}
+                  </div>
+                  <div
+                    v-if="
+                      importZipName && !importZipError && !importZipHasManifest
+                    "
+                    class="alert alert-secondary small mb-3"
+                  >
+                    {{ l('settings.import.zip.noManifest') }}
+                  </div>
+                  <div v-if="importZipName && !importZipError">
+                    <div class="form-check mb-2">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="importIncludeGeneralSettings"
+                        v-model="importIncludeGeneralSettings"
+                        :disabled="!importGeneralAvailable"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="importIncludeGeneralSettings"
+                      >
+                        {{ l('settings.import.zip.includeGeneral') }}
+                      </label>
+                      <small
+                        v-if="!importGeneralAvailable"
+                        class="form-text text-muted"
+                      >
+                        {{ l('settings.import.zip.generalUnavailable') }}
+                      </small>
+                    </div>
+                    <div v-if="importCustomLogDirectory" class="mb-2">
+                      <div class="form-check mb-1">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          id="importUseCustomLogLocation"
+                          v-model="importUseCustomLogLocation"
+                        />
+                        <label
+                          class="form-check-label"
+                          for="importUseCustomLogLocation"
+                        >
+                          {{ l('settings.import.zip.useCustomLogLocation') }}
+                        </label>
+                      </div>
+                      <small class="form-text text-muted d-block">
+                        {{
+                          l('settings.import.zip.customLogDirectoryDescription')
+                        }}
+                        <code>{{ importCustomLogDirectory }}</code>
+                      </small>
+                      <small
+                        v-if="!importUseCustomLogLocation"
+                        class="form-text text-muted d-block"
+                      >
+                        {{ l('settings.import.zip.useDefaultLogLocation') }}
+                      </small>
+                      <div
+                        v-if="importCustomLogLocationError"
+                        class="alert alert-danger small mt-1 mb-0 py-1 px-2"
+                      >
+                        {{ importCustomLogLocationError }}
+                      </div>
+                    </div>
+                    <div class="form-check mb-2">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="importIncludeCharacterSettings"
+                        v-model="importIncludeCharacterSettings"
+                        :disabled="!importCharacterSettingsAvailable"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="importIncludeCharacterSettings"
+                      >
+                        {{ l('settings.import.zip.includeCharacterSettings') }}
+                      </label>
+                      <small
+                        v-if="!importCharacterSettingsAvailable"
+                        class="form-text text-muted"
+                      >
+                        {{
+                          l('settings.import.zip.characterSettingsUnavailable')
+                        }}
+                      </small>
+                    </div>
+                    <div class="form-check mb-2">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="importIncludeLogs"
+                        v-model="importIncludeLogs"
+                        :disabled="!importLogsAvailable"
+                      />
+                      <label class="form-check-label" for="importIncludeLogs">
+                        {{ l('settings.import.zip.includeLogs') }}
+                      </label>
+                      <small
+                        v-if="!importLogsAvailable"
+                        class="form-text text-muted"
+                      >
+                        {{ l('settings.import.zip.logsUnavailable') }}
+                      </small>
+                    </div>
+                    <div class="form-check mb-2">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="importIncludeDrafts"
+                        v-model="importIncludeDrafts"
+                        :disabled="!importDraftsAvailable"
+                      />
+                      <label class="form-check-label" for="importIncludeDrafts">
+                        {{ l('settings.import.zip.includeDrafts') }}
+                      </label>
+                      <small
+                        v-if="!importDraftsAvailable"
+                        class="form-text text-muted"
+                      >
+                        {{ l('settings.import.zip.draftsUnavailable') }}
+                      </small>
+                    </div>
+                    <div class="form-check mb-2">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="importIncludePinnedConversations"
+                        v-model="importIncludePinnedConversations"
+                        :disabled="!importPinnedConversationsAvailable"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="importIncludePinnedConversations"
+                      >
+                        {{
+                          l('settings.import.zip.includePinnedConversations')
+                        }}
+                      </label>
+                      <small
+                        v-if="!importPinnedConversationsAvailable"
+                        class="form-text text-muted"
+                      >
+                        {{ l('settings.import.zip.pinnedUnavailable') }}
+                      </small>
+                    </div>
+                    <div class="form-check mb-2">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="importIncludePinnedEicons"
+                        v-model="importIncludePinnedEicons"
+                        :disabled="!importPinnedEiconsAvailable"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="importIncludePinnedEicons"
+                      >
+                        {{ l('settings.import.zip.includePinnedEicons') }}
+                      </label>
+                      <small
+                        v-if="!importPinnedEiconsAvailable"
+                        class="form-text text-muted"
+                      >
+                        {{ l('settings.import.zip.pinnedUnavailable') }}
+                      </small>
+                    </div>
+                    <div class="form-check mb-2">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="importIncludeRecents"
+                        v-model="importIncludeRecents"
+                        :disabled="!importRecentsAvailable"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="importIncludeRecents"
+                      >
+                        {{ l('settings.import.zip.includeRecents') }}
+                      </label>
+                      <small
+                        v-if="!importRecentsAvailable"
+                        class="form-text text-muted"
+                      >
+                        {{ l('settings.import.zip.recentsUnavailable') }}
+                      </small>
+                    </div>
+                    <div class="form-check mb-2">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="importIncludeHidden"
+                        v-model="importIncludeHidden"
+                        :disabled="!importHiddenAvailable"
+                      />
+                      <label class="form-check-label" for="importIncludeHidden">
+                        {{ l('settings.import.zip.includeHidden') }}
+                      </label>
+                      <small
+                        v-if="!importHiddenAvailable"
+                        class="form-text text-muted"
+                      >
+                        {{ l('settings.import.zip.hiddenUnavailable') }}
+                      </small>
+                    </div>
+                    <fieldset class="character-box mb-3">
+                      <legend>
+                        {{ l('settings.import.charactersLegend') }}
+                      </legend>
+                      <div class="d-flex flex-wrap gap-2 mb-3">
+                        <button
+                          class="btn btn-outline-secondary btn-sm"
+                          type="button"
+                          @click="toggleImportCharacters"
+                        >
+                          {{
+                            allImportCharactersSelected
+                              ? l('settings.import.deselectAll')
+                              : l('action.selectAll')
+                          }}
+                        </button>
+                      </div>
+                      <div
+                        class="overflow-auto d-flex flex-column gap-1 py-2"
+                        style="max-height: 200px"
+                      >
+                        <label
+                          class="form-check d-flex align-items-start gap-2 mb-2"
+                          v-for="character in importCharacters"
+                          :key="`import-${character.name}`"
+                        >
+                          <input
+                            class="form-check-input mt-1"
+                            type="checkbox"
+                            v-model="character.selected"
+                          />
+                          <div
+                            class="form-check-label d-flex flex-column gap-0 flex-grow-1 lh-sm"
+                          >
+                            <div class="fw-semibold">
+                              {{ character.name }}
+                            </div>
+                            <div
+                              class="text-muted small"
+                              style="line-height: 1.2"
+                            >
+                              {{ describeImportCharacter(character) }}
+                            </div>
+                          </div>
+                        </label>
+                        <div
+                          v-if="importCharacters.length === 0"
+                          class="text-muted"
+                        >
+                          {{ l('settings.import.zip.noCharacters') }}
+                        </div>
+                      </div>
+                    </fieldset>
+                    <div class="form-check mb-3">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="importOverwrite"
+                        v-model="importOverwrite"
+                      />
+                      <label class="form-check-label" for="importOverwrite">
+                        {{ l('settings.import.zip.overwrite') }}
+                      </label>
+                    </div>
+                    <div class="mb-3">
+                      <div
+                        v-if="anyCharactersConnected"
+                        class="alert alert-warning"
+                      >
+                        {{
+                          l('settings.import.lockedWhileConnected') ||
+                          'Import is disabled while signed into a character.'
+                        }}
+                        <span v-if="connectedCharacters.length">
+                          ({{ connectedCharacters.join(', ') }})
+                        </span>
+                      </div>
+                      <button
+                        class="btn btn-primary"
+                        type="button"
+                        :disabled="!canRunZipImport || importInProgress"
+                        @click="runZipImport"
+                      >
+                        <span
+                          v-if="importInProgress"
+                          class="spinner-border spinner-border-sm me-2"
+                          role="status"
+                        ></span>
+                        {{
+                          importInProgress
+                            ? l('settings.import.inProgress')
+                            : l('settings.import.zip.button')
+                        }}
+                      </button>
+                    </div>
+                    <div v-if="importSummary" class="alert alert-success">
+                      {{ importSummary }}
+                    </div>
+                    <div v-if="importError" class="alert alert-danger">
+                      {{ importError }}
+                    </div>
+                  </div>
+                </div>
+                <div
+                  v-show="selectedSection === 'vanilla'"
+                  class="settings-content"
+                >
+                  <h5>{{ l('settings.import.vanilla.title') }}</h5>
+                  <div class="mb-3">
+                    <label
+                      class="form-label label-full"
+                      for="vanillaImportBaseDir"
+                    >
+                      {{ l('settings.import.vanilla.customDirLabel') }}
+                    </label>
+                    <div class="input-group">
+                      <input
+                        class="form-control"
+                        type="text"
+                        id="vanillaImportBaseDir"
+                        v-model="settings.vanillaCustomBaseDir"
+                        @keyup.enter="
+                          () =>
+                            normalizeVanillaBaseDir(
+                              settings.vanillaCustomBaseDir
+                            )
+                        "
+                        @blur="
+                          () =>
+                            normalizeVanillaBaseDir(
+                              settings.vanillaCustomBaseDir
+                            )
+                        "
+                        :disabled="vanillaImportInProgress"
+                      />
+                      <button
+                        class="btn btn-outline-secondary"
+                        type="button"
+                        :disabled="vanillaImportInProgress"
+                        @click="chooseVanillaImportDir"
+                      >
+                        {{ l('settings.import.vanilla.customDirBrowse') }}
+                      </button>
+                      <button
+                        v-if="settings.vanillaCustomBaseDir"
+                        class="btn btn-outline-secondary"
+                        type="button"
+                        :disabled="vanillaImportInProgress"
+                        @click="resetVanillaImportDir"
+                      >
+                        {{ l('settings.import.vanilla.customDirReset') }}
+                      </button>
+                    </div>
+                    <small class="form-text text-muted">
+                      {{ l('settings.import.vanilla.customDirHelp') }}
+                    </small>
+                  </div>
+                  <div v-if="vanillaImportAvailable" class="mb-3">
+                    <div class="alert alert-info" v-if="vanillaBaseDir">
+                      {{
+                        l('settings.import.vanilla.location', vanillaBaseDir)
+                      }}
+                    </div>
+                    <div class="form-check mb-2">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="vanillaImportGeneral"
+                        v-model="vanillaImportGeneral"
+                        :disabled="!vanillaImportGeneralAvailable"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="vanillaImportGeneral"
+                      >
+                        {{ l('settings.import.vanilla.includeGeneral') }}
+                      </label>
+                      <small
+                        v-if="!vanillaImportGeneralAvailable"
+                        class="form-text text-muted"
+                      >
+                        {{ l('settings.import.vanilla.generalUnavailable') }}
+                      </small>
+                    </div>
+                    <div class="form-check mb-2">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="vanillaImportCharacterSettings"
+                        v-model="vanillaImportCharacterSettings"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="vanillaImportCharacterSettings"
+                      >
+                        {{
+                          l('settings.import.vanilla.includeCharacterSettings')
+                        }}
+                      </label>
+                    </div>
+                    <div class="form-check mb-2">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="vanillaImportPinnedEicons"
+                        v-model="vanillaImportPinnedEicons"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="vanillaImportPinnedEicons"
+                      >
+                        {{ l('settings.import.vanilla.includePinnedEicons') }}
+                      </label>
+                      <small
+                        v-if="vanillaImportCharacterSettings"
+                        class="form-text text-muted"
+                      >
+                        {{
+                          l(
+                            'settings.import.vanilla.pinnedIncludedWithSettings'
+                          )
+                        }}
+                      </small>
+                    </div>
+                    <div class="form-check mb-2">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="vanillaImportLogs"
+                        v-model="vanillaImportLogs"
+                      />
+                      <label class="form-check-label" for="vanillaImportLogs">
+                        {{ l('settings.import.vanilla.includeLogs') }}
+                      </label>
+                    </div>
+                    <div class="form-check mb-3">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="vanillaImportOverwrite"
+                        v-model="vanillaImportOverwrite"
+                      />
+                      <label
+                        class="form-check-label"
+                        for="vanillaImportOverwrite"
+                      >
+                        {{ l('settings.import.vanilla.overwrite') }}
+                      </label>
+                    </div>
+                    <fieldset class="character-box mb-3">
+                      <legend>
+                        {{ l('settings.import.charactersLegend') }}
+                      </legend>
+                      <div class="d-flex flex-wrap gap-2 mb-3">
+                        <button
+                          class="btn btn-outline-secondary btn-sm"
+                          type="button"
+                          @click="toggleVanillaCharacters"
+                        >
+                          {{
+                            allVanillaCharactersSelected
+                              ? l('settings.import.deselectAll')
+                              : l('action.selectAll')
+                          }}
+                        </button>
+                      </div>
+                      <div
+                        class="overflow-auto d-flex flex-column gap-1 py-2"
+                        style="max-height: 200px"
+                      >
+                        <label
+                          class="form-check mb-0"
+                          v-for="character in vanillaCharacters"
+                          :key="`vanilla-${character.name}`"
+                        >
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            v-model="character.selected"
+                          />
+                          <span class="form-check-label">{{
+                            character.name
+                          }}</span>
+                        </label>
+                        <div
+                          v-if="vanillaCharacters.length === 0"
+                          class="text-muted"
+                        >
+                          {{ l('settings.import.vanilla.noCharacters') }}
+                        </div>
+                      </div>
+                    </fieldset>
+                    <div class="mb-3">
+                      <div
+                        v-if="anyCharactersConnected"
+                        class="alert alert-warning"
+                      >
+                        {{
+                          l('settings.import.lockedWhileConnected') ||
+                          'Import is disabled while signed into a character.'
+                        }}
+                        <span v-if="connectedCharacters.length">
+                          ({{ connectedCharacters.join(', ') }})
+                        </span>
+                      </div>
+                      <button
+                        class="btn btn-primary"
+                        type="button"
+                        :disabled="
+                          !canRunVanillaImport || vanillaImportInProgress
+                        "
+                        @click="runVanillaImport"
+                      >
+                        <span
+                          v-if="vanillaImportInProgress"
+                          class="spinner-border spinner-border-sm me-2"
+                          role="status"
+                        ></span>
+                        {{
+                          vanillaImportInProgress
+                            ? l('settings.import.inProgress')
+                            : l('settings.import.vanilla.importButton')
+                        }}
+                      </button>
+                    </div>
+                    <div
+                      v-if="vanillaImportSummary"
+                      class="alert alert-success"
+                    >
+                      {{ vanillaImportSummary }}
+                    </div>
+                    <div v-if="vanillaImportError" class="alert alert-danger">
+                      {{ vanillaImportError }}
+                    </div>
+                  </div>
+                  <div v-else class="alert alert-secondary">
+                    {{ l('settings.import.vanilla.notFound') }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="modal-footer"
+            style="padding: 0.5rem 0.75rem 1rem 0.75rem"
+          >
+            <button
+              type="button"
+              class="btn btn-secondary"
+              @click.stop="close()"
+            >
+              {{ l('action.close') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script lang="ts">
+  import Vue from 'vue';
+  import l from '@horizon/shared/chat/localize';
+  import { GeneralSettings } from '@horizon/shared/common';
+  import path from 'path';
+  import { ipcRenderer } from 'electron';
+  import * as ImportExport from './services';
+  import type { VanillaContext } from './services/importer/vanilla-importer';
+  import type { BackupCharacterInfo } from './services/importer/backup-import';
+  import type { ExportManifest } from './services';
+
+  export default Vue.extend({
+    data() {
+      return {
+        settings: undefined as any as GeneralSettings,
+        importHint: undefined as
+          | 'auto'
+          | 'vanilla'
+          | 'advanced'
+          | 'slimcat'
+          | undefined,
+        l: l,
+        osIsDark: ipcRenderer.sendSync('native-theme-dark-sync') as boolean,
+        selectedSection: 'auto-backup' as
+          | 'auto-backup'
+          | 'export'
+          | 'import'
+          | 'vanilla',
+        isMac: process.platform === 'darwin',
+        platform: process.platform,
+
+        vanillaContext: undefined as VanillaContext | undefined,
+        vanillaImportAvailable: false,
+        vanillaBaseDir: undefined as string | undefined,
+        vanillaCharacters: [] as Array<{ name: string; selected: boolean }>,
+        vanillaImportGeneral: true,
+        vanillaImportGeneralAvailable: true,
+        vanillaImportCharacterSettings: true,
+        vanillaImportLogs: true,
+        vanillaImportPinnedEicons: true,
+        vanillaImportOverwrite: false,
+        vanillaImportInProgress: false,
+        vanillaImportSummary: undefined as string | undefined,
+        vanillaImportError: undefined as string | undefined,
+        showVanillaAutoPrompt: false,
+
+        exportCharacters: [] as Array<{ name: string; selected: boolean }>,
+        exportIncludeGeneralSettings: true,
+        exportIncludeCharacterSettings: true,
+        exportIncludeLogs: true,
+        exportIncludeDrafts: true,
+        exportIncludePinnedConversations: true,
+        exportIncludePinnedEicons: true,
+        exportIncludeRecents: true,
+        exportIncludeHidden: true,
+        exportInProgress: false,
+        exportProgress: undefined as number | undefined,
+        exportCount: undefined as number | undefined,
+        exportTotal: undefined as number | undefined,
+        exportSummary: undefined as string | undefined,
+        exportError: undefined as string | undefined,
+        exportAnimatedDots: '',
+        exportAnimationTimer: undefined as NodeJS.Timeout | undefined,
+
+        importCharacters: [] as BackupCharacterInfo[],
+        importIncludeGeneralSettings: false,
+        importGeneralAvailable: false,
+        importIncludeCharacterSettings: false,
+        importCharacterSettingsAvailable: false,
+        importIncludeLogs: false,
+        importLogsAvailable: false,
+        importIncludeDrafts: false,
+        importDraftsAvailable: false,
+        importIncludePinnedConversations: false,
+        importPinnedConversationsAvailable: false,
+        importIncludePinnedEicons: false,
+        importPinnedEiconsAvailable: false,
+        importIncludeRecents: false,
+        importRecentsAvailable: false,
+        importIncludeHidden: false,
+        importHiddenAvailable: false,
+        importOverwrite: false,
+        importInProgress: false,
+        importSummary: undefined as string | undefined,
+        importError: undefined as string | undefined,
+        importZipPath: undefined as string | undefined,
+        importZipName: undefined as string | undefined,
+        importZipError: undefined as string | undefined,
+        importZipArchive: undefined as any,
+        importZipHasManifest: false,
+        importZipManifest: undefined as ExportManifest | undefined,
+        importCustomLogDirectory: undefined as string | undefined,
+        importUseCustomLogLocation: false,
+        importCustomLogLocationError: undefined as string | undefined,
+
+        connectedCharacters: [] as string[],
+        autoBackups: [] as {
+          name: string;
+          path: string;
+          mtime: number;
+          size: number;
+        }[],
+        selectedAutoBackup: undefined as string | undefined
+      };
+    },
+    computed: {
+      anyCharactersConnected(): boolean {
+        return (
+          Array.isArray(this.connectedCharacters) &&
+          this.connectedCharacters.length > 0
+        );
+      },
+      defaultBackupDir(): string {
+        return path.join(
+          ipcRenderer.sendSync('app-path-sync', 'userData') as string,
+          'backups'
+        );
+      },
+      estimatedRetentionSize(): string | undefined {
+        if (!this.autoBackups.length) return undefined;
+        const latest = this.autoBackups[0];
+        const total = latest.size * (this.settings.autoBackupRetention || 1);
+        if (total < 1024 * 1024) {
+          return `${(total / 1024).toFixed(0)} KB`;
+        }
+        if (total < 1024 * 1024 * 1024) {
+          return `${(total / (1024 * 1024)).toFixed(1)} MB`;
+        }
+        return `${(total / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+      },
+      styling(): string {
+        const css = <string | null>(
+          ipcRenderer.sendSync('themes-read-sync', this.getSyncedTheme())
+        );
+        if (css === null) {
+          if (this.settings.theme !== 'default') {
+            this.settings.theme = 'default';
+            return this.styling;
+          }
+          throw new Error('Default theme is missing');
+        }
+        return `<style>${css}</style>`;
+      },
+      canRunVanillaImport(): boolean {
+        if (!this.vanillaImportAvailable || this.vanillaImportInProgress)
+          return false;
+        if (this.anyCharactersConnected) return false;
+        if (
+          !this.vanillaImportGeneral &&
+          !this.vanillaImportCharacterSettings &&
+          !this.vanillaImportLogs &&
+          !this.vanillaImportPinnedEicons
+        )
+          return false;
+        if (
+          (this.vanillaImportCharacterSettings ||
+            this.vanillaImportLogs ||
+            this.vanillaImportPinnedEicons) &&
+          this.vanillaCharacters.length > 0 &&
+          this.vanillaCharacters.every(character => !character.selected)
+        )
+          return false;
+        return true;
+      },
+      canRunExport(): boolean {
+        if (this.exportInProgress) return false;
+        if (
+          !this.exportIncludeGeneralSettings &&
+          !this.exportIncludeCharacterSettings &&
+          !this.exportIncludeLogs &&
+          !this.exportIncludeDrafts &&
+          !this.exportIncludePinnedConversations &&
+          !this.exportIncludePinnedEicons &&
+          !this.exportIncludeRecents &&
+          !this.exportIncludeHidden
+        )
+          return false;
+        if (
+          (this.exportIncludeCharacterSettings ||
+            this.exportIncludeLogs ||
+            this.exportIncludeDrafts ||
+            this.exportIncludePinnedConversations ||
+            this.exportIncludePinnedEicons ||
+            this.exportIncludeRecents ||
+            this.exportIncludeHidden) &&
+          this.exportCharacters.length > 0 &&
+          this.exportCharacters.every(character => !character.selected)
+        )
+          return false;
+        return true;
+      },
+      canRunZipImport(): boolean {
+        if (!this.importZipArchive || this.importInProgress) return false;
+        if (this.anyCharactersConnected) return false;
+
+        const includeGeneral =
+          this.importIncludeGeneralSettings && this.importGeneralAvailable;
+        const includeAnyCharacterData =
+          (this.importIncludeCharacterSettings &&
+            this.importCharacterSettingsAvailable) ||
+          (this.importIncludeLogs && this.importLogsAvailable) ||
+          (this.importIncludeDrafts && this.importDraftsAvailable) ||
+          (this.importIncludePinnedConversations &&
+            this.importPinnedConversationsAvailable) ||
+          (this.importIncludePinnedEicons &&
+            this.importPinnedEiconsAvailable) ||
+          (this.importIncludeRecents && this.importRecentsAvailable) ||
+          (this.importIncludeHidden && this.importHiddenAvailable);
+
+        if (!includeGeneral && !includeAnyCharacterData) return false;
+        if (!includeAnyCharacterData) return true;
+
+        const selectedCharacters = this.importCharacters.filter(
+          character => character.selected
+        );
+        if (selectedCharacters.length === 0) return false;
+
+        return selectedCharacters.some(character => {
+          if (
+            this.importIncludeCharacterSettings &&
+            this.importCharacterSettingsAvailable &&
+            character.hasSettings
+          )
+            return true;
+          if (
+            this.importIncludeLogs &&
+            this.importLogsAvailable &&
+            character.hasLogs
+          )
+            return true;
+          if (
+            this.importIncludeDrafts &&
+            this.importDraftsAvailable &&
+            character.hasDrafts
+          )
+            return true;
+          if (
+            this.importIncludePinnedConversations &&
+            this.importPinnedConversationsAvailable &&
+            character.hasPinnedConversations
+          )
+            return true;
+          if (
+            this.importIncludePinnedEicons &&
+            this.importPinnedEiconsAvailable &&
+            character.hasPinnedEicons
+          )
+            return true;
+          if (
+            this.importIncludeRecents &&
+            this.importRecentsAvailable &&
+            character.hasRecents
+          )
+            return true;
+          if (
+            this.importIncludeHidden &&
+            this.importHiddenAvailable &&
+            character.hasHidden
+          )
+            return true;
+          return false;
+        });
+      },
+      allExportCharactersSelected(): boolean {
+        return (
+          this.exportCharacters.length > 0 &&
+          this.exportCharacters.every(character => character.selected)
+        );
+      },
+      allImportCharactersSelected(): boolean {
+        return (
+          this.importCharacters.length > 0 &&
+          this.importCharacters.every(character => character.selected)
+        );
+      },
+      allVanillaCharactersSelected(): boolean {
+        return (
+          this.vanillaCharacters.length > 0 &&
+          this.vanillaCharacters.every(character => character.selected)
+        );
+      }
+    },
+    async mounted(): Promise<void> {
+      ipcRenderer.on(
+        'native-theme-updated',
+        (_e: Electron.IpcRendererEvent, isDark: boolean) => {
+          this.osIsDark = isDark;
+        }
+      );
+
+      window.addEventListener('beforeunload', e => {
+        if (this.exportInProgress || this.importInProgress) {
+          e.preventDefault();
+        }
+      });
+
+      window.addEventListener('keyup', e => {
+        if (e.key === 'Escape') {
+          this.close();
+        }
+      });
+      if (process.platform === 'darwin') {
+        window.addEventListener('keydown', e => {
+          if (e.metaKey && e.key == 'w') {
+            this.close();
+          }
+        });
+      }
+
+      this.$watch(
+        () => this.settings.logDirectory,
+        () => {
+          this.refreshExportCharacters();
+        }
+      );
+      this.$watch(
+        () => [
+          this.settings.autoBackupEnabled,
+          ...(this.settings.autoBackupTriggers || []),
+          this.settings.autoBackupIntervalHours,
+          ...(this.settings.autoBackupCronTimes || []),
+          this.settings.autoBackupIncludeGeneralSettings,
+          this.settings.autoBackupIncludeCharacterSettings,
+          this.settings.autoBackupIncludeLogs,
+          this.settings.autoBackupIncludeDrafts,
+          this.settings.autoBackupIncludePinnedConversations,
+          this.settings.autoBackupIncludePinnedEicons,
+          this.settings.autoBackupIncludeRecents,
+          this.settings.autoBackupIncludeHidden,
+          this.settings.autoBackupRetention,
+          this.settings.autoBackupDirectory
+        ],
+        () => {
+          ipcRenderer.send('general-settings-update', this.settings);
+        }
+      );
+      this.$watch(
+        () => this.importIncludeCharacterSettings,
+        include => {
+          if (!include) return;
+          if (this.importPinnedConversationsAvailable)
+            this.importIncludePinnedConversations = true;
+          if (this.importPinnedEiconsAvailable)
+            this.importIncludePinnedEicons = true;
+        }
+      );
+      this.$watch(
+        () => this.vanillaImportCharacterSettings,
+        include => {
+          if (include) this.vanillaImportPinnedEicons = true;
+        }
+      );
+
+      this.$watch(
+        () => this.importUseCustomLogLocation,
+        () => {
+          this.importCustomLogLocationError = undefined;
+        }
+      );
+      this.$watch(
+        () => this.selectedAutoBackup,
+        async (backupPath: string | undefined) => {
+          if (!backupPath) return;
+          await ImportExport.loadImportZip(this, backupPath);
+          this.selectedSection = 'import';
+        }
+      );
+
+      if (this.settings.autoBackupEnabled) {
+        this.refreshAutoBackups();
+      }
+
+      await this.initializeImportExport();
+
+      try {
+        const list: string[] = await ipcRenderer.invoke(
+          'get-connected-characters'
+        );
+        this.connectedCharacters = Array.isArray(list) ? list : [];
+      } catch {}
+      ipcRenderer.on('connected-characters-updated', (_e, list: string[]) => {
+        this.connectedCharacters = Array.isArray(list) ? list : [];
+      });
+    },
+    methods: {
+      getSyncedTheme() {
+        if (!this.settings.themeSync) return this.settings.theme;
+        return this.osIsDark
+          ? this.settings.themeSyncDark
+          : this.settings.themeSyncLight;
+      },
+      async initializeImportExport(): Promise<void> {
+        this.refreshExportCharacters();
+        await ImportExport.initializeVanillaImport(this);
+      },
+      refreshExportCharacters(): void {
+        ImportExport.refreshExportCharacters(this);
+      },
+      refreshVanillaContext(): void {
+        ImportExport.refreshVanillaContext(this);
+      },
+      normalizeVanillaBaseDir(): void {
+        ImportExport.normalizeVanillaBaseDir(this);
+      },
+      chooseVanillaImportDir(): Promise<void> {
+        return ImportExport.chooseVanillaImportDir(this);
+      },
+      resetVanillaImportDir(): void {
+        ImportExport.resetVanillaImportDir(this);
+      },
+      handleVanillaBaseDirInput(): void {
+        ImportExport.handleVanillaBaseDirInput(this);
+      },
+      setVanillaCharacters(selected: boolean): void {
+        ImportExport.setVanillaCharacters(this, selected);
+      },
+      setExportCharacters(selected: boolean): void {
+        ImportExport.setExportCharacters(this, selected);
+      },
+      setImportCharacters(selected: boolean): void {
+        ImportExport.setImportCharacters(this, selected);
+      },
+      runVanillaImport(): Promise<void> {
+        return ImportExport.runVanillaImport(this);
+      },
+      runExport(): void {
+        this.startExportAnimation();
+        void ImportExport.runExport(this).finally(() =>
+          this.stopExportAnimation()
+        );
+      },
+      chooseImportZip(): Promise<void> {
+        return ImportExport.chooseImportZip(this);
+      },
+      describeImportCharacter(character: BackupCharacterInfo): string {
+        return ImportExport.describeImportCharacter(character);
+      },
+      runZipImport(): Promise<void> {
+        return ImportExport.runZipImport(this);
+      },
+      async chooseAutoBackupDir(): Promise<void> {
+        const result = await ipcRenderer.invoke('dialog-open', {
+          properties: ['openDirectory'],
+          defaultPath:
+            this.settings.autoBackupDirectory || this.defaultBackupDir
+        });
+        if (!result.canceled && result.filePaths.length > 0) {
+          this.settings.autoBackupDirectory = result.filePaths[0];
+        }
+      },
+      async refreshAutoBackups(): Promise<void> {
+        try {
+          this.autoBackups = await ipcRenderer.invoke('list-auto-backups');
+        } catch {
+          this.autoBackups = [];
+        }
+      },
+      formatBackupLabel(backup: {
+        name: string;
+        mtime: number;
+        size: number;
+      }): string {
+        const date = new Date(backup.mtime).toLocaleString();
+        const mb = (backup.size / (1024 * 1024)).toFixed(1);
+        return `${date} (${mb} MB)`;
+      },
+      hasTrigger(t: string): boolean {
+        const triggers = this.settings.autoBackupTriggers;
+        return Array.isArray(triggers) && triggers.includes(t);
+      },
+      toggleTrigger(t: string): void {
+        if (!Array.isArray(this.settings.autoBackupTriggers)) {
+          this.settings.autoBackupTriggers = ['launch'];
+        }
+        const idx = this.settings.autoBackupTriggers.indexOf(t);
+        if (idx === -1) {
+          this.settings.autoBackupTriggers.push(t);
+        } else {
+          this.settings.autoBackupTriggers.splice(idx, 1);
+        }
+        this.settings.autoBackupTriggers = [
+          ...this.settings.autoBackupTriggers
+        ];
+      },
+      setCronTime(idx: number, value: string): void {
+        if (!Array.isArray(this.settings.autoBackupCronTimes)) return;
+        this.settings.autoBackupCronTimes.splice(idx, 1, value);
+        this.settings.autoBackupCronTimes = [
+          ...this.settings.autoBackupCronTimes
+        ];
+      },
+      removeCronTime(idx: number): void {
+        if (!Array.isArray(this.settings.autoBackupCronTimes)) return;
+        this.settings.autoBackupCronTimes.splice(idx, 1);
+        this.settings.autoBackupCronTimes = [
+          ...this.settings.autoBackupCronTimes
+        ];
+      },
+      addCronTime(): void {
+        if (!Array.isArray(this.settings.autoBackupCronTimes)) {
+          this.settings.autoBackupCronTimes = [];
+        }
+        this.settings.autoBackupCronTimes = [
+          ...this.settings.autoBackupCronTimes,
+          '02:00'
+        ];
+      },
+      close(): void {
+        if (this.exportInProgress || this.importInProgress) {
+          const choice = ipcRenderer.sendSync('dialog-message-box-sync', {
+            type: 'warning',
+            buttons: [
+              l('settings.dataManager.closeWhileBusyCancel'),
+              l('settings.dataManager.closeWhileBusyConfirm')
+            ],
+            defaultId: 0,
+            cancelId: 0,
+            title: l('settings.dataManager.closeWhileBusyTitle'),
+            message: l('settings.dataManager.closeWhileBusyMessage')
+          });
+          if (choice === 0) return;
+        }
+        ipcRenderer.send('window-close');
+      },
+      toggleVanillaCharacters(): void {
+        this.setVanillaCharacters(!this.allVanillaCharactersSelected);
+      },
+      toggleExportCharacters(): void {
+        this.setExportCharacters(!this.allExportCharactersSelected);
+      },
+      toggleImportCharacters(): void {
+        this.setImportCharacters(!this.allImportCharactersSelected);
+      },
+      startExportAnimation(): void {
+        this.exportAnimatedDots = '';
+        this.exportAnimationTimer = setInterval(() => {
+          if (this.exportAnimatedDots === '...') {
+            this.exportAnimatedDots = '';
+          } else {
+            this.exportAnimatedDots += '.';
+          }
+        }, 500);
+      },
+      stopExportAnimation(): void {
+        if (this.exportAnimationTimer) {
+          clearInterval(this.exportAnimationTimer);
+          this.exportAnimationTimer = undefined;
+        }
+        this.exportAnimatedDots = '';
+      },
+      close(): void {
+        ipcRenderer.send('window-close');
+      },
+      getThemeClass() {
+        try {
+          if (process.platform === 'win32') {
+            if (this.settings?.risingDisableWindowsHighContrast) {
+              document
+                .querySelector('html')
+                ?.classList.add('disableWindowsHighContrast');
+            } else {
+              document
+                .querySelector('html')
+                ?.classList.remove('disableWindowsHighContrast');
+            }
+          }
+
+          return {
+            ['platform-' + this.platform]: true,
+            disableWindowsHighContrast:
+              this.settings?.risingDisableWindowsHighContrast || false
+          };
+        } catch (err) {
+          return {
+            ['platform-' + this.platform]: true
+          };
+        }
+      }
+    }
+  });
+</script>
+
+<style lang="scss">
+  .card-full .window-modal {
+    position: relative;
+    display: block;
+  }
+  .window-modal .modal-dialog {
+    margin: 0px;
+    max-width: 100%;
+  }
+
+  .modal-title {
+    width: 100%;
+  }
+
+  .modal-body {
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+  }
+
+  .modal-body .modal-footer {
+    height: 52px;
+    min-height: 52px;
+  }
+
+  .modal-footer {
+    padding-bottom: 1rem;
+  }
+
+  .data-manager-sidebar {
+    width: 200px;
+    min-width: 200px;
+    border-right: 1px solid var(--bs-border-color);
+    padding: 0.5rem 0;
+  }
+
+  .data-manager-sidebar .nav-link {
+    color: var(--bs-body-color);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    border-radius: 0;
+
+    &:hover {
+      background: var(--bs-tertiary-bg);
+    }
+
+    &.active {
+      background: var(--bs-primary);
+      color: #fff;
+    }
+  }
+
+  .data-manager-content {
+    flex: 1;
+    overflow: auto;
+    padding: 1rem 1.25rem;
+  }
+
+  .label-full {
+    width: 100%;
+  }
+
+  .card-full {
+    height: 100%;
+    left: 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+  }
+
+  fieldset.character-box {
+    border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.175));
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem 1rem;
+    margin: 0;
+  }
+
+  fieldset.character-box legend {
+    width: auto;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .disableWindowsHighContrast,
+  .disableWindowsHighContrast * {
+    forced-color-adjust: none;
+  }
+</style>

@@ -1,0 +1,87 @@
+<template>
+  <modal :buttons="false" ref="dialog" style="width: 98%" dialogClass="">
+    <template slot="title">
+      Channels for
+      <user :character="character" :isMarkerShown="false">{{
+        character.name
+      }}</user>
+    </template>
+
+    <div class="user-channel-list" ref="pageBody" v-if="channels.length > 0">
+      <template v-for="channel in channels">
+        <h3>
+          <a href="#" @click.prevent="jumpToChannel(channel)"
+            >#{{ channel.name }}</a
+          >
+        </h3>
+      </template>
+    </div>
+
+    <div class="user-channel-list" ref="pageBody" v-else>
+      <i
+        ><user :character="character" :isMarkerShown="false">{{
+          character.name
+        }}</user>
+        is not on any of the channels you are on.</i
+      >
+    </div>
+  </modal>
+</template>
+
+<script lang="ts">
+  import * as _ from 'lodash';
+  import CustomDialog from '@/components/custom_dialog';
+  import Modal from '@/components/Modal.vue';
+  import { Character } from '@/fchat/interfaces';
+  import core from '../core';
+  import { Conversation } from '../interfaces';
+  import UserView from '../UserView.vue';
+  import ChannelConversation = Conversation.ChannelConversation;
+  import { PropType } from 'vue';
+
+  export default CustomDialog.extend({
+    components: { modal: Modal, user: UserView },
+    props: {
+      character: { type: Object as PropType<Character>, required: true }
+    },
+    data() {
+      return {
+        channels: [] as ChannelConversation[]
+      };
+    },
+    watch: {
+      character(): void {
+        this.update();
+      }
+    },
+    mounted(): void {
+      this.update();
+    },
+    methods: {
+      update(): void {
+        if (!this.character) {
+          this.channels = [];
+          return;
+        }
+
+        this.channels = _.sortBy(
+          _.filter(
+            core.conversations.channelConversations,
+            (cc: ChannelConversation) =>
+              !!cc.channel.members[this.character.name]
+          ),
+          'name'
+        );
+      },
+      jumpToChannel(channel: ChannelConversation): void {
+        channel.show();
+      }
+    }
+  });
+</script>
+
+<style lang="scss">
+  .user-channel-list h3 {
+    font-size: 120%;
+  }
+</style>

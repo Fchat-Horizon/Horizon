@@ -87,7 +87,7 @@
               export NIXOS_OZONE_WL=1
 
               exec ${electron}/bin/electron \
-                "@OUT@/lib/horizon-electron/electron/app" \
+                "@OUT@/lib/horizon-electron/src/electron/app" \
                 --ozone-platform=wayland \
                 "$@"
               EOF

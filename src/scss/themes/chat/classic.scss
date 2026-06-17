@@ -1,0 +1,379 @@
+@import '~bootstrap/scss/functions';
+@import '../../functions';
+@import '../variables/classic_variables';
+@import '~bootstrap/scss/variables';
+@import '../../flist_derived';
+@import '../variables/classic_derived';
+
+// Apply variables to theme.
+@import '../chat';
+
+#window-tabs {
+  background: -webkit-linear-gradient(top, #1c4a72 0%, #194064 100%);
+}
+
+#page {
+  padding: 0px !important;
+}
+
+body {
+  color: $black;
+}
+
+$red-color: #f44;
+$green-color: #4f4;
+$blue-color: #1e90ff;
+$yellow-color: yellow;
+$purple-color: #e2afff;
+$cyan-color: #00ffff;
+$white-color: white;
+$black-color: black;
+$brown-color: #aa840c;
+$pink-color: #ffcbdb;
+$gray-color: #d3d3d3;
+$orange-color: orange;
+$bookmark-color: $green-color;
+.card-header,
+.modal-header,
+.bg-solid-text,
+.guestbook-post,
+.character-preview {
+  background: -webkit-gradient(
+    linear,
+    left bottom,
+    left top,
+    color-stop(0, #134478),
+    color-stop(1, #2468af)
+  );
+}
+
+div.bbcode-editor > div.bbcode-editor-text-area.bg-light {
+  background: $body-bg !important;
+}
+
+.character-preview {
+  opacity: 100%;
+}
+
+.modal-body,
+.card-body {
+  background: -webkit-linear-gradient(top, #23598e 0%, #1b446f 100%);
+}
+
+.btn,
+.userInfo-buttons-container .userInfo-button-item {
+  //padding: 0.4em 2.1em 0.4em 2.1em;
+  color: $black;
+  border-radius: 0px;
+}
+.btn.btn-primary,
+.btn.btn-secondary,
+.btn.btn-outline-primary,
+.btn.btn-outline-secondary,
+.btn.btn-light,
+.btn.btn-outline-light,
+.bbcode-collapse-header,
+.nav-tabs > .nav-item > .nav-link,
+.userInfo-buttons-container .userInfo-button-item,
+.sidebarUserInfo-user {
+  background: -webkit-gradient(
+    linear,
+    left bottom,
+    left top,
+    color-stop(0, #225080),
+    color-stop(1, #04396f)
+  );
+  border-color: $card-border-color;
+  &:hover {
+    background: -webkit-linear-gradient(
+      top,
+      #2b5885 1%,
+      #2b5885 53%,
+      #04396f 80%,
+      #5c627e 100%
+    );
+  }
+}
+
+.btb.btn-danger,
+.btn.btn-outline-danger,
+#windowButtons .btn:last-child {
+  background: -webkit-linear-gradient(top, #8e2323 0%, #6f1b1b 100%);
+  &:hover {
+    background: -webkit-linear-gradient(
+      top,
+      #85312b 1%,
+      #85312b 53%,
+      #6f0c04 80%,
+      #7e695c 100%
+    );
+  }
+}
+.btb.btn-success,
+.btn.btn-outline-success {
+  background: -webkit-linear-gradient(top, #2e682a 0%, #1a5016 100%);
+  &:hover {
+    background: -webkit-linear-gradient(
+      top,
+      #33852b 1%,
+      #33852b 53%,
+      #0c6f04 80%,
+      #5c7e64 100%
+    );
+  }
+}
+
+#window-tabs {
+  .hasNew {
+    background: -webkit-linear-gradient(top, #797e5c 0%, #797e5c 100%);
+    &:hover {
+      background: -webkit-linear-gradient(
+        top,
+        #85752b 1%,
+        #85752b 53%,
+        #6f5e04 80%,
+        #797e5c 100%
+      );
+    }
+  }
+  .tab:not(.active):not(:hover) {
+    opacity: 1;
+  }
+}
+
+.list-group-item {
+  background: -webkit-linear-gradient(top, #23598e 0%, #1b446f 100%);
+  color: $black;
+  &.list-group-item-action:hover,
+  &.active {
+    background: -webkit-linear-gradient(top, #3d86cf 0%, #26619b 100%);
+    color: $black;
+  }
+  &.list-group-item-danger {
+    background: -webkit-linear-gradient(top, #8e2323 0%, #6f1b1b 100%);
+    &:hover {
+      background: -webkit-linear-gradient(top, #cf3d3d 0%, #9b2626 100%);
+      color: $black;
+    }
+  }
+  &.list-group-item-warning {
+    background: -webkit-linear-gradient(top, #68562a 0%, #503f16 100%);
+    &:hover {
+      background: -webkit-linear-gradient(top, #9b7326 0%, #cf9e3d 100%);
+      color: $black;
+    }
+  }
+}
+
+#userMenu,
+.modal-content {
+  border-radius: 0px;
+}
+
+.custom-select {
+  background: white;
+}
+
+button.close {
+  color: none;
+  background-image: url('~@assets/images/classic-theme/close.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: unset;
+  &:not(:disabled):not(.disabled):hover,
+  .close:not(:disabled):not(.disabled):focus {
+    opacity: unset;
+  }
+}
+
+.logs-fab {
+  border-radius: 0px;
+}
+
+.nav-tabs > .nav-item > .nav-link.active {
+  background: none;
+  color: $black;
+}
+
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link {
+  border-bottom: none;
+  border-color: $card-border-color;
+  color: $gray-800;
+}
+
+#characterView .card-body,
+#characterView .bg-light,
+.bbcode-collapse-header-up,
+.sidebar {
+  background: #1b446f;
+}
+
+.character-card-header {
+  background: #1b446f !important;
+}
+
+#character-page-sidebar .card-body {
+  background: $gray-100;
+}
+
+.colorblindMode {
+  @import '../colorblind';
+  @import '../../rising';
+
+  @each $varName, $value in $risingVariables {
+    --#{$varName}: #{$value};
+  }
+}
+
+:root {
+  color-scheme: light;
+}
+
+$genders: (
+  'shemale': #cc66ff,
+  'herm': #9b30ff,
+  'none': #999,
+  'female': #ff6699,
+  'male': #6699ff,
+  'male-herm': #007fff,
+  'transgender': #ee8822,
+  'cunt-boy': #00cc66
+);
+
+@each $gender, $color in $genders {
+  .gender-#{$gender},
+  .gender-icon-#{$gender} {
+    --gender-color: #{$color};
+  }
+
+  .gender-icon-#{$gender},
+  .message-event .gender-icon-#{gender} {
+    color: var(--gender-color);
+  }
+
+  .message-event .gender-#{$gender} {
+    --gender-color: #{$color};
+  }
+}
+
+.redText,
+.redNameText {
+  --text-color: #f00;
+}
+
+.bbcode-toolbar .color-selector .btn.text-color.red {
+  background-color: #f00;
+}
+
+.blueText,
+.blueNameText {
+  color: #00f;
+}
+
+.bbcode-toolbar .color-selector .btn.text-color.blue {
+  background-color: #00f;
+}
+
+.greenText,
+.greenNameText {
+  color: #0f0;
+}
+
+.bbcode-toolbar .color-selector .btn.text-color.green {
+  background-color: #0f0;
+}
+
+.yellowText,
+.yellowNameText {
+  color: #ff0;
+}
+
+.bbcode-toolbar .color-selector .btn.text-color.yellow {
+  background-color: #ff0;
+}
+
+.cyanText,
+.cyanNameText {
+  color: #0ff;
+}
+.bbcode-toolbar .color-selector .btn.text-color.cyan {
+  background-color: #0ff;
+}
+
+.purpleText,
+.purpleNameText {
+  color: #93f;
+}
+
+.bbcode-toolbar .color-selector .btn.text-color.purple {
+  background-color: #93f;
+}
+
+.brownText,
+.brownNameText {
+  color: #8a6d3b;
+}
+
+.bbcode-toolbar .color-selector .btn.text-color.brown {
+  background-color: #8a6d3b;
+}
+
+.pinkText,
+.pinkNameText {
+  color: #f9c;
+}
+
+.bbcode-toolbar .color-selector .btn.text-color.pink {
+  background-color: #f9c;
+}
+
+.grayText,
+.grayNameText {
+  color: #ccc;
+}
+
+.bbcode-toolbar .color-selector .btn.text-color.gray {
+  background-color: #ccc;
+}
+
+.orangeText {
+  color: #f60;
+}
+.bbcode-toolbar .color-selector .btn.text-color.orange {
+  background-color: #f60;
+}
+
+.whiteText,
+.whiteNameText {
+  color: #fff;
+}
+
+.bbcode-toolbar .color-selector .btn.text-color.white {
+  background-color: #fff;
+}
+
+.blackText,
+.blackNameText {
+  color: #000;
+  @include text-outline(#444);
+}
+.bbcode-toolbar .color-selector .btn.text-color.black {
+  background-color: #000;
+}
+
+//@import "../../util/accecss";
+//
+//@include accecss(
+//  'html body',
+//  false,
+//  false,
+//  tritanopia
+//);
+
+// deuteranomaly
+// protanomaly
+// protanopia
+// deuteranopia
+// tritanomaly
+// tritanopia

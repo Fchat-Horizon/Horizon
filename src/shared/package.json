@@ -1,0 +1,10 @@
+{
+  "name": "@horizon/shared",
+  "version": "2.2.2-beta.0",
+  "description": "Shared Horizon source (renderer UI, chat/profile logic, bbcode, helpers) consumed by the platform targets.",
+  "license": "MPL-2.0",
+  "private": true,
+  "exports": {
+    "./*": "./src/*"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "useDefineForClassFields": false,
+    "module": "commonjs",
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "allowJs": true,
+    "noEmitHelpers": true,
+    "importHelpers": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@horizon/shared/*": ["../shared/src/*"],
+      "@/*": ["../shared/src/*"]
+    }
+  },
+  "include": ["chat.ts", "window.ts", "../**/*.d.ts"],
+  "exclude": ["../node_modules"]
+}
