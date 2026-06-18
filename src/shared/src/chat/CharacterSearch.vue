@@ -173,6 +173,9 @@
   } from '@/learn/matcher-types';
   import { CharacterCacheRecord } from '@/learn/profile-cache';
   import { delay } from '@/helpers/async';
+  import { createLogger } from '@/logger';
+
+  const log = createLogger('character-search');
 
   type Options = {
     kinks: SearchKink[];
@@ -450,7 +453,7 @@
         this.countUpdater?.start();
         this.resort(results);
 
-        console.log('Done!');
+        log.debug('Debug results update done');
       },
       resort(results = this.results) {
         this.results = (

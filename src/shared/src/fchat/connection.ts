@@ -2,7 +2,8 @@ import Axios, { AxiosError, AxiosResponse } from 'axios';
 import * as qs from 'qs';
 import { Connection as Interfaces, WebSocketConnection } from './interfaces';
 import ReadyState = WebSocketConnection.ReadyState;
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '@/logger';
+const log = createLogger('connection');
 import core from '@/chat/core';
 import throat from 'throat';
 
@@ -357,7 +358,7 @@ export default class Connection implements Interfaces.Connection {
   //tslint:enable
 
   private async getTicket(password: string): Promise<string> {
-    console.log('Acquiring new API ticket');
+    log.debug('Acquiring new API ticket');
     const oldLastApiTicketFetch = lastApiTicketFetch;
 
     log.debug('api.getTicket.start', {
@@ -391,7 +392,7 @@ export default class Connection implements Interfaces.Connection {
       return data.ticket;
     }
 
-    console.error('API Ticket Error', data.error);
+    log.error('API ticket error', data.error);
 
     log.error('error.api.getTicket', {
       character: core.characters.ownCharacter.name,

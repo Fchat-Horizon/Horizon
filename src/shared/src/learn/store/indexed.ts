@@ -1,4 +1,5 @@
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '@/logger';
+const log = createLogger('indexed-store');
 import * as _ from 'lodash';
 
 import {
@@ -78,7 +79,6 @@ export class IndexedStore implements PermanentIndexedStore {
     const data = await promisifyRequest<any>(getRequest);
 
     if (!data) {
-      // console.info('IDX empty profile', name);
       return;
     }
 
@@ -95,9 +95,6 @@ export class IndexedStore implements PermanentIndexedStore {
       data.profileData.character.customs = {};
       await this.storeProfile(data.profileData);
     }
-
-    // console.log('IDX profile', name, data);
-
     return data as ProfileRecord;
   }
 
@@ -171,8 +168,6 @@ export class IndexedStore implements PermanentIndexedStore {
 
     // tslint:disable-next-line no-any
     await promisifyRequest<any>(putRequest);
-
-    // console.log('IDX store profile', c.character.name, data);
   }
 
   // async updateProfileCounts(
@@ -234,8 +229,6 @@ export class IndexedStore implements PermanentIndexedStore {
 
     // tslint:disable-next-line no-any
     await promisifyRequest<any>(putRequest);
-
-    // console.log('IDX update counts', name, data);
   }
 
   async start(): Promise<void> {

@@ -936,6 +936,23 @@
                     </div>
                   </label>
                 </div>
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="humanReadableLogs"
+                      aria-describedby="humanReadableLogsNote"
+                      v-model="settings.horizonHumanReadableLogs"
+                    />
+                    <label class="form-check-label" for="humanReadableLogs">
+                      {{ l('settings.humanReadableLogs') }}
+                    </label>
+                  </div>
+                  <div id="humanReadableLogsNote" class="form-text text-muted">
+                    {{ l('settings.humanReadableLogs.help') }}
+                  </div>
+                </div>
 
                 <h5>
                   {{ l('settings.cache') }}
@@ -1128,7 +1145,8 @@
   import { GeneralSettings } from '@horizon/shared/common';
   import path from 'path';
   import { ipcRenderer } from 'electron';
-  import log from 'electron-log';
+  import { createLogger, LevelOption } from '@horizon/shared/logger';
+  const log = createLogger('settings-view');
   import { Dialog } from '@horizon/shared/helpers/dialog';
   import Tabs from '@horizon/shared/components/tabs';
   import FilterableSelect from '@horizon/shared/components/FilterableSelect.vue';
@@ -1156,7 +1174,7 @@
         logDirectory: '',
         availableThemes: [] as ReadonlyArray<string>,
         availableSoundThemes: [] as ReadonlyArray<string>,
-        logLevel: false as log.LevelOption,
+        logLevel: false as LevelOption,
         selectedLang: undefined as string | string[] | undefined,
         availableDisplayLanguages: availableDisplayLanguages,
         //These are not reactive.
@@ -1228,7 +1246,7 @@
       try {
         setLanguage(this.settings.displayLanguage);
       } catch (e) {
-        console.warn('Failed to set initial display language', e);
+        log.warn('Failed to set initial display language', e);
       }
       this.$watch(
         () => this.settings.displayLanguage,
@@ -1372,7 +1390,7 @@
           );
           for (const source of sources) pushSource(source.url, source.type);
         } catch (err) {
-          console.warn('Preview load failed', err);
+          log.warn('Preview load failed', err);
         }
 
         audio.addEventListener('ended', () => {
@@ -1385,7 +1403,7 @@
         document.body.appendChild(audio);
         this.soundPreviewAudio = audio;
         // Some browsers require a user gesture; this is an explicit user action (click) so should work.
-        audio.play().catch(e => console.warn('Preview play failed', e));
+        audio.play().catch(e => log.warn('Preview play failed', e));
       },
 
       close(): void {
@@ -1470,7 +1488,7 @@
       },
 
       filterLanguage(filter: RegExp, languageEntry: string): boolean {
-        console.log(languageEntry);
+        log.debug(languageEntry);
         return filter.test(this.formatLanguage(languageEntry));
       },
 

@@ -23,7 +23,8 @@ import MessageType = Interfaces.Message.Type;
 import { EventBus } from './preview/event-bus';
 import throat from 'throat';
 import { delay } from '@/helpers/async';
-import log from 'electron-log';
+import { createLogger } from '@/logger';
+const log = createLogger('conversations');
 import isChannel = Interfaces.isChannel;
 
 /**

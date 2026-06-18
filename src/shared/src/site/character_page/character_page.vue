@@ -244,7 +244,8 @@
 
   import anyAscii from 'any-ascii';
   import Vue from 'vue';
-  import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+  import { createLogger } from '@/logger';
+  const log = createLogger('character-page');
 
   import { StandardBBCodeParser } from '@/bbcode/standard';
   import { BBCodeView } from '@/bbcode/view';
@@ -383,7 +384,7 @@
           );
 
           if (!el) {
-            console.error('Could not find modal body for profile view');
+            log.error('Could not find modal body for profile view');
             return;
           }
 
@@ -393,13 +394,9 @@
     },
     beforeMount(): void {
       this.shared.authenticated = this.authenticated;
-
-      // console.log('Beforemount');
     },
     async mounted(): Promise<void> {
       await this.load(false);
-
-      // console.log('mounted');
     },
     methods: {
       shouldShowMatch(): boolean {
@@ -442,7 +439,7 @@
 
           await Promise.all(due);
         } catch (e) {
-          console.error(e);
+          log.error('Failed to load character', e);
 
           this.error = Utils.isJSONError(e)
             ? <string>e.response.data.error
@@ -469,7 +466,7 @@
           this.guestbook = result;
         } catch (err) {
           if (this.name !== expectedName) return;
-          console.error(err);
+          log.error('Failed to update guestbook', err);
           this.guestbook = null;
         }
       },
@@ -487,7 +484,7 @@
           this.groups = result;
         } catch (err) {
           if (this.name !== expectedName) return;
-          console.error('Update groups', err);
+          log.error('Failed to update groups', err);
           this.groups = null;
         }
       },
@@ -508,7 +505,7 @@
           this.friends = result;
         } catch (err) {
           if (this.name !== expectedName) return;
-          console.error('Update friends', err);
+          log.error('Failed to update friends', err);
           this.friends = null;
         }
       },
@@ -528,7 +525,7 @@
           this.images = fetchedImages;
         } catch (err) {
           if (this.name !== expectedName) return;
-          console.error('Update images', err);
+          log.error('Failed to update images', err);
           this.images = null;
         }
       },
@@ -561,15 +558,7 @@
         void core.cache.profileCache.register(this.character!);
       },
       async loadSelfCharacter(): Promise<void> {
-        // console.log('SELF');
-
-        // const ownChar = core.characters.ownCharacter;
-
-        // this.selfCharacter = await methods.characterData(ownChar.name, -1);
         this.selfCharacter = core.characters.ownProfile;
-
-        // console.log('SELF LOADED');
-
         this.updateMatches();
       },
       async fetchCharacterCache(): Promise<CharacterCacheRecord | null> {
@@ -634,11 +623,10 @@
           // No await on purpose:
           // tslint:disable-next-line no-floating-promises
           this.updateMeta(this.name).catch((err: any) =>
-            console.error('profile.updateMeta', err)
+            log.error('profile.updateMeta', err)
           );
         }
 
-        // console.log('LoadChar', this.name, this.character);
         this.updateMatches();
 
         // old profile cache, let's refresh
@@ -706,8 +694,6 @@
           this.selfCharacter.character,
           this.character.character
         );
-
-        // console.log('Match', this.selfCharacter.character.name, this.character.character.name, this.characterMatch);
       },
       updateGalleryType(profileGalleryType: ProfileViewerGalleryType): void {
         this.$emit('gallery-type-updated', profileGalleryType);

@@ -1,6 +1,7 @@
 import { ipcRenderer } from 'electron';
 import path from 'path';
-import log from 'electron-log';
+import { createLogger } from '@horizon/shared/logger';
+const log = createLogger('vanilla-import-ui');
 import l from '@horizon/shared/chat/localize';
 import type { ExporterVm } from '../exporter-vm';
 import * as VanillaImporter from './vanilla-importer';

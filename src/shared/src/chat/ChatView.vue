@@ -471,7 +471,9 @@
   import CustomDialog from '@/components/custom_dialog';
   import Modal from '@/components/Modal.vue';
   import QuickJump from './QuickJump.vue';
-  import { group, log } from 'node:console';
+  import { createLogger } from '@/logger';
+
+  const log = createLogger('chat-view-panel');
 
   const unreadClasses = {
     [Conversation.UnreadState.None]: '',
@@ -1123,7 +1125,7 @@
         } else {
           groupId = core.conversations.channelGroups[0].id;
         }
-        console.log(`id: ${groupId}`);
+        log.debug('Pinned conversation to group', groupId);
         this.onChannelAssign(conversation.channel.id, groupId);
       },
 

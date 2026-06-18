@@ -1,4 +1,6 @@
 import _ from 'lodash';
+import { createLogger } from '@/logger';
+const log = createLogger('word-pos-search');
 
 export interface FoundWord {
   word: string;
@@ -47,7 +49,7 @@ export class WordPosSearch {
           null
         );
       } catch (err) {
-        console.log('wordpos.event', err);
+        log.debug('wordpos.event', err);
       }
     };
   }
@@ -81,8 +83,6 @@ export class WordPosSearch {
 
         start = end + 1;
       } catch (e) {
-        // console.log('MM', 'word', word, 'start', start, 'end', end, 'i', i, words);
-        // console.error(e);
         return null;
       }
     }

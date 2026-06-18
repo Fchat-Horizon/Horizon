@@ -40,12 +40,20 @@
 
 import * as electron from 'electron';
 
-import log from 'electron-log/main'; //tslint:disable-line:match-default-export-name
+import electronLog from 'electron-log/main';
+import { createLogger } from '@horizon/shared/logger';
+const log = createLogger('main');
 import * as fs from 'fs';
 import * as path from 'path';
 import { execFile } from 'child_process';
 import { fileURLToPath } from 'url';
 import l from '@horizon/shared/chat/localize';
+import {
+  installElectronLogging,
+  applySharedLogLevel,
+  applyHumanReadableLogs
+} from './logging';
+import { setAppInfo } from '@horizon/shared/platform/app-info';
 import { defaultHost, GeneralSettings } from '@horizon/shared/common';
 // import BrowserWindow = electron.BrowserWindow;
 import MenuItemConstructorOptions = electron.MenuItemConstructorOptions;
@@ -122,7 +130,15 @@ const isAllowedWebviewPreload = (preload: string | undefined): boolean => {
 const app = electron.app;
 let mainWindow: electron.BrowserWindow | undefined;
 
-log.initialize();
+electronLog.initialize();
+installElectronLogging(electronLog);
+
+// shared/ reads app metadata through getAppInfo() rather than electron.app.
+setAppInfo({
+  locale: app.getLocale(),
+  userDataPath: app.getPath('userData'),
+  version: app.getVersion()
+});
 
 const characters: string[] = [];
 let autoBackupScheduler:
@@ -347,7 +363,7 @@ if (!fs.existsSync(settingsFile)) {
 }
 
 if (!settings.hwAcceleration) {
-  log.info('Disabling hardware acceleration.');
+  log.info('Disabling hardware acceleration');
   app.disableHardwareAcceleration();
 }
 
@@ -358,9 +374,6 @@ if (!settings.hwAcceleration) {
 // }
 
 export function updateSpellCheckerLanguages(langs: string[]): void {
-  // console.log('UPDATESPELLCHECKERLANGUAGES', langs);
-
-  // console.log('Language support:', langs);
   electron.session.defaultSession.setSpellCheckerLanguages(langs);
   browserWindows.setSpellCheckerLanguages(langs);
 }
@@ -373,8 +386,8 @@ function setGeneralSettings(value: GeneralSettings): void {
 
   shouldImportSettings = false;
 
-  log.transports.file.level = settings.risingSystemLogLevel;
-  log.transports.console.level = settings.risingSystemLogLevel;
+  applySharedLogLevel(value.risingSystemLogLevel);
+  applyHumanReadableLogs(!!value.horizonHumanReadableLogs);
 }
 
 function normalizeVersionToTag(version?: string): string | undefined {
@@ -657,11 +670,10 @@ async function onReady(): Promise<void> {
 
   const logLevel = process.env.NODE_ENV === 'production' ? 'info' : 'silly';
 
-  log.transports.file.level = settings.risingSystemLogLevel || logLevel;
-  log.transports.console.level = settings.risingSystemLogLevel || logLevel;
-  log.transports.file.maxSize = 5 * 1024 * 1024;
+  applySharedLogLevel(settings.risingSystemLogLevel || logLevel);
+  applyHumanReadableLogs(!!settings.horizonHumanReadableLogs);
 
-  log.info('Starting application.');
+  log.info('Starting application');
 
   app.setAppUserModelId('net.flist.fchat');
   app.on('open-file', () => {
@@ -705,7 +717,7 @@ async function onReady(): Promise<void> {
           permission === 'clipboard-sanitized-write' &&
           partitionName === 'persist:fchat'
         ) {
-          log.debug('permissions.allowed.clipboard-sanitized-write', {
+          log.debug('Allowing clipboard write', {
             partition: partitionName
           });
           callback(true);
@@ -1369,7 +1381,6 @@ async function onReady(): Promise<void> {
   );
 
   electron.ipcMain.on('rising-upgrade-complete', () => {
-    // console.log('RISING COMPLETE SHARE');
     hasCompletedUpgrades = true;
     for (const w of electron.webContents.getAllWebContents())
       w.send('rising-upgrade-complete');
@@ -1387,7 +1398,7 @@ async function onReady(): Promise<void> {
 
   electron.ipcMain.handle('browser-option-browse', async () => {
     log.debug('settings.browserOption.browse');
-    console.log('settings.browserOption.browse', JSON.stringify(settings));
+    log.debug('settings.browserOption.browse', JSON.stringify(settings));
 
     let filters;
     if (process.platform === 'win32') {

@@ -120,8 +120,6 @@
     },
     beforeMount(): void {
       standardParser.inlines = this.character.character.inlines;
-
-      // console.log('mounted');
     },
     methods: {
       async deletePost(): Promise<void> {

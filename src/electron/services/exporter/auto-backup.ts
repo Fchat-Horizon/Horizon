@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import * as electron from 'electron';
-import log from 'electron-log';
+import { createLogger } from '@horizon/shared/logger';
+const log = createLogger('auto-backup');
 import { runExportCli } from './backup-export-cli';
 import type { GeneralSettings } from '@horizon/shared/common';
 
@@ -36,13 +37,13 @@ function cleanupOldBackups(dir: string, retention: number): void {
     for (const file of files.slice(retention)) {
       try {
         fs.unlinkSync(path.join(dir, file.name));
-        log.info('auto-backup.cleanup.deleted', file.name);
+        log.info('Deleted old backup', file.name);
       } catch (err) {
-        log.warn('auto-backup.cleanup.delete-failed', file.name, err);
+        log.warn('Could not delete old backup', file.name, err);
       }
     }
   } catch (err) {
-    log.warn('auto-backup.cleanup.failed', err);
+    log.warn('Could not clean up old backups', err);
   }
 }
 
@@ -54,7 +55,7 @@ export async function performAutoBackup(
     settings.autoBackupDirectory || path.join(baseDir, 'backups');
   const outPath = path.join(backupDir, `auto-backup-${formatTimestamp()}.zip`);
 
-  log.info('auto-backup.start', outPath);
+  log.info('Starting backup', outPath);
   broadcast('auto-backup-status', 'started');
 
   try {
@@ -75,13 +76,13 @@ export async function performAutoBackup(
       }
     });
 
-    log.info('auto-backup.success', outPath);
+    log.info('Backup complete', outPath);
     broadcast('auto-backup-status', 'success');
 
     const retention = Math.max(1, Math.min(50, settings.autoBackupRetention));
     cleanupOldBackups(backupDir, retention);
   } catch (err) {
-    log.error('auto-backup.failed', err);
+    log.error('Backup failed', err);
     broadcast('auto-backup-status', 'error');
   }
 }

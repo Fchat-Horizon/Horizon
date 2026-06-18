@@ -1,5 +1,7 @@
-import { ipcRenderer } from 'electron';
+import { ipc } from '@/platform/ipc';
 import core from '@/chat/core';
+import { createLogger } from '@/logger';
+const log = createLogger('drafts');
 
 /**
  * Reads the persisted conversation draft cache as parsed JSON, scoped to the
@@ -8,23 +10,19 @@ import core from '@/chat/core';
  */
 export function getDrafts(): any {
   const raw = <string | null>(
-    ipcRenderer.sendSync('drafts-get-sync', core.connection.character)
+    ipc.sendSync('drafts-get-sync', core.connection.character)
   );
   //tslint:disable-next-line:no-null-keyword
   if (raw === null) return null;
   try {
     return JSON.parse(raw);
   } catch (e) {
-    console.error(`Error encountered when parsing drafts: ${e}`);
+    log.error(`Error encountered when parsing drafts: ${e}`);
     return null; //tslint:disable-line:no-null-keyword
   }
 }
 
 /** Persists the conversation draft cache as raw JSON. @internal */
 export async function saveDrafts(drafts: any): Promise<void> {
-  ipcRenderer.send(
-    'drafts-set',
-    core.connection.character,
-    JSON.stringify(drafts)
-  );
+  ipc.send('drafts-set', core.connection.character, JSON.stringify(drafts));
 }

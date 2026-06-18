@@ -110,6 +110,9 @@
   import * as _ from 'lodash';
   import { Dialog } from '@/helpers/dialog';
   import l from './localize';
+  import { createLogger } from '@/logger';
+
+  const log = createLogger('status-picker');
 
   const MAX_PINNED_STATUSES: number = 5;
 
@@ -168,7 +171,7 @@
       },
       async pinStatusFromHistory(pinHistoryIndex: number): Promise<void> {
         const status = this.history[pinHistoryIndex];
-        console.log(this.pinned.indexOf(status));
+        log.debug('Pin status index', this.pinned.indexOf(status));
         if (this.pinned.indexOf(status) > -1) return;
         this.pinned.push(status);
 

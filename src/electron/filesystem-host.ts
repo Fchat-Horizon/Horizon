@@ -9,7 +9,8 @@
  */
 
 import * as electron from 'electron';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '@horizon/shared/logger';
+const log = createLogger('filesystem-host');
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';

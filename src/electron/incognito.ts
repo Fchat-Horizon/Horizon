@@ -6,7 +6,8 @@
  */
 
 import * as electron from 'electron';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '@horizon/shared/logger';
+const log = createLogger('incognito');
 import { execFileSync, execSync, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -36,7 +37,7 @@ function openIncognitoWindows(url: string): void {
           .toString()
           .trim();
       } catch (e) {
-        console.error(e);
+        log.error(e);
       }
 
     log.debug('incognito.open.win32.ProgId', browser);

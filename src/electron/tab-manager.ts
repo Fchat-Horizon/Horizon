@@ -7,7 +7,8 @@
  */
 
 import * as electron from 'electron';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '@horizon/shared/logger';
+const log = createLogger('tab-manager');
 import path from 'path';
 import { GeneralSettings } from '@horizon/shared/common';
 import { canAddTab, tabAddHandler, tabClosedHandler } from './browser_windows';

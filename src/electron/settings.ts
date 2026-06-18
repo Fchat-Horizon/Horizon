@@ -1,10 +1,16 @@
 //For potential git history reasons, this file used to be named "browser_options.ts" prior to f257b4c6a9d6fc06c1a6f7354e38c2dbd7bc69f6
 import * as qs from 'querystring';
-import log from 'electron-log/renderer'; //tslint:disable-line:match-default-export-name
+import electronLog from 'electron-log/renderer';
+import { createLogger } from '@horizon/shared/logger';
+const log = createLogger('settings');
+import { installElectronLogging, applySharedLogLevel } from './logging';
+import { installRendererPlatform } from './platform-host';
 
 import { GeneralSettings } from '@horizon/shared/common';
 import BrowserOption from './Settings.vue';
 
+installElectronLogging(electronLog);
+installRendererPlatform();
 log.info('init.settings');
 
 const params = <{ [key: string]: string | undefined }>(
@@ -14,8 +20,7 @@ const settings = <GeneralSettings>JSON.parse(params['settings']!);
 
 const logLevel = process.env.NODE_ENV === 'production' ? 'info' : 'silly';
 
-log.transports.console.level = settings.risingSystemLogLevel || logLevel;
-log.transports.ipc.level = settings.risingSystemLogLevel || logLevel;
+applySharedLogLevel(settings.risingSystemLogLevel || logLevel);
 
 log.info('init.settings.vue');
 

@@ -1,6 +1,9 @@
 import { ImageUrlMutator } from '../image-url-mutator';
 import { ImagePreviewHelper } from './helper';
 import * as _ from 'lodash';
+import { createLogger } from '@/logger';
+
+const log = createLogger('preview-external');
 
 export class ExternalImagePreviewHelper extends ImagePreviewHelper {
   protected lastExternalUrl: string | undefined = undefined;
@@ -12,7 +15,7 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
   hide(): void {
     const wasVisible = this.visible;
 
-    if (this.parent.debug) console.log('ImagePreview: exec hide mutator');
+    if (this.parent.debug) log.debug('ImagePreview: exec hide mutator');
 
     if (wasVisible) {
       const webview = this.parent.getWebview();
@@ -21,7 +24,7 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
       webview.stop();
 
       webview.loadURL('about:blank').catch((err: any) => {
-        console.warn('webview.loadURL() in hide()', err);
+        log.warn('webview.loadURL() in hide()', err);
       });
 
       this.visible = false;
@@ -81,7 +84,7 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
         .resolve(url)
         .then(async (finalUrl: string) => {
           if (this.debug)
-            console.log(
+            log.debug(
               'ImagePreview: must load',
               finalUrl,
               this.url,
@@ -95,12 +98,12 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
           webview.setAudioMuted(true);
         })
         .catch((err: any) => {
-          console.warn('webview.loadURL() in show()', err);
+          log.warn('webview.loadURL() in show()', err);
         });
 
       // }
     } catch (err) {
-      console.error('ImagePreview: Webview reuse error', err);
+      log.error('ImagePreview: Webview reuse error', err);
     }
   }
 

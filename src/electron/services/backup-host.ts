@@ -10,7 +10,8 @@
  */
 
 import * as electron from 'electron';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '@horizon/shared/logger';
+const log = createLogger('backup-host');
 import fs from 'fs';
 import path from 'path';
 import archiver from 'archiver';
@@ -639,7 +640,7 @@ function importCharacterFile(
         }
       } catch (err) {
         stats.filesErrored++;
-        log.warn('import.file.json-convert-error', normalized, err);
+        log.warn('Failed to convert JSON log', normalized, err);
         return;
       }
     }

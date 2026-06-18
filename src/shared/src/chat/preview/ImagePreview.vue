@@ -86,6 +86,9 @@
   import IpcMessageEvent = Electron.IpcMessageEvent;
   import CharacterPreview from './CharacterPreview.vue';
   import l from '../localize';
+  import { createLogger } from '@/logger';
+
+  const log = createLogger('image-preview');
 
   type TimerHandle = ReturnType<typeof setTimeout>;
 
@@ -139,7 +142,7 @@
       };
     },
     async mounted(): Promise<void> {
-      console.info('Mounted ImagePreview');
+      log.info('Mounted ImagePreview');
 
       // tslint:disable-next-line:no-floating-promises
       this.jsMutator.init();
@@ -873,7 +876,7 @@
       },
       debugLog(...args: any[]): void {
         if (this.debug) {
-          console.log(...args);
+          log.debug(...args);
         }
       },
       toggleStickyMode(): void {

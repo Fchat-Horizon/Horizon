@@ -1,5 +1,6 @@
-import { ipcRenderer } from 'electron';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { ipc } from '@/platform/ipc';
+import { createLogger } from '@/logger';
+const log = createLogger('eicon-store');
 import { FisherYatesShuffle } from '@/chat/common';
 
 import { EIconUpdater } from './updater';
@@ -103,7 +104,7 @@ export class EIconStore {
       });
 
       // & Written by the main process; failures are logged there.
-      ipcRenderer.send(
+      ipc.send(
         'eicons-write',
         JSON.stringify({
           version: CURRENT_STORE_VERSION,
@@ -129,7 +130,7 @@ export class EIconStore {
     log.info('eicons.load');
 
     try {
-      const raw = <string | null>await ipcRenderer.invoke('eicons-read');
+      const raw = <string | null>await ipc.invoke('eicons-read');
       if (raw === null) throw new Error('No local eicon store');
       const data = JSON.parse(raw);
 

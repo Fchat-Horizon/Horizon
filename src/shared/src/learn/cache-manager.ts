@@ -27,10 +27,9 @@ import { GeneralSettings } from '@/common';
 import { Gender } from './matcher-types';
 import { WorkerStore } from './store/worker';
 import { PermanentIndexedStore } from './store/types';
-import * as path from 'path';
-// import * as electron from 'electron';
 
-import log from 'electron-log';
+import { createLogger } from '@/logger';
+const log = createLogger('cache-manager');
 import { testSmartFilterForPrivateMessage } from '@/chat/conversations'; //tslint:disable-line:match-default-export-name
 
 export interface ProfileCacheQueueEntry {
@@ -178,7 +177,7 @@ export class CacheManager {
 
       return c;
     } catch (err) {
-      console.error('Failed to fetch profile for cache', name, err);
+      log.error('Failed to fetch profile for cache', name, err);
 
       return null;
     }
@@ -330,9 +329,7 @@ export class CacheManager {
   async start(settings: GeneralSettings, skipFlush: boolean): Promise<void> {
     await this.stop();
 
-    this.profileStore = await WorkerStore.open(
-      path.join(/*electron.remote.app.getAppPath(),*/ 'storeWorkerEndpoint.js')
-    ); // await IndexedStore.open();
+    this.profileStore = await WorkerStore.open('storeWorkerEndpoint.js');
 
     this.profileCache.setStore(this.profileStore);
 
@@ -406,7 +403,7 @@ export class CacheManager {
 
             // tslint:disable-next-line: binary-expression-operand-order
             if (false && next) {
-              console.log(
+              log.debug(
                 `Fetch '${next!.name}' for channel '${next!.channelId}', gap: ${Date.now() - this.lastFetch}ms`
               );
               this.lastFetch = Date.now();
@@ -424,7 +421,7 @@ export class CacheManager {
             this.queue = _.filter(this.queue, q => q.name !== next.name);
             delete this.ongoingLog[next.name];
           } catch (err) {
-            console.error('Profile queue error', err);
+            log.error('Profile queue error', err);
 
             delete this.ongoingLog[next.name];
 

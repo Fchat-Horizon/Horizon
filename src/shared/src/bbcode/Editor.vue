@@ -164,6 +164,9 @@
   import { default as EIconSelector } from './EIconSelector.vue';
   import Modal from '@/components/Modal.vue';
   import l from '@/chat/localize';
+  import { createLogger } from '@/logger';
+
+  const log = createLogger('bbcode-editor');
 
   export default Vue.extend({
     components: {
@@ -671,7 +674,7 @@
             }
           }
 
-          console.log('bbcode.url.paste', data);
+          log.debug('bbcode.url.paste', data);
           e.preventDefault();
           //we only replace the brackets instead of trying to force the whole path to be escaped because
           //these two characters give us trouble with BBCode and the rest can just be picked up by the browser anyway

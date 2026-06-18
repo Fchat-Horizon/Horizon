@@ -1,8 +1,9 @@
-import * as electron from 'electron';
-import * as path from 'path';
 import { ProfileViewerGalleryType } from '@/site/utils';
+import { getAppInfo } from '@/platform/app-info';
+import { join } from '@/platform/path';
 
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger, LevelOption } from '@/logger';
+const log = createLogger('common');
 
 log.debug('init.common');
 
@@ -11,7 +12,7 @@ export const defaultHost = 'wss://chat.f-list.net/chat2';
 function getDefaultLanguage(): string {
   try {
     return (
-      electron.app.getLocale() ||
+      getAppInfo().locale ||
       process.env.LC_ALL ||
       process.env.LC_MESSAGES ||
       process.env.LANG ||
@@ -32,14 +33,14 @@ export class GeneralSettings {
   profileViewerSmallerDefaultAvatars = false;
   proxy: string = '';
   host = defaultHost;
-  logDirectory = path.join(electron.app.getPath('userData'), 'data');
+  logDirectory = join(getAppInfo().userDataPath, 'data');
   spellcheckLang: string[] | string | undefined = [getDefaultLanguage()];
   displayLanguage: string = 'en_us';
   theme = 'default';
   themeSync: boolean = false;
   themeSyncDark: string = 'dark';
   themeSyncLight: string = 'light';
-  version = electron.app.getVersion();
+  version = getAppInfo().version;
   beta = false;
   updateCheck = true;
   horizonHideAutoUpdater = false;
@@ -50,7 +51,8 @@ export class GeneralSettings {
   reducedMotion = false;
   risingCacheExpiryDays = 30;
   horizonCacheMemoryCount = 350;
-  risingSystemLogLevel: log.LevelOption = 'info';
+  risingSystemLogLevel: LevelOption = 'info';
+  horizonHumanReadableLogs: boolean = true;
   risingDisableWindowsHighContrast = false;
   browserPath = '';
   browserArgs = '%s';

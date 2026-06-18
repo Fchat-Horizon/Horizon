@@ -1,6 +1,9 @@
 import * as _ from 'lodash';
 import Axios from 'axios';
 import { domain } from '@/bbcode/core';
+import { createLogger } from '@/logger';
+
+const log = createLogger('image-url-mutator');
 
 export type UrlSolverCallback = (
   url: string,
@@ -91,16 +94,16 @@ export class ImageUrlMutator {
               return url;
             }
 
-            if (this.debug) console.log('Twitter', url, videoUrl);
+            if (this.debug) log.debug('Twitter', url, videoUrl);
 
             return videoUrl;
           }
 
-          if (this.debug) console.log('Twitter', url, imageUrl);
+          if (this.debug) log.debug('Twitter', url, imageUrl);
 
           return imageUrl;
         } catch (err) {
-          console.error('Twitter Failure', url, err);
+          log.error('Twitter Failure', url, err);
           return url;
         }
       }
@@ -171,7 +174,7 @@ export class ImageUrlMutator {
           } catch (err) {
             // attempt token refresh, then fallback to iframe if API fails
             if (refresh && this.debug)
-              console.error('RedGifs API Failure', redgifId, err);
+              log.error('RedGifs API Failure', redgifId, err);
           }
         }
         return fallback;
@@ -215,7 +218,7 @@ export class ImageUrlMutator {
 
           return imageUrl || url;
         } catch (err) {
-          console.error('E621 API Failure', url, err);
+          log.error('E621 API Failure', url, err);
           return url;
         }
       }
@@ -250,13 +253,13 @@ export class ImageUrlMutator {
           const imageCount = _.get(result, 'data.data.length', 1);
 
           if (this.debug)
-            console.log('Imgur gallery', url, imageUrl, imageCount);
+            log.debug('Imgur gallery', url, imageUrl, imageCount);
 
           return this.getOptimizedImgurUrlFromUrl(
             `${imageUrl}?flist_gallery_image_count=${imageCount}`
           );
         } catch (err) {
-          console.error('Imgur Gallery Failure', url, err);
+          log.error('Imgur Gallery Failure', url, err);
           return url;
         }
       }
@@ -286,13 +289,13 @@ export class ImageUrlMutator {
 
           const imageCount = _.get(result, 'data.data.length', 1);
 
-          if (this.debug) console.log('Imgur album', url, imageUrl, imageCount);
+          if (this.debug) log.debug('Imgur album', url, imageUrl, imageCount);
 
           return this.getOptimizedImgurUrlFromUrl(
             `${imageUrl}?flist_gallery_image_count=${imageCount}`
           );
         } catch (err) {
-          console.error('Imgur Album Failure', url, err);
+          log.error('Imgur Album Failure', url, err);
           return url;
         }
       }
@@ -317,11 +320,11 @@ export class ImageUrlMutator {
 
           const imageUrl = _.get(result, 'data.data.link', url);
 
-          if (this.debug) console.log('Imgur image', url, imageUrl);
+          if (this.debug) log.debug('Imgur image', url, imageUrl);
 
           return this.getOptimizedImgurUrlFromUrl(imageUrl as string);
         } catch (err) {
-          console.error('Imgur Image Failure', url, err);
+          log.error('Imgur Image Failure', url, err);
           return url;
         }
       }
@@ -347,14 +350,14 @@ export class ImageUrlMutator {
         'https://api.redgifs.com/v2/auth/temporary'
       );
       const token = _.get(response, 'data.token');
-      console.log('Fetching redgifs API token');
+      log.info('Fetching redgifs API token');
 
       if (token) {
         ImageUrlMutator.redgifsToken = token;
         return token;
       }
     } catch (err) {
-      if (this.debug) console.error('Failed to get RedGifs token', err);
+      if (this.debug) log.error('Failed to get RedGifs token', err);
     }
 
     return '';

@@ -1,6 +1,9 @@
-import { ipcRenderer } from 'electron';
+import { ipc } from '@/platform/ipc';
+import { createLogger } from '@/logger';
 import core from './core';
 import { Conversation, Notifications as Interface } from './interfaces';
+
+const log = createLogger('notifications');
 
 const SUPPORTED_AUDIO_CODECS: { [key: string]: string } = {
   ogg: 'ogg',
@@ -94,7 +97,7 @@ export default class Notifications implements Interface {
 
     audio.volume = volume;
     audio.muted = false;
-    audio.play().catch(e => console.error(e));
+    audio.play().catch(e => log.error('Sound playback failed', e));
   }
 
   async initSounds(sounds: ReadonlyArray<string>): Promise<void> {
@@ -143,13 +146,13 @@ export default class Notifications implements Interface {
   private async loadSoundTheme(soundTheme: string): Promise<SoundTheme | null> {
     try {
       const raw = <string | null>(
-        ipcRenderer.sendSync('sound-theme-read-sync', soundTheme)
+        ipc.sendSync('sound-theme-read-sync', soundTheme)
       );
       //tslint:disable-next-line:no-null-keyword
       if (raw === null) return null;
       return <SoundTheme>JSON.parse(raw);
     } catch (error) {
-      console.warn(`Failed to load sound theme "${soundTheme}":`, error);
+      log.warn(`Failed to load sound theme "${soundTheme}"`, error);
       return null; //tslint:disable-line:no-null-keyword
     }
   }
@@ -194,10 +197,7 @@ export default class Notifications implements Interface {
         src.src = require(`./assets/${sound}.${extension}`).default;
         audio.appendChild(src);
       } catch (error) {
-        console.warn(
-          `Failed to load fallback sound: ${sound}.${extension}`,
-          error
-        );
+        log.warn(`Failed to load fallback sound: ${sound}.${extension}`, error);
       }
     }
   }
@@ -209,7 +209,7 @@ export default class Notifications implements Interface {
     const promise = audio.play();
     if (promise instanceof Promise) {
       return promise
-        .catch(e => console.error('Audio preload failed:', e))
+        .catch(e => log.error('Audio preload failed', e))
         .finally(() => {
           // Keep element muted until actual playback to avoid noise during preload
         });

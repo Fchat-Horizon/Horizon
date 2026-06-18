@@ -358,18 +358,7 @@ const storeWorkerEndpointConfig = _.assign(_.cloneDeep(mainConfig), {
   resolve: {
     extensions: ['.ts', '.js'],
     alias: {
-      ...sharedAliases,
-      /*
-      ! electron-log's renderer transport needs window.__electronLog, which
-      ! does not exist in a worker scope; log to the console instead.
-      */
-      'electron-log$': path.join(
-        sharedSrc,
-        'learn',
-        'store',
-        'worker',
-        'log-stub.ts'
-      )
+      ...sharedAliases
     }
   },
 

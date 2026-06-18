@@ -195,6 +195,9 @@
   import markdownit from 'markdown-it';
   import { alert } from '@mdit/plugin-alert';
   import electron from 'electron';
+  import { createLogger } from '@horizon/shared/logger';
+
+  const log = createLogger('changelog');
 
   // tslint:disable-next-line:no-require-imports
   const logoSrc = require('./build/icon.png').default;
@@ -256,7 +259,7 @@
       try {
         setLanguage(this.settings.displayLanguage);
       } catch (e) {
-        console.warn('Failed to set display language', e);
+        log.warn('Failed to set display language', e);
       }
       document.title = this.updateVersion
         ? l('action.updateAvailable')

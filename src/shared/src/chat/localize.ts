@@ -1,6 +1,9 @@
 import Vue from 'vue';
+import { createLogger } from '@/logger';
 // Runtime uses en_us only. en.json exists for Weblate but is not referenced here.
 const enUS: { [k: string]: string } = require('./locales/en_us.json');
+
+const log = createLogger('localize');
 // Ensure Webpack can resolve dynamic locale filenames (including hyphens)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const localeContext: any = (require as any).context(
@@ -50,7 +53,7 @@ export function setLanguage(lang: string | undefined): void {
     current = { ...enUS };
     i18nState.locale = 'en_us';
     if (process.env.NODE_ENV !== 'production')
-      console.warn('Missing locale file for', code, e);
+      log.warn('Missing locale file for', code, e);
   }
   i18nState.version++;
 }
@@ -62,7 +65,7 @@ export default function l(key: string, ...args: (string | number)[]): string {
     str = enUS[key];
     if (str === undefined) {
       if (process.env.NODE_ENV !== 'production')
-        console.warn(`Missing translation key: ${key}`);
+        log.warn(`Missing translation key: ${key}`);
       return key;
     }
   }

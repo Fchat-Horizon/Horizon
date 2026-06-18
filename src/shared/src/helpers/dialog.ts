@@ -1,10 +1,10 @@
-import { ipcRenderer } from 'electron';
+import { ipc } from '@/platform/ipc';
 
 import l from '@/chat/localize';
 
 export class Dialog {
   static confirmDialog(message: string, defaultNo: boolean = false): boolean {
-    const result = <number>ipcRenderer.sendSync('dialog-message-box-sync', {
+    const result = <number>ipc.sendSync('dialog-message-box-sync', {
       message,
       title: l('title'),
       type: 'question',

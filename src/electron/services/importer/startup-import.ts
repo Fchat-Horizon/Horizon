@@ -1,8 +1,11 @@
 import { ipcRenderer } from 'electron';
 import l from '@horizon/shared/chat/localize';
+import { createLogger } from '@horizon/shared/logger';
 import * as VanillaImporter from './vanilla-importer';
 import { SlimcatImporter } from '../index';
 import { GeneralSettings } from '@horizon/shared/common';
+
+const log = createLogger('importer');
 
 type ImporterHint = 'auto' | 'vanilla' | 'advanced' | 'slimcat' | undefined;
 
@@ -168,7 +171,7 @@ export async function handleStartupImport(
       handleSlimcatImport(settings);
     }
   } catch (err) {
-    console.error('importer.error', err);
+    log.error('importer.error', err);
     alert(l('importer.error'));
   }
 

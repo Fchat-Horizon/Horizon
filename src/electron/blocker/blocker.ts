@@ -1,4 +1,5 @@
-import log from 'electron-log';
+import { createLogger } from '@horizon/shared/logger';
+const log = createLogger('blocker');
 import type { ElectronBlocker, Request } from '@ghostery/adblocker-electron';
 import path from 'path';
 import fs from 'fs';

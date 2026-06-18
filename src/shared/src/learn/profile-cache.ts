@@ -23,8 +23,9 @@ import { PermanentIndexedStore } from './store/types';
 import { CharacterImage, SimpleCharacter } from '@/interfaces';
 import { Scoring } from './matcher-types';
 import { matchesSmartFilters } from './filter/smart-filter';
-import { ipcRenderer } from 'electron';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { ipc } from '@/platform/ipc';
+import { createLogger } from '@/logger';
+const log = createLogger('profile-cache');
 
 export interface MetaRecord {
   images: CharacterImage[] | null;
@@ -175,7 +176,9 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
       const record = this.cache[key];
 
       if (record) {
-        log.debug('cache.evict', { name: record.character.character.name });
+        log.debug('cache.evict', {
+          name: record.character.character.name
+        });
 
         // Clean up the record before deletion
         this.cleanupRecord(record);
@@ -410,14 +413,20 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
 
     if (avatarUrl) {
       if (!ProfileCache.isSafeRisingPortraitURL(avatarUrl)) {
-        log.info('portrait.hq.invalid.domain', { name, url: avatarUrl });
+        log.info('portrait.hq.invalid.domain', {
+          name,
+          url: avatarUrl
+        });
       } else {
         if (c.character.name === core.characters.ownCharacter.name) {
           // ~ Routed by the main process to this tab's host window.
-          ipcRenderer.send('tab-avatar-url', c.character.name, avatarUrl);
+          ipc.send('tab-avatar-url', c.character.name, avatarUrl);
         }
 
-        log.info('portrait.hq.url', { name: c.character.name, url: avatarUrl });
+        log.info('portrait.hq.url', {
+          name: c.character.name,
+          url: avatarUrl
+        });
         core.characters.setOverride(c.character.name, 'avatarUrl', avatarUrl);
       }
     }
@@ -430,11 +439,7 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
         });
       } else {
         if (c.character.name === core.characters.ownCharacter.name) {
-          ipcRenderer.send(
-            'tab-character-color',
-            c.character.name,
-            characterColor
-          );
+          ipc.send('tab-character-color', c.character.name, characterColor);
         }
 
         log.info('character.custom.color.applied', {

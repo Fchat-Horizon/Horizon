@@ -3,6 +3,8 @@ import _ from 'lodash';
 
 import { IndexedStore } from '../indexed';
 import { IndexedRequest, ProfileStoreCommand } from './types';
+import { createLogger } from '@/logger';
+const log = createLogger('store-worker-endpoint');
 
 type IndexedCallback = (params: Record<string, any>) => Promise<any>;
 
@@ -21,7 +23,7 @@ const reply = (
   };
 
   if (err) {
-    console.error('store.worker.endpoint.error', err);
+    log.error('store.worker.endpoint.error', err);
     res.msg = _.isString(err) ? err : err.message;
   }
 

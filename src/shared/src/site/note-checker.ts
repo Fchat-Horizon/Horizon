@@ -1,5 +1,6 @@
 import { SiteSession, SiteSessionInterface } from './site-session';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '@/logger';
+const log = createLogger('note-checker');
 import { EventBus } from '@/chat/preview/event-bus';
 import core from '@/chat/core';
 /* tslint:disable:no-unsafe-any */

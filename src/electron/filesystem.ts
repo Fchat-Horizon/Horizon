@@ -17,7 +17,10 @@ import {
 } from '@horizon/shared/chat/interfaces';
 import l from '@horizon/shared/chat/localize';
 import { GeneralSettings } from '@horizon/shared/common';
+import { createLogger } from '@horizon/shared/logger';
 import type { PlainLogMessage } from './log-format';
+
+const log = createLogger('filesystem');
 
 declare module '@horizon/shared/chat/interfaces' {
   interface State {
@@ -45,7 +48,7 @@ function toMessage(plain: PlainLogMessage): Conversation.Message {
 }
 
 function alertCorruption(e: unknown): void {
-  console.error(e);
+  log.error(e);
   core.notifications.alert(l('logs.corruption.desktop'));
 }
 
@@ -158,7 +161,7 @@ export class SettingsStore implements Settings.Store {
       if (raw === undefined) return undefined;
       return <Settings.Keys[K]>JSON.parse(raw);
     } catch (e) {
-      console.error('READ KEY FAILURE', e, key, character);
+      log.error('READ KEY FAILURE', e, key, character);
       return undefined;
     }
   }

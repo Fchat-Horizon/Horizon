@@ -13,7 +13,8 @@
 
 import * as _ from 'lodash';
 import { Character, CharacterInfotag, KinkChoice } from '@/interfaces';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '@/logger';
+const log = createLogger('matcher');
 // tslint:disable-next-line ban-ts-ignore
 // @ts-ignore
 import anyAscii from 'any-ascii';
@@ -578,7 +579,6 @@ export class Matcher {
     const speciesScore = Matcher.getKinkSpeciesPreference(you, theirSpecies);
 
     if (speciesScore !== null) {
-      // console.log(this.them.name, speciesScore, theirSpecies);
       const speciesName =
         speciesNames[theirSpecies] || `${Species[theirSpecies].toLowerCase()}s`;
 

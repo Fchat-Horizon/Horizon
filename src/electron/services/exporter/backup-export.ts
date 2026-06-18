@@ -17,7 +17,8 @@
 
 import { ipcRenderer } from 'electron';
 import path from 'path';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '@horizon/shared/logger';
+const log = createLogger('backup-export');
 import type { ExporterVm } from '../exporter-vm';
 import type { BackupExportOptions, BackupExportResult } from '../backup-host';
 

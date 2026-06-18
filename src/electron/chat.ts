@@ -54,10 +54,20 @@ import { Logs, SettingsStore } from './filesystem';
 import Notifications from './notifications';
 import { handleStartupImport } from './services';
 import Index from './Index.vue';
-import log from 'electron-log/renderer'; // tslint:disable-line: match-default-export-name
+import electronLog from 'electron-log/renderer';
+import { createLogger } from '@horizon/shared/logger';
+const log = createLogger('chat');
+import {
+  installElectronLogging,
+  applySharedLogLevel,
+  applyHumanReadableLogs
+} from './logging';
+import { installRendererPlatform } from './platform-host';
 import { WordPosSearch } from '@horizon/shared/learn/dictionary/word-pos-search';
 import { MenuItemConstructorOptions } from 'electron/main';
 
+installElectronLogging(electronLog);
+installRendererPlatform();
 log.debug('init.chat');
 
 const appVersion = <string>electron.ipcRenderer.sendSync('app-version-sync');
@@ -322,8 +332,8 @@ electron.ipcRenderer.on(
 function onSettings(s: GeneralSettings): void {
   settings = s;
 
-  log.transports.console.level = settings.risingSystemLogLevel;
-  log.transports.ipc.level = settings.risingSystemLogLevel;
+  applySharedLogLevel(settings.risingSystemLogLevel);
+  applyHumanReadableLogs(!!settings.horizonHumanReadableLogs);
 
   // spellchecker.setDictionary(s.spellcheckLang, dictDir);
   // for(const word of s.customDictionary) spellchecker.add(word);
@@ -332,7 +342,7 @@ function onSettings(s: GeneralSettings): void {
   try {
     setLanguage(settings.displayLanguage);
   } catch (e) {
-    console.warn('Failed to apply display language', e);
+    log.warn('Failed to apply display language', e);
   }
 }
 
@@ -346,25 +356,20 @@ const params = <{ [key: string]: string | undefined }>(
 );
 let settings = <GeneralSettings>JSON.parse(params['settings']!);
 
-log.info(
-  '[chat.ts] params[import]:',
-  params['import'],
-  'type:',
-  typeof params['import']
-);
+log.info('init.chat.import.param', params['import'], typeof params['import']);
 
 if (params['import'] !== undefined && params['import'] !== '') {
-  log.info('[chat.ts] Calling handleStartupImport');
+  log.info('init.chat.import.start');
   handleStartupImport(settings, params['import'])
     .then(updatedSettings => {
       settings = updatedSettings;
       onSettings(settings);
     })
     .catch(err => {
-      log.error('Startup import error:', err);
+      log.error('init.chat.import.error', err);
     });
 } else {
-  log.info('[chat.ts] Skipping import, calling onSettings directly');
+  log.info('init.chat.import.skip');
   onSettings(settings);
 }
 
@@ -372,7 +377,7 @@ if (params['import'] !== undefined && params['import'] !== '') {
 try {
   setLanguage(settings.displayLanguage);
 } catch (e) {
-  console.warn('Failed to apply display language', e);
+  log.warn('Failed to apply display language', e);
 }
 
 log.debug('init.chat.core');

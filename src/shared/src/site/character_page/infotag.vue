@@ -55,7 +55,6 @@
       infotag: true
     };
 
-    // // console.log(`Infotag ${props.infotag.id}: ${props.infotag.name}`, core.state.settings.risingAdScore, props.characterMatch);
     const id = parseInt(props.infotag.id as any, 10);
 
     if (

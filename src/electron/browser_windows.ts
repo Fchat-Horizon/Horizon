@@ -5,7 +5,8 @@
 
 import * as electron from 'electron';
 import * as windowState from './window_state';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '@horizon/shared/logger';
+const log = createLogger('browser-windows');
 import path from 'path';
 import { GeneralSettings } from '@horizon/shared/common';
 import { openURLExternally } from './main';
@@ -394,8 +395,6 @@ export function createMainWindow(
   );
 
   const safeLanguages = getSafeLanguages(settings.spellcheckLang);
-
-  // console.log('CREATEWINDOW', safeLanguages);
   electron.session.defaultSession.setSpellCheckerLanguages(safeLanguages);
   window.webContents.session.setSpellCheckerLanguages(safeLanguages);
 

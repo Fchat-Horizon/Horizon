@@ -1,6 +1,7 @@
 import _ from 'lodash';
-import { ipcRenderer, IpcRendererEvent } from 'electron';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { ipc } from '@/platform/ipc';
+import { createLogger } from '@/logger';
+const log = createLogger('ad-coordinator-guest');
 import core from '../core';
 
 interface PendingAd {
@@ -14,9 +15,7 @@ export class AdCoordinatorGuest {
   protected adCounter = 0;
 
   constructor() {
-    ipcRenderer.on('grant-send-ad', (_event: IpcRendererEvent, adId: string) =>
-      this.processPendingAd(adId)
-    );
+    ipc.on('grant-send-ad', adId => this.processPendingAd(adId as string));
   }
 
   processPendingAd(adId: string): void {
@@ -49,18 +48,17 @@ export class AdCoordinatorGuest {
         character: core.characters.ownCharacter?.name
       });
 
-      ipcRenderer.send('request-send-ad', adId);
+      ipc.send('request-send-ad', adId);
     });
   }
 
   clear(): void {
     _.each(this.pendingAds, pa => pa.reject(new Error('Pending ad cleared')));
 
-    console.debug(
-      'adid.clear',
-      _.keys(this.pendingAds),
-      core.characters.ownCharacter?.name
-    );
+    log.debug('adid.clear', {
+      adIds: _.keys(this.pendingAds),
+      character: core.characters.ownCharacter?.name
+    });
 
     this.pendingAds = {};
   }

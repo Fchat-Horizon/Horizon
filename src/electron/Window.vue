@@ -180,7 +180,9 @@
   import Vue from 'vue';
   import l from '@horizon/shared/chat/localize';
   import { GeneralSettings } from '@horizon/shared/common';
-  import log from 'electron-log/renderer';
+  import { createLogger } from '@horizon/shared/logger';
+  const log = createLogger('window-view');
+  import { applySharedLogLevel } from './logging';
   import { Dialog } from '@horizon/shared/helpers/dialog';
 
   /*
@@ -266,13 +268,11 @@
 
           this.settings = settings;
 
-          log.transports.console.level = settings.risingSystemLogLevel;
-          log.transports.ipc.level = settings.risingSystemLogLevel;
+          applySharedLogLevel(settings.risingSystemLogLevel);
         }
       );
 
       electron.ipcRenderer.on('rising-upgrade-complete', () => {
-        // console.log('RISING COMPLETE RECV');
         this.hasCompletedUpgrades = true;
       });
       electron.ipcRenderer.on(
@@ -630,8 +630,6 @@
         setTimeout(done, 100);
       },
       getThemeClass() {
-        // console.log('getThemeClassWindow', this.settings?.risingDisableWindowsHighContrast);
-
         try {
           // Hack!
           if (process.platform === 'win32') {

@@ -1148,7 +1148,7 @@
 </template>
 
 <script lang="ts">
-  import { ipcRenderer } from 'electron';
+  import { ipc } from '@/platform/ipc';
   import CustomDialog from '@/components/custom_dialog';
   import Modal from '@/components/Modal.vue';
   import { Editor } from './bbcode';
@@ -1169,6 +1169,9 @@
   import { EventBus } from './preview/event-bus';
   import UserView from './UserView.vue';
   import VirtualList from '@/components/VirtualList.vue';
+  import { createLogger } from '@/logger';
+
+  const log = createLogger('chat-settings-view');
 
   const bbcodeParser = new UserInterfaceBBCodeParser();
 
@@ -1349,9 +1352,7 @@
         this.horizonHighlightUsers = settings.horizonHighlightUsers.join(',');
         this.risingFilter = settings.risingFilter;
 
-        this.risingAvailableThemes = <string[]>(
-          ipcRenderer.sendSync('themes-list-sync')
-        );
+        this.risingAvailableThemes = <string[]>ipc.sendSync('themes-list-sync');
         this.risingCharacterTheme = settings.risingCharacterTheme;
         this.horizonPersistentMemberFilters =
           typeof (settings as any).horizonPersistentMemberFilters === 'boolean'
@@ -1518,7 +1519,7 @@
               ? this.risingCharacterTheme
               : undefined
         };
-        console.log('SETTINGS', minAge, maxAge, core.state.settings);
+        log.debug('Saved settings', minAge, maxAge, core.state.settings);
 
         const newRisingFilter = JSON.parse(
           JSON.stringify(core.state.settings.risingFilter)

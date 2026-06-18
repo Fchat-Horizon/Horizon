@@ -1,9 +1,15 @@
 import * as qs from 'querystring';
-import log from 'electron-log/renderer'; //tslint:disable-line:match-default-export-name
+import electronLog from 'electron-log/renderer';
+import { createLogger } from '@horizon/shared/logger';
+const log = createLogger('exporter');
+import { installElectronLogging, applySharedLogLevel } from './logging';
+import { installRendererPlatform } from './platform-host';
 
 import { GeneralSettings } from '@horizon/shared/common';
 import ExporterWindow from './Exporter.vue';
 
+installElectronLogging(electronLog);
+installRendererPlatform();
 log.info('init.exporter');
 
 const params = <{ [key: string]: string | undefined }>(
@@ -14,8 +20,7 @@ const importHint = params['import'];
 
 const logLevel = process.env.NODE_ENV === 'production' ? 'info' : 'silly';
 
-log.transports.console.level = settings.risingSystemLogLevel || logLevel;
-log.transports.ipc.level = settings.risingSystemLogLevel || logLevel;
+applySharedLogLevel(settings.risingSystemLogLevel || logLevel);
 
 log.info('init.exporter.vue');
 

@@ -219,6 +219,9 @@
   import Vue from 'vue';
   import l, { setLanguage } from '@horizon/shared/chat/localize';
   import { GeneralSettings, defaultHost } from '@horizon/shared/common';
+  import { createLogger } from '@horizon/shared/logger';
+
+  const log = createLogger('about');
 
   // tslint:disable-next-line:no-require-imports
   const logoSrc = require('./build/icon.png').default;
@@ -395,7 +398,7 @@
       try {
         setLanguage(this.settings.displayLanguage);
       } catch (e) {
-        console.warn('Failed to set display language', e);
+        log.warn('Failed to set display language', e);
       }
       window.addEventListener('keyup', e => {
         if (e.key === 'Escape') {
@@ -425,7 +428,7 @@
           const logs = ipcRenderer.sendSync('app-path-sync', 'logs') as string;
           if (logs) ipcRenderer.send('open-dir', logs);
         } catch (e) {
-          console.warn('Failed to open logs folder', e);
+          log.warn('Failed to open logs folder', e);
         }
       },
       async reportBug(): Promise<void> {
@@ -434,7 +437,7 @@
         try {
           info = await this.buildDebugInfo();
         } catch (e) {
-          console.warn('Failed to build debug info', e);
+          log.warn('Failed to build debug info', e);
         }
         const params = new URLSearchParams({ template: 'bug.yml' });
         if (info) params.set('version-info', info);
@@ -453,7 +456,7 @@
         try {
           text = await this.buildDebugInfo();
         } catch (e) {
-          console.warn('Failed to build debug info', e);
+          log.warn('Failed to build debug info', e);
           text = `Version: ${this.appVersion || 'N/A'}\nCommit: ${this.displayCommit}`;
         }
         clipboard.writeText(text);

@@ -146,6 +146,9 @@
   import { smartFilterTypes } from '@/learn/filter/types';
   import { Conversation } from '../interfaces';
   import MessageView from '../message_view';
+  import { createLogger } from '@/logger';
+
+  const log = createLogger('character-preview');
 
   interface CustomKinkWithScore extends CustomKink {
     score: number;
@@ -410,7 +413,7 @@
         const rawAge = Matcher.getTagValue(TagId.Age, c);
 
         if (a.orientation && !Orientation[a.orientation]) {
-          console.error('Missing Orientation', a.orientation, c.name);
+          log.error('Missing Orientation', a.orientation, c.name);
         }
 
         this.age = a.age

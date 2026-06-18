@@ -1,11 +1,14 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { InlineDisplayMode, Settings, SimpleCharacter } from '@/interfaces';
+import { createLogger } from '@/logger';
+
+const log = createLogger('site-utils');
 
 type FlashMessageType = 'info' | 'success' | 'warning' | 'danger';
 type FlashMessageImpl = (type: FlashMessageType, message: string) => void;
 
 let flashImpl: FlashMessageImpl = (type: FlashMessageType, message: string) => {
-  console.log(`${type}: ${message}`);
+  log.info(`${type}: ${message}`);
 };
 
 export function setFlashMessageImplementation(impl: FlashMessageImpl): void {
@@ -64,7 +67,7 @@ export function ajaxError(
           : (error as Error).name;
     }
   } else message = <string>error;
-  console.error(error);
+  log.error('AJAX request failed', error);
   if (showFlashMessage) flashError(`[ERROR] ${prefix}: ${message}`);
 }
 

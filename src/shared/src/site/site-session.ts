@@ -1,7 +1,8 @@
 import _ from 'lodash';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '@/logger';
+const log = createLogger('site-session');
 import throat from 'throat';
-import { ipcRenderer } from 'electron';
+import { ipc } from '@/platform/ipc';
 import { NoteChecker } from './note-checker';
 
 import { AxiosRequestConfig } from 'axios';
@@ -78,7 +79,7 @@ export class SiteSession {
     log.debug('sitesession.init');
 
     // & Fresh cookie jar in the main process for this tab.
-    await ipcRenderer.invoke('site-session-reset');
+    await ipc.invoke('site-session-reset');
     this.csrf = '';
 
     const res = await this.get('/');
@@ -165,7 +166,10 @@ export class SiteSession {
         config
       );
 
-      return ipcRenderer.invoke('site-session-request', finalConfig);
+      return ipc.invoke(
+        'site-session-request',
+        finalConfig
+      ) as Promise<SiteSessionResponse>;
     });
   }
 
@@ -192,7 +196,10 @@ export class SiteSession {
         )
       );
 
-      return ipcRenderer.invoke('site-session-request', finalConfig);
+      return ipc.invoke(
+        'site-session-request',
+        finalConfig
+      ) as Promise<SiteSessionResponse>;
     });
   }
 

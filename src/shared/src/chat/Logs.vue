@@ -253,7 +253,7 @@
   import l from './localize';
   import MessageView from './message_view';
   import VirtualList from '@/components/VirtualList.vue';
-  import { ipcRenderer } from 'electron';
+  import { ipc } from '@/platform/ipc';
   import { Dialog } from '@/helpers/dialog';
 
   function formatDate(this: void, date: Date): string {
@@ -618,9 +618,7 @@
             content: getLogs(messages, html)
           });
         }
-        const zipped = <Uint8Array>(
-          await ipcRenderer.invoke('zip-create', files)
-        );
+        const zipped = <Uint8Array>await ipc.invoke('zip-create', files);
         this.download(
           `${this.sanitizeConversationName(this.selectedConversation.name)}.zip`,
           URL.createObjectURL(new Blob([zipped]))
@@ -658,9 +656,7 @@
             });
           }
         }
-        const zipped = <Uint8Array>(
-          await ipcRenderer.invoke('zip-create', files)
-        );
+        const zipped = <Uint8Array>await ipc.invoke('zip-create', files);
         this.download(
           `${this.selectedCharacter}.zip`,
           URL.createObjectURL(new Blob([zipped]))

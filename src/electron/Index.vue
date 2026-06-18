@@ -313,7 +313,8 @@
   import Axios from 'axios';
   import * as electron from 'electron';
   import { IpcKeyValueStore } from './ipc-store';
-  import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+  import { createLogger } from '@horizon/shared/logger';
+  const log = createLogger('chat-window');
   import * as qs from 'querystring';
   import Vue from 'vue';
   import Chat from '@horizon/shared/chat/Chat.vue';
@@ -899,8 +900,6 @@
         (this.$refs.characterPage as any).reload();
       },
       getThemeClass(): Record<string, boolean> {
-        // console.log('getThemeClassIndex', core.state.generalSettings?.risingDisableWindowsHighContrast);
-
         try {
           // Hack!
           if (process.platform === 'win32') {
