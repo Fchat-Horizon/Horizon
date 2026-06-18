@@ -455,20 +455,26 @@ export function createMainWindow(
     tray.setToolTip(l('title'));
     // single click opens context menu, double click opens all windows
     let clickTimeout: NodeJS.Timeout | undefined;
-    tray.on('click', _e => {
-      if (clickTimeout) clearTimeout(clickTimeout);
-      clickTimeout = setTimeout(() => {
-        clickTimeout = undefined;
-        tray.popUpContextMenu();
-      }, 200);
-    });
-    tray.on('double-click', _e => {
+    const showAll = () => {
       if (clickTimeout) {
         clearTimeout(clickTimeout);
         clickTimeout = undefined;
       }
       showAllWindows();
+    };
+    tray.on('click', _e => {
+      // linux-specific double click fix
+      if (clickTimeout) {
+        showAll();
+      } else {
+        clickTimeout = setTimeout(() => {
+          clickTimeout = undefined;
+          tray.popUpContextMenu();
+        }, 200);
+      }
     });
+    // windows/mac
+    tray.on('double-click', _e => showAll());
 
     tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
     log.debug('init.window.add.tray');
@@ -586,7 +592,8 @@ function createTrayMenu(): electron.MenuItemConstructorOptions[] {
     }
   }));
   return [
-    { label: l('title'), click: () => showAllWindows() },
+    { label: l('title'), enabled: false },
+    { label: l('action.showAllWindows'), click: () => showAllWindows() },
     { type: 'separator' },
     ...tabItems,
     {
