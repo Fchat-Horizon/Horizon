@@ -463,7 +463,8 @@ export function createMainWindow(
       showAllWindows();
     };
     tray.on('click', _e => {
-      // linux-specific double click fix
+      // linux-specific double click fix, but because left clicking on tray icons doesn't
+      // do anything in linux, right clicking to see the context menu is required
       if (clickTimeout) {
         showAll();
       } else {
@@ -659,7 +660,7 @@ export async function quitAllWindows() {
 export function showAllWindows() {
   for (const w of windows) {
     if (w.isMinimized()) w.restore();
-    if (!w.isVisible()) w.show();
+    w.show();
     w.focus();
   }
 }
