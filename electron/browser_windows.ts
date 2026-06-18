@@ -462,9 +462,9 @@ export function createMainWindow(
       }
       showAllWindows();
     };
+    // left clicking on tray icons doesn't do anything in linux and attaching a click handler
+    // messes things up even more, so right clicking to see the context menu is required
     tray.on('click', _e => {
-      // linux-specific double click fix, but because left clicking on tray icons doesn't
-      // do anything in linux, right clicking to see the context menu is required
       if (clickTimeout) {
         showAll();
       } else {
@@ -474,7 +474,7 @@ export function createMainWindow(
         }, 200);
       }
     });
-    // windows/mac
+    // works across windows/mac/linux
     tray.on('double-click', _e => showAll());
 
     tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
