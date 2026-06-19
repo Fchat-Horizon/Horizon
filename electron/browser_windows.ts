@@ -453,7 +453,29 @@ export function createMainWindow(
   if (!tray) {
     tray = new electron.Tray(trayIcon);
     tray.setToolTip(l('title'));
-    tray.on('click', _e => showAllWindows());
+    // single click opens context menu, double click opens all windows
+    let clickTimeout: NodeJS.Timeout | undefined;
+    const showAll = () => {
+      if (clickTimeout) {
+        clearTimeout(clickTimeout);
+        clickTimeout = undefined;
+      }
+      showAllWindows();
+    };
+    // left clicking on tray icons doesn't do anything in linux and attaching a click handler
+    // messes things up even more, so right clicking to see the context menu is required
+    tray.on('click', _e => {
+      if (clickTimeout) {
+        showAll();
+      } else {
+        clickTimeout = setTimeout(() => {
+          clickTimeout = undefined;
+          tray.popUpContextMenu();
+        }, 200);
+      }
+    });
+    // works across windows/mac/linux
+    tray.on('double-click', _e => showAll());
 
     tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
     log.debug('init.window.add.tray');
@@ -565,17 +587,14 @@ function createTrayMenu(): electron.MenuItemConstructorOptions[] {
   ).map(([tabId, webContents]) => ({
     label: tabId,
     click: () => {
-      // Example: focus this tab, or any action you want
-      windows.forEach(winow => {
-        winow.webContents.focus();
-        winow.show();
-        winow.webContents.send('show-tab', webContents.id);
+      windows.forEach(window => {
+        window.webContents.send('show-tab', webContents.id);
       });
-      webContents.focus();
     }
   }));
   return [
-    { label: l('title'), click: () => showAllWindows() },
+    { label: l('title'), enabled: false },
+    { label: l('action.showAllWindows'), click: () => showAllWindows() },
     { type: 'separator' },
     ...tabItems,
     {
@@ -641,7 +660,7 @@ export async function quitAllWindows() {
 export function showAllWindows() {
   for (const w of windows) {
     if (w.isMinimized()) w.restore();
-    if (!w.isVisible()) w.show();
+    w.show();
     w.focus();
   }
 }

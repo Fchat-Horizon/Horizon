@@ -41,6 +41,7 @@
   "action.paste": "Paste",
   "action.preferences": "Preferences",
   "action.quit": "Quit",
+  "action.showAllWindows": "Show all windows",
   "action.rename": "Rename...",
   "action.reset": "Reset",
   "action.saveAndClose": "Save and Close",
