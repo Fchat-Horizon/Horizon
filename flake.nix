@@ -12,7 +12,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
         nodejs = pkgs.nodejs_24;
         pnpm = pkgs.pnpm;
-        electron = pkgs.electron_40;
+        electron = pkgs.electron_42;
       in
       {
         packages = rec {
