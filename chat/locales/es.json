@@ -47,6 +47,7 @@
   "action.saveChanges": "Guardar cambios",
   "action.select": "Seleccionar",
   "action.selectAll": "Seleccionar Todo",
+  "action.showAllWindows": "Mostrar todas las ventanas",
   "action.suggestions": "Sugerencias",
   "action.toggleStickyPreview": "Deactivar/activar vista previa fija",
   "action.update": "Salir y descargar actualización",
