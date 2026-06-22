@@ -33,6 +33,9 @@ function sortMember(
         continue;
       if (member.character.isBookmarked && !other.character.isBookmarked) break;
     } else if (!other.character.isFriend) break;
+    if (!core.isHidden(member.character.name))
+      if (member.key < other.key) break;
+    if (!core.isHidden(other.character.name)) continue;
     if (member.key < other.key) break;
   }
   array.splice(i, 0, member);
