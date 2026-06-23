@@ -11,7 +11,7 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const packageJson = require('./package.json');
 const { DefinePlugin, ProvidePlugin } = require('webpack');
 const APP_VERSION = process.env.APP_VERSION || packageJson.version;
-// This config lives at src/electron/; the repo root is two levels up.
+// This config lives at apps/desktop/; the repo root is two levels up.
 const repoRoot = path.resolve(__dirname, '..', '..');
 const APP_COMMIT =
   process.env.APP_COMMIT ||
@@ -33,13 +33,13 @@ const nodeModulesPath = path.join(repoRoot, 'node_modules');
 /*
  * Path aliases shared by every config. `@horizon/shared` is the shared
  * source package (cross-package imports); `@` is its own-source alias used
- * within that package; `@assets` is the static asset dir at the repo root.
+ * within that package; `@assets` is the static asset dir.
  */
-const sharedSrc = path.join(repoRoot, 'src', 'shared', 'src');
+const sharedSrc = path.join(repoRoot, 'packages', 'shared', 'src');
 const sharedAliases = {
   '@horizon/shared': sharedSrc,
   '@': sharedSrc,
-  '@assets': path.join(repoRoot, 'assets')
+  '@assets': path.join(repoRoot, 'packages', 'shared', 'assets')
 };
 
 const sharedConfig = {
@@ -278,10 +278,10 @@ const mainConfig = {
           },
           {
             from: path
-              .resolve(repoRoot, 'assets', '**', '*')
+              .resolve(repoRoot, 'packages', 'shared', 'assets', '**', '*')
               .replace(/\\/g, '/'),
             to: path.join('assets'),
-            context: path.resolve(repoRoot, 'assets')
+            context: path.resolve(repoRoot, 'packages', 'shared', 'assets')
           },
           {
             from: path
@@ -391,7 +391,15 @@ const storeWorkerEndpointConfig = _.assign(_.cloneDeep(mainConfig), {
 });
 
 module.exports = function (mode) {
-  const themesDir = path.join(repoRoot, 'src', 'scss', 'themes', 'chat');
+  const themesDir = path.join(
+    repoRoot,
+    'packages',
+    'themes',
+    'src',
+    'scss',
+    'themes',
+    'chat'
+  );
   const themes = fs.readdirSync(themesDir);
 
   // Create entry points for themes

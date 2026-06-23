@@ -1,5 +1,5 @@
 {
-  "name": "fchat",
+  "name": "@horizon/themes",
   "version": "3.0.0",
   "author": "The F-List Team",
   "description": "F-Chat Themes",
@@ -9,7 +9,7 @@
     "sass-embedded": "^1.85.1"
   },
   "scripts": {
-    "build": "sass --load-path=. --style=compressed --source-map --importer=./importer.js --update ."
+    "build": "sass --load-path=src/scss --style=compressed --source-map --importer=./src/scss/importer.js --update src/scss"
   },
   "devDependencies": {
     "bootstrap": "^5.3.7"

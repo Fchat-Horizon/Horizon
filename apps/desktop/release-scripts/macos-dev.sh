@@ -1,13 +1,14 @@
 #!/bin/bash -e
 
-# & Usage: ./linux-dev.sh RELEASE_VERSION [RELEASE_PATH] [ARCH]
+# Usage: ./macos.sh RELEASE_VERSION [RELEASE_PATH] [ARCH]
 # ** RELEASE_VERSION: The version string for the release.
 #    RELEASE_PATH (optional): The directory where release artifacts will be stored.
-#    ARCH (optional): Target architecture (default: runner native)
+#       ^ The github action will automatically set the release path— Do not fret!
+#    ARCH (optional): Target architecture (default: universal)
 
 # * Parse arguments
 RELEASE_VERSION="$1"
-RELEASE_PATH="${2:-$(pwd)/release_artifacts/linux/$RELEASE_VERSION}"
+RELEASE_PATH="${2:-$(pwd)/release_artifacts/macos/$RELEASE_VERSION}"
 ARCH="$3"
 
 if [ -z "$RELEASE_VERSION" ]; then
@@ -17,10 +18,15 @@ fi
 
 # & Sets our paths
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-DIST_PATH="$REPO_ROOT/src/electron/dist/"
+DIST_PATH="$REPO_ROOT/apps/desktop/dist"
 
 # & Ensure we're at the root of the repo
 cd "$REPO_ROOT"
+
+# This is handled by our CI.
+# // # & Ensure we're on the 'main' branch and up-to-date
+# // git checkout main
+# // git pull
 
 # & Install dependencies
 pnpm install --frozen-lockfile
@@ -29,18 +35,19 @@ pnpm install --frozen-lockfile
 rm -rf "$DIST_PATH"
 
 # & Build the project
-cd src/electron
+cd apps/desktop
 rm -rf app dist
+# Create dist directory for logging before build
 mkdir -p "$DIST_PATH"
 if [ -n "$ARCH" ]; then
   pnpm run webpack:dev
-  node build/build.mjs --os linux --format AppImage --arch "$ARCH"
+  node build/build.mjs --os macos --format zip --arch "$ARCH"
 else
-  pnpm build:dev:linux
+  pnpm build:dev:mac
 fi
 
 # & Prepare release directory
 mkdir -p "$RELEASE_PATH"
 
-# & Copy artifacts for release
-cp "$DIST_PATH"/*.AppImage "$RELEASE_PATH"/ 2>/dev/null || true
+# & Copy artifacts (both dmg and zip files)
+cp "$DIST_PATH"/*.zip "$RELEASE_PATH"/ 2>/dev/null || true

@@ -79,8 +79,8 @@ jobs:
           PR_VERSION: ${{ steps.info.outputs.version }}
           BUILD_ARCH: ${{ matrix.arch }}
         run: |
-          chmod +x src/electron/release-scripts/linux-dev.sh
-          src/electron/release-scripts/linux-dev.sh "$PR_VERSION" "$GITHUB_WORKSPACE/release_artifacts/linux/$PR_VERSION" "$BUILD_ARCH"
+          chmod +x apps/desktop/release-scripts/linux-dev.sh
+          apps/desktop/release-scripts/linux-dev.sh "$PR_VERSION" "$GITHUB_WORKSPACE/release_artifacts/linux/$PR_VERSION" "$BUILD_ARCH"
 
       - name: Run Build Script (macOS)
         if: matrix.platform == 'macos'
@@ -88,8 +88,8 @@ jobs:
           PR_VERSION: ${{ steps.info.outputs.version }}
           BUILD_ARCH: ${{ matrix.arch }}
         run: |
-          chmod +x src/electron/release-scripts/macos-dev.sh
-          src/electron/release-scripts/macos-dev.sh "$PR_VERSION" "$GITHUB_WORKSPACE/release_artifacts/macos/$PR_VERSION" "$BUILD_ARCH"
+          chmod +x apps/desktop/release-scripts/macos-dev.sh
+          apps/desktop/release-scripts/macos-dev.sh "$PR_VERSION" "$GITHUB_WORKSPACE/release_artifacts/macos/$PR_VERSION" "$BUILD_ARCH"
 
       - name: Run Build Script (Windows)
         if: matrix.platform == 'windows'

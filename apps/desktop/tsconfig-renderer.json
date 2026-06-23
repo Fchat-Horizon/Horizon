@@ -17,10 +17,10 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "paths": {
-      "@horizon/shared/*": ["../shared/src/*"],
-      "@/*": ["../shared/src/*"]
+      "@horizon/shared/*": ["../../packages/shared/src/*"],
+      "@/*": ["../../packages/shared/src/*"]
     }
   },
-  "include": ["chat.ts", "window.ts", "../**/*.d.ts"],
-  "exclude": ["../node_modules"]
+  "include": ["chat.ts", "window.ts", "../../packages/shared/src/**/*.d.ts"],
+  "exclude": ["../../node_modules"]
 }

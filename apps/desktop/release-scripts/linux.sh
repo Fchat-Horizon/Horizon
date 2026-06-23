@@ -16,7 +16,7 @@ fi
 
 # & Sets our paths
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-DIST_PATH="$REPO_ROOT/src/electron/dist/"
+DIST_PATH="$REPO_ROOT/apps/desktop/dist/"
 
 # & Ensure we're at the root of the repo
 cd "$REPO_ROOT"
@@ -33,7 +33,7 @@ pnpm install --frozen-lockfile
 rm -rf "$DIST_PATH"
 
 # & Build the project
-cd src/electron
+cd apps/desktop
 rm -rf app dist
 node ../../webpack production
 node build/build.mjs --os linux --format deb tar.gz AppImage rpm --arch x64 arm64

@@ -215,14 +215,14 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1(supports-color@10.0.0)
 
-  src/electron:
+  apps/desktop:
     dependencies:
       '@ghostery/adblocker-electron-preload':
         specifier: ^2.14.1
         version: 2.14.1(electron@40.10.0(supports-color@10.0.0))
       '@horizon/shared':
         specifier: workspace:*
-        version: link:../shared
+        version: link:../../packages/shared
       '@mdit/plugin-alert':
         specifier: ^0.22.2
         version: 0.22.3(markdown-it@14.1.1)
@@ -243,7 +243,9 @@ importers:
         specifier: ^26.8.1
         version: 26.8.1(electron-builder-squirrel-windows@26.8.1)(supports-color@10.0.0)
 
-  src/scss:
+  packages/shared: {}
+
+  packages/themes:
     dependencies:
       '@fortawesome/fontawesome-free':
         specifier: ^7.2.0
@@ -255,8 +257,6 @@ importers:
       bootstrap:
         specifier: ^5.3.7
         version: 5.3.8(@popperjs/core@2.11.8)
-
-  src/shared: {}
 
 packages:
 
@@ -7543,7 +7543,7 @@ snapshots:
 
   extract-zip@2.0.1(supports-color@10.0.0):
     dependencies:
-      debug: 4.4.0(supports-color@10.0.0)
+      debug: 4.4.3(supports-color@10.0.0)
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:

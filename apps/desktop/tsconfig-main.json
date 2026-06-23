@@ -16,8 +16,8 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "paths": {
-      "@horizon/shared/*": ["../shared/src/*"],
-      "@/*": ["../shared/src/*"]
+      "@horizon/shared/*": ["../../packages/shared/src/*"],
+      "@/*": ["../../packages/shared/src/*"]
     }
   },
   "include": ["main.ts", "preload.ts"]

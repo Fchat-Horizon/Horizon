@@ -53,8 +53,8 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           # ! Execute Linux build script
-          chmod +x src/electron/release-scripts/linux.sh
-          src/electron/release-scripts/linux.sh "$RELEASE_VERSION" "$GITHUB_WORKSPACE/release_artifacts/linux/$RELEASE_VERSION"
+          chmod +x apps/desktop/release-scripts/linux.sh
+          apps/desktop/release-scripts/linux.sh "$RELEASE_VERSION" "$GITHUB_WORKSPACE/release_artifacts/linux/$RELEASE_VERSION"
 
       - name: Run Build Script (macOS)
         if: matrix.os == 'macos-26'
@@ -66,8 +66,8 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           # ! Execute macOS build script
-          chmod +x src/electron/release-scripts/macos.sh
-          src/electron/release-scripts/macos.sh "$RELEASE_VERSION" "$GITHUB_WORKSPACE/release_artifacts/macos/$RELEASE_VERSION"
+          chmod +x apps/desktop/release-scripts/macos.sh
+          apps/desktop/release-scripts/macos.sh "$RELEASE_VERSION" "$GITHUB_WORKSPACE/release_artifacts/macos/$RELEASE_VERSION"
 
       - name: Run Build Script (Windows)
         if: matrix.os == 'windows-latest'

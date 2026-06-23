@@ -1,11 +1,11 @@
 node_modules/
 .pnpm-store/
-/src/electron/app
-/src/electron/dist
-/src/electron/release_artifacts
+/apps/desktop/app
+/apps/desktop/dist
+/apps/desktop/release_artifacts
 /webchat/dist
 
-/src/electron/adblocker.bin
+/apps/desktop/adblocker.bin
 
 .idea/
 

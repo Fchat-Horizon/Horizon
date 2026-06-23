@@ -90,7 +90,7 @@ pnpm build:all
 >
 > Please read the [electron-builder](https://www.electron.build/multi-platform-build.html) wiki for more info. If you're a kickass electron dev, please make a pull request to fix this.
 
-Read [the electron README.md](../src/electron/README.md) for more info.
+Read [the electron README.md](../apps/desktop/README.md) for more info.
 
 #### Mobile
 
@@ -180,13 +180,13 @@ Note that this does not build a distributable or installable release yet, this j
 4. Run the build/ package script:
 
 ```bash
-node src/electron/build/build.mjs --os <linux|windows|macos> <options>
+node apps/desktop/build/build.mjs --os <linux|windows|macos> <options>
 ```
 
 The options for the build script are quite varied, and thus won't be elaborated on here. You can select the kind of package, system architecture, etc. For more details, run the script with the help flag:
 
 ```bash
-node src/electron/build/build.mjs -h
+node apps/desktop/build/build.mjs -h
 ```
 
-See also the [README](../src/electron/README.md) file for the Electron sub-project.
+See also the [README](../apps/desktop/README.md) file for the Electron sub-project.
