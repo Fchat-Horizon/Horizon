@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Pre-release fixes and changes
+
+<!-- These do not go into the final 2.3 changelog-->
+
+- Fixed some issues where the tray icon would incorrectly open all or not enough windows depending on the items clicked. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3f20e61216052785ed83377c2e9a5b3c83d37a80)
+- The update download progress indicator is now a clock filling up instead of a blue bar. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9fc0578f7bd2baa274197607e83218536cde4dc6)
+  - Ironically, you won't be able to notice this one until the next beta (or full release) comes out.
+
+### Fixed
+
+- Channel-specific settings are no longer visible in the PM conversation settings dialog, where they were basically just useless. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6bcb6d64bf4744f4caa1d7b06168d7ec736725b5)
+- You can no longer send "empty" messages with just a space or a newline character. These also no longer look messed up in the 'Modern' chat view [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/fd704097bce7c9bb1e3e0a0a0886a43b15cf7b00)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/827 by @freenutsxd
+
+Non PR'd changes by @CodingWithAnxiety and @FatCatClient
+
 ## [2.2.2-beta.0] - 2026-06-16
 
 ### Added
