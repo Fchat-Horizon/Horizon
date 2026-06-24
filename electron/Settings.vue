@@ -993,9 +993,40 @@
                       v-model="settings.browserArgs"
                     />
                   </div>
-                  <small class="form-text text-muted">{{
+                  <small class="form-text text-muted" v-if="!isMac">{{
                     l('settings.browserOptionArgumentsHelp')
                   }}</small>
+                  <small class="form-text text-muted" v-else>
+                    <span
+                      >{{ l('settings.browserOptionArgumentsHelp.mac') }}
+                    </span>
+
+                    <a
+                      class="fa-solid fa-arrow-up-right-from-square"
+                      href="#"
+                      @click="
+                        externalUrlHandler(
+                          'https://support.apple.com/guide/terminal/execute-commands-and-run-tools-apdb66b5242-0d18-49fc-9c47-a2498b7c91d5/mac'
+                        )
+                      "
+                    ></a>
+                    <p>
+                      <span>
+                        {{ l('settings.browserOptionArgumentsHelp.format') }}
+                      </span>
+                      <kbd>
+                        {{
+                          `open -a ${settings.browserPath} ${settings.browserArgs}`
+                        }}
+                      </kbd>
+                    </p>
+
+                    <p>
+                      {{
+                        l('settings.browserOptionArgumentsHelp.mac.ignoreMe')
+                      }}
+                    </p>
+                  </small>
                 </label>
                 <h5>
                   {{ l('settings.experimental', l('settings.customCss')) }}
