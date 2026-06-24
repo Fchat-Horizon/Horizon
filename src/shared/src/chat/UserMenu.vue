@@ -110,16 +110,17 @@
   } from './common';
   import core from './core';
   import { Dialog } from '@/helpers/dialog';
-  import { Channel, Character } from './interfaces';
+  import type { Character } from './interfaces';
+  import { Channel } from './interfaces';
   import l from './localize';
-  import ReportDialog from './ReportDialog.vue';
-  import { Matcher, MatchReport } from '@/learn/matcher';
+  import type ReportDialog from './ReportDialog.vue';
+  import type { MatchReport } from '@/learn/matcher';
+  import { Matcher } from '@/learn/matcher';
   import _ from 'lodash';
   import MatchTags from './preview/MatchTags.vue';
   import { MemoManager } from './character/memo';
-  import CustomContextMenu, {
-    ContextMenuItemProps
-  } from '@/components/CustomContextMenu.vue';
+  import type { ContextMenuItemProps } from '@/components/CustomContextMenu.vue';
+  import CustomContextMenu from '@/components/CustomContextMenu.vue';
 
   export default defineComponent({
     components: {

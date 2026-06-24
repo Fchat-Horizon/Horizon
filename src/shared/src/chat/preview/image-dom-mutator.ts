@@ -14,13 +14,6 @@ export interface DomMutator {
   urlMutator?(url: string): string;
 }
 
-// tslint:disable-next-line:max-line-length
-const imgurOuterStyle =
-  'z-index: 1000000; position: absolute; bottom: 0.75rem; right: 0.75rem; background: rgba(0, 128, 0, 0.8); border: 2px solid rgba(144, 238, 144, 0.5); width: 3rem; height: 3rem; font-size: 15pt; font-weight: normal; color: white; border-radius: 3rem; margin: 0; font-family: Helvetica,Arial,sans-serif; box-shadow: 2px 2px 2px rgba(0,0,0,0.5)';
-// tslint:disable-next-line:max-line-length
-const imgurInnerStyle =
-  'position: absolute; top: 50%; left: 50%; transform: translateY(-50%) translateX(-50%); text-shadow: 1px 1px 2px rgba(0,0,0,0.4);';
-
 export interface DomMutatorScripts {
   processor: string;
 }

@@ -182,7 +182,12 @@
                           class="form-control form-control-sm"
                           type="time"
                           :value="time"
-                          @input="setCronTime(idx, $event.target.value)"
+                          @input="
+                            setCronTime(
+                              idx,
+                              ($event.target as HTMLInputElement).value
+                            )
+                          "
                           style="max-width: 140px"
                         />
                         <button
@@ -1002,18 +1007,8 @@
                         type="text"
                         id="vanillaImportBaseDir"
                         v-model="settings.vanillaCustomBaseDir"
-                        @keyup.enter="
-                          () =>
-                            normalizeVanillaBaseDir(
-                              settings.vanillaCustomBaseDir
-                            )
-                        "
-                        @blur="
-                          () =>
-                            normalizeVanillaBaseDir(
-                              settings.vanillaCustomBaseDir
-                            )
-                        "
+                        @keyup.enter="normalizeVanillaBaseDir()"
+                        @blur="normalizeVanillaBaseDir()"
                         :disabled="vanillaImportInProgress"
                       />
                       <button
@@ -1244,6 +1239,7 @@
 <script lang="ts">
   import { defineComponent, type PropType } from 'vue';
   import l from '@horizon/shared/chat/localize';
+  import { getPlatform } from '@horizon/shared/platform/platform';
   import { GeneralSettings } from '@horizon/shared/common';
   import path from 'path';
   import { ipcRenderer } from 'electron';
@@ -1262,7 +1258,7 @@
       },
       importHint: {
         type: String as PropType<ImportHint>,
-        default: undefined
+        required: true
       }
     },
     data() {
@@ -1275,8 +1271,8 @@
           | 'export'
           | 'import'
           | 'vanilla',
-        isMac: process.platform === 'darwin',
-        platform: process.platform,
+        isMac: getPlatform() === 'darwin',
+        platform: getPlatform(),
 
         vanillaContext: undefined as VanillaContext | undefined,
         vanillaImportAvailable: false,
@@ -1550,7 +1546,7 @@
           this.close();
         }
       });
-      if (process.platform === 'darwin') {
+      if (getPlatform() === 'darwin') {
         window.addEventListener('keydown', e => {
           if (e.metaKey && e.key == 'w') {
             this.close();
@@ -1803,7 +1799,7 @@
       },
       getThemeClass() {
         try {
-          if (process.platform === 'win32') {
+          if (getPlatform() === 'win32') {
             if (this.settings?.risingDisableWindowsHighContrast) {
               document
                 .querySelector('html')

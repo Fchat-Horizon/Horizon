@@ -9,7 +9,6 @@
   >
     <div v-html="styling"></div>
 
-    <!-- Startup/upgrade initializer overlay -->
     <div
       class="initializer"
       :class="{
@@ -27,7 +26,6 @@
 
     <BBCodeTester v-show="false"></BBCodeTester>
 
-    <!-- Login card -->
     <div
       v-if="!characters"
       style="
@@ -183,7 +181,7 @@
     <chat
       v-else
       :ownCharacters="characters"
-      :defaultCharacter="defaultCharacter"
+      :defaultCharacter="defaultCharacter ?? 0"
       ref="chat"
     ></chat>
     <div ref="linkPreview" class="link-preview"></div>
@@ -251,7 +249,7 @@
       :action="l('fixLogs.action')"
       ref="fixLogsModal"
       @submit="fixLogs"
-      buttonClass="btn-danger"
+      :buttonClass="{ 'btn-primary': false, 'btn-danger': true }"
       iconClass="fas fa-file-half-dashed"
     >
       <span style="white-space: pre-wrap">{{ l('fixLogs.text') }}</span>
@@ -336,12 +334,13 @@
     updateToast,
     dismissToast
   } from '@horizon/shared/chat/toast';
-  import { SimpleCharacter } from '@horizon/shared/interfaces';
+  import type { SimpleCharacter } from '@horizon/shared/interfaces';
   import CharacterPage from '@horizon/shared/site/character_page/character_page.vue';
   import WordDefinition, {
     DictionaryMode
   } from '@horizon/shared/learn/dictionary/WordDefinition.vue';
-  import { defaultHost, GeneralSettings } from '@horizon/shared/common';
+  import type { GeneralSettings } from '@horizon/shared/common';
+  import { defaultHost } from '@horizon/shared/common';
   import { fixLogs } from './filesystem';
   import { SlimcatImporter } from '@services';
   import _ from 'lodash';
@@ -351,7 +350,7 @@
   import { BBCodeView } from '@horizon/shared/bbcode/view';
   import { EIconStore } from '@horizon/shared/learn/eicon/store';
   import { SecureStore } from './secure-store';
-  import { ProfileViewerGalleryType } from '@horizon/shared/site/utils';
+  import type { ProfileViewerGalleryType } from '@horizon/shared/site/utils';
 
   // import VueLazyload from 'vue-lazyload';
   //
@@ -366,7 +365,7 @@
 
   // log.info('init.chat.keytar.load.start');
   //
-  /* tslint:disable: no-any no-unsafe-any */ //because this is hacky
+  /* tslint:disable: no-any no-unsafe-any */
   //
 
   // const keyStore = nativeRequire<
@@ -481,10 +480,9 @@
       this.setupThemeHotReload();
     },
     async created(): Promise<void> {
-      // Register the auto-backup toast listener as early as possible. It used to
-      // live in ChatView, which is only mounted once a character is connected -
-      // so a backup triggered "on connect" in the tab that triggered it would
-      // fire before the listener existed and the toast was silently missed.
+      // ^ Registered here, not in ChatView: ChatView only mounts once a character
+      // connects, so a backup triggered "on connect" fired before its listener
+      // existed and the toast was silently missed.
       this.autoBackupStatusListener = (_e, status, progress) => {
         const id = 'auto-backup';
         if (status === 'started') {
@@ -526,7 +524,6 @@
 
       if (this.settings.account.length > 0) this.saveLogin = true;
 
-      // load auto-login flag from global settings
       if (this.settings.horizonAutoLogin) this.autoLogin = true;
 
       this.password =
@@ -546,11 +543,8 @@
             (core.state.generalSettings &&
               core.state.generalSettings.soundTheme !== settings.soundTheme);
           core.state.generalSettings = this.settings = settings;
-          /*
-          We have to do this after the settings change is applied to  this.settings &
-          core.state.generalSettings because the initSounds function checks those values
-          to determine which sounds to initialize.
-          */
+          // ^ Must run after settings are applied above: initSounds reads them to
+          // decide which sounds to initialize.
           if (soundChanged) {
             log.debug(
               'settings.update.index.reinitSounds',
@@ -638,8 +632,7 @@
 
       log.debug('init.chat.listeners.done');
 
-      // If auto-login is enabled globally and we have saved credentials, attempt to login
-      // This will skip the login screen if successful.
+      // With auto-login on and saved credentials present, skip the login screen.
       try {
         if (
           this.settings.horizonAutoLogin &&
@@ -675,7 +668,7 @@
           this.shouldShowSpinner = true;
         }, 250);
 
-        void EIconStore.getSharedStore(); // intentionally background
+        void EIconStore.getSharedStore(); // ! intentionally not awaited - runs in background
 
         log.debug('init.eicons.update.done');
 
@@ -690,11 +683,10 @@
         if (this.loggingIn) return;
         this.loggingIn = true;
 
-        // set proxy inside from the advanced option
         if (this.settings.proxy) {
           try {
             await electron.ipcRenderer.invoke('session-set-proxy', {
-              proxyRules: this.settings.proxy, // Update dynamically if needed,
+              proxyRules: this.settings.proxy,
               proxyBypassRules: 'localhost,127.0.0.1',
               mode: 'fixed_servers'
             });
@@ -704,13 +696,12 @@
             return;
           }
         } else {
-          // deactivate the proxy
           try {
             await electron.ipcRenderer.invoke('session-set-proxy', {
               mode: 'direct'
             });
           } catch (_) {
-            // Ignore error
+            // intentionally ignored
           }
         }
 
@@ -847,13 +838,12 @@
         this.settings.proxy = '';
       },
       onAutoLoginChange(): void {
-        // Only allow auto-login if saveLogin is enabled
+        // ! auto-login requires saved credentials
         if (!this.saveLogin) {
           this.autoLogin = false;
         }
 
         if (this.settings) this.settings.horizonAutoLogin = this.autoLogin;
-        // send updated general settings to main process
         electron.ipcRenderer.send('general-settings-update', this.settings);
       },
       onMouseOver(e: MouseEvent): void {
@@ -887,8 +877,6 @@
         (this.$refs.profileViewer as any).hide();
       },
       openConversation(): void {
-        //this.
-        // this.profileName
         const character = core.characters.get(this.profileName);
         const conversation = core.conversations.getPrivate(character);
 
@@ -910,7 +898,7 @@
       },
       getThemeClass(): Record<string, boolean> {
         try {
-          // Hack!
+          // ! Windows-only high-contrast override
           if (getPlatform() === 'win32') {
             if (core.state.generalSettings?.risingDisableWindowsHighContrast) {
               document

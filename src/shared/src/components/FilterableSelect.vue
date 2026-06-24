@@ -57,7 +57,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent } from 'vue';
+  import { defineComponent, type PropType } from 'vue';
   import Dropdown from '../components/Dropdown.vue';
 
   export default defineComponent({
@@ -73,7 +73,11 @@
         default: (filter: RegExp, value: unknown) => filter.test(String(value))
       },
       multiple: { type: Boolean, default: undefined },
-      modelValue: { default: undefined },
+      // A generic select bound to strings, string lists, or object lists; the
+      // value shape is the caller's, so it is intentionally untyped here.
+      modelValue: {
+        type: [String, Number, Boolean, Array, Object] as PropType<unknown>
+      },
       title: { type: String }
     },
     data() {

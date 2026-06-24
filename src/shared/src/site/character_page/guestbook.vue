@@ -70,10 +70,10 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent } from 'vue';
+  import { defineComponent, type PropType } from 'vue';
   import * as Utils from '../utils';
   import { methods, Store } from './data_store';
-  import type { GuestbookPost, Guestbook } from './interfaces';
+  import type { Character, GuestbookPost, Guestbook } from './interfaces';
 
   import GuestbookPostView from './guestbook_post.vue';
   import core from '@/chat/core';
@@ -82,7 +82,7 @@
   export default defineComponent({
     components: { 'guestbook-post': GuestbookPostView },
     props: {
-      character: { required: true as const },
+      character: { type: Object as PropType<Character>, required: true },
       oldApi: {}
     },
     data() {
@@ -133,7 +133,7 @@
         try {
           this.newPost.posting = true;
           await methods.guestbookPostPost(
-            (this as any).character.character.id,
+            this.character.character.id,
             this.newPost.character,
             this.newPost.message,
             this.newPost.privatePost
@@ -149,7 +149,7 @@
       async resolvePage(): Promise<Guestbook> {
         if (this.page === 1) {
           const c = await core.cache.profileCache.get(
-            (this as any).character.character.name
+            this.character.character.name
           );
 
           if (c && c.meta && c.meta.guestbook) {
@@ -158,7 +158,7 @@
         }
 
         return methods.guestbookPageGet(
-          (this as any).character.character.id,
+          this.character.character.id,
           (this.page - 1) * 10,
           10,
           this.unapprovedOnly

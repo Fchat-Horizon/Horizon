@@ -29,7 +29,7 @@
     </div>
     <div class="mb-3">
       <label class="control-label">{{ l('chat.setStatus.message') }}</label>
-      <editor id="text" v-model="text" classes="form-control" maxlength="255">
+      <editor id="text" v-model="text" classes="form-control" :maxlength="255">
         <div class="bbcode-editor-controls">
           {{ getByteLength(text) }} / 255
         </div>
@@ -58,7 +58,8 @@
   import { Editor } from './bbcode';
   import { getByteLength } from './common';
   import core from './core';
-  import { Character, userStatuses } from './interfaces';
+  import type { Character } from './interfaces';
+  import { userStatuses } from './interfaces';
   import l from './localize';
   import { getStatusIcon } from './UserView.vue';
   import StatusPicker from './StatusPicker.vue';
@@ -153,7 +154,7 @@
         await core.settingsStore.set('statusHistory', newHistory);
       },
       showStatusPicker(): void {
-        (<StatusPicker>this.$refs['statusPicker']).show();
+        (<InstanceType<typeof StatusPicker>>this.$refs['statusPicker']).show();
       }
     }
   });

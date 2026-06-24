@@ -40,7 +40,7 @@
   import Tabs from '@/components/tabs';
   import ChannelView from './ChannelTagView.vue';
   import core from './core';
-  import { Character, Conversation } from './interfaces';
+  import type { Character, Conversation } from './interfaces';
   import l from './localize';
   import UserView from './UserView.vue';
 

@@ -847,7 +847,7 @@
       <h5>{{ l('settings.profile.ignoredList') }}</h5>
       <div class="mb-3 p-2">
         <template v-if="ignored.length">
-          <div v-for="(user, i) in ignored" :key="user">
+          <div v-for="user in ignored" :key="user">
             <span
               class="fa fa-times"
               style="cursor: pointer"
@@ -1106,7 +1106,7 @@
           rows="5"
           :disabled="!risingFilter.autoReplyCustom || !risingFilter.autoReply"
           :placeholder="l('settings.autoReplyPlaceholder')"
-          maxlength="10000"
+          :maxlength="10000"
         >
         </editor>
 
@@ -1170,9 +1170,9 @@
   import SettingsCheckbox from '@/components/SettingsCheckbox.vue';
   import { UserInterfaceBBCodeParser } from '@/bbcode/user-interface';
   import core from './core';
-  import { Settings as SettingsInterface, Character } from './interfaces';
+  import type { Settings as SettingsInterface, Character } from './interfaces';
   import l from './localize';
-  import {
+  import type {
     SmartFilterSettings,
     SmartFilterSelection
   } from '@/learn/filter/types';
@@ -1276,7 +1276,7 @@
       hidden(): string[] {
         return core.state.hiddenUsers;
       },
-      filteredHidden(): ReadonlyArray<{ name: string }> {
+      filteredHidden(): { name: string }[] {
         // ^ Wrap entries as objects so VirtualList's keyField="name" can index
         // them; filter is case-insensitive substring on the raw name.
         const q = this.hiddenFilter.trim().toLowerCase();
@@ -1426,6 +1426,7 @@
         core.state.settings = {
           playSound: this.playSound,
           soundTheme: previousSettings.soundTheme || 'default',
+          soundThemeSoundVolumes: previousSettings.soundThemeSoundVolumes || {},
           clickOpensMessage: this.clickOpensMessage,
           disallowedTags: this.disallowedTags
             .split(',')

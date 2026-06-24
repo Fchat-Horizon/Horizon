@@ -344,7 +344,7 @@
   import { defineComponent } from 'vue';
   import Tabs from '@/components/tabs';
   import core from './core';
-  import { Channel, Character, Conversation } from './interfaces';
+  import type { Channel, Character, Conversation } from './interfaces';
   import l from './localize';
   import Sidebar from './Sidebar.vue';
   import UserView from './UserView.vue';

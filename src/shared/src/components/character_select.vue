@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
   import { computed } from 'vue';
-  import { SimpleCharacter } from '@/interfaces';
+  import type { SimpleCharacter } from '@/interfaces';
   import * as Utils from '@/site/utils';
 
   const props = defineProps<{
@@ -33,7 +33,7 @@
   }>();
 
   const characters = computed<SimpleCharacter[]>(() => Utils.characters);
-  const selected = computed<number>(() => {
+  const selected = computed<number | undefined>(() => {
     return props.modelValue !== undefined ? props.modelValue : props.value;
   });
 

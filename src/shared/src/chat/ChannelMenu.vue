@@ -28,10 +28,9 @@
 
 <script lang="ts">
   import { defineComponent } from 'vue';
-  import { Conversation } from './interfaces';
-  import CustomContextMenu, {
-    ContextMenuItemProps
-  } from '@/components/CustomContextMenu.vue';
+  import type { Conversation } from './interfaces';
+  import type { ContextMenuItemProps } from '@/components/CustomContextMenu.vue';
+  import CustomContextMenu from '@/components/CustomContextMenu.vue';
   import l from './localize';
 
   export default defineComponent({

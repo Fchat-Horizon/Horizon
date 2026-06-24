@@ -51,10 +51,10 @@
 <script lang="ts">
   import Modal from '@/components/Modal.vue';
   import CustomDialog from '@/components/custom_dialog';
-  import { defineComponent } from 'vue';
+  import { defineComponent, type PropType } from 'vue';
   import core from './core';
   import * as _ from 'lodash';
-  import { ExtendedSearchData, SearchData } from './interfaces';
+  import type { ExtendedSearchData, SearchData } from './interfaces';
   import l from './localize';
 
   export default defineComponent({
@@ -63,8 +63,14 @@
       modal: Modal
     },
     props: {
-      callback: { required: true as const },
-      curSearch: { required: true as const }
+      callback: {
+        type: Function as PropType<(data?: ExtendedSearchData) => void>,
+        required: true
+      },
+      curSearch: {
+        type: Object as PropType<ExtendedSearchData>,
+        required: true
+      }
     },
     data() {
       return {
@@ -73,24 +79,24 @@
         selectedSearch: null as number | null
       };
     },
-    async mounted(): Promise<void> {
-      this.history = (await core.settingsStore.get('searchHistory')) || [];
-      this.selectedSearch = null;
-
-      if (this.curSearch) {
-        const cleanedSearch = JSON.stringify(this.curSearch, null, 0);
-
-        const index = _.findIndex(
-          this.history,
-          c => JSON.stringify(c, null, 0) === cleanedSearch
-        );
-
-        if (index >= 0) {
-          this.selectedSearch = index;
-        }
-      }
-    },
     methods: {
+      async onMounted(): Promise<void> {
+        this.history = (await core.settingsStore.get('searchHistory')) || [];
+        this.selectedSearch = null;
+
+        if (this.curSearch) {
+          const cleanedSearch = JSON.stringify(this.curSearch, null, 0);
+
+          const index = _.findIndex(
+            this.history,
+            c => JSON.stringify(c, null, 0) === cleanedSearch
+          );
+
+          if (index >= 0) {
+            this.selectedSearch = index;
+          }
+        }
+      },
       selectStatus(): void {
         if (this.selectedSearch !== null) {
           this.callback(
@@ -102,7 +108,7 @@
         }
       },
       submit(e: Event): void {
-        (<Modal>this.$refs.dialog).submit(e);
+        (<InstanceType<typeof Modal>>this.$refs.dialog).submit(e);
       },
       describeSearch(searchData: SearchData | ExtendedSearchData): string {
         return _.join(

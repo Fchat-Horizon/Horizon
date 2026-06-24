@@ -86,7 +86,8 @@
   import { Editor } from './bbcode';
   import { getByteLength } from './common';
   import core from './core';
-  import { Channel, Character, channelModes } from './interfaces';
+  import type { Channel, Character } from './interfaces';
+  import { channelModes } from './interfaces';
   import l from './localize';
   import UserView from './UserView.vue';
 

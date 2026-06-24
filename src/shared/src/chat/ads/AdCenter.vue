@@ -42,7 +42,7 @@
         :id="'adm-tags-' + index"
         v-model="ad.tags"
         :placeholder="l('admgr.tags.placeholder')"
-        :add-tag-on-keys="[13, 188, 9, 32]"
+        :add-tag-on-keys="['Enter', ',', 'Tab', ' ']"
         class="form-control form-tag"
         :disabled="ad.disabled"
         :add-tag-on-blur="true"
@@ -79,7 +79,7 @@
   import core from '../core';
   import { Dialog } from '@/helpers/dialog';
   import InputTag from '@/components/TagInput.vue';
-  import { Ad } from './ad-center';
+  import type { Ad } from './ad-center';
   import _ from 'lodash';
 
   export default defineComponent({
@@ -161,7 +161,7 @@
     display: flex;
   }
 
-  .form-group.ad-list {
+  .ad-list {
     label {
       font-size: 140%;
 
@@ -198,9 +198,9 @@
       }
     }
 
-    .vue-input-tag-wrapper[disabled='disabled'],
-    textarea[disabled='disabled'],
-    div.bbcode-toolbar[disabled='disabled'] {
+    .vue-input-tag-wrapper.read-only,
+    textarea[disabled],
+    div.bbcode-toolbar[disabled] {
       opacity: 0.5;
       pointer-events: none;
     }

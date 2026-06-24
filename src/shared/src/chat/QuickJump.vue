@@ -102,12 +102,19 @@
     },
     computed: {
       filteredResults(): SearchResult[] {
+        // Vue's UnwrapNestedRefs recursively rewrites the nested Conversation
+        // interface on `this.allResults`, yielding a structurally distinct
+        // element type. No refs actually live inside SearchResult, so the
+        // unwrapped value is the same shape at runtime - cast back to the
+        // declared type rather than weaken the public computed signature.
+        const all = this.allResults as SearchResult[];
+
         if (this.searchQuery.length === 0) {
-          return this.allResults.slice(0, 10);
+          return all.slice(0, 10);
         }
 
         const query = this.searchQuery.toLowerCase();
-        return this.allResults
+        return all
           .filter(result => result.name.toLowerCase().includes(query))
           .slice(0, 10);
       }

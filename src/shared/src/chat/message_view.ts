@@ -1,5 +1,4 @@
-import { defineComponent, h, type VNode } from 'vue';
-import { Channel } from '@/fchat';
+import { defineComponent, h, type PropType, type VNode } from 'vue';
 import { Score } from '@/learn/matcher';
 import { BBCodeView } from '@/bbcode/view';
 import { formatTime } from './common';
@@ -277,7 +276,10 @@ export default defineComponent({
     return h('div', { class: classes, key: message.id }, children);
   },
   props: {
-    message: { required: true as const },
+    message: {
+      type: Object as PropType<Conversation.Message>,
+      required: true as const
+    },
     classes: {},
     channel: {},
     logs: {},

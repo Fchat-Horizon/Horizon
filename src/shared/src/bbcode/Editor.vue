@@ -156,17 +156,25 @@
 
 <script lang="ts">
   import _ from 'lodash';
-  import { defineComponent, type DirectiveBinding } from 'vue';
+  import {
+    defineComponent,
+    type ComponentPublicInstance,
+    type DirectiveBinding,
+    type PropType
+  } from 'vue';
+  import type { Character } from '@/fchat';
   import { getKey } from '@/chat/common';
   import { Keys } from '@/keys';
   import { getPlatform } from '@/platform/platform';
-  import { BBCodeElement, CoreBBCodeParser, urlRegex } from './core';
+  import type { BBCodeElement } from './core';
+  import { CoreBBCodeParser, urlRegex } from './core';
   import core from '@/chat/core';
-  import { defaultButtons, EditorButton, EditorSelection } from './editor';
-  import { BBCodeParser } from './parser';
+  import type { EditorButton, EditorSelection } from './editor';
+  import { defaultButtons } from './editor';
+  import type { BBCodeParser } from './parser';
   import { default as IconView } from './IconView.vue';
   import { default as EIconSelector } from './EIconSelector.vue';
-  import Modal from '@/components/Modal.vue';
+  import type Modal from '@/components/Modal.vue';
   import l from '@/chat/localize';
   import { createLogger } from '@/logger';
 
@@ -207,12 +215,12 @@
       extras: {},
       maxlength: { default: 1000 },
       classes: {},
-      modelValue: { default: undefined },
+      modelValue: { type: String, default: undefined },
       disabled: { type: Boolean, default: false },
       placeholder: { type: String, default: '' },
       hasToolbar: { default: true },
       invalid: { default: false, type: Boolean },
-      characterName: { default: null },
+      characterName: { type: Object as PropType<Character>, default: null },
       type: { default: 'normal' }
     },
     data() {
@@ -467,11 +475,11 @@
       },
 
       dismissEIconSelector(): void {
-        (this.$refs['eIconSelector'] as Modal).hide();
+        (this.$refs['eIconSelector'] as InstanceType<typeof Modal>).hide();
       },
 
       showEIconSelector(): void {
-        (this.$refs['eIconSelector'] as Modal).show();
+        (this.$refs['eIconSelector'] as InstanceType<typeof Modal>).show();
         setTimeout(() => (this.$refs['eIconSelector'] as any).setFocus(), 50);
       },
 
@@ -511,8 +519,10 @@
       ): void {
         // noinspection TypeScriptValidateTypes
         if (button.handler !== undefined) {
-          // tslint:ignore-next-line:no-any
-          return button.handler.call(this, this);
+          // vue-tsc does not treat a concrete component's mixin-wrapped `this`
+          // as assignable to the generic ComponentPublicInstance, though it is
+          // one at runtime; narrow to the handler's declared parameter type.
+          return button.handler.call(this, this as ComponentPublicInstance);
         }
         const startText =
           button.startText === undefined || withArgument

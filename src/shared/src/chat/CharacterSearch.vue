@@ -149,7 +149,7 @@
   import Modal from '@/components/Modal.vue';
   import { characterImage } from './common';
   import core from './core';
-  import {
+  import type {
     Character,
     Connection,
     ExtendedSearchData,
@@ -164,17 +164,14 @@
   import CharacterSearchHistory from './CharacterSearchHistory.vue';
   import { Matcher } from '@/learn/matcher';
   import {
-    Gender,
     kinkMatchScoreMap,
     kinkMatchWeights,
     nonAnthroSpecies,
-    Orientation,
     Species,
     speciesMapping,
-    speciesNames,
-    TagId
+    speciesNames
   } from '@/learn/matcher-types';
-  import { CharacterCacheRecord } from '@/learn/profile-cache';
+  import type { CharacterCacheRecord } from '@/learn/profile-cache';
   import { delay } from '@/helpers/async';
   import { createLogger } from '@/logger';
 
@@ -459,10 +456,11 @@
 
         log.debug('Debug results update done');
       },
-      resort(results = this.results) {
+      resort(results?: SearchResult[]) {
+        const source = results ?? this.results;
         this.results = (
           _.filter(
-            results,
+            source,
             x =>
               this.isSpeciesMatch(x) &&
               this.isBodyTypeMatch(x) &&
@@ -567,10 +565,11 @@
 
         return _.sortBy(species, 'name');
       },
-      countPendingResults(names?: string[], results = this.results): number {
+      countPendingResults(names?: string[], results?: SearchResult[]): number {
         if (!this.shouldShowMatch) return 0;
+        const source = results ?? this.results;
         return _.reduce(
-          results,
+          source,
           (accum: number, result: SearchResult) => {
             if (result.profile) {
               return accum;
@@ -664,7 +663,9 @@
         this.updateSearchHistory(this.data);
       },
       showHistory(): void {
-        (<CharacterSearchHistory>this.$refs.searchHistory).show();
+        (<InstanceType<typeof CharacterSearchHistory>>(
+          this.$refs.searchHistory
+        )).show();
       },
       async updateSearchHistory(data: ExtendedSearchData): Promise<void> {
         const history = (await core.settingsStore.get('searchHistory')) || [];

@@ -11,9 +11,15 @@
 
 import _ from 'lodash';
 import type { ImagePreviewHelper } from './helper';
-import type ImagePreview from '../ImagePreview.vue';
 
 export type RenderStyle = Record<string, any>;
+
+// Minimal structural view of the host ImagePreview component. A full
+// InstanceType<typeof ImagePreview> would be circular: the component owns a
+// PreviewManager, which would collapse both types to `any`.
+interface PreviewManagerParent {
+  debugLog(...messages: any[]): void;
+}
 
 export interface PreviewManagerHelper {
   helper: ImagePreviewHelper;
@@ -21,13 +27,16 @@ export interface PreviewManagerHelper {
 }
 
 export class PreviewManager {
-  private parent: ImagePreview;
+  private parent: PreviewManagerParent;
 
   private helpers: PreviewManagerHelper[];
 
   private debugMode = false;
 
-  constructor(parent: ImagePreview, helperInstances: ImagePreviewHelper[]) {
+  constructor(
+    parent: PreviewManagerParent,
+    helperInstances: ImagePreviewHelper[]
+  ) {
     this.parent = parent;
     this.helpers = _.map(helperInstances, helper => ({
       helper,

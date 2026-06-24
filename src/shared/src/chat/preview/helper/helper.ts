@@ -1,11 +1,20 @@
-import type ImagePreview from '../ImagePreview.vue';
+// Structural view of the ImagePreview SFC instance the helpers depend on.
+// A direct InstanceType<typeof ImagePreview> would be circular: the component
+// owns these helpers and each helper holds a back-reference to it.
+export interface ImagePreviewHost {
+  debug: boolean;
+  getWebview(): Electron.WebviewTag;
+  getCharacterPreview(): any;
+  updatePreviewSize(width: number, height: number): void;
+  debugLog(...args: any[]): void;
+}
 
 export abstract class ImagePreviewHelper {
   static readonly HTTP_TESTER = /^https?:\/\//;
 
   protected visible = false;
   protected url: string | undefined = 'about:blank';
-  protected parent: ImagePreview;
+  protected parent: ImagePreviewHost;
   protected debug: boolean;
   protected ratio: number | null = null;
 
@@ -54,7 +63,7 @@ export abstract class ImagePreviewHelper {
     }
   }
 
-  constructor(parent: ImagePreview) {
+  constructor(parent: ImagePreviewHost) {
     if (!parent) {
       throw new Error('Empty parent!');
     }

@@ -146,11 +146,12 @@
       };
     },
     computed: {
-      openRooms(): ReadonlyArray<Channel.ListItem> {
-        return this.filteredOpenRooms;
+      // VirtualList types `items` as a mutable Array; copy the readonly source to a fresh mutable array
+      openRooms(): Channel.ListItem[] {
+        return this.filteredOpenRooms.slice();
       },
-      officialChannels(): ReadonlyArray<Channel.ListItem> {
-        return this.filteredOfficialChannels;
+      officialChannels(): Channel.ListItem[] {
+        return this.filteredOfficialChannels.slice();
       },
       officialChannelsSource(): {
         [key: string]: Channel.ListItem | undefined;

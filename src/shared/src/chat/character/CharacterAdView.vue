@@ -36,14 +36,15 @@
   import * as _ from 'lodash';
   import CustomDialog from '@/components/custom_dialog';
   import Modal from '@/components/Modal.vue';
-  import { Character } from '@/fchat/interfaces';
-  import { AdCachedPosting } from '@/learn/ad-cache';
+  import type { Character } from '@/fchat/interfaces';
+  import type { AdCachedPosting } from '@/learn/ad-cache';
   import core from '../core';
   import { formatTime } from '../common';
   import UserView from '../UserView.vue';
   import { BBCodeView } from '@/bbcode/view';
   import l from '../localize';
-  import { defineComponent, PropType } from 'vue';
+  import type { PropType } from 'vue';
+  import { defineComponent } from 'vue';
 
   export default defineComponent({
     extends: CustomDialog,

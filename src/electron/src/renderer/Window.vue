@@ -67,16 +67,11 @@
         style="border-bottom: 0; margin-bottom: -1px; margin-top: 1px"
         ref="tabs"
       >
-        <!-- Individual tab transitions with appear hooks 
-          :css="!isClosing" - Disables CSS transitions during window cleanup
-          JavaScript hooks (@before-enter, @enter, etc.) take priority over CSS
-          appear - Enables animations for tabs present on initial page load 
-          
-          We wound up doing it this way because working with a <transition-grou> element
-          would be cleaner for the actual template, it wound up giving too many problems
-          because of things relying on the <ul> element being directly referenced through
-          the "tabs" reference
-        -->
+        <!-- ^ Per-tab <transition> rather than <transition-group>: the latter
+          would wrap the tabs in its own element, but code relies on the <ul>
+          being directly reachable through the "tabs" ref.
+          :css="!isClosing" disables CSS transitions during window cleanup so
+          the JS hooks run without dangling element references. -->
         <transition
           name="tab"
           appear
@@ -250,7 +245,7 @@
     async mounted(): Promise<void> {
       log.debug('init.window.mounting');
 
-      //double check for MacOS here because I don't want to deal with issues caused by imported settings
+      // ! Re-check the macOS platform here so imported settings can't force native controls on the wrong OS.
       this.hideWindowControls =
         this.settings.forceNativeWindowControls && this.platform !== 'darwin';
       this.hideSingleTab = this.settings.nativeWindowShowSingleTab;
@@ -503,7 +498,7 @@
           electron.ipcRenderer.send('tab-forward', this.activeTab.id, channel);
       },
       destroyAllTabs(): void {
-        // Disable animations before cleanup to prevent dangling references
+        // ^ Disable animations before cleanup so leave hooks don't outlive their elements.
         this.isClosing = true;
         this.$nextTick(() => {
           for (const tab of this.tabs)
@@ -608,34 +603,36 @@
         log.debug('settings clicked');
         electron.ipcRenderer.send('open-settings-menu');
       },
-      onTabBeforeEnter(el: HTMLElement): void {
+      onTabBeforeEnter(el: Element): void {
         if (this.isClosing) return;
-        el.style.opacity = '0';
-        el.style.transform = 'translateX(-100%)';
+        const tab = el as HTMLElement;
+        tab.style.opacity = '0';
+        tab.style.transform = 'translateX(-100%)';
       },
-      onTabEnter(el: HTMLElement, done: () => void): void {
+      onTabEnter(el: Element, done: () => void): void {
         if (this.isClosing) {
           done();
           return;
         }
 
-        // Use requestAnimationFrame for smooth animation
+        const tab = el as HTMLElement;
         requestAnimationFrame(() => {
-          el.style.transition = 'all 0.15s ease-out';
-          el.style.opacity = '1';
-          el.style.transform = 'translateX(0)';
+          tab.style.transition = 'all 0.15s ease-out';
+          tab.style.opacity = '1';
+          tab.style.transform = 'translateX(0)';
 
           setTimeout(done, 150);
         });
       },
-      onTabLeave(el: HTMLElement, done: () => void): void {
+      onTabLeave(el: Element, done: () => void): void {
         if (this.isClosing) {
           done();
           return;
         }
 
-        el.style.transition = 'opacity 0.1s ease-in';
-        el.style.opacity = '0';
+        const tab = el as HTMLElement;
+        tab.style.transition = 'opacity 0.1s ease-in';
+        tab.style.opacity = '0';
 
         setTimeout(done, 100);
       },

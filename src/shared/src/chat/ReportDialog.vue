@@ -21,14 +21,15 @@
 </template>
 
 <script lang="ts">
-  import { BBCodeElement } from '@/bbcode/core';
+  import type { BBCodeElement } from '@/bbcode/core';
   import CustomDialog from '@/components/custom_dialog';
   import { defineComponent } from 'vue';
   import Modal from '@/components/Modal.vue';
   import BBCodeParser from './bbcode';
   import { errorToString, messageToString } from './common';
   import core from './core';
-  import { Character, Conversation } from './interfaces';
+  import type { Character } from './interfaces';
+  import { Conversation } from './interfaces';
   import l from './localize';
 
   export default defineComponent({

@@ -4,10 +4,12 @@ import Modal from './Modal.vue';
 export default defineComponent({
   components: { Modal },
   computed: {
-    dialog(): Modal {
+    dialog(): InstanceType<typeof Modal> {
       // Vue 3 dropped $children; every dialog renders <modal> as its single
       // root, so reach its instance through the rendered subtree.
-      return (this.$ as any).subTree?.component?.proxy as Modal;
+      return (this.$ as any).subTree?.component?.proxy as InstanceType<
+        typeof Modal
+      >;
     }
   },
   methods: {

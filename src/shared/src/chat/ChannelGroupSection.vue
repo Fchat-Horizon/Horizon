@@ -112,7 +112,8 @@
 
 <script lang="ts">
   import Sortable from 'sortablejs'; // tslint:disable-line:no-require-imports
-  import { defineComponent, PropType } from 'vue';
+  import type { PropType } from 'vue';
+  import { defineComponent } from 'vue';
   import core from './core';
   import {
     endChannelDragging,

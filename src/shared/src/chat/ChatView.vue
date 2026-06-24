@@ -262,7 +262,7 @@
             :all-groups="conversations.channelGroups"
             :start-editing="pendingRenameGroupId === group.id"
             @editing-started="pendingRenameGroupId = null"
-            @create-and-rename="id => (pendingRenameGroupId = id)"
+            @create-and-rename="(id: string) => (pendingRenameGroupId = id)"
           ></channel-group-section>
         </div>
 
@@ -392,7 +392,7 @@
           <div class="name">{{ conversation.name }}</div>
         </a>
       </div>
-      <conversation :reportDialog="$refs['reportDialog']"></conversation>
+      <conversation :reportDialog="getReportDialog()"></conversation>
     </div>
     <user-list></user-list>
     <channels ref="channelsDialog"></channels>
@@ -404,7 +404,7 @@
     <report-dialog ref="reportDialog"></report-dialog>
     <user-menu
       ref="userMenu"
-      :reportDialog="$refs['reportDialog']"
+      :reportDialog="getReportDialog()"
       @open="onMenuOpen(ContextMenuTypes.User)"
       @close="onMenuClose(ContextMenuTypes.User)"
     ></user-menu>
@@ -448,7 +448,8 @@
     startChannelDragging,
     startGroupDragging
   } from './channelDragDropHighlight';
-  import { Character, Connection, Conversation } from './interfaces';
+  import type { Character, Connection } from './interfaces';
+  import { Conversation } from './interfaces';
   import l from './localize';
   import PmPartnerAdder from './PmPartnerAdder.vue';
   import RecentConversations from './RecentConversations.vue';
@@ -460,7 +461,7 @@
   import UserList from './UserList.vue';
   import UserMenu from './UserMenu.vue';
   import ImagePreview from './preview/ImagePreview.vue';
-  import PrivateConversation = Conversation.PrivateConversation;
+  type PrivateConversation = Conversation.PrivateConversation;
   import * as _ from 'lodash';
   import NoteStatus from '@/site/NoteStatus.vue';
   import { Dialog } from '@/helpers/dialog';
@@ -469,7 +470,7 @@
   import ChannelGroupSection from './ChannelGroupSection.vue';
   import ChannelGroupMenu from './ChannelGroupMenu.vue';
   import ChannelMenu from './ChannelMenu.vue';
-  import CustomDialog from '@/components/custom_dialog';
+  import type CustomDialog from '@/components/custom_dialog';
   import QuickJump from './QuickJump.vue';
   import { createLogger } from '@/logger';
 
@@ -517,7 +518,6 @@
         l: l,
         sidebarExpanded: false,
         characterImage: characterImage,
-        conversations: core.conversations,
         getStatusIcon: getStatusIcon,
         coreState: core.state,
         keydownListener: undefined as any as (e: KeyboardEvent) => void,
@@ -541,6 +541,11 @@
       };
     },
     computed: {
+      // Exposed via computed (not data) so the declared mutable Conversation.State
+      // type survives instead of Vue's deep-readonly unwrapping of reactive data.
+      conversations(): Conversation.State {
+        return core.conversations;
+      },
       sortedChannelGroups(): any[] {
         return [...core.conversations.channelGroups].sort(
           (a, b) => a.order - b.order
@@ -984,20 +989,26 @@
       },
 
       showSettings(): void {
-        (<SettingsView>this.$refs['settingsDialog']).show();
+        (<InstanceType<typeof SettingsView>>(
+          this.$refs['settingsDialog']
+        )).show();
       },
 
       showSearch(): void {
-        (<CharacterSearch>this.$refs['searchDialog']).show();
+        (<InstanceType<typeof CharacterSearch>>(
+          this.$refs['searchDialog']
+        )).show();
       },
 
       showRecent(showChannels?: boolean): void {
-        (<RecentConversations>this.$refs['recentDialog']).show();
+        (<InstanceType<typeof RecentConversations>>(
+          this.$refs['recentDialog']
+        )).show();
 
         //Not particularly elegant, but it allows us to open the second tab without changing other function calls
-        (<RecentConversations>this.$refs['recentDialog']).setTab(
-          showChannels ? '1' : '0'
-        );
+        (<InstanceType<typeof RecentConversations>>(
+          this.$refs['recentDialog']
+        )).setTab(showChannels ? '1' : '0');
       },
 
       markAllAsRead(): void {
@@ -1009,11 +1020,13 @@
       },
 
       showChannels(): void {
-        (<ChannelList>this.$refs['channelsDialog']).show();
+        (<InstanceType<typeof ChannelList>>this.$refs['channelsDialog']).show();
       },
 
       showStatus(): void {
-        (<StatusSwitcher>this.$refs['statusDialog']).show();
+        (<InstanceType<typeof StatusSwitcher>>(
+          this.$refs['statusDialog']
+        )).show();
       },
 
       showAdCenter(): void {
@@ -1030,7 +1043,9 @@
       },
 
       showAddPmPartner(): void {
-        (<PmPartnerAdder>this.$refs['addPmPartnerDialog']).show();
+        (<InstanceType<typeof PmPartnerAdder>>(
+          this.$refs['addPmPartnerDialog']
+        )).show();
       },
 
       onMenuOpen(menuType: ContextMenuTypes): void {
@@ -1075,7 +1090,7 @@
             if (conv) {
               this.closeAllMenus();
               channelMenu.handleEvent(
-                e,
+                e as MouseEvent,
                 conv,
                 core.conversations.channelGroups,
                 core.conversations.channelGroupAssignments[channelId] ?? null
@@ -1162,7 +1177,7 @@
       },
 
       showQuickJump(): void {
-        (<QuickJump>this.$refs['quickJump']).show();
+        (<InstanceType<typeof QuickJump>>this.$refs['quickJump']).show();
       },
 
       getClasses(conversation: Conversation): string {
@@ -1174,8 +1189,14 @@
       isColorblindModeActive(): boolean {
         return core.state.settings.risingColorblindMode;
       },
-      getImagePreview(): ImagePreview | undefined {
-        return this.$refs['imagePreview'] as ImagePreview;
+      getImagePreview(): InstanceType<typeof ImagePreview> | undefined {
+        return this.$refs['imagePreview'] as InstanceType<typeof ImagePreview>;
+      },
+      // Read via a method (re-evaluated each render) so child props track the
+      // ref once it populates; resolves ReportDialog's type in <script> scope,
+      // which a template-level cast cannot do under the Options API.
+      getReportDialog(): InstanceType<typeof ReportDialog> {
+        return this.$refs['reportDialog'] as InstanceType<typeof ReportDialog>;
       },
 
       adsAreRunning(): boolean {

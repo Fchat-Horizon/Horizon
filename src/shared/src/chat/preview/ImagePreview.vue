@@ -70,20 +70,21 @@
   import { defineComponent } from 'vue';
   import core from '../core';
   import { normalizeCharacterName } from '../common';
-  import { EventBus, EventBusEvent } from './event-bus';
+  import type { EventBusEvent } from './event-bus';
+  import { EventBus } from './event-bus';
   import { domain } from '@/bbcode/core';
   import { getPreviewPreloadUrl } from '@/platform/platform';
   import { ImageDomMutator } from './image-dom-mutator';
 
+  import type { RenderStyle } from './helper';
   import {
     ExternalImagePreviewHelper,
     LocalImagePreviewHelper,
     PreviewManager,
-    CharacterPreviewHelper,
-    RenderStyle
+    CharacterPreviewHelper
   } from './helper';
 
-  import IpcMessageEvent = Electron.IpcMessageEvent;
+  type IpcMessageEvent = Electron.IpcMessageEvent;
   import CharacterPreview from './CharacterPreview.vue';
   import l from '../localize';
   import { createLogger } from '@/logger';

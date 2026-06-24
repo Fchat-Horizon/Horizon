@@ -155,7 +155,7 @@
             class="carousel-inner w-100 hidden-scrollbar"
             role="listbox"
             :animation="150"
-            :item-key="eicon => eicon"
+            :item-key="(eicon: string) => eicon"
             @end="saveFavoritesOrder"
           >
             <template #item="{ element: eicon }">

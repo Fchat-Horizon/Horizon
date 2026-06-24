@@ -18,8 +18,6 @@ export interface UrlSolver {
 export class ImageUrlMutator {
   private solvers: UrlSolver[] = [];
 
-  private static readonly IMGUR_CLIENT_ID = 'd60e27140a73b2e';
-
   private static readonly IMGUR_IMAGE_URL_REGEX =
     /^https?:\/\/i.imgur.com\/([a-zA-Z0-9]+)(\.[a-z0-9A-Z]+)(.*)$/;
 
@@ -46,7 +44,6 @@ export class ImageUrlMutator {
           }
         );
 
-        const userId = result.data.author_unique_id;
         const videoId = result.data.embed_product_id;
 
         return `https://picuki.com/media/${videoId}`;
@@ -111,7 +108,7 @@ export class ImageUrlMutator {
 
     this.add(
       /^https?:\/\/([\w-]*bsky|bskye|bskyx|bsyy)\.app\/(profile\/[\w.:]+\/post\/\w+)/,
-      async (url: string, match: RegExpMatchArray): Promise<string> => {
+      async (_url: string, match: RegExpMatchArray): Promise<string> => {
         const path = match[2];
 
         // https://github.com/Lexedia/VixBluesky/wiki/Features#custom-pds-video-support

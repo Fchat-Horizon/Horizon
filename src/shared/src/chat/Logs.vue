@@ -95,7 +95,7 @@
                   margin-right: 6px;
                   object-fit: cover;
                 "
-                @error="$event.target.style.display = 'none'"
+                @error="hideBrokenAvatar"
                 loading="lazy"
               />
               {{ (s.option.key[0] == '#' ? '#' : '') + s.option.name }}
@@ -253,7 +253,8 @@
   import { Keys } from '@/keys';
   import { formatTime, getKey, messageToString } from './common';
   import core from './core';
-  import { Conversation, Logs as LogInterface } from './interfaces';
+  import type { Logs as LogInterface } from './interfaces';
+  import { Conversation } from './interfaces';
   import l from './localize';
   import MessageView from './message_view';
   import VirtualList from '@/components/VirtualList.vue';
@@ -344,7 +345,7 @@
         messages: [] as ReadonlyArray<Conversation.Message>,
         formatDate: formatDate,
         keyDownListener: undefined as ((e: KeyboardEvent) => void) | undefined,
-        characters: [] as ReadonlyArray<string>,
+        characters: [] as string[],
         selectedCharacter: core.connection.character,
         showFilters: true,
         canZip: core.logs.canZip,
@@ -374,8 +375,11 @@
       itemHeight(): number {
         return getLayoutMode() === 'modern' ? 52 : 40;
       },
-      filteredMessages(): ReadonlyArray<Conversation.Message> {
-        if (this.pendingFilter.length === 0) return this.messages;
+      filteredMessages(): Conversation.Message[] {
+        // VirtualList's items prop is mutable unknown[] but only ever reads
+        // (slice/index/length); messages is held readonly so this view is safe.
+        if (this.pendingFilter.length === 0)
+          return this.messages as Conversation.Message[];
         const filter = new RegExp(
           this.pendingFilter.replace(/[^\w]/gi, '\\$&'),
           'i'
@@ -414,7 +418,7 @@
       }
     },
     async mounted(): Promise<void> {
-      this.characters = await core.logs.getAvailableCharacters();
+      this.characters = (await core.logs.getAvailableCharacters()).slice();
       //On Windows, sort is case-sensitive by default, so we need to force case-insensitive sorting for Linux and macOS.
       this.characters = this.characters
         .slice()
@@ -623,7 +627,12 @@
             content: getLogs(messages, html)
           });
         }
-        const zipped = <Uint8Array>await ipc.invoke('zip-create', files);
+        // The zip-create IPC returns a Node Buffer, always backed by a plain
+        // ArrayBuffer, so this narrower view type is safe and satisfies BlobPart.
+        const zipped = (await ipc.invoke(
+          'zip-create',
+          files
+        )) as Uint8Array<ArrayBuffer>;
         this.download(
           `${this.sanitizeConversationName(this.selectedConversation.name)}.zip`,
           URL.createObjectURL(new Blob([zipped]))
@@ -661,7 +670,12 @@
             });
           }
         }
-        const zipped = <Uint8Array>await ipc.invoke('zip-create', files);
+        // The zip-create IPC returns a Node Buffer, always backed by a plain
+        // ArrayBuffer, so this narrower view type is safe and satisfies BlobPart.
+        const zipped = (await ipc.invoke(
+          'zip-create',
+          files
+        )) as Uint8Array<ArrayBuffer>;
         this.download(
           `${this.selectedCharacter}.zip`,
           URL.createObjectURL(new Blob([zipped]))
@@ -916,6 +930,11 @@
 
       getAvatarUrl(character: string): string {
         return `https://static.f-list.net/images/avatar/${encodeURIComponent(character.toLowerCase())}.png`;
+      },
+
+      hideBrokenAvatar(event: Event): void {
+        const target = event.target;
+        if (target instanceof HTMLElement) target.style.display = 'none';
       }
     }
   });

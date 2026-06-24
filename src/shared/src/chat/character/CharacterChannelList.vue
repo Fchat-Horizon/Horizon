@@ -32,12 +32,21 @@
   import * as _ from 'lodash';
   import CustomDialog from '@/components/custom_dialog';
   import Modal from '@/components/Modal.vue';
-  import { Character } from '@/fchat/interfaces';
+  import type { Character } from '@/fchat/interfaces';
   import core from '../core';
-  import { Conversation } from '../interfaces';
+  import type { Conversation } from '../interfaces';
   import UserView from '../UserView.vue';
-  import ChannelConversation = Conversation.ChannelConversation;
-  import { defineComponent, PropType } from 'vue';
+  import type { PropType } from 'vue';
+  import { defineComponent } from 'vue';
+
+  type ChannelConversation = Conversation.ChannelConversation;
+
+  // Vue's reactive unwrapping makes data() items deeply readonly in the
+  // template, so jumpToChannel takes the minimal shape it actually uses
+  // rather than the mutable ChannelConversation, which would not assign.
+  interface ShowableChannel {
+    show(): void;
+  }
 
   export default defineComponent({
     extends: CustomDialog,
@@ -74,7 +83,7 @@
           'name'
         );
       },
-      jumpToChannel(channel: ChannelConversation): void {
+      jumpToChannel(channel: ShowableChannel): void {
         channel.show();
       }
     }

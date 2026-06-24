@@ -70,6 +70,7 @@
 
 <script lang="ts">
   import { defineComponent } from 'vue';
+  import type { PropType } from 'vue';
   import { getKey } from '@/chat/common';
   import { Keys } from '@/keys';
   import l from '@/chat/localize';
@@ -102,17 +103,31 @@
 
   export let isShowing = false;
 
-  type ModalInstance = InstanceType<typeof Modal>;
+  // Structural type for the global dialog stack. Using
+  // InstanceType<typeof Modal> here would be self-referential (the stack is
+  // consumed inside Modal's own methods) and collapse the component to `any`.
+  interface ModalInstance {
+    hide(): void;
+    hideWithCheck(): void;
+  }
   const Modal = defineComponent({
     props: {
       action: { default: '' },
-      dialogClass: {},
+      dialogClass: {
+        type: [String, Object, Array] as PropType<
+          string | Record<string, boolean> | unknown[]
+        >,
+        default: undefined
+      },
       buttons: { default: true },
-      buttonClass: { default: () => ({ 'btn-primary': true }) },
-      disabled: {},
+      buttonClass: {
+        type: [String, Object] as PropType<string | Record<string, boolean>>,
+        default: () => ({ 'btn-primary': true })
+      },
+      disabled: { type: Boolean, default: false },
       showCancel: { default: true },
-      buttonText: {},
-      iconClass: {}
+      buttonText: { type: String as PropType<string>, default: undefined },
+      iconClass: { type: String as PropType<string>, default: undefined }
     },
     data() {
       return {

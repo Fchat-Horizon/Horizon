@@ -737,7 +737,7 @@
                         :title="
                           l(
                             'platform.open',
-                            l(`platform.fileExplorer.${platformName}`)
+                            l(`platform.fileExplorer.${platform}`)
                           )
                         "
                       >
@@ -1142,10 +1142,12 @@
     setLanguage,
     availableDisplayLanguages
   } from '@horizon/shared/chat/localize';
-  import { GeneralSettings } from '@horizon/shared/common';
+  import { getPlatform } from '@horizon/shared/platform/platform';
+  import type { GeneralSettings } from '@horizon/shared/common';
   import path from 'path';
   import { ipcRenderer } from 'electron';
-  import { createLogger, LevelOption } from '@horizon/shared/logger';
+  import type { LevelOption } from '@horizon/shared/logger';
+  import { createLogger } from '@horizon/shared/logger';
   const log = createLogger('settings-view');
   import { Dialog } from '@horizon/shared/helpers/dialog';
   import Tabs from '@horizon/shared/components/tabs';
@@ -1170,27 +1172,22 @@
         selectedTab: '0',
         isMaximized: false,
         l: l,
-        platform: process.platform,
+        platform: getPlatform(),
         hasCompletedUpgrades: false,
         browserPath: '',
         browserArgs: '',
         logDirectory: '',
-        availableThemes: [] as ReadonlyArray<string>,
-        availableSoundThemes: [] as ReadonlyArray<string>,
+        availableThemes: [] as string[],
+        availableSoundThemes: [] as string[],
         logLevel: false as LevelOption,
         selectedLang: undefined as string | string[] | undefined,
         availableDisplayLanguages: availableDisplayLanguages,
-        //These are not reactive.
-        //Which is kind of good because of all the security issues that'd otherwise arise
-        isWindows: process.platform === 'win32',
-        isMac: process.platform === 'darwin',
-        platformName: process.platform,
+        //! Intentionally non-reactive: avoids exposing platform checks to reactive tampering
+        isWindows: getPlatform() === 'win32',
+        isMac: getPlatform() === 'darwin',
         showTitle: false as boolean,
-        // Currently selected sound theme metadata and per-sound volumes for the UI
         currentSoundThemeDetails: null as any | null,
-        // live values driven by the slider (used for immediate UI feedback and persisted)
         liveVolumeMap: {} as { [sound: string]: number },
-        // collapse the sound list by default so it doesn't take the whole page
         soundListCollapsed: true as boolean,
         soundPreviewAudio: null as HTMLAudioElement | null
       };
@@ -1228,12 +1225,9 @@
         }
       );
 
-      // Load available sound themes
       this.loadAvailableSoundThemes();
-      // Load details for the currently selected sound theme
       await this.loadSelectedSoundThemeDetails();
 
-      // Watch for sound theme changes
       this.$watch(
         () => this.settings.soundTheme,
         async () => {
@@ -1263,7 +1257,7 @@
           this.close();
         }
       });
-      if (process.platform === 'darwin') {
+      if (getPlatform() === 'darwin') {
         window.addEventListener('keydown', e => {
           if (e.metaKey && e.key == 'w') {
             this.close();
@@ -1300,7 +1294,7 @@
 
       capitalizeThemeName(themeName: string): string {
         return themeName
-          .split(/[\s-_]+/) // Split on spaces, hyphens, or underscores
+          .split(/[\s-_]+/)
           .map(
             word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
           )
@@ -1319,7 +1313,6 @@
 
       async loadSelectedSoundThemeDetails(): Promise<void> {
         const theme = this.settings.soundTheme || 'default';
-        // Load metadata (sound.json) if present
         try {
           const raw = <string | null>(
             ipcRenderer.sendSync('sound-theme-read-sync', theme)
@@ -1329,7 +1322,6 @@
           this.currentSoundThemeDetails = null;
         }
 
-        // Build a fresh liveVolumeMap from saved settings (or defaults)
         try {
           const perTheme = (this.settings as any).soundThemeSoundVolumes || {};
           const saved = perTheme[this.settings.soundTheme] || {};
@@ -1352,7 +1344,6 @@
       },
 
       onVolumeChange(sound: any): void {
-        // Persist the changed volume into settings for the current theme
         const v = Number(this.liveVolumeMap[sound] ?? 1);
         const container = (this.settings as any).soundThemeSoundVolumes || {};
         if (!container[this.settings.soundTheme])
@@ -1372,7 +1363,6 @@
       },
 
       previewSound(sound: any): void {
-        // stop previous preview
         if (this.soundPreviewAudio) {
           try {
             this.soundPreviewAudio.pause();
@@ -1418,7 +1408,7 @@
 
         document.body.appendChild(audio);
         this.soundPreviewAudio = audio;
-        // Some browsers require a user gesture; this is an explicit user action (click) so should work.
+        //^ Allowed despite autoplay policy: invoked from an explicit click gesture
         audio.play().catch(e => log.warn('Preview play failed', e));
       },
 
@@ -1431,7 +1421,7 @@
 
         try {
           // Hack!
-          if (process.platform === 'win32') {
+          if (getPlatform() === 'win32') {
             if (this.settings?.risingDisableWindowsHighContrast) {
               document
                 .querySelector('html')
@@ -1538,12 +1528,10 @@
         const start = target.selectionStart;
         const end = target.selectionEnd;
 
-        // Get the current value and insert tab at cursor position
         const value = target.value;
         this.settings.horizonCustomCss =
           value.substring(0, start) + '\t' + value.substring(end);
 
-        // Move cursor after tab
         this.$nextTick(() => {
           target.selectionStart = target.selectionEnd = start + 1;
         });

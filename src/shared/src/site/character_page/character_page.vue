@@ -255,6 +255,7 @@
   import type {
     Character,
     CharacterGroup,
+    CharacterMemo,
     Guestbook,
     SharedStore
   } from './interfaces';
@@ -548,7 +549,7 @@
           images: this.images
         });
       },
-      memo(memo: { id: number; memo: string | null }): void {
+      memo(memo: CharacterMemo): void {
         this.character!.memo = memo;
 
         void core.cache.profileCache.register(this.character!);

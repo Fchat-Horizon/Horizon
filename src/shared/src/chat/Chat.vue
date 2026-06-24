@@ -167,7 +167,7 @@
       ref="reconnecting"
       @submit="cancelReconnect"
       :showCancel="false"
-      buttonClass="btn-danger"
+      :buttonClass="{ 'btn-primary': false, 'btn-danger': true }"
     >
       <div class="alert alert-danger" v-show="error">{{ error }}</div>
       {{ l('chat.disconnected') }}
@@ -188,8 +188,9 @@
   import { defineComponent } from 'vue';
   import { getKey } from './common';
   import Modal from '@/components/Modal.vue';
-  import CustomDialog from '@/components/custom_dialog';
-  import { InlineDisplayMode, SimpleCharacter } from '@/interfaces';
+  import type CustomDialog from '@/components/custom_dialog';
+  import type { SimpleCharacter } from '@/interfaces';
+  import { InlineDisplayMode } from '@/interfaces';
   import { Keys } from '@/keys';
   import ChatView from './ChatView.vue';
   import { errorToString, characterImage } from './common';
@@ -573,8 +574,8 @@
         core.connection.connect(this.selectedCharacter.name);
       },
 
-      getChatView(): ChatView | undefined {
-        return this.$refs['chatview'] as typeof ChatView;
+      getChatView(): InstanceType<typeof ChatView> | undefined {
+        return this.$refs['chatview'] as InstanceType<typeof ChatView>;
       }
     }
   });

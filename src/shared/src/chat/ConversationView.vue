@@ -502,7 +502,7 @@
 
 <script lang="ts">
   import { defineComponent } from 'vue';
-  import { EditorButton, EditorSelection } from '@/bbcode/editor';
+  import type { EditorButton, EditorSelection } from '@/bbcode/editor';
   import { BBCodeView } from '@/bbcode/view';
   import Modal, { isShowing as anyDialogsShown } from '@/components/Modal.vue';
   import { Keys } from '@/keys';
@@ -518,13 +518,8 @@
   import ConversationSettings from './ConversationSettings.vue';
   import ConversationAdSettings from './ads/ConversationAdSettings.vue';
   import core from './core';
-  import {
-    Channel,
-    channelModes,
-    Character,
-    Conversation,
-    Settings
-  } from './interfaces';
+  import type { Character, Settings } from './interfaces';
+  import { Channel, channelModes, Conversation } from './interfaces';
   import l from './localize';
   import Logs from './Logs.vue';
   import ManageChannel from './ManageChannel.vue';
@@ -537,7 +532,7 @@
   import Dropdown from '@/components/Dropdown.vue';
   import { EventBus } from './preview/event-bus';
   import { MemoManager } from './character/memo';
-  import { CharacterMemo } from '@/site/character_page/interfaces';
+  import type { CharacterMemo } from '@/site/character_page/interfaces';
   import { UserInterfaceBBCodeParser } from '@/bbcode/user-interface';
 
   const UIBbcodeParser = new UserInterfaceBBCodeParser();
@@ -560,7 +555,10 @@
       modal: Modal
     },
     props: {
-      reportDialog: { required: true as const }
+      reportDialog: {
+        type: Object as () => InstanceType<typeof ReportDialog>,
+        required: true as const
+      }
     },
     data() {
       return {
@@ -638,11 +636,14 @@
       viewModeIconClass(): string {
         const baseClasses = ['fas'];
 
-        if (this.conversation.mode === 'chat') {
+        // Only rendered within v-if="isChannel"; mode lives on ChannelConversation.
+        const conv = <Conversation.ChannelConversation>this.conversation;
+
+        if (conv.mode === 'chat') {
           baseClasses.push('fa-comments');
-        } else if (this.conversation.mode === 'ads') {
+        } else if (conv.mode === 'ads') {
           baseClasses.push('fa-ad');
-        } else if (this.conversation.mode === 'both') {
+        } else if (conv.mode === 'both') {
           baseClasses.push('fa-asterisk');
         }
 
@@ -664,7 +665,7 @@
       'conversation.infoText'(newValue: string, oldValue: string): void {
         if (oldValue.length === 0 && newValue.length > 0) this.keepScroll();
       },
-      'conversation.typingStatus'(str: string, oldValue: string): void {
+      'conversation.typingStatus'(_str: string, oldValue: string): void {
         if (oldValue === 'clear') this.keepScroll();
       }
     },
@@ -682,7 +683,8 @@
           titleKey: 'editor.help',
           tag: '?',
           icon: 'fa-question',
-          handler: () => (<CommandHelp>this.$refs['helpDialog']).show()
+          handler: () =>
+            (<InstanceType<typeof CommandHelp>>this.$refs['helpDialog']).show()
         }
       ];
       window.addEventListener(
@@ -700,7 +702,7 @@
               document.activeElement === null ||
               document.activeElement.tagName === 'A')
           )
-            (<Editor>this.$refs['textBox']).focus();
+            (<InstanceType<typeof Editor>>this.$refs['textBox']).focus();
         })
       );
       window.addEventListener(
@@ -791,7 +793,8 @@
       async conversationChanged(): Promise<void> {
         this.updateOwnName();
 
-        if (!anyDialogsShown) (<Editor>this.$refs['textBox']).focus();
+        if (!anyDialogsShown)
+          (<InstanceType<typeof Editor>>this.$refs['textBox']).focus();
         this.$nextTick(() =>
           setTimeout(
             () => (this.messageView.scrollTop = this.messageView.scrollHeight)
@@ -805,7 +808,7 @@
           const c = await core.cache.profileCache.get(this.conversation.name);
           this.userMemo = c?.character?.memo?.memo || '';
         }
-        const editor = <Editor>this.$refs['textBox'];
+        const editor = <InstanceType<typeof Editor>>this.$refs['textBox'];
 
         if (editor !== null && editor.preview) {
           editor.togglePreview();
@@ -858,7 +861,7 @@
       },
 
       async onKeyDown(e: KeyboardEvent): Promise<void> {
-        const editor = <Editor>this.$refs['textBox'];
+        const editor = <InstanceType<typeof Editor>>this.$refs['textBox'];
         if (getKey(e) === Keys.Tab) {
           if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
           e.preventDefault();
@@ -989,32 +992,38 @@
         const conv = <Conversation.ChannelConversation>this.conversation;
         if (conv.channel.mode === 'both') {
           conv.isSendingAds = is;
-          (<Editor>this.$refs['textBox']).focus();
+          (<InstanceType<typeof Editor>>this.$refs['textBox']).focus();
         }
       },
 
       showLogs(): void {
-        (<Logs>this.$refs['logsDialog']).show();
+        (<InstanceType<typeof Logs>>this.$refs['logsDialog']).show();
       },
 
       showSettings(): void {
-        (<ConversationSettings>this.$refs['settingsDialog']).show();
+        (<InstanceType<typeof ConversationSettings>>(
+          this.$refs['settingsDialog']
+        )).show();
       },
 
       showAdSettings(): void {
-        (<ConversationAdSettings>this.$refs['adSettingsDialog']).show();
+        (<InstanceType<typeof ConversationAdSettings>>(
+          this.$refs['adSettingsDialog']
+        )).show();
       },
 
       showManage(): void {
-        (<ManageChannel>this.$refs['manageDialog']).show();
+        (<InstanceType<typeof ManageChannel>>this.$refs['manageDialog']).show();
       },
 
       showAds(): void {
-        (<CharacterAdView>this.$refs['adViewer']).show();
+        (<InstanceType<typeof CharacterAdView>>this.$refs['adViewer']).show();
       },
 
       showChannels(): void {
-        (<CharacterChannelList>this.$refs['channelList']).show();
+        (<InstanceType<typeof CharacterChannelList>>(
+          this.$refs['channelList']
+        )).show();
       },
 
       isAutopostingAds(): boolean {
@@ -1121,7 +1130,7 @@
 
           this.editorMemo = '';
 
-          (<Modal>this.$refs['userMemoEditor']).show();
+          (<InstanceType<typeof Modal>>this.$refs['userMemoEditor']).show();
 
           try {
             this.memoManager = new MemoManager(c.name);

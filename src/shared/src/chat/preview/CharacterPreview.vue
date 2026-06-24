@@ -115,12 +115,14 @@
   import { defineComponent } from 'vue';
   import core from '../core';
   import { methods } from '@/site/character_page/data_store';
-  import { Character as ComplexCharacter } from '@/site/character_page/interfaces';
-  import { Matcher, MatchReport, Score } from '@/learn/matcher';
-  import { Character as CharacterStatus } from '@/fchat';
-  import { getStatusClasses, StatusClasses } from '../UserView.vue';
+  import type { Character as ComplexCharacter } from '@/site/character_page/interfaces';
+  import type { MatchReport } from '@/learn/matcher';
+  import { Matcher, Score } from '@/learn/matcher';
+  import type { Character as CharacterStatus } from '@/fchat';
+  import type { StatusClasses } from '../UserView.vue';
+  import { getStatusClasses } from '../UserView.vue';
   import * as _ from 'lodash';
-  import { AdCachedPosting } from '@/learn/ad-cache';
+  import type { AdCachedPosting } from '@/learn/ad-cache';
   import { formatTime } from '../common';
   import * as Utils from '@/site/utils';
   import MatchTags from './MatchTags.vue';
@@ -135,13 +137,13 @@
   } from '@/learn/matcher-types';
   import { BBCodeView } from '@/bbcode/view';
   import { EventBus } from './event-bus';
-  import { Character, CustomKink } from '@/interfaces';
+  import type { Character, CustomKink } from '@/interfaces';
   import {
     matchesSmartFilters,
     testSmartFilters
   } from '@/learn/filter/smart-filter';
   import { smartFilterTypes } from '@/learn/filter/types';
-  import { Conversation } from '../interfaces';
+  import type { Conversation } from '../interfaces';
   import MessageView from '../message_view';
   import { createLogger } from '@/logger';
 
@@ -159,7 +161,7 @@
       'message-view': MessageView
     },
     props: {
-      id: {}
+      id: { type: Number, default: undefined }
     },
     data() {
       return {

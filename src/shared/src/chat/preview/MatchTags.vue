@@ -11,13 +11,17 @@
 
 <script lang="ts">
   import { defineComponent } from 'vue';
-  import { MatchReport, MatchResultScores } from '@/learn/matcher';
+  import type { PropType } from 'vue';
+  import type { MatchReport, MatchResultScores } from '@/learn/matcher';
   import { TagId } from '@/learn/matcher-types';
 
   export default defineComponent({
     components: {},
     props: {
-      match: { required: true as const }
+      match: {
+        type: Object as PropType<MatchReport>,
+        required: true as const
+      }
     },
     data() {
       return {

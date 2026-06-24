@@ -50,10 +50,11 @@
 
 <script lang="ts">
   import { defineComponent } from 'vue';
-  import { Channel, Character } from '@/fchat';
+  import type { Channel, Character } from '@/fchat';
   import { Score } from '@/learn/matcher';
   import core from './core';
-  import { CharacterDataEvent, EventBus } from './preview/event-bus';
+  import type { CharacterDataEvent } from './preview/event-bus';
+  import { EventBus } from './preview/event-bus';
   import { kinkMatchWeights, Scoring } from '@/learn/matcher-types';
   import { characterImage, normalizeCharacterName } from './common';
   import {

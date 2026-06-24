@@ -20,11 +20,12 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, PropType } from 'vue';
+  import type { PropType } from 'vue';
+  import { defineComponent } from 'vue';
   import { EventBus } from '@/chat/preview/event-bus';
   import * as Utils from '@/site/utils';
   import { characterImage, normalizeCharacterName } from '@/chat/common';
-  import { Character } from '@/fchat';
+  import type { Character } from '@/fchat';
 
   export default defineComponent({
     props: {
