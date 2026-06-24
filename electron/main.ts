@@ -551,9 +551,10 @@ export function openURLExternally(linkUrl: string): void {
     // `open -a <app>`: args before --args are documents (the URL); flags follow
     // --args. NOTE: Safari-as-browser with a different OS default opens the URL
     // twice. https://developer.apple.com/forums/thread/685385
-    const flags = argTokens.filter(arg => !arg.includes('%s'));
-    const openArgs = ['-a', browserPath, url];
-    if (flags.length > 0) openArgs.push('--args', ...flags);
+    const flags = argTokens.map(arg => arg.replace('%s', url));
+    const openArgs = ['-a', browserPath];
+    if (flags.length > 0) openArgs.push(...flags);
+    log.debug('execFileBrowser.openArgs', openArgs);
     execFile('open', openArgs);
     return;
   }
