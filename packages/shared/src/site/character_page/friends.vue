@@ -23,8 +23,8 @@
   import { ref } from 'vue';
   import * as Utils from '../utils';
   import { methods } from './data_store';
-  import { Character } from './interfaces';
-  import { SimpleCharacter } from '@/interfaces';
+  import type { Character } from './interfaces';
+  import type { SimpleCharacter } from '@/interfaces';
   import core from '@/chat/core';
   import l from '@/chat/localize';
 

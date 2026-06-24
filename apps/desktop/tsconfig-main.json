@@ -2,7 +2,10 @@
   "compilerOptions": {
     "target": "es2022",
     "useDefineForClassFields": false,
-    "module": "commonjs",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "resolveJsonModule": true,
     "sourceMap": true,
     "allowJs": true,
     "noEmitHelpers": true,
@@ -20,5 +23,5 @@
       "@/*": ["../../packages/shared/src/*"]
     }
   },
-  "include": ["main.ts", "preload.ts"]
+  "include": ["main.ts", "preload.ts", "vite-env.d.ts"]
 }

@@ -2,10 +2,20 @@ import core from '@/chat/core';
 import { EventMessage } from '@/chat/common';
 import { methods } from '@/site/character_page/data_store';
 import { decodeHTML, emptyMap } from './common';
-import { Character as Interfaces, Connection } from './interfaces';
-import { Character as CharacterProfile } from '@/site/character_page/interfaces';
+import type { Character as Interfaces, Connection } from './interfaces';
+import type { Character as CharacterProfile } from '@/site/character_page/interfaces';
 import { ProfileCache } from '@/learn/profile-cache';
-import Vue from 'vue';
+import { reactive } from 'vue';
+
+// Gender and status arrive fresh off the wire for each of the ~13k known
+// characters; collapse the handful of distinct values to one shared instance.
+const internPool = new Map<string, string>();
+function intern<T extends string>(value: T): T {
+  const existing = internPool.get(value);
+  if (existing !== undefined) return existing as T;
+  internPool.set(value, value);
+  return value;
+}
 
 class Character implements Interfaces.Character {
   gender: Interfaces.Gender = 'None';
@@ -20,7 +30,7 @@ class Character implements Interfaces.Character {
   previousStatusText = '';
 
   constructor(public name: string) {
-    Vue.observable(this.overrides);
+    this.overrides = reactive(this.overrides);
   }
 
   hasStatusTextChanged(): boolean {
@@ -77,7 +87,10 @@ class State implements Interfaces.State {
       char.isIgnored = this.ignoreList.indexOf(key) !== -1;
       this.characters[key] = char;
     }
-    return char;
+    // Return the stored (reactive) ref, never the raw `new Character()`, so
+    // every caller shares one proxy identity - required for both reactivity
+    // and the indexOf() lookups setStatus() does against friends/bookmarks.
+    return this.characters[key]!;
   }
 
   setStatus(
@@ -105,7 +118,7 @@ class State implements Interfaces.State {
         }
       }
     }
-    character.status = status;
+    character.status = intern(status);
     character.statusText = decodeHTML(text);
   }
 
@@ -149,7 +162,7 @@ class State implements Interfaces.State {
       return;
     }
 
-    Vue.set(char.overrides, type, newValue);
+    char.overrides[type] = newValue;
   }
   async resolveOwnProfile(): Promise<void> {
     await methods.fieldsGet();
@@ -165,7 +178,7 @@ class State implements Interfaces.State {
 let state: State;
 
 export default function (this: void, connection: Connection): Interfaces.State {
-  state = new State();
+  state = reactive(new State()) as State;
   let reconnectStatus: Connection.ClientCommands['STA'];
   connection.onEvent('connecting', async isReconnect => {
     state.friends = [];
@@ -226,13 +239,13 @@ export default function (this: void, connection: Connection): Interfaces.State {
   connection.onMessage('LIS', data => {
     for (const char of data.characters) {
       const character = state.get(char[0]);
-      character.gender = char[1];
+      character.gender = intern(char[1]);
       state.setStatus(character, char[2], char[3]);
     }
   });
   connection.onMessage('FLN', data => {
     //Going offline counts as changing status too for the previous status var
-    let char = state.get(data.character);
+    const char = state.get(data.character);
     char.previousStatusText = char.statusText;
     state.setStatus(char, 'offline', '');
   });
@@ -282,12 +295,12 @@ export default function (this: void, connection: Connection): Interfaces.State {
     }
 
     character.name = data.identity;
-    character.gender = data.gender;
+    character.gender = intern(data.gender);
     state.setStatus(character, data.status, '');
   });
   connection.onMessage('STA', data => {
     //This is so it won't clear the previous status when their client reconnects and sends a STA message
-    let char = state.get(data.character);
+    const char = state.get(data.character);
     if (char.statusText.length > 0 && data.statusmsg.length > 0) {
       char.previousStatusText = char.statusText;
     }

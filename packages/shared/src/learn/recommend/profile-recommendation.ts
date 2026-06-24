@@ -1,7 +1,8 @@
 import _ from 'lodash';
 import Axios from 'axios';
 
-import { CharacterAnalysis, Matcher } from '../matcher';
+import type { CharacterAnalysis } from '../matcher';
+import { Matcher } from '../matcher';
 import {
   FurryPreference,
   Gender,
@@ -189,7 +190,7 @@ export class ProfileRecommendationAnalyzer {
 
   protected checkCustomKinks(): void {
     //we define it here, because we want to make sure this array is typed as a string[]
-    let unfilledList: string[] = [];
+    const unfilledList: string[] = [];
     const counts = _.reduce(
       this.profile.character.customs,
       (accum, kink) => {
@@ -282,7 +283,7 @@ export class ProfileRecommendationAnalyzer {
     const p = this.profile;
 
     if (p.age === null) {
-      let isUnparsable =
+      const isUnparsable =
         this.profile.character.infotags[TagId.Age]?.string !== undefined;
       this.add(
         'AGE',
@@ -313,7 +314,7 @@ export class ProfileRecommendationAnalyzer {
     }
 
     if (p.species === null) {
-      let isUnparsable =
+      const isUnparsable =
         this.profile.character.infotags[TagId.Species]?.string !== undefined;
       if (isUnparsable) {
         this.add(
@@ -434,7 +435,7 @@ export class ProfileRecommendationAnalyzer {
       .filter(value => typeof value === 'number')
       .forEach(genderValue => {
         let score: Scoring = Scoring.NEUTRAL;
-        let kinkPref = Matcher.getKinkGenderPreference(
+        const kinkPref = Matcher.getKinkGenderPreference(
           c,
           genderValue as Gender
         );

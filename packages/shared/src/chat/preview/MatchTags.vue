@@ -1,17 +1,20 @@
 <template>
   <div class="matched-tags">
-    <span v-for="(score, key) in merged" :class="score.getRecommendedClass()"
+    <span
+      v-for="(score, key) in merged"
+      :key="key"
+      :class="score.getRecommendedClass()"
       ><i :class="score.getRecommendedIcon()"></i> {{ getTagDesc(key) }}</span
     >
   </div>
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import { MatchReport, MatchResultScores } from '@/learn/matcher';
   import { TagId } from '@/learn/matcher-types';
 
-  export default Vue.extend({
+  export default defineComponent({
     components: {},
     props: {
       match: { required: true as const }

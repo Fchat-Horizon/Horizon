@@ -1,9 +1,4 @@
-import {
-  CreateElement,
-  default as Vue,
-  VNode,
-  VNodeChildrenArrayContents
-} from 'vue';
+import { defineComponent, h, type VNode } from 'vue';
 import { Channel } from '@/fchat';
 import { Score } from '@/learn/matcher';
 import { BBCodeView } from '@/bbcode/view';
@@ -12,15 +7,28 @@ import core from './core';
 import { Conversation } from './interfaces';
 import UserView from './UserView.vue';
 import IconView from '@/bbcode/IconView.vue';
-import { Scoring } from '@/learn/matcher-types';
+import type { Scoring } from '@/learn/matcher-types';
+
+type RenderChild = VNode | string;
 
 const userPostfix: { [key: number]: string | undefined } = {
   [Conversation.Message.Type.Message]: ': ',
   [Conversation.Message.Type.Ad]: ': ',
   [Conversation.Message.Type.Action]: ''
 };
-export default Vue.extend({
-  render(this: any, createElement: CreateElement): VNode {
+
+// BBCodeView(parser) builds a component type bound to a parser. Calling it inline
+// in render() would yield a fresh type every render, so Vue 3 (which diffs vnode
+// types by identity) would unmount+remount the whole BBCode subtree each time -
+// re-parsing and restarting eicon/GIF animations. Memoize once against the stable
+// core parser so re-renders just patch props on the same instance.
+let messageBBCodeView: ReturnType<typeof BBCodeView> | undefined;
+function getMessageBBCodeView(): ReturnType<typeof BBCodeView> {
+  return (messageBBCodeView ??= BBCodeView(core.bbCodeParser));
+}
+
+export default defineComponent({
+  render(this: any): VNode {
     const message = this.message;
     const layoutMode = core.connection.isOpen
       ? core.state.settings.chatLayoutMode || 'classic'
@@ -30,7 +38,7 @@ export default Vue.extend({
 
     // Classic layout: existing inline format.
     // Modern layout: avatar-first with header (name + time) and bubble content.
-    let children: VNodeChildrenArrayContents;
+    let children: RenderChild[];
     if (
       isModern &&
       message.type !== Conversation.Message.Type.Event &&
@@ -39,11 +47,7 @@ export default Vue.extend({
       children = [];
     } else {
       children = [
-        createElement(
-          'span',
-          { staticClass: 'message-time' },
-          `${formatTime(message.time)}`
-        )
+        h('span', { class: 'message-time' }, `${formatTime(message.time)}`)
       ];
     }
 
@@ -76,28 +80,22 @@ export default Vue.extend({
     ) {
       if (isModern) {
         // Modern layout: separate avatar column so time can sit directly after name
-        const headerChildren: VNodeChildrenArrayContents = [];
+        const headerChildren: RenderChild[] = [];
         if (showHeader) {
           // Create UserView in headerChildren
           headerChildren.push(
-            createElement(UserView, {
-              props: {
-                avatar: false, // custom avatar element
-                character: message.sender,
-                channel: this.channel,
-                isMarkerShown: core.connection.character
-                  ? core.state.settings.horizonShowGenderMarker
-                  : false
-              }
+            h(UserView, {
+              avatar: false, // custom avatar element
+              character: message.sender,
+              channel: this.channel,
+              isMarkerShown: core.connection.character
+                ? core.state.settings.horizonShowGenderMarker
+                : false
             })
           );
           // Create message-time in headerChildren
           headerChildren.push(
-            createElement(
-              'span',
-              { staticClass: 'message-time' },
-              `${formatTime(message.time)}`
-            )
+            h('span', { class: 'message-time' }, `${formatTime(message.time)}`)
           );
 
           // Create IconView (or spacer) in children (this makes it visible as children elements are displayed when they are put in)
@@ -105,51 +103,35 @@ export default Vue.extend({
             ? core.state.settings.risingShowPortraitInMessage
             : false;
           const avatarNode = showAvatar
-            ? createElement(IconView, {
-                props: {
-                  character: message.sender,
-                  useOriginalAvatar: core.state?.settings
-                    ? !core.state.settings.horizonMessagePortraitHighQuality
-                    : true
-                },
+            ? h(IconView, {
+                character: message.sender,
+                useOriginalAvatar: core.state?.settings
+                  ? !core.state.settings.horizonMessagePortraitHighQuality
+                  : true,
                 class: 'message-avatar'
               })
-            : createElement('div', { staticClass: 'message-avatar-spacer' });
+            : h('div', { class: 'message-avatar-spacer' });
           children.push(avatarNode);
 
           // Create message with header, putting headerChildren objects inside
-          modernInner = createElement(
-            'div',
-            { staticClass: 'message-modern-inner' },
-            [
-              createElement(
-                'div',
-                { staticClass: 'message-header' },
-                headerChildren
-              )
-            ]
-          );
+          modernInner = h('div', { class: 'message-modern-inner' }, [
+            h('div', { class: 'message-header' }, headerChildren)
+          ]);
         } else {
           // Creates spacer without avatar (when no header needed) in children
-          const avatarNode = createElement(
-            'div',
-            {
-              staticClass: 'message-avatar-spacer'
-            },
-            [
-              createElement(
-                'span',
-                { staticClass: 'message-time' },
-                `${formatTime(message.time, true)}`
-              )
-            ]
-          );
+          const avatarNode = h('div', { class: 'message-avatar-spacer' }, [
+            h(
+              'span',
+              { class: 'message-time' },
+              `${formatTime(message.time, true)}`
+            )
+          ]);
           children.push(avatarNode);
           // Creates message without header, keeping similar message structure
-          modernInner = createElement(
+          modernInner = h(
             'div',
-            { staticClass: 'message-modern-inner' },
-            []
+            { class: 'message-modern-inner' },
+            [] as RenderChild[]
           );
         }
         // Pushes the inner with or without header into children to make it visible
@@ -158,29 +140,23 @@ export default Vue.extend({
         // Classic Layout: Action Star > UserView (with icon logic) > Post type colon
         children.push(
           message.type === Conversation.Message.Type.Action
-            ? createElement('i', { class: 'message-pre fas fa-star-of-life' })
+            ? h('i', { class: 'message-pre fas fa-star-of-life' })
             : '',
-          createElement(UserView, {
-            props: {
-              avatar: core.connection.character
-                ? core.state.settings.risingShowPortraitInMessage
-                : false,
-              useOriginalAvatar: core.connection.character
-                ? !core.state.settings.horizonMessagePortraitHighQuality
-                : true,
-              character: message.sender,
-              channel: this.channel,
-              isMarkerShown: core.connection.character
-                ? core.state.settings.horizonShowGenderMarker
-                : false
-            }
+          h(UserView, {
+            avatar: core.connection.character
+              ? core.state.settings.risingShowPortraitInMessage
+              : false,
+            useOriginalAvatar: core.connection.character
+              ? !core.state.settings.horizonMessagePortraitHighQuality
+              : true,
+            character: message.sender,
+            channel: this.channel,
+            isMarkerShown: core.connection.character
+              ? core.state.settings.horizonShowGenderMarker
+              : false
           }),
           userPostfix[message.type] !== undefined
-            ? createElement(
-                'span',
-                { class: 'message-post' },
-                userPostfix[message.type]
-              )
+            ? h('span', { class: 'message-post' }, userPostfix[message.type])
             : ' '
         );
       }
@@ -212,68 +188,63 @@ export default Vue.extend({
     // shows as a blank line like classic view does.
     if (messageAdjustment === '') messageAdjustment = message.text;
     const isAd = message.type == Conversation.Message.Type.Ad && !this.logs;
-    const bbcodeNode = createElement(BBCodeView(core.bbCodeParser), {
-      props: {
-        unsafeText: isModern ? messageAdjustment : message.text,
-        afterInsert: isAd
-          ? (elm: HTMLElement) => {
-              setImmediate(() => {
-                if (isModern) {
-                  // Pushes elm up three times rather than one with modern to make it parent to the top level of a message.
-                  elm = elm.parentElement!.parentElement!.parentElement!;
-                } else {
-                  elm = elm.parentElement!;
-                }
-                if (elm.scrollHeight > elm.offsetHeight) {
-                  const expand = document.createElement('div');
-                  expand.className = 'expand fas fa-caret-down';
-                  expand.addEventListener('click', function (): void {
-                    const ad = this.parentElement!;
-                    ad.className += ' expanded';
-                    // * Restart eicon GIF animations so mosaics re-sync
-                    const eicons =
-                      ad.querySelectorAll<HTMLImageElement>('img.eicon');
-                    for (const eicon of eicons) {
-                      const src = eicon.src;
-                      eicon.src = '';
-                      eicon.src = src;
-                    }
-                  });
-                  elm.appendChild(expand);
-                }
-              });
-            }
-          : undefined
-      }
+    const bbcodeNode = h(getMessageBBCodeView(), {
+      unsafeText: isModern ? messageAdjustment : message.text,
+      afterInsert: isAd
+        ? (elm: HTMLElement) => {
+            setTimeout(() => {
+              if (isModern) {
+                // Pushes elm up three times rather than one with modern to make it parent to the top level of a message.
+                elm = elm.parentElement!.parentElement!.parentElement!;
+              } else {
+                elm = elm.parentElement!;
+              }
+              if (elm.scrollHeight > elm.offsetHeight) {
+                const expand = document.createElement('div');
+                expand.className = 'expand fas fa-caret-down';
+                expand.addEventListener('click', function (): void {
+                  const ad = this.parentElement!;
+                  ad.className += ' expanded';
+                  // * Restart eicon GIF animations so mosaics re-sync
+                  const eicons =
+                    ad.querySelectorAll<HTMLImageElement>('img.eicon');
+                  for (const eicon of eicons) {
+                    const src = eicon.src;
+                    eicon.src = '';
+                    eicon.src = src;
+                  }
+                });
+                elm.appendChild(expand);
+              }
+            }, 0);
+          }
+        : undefined
     });
 
     if (isModern) {
-      if (modernInner && modernInner.children) {
-        let messagePrefix = '';
+      if (modernInner && Array.isArray(modernInner.children)) {
+        let messagePrefix: RenderChild = '';
         switch (message.type) {
           case Conversation.Message.Type.Action:
-            messagePrefix = createElement('i', {
+            messagePrefix = h('i', {
               class: 'message-pre fa fa-fw fa-star-of-life'
             });
             break;
           case Conversation.Message.Type.Roll:
-            messagePrefix = createElement('i', {
+            messagePrefix = h('i', {
               class: 'message-pre fa fa-fw fa-dice-d6'
             });
             break;
           case Conversation.Message.Type.Warn:
-            messagePrefix = createElement('i', {
+            messagePrefix = h('i', {
               class: 'message-pre fa fa-fw fa-triangle-exclamation'
             });
             break;
           default:
             messagePrefix = '';
         }
-        (modernInner.children as VNodeChildrenArrayContents).push(
-          createElement('div', { staticClass: 'message-content' }, [
-            messagePrefix,
-            bbcodeNode
-          ])
+        (modernInner.children as RenderChild[]).push(
+          h('div', { class: 'message-content' }, [messagePrefix, bbcodeNode])
         );
       } else {
         // fallback just append bbcode
@@ -291,22 +262,19 @@ export default Vue.extend({
       classes += ' message-modern';
     if (this.selectable) {
       classes += ' message-selectable';
-      const checkbox = createElement('input', {
-        attrs: { type: 'checkbox', checked: this.selected || undefined },
-        staticClass: 'message-select-checkbox',
-        on: {
-          click: (e: MouseEvent) => {
-            e.stopPropagation();
-            this.$emit('toggle-select', e);
-          }
+      const checkbox = h('input', {
+        type: 'checkbox',
+        checked: this.selected || undefined,
+        class: 'message-select-checkbox',
+        onClick: (e: MouseEvent) => {
+          e.stopPropagation();
+          this.$emit('toggle-select', e);
         }
       });
       children.unshift(checkbox);
     }
 
-    const node = createElement('div', { attrs: { class: classes } }, children);
-    node.key = message.id;
-    return node;
+    return h('div', { class: classes, key: message.id }, children);
   },
   props: {
     message: { required: true as const },
@@ -331,7 +299,7 @@ export default Vue.extend({
         : null) as (() => void) | null
     };
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (this.scoreWatcher) {
       this.scoreWatcher(); // stop watching
       this.scoreWatcher = null;

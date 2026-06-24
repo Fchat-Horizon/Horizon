@@ -11,7 +11,7 @@
 
 import _ from 'lodash';
 import core from '../core';
-import { Conversation } from '../interfaces';
+import type { Conversation } from '../interfaces';
 
 export interface Ad {
   disabled: boolean;

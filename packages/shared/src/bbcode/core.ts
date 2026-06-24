@@ -1,3 +1,4 @@
+import { createApp, type App } from 'vue';
 import {
   BBCodeCustomTag,
   BBCodeParser,
@@ -72,7 +73,7 @@ export function analyzeUrlTag(
 }
 
 export class CoreBBCodeParser extends BBCodeParser {
-  cleanup: Vue[] = [];
+  cleanup: App[] = [];
   /*tslint:disable-next-line:typedef*/ //https://github.com/palantir/tslint/issues/711
   constructor(public makeLinksClickable = true) {
     super();
@@ -92,14 +93,11 @@ export class CoreBBCodeParser extends BBCodeParser {
         const el = parser.createElement('span');
         parent.appendChild(root);
         root.appendChild(el);
-        const view = new IconView({
-          el,
-          propsData: {
-            character: core.characters.get(characterName)
-          }
+        const app = createApp(IconView, {
+          character: core.characters.get(characterName)
         });
-
-        this.cleanup.push(view);
+        app.mount(el);
+        this.cleanup.push(app);
         return root;
       })
     );
@@ -152,15 +150,13 @@ export class CoreBBCodeParser extends BBCodeParser {
           return;
         }
 
-        const view = new UrlTagView({
-          el: root,
-          propsData: {
-            url: tagData.url,
-            text: tagData.textContent,
-            domain: tagData.domain
-          }
+        const app = createApp(UrlTagView, {
+          url: tagData.url,
+          text: tagData.textContent,
+          domain: tagData.domain
         });
-        this.cleanup.push(view);
+        app.mount(root);
+        this.cleanup.push(app);
 
         return root;
       })

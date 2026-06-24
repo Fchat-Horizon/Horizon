@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import AdmZip from 'adm-zip';
+import type AdmZip from 'adm-zip';
+import { loadAdmZip } from '../exporter/zip-loaders';
 import { shouldIncludeSettingsFile } from '../exporter/manifest';
 
 /**
@@ -338,7 +339,7 @@ export async function runImportCli(opts: ImportCliOptions): Promise<{
   const dataDir = opts.dataDir;
   if (!dataDir) throw new Error('No data dir provided');
 
-  const zip = new AdmZip(opts.zip);
+  const zip = new (await loadAdmZip())(opts.zip);
 
   const wantedChars =
     opts.characters && opts.characters.length > 0

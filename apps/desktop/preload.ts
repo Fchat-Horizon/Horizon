@@ -1,14 +1,13 @@
-/**
- * @module preload
- * Runs in every shell window and chat tab before any page script. Renderers
- * are sandboxed and context-isolated - no Node, no Electron - so the handful
- * of things the UI actually needs get handed through the context bridge
- * here, and electron-shim.ts picks them up on the other side.
+/*
+ * Runs in every shell window and chat tab before any page script. Renderers are
+ * sandboxed and context-isolated (no Node, no Electron), so the few host
+ * capabilities the UI needs are handed across the context bridge here;
+ * electron-shim.ts and platform-host.ts pick them up on the other side.
  */
 
 import { contextBridge, ipcRenderer, webFrame } from 'electron';
 
-// note: Exposes window.__electronLog so electron-log/renderer reaches main.
+// Exposes window.__electronLog so electron-log/renderer can reach main.
 import 'electron-log/preload';
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -21,20 +20,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   invoke(channel: string, ...args: unknown[]): Promise<unknown> {
     return ipcRenderer.invoke(channel, ...args);
   },
-  /**
-   * Subscribes and returns an unsubscribe function. The listener receives
-   * the message arguments without the IpcRendererEvent; electron-shim.ts
-   * reinserts a placeholder event so call sites keep their signatures.
-   */
   on(channel: string, listener: (...args: unknown[]) => void): () => void {
     const wrapped = (
       _event: Electron.IpcRendererEvent,
       ...args: unknown[]
     ): void => listener(...args);
     ipcRenderer.on(channel, wrapped);
-    return () => {
-      ipcRenderer.removeListener(channel, wrapped);
-    };
+    return () => ipcRenderer.removeListener(channel, wrapped);
   },
   once(channel: string, listener: (...args: unknown[]) => void): void {
     ipcRenderer.once(
@@ -48,12 +40,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   }
 });
 
-/*
- * Free `process.platform` references in renderer code resolve to this.
- * ! No `versions` on purpose: bluebird and friends sniff
- * ! process.versions.node and start believing they're in Node. They are not.
- */
-contextBridge.exposeInMainWorld('process', {
+contextBridge.exposeInMainWorld('hostInfo', {
   platform: process.platform,
-  env: {}
+  // The sandboxed preload has no path/fs to build the file:// URL, so main
+  // resolves the preview preload location and hands it over synchronously.
+  previewPreloadUrl: ipcRenderer.sendSync('preview-preload-url-sync')
 });

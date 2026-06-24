@@ -1,6 +1,8 @@
-import Axios, { AxiosError, AxiosResponse } from 'axios';
+import type { AxiosError, AxiosResponse } from 'axios';
+import Axios from 'axios';
 import * as qs from 'qs';
-import { Connection as Interfaces, WebSocketConnection } from './interfaces';
+import type { Connection as Interfaces } from './interfaces';
+import { WebSocketConnection } from './interfaces';
 import ReadyState = WebSocketConnection.ReadyState;
 import { createLogger } from '@/logger';
 const log = createLogger('connection');

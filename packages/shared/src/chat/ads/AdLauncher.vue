@@ -23,7 +23,7 @@
         <div class="mb-3">
           <p>{{ l('admgr.tags.help') }}</p>
 
-          <div class="form-check" v-for="(tag, index) in tags">
+          <div class="form-check" v-for="(tag, index) in tags" :key="tag.title">
             <input
               class="form-check-input"
               type="checkbox"
@@ -59,7 +59,11 @@
           </label>
         </div>
 
-        <div class="form-check" v-for="(channel, index) in channels">
+        <div
+          class="form-check"
+          v-for="(channel, index) in channels"
+          :key="channel.id"
+        >
           <input
             class="form-check-input"
             type="checkbox"
@@ -111,7 +115,11 @@
             v-model="timeoutMinutes"
             id="timeoutMinutes"
           >
-            <option v-for="timeout in timeoutOptions" :value="timeout.value">
+            <option
+              v-for="timeout in timeoutOptions"
+              :key="timeout.value"
+              :value="timeout.value"
+            >
               {{ timeout.title }}
             </option>
           </select>
@@ -121,7 +129,11 @@
             {{ l('admgr.delay') }}</label
           >
           <select class="form-select" v-model="delayMinutes" id="delayMinutes">
-            <option v-for="delay in delayOptions" :value="delay.value">
+            <option
+              v-for="delay in delayOptions"
+              :key="delay.value"
+              :value="delay.value"
+            >
               {{ delay.title }}
             </option>
           </select>
@@ -148,12 +160,14 @@
 
 <script lang="ts">
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import Modal from '@/components/Modal.vue';
   import core from '../core';
   import _ from 'lodash';
   import l from '../localize';
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: { modal: Modal },
     data() {
       return {

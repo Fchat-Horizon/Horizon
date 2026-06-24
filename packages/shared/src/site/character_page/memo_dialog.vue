@@ -19,11 +19,11 @@
 
 <script lang="ts">
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import Modal from '@/components/Modal.vue';
-  import { SimpleCharacter } from '@/interfaces';
+  import type { SimpleCharacter } from '@/interfaces';
   import * as Utils from '../utils';
   import l from '@/chat/localize';
-  // import {methods} from './data_store';
   import { MemoManager } from '@/chat/character/memo';
 
   export interface Memo {
@@ -34,7 +34,8 @@
     updated_at: number;
   }
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: { Modal },
     props: {
       character: { required: true as const },
@@ -60,7 +61,8 @@
     },
     methods: {
       show(): void {
-        CustomDialog.options.methods!.show.call(this);
+        // defineComponent has no Vue 2 `.options`; methods live on the object.
+        (CustomDialog as any).methods.show.call(this);
         this.setMemo();
         this.editing = true;
       },

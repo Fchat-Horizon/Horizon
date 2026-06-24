@@ -58,11 +58,11 @@
     computed,
     watch,
     onMounted,
-    PropType
+    type PropType
   } from 'vue';
   import anyAscii from 'any-ascii';
   import core from '@/chat/core';
-  import { DisplayKink } from './interfaces';
+  import type { DisplayKink } from './interfaces';
   import { kinkComparisonSwaps } from '@/learn/matcher-types';
   import l from '@/chat/localize';
 

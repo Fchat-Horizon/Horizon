@@ -7,13 +7,13 @@
     iconClass="fas fa-question"
   >
     <div style="overflow: auto">
-      <div v-for="command in filteredCommands">
+      <div v-for="command in filteredCommands" :key="command.name">
         <h4>{{ command.name }}</h4>
         <i>{{ l('commands.help.syntax', command.syntax) }}</i>
         <div>{{ command.help }}</div>
         <div v-if="command.params.length">
           {{ l('commands.help.parameters') }}
-          <div v-for="param in command.params" class="params">
+          <div v-for="(param, i) in command.params" :key="i" class="params">
             <b>{{ param.name }}</b> - {{ param.help }}
           </div>
         </div>
@@ -36,6 +36,7 @@
 
 <script lang="ts">
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import Modal from '@/components/Modal.vue';
   import core from './core';
   import l from './localize';
@@ -54,7 +55,8 @@
     syntax: string;
   };
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: { modal: Modal },
     data() {
       return {

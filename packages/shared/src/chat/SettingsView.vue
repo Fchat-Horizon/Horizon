@@ -347,7 +347,11 @@
               {{ l('settings.useDefaultTheme') }}
             </option>
             <option disabled>---</option>
-            <option v-for="theme in risingAvailableThemes" :value="theme">
+            <option
+              v-for="theme in risingAvailableThemes"
+              :key="theme"
+              :value="theme"
+            >
               {{ theme }}
             </option>
           </select>
@@ -745,7 +749,7 @@
             keyField="name"
             :resetKey="hiddenFilter"
           >
-            <template slot-scope="{ item: entry }">
+            <template #default="{ item: entry }">
               <div>
                 <span
                   class="fa fa-times"
@@ -843,7 +847,7 @@
       <h5>{{ l('settings.profile.ignoredList') }}</h5>
       <div class="mb-3 p-2">
         <template v-if="ignored.length">
-          <div v-for="(user, i) in ignored">
+          <div v-for="(user, i) in ignored" :key="user">
             <span
               class="fa fa-times"
               style="cursor: pointer"
@@ -1047,7 +1051,11 @@
 
       <h5>{{ l('settings.typeMatch') }}</h5>
       <div class="mb-3 filters">
-        <div class="form-check" v-for="(value, key) in smartFilterTypes">
+        <div
+          class="form-check"
+          v-for="(value, key) in smartFilterTypes"
+          :key="key"
+        >
           <input
             class="form-check-input"
             type="checkbox"
@@ -1131,7 +1139,11 @@
           style="flex: 1; margin-right: 10px"
         >
           <option value="">{{ l('settings.import.selectCharacter') }}</option>
-          <option v-for="character in availableImports" :value="character">
+          <option
+            v-for="character in availableImports"
+            :key="character"
+            :value="character"
+          >
             {{ character }}
           </option>
         </select>
@@ -1150,6 +1162,7 @@
 <script lang="ts">
   import { ipc } from '@/platform/ipc';
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import Modal from '@/components/Modal.vue';
   import { Editor } from './bbcode';
   import Tabs from '@/components/tabs';
@@ -1175,7 +1188,8 @@
 
   const bbcodeParser = new UserInterfaceBBCodeParser();
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: {
       modal: Modal,
       editor: Editor,
@@ -1411,7 +1425,7 @@
 
         core.state.settings = {
           playSound: this.playSound,
-          soundTheme: previousSettings.soundTheme,
+          soundTheme: previousSettings.soundTheme || 'default',
           clickOpensMessage: this.clickOpensMessage,
           disallowedTags: this.disallowedTags
             .split(',')
@@ -1426,7 +1440,6 @@
           showAvatars: this.showAvatars,
           animatedEicons: this.animatedEicons,
           smoothMosaics: this.smoothMosaics,
-          soundTheme: core.state.settings.soundTheme || 'default',
           idleTimer: isNaN(idleTimer)
             ? 0
             : idleTimer < 0

@@ -4,11 +4,6 @@ import tseslint from 'typescript-eslint';
 import pluginVue from 'eslint-plugin-vue';
 import prettier from 'eslint-config-prettier';
 
-/*
- * When the renderer moves to Vue 3, bump the plugin to v10 and swap to
- * `flat/essential`.
- */
-
 // & Anything that is generated, vendored, or not ours to lint.
 const ignores = [
   '**/node_modules/**',
@@ -66,7 +61,7 @@ export default [
 
   js.configs.recommended,
   ...tseslint.configs.recommended,
-  ...pluginVue.configs['flat/vue2-essential'],
+  ...pluginVue.configs['flat/essential'],
 
   {
     files: ['**/*.{js,mjs,cjs,ts,vue}'],

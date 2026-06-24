@@ -8,11 +8,10 @@
     style="width: 98%"
     dialogClass="logs-dialog"
   >
-    <template slot="title">
+    <template #title>
       {{ l('logs.title') }}
       <div
         class="logs-fab btn btn-secondary"
-        slot="title"
         @click="showFilters = !showFilters"
       >
         <span
@@ -32,7 +31,7 @@
           :placeholder="l('filter')"
           @input="loadCharacter"
         >
-          <template slot-scope="s">
+          <template #default="s">
             <template v-if="s.option">
               <img
                 :src="getAvatarUrl(s.option)"
@@ -74,7 +73,7 @@
           :filterFunc="filterConversation"
           :placeholder="l('filter')"
         >
-          <template slot-scope="s">
+          <template #default="s">
             <template v-if="s.option">
               <i
                 v-if="s.option.key === '_'"
@@ -129,7 +128,11 @@
           @change="loadMessages"
         >
           <option :value="undefined">{{ l('logs.allDates') }}</option>
-          <option v-for="date in dates" :value="date.getTime()">
+          <option
+            v-for="date in dates"
+            :key="date.getTime()"
+            :value="date.getTime()"
+          >
             {{ formatDate(date) }}
           </option>
         </select>
@@ -155,9 +158,9 @@
       :keyFunc="messageKeyFunc"
       :resetKey="resetKey"
       @near-top="onNearTop"
-      @keydown.native.page-up="onPageUp"
+      @keydown.page-up="onPageUp"
     >
-      <template slot-scope="{ item, index, isScrolling }">
+      <template #default="{ item, index, isScrolling }">
         <div v-if="!isScrolling" class="message-container">
           <span
             v-if="filter.length > 0"
@@ -244,6 +247,7 @@
 <script lang="ts">
   import { format } from 'date-fns';
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import FilterableSelect from '@/components/FilterableSelect.vue';
   import Modal from '@/components/Modal.vue';
   import { Keys } from '@/keys';
@@ -315,7 +319,8 @@
     }
   }
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: {
       modal: Modal,
       'message-view': MessageView,
@@ -415,7 +420,7 @@
         .slice()
         .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     },
-    beforeDestroy(): void {
+    beforeUnmount(): void {
       if (this.filterDebounce !== undefined) clearTimeout(this.filterDebounce);
       if (this.nearTopDebounce !== undefined)
         clearTimeout(this.nearTopDebounce);
@@ -551,7 +556,7 @@
          * This list should cover Unix, Windows and macOS.
          * Files and folders also may not end with spaces.
          */
-        let sanitizedName = name.replace(/[\/<>:"\\|?*.]/g, '_').trimRight();
+        let sanitizedName = name.replace(/[/<>:"\\|?*.]/g, '_').trimRight();
 
         /*
          * For Windows, certain names are forbidden, too.
@@ -690,7 +695,7 @@
             if (selection === null) return;
             selection.removeAllRanges();
             if (this.messages.length > 0) {
-              const el = (this.$refs['messages'] as Vue | undefined)?.$el;
+              const el = (this.$refs['messages'] as any)?.$el;
               if (el?.firstChild && el.lastChild) {
                 const range = document.createRange();
                 range.setStartBefore(el.firstChild);

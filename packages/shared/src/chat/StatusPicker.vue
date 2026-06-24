@@ -15,6 +15,7 @@
       <div
         class="row"
         v-for="(pinnedStatus, index) in pinned"
+        :key="index"
         :class="{ 'selected-row': index === selectedPin }"
       >
         <div class="form-col radio-col">
@@ -55,6 +56,7 @@
       <div
         class="row"
         v-for="(historicStatus, index) in history"
+        :key="index"
         :class="{ 'selected-row': index === selectedStatus }"
       >
         <div class="form-col radio-col">
@@ -105,6 +107,7 @@
 <script lang="ts">
   import Modal from '@/components/Modal.vue';
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import core from './core';
   import { BBCodeView } from '@/bbcode/view';
   import * as _ from 'lodash';
@@ -116,7 +119,8 @@
 
   const MAX_PINNED_STATUSES: number = 5;
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: { modal: Modal, bbcode: BBCodeView(core.bbCodeParser) },
     props: {
       callback: { required: true as const },

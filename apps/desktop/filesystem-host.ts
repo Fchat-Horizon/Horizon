@@ -14,17 +14,17 @@ const log = createLogger('filesystem-host');
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
-import l from '@horizon/shared/chat/localize';
-import { GeneralSettings } from '@horizon/shared/common';
+import l from './localize-host';
+import type { GeneralSettings } from '@horizon/shared/common';
+import { allowMediaRoot, mediaUrl } from './app-protocol';
 import { JsonStore } from './json-store';
+import type { Index, PlainLogMessage } from './log-format';
 import {
   checkIndex,
   deserializeMessage,
   fixLogs,
   getLogDir,
-  Index,
   loadIndex,
-  PlainLogMessage,
   serializeMessage
 } from './log-format';
 
@@ -90,9 +90,6 @@ function availableCharacters(): string[] {
 
 let initialized = false;
 
-/**
- * Registers the filesystem IPC endpoints. Call once during app startup.
- */
 export function initFilesystemHost(opts: {
   getSettings(): GeneralSettings;
 }): void {
@@ -285,8 +282,7 @@ export function initFilesystemHost(opts: {
     writeFile(draftFile(character), drafts);
   });
 
-  /* --- Bundled assets: color themes ------------------------------------- */
-
+  // Bundled assets: color themes
   const themesDir = path.join(__dirname, 'themes');
 
   ipc.on('themes-list-sync', e => {
@@ -315,7 +311,7 @@ export function initFilesystemHost(opts: {
   });
 
   /* Theme hot reload for development: renderers re-read on change. */
-  if (process.env.NODE_ENV !== 'production') {
+  if (!import.meta.env.PROD) {
     try {
       fs.watch(themesDir, { persistent: false }, (_event, filename) => {
         for (const contents of electron.webContents.getAllWebContents())
@@ -329,9 +325,15 @@ export function initFilesystemHost(opts: {
     }
   }
 
-  /* --- Bundled assets: sound themes ------------------------------------- */
-
+  // Bundled assets: sound themes
   const soundThemesDir = path.join(__dirname, 'sound-themes');
+  // Default-sound fallbacks live one level up from app/, outside the renderer
+  // origin's root, so the app:// handler streams them via a vouched media root.
+  const bundledChatSounds = path.join(__dirname, '..', 'chat', 'assets');
+  const bundledSounds = path.join(__dirname, '..', 'assets');
+  allowMediaRoot(soundThemesDir);
+  allowMediaRoot(bundledChatSounds);
+  allowMediaRoot(bundledSounds);
 
   ipc.on('sound-themes-list-sync', e => {
     try {
@@ -390,28 +392,17 @@ export function initFilesystemHost(opts: {
         for (const format of formats) {
           const ext = format === 'mpeg' ? 'mp3' : format;
           const abs = path.join(soundThemesDir, theme, `${soundPath}.${ext}`);
-          sources.push({ url: `file://${abs}`, type: `audio/${format}` });
+          sources.push({ url: mediaUrl(abs), type: `audio/${format}` });
         }
       } else {
         const codecOrder = ['wav', 'mp3', 'ogg'];
         for (const ext of codecOrder) {
-          const candidate1 = path.join(
-            __dirname,
-            '..',
-            'chat',
-            'assets',
-            `${sound}.${ext}`
-          );
-          const candidate2 = path.join(
-            __dirname,
-            '..',
-            'assets',
-            `${sound}.${ext}`
-          );
+          const candidate1 = path.join(bundledChatSounds, `${sound}.${ext}`);
+          const candidate2 = path.join(bundledSounds, `${sound}.${ext}`);
           if (fs.existsSync(candidate1))
-            sources.push({ url: `file://${candidate1}`, type: `audio/${ext}` });
+            sources.push({ url: mediaUrl(candidate1), type: `audio/${ext}` });
           else if (fs.existsSync(candidate2))
-            sources.push({ url: `file://${candidate2}`, type: `audio/${ext}` });
+            sources.push({ url: mediaUrl(candidate2), type: `audio/${ext}` });
         }
       }
     } catch (err) {
@@ -420,8 +411,7 @@ export function initFilesystemHost(opts: {
     e.returnValue = sources;
   });
 
-  /* --- Eicon cache -------------------------------------------------------- */
-
+  // Eicon cache
   const eiconsFile = () =>
     path.join(electron.app.getPath('userData'), 'data', 'eicons.json');
 
@@ -442,8 +432,7 @@ export function initFilesystemHost(opts: {
     }
   });
 
-  /* --- App-level key-value store (userData/settings.json) ---------------- */
-
+  // App-level key-value store (userData/settings.json)
   const appStore = new JsonStore(
     path.join(electron.app.getPath('userData'), 'settings.json')
   );

@@ -26,12 +26,6 @@ import type {
   ParsedBackupZip
 } from '../backup-host';
 
-/**
- * Information about a character found in a Horizon backup ZIP file.
- *
- * The has* flags mark which kinds of data the backup contains for the
- * character.
- */
 export interface BackupCharacterInfo {
   name: string;
   selected: boolean;
@@ -44,7 +38,6 @@ export interface BackupCharacterInfo {
   hasDrafts?: boolean;
 }
 
-/** Prompts for a backup ZIP and loads it into the view-model. */
 export async function chooseImportZip(vm: ExporterVm): Promise<void> {
   if (vm.importInProgress) return;
   const result: Electron.OpenDialogReturnValue = await ipcRenderer.invoke(
@@ -60,7 +53,6 @@ export async function chooseImportZip(vm: ExporterVm): Promise<void> {
   await loadImportZip(vm, result.filePaths[0]);
 }
 
-/** Resets all import-related view-model state. */
 export function resetImportZipState(vm: ExporterVm): void {
   vm.importZipArchive = undefined;
   vm.importZipPath = undefined;
@@ -90,7 +82,6 @@ export function resetImportZipState(vm: ExporterVm): void {
   vm.importCustomLogLocationError = undefined;
 }
 
-/** Loads and parses a backup ZIP through the main process. */
 export async function loadImportZip(
   vm: ExporterVm,
   filePath: string
@@ -118,10 +109,6 @@ export async function loadImportZip(
   }
 }
 
-/**
- * Applies main-process parse results to the view-model: character list,
- * availability flags, and default selections.
- */
 function applyParsedZip(vm: ExporterVm, parsed: ParsedBackupZip): void {
   vm.importZipHasManifest = parsed.hasManifest;
   vm.importZipManifest = parsed.manifest;
@@ -180,21 +167,18 @@ function applyParsedZip(vm: ExporterVm, parsed: ParsedBackupZip): void {
   }
 }
 
-/** Sets the selection state for all characters in the import list. */
 export function setImportCharacters(vm: ExporterVm, selected: boolean): void {
   vm.importCharacters.forEach(character => {
     character.selected = selected;
   });
 }
 
-/** Character names currently selected for import. */
 export function getSelectedImportCharacters(vm: ExporterVm): string[] {
   return vm.importCharacters
     .filter(character => character.selected)
     .map(character => character.name);
 }
 
-/** Human-readable list of what the backup holds for a character. */
 export function describeImportCharacter(
   character: BackupCharacterInfo
 ): string {
@@ -238,10 +222,6 @@ function buildImportSummary(result: BackupImportResult): string {
   return summary;
 }
 
-/**
- * Runs the full import from the loaded ZIP: general settings, selected
- * characters, and conflict handling.
- */
 export async function runZipImport(vm: ExporterVm): Promise<void> {
   if (!vm.canRunZipImport) return;
 

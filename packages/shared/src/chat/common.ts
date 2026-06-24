@@ -1,11 +1,11 @@
 import { isToday, format } from 'date-fns';
-import { Keys } from '@/keys';
-import {
+import type { Keys } from '@/keys';
+import type {
   AvailableSort,
   Character,
-  Conversation,
   Settings as ISettings
 } from './interfaces';
+import { Conversation } from './interfaces';
 import core from './core';
 
 export function normalizeCharacterName(

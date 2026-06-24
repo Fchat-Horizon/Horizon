@@ -9,14 +9,17 @@
     <div class="mb-3" id="statusSelector">
       <label class="control-label">{{ l('chat.setStatus.status') }}</label>
       <dropdown linkClass="form-select">
-        <span slot="title"
-          ><span class="fa fa-fw" :class="getStatusIcon(status)"></span
-          >{{ l('status.' + status) }}</span
+        <template #title
+          ><span
+            ><span class="fa fa-fw" :class="getStatusIcon(status)"></span
+            >{{ l('status.' + status) }}</span
+          ></template
         >
         <a
           href="#"
           class="dropdown-item"
           v-for="item in statuses"
+          :key="item"
           @click.prevent="status = item"
         >
           <span class="fa fa-fw" :class="getStatusIcon(item)"></span
@@ -49,6 +52,7 @@
 
 <script lang="ts">
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import Dropdown from '@/components/Dropdown.vue';
   import Modal from '@/components/Modal.vue';
   import { Editor } from './bbcode';
@@ -65,7 +69,8 @@
   //That component only uses it to display the string that shows how many statuses you have saved though.
   const MAX_STATUS_COUNT: number = 15;
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: {
       modal: Modal,
       editor: Editor,

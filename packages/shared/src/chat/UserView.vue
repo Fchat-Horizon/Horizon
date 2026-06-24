@@ -49,7 +49,7 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import { Channel, Character } from '@/fchat';
   import { Score } from '@/learn/matcher';
   import core from './core';
@@ -325,7 +325,7 @@
     };
   }
 
-  export default Vue.extend({
+  export default defineComponent({
     components: {},
     props: {
       character: { type: Object as () => Character, required: true },
@@ -434,7 +434,7 @@
         EventBus.$on('character-score', this.scoreWatcher);
       }
     },
-    beforeDestroy(): void {
+    beforeUnmount(): void {
       if (this.scoreWatcher)
         EventBus.$off('character-score', this.scoreWatcher);
       EventBus.$off('configuration-update', this.update);

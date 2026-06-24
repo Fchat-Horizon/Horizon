@@ -9,14 +9,14 @@
  * @see {@link https://github.com/Fchat-Horizon/Horizon|GitHub repo}
  */
 
-import Vue, { WatchHandler } from 'vue';
+import { reactive, watch as vueWatch } from 'vue';
 import { CacheManager } from '@/learn/cache-manager';
 import { Channels, Characters } from '@/fchat';
 import BBCodeParser from './bbcode';
 import { Settings as SettingsImpl } from './common';
 import { emptyMap, toMap } from '@/fchat/common';
 import Conversations from './conversations';
-import {
+import type {
   Channel,
   Character,
   Connection,
@@ -28,7 +28,7 @@ import {
 } from './interfaces';
 import { AdCoordinatorGuest } from './ads/ad-coordinator-guest';
 import { AdCenter } from './ads/ad-center';
-import { GeneralSettings } from '@/common';
+import type { GeneralSettings } from '@/common';
 import { SiteSession } from '@/site/site-session';
 import _ from 'lodash';
 import { preloadTeamData } from './profile_api';
@@ -67,16 +67,19 @@ interface VueState {
   readonly state: StateInterface;
 }
 
-const state = new State();
+// state is the reactive proxy; in-module mutators (reloadSettings et al.) and
+// components via core.state must share one proxy or those mutations would not
+// trigger reactivity.
+const state = reactive(new State()) as State;
 
-const vue = <Vue & VueState>new Vue({
-  data: {
-    channels: undefined,
-    characters: undefined,
-    conversations: undefined,
-    state
-  }
-});
+// Holder whose `this` backs core.watch() getters; the sub-states it carries are
+// already reactive proxies from their own modules.
+const vue = reactive({
+  channels: undefined,
+  characters: undefined,
+  conversations: undefined,
+  state
+}) as unknown as VueState;
 
 // ! Kept separate from Vue so it stays cheap when the list is huge. (=
 // ^ ps from rose: We should probably add some better filtering so people don't
@@ -121,14 +124,14 @@ const data = {
     module: K,
     subState: VueState[K]
   ): void {
-    Vue.set(vue, module, subState);
+    (vue as any)[module] = subState;
     (<VueState[K]>data[module]) = subState;
   },
   watch<T>(
     getter: (this: VueState) => T,
     callback: (n: any, o: any) => void
   ): void {
-    vue.$watch(getter, callback);
+    vueWatch(() => getter.call(vue), callback);
   },
   async reloadSettings(): Promise<void> {
     const s = await core.settingsStore.get('settings');
@@ -213,7 +216,10 @@ export interface Core {
   isHidden(name: string): boolean;
   toggleHidden(name: string): void;
 
-  watch<T>(getter: (this: VueState) => T, callback: WatchHandler<T>): void;
+  watch<T>(
+    getter: (this: VueState) => T,
+    callback: (newVal: T, oldVal: T | undefined) => void
+  ): void;
 }
 
 const core = <Core>(<any>data); /*tslint:disable-line:no-any*/ //hack

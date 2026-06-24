@@ -27,9 +27,9 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
 
-  export default Vue.extend({
+  export default defineComponent({
     props: {
       right: { type: Boolean, default: false },
       label: { type: String, required: true },

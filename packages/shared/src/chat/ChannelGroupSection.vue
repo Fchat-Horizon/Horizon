@@ -112,7 +112,7 @@
 
 <script lang="ts">
   import Sortable from 'sortablejs'; // tslint:disable-line:no-require-imports
-  import Vue, { PropType } from 'vue';
+  import { defineComponent, PropType } from 'vue';
   import core from './core';
   import {
     endChannelDragging,
@@ -129,8 +129,9 @@
     [Conversation.UnreadState.Unread]: 'list-group-item-danger'
   };
 
-  export default Vue.extend({
+  export default defineComponent({
     name: 'ChannelGroupSection',
+    emits: ['editing-started'],
     props: {
       group: {
         type: Object as PropType<Conversation.ChannelGroup>,
@@ -250,6 +251,7 @@
     },
     methods: {
       toggleCollapse() {
+        // eslint-disable-next-line vue/no-mutating-props -- group is a persisted store object
         this.group.collapsed = !this.group.collapsed;
         void core.conversations.saveChannelGroups();
       },

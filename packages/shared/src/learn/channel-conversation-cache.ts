@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import { Cache } from './cache';
-import { AdCachedPosting, AdCacheRecord, AdCache } from './ad-cache';
+import type { AdCachedPosting } from './ad-cache';
+import { AdCacheRecord, AdCache } from './ad-cache';
 
 export interface ChannelCachedPosting extends AdCachedPosting {
   channelName: string;

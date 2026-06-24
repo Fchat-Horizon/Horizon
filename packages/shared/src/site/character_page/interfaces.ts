@@ -1,4 +1,4 @@
-import {
+import type {
   Character as CharacterInfo,
   CharacterImage,
   CharacterSettings,

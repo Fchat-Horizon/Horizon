@@ -4,10 +4,7 @@ import * as _ from 'lodash';
 
 import { domain as extractDomain } from '@/bbcode/core';
 
-// tslint:disable-next-line:ban-ts-ignore
-// @ts-ignore
-// tslint:disable-next-line:no-submodule-imports ban-ts-ignore match-default-export-name
-import processorScript from '!!raw-loader!./assets/browser.processor.raw.js';
+import processorScript from './assets/browser.processor.raw.js?raw';
 
 export interface DomMutator {
   match: string | RegExp;
@@ -36,7 +33,7 @@ export class ImageDomMutator {
   private scripts: DomMutatorScripts = { processor: '' };
 
   constructor(debug: boolean) {
-    this.debug = debug || true;
+    this.debug = debug;
   }
 
   setDebug(debug: boolean): void {

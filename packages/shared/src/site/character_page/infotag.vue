@@ -16,12 +16,12 @@
   import { computed } from 'vue';
   import anyAscii from 'any-ascii';
   import core from '@/chat/core';
-  import { CharacterInfotag, Infotag, ListItem } from '@/interfaces';
+  import type { CharacterInfotag, Infotag, ListItem } from '@/interfaces';
   import { formatContactLink, formatContactValue } from './contact_utils';
   import { Store } from './data_store';
   import { CONTACT_GROUP_ID } from './interfaces';
-  import { MatchReport } from '@/learn/matcher';
-  import { CssClassMap } from './match-report.vue';
+  import type { MatchReport } from '@/learn/matcher';
+  import type { CssClassMap } from './match-report.vue';
   import { TagId } from '@/learn/matcher-types';
 
   const props = defineProps<{

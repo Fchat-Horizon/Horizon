@@ -1,8 +1,15 @@
-import { defineComponent, ref, computed, watch, PropType } from 'vue';
-import { CreateElement, VNode } from 'vue';
+import {
+  defineComponent,
+  ref,
+  computed,
+  watch,
+  h,
+  type PropType,
+  type VNode
+} from 'vue';
 
 interface TabsProps {
-  value?: string;
+  modelValue?: string;
   tabs?: { readonly [key: string]: string } | string[];
   fullWidth?: boolean;
   tabClass?: string;
@@ -11,7 +18,7 @@ interface TabsProps {
 const Tabs = defineComponent({
   name: 'Tabs',
   props: {
-    value: {
+    modelValue: {
       type: String as PropType<string | undefined>,
       default: undefined
     },
@@ -30,9 +37,9 @@ const Tabs = defineComponent({
       default: 'nav-tabs'
     }
   },
-  emits: ['input'],
+  emits: ['update:modelValue', 'input'],
   setup(props: TabsProps, { emit }) {
-    const internalValue = ref<string | undefined>(props.value);
+    const internalValue = ref<string | undefined>(props.modelValue);
 
     const children = computed(() => {
       let result: { [key: string]: string };
@@ -53,23 +60,26 @@ const Tabs = defineComponent({
     const keys = computed(() => Object.keys(children.value));
 
     watch(
-      () => props.value,
+      () => props.modelValue,
       newValue => {
         internalValue.value = newValue;
       }
     );
 
+    // first-tab auto-select syncs the parent via v-model but must not fire the
+    // user-facing 'input' event: it can run during setup before the parent has
+    // mounted its refs.
     watch(
-      [children, () => props.value],
+      [children, () => props.modelValue],
       () => {
         if (
           internalValue.value === undefined ||
           children.value[internalValue.value] === undefined
         ) {
           const firstKey = keys.value[0];
-          if (firstKey) {
+          if (firstKey !== undefined && firstKey !== internalValue.value) {
             internalValue.value = firstKey;
-            emit('input', firstKey);
+            emit('update:modelValue', firstKey);
           }
         }
       },
@@ -78,6 +88,7 @@ const Tabs = defineComponent({
 
     const handleTabClick = (key: string) => {
       internalValue.value = key;
+      emit('update:modelValue', key);
       emit('input', key);
     };
 
@@ -85,36 +96,29 @@ const Tabs = defineComponent({
       internalValue,
       children,
       keys,
-      handleTabClick,
-      fullWidth: computed(() => props.fullWidth),
-      tabClass: computed(() => props.tabClass)
+      handleTabClick
     };
   },
-  render(createElement: CreateElement): VNode {
-    return createElement(
+  render(): VNode {
+    return h(
       'div',
-      {
-        staticClass: `${this.tabClass} ${this.fullWidth ? 'nav-justified' : ''}`
-      },
+      { class: `${this.tabClass} ${this.fullWidth ? 'nav-justified' : ''}` },
       [
-        createElement('ul', { staticClass: `nav ${this.tabClass}` }, [
+        h('ul', { class: `nav ${this.tabClass}` }, [
           this.keys.map((key: string) =>
-            createElement('li', { staticClass: 'nav-item' }, [
-              createElement(
+            h('li', { class: 'nav-item' }, [
+              h(
                 'a',
                 {
-                  attrs: { href: '#' },
-                  staticClass: 'nav-link',
-                  class: { active: this.internalValue === key },
-                  on: { click: () => this.handleTabClick(key) }
+                  href: '#',
+                  class: ['nav-link', { active: this.internalValue === key }],
+                  onClick: () => this.handleTabClick(key)
                 },
                 [this.children[key]!]
               )
             ])
           ),
-          ...(this.fullWidth
-            ? []
-            : [createElement('div', { staticClass: 'nav-tab-spacer' })])
+          ...(this.fullWidth ? [] : [h('div', { class: 'nav-tab-spacer' })])
         ])
       ]
     );

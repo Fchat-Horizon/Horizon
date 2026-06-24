@@ -3,7 +3,6 @@ import path from 'path';
 import * as electron from 'electron';
 import { createLogger } from '@horizon/shared/logger';
 const log = createLogger('auto-backup');
-import { runExportCli } from './backup-export-cli';
 import type { GeneralSettings } from '@horizon/shared/common';
 
 function formatTimestamp(): string {
@@ -59,6 +58,9 @@ export async function performAutoBackup(
   broadcast('auto-backup-status', 'started');
 
   try {
+    // Load the archiver-heavy CLI exporter on demand: scheduled backups are
+    // rare, so it stays out of the main bundle until one actually fires.
+    const { runExportCli } = await import('./backup-export-cli');
     await runExportCli({
       dataDir: settings.logDirectory,
       settingsDir: path.join(baseDir, 'data'),

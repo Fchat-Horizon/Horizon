@@ -6,15 +6,13 @@
 
 import { ipcRenderer } from 'electron';
 import { Settings } from '@horizon/shared/chat/common';
-import { GeneralSettings } from '@horizon/shared/common';
+import type { GeneralSettings } from '@horizon/shared/common';
 import { SettingsStore } from '../../filesystem';
 
-/** Whether Slimcat general settings exist (%LOCALAPPDATA%/slimCat). */
 export function canImportGeneral(): boolean {
   return ipcRenderer.sendSync('slimcat-can-import-general-sync') === true;
 }
 
-/** Whether the character has Slimcat settings (APPDATA, else !Defaults). */
 export function canImportCharacter(character: string): boolean {
   return (
     ipcRenderer.sendSync('slimcat-can-import-character-sync', character) ===
@@ -113,10 +111,6 @@ async function importSettings(ownCharacter: string): Promise<void> {
   await settingsStore.set('pinned', pinned);
 }
 
-/**
- * Imports a character's Slimcat settings and converts their logs to the
- * binary format, reporting progress as a 0-1 fraction.
- */
 export async function importCharacter(
   ownCharacter: string,
   progress: (progress: number) => void

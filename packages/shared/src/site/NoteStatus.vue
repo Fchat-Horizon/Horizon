@@ -1,15 +1,16 @@
 <template>
   <div class="userInfo-buttons-container">
-    <template v-for="(report, index) in reports">
+    <template v-for="(report, index) in reports" :key="`report-${index}`">
       <a
         class="userInfo-button-item userInfo-pager-button btn btn-outline-secondary"
         :href="report.url"
-        :key="`report-${index}`"
         @click="dismissReport(report)"
         :title="
-          report.count + ' ' + (report.count !== 1)
+          report.count +
+          ' ' +
+          (report.count !== 1
             ? report.title
-            : report.title.substr(0, report.title.length - 1)
+            : report.title.substr(0, report.title.length - 1))
         "
         :class="`status-report ${report.type} ${report.count > 0 && report.count !== report.dismissedCount ? 'visible' : ''}`"
       >
@@ -36,7 +37,7 @@
 </template>
 <script lang="ts">
   import _ from 'lodash';
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import core from '@/chat/core';
   import { EventBus } from '@/chat/preview/event-bus';
   import l from '@/chat/localize';
@@ -49,7 +50,7 @@
     url: string;
   }
 
-  export default Vue.extend({
+  export default defineComponent({
     data() {
       return {
         reports: [
@@ -79,7 +80,7 @@
 
       EventBus.$on('note-counts-update', this.callback);
     },
-    beforeDestroy(): void {
+    beforeUnmount(): void {
       if (this.callback) {
         EventBus.$off('note-counts-update', this.callback);
       }

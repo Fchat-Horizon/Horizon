@@ -22,10 +22,6 @@ const log = createLogger('backup-export');
 import type { ExporterVm } from '../exporter-vm';
 import type { BackupExportOptions, BackupExportResult } from '../backup-host';
 
-/**
- * Refreshes the list of available characters for export, skipping special
- * folders like 'settings', 'eicons', and hidden directories.
- */
 export async function refreshExportCharacters(vm: ExporterVm): Promise<void> {
   try {
     const names = <string[]>(
@@ -38,22 +34,17 @@ export async function refreshExportCharacters(vm: ExporterVm): Promise<void> {
   }
 }
 
-/** Sets the selection state for all export characters. */
 export function setExportCharacters(vm: ExporterVm, selected: boolean): void {
   vm.exportCharacters.forEach(character => {
     character.selected = selected;
   });
 }
 
-/** Character names currently selected for export. */
 export function getSelectedExportCharacters(vm: ExporterVm): string[] {
   return vm.exportCharacters.filter(c => c.selected).map(c => c.name);
 }
 
-/**
- * Default export path: `horizon-export-YYYY-MM-DDTHH-MM-SS.zip` in the
- * user's Downloads folder, local time, Windows-safe.
- */
+// Dashes (not colons) in the timestamp keep the filename valid on Windows.
 export function getExportDefaultPath(): string {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -66,10 +57,6 @@ export function getExportDefaultPath(): string {
   );
 }
 
-/**
- * Runs the full export: output location prompt, main-process archive work
- * with progress, and the result summary.
- */
 export async function runExport(vm: ExporterVm): Promise<void> {
   if (!vm.canRunExport) return;
   vm.exportInProgress = true;

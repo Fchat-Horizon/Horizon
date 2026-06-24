@@ -432,8 +432,9 @@
 <script lang="ts">
   import Sortable from 'sortablejs';
 
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import { Keys } from '@/keys';
+  import { getPlatform } from '@/platform/platform';
   import ChannelList from './ChannelList.vue';
   import Dropdown from '@/components/Dropdown.vue';
   import CharacterSearch from './CharacterSearch.vue';
@@ -469,7 +470,6 @@
   import ChannelGroupMenu from './ChannelGroupMenu.vue';
   import ChannelMenu from './ChannelMenu.vue';
   import CustomDialog from '@/components/custom_dialog';
-  import Modal from '@/components/Modal.vue';
   import QuickJump from './QuickJump.vue';
   import { createLogger } from '@/logger';
 
@@ -489,7 +489,7 @@
     None = 'none'
   }
 
-  export default Vue.extend({
+  export default defineComponent({
     components: {
       'user-list': UserList,
       channels: ChannelList,
@@ -506,7 +506,6 @@
       'note-status': NoteStatus,
       adCenter: AdCenterDialog,
       adLauncher: AdLauncherDialog,
-      modal: Modal,
       'quick-jump': QuickJump,
       'channel-group-section': ChannelGroupSection,
       'channel-group-menu': ChannelGroupMenu,
@@ -524,7 +523,7 @@
         keydownListener: undefined as any as (e: KeyboardEvent) => void,
         focusListener: undefined as any as () => void,
         blurListener: undefined as any as () => void,
-        isMac: process.platform === 'darwin',
+        isMac: getPlatform() === 'darwin',
         channelConversations: core.conversations.channelConversations,
         privateConversations: core.conversations.privateConversations,
         privateCanGlow: !core.conversations.channelConversations?.length,
@@ -721,7 +720,7 @@
 
       void core.adCenter.load();
     },
-    destroyed(): void {
+    unmounted(): void {
       window.removeEventListener('keydown', this.keydownListener);
       window.removeEventListener('focus', this.focusListener);
       window.removeEventListener('blur', this.blurListener);
@@ -1191,9 +1190,9 @@
 </script>
 
 <style lang="scss">
-  @import '~bootstrap/scss/functions';
-  @import '~bootstrap/scss/variables';
-  @import '~bootstrap/scss/mixins/breakpoints';
+  @import 'bootstrap/scss/functions';
+  @import 'bootstrap/scss/variables';
+  @import 'bootstrap/scss/mixins/breakpoints';
 
   body {
     user-select: none;

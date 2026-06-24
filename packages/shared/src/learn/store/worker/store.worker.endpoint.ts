@@ -2,7 +2,7 @@ import _ from 'lodash';
 // import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 
 import { IndexedStore } from '../indexed';
-import { IndexedRequest, ProfileStoreCommand } from './types';
+import type { IndexedRequest, ProfileStoreCommand } from './types';
 import { createLogger } from '@/logger';
 const log = createLogger('store-worker-endpoint');
 

@@ -70,16 +70,16 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import * as Utils from '../utils';
   import { methods, Store } from './data_store';
-  import { GuestbookPost, Guestbook } from './interfaces';
+  import type { GuestbookPost, Guestbook } from './interfaces';
 
   import GuestbookPostView from './guestbook_post.vue';
   import core from '@/chat/core';
   import l from '@/chat/localize';
 
-  export default Vue.extend({
+  export default defineComponent({
     components: { 'guestbook-post': GuestbookPostView },
     props: {
       character: { required: true as const },

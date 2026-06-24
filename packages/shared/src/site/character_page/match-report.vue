@@ -28,8 +28,8 @@
 
         <ul>
           <li
-            v-for="score in getScores(characterMatch.you)"
-            v-if="shouldShowScore(score)"
+            v-for="(score, index) in getVisibleScores(characterMatch.you)"
+            :key="index"
             :class="getScoreClass(score)"
             v-html="score.description"
           ></li>
@@ -52,8 +52,8 @@
 
         <ul>
           <li
-            v-for="score in getScores(characterMatch.them)"
-            v-if="shouldShowScore(score)"
+            v-for="(score, index) in getVisibleScores(characterMatch.them)"
+            :key="index"
             :class="getScoreClass(score)"
             v-html="score.description"
           ></li>
@@ -67,7 +67,12 @@
   import { ref, onBeforeMount } from 'vue';
   import * as _ from 'lodash';
   import * as Utils from '../utils';
-  import { Matcher, MatchReport, MatchResult, Score } from '@/learn/matcher';
+  import {
+    Matcher,
+    type MatchReport,
+    type MatchResult,
+    type Score
+  } from '@/learn/matcher';
   import core from '@/chat/core';
   import { Scoring, TagId } from '@/learn/matcher-types';
 
@@ -116,6 +121,12 @@
 
   const getScores = (result: MatchResult): Score[] => {
     return _.map(result.scores, (s: Score) => s);
+  };
+
+  // Pre-filtered: pairing v-for with v-if on the same <li> breaks in Vue 3
+  // (v-if runs first and cannot see the loop's `score`).
+  const getVisibleScores = (result: MatchResult): Score[] => {
+    return getScores(result).filter(shouldShowScore);
   };
 
   const getSpeciesStr = (m: MatchResult): string => {

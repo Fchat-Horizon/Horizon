@@ -177,9 +177,10 @@
 
   import * as electron from 'electron';
 
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import l from '@horizon/shared/chat/localize';
   import { GeneralSettings } from '@horizon/shared/common';
+  import { getPlatform } from '@horizon/shared/platform/platform';
   import { createLogger } from '@horizon/shared/logger';
   const log = createLogger('window-view');
   import { applySharedLogLevel } from './logging';
@@ -198,11 +199,17 @@
     title: string;
   }
 
-  export default Vue.extend({
+  export default defineComponent({
+    props: {
+      initialSettings: {
+        type: Object as () => GeneralSettings,
+        required: true
+      },
+      importHint: { type: String, default: undefined }
+    },
     data() {
       return {
-        settings: undefined as any as GeneralSettings,
-        importHint: undefined as string | undefined,
+        settings: this.initialSettings,
         tabs: [] as Tab[],
         activeTab: undefined as Tab | undefined,
         tabMap: {} as { [key: number]: Tab },
@@ -219,10 +226,10 @@
         updateDownloading: false,
         updateDownloadPercent: 0,
         updateDownloaded: false,
-        platform: process.platform,
+        platform: getPlatform(),
         lockTab: false,
         hasCompletedUpgrades: false,
-        windowTitleKey: (process.env.NODE_ENV === 'production'
+        windowTitleKey: (import.meta.env.PROD
           ? 'title'
           : 'title.dev') as string,
         isClosing: false,
@@ -234,20 +241,7 @@
     },
     computed: {
       styling(): string {
-        const css = <string | null>(
-          electron.ipcRenderer.sendSync(
-            'themes-read-sync',
-            this.getSyncedTheme()
-          )
-        );
-        if (css === null) {
-          if (this.settings.theme !== 'default') {
-            this.settings.theme = 'default';
-            return this.styling;
-          }
-          throw new Error('Default theme is missing');
-        }
-        return `<style>${css}</style>`;
+        return this.readThemeCss();
       }
     },
     updated(): void {
@@ -337,8 +331,7 @@
             return;
           }
 
-          Vue.set(tab, 'avatarUrl', url);
-          // tab.avatarUrl = url;
+          tab.avatarUrl = url;
         }
       );
       electron.ipcRenderer.on(
@@ -359,7 +352,7 @@
           tab.user = undefined;
           tab.title = l('title');
           this.refreshWindowTitle();
-          Vue.set(tab, 'avatarUrl', undefined);
+          tab.avatarUrl = undefined;
         }
       );
       electron.ipcRenderer.on(
@@ -447,17 +440,17 @@
           (cur, tab) => cur || tab.user !== undefined,
           false
         );
-        if (process.env.NODE_ENV !== 'production' || !isConnected) {
+        if (import.meta.env.DEV || !isConnected) {
           this.destroyAllTabs();
           return;
         }
         if (!this.settings.closeToTray)
-          return setImmediate(() => {
+          return setTimeout(() => {
             if (Dialog.confirmDialog(l('chat.confirmLeave'))) {
               this.destroyAllTabs();
               this.close();
             }
-          });
+          }, 0);
         electron.ipcRenderer.send('window-hide');
         return false;
       };
@@ -470,6 +463,23 @@
         return this.osIsDark
           ? this.settings.themeSyncDark
           : this.settings.themeSyncLight;
+      },
+      // ~ Recovers from a deleted theme by falling back to default and re-reading.
+      readThemeCss(): string {
+        const css = <string | null>(
+          electron.ipcRenderer.sendSync(
+            'themes-read-sync',
+            this.getSyncedTheme()
+          )
+        );
+        if (css === null) {
+          if (this.settings.theme !== 'default') {
+            this.settings.theme = 'default';
+            return this.readThemeCss();
+          }
+          throw new Error('Default theme is missing');
+        }
+        return `<style>${css}</style>`;
       },
       getAvatarImage(tab: Tab) {
         if (tab.avatarUrl) {
@@ -567,7 +577,7 @@
           electron.ipcRenderer.send('disconnect', tab.user);
         electron.ipcRenderer.send('tab-close', tab.id);
         if (this.tabs.length === 0) {
-          if (process.env.NODE_ENV === 'production') this.close();
+          if (import.meta.env.PROD) this.close();
         } else {
           await this.$nextTick();
 
@@ -632,7 +642,7 @@
       getThemeClass() {
         try {
           // Hack!
-          if (process.platform === 'win32') {
+          if (getPlatform() === 'win32') {
             if (this.settings?.risingDisableWindowsHighContrast) {
               document
                 .querySelector('html')

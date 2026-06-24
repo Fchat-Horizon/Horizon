@@ -19,10 +19,10 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import { EventBus } from '@/chat/preview/event-bus';
 
-  export default Vue.extend({
+  export default defineComponent({
     props: {
       url: { type: String, required: true },
       text: { type: String, required: true },
@@ -33,7 +33,7 @@
         type: 'UrlTagView' as const
       };
     },
-    beforeDestroy(): void {
+    beforeUnmount(): void {
       this.dismiss();
     },
     mounted(): void {

@@ -47,19 +47,21 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execFile } from 'child_process';
 import { fileURLToPath } from 'url';
-import l from '@horizon/shared/chat/localize';
+import l from './localize-host';
 import {
   installElectronLogging,
   applySharedLogLevel,
   applyHumanReadableLogs
 } from './logging';
 import { setAppInfo } from '@horizon/shared/platform/app-info';
+import { registerAppSchemePrivileges, serveAppProtocol } from './app-protocol';
 import { defaultHost, GeneralSettings } from '@horizon/shared/common';
 // import BrowserWindow = electron.BrowserWindow;
 import MenuItemConstructorOptions = electron.MenuItemConstructorOptions;
 import * as _ from 'lodash';
 import { AdCoordinatorHost } from '@horizon/shared/chat/ads/ad-coordinator-host';
-import { IpcMainEvent, session } from 'electron';
+import type { IpcMainEvent } from 'electron';
+import { session } from 'electron';
 import * as browserWindows from './browser_windows';
 import * as tabManager from './tab-manager';
 import { initIpcHandlers } from './ipc-handlers';
@@ -68,10 +70,10 @@ import { initFilesystemHost } from './filesystem-host';
 import { initIncognito } from './incognito';
 import { initBackupHost } from './services/backup-host';
 import { initImportHost } from './services/import-host';
-import { Event } from 'electron/main';
-import { autoUpdater } from 'electron-updater';
+import type { Event } from 'electron/main';
+import type { AppUpdater } from 'electron-updater';
 import Axios from 'axios';
-import { ProfileViewerGalleryType } from '@horizon/shared/site/utils';
+import type { ProfileViewerGalleryType } from '@horizon/shared/site/utils';
 
 const configuredSessions = new WeakSet<electron.Session>();
 
@@ -126,7 +128,6 @@ const isAllowedWebviewPreload = (preload: string | undefined): boolean => {
   }
 };
 
-// Module to control application life.
 const app = electron.app;
 let mainWindow: electron.BrowserWindow | undefined;
 
@@ -324,8 +325,8 @@ function broadcastConnectedCharacters(): void {
 const baseDir = app.getPath('userData');
 fs.mkdirSync(baseDir, { recursive: true });
 let shouldImportSettings = false;
-const updateCheckFirstDelay = 10_000; // 10 seconds
-const updateCheckInterval = 60 * 60 * 1000; // 1 hour in milliseconds
+const updateCheckFirstDelay = 10_000;
+const updateCheckInterval = 60 * 60 * 1000;
 const releasesUrl =
   'https://api.github.com/repos/Fchat-Horizon/Horizon/releases';
 type ReleaseInfo = {
@@ -403,7 +404,7 @@ function supportsAutoUpdates(): boolean {
 }
 
 function isProductionMode(): boolean {
-  return process.env.NODE_ENV === 'production';
+  return import.meta.env.PROD;
 }
 
 function getConnectedCharacterCount(): number {
@@ -472,7 +473,7 @@ async function checkForGitRelease(
     return;
   }
   try {
-    let releases: ReleaseInfo[] = (
+    const releases: ReleaseInfo[] = (
       await Axios.get<ReleaseInfo[]>(`${releaseUrl}`)
     ).data;
     //The releases we get from the GitHub API are in in descending order from their release date.
@@ -511,9 +512,79 @@ async function checkForGitRelease(
   }
 }
 
+let autoUpdaterReady: Promise<AppUpdater> | undefined;
+
+// electron-updater (~200kB with js-yaml/semver) is dead weight at launch, so it
+// is imported and wired on the first (delayed) update check, then memoized.
+// Only the 'auto' update path reaches this; the git-release path never loads it.
+function ensureAutoUpdater(): Promise<AppUpdater> {
+  if (autoUpdaterReady === undefined) {
+    autoUpdaterReady = (async (): Promise<AppUpdater> => {
+      const { autoUpdater } = await import('electron-updater');
+      autoUpdater.logger = log;
+      autoUpdater.autoDownload = false;
+      autoUpdater.autoInstallOnAppQuit = true;
+      autoUpdater.allowPrerelease = settings.beta;
+
+      // HORIZON_UPDATE_URL optionally points at a generic electron-updater feed
+      // (e.g. http://localhost:8080 when testing).
+      const updateFeedUrl = process.env.HORIZON_UPDATE_URL;
+      if (updateFeedUrl) {
+        autoUpdater.setFeedURL({ provider: 'generic', url: updateFeedUrl });
+        log.info('autoUpdater.feed.override', updateFeedUrl);
+      }
+
+      autoUpdater.on('error', err => {
+        log.error('autoUpdater.error', err);
+        downloadingUpdate = false;
+        browserWindows.toggleUpdateNotice(false);
+      });
+
+      autoUpdater.on('update-available', info => {
+        const updateTag = normalizeVersionToTag(info.version);
+        if (!updateTag) return;
+        if (settings.horizonSkippedUpdateVersion === updateTag) {
+          log.info('autoUpdater.update.skipped', updateTag);
+          return;
+        }
+        if (downloadedUpdateTag === updateTag) {
+          browserWindows.toggleUpdateNotice(true, updateTag);
+          browserWindows.sendUpdateProgress(100, true);
+          return;
+        }
+        browserWindows.toggleUpdateNotice(true, updateTag);
+        if (settings.horizonAutoDownloadUpdates) {
+          log.info('autoUpdater.autoDownload', updateTag);
+          void requestUpdateDownload(updateTag);
+        } else {
+          maybeShowUpdatePrompt(updateTag, 'auto');
+        }
+      });
+
+      autoUpdater.on('update-not-available', () => {
+        browserWindows.toggleUpdateNotice(false);
+      });
+
+      autoUpdater.on('download-progress', progress => {
+        browserWindows.sendUpdateProgress(progress.percent);
+      });
+
+      autoUpdater.on('update-downloaded', info => {
+        downloadedUpdateTag = normalizeVersionToTag(info.version);
+        downloadingUpdate = false;
+        browserWindows.sendUpdateProgress(100, true);
+      });
+
+      return autoUpdater;
+    })();
+  }
+  return autoUpdaterReady;
+}
+
 async function runAutoUpdateCheck(): Promise<void> {
   if (!settings.updateCheck) return;
   try {
+    const autoUpdater = await ensureAutoUpdater();
     autoUpdater.allowPrerelease = settings.beta;
     await autoUpdater.checkForUpdates();
   } catch (e) {
@@ -527,6 +598,7 @@ async function requestUpdateDownload(expectedTag?: string): Promise<void> {
   suppressAutoUpdaterPrompt += 1;
   downloadingUpdate = true;
   try {
+    const autoUpdater = await ensureAutoUpdater();
     autoUpdater.allowPrerelease = settings.beta;
     const result = await autoUpdater.checkForUpdates();
     if (!result) return;
@@ -633,10 +705,6 @@ export function openURLExternally(linkUrl: string): void {
 
 let zoomLevel = settings.zoomLevel;
 
-/**
- * Creates a main chat window and registers it with the tab manager so it can
- * host WebContentsView tabs.
- */
 function openMainWindow(
   importHint: 'auto' | 'none'
 ): electron.BrowserWindow | undefined {
@@ -655,6 +723,13 @@ async function onReady(): Promise<void> {
     return;
   }
 
+  // Install the app:// handler before any window loads a page from it, on every
+  // session that hosts a renderer page: the default session (settings, about,
+  // changelog, exporter, window) and the persist:fchat partition behind the
+  // chat WebContentsView (see tab-manager.ts).
+  serveAppProtocol();
+  serveAppProtocol(electron.session.fromPartition('persist:fchat'));
+
   let hasCompletedUpgrades = false;
 
   initIpcHandlers();
@@ -668,7 +743,7 @@ async function onReady(): Promise<void> {
     hasCompletedUpgrades: () => hasCompletedUpgrades
   });
 
-  const logLevel = process.env.NODE_ENV === 'production' ? 'info' : 'silly';
+  const logLevel = import.meta.env.PROD ? 'info' : 'silly';
 
   applySharedLogLevel(settings.risingSystemLogLevel || logLevel);
   applyHumanReadableLogs(!!settings.horizonHumanReadableLogs);
@@ -810,10 +885,7 @@ async function onReady(): Promise<void> {
       webPreferences.webviewTag = false;
     });
   });
-  if (
-    settings.version !== app.getVersion() &&
-    process.env.NODE_ENV !== 'development'
-  ) {
+  if (settings.version !== app.getVersion() && !import.meta.env.DEV) {
     if (settings.host === 'wss://chat.f-list.net:9799')
       settings.host = defaultHost;
     settings.version = app.getVersion();
@@ -829,72 +901,11 @@ async function onReady(): Promise<void> {
   // );
   if (isProductionMode()) {
     const updateMode = supportsAutoUpdates() ? 'auto' : 'manual';
-    autoUpdater.logger = log;
-    autoUpdater.autoDownload = false;
-    autoUpdater.autoInstallOnAppQuit = true;
-    autoUpdater.allowPrerelease = settings.beta;
-
-    /**
-     * Optional override for the auto-update feed URL.
-     *
-     * When set, HORIZON_UPDATE_URL must be a fully-qualified HTTP(S) URL
-     * pointing to a generic update server compatible with electron-updater's
-     * `generic` provider (for example: "http://localhost:8080" when testing).
-     */
-    log.debug(
-      'autoUpdater.feed.env',
-      'Optional environment variable HORIZON_UPDATE_URL can override the generic auto-update feed URL.'
-    );
-    const updateFeedUrl = process.env.HORIZON_UPDATE_URL;
-    if (updateFeedUrl && updateMode === 'auto') {
-      autoUpdater.setFeedURL({ provider: 'generic', url: updateFeedUrl });
-      log.info('autoUpdater.feed.override', updateFeedUrl);
-    }
-
     if (updateMode === 'auto') {
-      autoUpdater.on('error', err => {
-        log.error('autoUpdater.error', err);
-        downloadingUpdate = false;
-        browserWindows.toggleUpdateNotice(false);
-      });
-
-      autoUpdater.on('update-available', info => {
-        const updateTag = normalizeVersionToTag(info.version);
-        if (!updateTag) return;
-        if (settings.horizonSkippedUpdateVersion === updateTag) {
-          log.info('autoUpdater.update.skipped', updateTag);
-          return;
-        }
-        if (downloadedUpdateTag === updateTag) {
-          browserWindows.toggleUpdateNotice(true, updateTag);
-          browserWindows.sendUpdateProgress(100, true);
-          return;
-        }
-        browserWindows.toggleUpdateNotice(true, updateTag);
-        if (settings.horizonAutoDownloadUpdates) {
-          log.info('autoUpdater.autoDownload', updateTag);
-          void requestUpdateDownload(updateTag);
-        } else {
-          maybeShowUpdatePrompt(updateTag, updateMode);
-        }
-      });
-
-      autoUpdater.on('update-not-available', () => {
-        browserWindows.toggleUpdateNotice(false);
-      });
-
-      autoUpdater.on('download-progress', progress => {
-        browserWindows.sendUpdateProgress(progress.percent);
-      });
-
-      autoUpdater.on('update-downloaded', info => {
-        downloadedUpdateTag = normalizeVersionToTag(info.version);
-        downloadingUpdate = false;
-        browserWindows.sendUpdateProgress(100, true);
-      });
-
-      setTimeout(() => runAutoUpdateCheck(), updateCheckFirstDelay);
-      setInterval(() => runAutoUpdateCheck(), updateCheckInterval);
+      // electron-updater is imported and wired lazily by ensureAutoUpdater() on
+      // the first check below; here we only schedule the checks.
+      setTimeout(() => void runAutoUpdateCheck(), updateCheckFirstDelay);
+      setInterval(() => void runAutoUpdateCheck(), updateCheckInterval);
     } else {
       setTimeout(
         () =>
@@ -1083,13 +1094,11 @@ async function onReady(): Promise<void> {
           },
           {
             label: l(
-              process.env.NODE_ENV !== 'development'
-                ? 'version'
-                : 'developmentVersion',
-              process.env.APP_VERSION || app.getVersion()
+              !import.meta.env.DEV ? 'version' : 'developmentVersion',
+              import.meta.env.VITE_APP_VERSION || app.getVersion()
             ),
             click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
-              let win = w || electron.BrowserWindow.getFocusedWindow();
+              const win = w || electron.BrowserWindow.getFocusedWindow();
               if (!win) return;
               browserWindows.createChangelogWindow(settings, 'none', win);
             }
@@ -1228,7 +1237,7 @@ async function onReady(): Promise<void> {
           }
         ] as MenuItemConstructorOptions[]
       },
-      ...(process.env.NODE_ENV !== 'production' ? [devItem] : [])
+      ...(!import.meta.env.PROD ? [devItem] : [])
     ])
   );
 
@@ -1250,7 +1259,7 @@ async function onReady(): Promise<void> {
   electron.ipcMain.on('install-update', () => {
     if (!confirmUpdateWhileConnected()) return;
     isUpdateRestarting = true;
-    autoUpdater.quitAndInstall(true, true);
+    void ensureAutoUpdater().then(u => u.quitAndInstall(true, true));
   });
   electron.ipcMain.on('enable-auto-download-updates', () => {
     settings.horizonAutoDownloadUpdates = true;
@@ -1445,11 +1454,11 @@ async function onReady(): Promise<void> {
     (_e, _options: GeneralSettings) => {
       log.info('main.settings.update.message', _options);
       if (_options) {
-        let newCss =
+        const newCss =
           settings.horizonCustomCssEnabled !==
             _options.horizonCustomCssEnabled ||
           settings.horizonCustomCss !== _options.horizonCustomCss;
-        let badgeChange =
+        const badgeChange =
           settings.horizonShowNotificationBadge !==
           _options.horizonShowNotificationBadge;
         Object.assign(settings, _options);
@@ -1507,10 +1516,14 @@ async function onReady(): Promise<void> {
 // Twitter fix
 app.commandLine.appendSwitch('disable-features', 'CrossOriginOpenerPolicy');
 
+// Declare the app:// renderer origin before `ready`; privileged scheme
+// registration is rejected once the first session exists.
+registerAppSchemePrivileges();
+
 const isSquirrelStart = require('electron-squirrel-startup'); //tslint:disable-line:no-require-imports
 if (
   isSquirrelStart ||
-  (process.env.NODE_ENV === 'production' && !app.requestSingleInstanceLock())
+  (import.meta.env.PROD && !app.requestSingleInstanceLock())
 )
   app.quit();
 else

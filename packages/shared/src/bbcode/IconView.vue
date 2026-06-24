@@ -20,13 +20,13 @@
 </template>
 
 <script lang="ts">
-  import Vue, { PropType } from 'vue';
+  import { defineComponent, PropType } from 'vue';
   import { EventBus } from '@/chat/preview/event-bus';
   import * as Utils from '@/site/utils';
   import { characterImage, normalizeCharacterName } from '@/chat/common';
   import { Character } from '@/fchat';
 
-  export default Vue.extend({
+  export default defineComponent({
     props: {
       character: { type: Object as PropType<Character>, required: true },
       useOriginalAvatar: { default: false }
@@ -40,7 +40,7 @@
     mounted(): void {
       // do nothing
     },
-    beforeDestroy(): void {
+    beforeUnmount(): void {
       this.dismiss();
     },
     deactivated(): void {
@@ -65,6 +65,7 @@
         });
       },
       onImageError(): void {
+        // eslint-disable-next-line vue/no-mutating-props -- shared character object; intended override reset
         this.character.overrides.avatarUrl = undefined;
       }
     }

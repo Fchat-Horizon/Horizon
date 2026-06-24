@@ -1,8 +1,9 @@
-import { ProfileViewerGalleryType } from '@/site/utils';
+import type { ProfileViewerGalleryType } from '@/site/utils';
 import { getAppInfo } from '@/platform/app-info';
 import { join } from '@/platform/path';
 
-import { createLogger, LevelOption } from '@/logger';
+import type { LevelOption } from '@/logger';
+import { createLogger } from '@/logger';
 const log = createLogger('common');
 
 log.debug('init.common');

@@ -5,9 +5,8 @@
  * off to avoid double-printing). Renderer records reach main over IPC.
  */
 
+import type { LogAdapter, LevelOption } from '@horizon/shared/logger';
 import {
-  LogAdapter,
-  LevelOption,
   combineAdapters,
   detectLogAdapter,
   levelOptionToLogLevel,

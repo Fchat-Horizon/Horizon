@@ -14,10 +14,10 @@ import { createLogger } from '@horizon/shared/logger';
 const log = createLogger('backup-host');
 import fs from 'fs';
 import path from 'path';
-import archiver from 'archiver';
-import AdmZip from 'adm-zip';
+import type AdmZip from 'adm-zip';
 import type { IZipEntry } from 'adm-zip';
-import { GeneralSettings } from '@horizon/shared/common';
+import { loadArchiver, loadAdmZip } from './exporter/zip-loaders';
+import type { GeneralSettings } from '@horizon/shared/common';
 import {
   createManifest,
   isValidManifest,
@@ -27,7 +27,7 @@ import type { ExportManifest, SettingsSelection } from './exporter/manifest';
 import {
   binaryLogToJson,
   listFilesRecursive
-} from './exporter/backup-export-cli';
+} from './exporter/backup-export-utils';
 import type { BackupCharacterInfo } from './importer/backup-import';
 
 export interface BackupIncludes {
@@ -57,16 +57,13 @@ export interface ParsedBackupZip {
   hasManifest: boolean;
   manifest: ExportManifest | undefined;
   generalAvailable: boolean;
-  /** Set when the backup was made with a non-default log directory. */
   customLogDirectory: string | undefined;
   characters: BackupCharacterInfo[];
 }
 
 export interface BackupImportOptions {
-  /** Restore destination; defaults to the configured log directory. */
   dataDir?: string;
   overwrite: boolean;
-  /** Drop `logDirectory` from restored general settings. */
   stripLogDirectory: boolean;
   selectedCharacters: string[];
   includes: BackupIncludes;
@@ -81,7 +78,6 @@ export interface BackupImportResult {
   generalImported: boolean;
   generalCandidate: boolean;
   charactersTouched: number;
-  /** Parsed general settings to merge into the renderer's copy. */
   newGeneralSettings: object | undefined;
 }
 
@@ -101,8 +97,6 @@ function settingsSelection(includes: BackupIncludes): SettingsSelection {
     includeHidden: includes.hidden
   };
 }
-
-/* --- Export ---------------------------------------------------------------- */
 
 type ExportEntry = { abs: string; zip: string; isLog?: boolean };
 
@@ -164,12 +158,12 @@ function buildExportEntries(
   return entries;
 }
 
-function verifyExportZip(
+async function verifyExportZip(
   filePath: string,
   manifest: ExportManifest
-): string | undefined {
+): Promise<string | undefined> {
   try {
-    const zip = new AdmZip(filePath);
+    const zip = new (await loadAdmZip())(filePath);
     const manifestEntry = zip.getEntry('manifest.json');
     if (!manifestEntry)
       return 'Verification failed: manifest.json missing from ZIP.';
@@ -230,7 +224,7 @@ async function runExport(
     const total = entries.length || 1;
     sendProgress(0, 0, entries.length);
 
-    const archive = archiver('zip', { zlib: { level: 6 } });
+    const archive = (await loadArchiver())('zip', { zlib: { level: 6 } });
     const output = fs.createWriteStream(outputPath);
     let streamErrored = false;
     output.on('error', () => {
@@ -309,7 +303,7 @@ async function runExport(
     if (archive.pointer() === 0)
       throw new Error('Export produced an empty ZIP file.');
 
-    const verifyError = verifyExportZip(outputPath, manifest);
+    const verifyError = await verifyExportZip(outputPath, manifest);
     if (verifyError) {
       log.error('export.verify.failed', verifyError);
       throw new Error(verifyError);
@@ -321,15 +315,12 @@ async function runExport(
       outputPath
     };
   } catch (error) {
-    // Clean up partial ZIP on failure
     try {
       if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
     } catch {}
     throw error;
   }
 }
-
-/* --- Import ---------------------------------------------------------------- */
 
 function createEmptyCharacterInfo(name: string): BackupCharacterInfo {
   return {
@@ -400,7 +391,6 @@ function parseCharacterEntry(
     characterMap.set(characterName, info);
   }
 
-  // Recognize JSON log files (e.g. characters/X/logs/foo.json)
   if (category === 'logs') {
     const fileName = segments.slice(3).join('/');
     if (fileName && fileName.endsWith('.json')) {
@@ -656,11 +646,11 @@ function importCharacterFile(
   }
 }
 
-function runImport(
+async function runImport(
   zipPath: string,
   options: BackupImportOptions
-): BackupImportResult {
-  const zip = new AdmZip(zipPath);
+): Promise<BackupImportResult> {
+  const zip = new (await loadAdmZip())(zipPath);
   const parsed = parseZip(zip);
 
   const dataDir = options.dataDir ?? getSettings!().logDirectory;
@@ -711,14 +701,8 @@ function runImport(
   };
 }
 
-/* --- IPC wiring ------------------------------------------------------------ */
-
 let initialized = false;
 
-/**
- * Registers the backup import/export IPC endpoints. Call once during app
- * startup.
- */
 export function initBackupHost(opts: { getSettings(): GeneralSettings }): void {
   if (initialized) return;
   initialized = true;
@@ -726,7 +710,6 @@ export function initBackupHost(opts: { getSettings(): GeneralSettings }): void {
 
   const ipc = electron.ipcMain;
 
-  /* Characters available for export (skips special/hidden directories). */
   ipc.handle('backup-list-export-characters', (): string[] => {
     const characters: string[] = [];
     try {
@@ -750,47 +733,50 @@ export function initBackupHost(opts: { getSettings(): GeneralSettings }): void {
     runExport(e.sender, options)
   );
 
-  ipc.handle('backup-zip-parse', (_e, zipPath: string): ParsedBackupZip => {
-    const zip = new AdmZip(zipPath);
-    const parsed = parseZip(zip);
+  ipc.handle(
+    'backup-zip-parse',
+    async (_e, zipPath: string): Promise<ParsedBackupZip> => {
+      const zip = new (await loadAdmZip())(zipPath);
+      const parsed = parseZip(zip);
 
-    // Detect custom log directory from manifest or settings entry.
-    let backupLogDir: string | undefined = parsed.manifest?.logDirectory;
-    if (!backupLogDir) {
-      const settingsEntry = zip.getEntry('settings');
-      if (settingsEntry) {
-        try {
-          const settings = JSON.parse(settingsEntry.getData().toString('utf8'));
-          if (
-            settings.logDirectory &&
-            typeof settings.logDirectory === 'string'
-          )
-            backupLogDir = settings.logDirectory;
-        } catch {
-          // Ignore parse errors; custom log detection is best-effort.
+      let backupLogDir: string | undefined = parsed.manifest?.logDirectory;
+      if (!backupLogDir) {
+        const settingsEntry = zip.getEntry('settings');
+        if (settingsEntry) {
+          try {
+            const settings = JSON.parse(
+              settingsEntry.getData().toString('utf8')
+            );
+            if (
+              settings.logDirectory &&
+              typeof settings.logDirectory === 'string'
+            )
+              backupLogDir = settings.logDirectory;
+          } catch {
+            // Ignore parse errors; custom log detection is best-effort.
+          }
         }
       }
+      const defaultLogDirectory = path.join(
+        electron.app.getPath('userData'),
+        'data'
+      );
+
+      return {
+        hasManifest: parsed.hasManifest,
+        manifest: parsed.manifest,
+        generalAvailable: parsed.generalAvailable,
+        customLogDirectory:
+          backupLogDir && backupLogDir !== defaultLogDirectory
+            ? backupLogDir
+            : undefined,
+        characters: Array.from(parsed.characterMap.values()).sort((a, b) =>
+          a.name.localeCompare(b.name)
+        )
+      };
     }
-    const defaultLogDirectory = path.join(
-      electron.app.getPath('userData'),
-      'data'
-    );
+  );
 
-    return {
-      hasManifest: parsed.hasManifest,
-      manifest: parsed.manifest,
-      generalAvailable: parsed.generalAvailable,
-      customLogDirectory:
-        backupLogDir && backupLogDir !== defaultLogDirectory
-          ? backupLogDir
-          : undefined,
-      characters: Array.from(parsed.characterMap.values()).sort((a, b) =>
-        a.name.localeCompare(b.name)
-      )
-    };
-  });
-
-  /* Verifies a restore destination is creatable and writable. */
   ipc.handle(
     'backup-check-dir-access',
     (_e, dir: string): string | undefined => {

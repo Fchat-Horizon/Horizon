@@ -5,7 +5,7 @@ import throat from 'throat';
 import { ipc } from '@/platform/ipc';
 import { NoteChecker } from './note-checker';
 
-import { AxiosRequestConfig } from 'axios';
+import type { AxiosRequestConfig } from 'axios';
 
 /* tslint:disable:no-unsafe-any */
 

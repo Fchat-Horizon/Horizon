@@ -155,42 +155,43 @@
             class="carousel-inner w-100 hidden-scrollbar"
             role="listbox"
             :animation="150"
+            :item-key="eicon => eicon"
             @end="saveFavoritesOrder"
           >
-            <div
-              class="carousel-item"
-              v-for="eicon in allResults"
-              :key="eicon"
-              role="img"
-              :aria-label="eicon"
-              tabindex="0"
-            >
-              <img
-                class="eicon"
-                :alt="eicon"
-                :src="
-                  'https://static.f-list.net/images/eicon/' + eicon + '.gif'
-                "
-                :title="eicon"
-                role="button"
-                :aria-label="eicon"
-                @click.prevent.stop="selectIcon(eicon, $event)"
-              />
-
+            <template #item="{ element: eicon }">
               <div
-                class="btn favorite-toggle"
-                :class="{ favorited: isFavorite(eicon) }"
-                @click.prevent.stop="toggleFavorite(eicon)"
-                role="button"
-                :aria-label="
-                  isFavorite(eicon)
-                    ? l('eicon.removeFromFavorites')
-                    : l('eicon.addToFavorites')
-                "
+                class="carousel-item"
+                role="img"
+                :aria-label="eicon"
+                tabindex="0"
               >
-                <i class="fas fa-thumbtack"></i>
+                <img
+                  class="eicon"
+                  :alt="eicon"
+                  :src="
+                    'https://static.f-list.net/images/eicon/' + eicon + '.gif'
+                  "
+                  :title="eicon"
+                  role="button"
+                  :aria-label="eicon"
+                  @click.prevent.stop="selectIcon(eicon, $event)"
+                />
+
+                <div
+                  class="btn favorite-toggle"
+                  :class="{ favorited: isFavorite(eicon) }"
+                  @click.prevent.stop="toggleFavorite(eicon)"
+                  role="button"
+                  :aria-label="
+                    isFavorite(eicon)
+                      ? l('eicon.removeFromFavorites')
+                      : l('eicon.addToFavorites')
+                  "
+                >
+                  <i class="fas fa-thumbtack"></i>
+                </div>
               </div>
-            </div>
+            </template>
           </draggable>
 
           <div
@@ -256,6 +257,7 @@
   import core from '@/chat/core';
   import modal from '@/components/Modal.vue';
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import l from '@/chat/localize';
   import { EventBus } from '@/chat/preview/event-bus';
 
@@ -274,7 +276,8 @@
 
   let store: EIconStore | undefined;
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: { modal, draggable },
     props: {
       onSelect: Function
@@ -330,7 +333,7 @@
         }
       });
     },
-    beforeDestroy(): void {
+    beforeUnmount(): void {
       const resultsContainer = this.$refs['resultsContainer'] as HTMLElement;
       if (resultsContainer) {
         resultsContainer.removeEventListener('scroll', this.handleScroll);

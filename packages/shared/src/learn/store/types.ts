@@ -2,13 +2,13 @@
 // import * as path from 'path';
 // import core from '@/chat/core';
 
-import {
+import type {
   Character as ComplexCharacter,
   CharacterGroup,
   Guestbook
 } from '@/site/character_page/interfaces';
-import { CharacterImage, SimpleCharacter } from '@/interfaces';
-import {
+import type { CharacterImage, SimpleCharacter } from '@/interfaces';
+import type {
   FurryPreference,
   Gender,
   Orientation,

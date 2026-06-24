@@ -25,9 +25,9 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
 
-  export default Vue.extend({
+  export default defineComponent({
     props: {
       items: { type: Array, required: true as const },
       itemHeight: { type: Number, required: true as const },
@@ -37,6 +37,7 @@
       rowClass: { type: [String, Function], required: false },
       resetKey: { type: [String, Number], required: false }
     },
+    emits: ['scroll', 'near-top'],
     data() {
       return {
         scrollTop: 0,
@@ -104,7 +105,7 @@
     updated(): void {
       this.measureRows();
     },
-    beforeDestroy(): void {
+    beforeUnmount(): void {
       if (this.scrollRequestAnimFrame !== undefined) {
         window.cancelAnimationFrame(this.scrollRequestAnimFrame);
       }

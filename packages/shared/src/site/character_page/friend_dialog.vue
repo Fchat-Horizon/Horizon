@@ -15,7 +15,7 @@
           <h4>{{ l('friends.existing') }}</h4>
         </div>
         <div class="card-body">
-          <div v-for="friend in existing" class="friend-item">
+          <div v-for="friend in existing" :key="friend.id" class="friend-item">
             <character-link :character="friend.source"
               ><img
                 class="character-avatar icon"
@@ -42,7 +42,7 @@
           <h4>{{ l('friends.pendingTo') }}</h4>
         </div>
         <div class="card-body">
-          <div v-for="request in pending" class="friend-item">
+          <div v-for="request in pending" :key="request.id" class="friend-item">
             <character-link :character="request.source"
               ><img
                 class="character-avatar icon"
@@ -69,7 +69,11 @@
           <h4>{{ l('friends.pendingFrom') }}</h4>
         </div>
         <div class="card-body">
-          <div v-for="request in incoming" class="friend-item">
+          <div
+            v-for="request in incoming"
+            :key="request.id"
+            class="friend-item"
+          >
             <character-link :character="request.target"
               ><img
                 class="character-avatar icon"
@@ -114,7 +118,7 @@
             <button
               @click="request"
               class="btn btn-secondary"
-              :disable="requesting || !ourCharacter"
+              :disabled="requesting || !ourCharacter"
             >
               {{ l('friends.requestButton') }}
             </button>
@@ -127,15 +131,16 @@
 
 <script lang="ts">
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent, type PropType } from 'vue';
   import { Dialog } from '@/helpers/dialog';
   import Modal from '@/components/Modal.vue';
   import * as Utils from '../utils';
   import { methods } from './data_store';
-  import { Character, Friend, FriendRequest } from './interfaces';
+  import type { Character, Friend, FriendRequest } from './interfaces';
   import l from '@/chat/localize';
-  import { PropType } from 'vue';
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: { Modal },
     props: {
       character: { type: Object as PropType<Character>, required: true }
@@ -225,7 +230,8 @@
         }
       },
       async show(): Promise<void> {
-        (CustomDialog as any).options.methods.show.call(this);
+        // defineComponent has no Vue 2 `.options`; methods live on the object.
+        (CustomDialog as any).methods.show.call(this);
         try {
           this.loading = true;
           const friendData = await methods.characterFriends(

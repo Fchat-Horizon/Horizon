@@ -1,6 +1,7 @@
-import Vue from 'vue';
-import { BBCodeElement } from './core';
-import { InlineDisplayMode, InlineImage } from '@/interfaces';
+import { type App } from 'vue';
+import type { BBCodeElement } from './core';
+import type { InlineImage } from '@/interfaces';
+import { InlineDisplayMode } from '@/interfaces';
 import * as Utils from '@/site/utils';
 import { CoreBBCodeParser } from './core';
 import { BBCodeCustomTag, BBCodeSimpleTag, BBCodeTextTag } from './parser';
@@ -10,7 +11,7 @@ const usernameRegex = /^[a-zA-Z0-9_\-\s]+$/;
 export class StandardBBCodeParser extends CoreBBCodeParser {
   inlines: { [key: string]: InlineImage | undefined } | undefined;
 
-  cleanup: Vue[] = [];
+  cleanup: App[] = [];
 
   createInline(inline: InlineImage): HTMLElement {
     const p1 = inline.hash.substr(0, 2);
@@ -205,10 +206,10 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
           else {
             clearTimeout(timeout);
             body.style.transition = 'initial';
-            setImmediate(() => {
+            setTimeout(() => {
               body.style.transition = '';
               body.style.height = '0';
-            });
+            }, 0);
           }
           body.style.height = `${body.scrollHeight}px`;
           outer.className = `card bg-light bbcode-collapse ${!isCollapsed ? 'collapsed' : ''}`;
@@ -297,8 +298,8 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
   parseEverything(input: string): BBCodeElement {
     const elm = <BBCodeElement>super.parseEverything(input);
     if (this.cleanup.length > 0)
-      elm.cleanup = ((cleanup: Vue[]) => () => {
-        for (const component of cleanup) component.$destroy();
+      elm.cleanup = ((cleanup: App[]) => () => {
+        for (const app of cleanup) app.unmount();
       })(this.cleanup);
     this.cleanup = [];
     return elm;

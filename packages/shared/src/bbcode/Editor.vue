@@ -39,7 +39,7 @@
         <div
           class="popover popover-top color-selector"
           v-show="colorPopupVisible"
-          v-on-clickaway="dismissColorSelector"
+          v-clickaway="dismissColorSelector"
         >
           <div class="popover-body">
             <div
@@ -60,6 +60,7 @@
             <div class="btn-group" role="group" :aria-label="l('common.color')">
               <button
                 v-for="btnCol in buttonColors"
+                :key="btnCol"
                 type="button"
                 class="btn text-color"
                 :class="btnCol"
@@ -80,6 +81,7 @@
         <div
           class="btn btn-light btn-sm"
           v-for="button in buttons"
+          :key="button.tag"
           :class="button.outerClass"
           :title="l(button.titleKey, shortcutModifierKey)"
           @click.prevent.stop="apply(button)"
@@ -141,7 +143,9 @@
       <div class="bbcode-preview bg-body" v-show="preview">
         <div class="bbcode-preview-warnings">
           <div class="alert alert-danger" v-show="previewWarnings.length">
-            <li v-for="warning in previewWarnings">{{ warning }}</li>
+            <li v-for="(warning, i) in previewWarnings" :key="i">
+              {{ warning }}
+            </li>
           </div>
         </div>
         <div class="bbcode" ref="preview-element"></div>
@@ -152,10 +156,10 @@
 
 <script lang="ts">
   import _ from 'lodash';
-  import Vue from 'vue';
-  import { mixin as clickaway } from 'vue-clickaway';
+  import { defineComponent, type DirectiveBinding } from 'vue';
   import { getKey } from '@/chat/common';
   import { Keys } from '@/keys';
+  import { getPlatform } from '@/platform/platform';
   import { BBCodeElement, CoreBBCodeParser, urlRegex } from './core';
   import core from '@/chat/core';
   import { defaultButtons, EditorButton, EditorSelection } from './editor';
@@ -168,17 +172,42 @@
 
   const log = createLogger('bbcode-editor');
 
-  export default Vue.extend({
+  type ClickAwayEl = HTMLElement & { _clickAway?: (e: Event) => void };
+
+  export default defineComponent({
     components: {
       icon: IconView,
       EIconSelector: EIconSelector
     },
-    mixins: [clickaway],
+    // Replaces vue-clickaway (Vue 2 only): invoke the bound handler on any
+    // click landing outside the element.
+    directives: {
+      clickaway: {
+        mounted(
+          el: ClickAwayEl,
+          binding: DirectiveBinding<(e: Event) => void>
+        ) {
+          el._clickAway = (e: Event) => {
+            if (el !== e.target && !el.contains(e.target as Node))
+              binding.value(e);
+          };
+          document.addEventListener('click', el._clickAway, true);
+        },
+        unmounted(el: ClickAwayEl) {
+          if (el._clickAway)
+            document.removeEventListener('click', el._clickAway, true);
+        }
+      }
+    },
+    // Declaring emitted events keeps parent @keydown/@keyup/etc. as component
+    // listeners; otherwise Vue 3 also falls them through as native root
+    // listeners, firing parent handlers twice (double-sent messages on Enter).
+    emits: ['keydown', 'keyup', 'keypress', 'update:modelValue'],
     props: {
       extras: {},
       maxlength: { default: 1000 },
       classes: {},
-      value: { default: undefined },
+      modelValue: { default: undefined },
       disabled: { type: Boolean, default: false },
       placeholder: { type: String, default: '' },
       hasToolbar: { default: true },
@@ -208,14 +237,14 @@
         previewWarnings: [] as ReadonlyArray<string>,
         previewResult: '',
         // tslint:disable-next-line: no-unnecessary-type-assertion
-        text: (this.value !== undefined ? this.value : '') as string,
+        text: (this.modelValue !== undefined ? this.modelValue : '') as string,
         element: undefined as any as HTMLTextAreaElement,
         sizer: undefined as any as HTMLTextAreaElement,
         editorContainer: undefined as any as HTMLElement,
         maxHeight: 0 as number,
         minHeight: 0 as number,
         showToolbar: false,
-        shortcutModifierKey: process.platform == 'darwin' ? '⌘' : 'Ctrl',
+        shortcutModifierKey: getPlatform() === 'darwin' ? '⌘' : 'Ctrl',
         parser: undefined as any as BBCodeParser,
         defaultButtons: defaultButtons,
         isShiftPressed: false,
@@ -265,7 +294,7 @@
       }
     },
     watch: {
-      value(newValue: string): void {
+      modelValue(newValue: string): void {
         this.$nextTick(() => this.resize());
         if (this.text === newValue) return;
         this.text = newValue;
@@ -312,7 +341,7 @@
 
     //tslint:enable
 
-    destroyed(): void {
+    unmounted(): void {
       window.removeEventListener('resize', this.resizeListener);
     },
     methods: {
@@ -422,7 +451,7 @@
 
           this.$nextTick(() => this.setSelection(selectionPoint));
         }
-        this.$emit('input', this.text);
+        this.$emit('update:modelValue', this.text);
       },
 
       dismissColorSelector(): void {
@@ -480,10 +509,6 @@
         withArgument?: string,
         withInject?: string
       ): void {
-        // Allow emitted variations for custom buttons.
-        this.$once('insert', (startText: string, endText: string) =>
-          this.applyText(startText, endText)
-        );
         // noinspection TypeScriptValidateTypes
         if (button.handler !== undefined) {
           // tslint:ignore-next-line:no-any
@@ -516,7 +541,7 @@
           this.undoStack = this.undoStack.slice(this.undoIndex);
           this.undoIndex = 0;
         }
-        this.$emit('input', this.text);
+        this.$emit('update:modelValue', this.text);
         this.lastInput = Date.now();
       },
 
@@ -606,14 +631,14 @@
               this.undoStack.unshift(this.text);
             if (this.undoStack.length > this.undoIndex + 1) {
               this.text = this.undoStack[++this.undoIndex];
-              this.$emit('input', this.text);
+              this.$emit('update:modelValue', this.text);
               this.lastInput = Date.now();
             }
           } else if (key === Keys.KeyY) {
             e.preventDefault();
             if (this.undoIndex > 0) {
               this.text = this.undoStack[--this.undoIndex];
-              this.$emit('input', this.text);
+              this.$emit('update:modelValue', this.text);
               this.lastInput = Date.now();
             }
           }

@@ -1137,7 +1137,7 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import l, {
     setLanguage,
     availableDisplayLanguages
@@ -1157,12 +1157,15 @@
   } from './language';
   import _ from 'lodash';
 
-  export default Vue.extend({
+  export default defineComponent({
     components: { tabs: Tabs, 'filterable-select': FilterableSelect },
+    props: {
+      initialSettings: { type: Object as () => GeneralSettings, required: true }
+    },
     data() {
       return {
         sortedLangs: [] as string[],
-        settings: undefined as any as GeneralSettings,
+        settings: this.initialSettings,
         osIsDark: ipcRenderer.sendSync('native-theme-dark-sync') as boolean,
         selectedTab: '0',
         isMaximized: false,
@@ -1197,14 +1200,13 @@
         const css = <string | null>(
           ipcRenderer.sendSync('themes-read-sync', this.getSyncedTheme())
         );
-        if (css === null) {
-          if (this.settings.theme !== 'default') {
-            this.settings.theme = 'default';
-            return this.styling;
-          }
-          throw new Error('Default theme is missing');
-        }
-        return `<style>${css}</style>`;
+        if (css !== null) return `<style>${css}</style>`;
+        // ! Missing theme falls back to default; reset is persisted in resetMissingTheme()
+        const fallback = <string | null>(
+          ipcRenderer.sendSync('themes-read-sync', 'default')
+        );
+        if (fallback === null) throw new Error('Default theme is missing');
+        return `<style>${fallback}</style>`;
       }
     },
     async mounted(): Promise<void> {
@@ -1217,6 +1219,7 @@
       this.logLevel = this.settings.risingSystemLogLevel;
       this.showTitle = this.settings.forceNativeWindowControls && !this.isMac;
       this.availableThemes = <string[]>ipcRenderer.sendSync('themes-list-sync');
+      this.resetMissingTheme();
 
       ipcRenderer.on(
         'native-theme-updated',
@@ -1274,6 +1277,15 @@
         return this.osIsDark
           ? this.settings.themeSyncDark
           : this.settings.themeSyncLight;
+      },
+
+      // Persist the default-theme fallback that `styling` renders read-only
+      resetMissingTheme(): void {
+        if (this.settings.theme === 'default') return;
+        const css = <string | null>(
+          ipcRenderer.sendSync('themes-read-sync', this.getSyncedTheme())
+        );
+        if (css === null) this.settings.theme = 'default';
       },
 
       minimize(): void {
@@ -1355,7 +1367,7 @@
         if (isNaN(pct)) pct = 0;
         pct = Math.max(0, Math.min(100, pct));
         const v = pct / 100;
-        (this as any).$set(this.liveVolumeMap, sound, v);
+        this.liveVolumeMap[sound] = v;
         this.onVolumeChange(sound);
       },
 
@@ -1365,7 +1377,9 @@
           try {
             this.soundPreviewAudio.pause();
             this.soundPreviewAudio.remove();
-          } catch (e) {}
+          } catch {
+            // ignore teardown errors on an already-detached audio element
+          }
           this.soundPreviewAudio = null;
         }
 
@@ -1396,7 +1410,9 @@
         audio.addEventListener('ended', () => {
           try {
             audio.remove();
-          } catch (e) {}
+          } catch {
+            // ignore teardown errors on an already-detached audio element
+          }
           if (this.soundPreviewAudio === audio) this.soundPreviewAudio = null;
         });
 

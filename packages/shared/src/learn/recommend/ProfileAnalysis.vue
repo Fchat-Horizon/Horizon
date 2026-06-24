@@ -16,7 +16,7 @@
     <div class="alert alert-info" role="alert">
       <h4 class="alert-heading">Feedback requested.</h4>
       <p>
-        This reworked version of the analyser— now visible on your profile, is
+        This reworked version of the analyser - now visible on your profile, is
         intended to give you a better idea of how the matcher sees your
         character. Are the results inaccurate, or do you otherwise feel there's
         improvements for the matcher?
@@ -68,6 +68,7 @@
       <div class="row">
         <div
           v-for="r in recommendations"
+          :key="r.code"
           class="recommendation-wrapper col-12 col-md-6 col-xl-4"
         >
           <div class="recommendation" :class="r.level">
@@ -86,16 +87,14 @@
   </div>
 </template>
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import core from '@/chat/core';
-  import {
-    ProfileRecommendation,
-    ProfileRecommendationAnalyzer
-  } from './profile-recommendation';
+  import type { ProfileRecommendation } from './profile-recommendation';
+  import { ProfileRecommendationAnalyzer } from './profile-recommendation';
   import { CharacterAnalysis } from '../matcher';
   import { methods } from '@/site/character_page/data_store';
 
-  export default Vue.extend({
+  export default defineComponent({
     props: {
       characterName: { type: String, required: true },
       characterId: { type: Number, required: true }

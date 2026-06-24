@@ -11,6 +11,7 @@
       <div
         class="row"
         v-for="(search, index) in history"
+        :key="index"
         :class="{ 'selected-row': index === selectedSearch }"
       >
         <div class="form-col radio-col">
@@ -49,19 +50,17 @@
 
 <script lang="ts">
   import Modal from '@/components/Modal.vue';
-  import Dropdown from '@/components/Dropdown.vue';
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import core from './core';
-  import { BBCodeView } from '@/bbcode/view';
   import * as _ from 'lodash';
   import { ExtendedSearchData, SearchData } from './interfaces';
   import l from './localize';
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: {
-      modal: Modal,
-      dropdown: Dropdown,
-      bbcode: BBCodeView(core.bbCodeParser)
+      modal: Modal
     },
     props: {
       callback: { required: true as const },

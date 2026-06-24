@@ -16,8 +16,8 @@ import { createLogger } from '@/logger';
 const log = createLogger('ad-manager');
 
 import core from '../core';
-import { Conversation } from '../interfaces';
-import ChannelConversation = Conversation.ChannelConversation;
+import type { Conversation } from '../interfaces';
+type ChannelConversation = Conversation.ChannelConversation;
 type Timer = ReturnType<typeof setTimeout>;
 
 const adManagerThroat = throat(1);

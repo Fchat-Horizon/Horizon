@@ -1,3 +1,21 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+
+onlyBuiltDependencies:
+  - '@fortawesome/fontawesome-free'
+  - '@parcel/watcher'
+  - core-js
+  - electron
+  - esbuild
+  - fs-xattr
+  - lzma-native
+  - macos-alias
+  - utf-8-validate
+
+overrides:
+  '@types/node': ^24.0.0
+  pbkdf2: 3.1.3
+  babel-core: 7.0.0-bridge.0
+  babel-traverse: 7.25.9
+  consolidate: 0.16.0

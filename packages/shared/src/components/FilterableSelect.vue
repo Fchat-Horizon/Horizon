@@ -7,8 +7,10 @@
     @opened="selectOpened"
     ref="dropdown"
   >
-    <template slot="title" v-if="multiple">{{ label }}</template>
-    <slot v-else slot="title" :option="selected">{{ label }}</slot>
+    <template #title>
+      <template v-if="multiple">{{ label }}</template>
+      <slot v-else :option="selected">{{ label }}</slot>
+    </template>
 
     <div class="p-2">
       <input
@@ -26,7 +28,8 @@
         <a
           href="#"
           @click.stop="select(option)"
-          v-for="option in filtered"
+          v-for="(option, index) in filtered"
+          :key="index"
           class="dropdown-item d-flex align-items-center"
         >
           <input
@@ -41,7 +44,8 @@
         <a
           href="#"
           @click="select(option)"
-          v-for="option in filtered"
+          v-for="(option, index) in filtered"
+          :key="index"
           class="dropdown-item"
           :class="selected === option ? 'selected' : ''"
         >
@@ -53,11 +57,14 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import Dropdown from '../components/Dropdown.vue';
 
-  export default Vue.extend({
+  export default defineComponent({
     components: { dropdown: Dropdown },
+    // 'input' fires only on user selection, distinct from v-model; declaring it
+    // keeps a parent @input as a component listener, not a native fallthrough.
+    emits: ['update:modelValue', 'input'],
     props: {
       placeholder: { type: String, default: 'Filter...' },
       options: { type: Array, required: true as const },
@@ -66,14 +73,14 @@
         default: (filter: RegExp, value: unknown) => filter.test(String(value))
       },
       multiple: { type: Boolean, default: undefined },
-      value: { default: undefined },
+      modelValue: { default: undefined },
       title: { type: String }
     },
     data() {
       return {
         filter: '',
-        selected: (this.value !== undefined
-          ? this.value
+        selected: (this.modelValue !== undefined
+          ? this.modelValue
           : this.multiple !== undefined
             ? []
             : undefined) as unknown | unknown[] | undefined
@@ -102,7 +109,7 @@
       }
     },
     watch: {
-      value(newValue: unknown): void {
+      modelValue(newValue: unknown): void {
         this.selected = newValue;
       }
     },
@@ -120,6 +127,7 @@
           this.selected = item;
         }
 
+        this.$emit('update:modelValue', this.selected);
         this.$emit('input', this.selected);
       },
       isSelected(option: unknown): boolean {

@@ -5,6 +5,7 @@
   "license": "MPL-2.0",
   "private": true,
   "exports": {
+    "./package.json": "./package.json",
     "./*": "./src/*"
   }
 }

@@ -61,13 +61,15 @@
 
 <script lang="ts">
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import Modal from '@/components/Modal.vue';
   import * as Utils from '../utils';
   import { methods } from './data_store';
-  import { Character } from './interfaces';
+  import type { Character } from './interfaces';
   import l from '@/chat/localize';
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: { modal: Modal },
     props: {
       character: { required: true as const }

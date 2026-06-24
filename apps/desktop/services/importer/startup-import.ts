@@ -2,20 +2,16 @@ import { ipcRenderer } from 'electron';
 import l from '@horizon/shared/chat/localize';
 import { createLogger } from '@horizon/shared/logger';
 import * as VanillaImporter from './vanilla-importer';
-import { SlimcatImporter } from '../index';
-import { GeneralSettings } from '@horizon/shared/common';
+// Import the slimcat importer from its source module, not the services barrel:
+// going through ../index made the barrel self-referential and pulled the whole
+// import/export graph into every window that only needs startup import.
+import * as SlimcatImporter from './importer';
+import type { GeneralSettings } from '@horizon/shared/common';
 
 const log = createLogger('importer');
 
 type ImporterHint = 'auto' | 'vanilla' | 'advanced' | 'slimcat' | undefined;
 
-/**
- * Checks if the user already has Horizon logs.
- * If the log directory contains any subdirectories (character folders), we assume they have logs.
- *
- * @param logDirectory - Path to the Horizon log directory
- * @returns true if logs exist, false otherwise
- */
 async function hasExistingHorizonLogs(): Promise<boolean> {
   try {
     const characters = <string[]>(
@@ -65,8 +61,7 @@ async function doVanillaGeneralImport(
 
   const summaries = await VanillaImporter.importAll(rctx, destinationDir, {
     includePinnedEicons: true,
-    // ! we should avoid overwriting any existing logs during startup import
-    // This shouldn't even be offered if you have logs already, but better safe than sorry.
+    // ! never overwrite existing logs during startup import
     overwrite: false
   });
   const importedCharacters = Array.from(summaries.entries()).filter(
@@ -131,14 +126,6 @@ function handleSlimcatImport(settings: GeneralSettings): void {
   }
 }
 
-/**
- * Handles automatic import prompts when Horizon starts up.
- * Processes import hints ('auto', 'vanilla', 'slimcat', 'advanced') to detect and import data.
- *
- * @param settings - Current general settings for the application
- * @param rawImportParam - Import hint passed from main process
- * @returns Updated GeneralSettings after import completes
- */
 export async function handleStartupImport(
   settings: GeneralSettings,
   rawImportParam: string | undefined

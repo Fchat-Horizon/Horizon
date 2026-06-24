@@ -115,9 +115,6 @@ export class BBCodeParser {
     parent.className = 'bbcode';
     this._currentTag = { tag: '<root>', line: 1, column: 1 };
     this.parse(input, 0, undefined, parent, () => true, 0);
-
-    //if(process.env.NODE_ENV !== 'production' && this._warnings.length > 0)
-    //    console.log(this._warnings);
     return parent;
   }
 
@@ -192,7 +189,7 @@ export class BBCodeParser {
         paramStart = i;
 
         const paramIndex = paramStart === -1 ? i : paramStart;
-        let tagKey = input
+        const tagKey = input
           .substring(tagStart + 1, paramIndex)
           .trim()
           .toLowerCase();
@@ -219,7 +216,7 @@ export class BBCodeParser {
           continue;
         }
         if (isInCollapseParam) {
-          let fullTagKey = input
+          const fullTagKey = input
             .substring(tagStart + 1, i + 1)
             .trim()
             .toLowerCase();

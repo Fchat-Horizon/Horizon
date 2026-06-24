@@ -12,7 +12,7 @@ import { execFileSync, execSync, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { GeneralSettings } from '@horizon/shared/common';
+import type { GeneralSettings } from '@horizon/shared/common';
 
 let getSettings: (() => GeneralSettings) | undefined;
 
@@ -25,7 +25,6 @@ function openIncognitoWindows(url: string): void {
     executablePath = settings.browserPath;
     log.debug('incognito.open.customPath', executablePath);
   } else if (executablePath === undefined) {
-    //Default to Edge path
     executablePath =
       'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe';
     if (browser === undefined)
@@ -68,7 +67,6 @@ function openIncognitoWindows(url: string): void {
 
     log.debug('incognito.open.exePath', executablePath);
   }
-  //"Everything is chrome in the future!" -Spongebob
   let incognitoArg: string = '-incognito';
 
   switch (path.basename(executablePath).toLowerCase()) {
@@ -97,9 +95,6 @@ function openIncognitoWindows(url: string): void {
   spawn(executablePath, [incognitoArg, url]);
 }
 
-// --- Linux incognito helpers ------------------------------------------------
-// Resolve an executable to an absolute path using PATH; Otherwise, return the
-// original command.
 function resolveExecutable(cmd: string): string {
   if (path.isAbsolute(cmd)) return cmd;
   try {
@@ -108,7 +103,7 @@ function resolveExecutable(cmd: string): string {
       .split('\n')[0];
     if (resolved) return resolved;
   } catch {
-    // Ignore: we'll try spawn with the raw token. Oh god.
+    // Ignore: fall through and try spawn with the raw token.
   }
   return cmd;
 }
@@ -128,7 +123,6 @@ const LINUX_INCOGNITO_FLAGS: Record<string, string> = {
   'vivaldi-stable': '--incognito',
   'vivaldi-snapshot': '--incognito',
 
-  // why is edge on linux lol
   'microsoft-edge': '--inprivate',
   'microsoft-edge-stable': '--inprivate',
   'microsoft-edge-beta': '--inprivate',
@@ -183,7 +177,6 @@ function openIncognitoLinux(url: string): void {
     log.error('incognito.open.linux.desktopId.error', err);
   }
 
-  // & oh my god.
   const candidatePaths =
     desktopId === undefined
       ? []
@@ -199,16 +192,14 @@ function openIncognitoLinux(url: string): void {
           path.join('/usr/local/share/applications', desktopId),
           path.join('/usr/share/applications', desktopId),
 
-          // flatpak and snap system locations (???)
+          // flatpak and snap system locations
           path.join(
             '/usr/local/share/flatpak/exports/share/applications',
             desktopId
           ),
           path.join('/var/lib/flatpak/exports/share/applications', desktopId),
-          // ? does snap live here or am i fucking pedantic
           path.join('/var/lib/snapd/desktop/applications', desktopId)
         ];
-  // okay we're out of hell.
   const desktopFilePath = candidatePaths.find(p => fs.existsSync(p));
   let browserCommand = desktopFilePath
     ? extractExecCommand(desktopFilePath)
@@ -221,8 +212,7 @@ function openIncognitoLinux(url: string): void {
       desktopFilePath ?? 'no desktop file found'
     );
 
-    // ! Last resort:
-    // ! We are in hell. Hope that god has given us Firefox.
+    // ! Last resort: fall back to Firefox.
     browserCommand = 'firefox';
   }
 
@@ -232,16 +222,13 @@ function openIncognitoLinux(url: string): void {
 
   const incognitoArg =
     LINUX_INCOGNITO_FLAGS[path.basename(browserCommand).toLowerCase()] ??
-    '-private-window'; // again, we pray to god we have firefox. :)
+    '-private-window';
 
   spawn(resolvedCommand, [incognitoArg, url]);
 }
 
 let initialized = false;
 
-/**
- * Registers the 'open-incognito' IPC endpoint. Call once during app startup.
- */
 export function initIncognito(opts: { getSettings(): GeneralSettings }): void {
   if (initialized) return;
   initialized = true;

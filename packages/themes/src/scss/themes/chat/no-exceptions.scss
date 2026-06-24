@@ -1,8 +1,8 @@
 @use 'sass:color';
 @import '../../functions';
-@import '~bootstrap/scss/functions';
+@import 'bootstrap/scss/functions';
 @import '../variables/no_exceptions_variables';
-@import '~bootstrap/scss/variables';
+@import 'bootstrap/scss/variables';
 @import '../../flist_derived';
 @import '../variables/no_exceptions_derived';
 

@@ -1,8 +1,9 @@
 import core from './core';
-import { Character, Conversation, userStatuses } from './interfaces';
+import type { Character } from './interfaces';
+import { Conversation, userStatuses } from './interfaces';
 import l from './localize';
-import ChannelConversation = Conversation.ChannelConversation;
-import PrivateConversation = Conversation.PrivateConversation;
+type ChannelConversation = Conversation.ChannelConversation;
+type PrivateConversation = Conversation.PrivateConversation;
 
 export const enum ParamType {
   String,

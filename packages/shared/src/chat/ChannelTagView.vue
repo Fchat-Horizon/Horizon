@@ -13,11 +13,11 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import core from './core';
   import { Channel } from './interfaces';
 
-  export default Vue.extend({
+  export default defineComponent({
     props: {
       id: { type: String, required: true },
       text: { type: String, required: true }

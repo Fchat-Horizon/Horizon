@@ -11,7 +11,8 @@
  */
 
 import * as electron from 'electron';
-import Axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import type { AxiosInstance, AxiosRequestConfig } from 'axios';
+import Axios from 'axios';
 import { wrapper as addCookieJar } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
 
@@ -39,9 +40,6 @@ function transportFor(sender: electron.WebContents): AxiosInstance {
 
 let initialized = false;
 
-/**
- * Registers the site-session IPC endpoints. Call once during app startup.
- */
 export function initSiteSessionHost(): void {
   if (initialized) return;
   initialized = true;

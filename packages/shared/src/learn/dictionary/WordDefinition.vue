@@ -14,17 +14,14 @@
   </div>
 </template>
 <script lang="ts">
-  import Vue from 'vue';
-  import { EventBusEvent } from '@/chat/preview/event-bus';
+  import { defineComponent } from 'vue';
+  import type { EventBusEvent } from '@/chat/preview/event-bus';
 
   import anyAscii from 'any-ascii';
   import { createLogger } from '@/logger';
   const log = createLogger('word-definition');
 
-  // tslint:disable-next-line:ban-ts-ignore
-  // @ts-ignore
-  // tslint:disable-next-line:no-submodule-imports ban-ts-ignore match-default-export-name
-  import mutatorScript from '!!raw-loader!./assets/mutator.raw.js';
+  import mutatorScript from './assets/mutator.raw.js?raw';
 
   const scripts: Record<string, string> = {
     mutator: mutatorScript
@@ -36,7 +33,7 @@
     Wiktionary = 'wiktionary'
   }
 
-  export default Vue.extend({
+  export default defineComponent({
     props: {
       expression: { type: String, required: true }
     },
@@ -83,7 +80,7 @@
         const expr = expression !== undefined ? expression : this.expression;
         return anyAscii(expr || '')
           .toLowerCase()
-          .replace(/[^a-z0-9\-]/g, ' ')
+          .replace(/[^a-z0-9-]/g, ' ')
           .replace(/  +/g, ' ')
           .trim();
       },

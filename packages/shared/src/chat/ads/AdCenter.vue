@@ -8,7 +8,7 @@
     :buttonText="l('action.saveChanges')"
     iconClass="fas fa-file-pen"
   >
-    <div class="mb-3 ad-list" v-for="(ad, index) in ads">
+    <div class="mb-3 ad-list" v-for="(ad, index) in ads" :key="index">
       <label :for="'adm-content-' + index" class="control-label"
         >{{ l('admgr.adNumber', index + 1) }}
         <a
@@ -71,17 +71,19 @@
 
 <script lang="ts">
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import Modal from '@/components/Modal.vue';
   import { Conversation } from '../interfaces';
   import l from '../localize';
   import { Editor } from '../bbcode';
   import core from '../core';
   import { Dialog } from '@/helpers/dialog';
-  import InputTag from 'vue-input-tag';
+  import InputTag from '@/components/TagInput.vue';
   import { Ad } from './ad-center';
   import _ from 'lodash';
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: { modal: Modal, editor: Editor, tagEditor: InputTag },
     data() {
       return {
@@ -101,7 +103,7 @@
       },
       async submit(): Promise<void> {
         await core.adCenter.set(this.ads);
-        const parent = this.$parent as Vue | null;
+        const parent = this.$parent as any;
         const refObj =
           parent &&
           (parent.$refs['adLauncher'] as

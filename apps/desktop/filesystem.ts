@@ -10,13 +10,13 @@
 import { ipcRenderer } from 'electron';
 import { Message as MessageImpl } from '@horizon/shared/chat/common';
 import core from '@horizon/shared/chat/core';
-import {
-  Conversation,
+import type {
   Logs as Logging,
   Settings
 } from '@horizon/shared/chat/interfaces';
+import { Conversation } from '@horizon/shared/chat/interfaces';
 import l from '@horizon/shared/chat/localize';
-import { GeneralSettings } from '@horizon/shared/common';
+import type { GeneralSettings } from '@horizon/shared/common';
 import { createLogger } from '@horizon/shared/logger';
 import type { PlainLogMessage } from './log-format';
 

@@ -149,6 +149,7 @@
           >
             <button
               v-for="mode in modes"
+              :key="mode"
               class="dropdown-item"
               :class="{ selected: conversation.mode == mode }"
               type="button"
@@ -308,19 +309,15 @@
       @scroll="onMessagesScroll"
       style="flex: 1; overflow: auto; margin-top: 2px"
     >
-      <template v-for="(message, i) in messages">
+      <template v-for="(message, i) in messages" :key="message.id">
         <message-view
           :message="message"
           :channel="isChannel(conversation) ? conversation.channel : undefined"
-          :key="message.id"
           :classes="message == conversation.lastRead ? 'last-read' : ''"
           :previous="messages[i - 1]"
         >
         </message-view>
-        <span
-          v-if="hasSFC(message) && message.sfc.action === 'report'"
-          :key="'r' + message.id"
-        >
+        <span v-if="hasSFC(message) && message.sfc.action === 'report'">
           <a
             :href="
               'https://www.f-list.net/fchat/getLog.php?log=' + message.sfc.logid
@@ -347,7 +344,7 @@
       v-model="conversation.enteredText"
       @keydown="onKeyDown"
       :extras="extraButtons"
-      @input="keepScroll"
+      @update:model-value="keepScroll"
       :classes="
         'form-control chat-text-box' +
         (isChannel(conversation) && conversation.isSendingAds
@@ -504,7 +501,7 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import { EditorButton, EditorSelection } from '@/bbcode/editor';
   import { BBCodeView } from '@/bbcode/view';
   import Modal, { isShowing as anyDialogsShown } from '@/components/Modal.vue';
@@ -545,7 +542,7 @@
 
   const UIBbcodeParser = new UserInterfaceBBCodeParser();
 
-  export default Vue.extend({
+  export default defineComponent({
     components: {
       user: UserView,
       'bbcode-editor': Editor,
@@ -657,7 +654,9 @@
         handler: 'conversationChanged'
       },
       'conversation.messages': {
-        handler: 'messageAdded'
+        handler: 'messageAdded',
+        // messages mutate in place (shift/push) without a new array ref; Vue 3 needs an explicit deep watch. depth 1 catches add/length changes without traversing every message graph.
+        deep: 1
       },
       'conversation.errorText'(newValue: string, oldValue: string): void {
         if (oldValue.length === 0 && newValue.length > 0) this.keepScroll();
@@ -762,7 +761,7 @@
       this.memoUpdateHook = (e: any) => this.refreshMemo(e);
       EventBus.$on('character-memo', this.memoUpdateHook);
     },
-    destroyed(): void {
+    unmounted(): void {
       window.removeEventListener('resize', this.resizeHandler);
       window.removeEventListener('keydown', this.keydownHandler);
       window.removeEventListener('keypress', this.keypressHandler);
@@ -1140,9 +1139,9 @@
 </script>
 
 <style lang="scss">
-  @import '~bootstrap/scss/functions';
-  @import '~bootstrap/scss/variables';
-  @import '~bootstrap/scss/mixins/breakpoints';
+  @import 'bootstrap/scss/functions';
+  @import 'bootstrap/scss/variables';
+  @import 'bootstrap/scss/mixins/breakpoints';
 
   #conversation {
     .header {
@@ -1279,7 +1278,8 @@
     align-items: center;
     flex: 1 auto;
     width: 100%;
-    @media (max-width: breakpoint-max(xs)) {
+    // breakpoint-max(xs) is null and emits a dead empty @media; sm is the correct below-small cap
+    @media (max-width: breakpoint-max(sm)) {
       flex-basis: 100%;
     }
   }

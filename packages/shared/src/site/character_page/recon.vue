@@ -8,12 +8,8 @@
         class="col-sm-10"
         style="margin-top: 5px"
       >
-        <template v-for="(message, i) in conversation">
-          <message-view
-            :message="message"
-            :key="message.id"
-            :previous="conversation[i - 1]"
-          >
+        <template v-for="(message, i) in conversation" :key="message.id">
+          <message-view :message="message" :previous="conversation[i - 1]">
           </message-view>
         </template>
       </div>
@@ -23,7 +19,7 @@
       <div class="col-sm-10" style="margin-top: 5px">
         <h4>Latest Ads</h4>
 
-        <template v-for="message in ads">
+        <template v-for="(message, i) in ads" :key="i">
           <h3>
             #{{ message.channelName }}
             <span class="message-time">{{
@@ -46,18 +42,18 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
-  import { Character } from './interfaces';
-  import { Conversation } from '@/chat/interfaces';
+  import { defineComponent } from 'vue';
+  import type { Character } from './interfaces';
+  import type { Conversation } from '@/chat/interfaces';
   import core from '@/chat/core';
   import * as _ from 'lodash';
-  import { AdCachedPosting } from '@/learn/ad-cache';
+  import type { AdCachedPosting } from '@/learn/ad-cache';
   import MessageView from '@/chat/message_view';
   import { BBCodeView } from '@/bbcode/view';
 
   import { formatTime } from '@/chat/common';
 
-  export default Vue.extend({
+  export default defineComponent({
     components: {
       'message-view': MessageView,
       bbcode: BBCodeView(core.bbCodeParser)

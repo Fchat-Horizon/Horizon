@@ -2,7 +2,11 @@
   "compilerOptions": {
     "target": "es2022",
     "useDefineForClassFields": false,
-    "module": "commonjs",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
     "sourceMap": true,
     "experimentalDecorators": true,
     "allowJs": true,
@@ -18,9 +22,19 @@
     "skipLibCheck": true,
     "paths": {
       "@horizon/shared/*": ["../../packages/shared/src/*"],
-      "@/*": ["../../packages/shared/src/*"]
+      "@/*": ["../../packages/shared/src/*"],
+      "@assets/*": ["../../packages/shared/assets/*"]
     }
   },
-  "include": ["chat.ts", "window.ts", "../../packages/shared/src/**/*.d.ts"],
+  "include": [
+    "chat.ts",
+    "window.ts",
+    "settings.ts",
+    "changelog.ts",
+    "exporter.ts",
+    "about.ts",
+    "vite-env.d.ts",
+    "../../packages/shared/src/**/*.d.ts"
+  ],
   "exclude": ["../../node_modules"]
 }

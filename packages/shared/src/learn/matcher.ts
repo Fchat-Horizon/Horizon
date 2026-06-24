@@ -12,7 +12,7 @@
 /* eslint-disable no-null-keyword, max-file-line-count */
 
 import * as _ from 'lodash';
-import { Character, CharacterInfotag, KinkChoice } from '@/interfaces';
+import type { Character, CharacterInfotag, KinkChoice } from '@/interfaces';
 import { createLogger } from '@/logger';
 const log = createLogger('matcher');
 // tslint:disable-next-line ban-ts-ignore
@@ -21,6 +21,11 @@ import anyAscii from 'any-ascii';
 
 import { Store } from '@/site/character_page/data_store';
 
+import type {
+  KinkBucketScore,
+  SpeciesMap,
+  SpeciesMappingCache
+} from './matcher-types';
 import {
   BodyType,
   bodyTypeKinkMapping,
@@ -29,7 +34,6 @@ import {
   Gender,
   genderKinkMapping,
   Kink,
-  KinkBucketScore,
   kinkComparisonExclusionGroups,
   kinkComparisonExclusions,
   kinkComparisonSwaps,
@@ -47,9 +51,7 @@ import {
   postLengthPreferenceScoreMapping,
   Scoring,
   Species,
-  SpeciesMap,
   speciesMapping,
-  SpeciesMappingCache,
   speciesNames,
   SubDomRole,
   TagId
@@ -856,7 +858,7 @@ export class Matcher {
     }
 
     //No preference listed? Then we return based on assumed preference from the orientation.
-    let score = Matcher.scoreOrientationByGender(
+    const score = Matcher.scoreOrientationByGender(
       yourGender,
       yourOrientation,
       theirGender

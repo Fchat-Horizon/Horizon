@@ -1,4 +1,4 @@
-import { SiteSession, SiteSessionInterface } from './site-session';
+import type { SiteSession, SiteSessionInterface } from './site-session';
 import { createLogger } from '@/logger';
 const log = createLogger('note-checker');
 import { EventBus } from '@/chat/preview/event-bus';

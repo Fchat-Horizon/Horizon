@@ -1,8 +1,8 @@
 @use 'sass:color';
 @import '../../functions';
-@import '~bootstrap/scss/functions';
+@import 'bootstrap/scss/functions';
 @import '../variables/moon_prism_variables';
-@import '~bootstrap/scss/variables';
+@import 'bootstrap/scss/variables';
 @import '../../flist_derived';
 @import '../variables/default_derived';
 

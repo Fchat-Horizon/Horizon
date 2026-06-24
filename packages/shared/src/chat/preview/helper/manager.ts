@@ -10,8 +10,8 @@
  */
 
 import _ from 'lodash';
-import { ImagePreviewHelper } from './helper';
-import ImagePreview from '../ImagePreview.vue';
+import type { ImagePreviewHelper } from './helper';
+import type ImagePreview from '../ImagePreview.vue';
 
 export type RenderStyle = Record<string, any>;
 

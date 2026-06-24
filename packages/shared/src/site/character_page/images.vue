@@ -235,16 +235,16 @@
   import { createLogger } from '@/logger';
   const log = createLogger('character-images');
   import { onUnmounted, ref, watch } from 'vue';
-  import { CharacterImage } from '@/interfaces';
+  import type { CharacterImage } from '@/interfaces';
   import * as Utils from '../utils';
   import { methods } from './data_store';
-  import { Character } from './interfaces';
+  import type { Character } from './interfaces';
   import core from '@/chat/core';
   import _ from 'lodash';
   import l from '@/chat/localize';
   import { Keys } from '@/keys';
   import { getKey } from '@/chat/common';
-  import { ProfileViewerGalleryType } from '../utils';
+  import type { ProfileViewerGalleryType } from '../utils';
   import { EventBus } from '@/chat/preview/event-bus';
 
   const props = defineProps<{
@@ -652,7 +652,7 @@
   };
 
   const previewPrev = async (): Promise<void> => {
-    if (!previewImage) return;
+    if (!previewImage.value) return;
     let targetIndex = images.value.indexOf(
       previewImage.value as CharacterImage
     );
@@ -662,7 +662,7 @@
   };
 
   const previewNext = async (): Promise<void> => {
-    if (!previewImage) return;
+    if (!previewImage.value) return;
     let targetIndex = images.value.indexOf(
       previewImage.value as CharacterImage
     );

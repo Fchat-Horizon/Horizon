@@ -1,7 +1,7 @@
-@import '~bootstrap/scss/functions';
+@import 'bootstrap/scss/functions';
 @import '../../functions';
 @import '../variables/classic_variables';
-@import '~bootstrap/scss/variables';
+@import 'bootstrap/scss/variables';
 @import '../../flist_derived';
 @import '../variables/classic_derived';
 
@@ -176,7 +176,7 @@ div.bbcode-editor > div.bbcode-editor-text-area.bg-light {
 
 button.close {
   color: none;
-  background-image: url('~@assets/images/classic-theme/close.png');
+  background-image: url('./assets/images/classic-theme/close.png');
   background-repeat: no-repeat;
   background-position: center;
   opacity: unset;

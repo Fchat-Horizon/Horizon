@@ -1,11 +1,13 @@
-import Vue from 'vue';
+import { defineComponent } from 'vue';
 import Modal from './Modal.vue';
 
-export default Vue.extend({
+export default defineComponent({
   components: { Modal },
   computed: {
     dialog(): Modal {
-      return <Modal>this.$children[0];
+      // Vue 3 dropped $children; every dialog renders <modal> as its single
+      // root, so reach its instance through the rendered subtree.
+      return (this.$ as any).subTree?.component?.proxy as Modal;
     }
   },
   methods: {

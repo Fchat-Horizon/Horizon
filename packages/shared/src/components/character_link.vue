@@ -8,12 +8,12 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
-  import { SimpleCharacter } from '@/interfaces';
+  import { defineComponent } from 'vue';
+  import type { SimpleCharacter } from '@/interfaces';
   import * as Utils from '@/site/utils';
   import l from '@/chat/localize';
 
-  export default Vue.extend({
+  export default defineComponent({
     props: {
       character: { required: true as const },
       target: { default: '_blank' }

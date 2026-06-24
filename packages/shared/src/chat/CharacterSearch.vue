@@ -19,7 +19,7 @@
           :filterFunc="filterKink"
           :options="options.kinks"
         >
-          <template slot-scope="s">{{ s.option.name }}</template>
+          <template #default="s">{{ s.option.name }}</template>
         </filterable-select>
         <filterable-select
           v-for="item in listItems"
@@ -42,7 +42,7 @@
           :title="l('characterSearch.species')"
           :options="options.species"
         >
-          <template slot-scope="s"
+          <template #default="s"
             >{{ s.option.shortName }}
             <small>{{ s.option.details }}</small></template
           >
@@ -119,8 +119,9 @@
             </div>
           </div>
         </template>
-        <template v-else v-once>
+        <template v-else>
           <user
+            v-once
             :character="record.character"
             :showStatus="true"
             :match="shouldShowMatch"
@@ -128,6 +129,7 @@
             :isMarkerShown="shouldShowMarker"
           ></user>
           <bbcode
+            v-once
             :text="record.character.statusText"
             v-if="!!record.character.statusText"
             class="status-text"
@@ -142,6 +144,7 @@
   import Axios from 'axios';
   import { BBCodeView } from '@/bbcode/view';
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import FilterableSelect from '@/components/FilterableSelect.vue';
   import Modal from '@/components/Modal.vue';
   import { characterImage } from './common';
@@ -224,7 +227,8 @@
     return 0;
   }
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: {
       modal: Modal,
       user: UserView,
@@ -415,7 +419,7 @@
 
       EventBus.$on('character-score', this.scoreWatcher);
     },
-    beforeDestroy(): void {
+    beforeUnmount(): void {
       if (this.scoreWatcher) {
         EventBus.$off('character-score', this.scoreWatcher);
 
@@ -568,7 +572,7 @@
         return _.reduce(
           results,
           (accum: number, result: SearchResult) => {
-            if (!!result.profile) {
+            if (result.profile) {
               return accum;
             }
 
@@ -581,7 +585,7 @@
               );
             }
 
-            return !!result.profile ? accum : accum + 1;
+            return result.profile ? accum : accum + 1;
           },
           0
         );

@@ -75,7 +75,7 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import { getKey } from './common';
   import core from './core';
   import { Conversation } from './interfaces';
@@ -90,7 +90,7 @@
     description?: string;
   }
 
-  export default Vue.extend({
+  export default defineComponent({
     data() {
       return {
         l,
@@ -103,19 +103,18 @@
     computed: {
       filteredResults(): SearchResult[] {
         if (this.searchQuery.length === 0) {
-          return this.allResults.slice(0, 10); // Show recent results when no query
+          return this.allResults.slice(0, 10);
         }
 
         const query = this.searchQuery.toLowerCase();
         return this.allResults
           .filter(result => result.name.toLowerCase().includes(query))
-          .slice(0, 10); // Limit to 10 results
+          .slice(0, 10);
       }
     },
     watch: {
       visible(newValue: boolean): void {
         if (newValue) {
-          // Update results when showing
           this.updateResults();
         }
       }
@@ -141,7 +140,6 @@
       updateResults(): void {
         const results: SearchResult[] = [];
 
-        // Add console tab
         results.push({
           key: 'console',
           name: core.conversations.consoleTab.name,
@@ -150,7 +148,6 @@
           description: l('quickJump.consoleDescription')
         });
 
-        // Add private conversations
         for (const conversation of core.conversations.privateConversations) {
           results.push({
             key: conversation.key,
@@ -161,7 +158,6 @@
           });
         }
 
-        // Add channel conversations
         for (const conversation of core.conversations.channelConversations) {
           results.push({
             key: conversation.key,
@@ -175,7 +171,7 @@
           });
         }
 
-        //we filter: active conversations
+        //skip friends that already have an active conversation
         for (const friend of core.characters.friends
           .slice()
           .filter(x => core.conversations.getPrivate(x, true) === undefined)) {
@@ -187,7 +183,7 @@
           });
         }
 
-        //we filter: online friends, and active conversations
+        //skip bookmarks already covered by friends or an active conversation
         for (const bookmark of core.characters.bookmarks
           .slice()
           .filter(x => core.characters.friends.indexOf(x) === -1)
@@ -200,7 +196,7 @@
           });
         }
 
-        //We filter: online friends, online bookmarks, and active conversations
+        //skip recents already covered by bookmarks, friends or an active conversation
         for (const recent of core.conversations.recent
           .slice()
           .filter(
@@ -229,11 +225,10 @@
             description: l('quickJump.recent')
           });
         }
-        // Sort by recent activity (unread first, then by last message time)
         results.sort((a, b) => {
           if (!a.conversation || !b.conversation) return 0;
 
-          //First we want pings
+          //mentions rank first
           if (
             a.conversation.unread === Conversation.UnreadState.Mention &&
             b.conversation.unread !== Conversation.UnreadState.Mention
@@ -260,7 +255,7 @@
             return 1;
           }
 
-          //Any other unread states (currently only UnreadState.Unread) that aren't None get prioritized after
+          //remaining unread states rank after mentions and the last conversation
           if (
             a.conversation.unread !== Conversation.UnreadState.None &&
             b.conversation.unread === Conversation.UnreadState.None
@@ -274,7 +269,6 @@
             return 1;
           }
 
-          // Then sort by last message time (most recent first)
           const aLastMessage =
             a.conversation.messages[a.conversation.messages.length - 1];
           const bLastMessage =
@@ -293,7 +287,6 @@
       },
       onInput(): void {
         this.selectedIndex = 0;
-        // Auto-focus the "open new conversation" option when it's the only option
         this.$nextTick(() => {
           if (
             this.filteredResults.length === 0 &&
@@ -318,15 +311,12 @@
               this.filteredResults.length === 0 &&
               this.searchQuery.length > 0
             ) {
-              // Only the "open new conversation" option is available
               this.selectedIndex = -1;
             } else if (this.selectedIndex === -1) {
-              // From "open new conversation" to last result
               this.selectedIndex = this.filteredResults.length - 1;
             } else if (this.selectedIndex > 0) {
               this.selectedIndex--;
             } else {
-              // From first result, go to "open new conversation" if available, otherwise wrap to last
               if (this.searchQuery.length > 0) {
                 this.selectedIndex = -1;
               } else {
@@ -341,15 +331,12 @@
               this.filteredResults.length === 0 &&
               this.searchQuery.length > 0
             ) {
-              // Only the "open new conversation" option is available
               this.selectedIndex = -1;
             } else if (this.selectedIndex === -1) {
-              // From "open new conversation" to first result
               this.selectedIndex = 0;
             } else if (this.selectedIndex < this.filteredResults.length - 1) {
               this.selectedIndex++;
             } else {
-              // From last result, go to "open new conversation" if available, otherwise wrap to first
               if (this.searchQuery.length > 0) {
                 this.selectedIndex = -1;
               } else {
@@ -365,7 +352,6 @@
               this.filteredResults.length === 0 &&
               this.searchQuery.length > 0
             ) {
-              // Open new conversation
               this.openNewConversation();
             } else if (this.filteredResults.length > 0) {
               this.selectResult(this.filteredResults[this.selectedIndex]);
@@ -377,7 +363,6 @@
         if (result.conversation) {
           result.conversation.show();
         } else {
-          //We don't have a conversation for this result, but since one was selected we open it
           const character = core.characters.get(result.name);
           const conversation = core.conversations.getPrivate(character);
           conversation.show();
@@ -411,10 +396,8 @@
       openNewConversation(): void {
         if (this.searchQuery.trim().length === 0) return;
 
-        // Create a character object for the username
         const character = core.characters.get(this.searchQuery.trim());
 
-        // Create and show the conversation
         const conversation = core.conversations.getPrivate(character);
         conversation.show();
 
@@ -558,7 +541,7 @@
           gap: 12px;
           cursor: pointer;
           border-radius: 4px;
-          background-color: var(primary);
+          background-color: var(--bs-primary);
           transition: all 0.2s ease;
           position: relative;
 

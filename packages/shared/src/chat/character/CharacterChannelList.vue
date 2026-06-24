@@ -1,6 +1,6 @@
 <template>
   <modal :buttons="false" ref="dialog" style="width: 98%" dialogClass="">
-    <template slot="title">
+    <template #title>
       Channels for
       <user :character="character" :isMarkerShown="false">{{
         character.name
@@ -8,7 +8,7 @@
     </template>
 
     <div class="user-channel-list" ref="pageBody" v-if="channels.length > 0">
-      <template v-for="channel in channels">
+      <template v-for="channel in channels" :key="channel.channel.id">
         <h3>
           <a href="#" @click.prevent="jumpToChannel(channel)"
             >#{{ channel.name }}</a
@@ -37,9 +37,10 @@
   import { Conversation } from '../interfaces';
   import UserView from '../UserView.vue';
   import ChannelConversation = Conversation.ChannelConversation;
-  import { PropType } from 'vue';
+  import { defineComponent, PropType } from 'vue';
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: { modal: Modal, user: UserView },
     props: {
       character: { type: Object as PropType<Character>, required: true }

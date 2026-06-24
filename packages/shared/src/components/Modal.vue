@@ -69,23 +69,25 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import { getKey } from '@/chat/common';
   import { Keys } from '@/keys';
   import l from '@/chat/localize';
+  import { getPlatform } from '@/platform/platform';
 
-  const dialogStack: Modal[] = [];
+  const dialogStack: ModalInstance[] = [];
   window.addEventListener('keydown', e => {
     if (getKey(e) === Keys.Escape && dialogStack.length > 0)
       dialogStack[dialogStack.length - 1].hideWithCheck();
   });
-  if (process.platform === 'darwin') {
-    window.addEventListener('keydown', e => {
-      if (e.metaKey && e.key == 'w' && dialogStack.length > 0) {
-        dialogStack[dialogStack.length - 1].hideWithCheck();
-      }
-    });
-  }
+  // platform is read inside the handler so it resolves after the host installs
+  // it, not at module load.
+  window.addEventListener('keydown', e => {
+    if (getPlatform() !== 'darwin') return;
+    if (e.metaKey && e.key == 'w' && dialogStack.length > 0) {
+      dialogStack[dialogStack.length - 1].hideWithCheck();
+    }
+  });
   window.addEventListener(
     'backbutton',
     e => {
@@ -100,8 +102,8 @@
 
   export let isShowing = false;
 
-  type Modal = InstanceType<typeof Modal>;
-  const Modal = Vue.extend({
+  type ModalInstance = InstanceType<typeof Modal>;
+  const Modal = defineComponent({
     props: {
       action: { default: '' },
       dialogClass: {},
@@ -126,7 +128,7 @@
         return this.buttonText !== undefined ? this.buttonText : this.action;
       }
     },
-    beforeDestroy(): void {
+    beforeUnmount(): void {
       if (this.isShown) this.hide();
     },
     methods: {

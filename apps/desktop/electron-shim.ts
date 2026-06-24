@@ -1,14 +1,9 @@
 /**
  * @module electron-shim
- * Webpack aliases `electron` to this file in renderer bundles. The real
+ * Vite aliases `electron` to this file in renderer bundles. The real
  * Electron APIs live behind the context bridge (see preload.ts); this module
  * re-creates the small ipcRenderer/clipboard/webFrame surface the renderer
  * code uses, so call sites keep their normal `import ... from 'electron'`.
- *
- * * TypeScript still checks call sites against the real electron types -
- * * only webpack's resolution is swapped - so anything missing here
- * * compiles happily and then explodes at runtime. New APIs go into
- * * preload.ts AND here, always both.
  */
 
 type Listener = (...args: any[]) => void;

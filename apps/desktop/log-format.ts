@@ -28,7 +28,6 @@ export interface LogMessage {
   readonly sender?: { readonly name: string };
   readonly text: string;
   readonly time: Date;
-  /** Conversation.Message.Type value. */
   readonly type: number;
 }
 
@@ -37,11 +36,9 @@ export interface LogMessage {
  * character object to it. Serializable across IPC.
  */
 export interface PlainLogMessage {
-  /** Conversation.Message.Type value. */
   type: number;
   sender: string;
   text: string;
-  /** Epoch milliseconds. */
   time: number;
 }
 

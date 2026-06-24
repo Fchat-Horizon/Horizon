@@ -243,16 +243,16 @@
   import * as _ from 'lodash';
 
   import anyAscii from 'any-ascii';
-  import Vue from 'vue';
+  import { defineComponent, type ComponentPublicInstance } from 'vue';
   import { createLogger } from '@/logger';
   const log = createLogger('character-page');
 
   import { StandardBBCodeParser } from '@/bbcode/standard';
   import { BBCodeView } from '@/bbcode/view';
-  import { CharacterCacheRecord } from '@/learn/profile-cache';
+  import type { CharacterCacheRecord } from '@/learn/profile-cache';
   import * as Utils from '../utils';
   import { methods, Store } from './data_store';
-  import {
+  import type {
     Character,
     CharacterGroup,
     Guestbook,
@@ -269,23 +269,23 @@
   import ReconView from './recon.vue';
   import Sidebar from './sidebar.vue';
   import core from '@/chat/core';
-  import { Matcher, MatchReport } from '@/learn/matcher';
+  import { Matcher, type MatchReport } from '@/learn/matcher';
   import MatchReportView from './match-report.vue';
   import ProfileAnalysis from '@/learn/recommend/ProfileAnalysis.vue';
-  import { CharacterImage, SimpleCharacter } from '@/interfaces';
+  import type { CharacterImage, SimpleCharacter } from '@/interfaces';
   import l from '@/chat/localize';
-  import { ProfileViewerGalleryType } from '../utils';
+  import type { ProfileViewerGalleryType } from '../utils';
 
   const CHARACTER_CACHE_EXPIRE = 7 * 24 * 60 * 60 * 1000; // 7 days (milliseconds)
   const CHARACTER_META_CACHE_EXPIRE = 7 * 24 * 60 * 60 * 1000; // 7 days (milliseconds)
 
-  interface ShowableVueTab extends Vue {
+  interface ShowableVueTab extends ComponentPublicInstance {
     show?(): void;
   }
 
   const standardParser = new StandardBBCodeParser();
 
-  export default Vue.extend({
+  export default defineComponent({
     components: {
       sidebar: Sidebar,
       date: DateDisplay,
@@ -312,6 +312,7 @@
       },
       animatedThumbs: { type: Boolean, default: false }
     },
+    emits: ['gallery-type-updated'],
     data() {
       return {
         shared: Store as SharedStore,
@@ -548,12 +549,12 @@
         });
       },
       memo(memo: { id: number; memo: string | null }): void {
-        Vue.set(this.character!, 'memo', memo);
+        this.character!.memo = memo;
 
         void core.cache.profileCache.register(this.character!);
       },
       bookmarked(state: boolean): void {
-        Vue.set(this.character!, 'bookmarked', state);
+        this.character!.bookmarked = state;
 
         void core.cache.profileCache.register(this.character!);
       },

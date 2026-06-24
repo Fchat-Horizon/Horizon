@@ -1,5 +1,5 @@
 import { urlRegex as websitePattern } from '@/bbcode/core';
-import { Infotag } from '@/interfaces';
+import type { Infotag } from '@/interfaces';
 
 const daUsernamePattern = /^([a-z0-9_\-]+)$/i;
 const daSitePattern = /^https?:\/\/([a-z0-9_\-]+)\.deviantart\.com\//i;

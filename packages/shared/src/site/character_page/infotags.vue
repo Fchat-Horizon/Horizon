@@ -22,15 +22,15 @@
 </template>
 
 <script lang="ts">
-  import Vue, { PropType } from 'vue';
-  import { CharacterInfotag, Infotag, InfotagGroup } from '@/interfaces';
+  import { defineComponent, type PropType } from 'vue';
+  import type { CharacterInfotag, Infotag, InfotagGroup } from '@/interfaces';
   import { Store } from './data_store';
   import InfotagView from './infotag.vue';
-  import { MatchReport } from '@/learn/matcher';
-  import { Character } from './interfaces';
+  import type { MatchReport } from '@/learn/matcher';
+  import type { Character } from './interfaces';
   import l from '@/chat/localize';
 
-  export default Vue.extend({
+  export default defineComponent({
     components: { infotag: InfotagView },
     props: {
       character: { type: Object as PropType<Character>, required: true },

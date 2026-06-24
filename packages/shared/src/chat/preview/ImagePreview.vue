@@ -31,9 +31,8 @@
       ></a>
     </div>
 
-    <!-- note: preload requires a webpack config CopyPlugin configuration -->
     <webview
-      preload="./preview/assets/browser.pre.js"
+      :preload="previewPreloadPath"
       src="about:blank"
       webpreferences="autoplayPolicy=no-user-gesture-required,contextIsolation,sandbox,disableDialogs,disableHtmlFullScreenWindowResize,webSecurity,enableWebSQL=no,nodeIntegration=no,nativeWindowOpen=no,nodeIntegrationInWorker=no,nodeIntegrationInSubFrames=no,webviewTag=no"
       enableremotemodule="false"
@@ -68,11 +67,12 @@
 
 <script lang="ts">
   import * as _ from 'lodash';
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import core from '../core';
   import { normalizeCharacterName } from '../common';
   import { EventBus, EventBusEvent } from './event-bus';
   import { domain } from '@/bbcode/core';
+  import { getPreviewPreloadUrl } from '@/platform/platform';
   import { ImageDomMutator } from './image-dom-mutator';
 
   import {
@@ -106,9 +106,14 @@
     httpStatusText: string;
   }
 
-  export default Vue.extend({
+  export default defineComponent({
     components: {
       'character-preview': CharacterPreview
+    },
+    computed: {
+      previewPreloadPath(): string {
+        return getPreviewPreloadUrl();
+      }
     },
     data() {
       return {
@@ -492,7 +497,7 @@
         passive: true
       });
     },
-    beforeDestroy(): void {
+    beforeUnmount(): void {
       this.cancelExitTimer();
       this.cancelTimer();
 
@@ -968,9 +973,9 @@
 </script>
 
 <style lang="scss">
-  @import '~bootstrap/scss/functions';
-  @import '~bootstrap/scss/variables';
-  @import '~bootstrap/scss/mixins/breakpoints';
+  @import 'bootstrap/scss/functions';
+  @import 'bootstrap/scss/variables';
+  @import 'bootstrap/scss/mixins/breakpoints';
 
   .image-preview-wrapper {
     z-index: 10000;

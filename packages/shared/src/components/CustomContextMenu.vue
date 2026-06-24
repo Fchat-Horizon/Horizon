@@ -46,48 +46,21 @@
 </template>
 
 <script lang="ts">
-  import Vue, { PropType } from 'vue';
+  import { defineComponent } from 'vue';
+  import type { PropType } from 'vue';
 
-  /**
-   * @interface ContextMenuItemProps
-   * @description Represents a single item in the context menu, which can optionally have child items for nested submenus.
-   */
   export interface ContextMenuItemProps {
-    /**
-     * The display text for the menu item.
-     */
     label: string;
-    /**
-     * Indicates whether the menu item is disabled. Disabled items are not interactive and are styled accordingly.
-     */
     disabled?: boolean;
-    /**
-     * An optional URL that the menu item links to.
-     */
     href?: string;
-    /**
-     * An optional click handler function that is called when the menu item is clicked.
-     */
     onClick?: () => void;
-    /**
-     * An optional CSS class for an icon to be displayed alongside the menu item label. This allows for visual enhancement of the menu item.
-     */
     iconClass?: string;
-    /**
-     * An optional array of child menu items, allowing for the creation of nested submenus. Each child item is also of type {@link ContextMenuItemProps}.
-     */
     children?: ContextMenuItemProps[];
-    /**
-     * An optional boolean that, when true, adds a top border to the menu item. This can be used to visually separate groups of items within the menu.
-     */
     topBorder?: boolean;
-    /**
-     * An optional boolean that, when true, styles the menu item as dangerous, typically indicating a destructive action.
-     */
     dangerous?: boolean;
   }
 
-  export default Vue.extend({
+  export default defineComponent({
     name: 'CustomContextMenu',
     props: {
       menuItems: {

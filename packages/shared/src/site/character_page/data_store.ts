@@ -1,7 +1,7 @@
-import { Component } from 'vue';
-import { SharedStore, StoreMethods } from './interfaces';
+import type { Component } from 'vue';
+import type { SharedStore, StoreMethods } from './interfaces';
 
-export let Store: SharedStore = {
+export const Store: SharedStore = {
   shared: undefined!,
   authenticated: false
 };

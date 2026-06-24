@@ -136,6 +136,7 @@
       <div v-if="displayBadges.length > 0" class="badges-block">
         <div
           v-for="badge in displayBadges"
+          :key="badge"
           class="character-badge px-2 py-1"
           :class="badgeClass(badge)"
         >
@@ -157,9 +158,9 @@
         <template v-for="id in quickInfoIds">
           <infotag-item
             v-if="character.character.infotags[id]"
+            :key="id"
             :infotag="getInfotag(id)"
             :data="character.character.infotags[id]"
-            :key="id"
             :characterMatch="characterMatch"
           ></infotag-item>
         </template>
@@ -207,6 +208,7 @@
         <div
           class="row align-items-center"
           v-for="listCharacter in character.character_list"
+          :key="listCharacter.id"
         >
           <div class="col col-auto">
             <img
@@ -241,20 +243,25 @@
 
 <script lang="ts">
   import l from '@/chat/localize';
-  import Vue, {
-    Component as VueComponent,
-    ComponentOptions,
-    CreateElement,
-    VNode,
-    PropType
+  import {
+    defineComponent,
+    defineAsyncComponent,
+    h,
+    type Component as VueComponent,
+    type ComponentPublicInstance,
+    type PropType
   } from 'vue';
   import DateDisplay from '@/components/date_display.vue';
-  import { Infotag } from '@/interfaces';
+  import type { Infotag } from '@/interfaces';
   import * as Utils from '../utils';
   import { methods, registeredComponents, Store } from './data_store';
   import FriendDialog from './friend_dialog.vue';
   import InfotagView from './infotag.vue';
-  import { Character, CONTACT_GROUP_ID, SharedStore } from './interfaces';
+  import {
+    type Character,
+    CONTACT_GROUP_ID,
+    type SharedStore
+  } from './interfaces';
   import MemoDialog from './memo_dialog.vue';
   import ReportDialog from './report_dialog.vue';
   import core from '@/chat/core';
@@ -267,41 +274,35 @@
     getStaffRole,
     getSupporterAlias
   } from '@/chat/profile_api';
-  import { MatchReport } from '@/learn/matcher';
+  import type { MatchReport } from '@/learn/matcher';
 
-  interface ShowableVueDialog extends Vue {
+  interface ShowableVueDialog extends ComponentPublicInstance {
     show(): void;
   }
 
-  function resolveComponent(
-    name: string
-  ): () => Promise<VueComponent | ComponentOptions<Vue>> {
-    return async (): Promise<VueComponent | ComponentOptions<Vue>> => {
+  // Dialogs register lazily via the data store; Vue 3 has no global
+  // Vue.component, so wrap each as an async component registered locally.
+  function resolveComponent(name: string): VueComponent {
+    return defineAsyncComponent(async (): Promise<VueComponent> => {
       if (typeof registeredComponents[name] === 'undefined')
-        return {
-          render(createElement: CreateElement): VNode {
-            return createElement('span');
-          },
-          name
-        };
+        return defineComponent({
+          name,
+          render: () => h('span')
+        });
       return registeredComponents[name]!;
-    };
+    });
   }
 
-  Vue.component('block-dialog', resolveComponent('block-dialog'));
-  Vue.component('rename-dialog', resolveComponent('rename-dialog'));
-  Vue.component(
-    'character-action-menu',
-    resolveComponent('character-action-menu')
-  );
-
-  export default Vue.extend({
+  export default defineComponent({
     components: {
       date: DateDisplay,
       'friend-dialog': FriendDialog,
       'infotag-item': InfotagView,
       'memo-dialog': MemoDialog,
-      'report-dialog': ReportDialog
+      'report-dialog': ReportDialog,
+      'block-dialog': resolveComponent('block-dialog'),
+      'rename-dialog': resolveComponent('rename-dialog'),
+      'character-action-menu': resolveComponent('character-action-menu')
     },
     props: {
       character: {
@@ -311,6 +312,7 @@
       oldApi: { type: Boolean },
       characterMatch: { type: Object as PropType<MatchReport>, required: true }
     },
+    emits: ['memo'],
     data() {
       return {
         l: l,

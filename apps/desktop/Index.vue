@@ -208,7 +208,7 @@
         @gallery-type-updated="galleryTypeUpdated"
         ref="characterPage"
       ></character-page>
-      <template slot="title">
+      <template #title>
         {{ profileName }}
         <a class="btn" @click="openProfileInBrowser"
           ><i class="fa fa-external-link-alt"
@@ -258,7 +258,11 @@
       <div class="mb-3">
         <label class="control-label">{{ l('fixLogs.character') }}</label>
         <select id="import" class="form-select" v-model="fixCharacter">
-          <option v-for="character in fixCharacters" :value="character">
+          <option
+            v-for="character in fixCharacters"
+            :key="character"
+            :value="character"
+          >
             {{ character }}
           </option>
         </select>
@@ -273,7 +277,7 @@
         :expression="wordDefinitionLookup"
         ref="wordDefinitionLookup"
       ></word-definition>
-      <template slot="title">
+      <template #title>
         {{ wordDefinitionLookup }}
         <a
           class="btn wordDefBtn merriam-webster"
@@ -314,9 +318,9 @@
   import * as electron from 'electron';
   import { IpcKeyValueStore } from './ipc-store';
   import { createLogger } from '@horizon/shared/logger';
+  import { getPlatform } from '@horizon/shared/platform/platform';
   const log = createLogger('chat-window');
-  import * as qs from 'querystring';
-  import Vue from 'vue';
+  import { defineComponent, type PropType } from 'vue';
   import Chat from '@horizon/shared/chat/Chat.vue';
   import { Settings } from '@horizon/shared/chat/common';
   import core from '@horizon/shared/chat/core';
@@ -337,7 +341,6 @@
   import WordDefinition, {
     DictionaryMode
   } from '@horizon/shared/learn/dictionary/WordDefinition.vue';
-  import ProfileAnalysis from '@horizon/shared/learn/recommend/ProfileAnalysis.vue';
   import { defaultHost, GeneralSettings } from '@horizon/shared/common';
   import { fixLogs } from './filesystem';
   import { SlimcatImporter } from './services';
@@ -389,7 +392,7 @@
 
   // log.info('init.chat.keytar.load.done');
 
-  export default Vue.extend({
+  export default defineComponent({
     components: {
       chat: Chat,
       modal: Modal,
@@ -399,8 +402,14 @@
       'ui-test': UITest,
       'word-definition': WordDefinition,
       BBCodeTester: BBCodeTester,
-      bbcode: BBCodeView(core.bbCodeParser),
-      'profile-analysis': ProfileAnalysis
+      bbcode: BBCodeView(core.bbCodeParser)
+    },
+    props: {
+      initialSettings: {
+        type: Object as PropType<GeneralSettings>,
+        required: true
+      },
+      initialHasCompletedUpgrades: { type: Boolean, default: false }
     },
     data() {
       return {
@@ -415,11 +424,11 @@
         error: '',
         defaultCharacter: undefined as number | undefined,
         l: l,
-        settings: undefined as any as GeneralSettings,
+        settings: this.initialSettings,
         osIsDark: electron.ipcRenderer.sendSync(
           'native-theme-dark-sync'
         ) as boolean,
-        hasCompletedUpgrades: undefined as any as boolean,
+        hasCompletedUpgrades: this.initialHasCompletedUpgrades,
         importProgress: 0,
         profileName: '',
         profileStatus: '',
@@ -430,7 +439,7 @@
         shouldShowSpinner: false,
         profileNameHistory: [] as string[],
         profilePointer: 0,
-        isDevMode: (process.env.NODE_ENV !== 'production') as boolean,
+        isDevMode: import.meta.env.DEV,
         themeWatchListener: undefined as
           | ((e: Electron.IpcRendererEvent, filename: string) => void)
           | undefined,
@@ -525,7 +534,7 @@
 
       log.debug('init.chat.keystore.get.done');
 
-      Vue.set(core.state, 'generalSettings', this.settings);
+      (core.state as any).generalSettings = this.settings;
       electron.webFrame.setZoomLevel(this.settings.zoomLevel);
 
       electron.ipcRenderer.on(
@@ -650,7 +659,7 @@
                 dt.connect();
             }*/
     },
-    beforeDestroy(): void {
+    beforeUnmount(): void {
       this.stopThemeWatch();
       if (this.autoBackupStatusListener)
         electron.ipcRenderer.removeListener(
@@ -682,7 +691,7 @@
         this.loggingIn = true;
 
         // set proxy inside from the advanced option
-        if (!!this.settings.proxy) {
+        if (this.settings.proxy) {
           try {
             await electron.ipcRenderer.invoke('session-set-proxy', {
               proxyRules: this.settings.proxy, // Update dynamically if needed,
@@ -722,13 +731,13 @@
           >(
             await Axios.post(
               'https://www.f-list.net/json/getApiTicket.php',
-              qs.stringify({
+              new URLSearchParams({
                 account: this.settings.account,
                 password: this.password,
-                no_friends: true,
-                no_bookmarks: true,
-                new_character_list: true
-              })
+                no_friends: 'true',
+                no_bookmarks: 'true',
+                new_character_list: 'true'
+              }).toString()
             )
           ).data;
           if (data.error !== '') {
@@ -756,7 +765,7 @@
                 'connect',
                 core.connection.character
               ) &&
-              process.env.NODE_ENV === 'production'
+              import.meta.env.PROD
             ) {
               core.notifications.alert(l('login.alreadyLoggedIn'));
               return core.connection.close();
@@ -791,7 +800,7 @@
             EventBus.$on('word-definition', (data: any) => {
               this.wordDefinitionLookup = data.lookupWord;
 
-              if (!!data.lookupWord) {
+              if (data.lookupWord) {
                 (
                   this.$refs.wordDefinitionViewer as InstanceType<typeof Modal>
                 ).show();
@@ -812,7 +821,7 @@
         } catch (e) {
           this.error = l('login.error');
           log.error('connect.error', e);
-          if (process.env.NODE_ENV !== 'production') throw e;
+          if (import.meta.env.DEV) throw e;
         } finally {
           this.loggingIn = false;
         }
@@ -902,7 +911,7 @@
       getThemeClass(): Record<string, boolean> {
         try {
           // Hack!
-          if (process.platform === 'win32') {
+          if (getPlatform() === 'win32') {
             if (core.state.generalSettings?.risingDisableWindowsHighContrast) {
               document
                 .querySelector('html')
@@ -999,7 +1008,7 @@
           : this.settings.themeSyncLight;
       },
       setupThemeHotReload(): void {
-        if (process.env.NODE_ENV === 'production') return;
+        if (import.meta.env.PROD) return;
         this.startThemeWatch();
         this.$watch(
           () => this.getActiveThemeName(),
@@ -1010,7 +1019,7 @@
         );
       },
       startThemeWatch(): void {
-        if (process.env.NODE_ENV === 'production') return;
+        if (import.meta.env.PROD) return;
         this.stopThemeWatch();
 
         // ~ The themes directory is watched by the main process in dev mode.

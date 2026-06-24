@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import type { ComponentPublicInstance } from 'vue';
 import { Keys } from '@/keys';
 
 export interface EditorButton {
@@ -10,7 +10,7 @@ export interface EditorButton {
   outerClass?: string;
   startText?: string;
   endText?: string;
-  handler?(vm: Vue): void;
+  handler?(vm: ComponentPublicInstance): void;
 }
 
 export interface EditorSelection {
@@ -19,7 +19,7 @@ export interface EditorSelection {
   length: number;
   text: string;
 }
-export let defaultButtons: ReadonlyArray<EditorButton> = [
+export const defaultButtons: ReadonlyArray<EditorButton> = [
   {
     titleKey: 'editor.format.bold',
     tag: 'b',

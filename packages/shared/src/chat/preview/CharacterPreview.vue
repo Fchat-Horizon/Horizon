@@ -50,6 +50,7 @@
           <span class="matched-tags">
             <span
               v-for="filterName in smartFilterDetails"
+              :key="filterName"
               class="mismatch smart-filter-tag"
               :class="filterName"
               ><i class="fas fa-solid fa-filter"></i>
@@ -85,12 +86,8 @@
           <h4>Latest Messages</h4>
 
           <div class="getMessageWrapperClasses()">
-            <template v-for="(message, i) in conversation">
-              <message-view
-                :message="message"
-                :key="message.id"
-                :previous="conversation[i - 1]"
-              >
+            <template v-for="(message, i) in conversation" :key="message.id">
+              <message-view :message="message" :previous="conversation[i - 1]">
               </message-view>
             </template>
           </div>
@@ -115,7 +112,7 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import core from '../core';
   import { methods } from '@/site/character_page/data_store';
   import { Character as ComplexCharacter } from '@/site/character_page/interfaces';
@@ -155,7 +152,7 @@
     name: string;
   }
 
-  export default Vue.extend({
+  export default defineComponent({
     components: {
       'match-tags': MatchTags,
       bbcode: BBCodeView(core.bbCodeParser),
@@ -213,7 +210,7 @@
 
       EventBus.$on('character-score', this.scoreWatcher);
     },
-    beforeDestroy(): void {
+    beforeUnmount(): void {
       if (this.scoreWatcher) {
         EventBus.$off('character-score', this.scoreWatcher);
 

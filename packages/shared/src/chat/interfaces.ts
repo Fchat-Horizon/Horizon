@@ -1,9 +1,9 @@
 //tslint:disable:no-shadowed-variable
-import { Connection } from '@/fchat';
+import type { Connection } from '@/fchat';
 
-import { Channel, Character } from '@/fchat/interfaces';
-import { AdManager } from './ads/ad-manager';
-import { SmartFilterSettings } from '@/learn/filter/types';
+import type { Channel, Character } from '@/fchat/interfaces';
+import type { AdManager } from './ads/ad-manager';
+import type { SmartFilterSettings } from '@/learn/filter/types';
 export { type Connection, Channel, type Character } from '@/fchat/interfaces';
 export const userStatuses: ReadonlyArray<Character.Status> = [
   'online',
@@ -17,7 +17,7 @@ export const channelModes: ReadonlyArray<Channel.Mode> = [
   'ads',
   'both'
 ];
-import { Ad } from './ads/ad-center';
+import type { Ad } from './ads/ad-center';
 
 export namespace Conversation {
   interface BaseMessage {

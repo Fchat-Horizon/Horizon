@@ -45,7 +45,7 @@
       </div>
     </div>
 
-    <div class="mb-3 ad-list" v-for="(_, index) in ads">
+    <div class="mb-3 ad-list" v-for="(_, index) in ads" :key="index">
       <label :for="'ad' + conversation.key + '-' + index" class="control-label"
         >{{ l('admgr.adNumber', index + 1) }}
         <a v-if="index > 0" @click="moveAdUp(index)" :title="l('admgr.moveUp')"
@@ -79,6 +79,7 @@
 
 <script lang="ts">
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import Modal from '@/components/Modal.vue';
   import { Conversation } from '../interfaces';
   import l from '../localize';
@@ -87,7 +88,8 @@
   import { Dialog } from '@/helpers/dialog';
   import _ from 'lodash';
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: { modal: Modal, editor: Editor },
     props: {
       conversation: { type: Object as () => Conversation, required: true }
@@ -113,6 +115,7 @@
         }
       },
       submit(): void {
+        // eslint-disable-next-line vue/no-mutating-props -- writes through the conversation store setter
         this.conversation.settings = {
           ...this.conversation.settings,
 

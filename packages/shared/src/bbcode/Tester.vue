@@ -8,14 +8,14 @@
 
 <script lang="ts">
   import * as _ from 'lodash';
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
 
   import { BBCodeView } from './view';
   import { StandardBBCodeParser } from './standard';
 
   const standardParser = new StandardBBCodeParser();
 
-  export default Vue.extend({
+  export default defineComponent({
     components: {
       bbcode: BBCodeView(standardParser)
     },

@@ -1,5 +1,5 @@
 import Axios from 'axios';
-import Vue from 'vue';
+import { type App } from 'vue';
 import Editor from '@/bbcode/Editor.vue';
 import { BBCodeView } from '@/bbcode/view';
 import { InlineDisplayMode } from '@/interfaces';
@@ -9,7 +9,7 @@ import CharacterSelect from '@/components/character_select.vue';
 import DateDisplay from '@/components/date_display.vue';
 import SimplePager from '@/components/simple_pager.vue';
 
-import {
+import type {
   Character as CharacterInfo,
   CharacterImage,
   CharacterImageOld,
@@ -25,7 +25,7 @@ import {
   SimpleCharacter
 } from '@/interfaces';
 import { registerMethod, Store } from '@/site/character_page/data_store';
-import {
+import type {
   Character,
   CharacterKink,
   Friend,
@@ -528,15 +528,19 @@ async function kinksGet(id: number): Promise<CharacterKink[]> {
   });
 }
 
+// Vue 3 apps are isolated; register the shared components on each created app.
+export function registerComponents(app: App): void {
+  app.component('character-select', CharacterSelect);
+  app.component('character-link', CharacterLink);
+  app.component('date-display', DateDisplay);
+  app.component('simple-pager', SimplePager);
+  app.component('bbcode', BBCodeView(new StandardBBCodeParser()));
+  app.component('bbcode-editor', Editor);
+}
+
 export function init(settings: Settings, characters: SimpleCharacter[]): void {
   Utils.setDomains(parserSettings.siteDomain, parserSettings.staticDomain);
 
-  Vue.component('character-select', CharacterSelect);
-  Vue.component('character-link', CharacterLink);
-  Vue.component('date-display', DateDisplay);
-  Vue.component('simple-pager', SimplePager);
-  Vue.component('bbcode', BBCodeView(new StandardBBCodeParser()));
-  Vue.component('bbcode-editor', Editor);
   Utils.init(settings, characters);
   core.connection.onEvent('connecting', () => {
     Utils.settings.defaultCharacter = characters.find(

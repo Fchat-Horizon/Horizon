@@ -1,5 +1,6 @@
-import Vue from 'vue';
-import { BBCodeElement, CoreBBCodeParser } from '@/bbcode/core';
+import { createApp, defineComponent, type App } from 'vue';
+import type { BBCodeElement } from '@/bbcode/core';
+import { CoreBBCodeParser } from '@/bbcode/core';
 //tslint:disable-next-line:match-default-export-name
 import BaseEditor from '@/bbcode/Editor.vue';
 import {
@@ -12,12 +13,16 @@ import { normalizeCharacterName } from './common';
 import core from './core';
 import UserView from './UserView.vue';
 
-export class Editor extends BaseEditor {
-  parser = core.bbCodeParser;
-}
+// Re-points the parser at core's shared instance after the base created() runs.
+export const Editor = defineComponent({
+  extends: BaseEditor,
+  created() {
+    (this as any).parser = core.bbCodeParser;
+  }
+});
 
 export default class BBCodeParser extends CoreBBCodeParser {
-  cleanup: Vue[] = [];
+  cleanup: App[] = [];
 
   constructor() {
     super();
@@ -50,17 +55,15 @@ export default class BBCodeParser extends CoreBBCodeParser {
         const characterName = normalizeCharacterName(content);
         const el = parser.createElement('span');
         parent.appendChild(el);
-        const view = new UserView({
-          el,
-          propsData: {
-            character: core.characters.get(characterName),
-            displayName: content, // added so that the non-normalized names are displayed
-            isMarkerShown: core.connection.character
-              ? core.state.settings.horizonShowGenderMarker
-              : false
-          }
+        const app = createApp(UserView, {
+          character: core.characters.get(characterName),
+          displayName: content, // so the non-normalized name is displayed
+          isMarkerShown: core.connection.character
+            ? core.state.settings.horizonShowGenderMarker
+            : false
         });
-        this.cleanup.push(view);
+        app.mount(el);
+        this.cleanup.push(app);
         return el;
       })
     );
@@ -70,11 +73,9 @@ export default class BBCodeParser extends CoreBBCodeParser {
         const el = parser.createElement('span');
         parent.appendChild(root);
         root.appendChild(el);
-        const view = new ChannelView({
-          el,
-          propsData: { id: content, text: param }
-        });
-        this.cleanup.push(view);
+        const app = createApp(ChannelView, { id: content, text: param });
+        app.mount(el);
+        this.cleanup.push(app);
         return root;
       })
     );
@@ -84,11 +85,9 @@ export default class BBCodeParser extends CoreBBCodeParser {
         const el = parser.createElement('span');
         parent.appendChild(root);
         root.appendChild(el);
-        const view = new ChannelView({
-          el,
-          propsData: { id: content, text: content }
-        });
-        this.cleanup.push(view);
+        const app = createApp(ChannelView, { id: content, text: content });
+        app.mount(el);
+        this.cleanup.push(app);
         return root;
       })
     );
@@ -97,8 +96,8 @@ export default class BBCodeParser extends CoreBBCodeParser {
   parseEverything(input: string): BBCodeElement {
     const elm = <BBCodeElement>super.parseEverything(input);
     if (this.cleanup.length > 0)
-      elm.cleanup = ((cleanup: Vue[]) => () => {
-        for (const component of cleanup) component.$destroy();
+      elm.cleanup = ((cleanup: App[]) => () => {
+        for (const app of cleanup) app.unmount();
       })(this.cleanup);
     this.cleanup = [];
     return elm;

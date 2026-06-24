@@ -8,10 +8,12 @@
  * * `event.returnValue`; everything else is either `invoke` or fire-and-forget.
  */
 
-import AdmZip from 'adm-zip';
+import { loadAdmZip } from './services/exporter/zip-loaders';
 import * as electron from 'electron';
 import * as os from 'os';
 import * as fs from 'fs';
+import * as path from 'path';
+import { pathToFileURL } from 'url';
 import { hostWindowFor } from './tab-manager';
 
 /**
@@ -49,7 +51,6 @@ const LINUX_ENV_KEYS = [
   'LANGUAGE'
 ];
 
-/** Parses /etc/os-release for a human-readable distro name (Linux only). */
 function readLinuxDistro(): string {
   if (process.platform !== 'linux') return '';
   for (const file of ['/etc/os-release', '/usr/lib/os-release']) {
@@ -80,7 +81,6 @@ function readLinuxDistro(): string {
   return '';
 }
 
-/** Detects how a Linux build is packaged (Flatpak/Snap/AppImage/...). */
 function detectLinuxPackaging(): string {
   const exists = (p: string): boolean => {
     try {
@@ -200,10 +200,7 @@ async function collectDebugInfo() {
 
 let initialized = false;
 
-/**
- * Registers all generic renderer-facing IPC endpoints. Call once during app
- * startup, before any renderer loads.
- */
+// ! Must run before any renderer loads, since renderers call these on init.
 export function initIpcHandlers(): void {
   if (initialized) return;
   initialized = true;
@@ -216,6 +213,11 @@ export function initIpcHandlers(): void {
      blocking. */
   ipc.on('app-version-sync', e => {
     e.returnValue = electron.app.getVersion();
+  });
+  ipc.on('preview-preload-url-sync', e => {
+    e.returnValue = pathToFileURL(
+      path.join(__dirname, 'preview', 'assets', 'browser.pre.js')
+    ).href;
   });
   ipc.on(
     'app-path-sync',
@@ -260,12 +262,15 @@ export function initIpcHandlers(): void {
   });
 
   /* Zips rendered text/HTML log exports; renderers cannot zip without Node. */
-  ipc.handle('zip-create', (_e, files: { name: string; content: string }[]) => {
-    const zip = new AdmZip();
-    for (const file of files)
-      zip.addFile(file.name, Buffer.from(file.content, 'utf-8'));
-    return zip.toBuffer();
-  });
+  ipc.handle(
+    'zip-create',
+    async (_e, files: { name: string; content: string }[]) => {
+      const zip = new (await loadAdmZip())();
+      for (const file of files)
+        zip.addFile(file.name, Buffer.from(file.content, 'utf-8'));
+      return zip.toBuffer();
+    }
+  );
 
   /* Dialogs, parented to the sender's window whenever one can be resolved. */
   ipc.on(
@@ -363,7 +368,13 @@ export function initIpcHandlers(): void {
   });
 
   electron.nativeTheme.on('updated', () => {
-    for (const contents of electron.webContents.getAllWebContents())
+    // Early OS theme events (seen on Linux at startup) can arrive before the
+    // webContents module is resolved; skip the broadcast rather than crash the
+    // main process. Windows read the current theme on load, so a dropped early
+    // event is harmless.
+    const targets = electron.webContents.getAllWebContents?.();
+    if (!Array.isArray(targets)) return;
+    for (const contents of targets)
       contents.send(
         'native-theme-updated',
         electron.nativeTheme.shouldUseDarkColors

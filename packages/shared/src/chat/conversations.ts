@@ -1,3 +1,4 @@
+import { reactive } from 'vue';
 import { queuedJoin } from '@/fchat/channels';
 import { decodeHTML, emptyMap, toMap } from '@/fchat/common';
 import { AdManager } from './ads/ad-manager';
@@ -10,7 +11,8 @@ import {
   messageToString
 } from './common';
 import core from './core';
-import { Channel, Character, Conversation as Interfaces } from './interfaces';
+import type { Character } from './interfaces';
+import { Channel, Conversation as Interfaces } from './interfaces';
 import l from './localize';
 import {
   CommandContext,
@@ -44,7 +46,12 @@ function createMessage(
     type = MessageType.Action;
     text = text.substr(text.charAt(4) === ' ' ? 4 : 3);
   }
-  return new Message(type, sender, text, time);
+  // Wrap at creation so the handler's local ref, the stored array element, and
+  // the rendered proxy share one identity. Vue 3 keeps a pushed raw object as-is
+  // and hands out a separate proxy on access, so a later mutation on the raw ref
+  // (e.g. channel-ping detection sets isHighlight after addMessage) would not
+  // notify the view until an unrelated re-render.
+  return reactive(new Message(type, sender, text, time)) as Message;
 }
 
 function safeAddMessage(
@@ -127,10 +134,10 @@ abstract class Conversation implements Interfaces.Conversation {
   }
 
   clearText(): void {
-    setImmediate(() => {
+    setTimeout(() => {
       this.enteredText = '';
       core.cache.conversationDraftCache.deregister(this.name);
-    });
+    }, 0);
   }
 
   async send(): Promise<void> {
@@ -821,9 +828,11 @@ class State implements Interfaces.State {
 
     void core.cache.queueForFetching(character.name);
 
-    conv = new PrivateConversation(character);
+    this.privateMap[key] = new PrivateConversation(character);
+    // Return the stored reactive proxy, not the raw instance: the conv gets
+    // messages pushed and unread mutated, which must stay reactive.
+    conv = this.privateMap[key]!;
     this.privateConversations.push(conv);
-    this.privateMap[key] = conv;
     const index = this.recent.findIndex(c => c.character === conv!.name);
     if (index !== -1) this.recent.splice(index, 1);
     if (this.recent.length >= 50) this.recent.pop();
@@ -1235,7 +1244,7 @@ async function initConversationCache(this: Conversation): Promise<void> {
 }
 
 export default function (this: any): Interfaces.State {
-  state = new State();
+  state = reactive(new State()) as State;
   window.addEventListener('focus', () => {
     state.windowFocused = true;
     if (state.selectedConversation !== undefined!)
@@ -1273,8 +1282,10 @@ export default function (this: any): Interfaces.State {
   core.channels.onEvent(async (type, channel, member) => {
     if (type === 'join')
       if (member === undefined) {
-        const conv = new ChannelConversation(channel);
-        state.channelMap[channel.id] = conv;
+        state.channelMap[channel.id] = new ChannelConversation(channel);
+        // Read back the reactive proxy so the conversation that receives
+        // messages is the one components observe.
+        const conv = state.channelMap[channel.id]!;
         state.channelConversations.push(conv);
         void state.savePinned();
         const index = state.recentChannels.findIndex(
@@ -1464,12 +1475,12 @@ export default function (this: any): Interfaces.State {
     if (conv === undefined) return core.channels.leave(data.channel);
     if (char.isIgnored || core.isHidden(char.name)) return;
 
-    const msg = new Message(
-      MessageType.Ad,
-      char,
-      decodeHTML(data.message),
-      time
-    );
+    // reactive like createMessage: resolveProfileScore can update msg.score
+    // asynchronously after the message is rendered, and MessageView watches
+    // message.score - that mutation must go through the proxy to re-render.
+    const msg = reactive(
+      new Message(MessageType.Ad, char, decodeHTML(data.message), time)
+    ) as Message;
 
     const p = await core.cache.resolveProfileScore(
       core.conversations.selectedConversation !== conv ||

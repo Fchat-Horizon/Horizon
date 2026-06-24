@@ -23,6 +23,7 @@
 <script lang="ts">
   import { BBCodeElement } from '@/bbcode/core';
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import Modal from '@/components/Modal.vue';
   import BBCodeParser from './bbcode';
   import { errorToString, messageToString } from './common';
@@ -30,7 +31,8 @@
   import { Character, Conversation } from './interfaces';
   import l from './localize';
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: { modal: Modal },
     data() {
       return {
@@ -51,7 +53,7 @@
         new BBCodeParser().parseEverything(l('chat.report.description'))
       );
     },
-    beforeDestroy(): void {
+    beforeUnmount(): void {
       (<BBCodeElement>(<Element>this.$refs['caption']).firstChild).cleanup!();
     },
     methods: {

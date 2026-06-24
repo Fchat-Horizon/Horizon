@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import { reactive } from 'vue';
 
 export interface ToastEntry {
   id: string;
@@ -12,7 +12,7 @@ export interface ToastEntry {
 
 type ToastUpdate = Partial<Omit<ToastEntry, 'id'>>;
 
-const state = Vue.observable({ toasts: [] as ToastEntry[] });
+const state = reactive({ toasts: [] as ToastEntry[] });
 
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
 
@@ -55,7 +55,7 @@ export function updateToast(id: string, partial: ToastUpdate): void {
   const idx = state.toasts.findIndex(t => t.id === id);
   if (idx === -1) return;
   const entry = { ...state.toasts[idx], ...partial };
-  Vue.set(state.toasts, idx, entry);
+  state.toasts[idx] = entry;
   if (partial.autoDismiss !== undefined) {
     scheduleAutoDismiss(id, partial.autoDismiss);
   }

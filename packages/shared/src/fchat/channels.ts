@@ -1,5 +1,7 @@
+import { markRaw, reactive } from 'vue';
 import { decodeHTML, emptyMap } from './common';
-import { Channel as Interfaces, Character, Connection } from './interfaces';
+import type { Character, Connection } from './interfaces';
+import { Channel as Interfaces } from './interfaces';
 import core from '@/chat/core';
 
 interface SortableMember extends Interfaces.Member {
@@ -148,7 +150,9 @@ export default function (
   connection: Connection,
   characters: Character.State
 ): Interfaces.State {
-  state = new State(connection);
+  // markRaw keeps the live socket/handler graph out of the reactive proxy; only
+  // the channel/member lists need to drive the UI.
+  state = reactive(new State(markRaw(connection))) as State;
   let rejoin: string[] | undefined;
   connection.onEvent('connecting', isReconnect => {
     if (isReconnect && rejoin === undefined)
@@ -192,10 +196,10 @@ export default function (
     if (data.character.identity === connection.character) {
       const id = data.channel.toLowerCase();
       if (state.joinedMap[id] !== undefined) return;
-      const channel = (state.joinedMap[id] = new Channel(
-        id,
-        decodeHTML(data.title)
-      ));
+      state.joinedMap[id] = new Channel(id, decodeHTML(data.title));
+      // Read the proxy back so joinedMap and joinedChannels share one reactive
+      // identity; pushing the raw instance would desync member-list updates.
+      const channel = state.joinedMap[id]!;
       state.joinedChannels.push(channel);
       if (item !== undefined) item.isJoined = true;
     } else {

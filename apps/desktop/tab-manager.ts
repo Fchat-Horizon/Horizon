@@ -10,17 +10,20 @@ import * as electron from 'electron';
 import { createLogger } from '@horizon/shared/logger';
 const log = createLogger('tab-manager');
 import path from 'path';
-import { GeneralSettings } from '@horizon/shared/common';
-import { canAddTab, tabAddHandler, tabClosedHandler } from './browser_windows';
+import { loadRendererPage } from './load-renderer';
+import type { GeneralSettings } from '@horizon/shared/common';
+import {
+  canAddTab,
+  tabAddHandler,
+  tabClosedHandler,
+  shouldOpenDevtools
+} from './browser_windows';
 
-/** Channels the host window may forward verbatim to one of its tabs. */
 const FORWARDABLE_CHANNELS = ['fix-logs', 'ui-test', 'reopen-profile'];
 
 interface HostWindowState {
   window: electron.BrowserWindow;
-  /** Importer hint passed through to each tab's query string. */
   importHint: string;
-  /** Height of the tab strip in DIP, reported by the host renderer. */
   topOffset: number;
   tabs: Map<number, electron.WebContentsView>;
   activeTabId?: number;
@@ -34,12 +37,8 @@ interface TabManagerOptions {
 /* state: host window id -> state, tab webContents id -> host window id */
 const hosts = new Map<number, HostWindowState>();
 const tabToHost = new Map<number, number>();
-/** Inserted custom CSS keys per tab webContents id. */
 const cssKeys = new Map<number, string>();
-/**
- * Tabs that have actually finished loading. We keep views invisible until
- * then, otherwise we end up with a blind user. "And nobody likes that!" —Rose, probably
- */
+// ! Views stay invisible until first load completes (no white flash).
 const loadedTabs = new Set<number>();
 
 let options: TabManagerOptions | undefined;
@@ -165,10 +164,6 @@ export function adoptWindow(
   });
 }
 
-/**
- * Re-applies (or clears) the user's custom CSS on every open tab. Mirrors
- * what `browser_windows.updateCustomCssAllWindows` does for the shell.
- */
 export async function updateCustomCssAllTabs(
   styleSheet: string,
   useCustomCss: boolean
@@ -192,9 +187,6 @@ export async function updateCustomCssAllTabs(
     }
 }
 
-/**
- * Registers all tab-related IPC endpoints. Call once during app startup.
- */
 export function initTabManager(opts: TabManagerOptions): void {
   if (options !== undefined) return;
   options = opts;
@@ -209,17 +201,14 @@ export function initTabManager(opts: TabManagerOptions): void {
     const settings = options.getSettings();
     const view = new electron.WebContentsView({
       webPreferences: {
-        /*
-        ! webviewTag stays on. The link preview and dictionary popup really
-        ! do need to be <webview>s (sandboxed, isolated, no Node of their
-        ! own): they live in the DOM, so they can be click-through and sized
-        ! by CSS like everything else. A main-process WebContentsView would
-        ! float above the page and eat the mouse.
-        */
         preload: path.join(__dirname, 'preload.js'),
         webviewTag: true,
         nodeIntegration: false,
         contextIsolation: true,
+        // ! Must stay sandboxed. With webviewTag on, an unsandboxed embedder
+        // ! leaves Electron's internal <webview> element without its ipcNative
+        // ! binding, so every guest resize/event spams the renderer log. The
+        // ! chat tab needs no Node anyway - it talks to main over the bridge.
         sandbox: true,
         spellcheck: true,
         partition: 'persist:fchat'
@@ -248,20 +237,16 @@ export function initTabManager(opts: TabManagerOptions): void {
     });
     contents.on('devtools-opened', () => contents.send('devtools-opened'));
 
-    if (process.argv.includes('--devtools'))
-      contents.openDevTools({ mode: 'detach' });
+    if (shouldOpenDevtools()) contents.openDevTools({ mode: 'detach' });
 
     host.window.contentView.addChildView(view);
     showTab(host, contents.id);
 
-    void contents
-      .loadFile(path.join(__dirname, 'index.html'), {
-        query: {
-          settings: JSON.stringify(settings),
-          hasCompletedUpgrades: JSON.stringify(options.hasCompletedUpgrades()),
-          import: host.importHint
-        }
-      })
+    void loadRendererPage(contents, 'index.html', {
+      settings: JSON.stringify(settings),
+      hasCompletedUpgrades: JSON.stringify(options.hasCompletedUpgrades()),
+      import: host.importHint
+    })
       .catch(e => log.error('tab.load.error', e))
       .finally(async () => {
         if (contents.isDestroyed() || host.window.isDestroyed()) return;

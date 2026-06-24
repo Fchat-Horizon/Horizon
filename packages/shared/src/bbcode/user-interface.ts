@@ -1,10 +1,10 @@
-import Vue from 'vue';
-import { BBCodeElement } from './core';
+import { type App } from 'vue';
+import type { BBCodeElement } from './core';
 import { CoreBBCodeParser } from './core';
 import { BBCodeCustomTag } from './parser';
 
 export class UserInterfaceBBCodeParser extends CoreBBCodeParser {
-  cleanup: Vue[] = [];
+  cleanup: App[] = [];
 
   constructor() {
     super();
@@ -44,8 +44,8 @@ export class UserInterfaceBBCodeParser extends CoreBBCodeParser {
   parseEverything(input: string): BBCodeElement {
     const elm = <BBCodeElement>super.parseEverything(input);
     if (this.cleanup.length > 0)
-      elm.cleanup = ((cleanup: Vue[]) => () => {
-        for (const component of cleanup) component.$destroy();
+      elm.cleanup = ((cleanup: App[]) => () => {
+        for (const app of cleanup) app.unmount();
       })(this.cleanup);
     this.cleanup = [];
     return elm;

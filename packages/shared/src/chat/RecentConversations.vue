@@ -35,6 +35,7 @@
 
 <script lang="ts">
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import Modal from '@/components/Modal.vue';
   import Tabs from '@/components/tabs';
   import ChannelView from './ChannelTagView.vue';
@@ -43,7 +44,8 @@
   import l from './localize';
   import UserView from './UserView.vue';
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: {
       'user-view': UserView,
       'channel-view': ChannelView,

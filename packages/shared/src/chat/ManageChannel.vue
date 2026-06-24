@@ -28,7 +28,7 @@
         l('manageChannel.mode')
       }}</label>
       <select v-model="mode" class="form-select" id="mode">
-        <option v-for="mode in modes" :value="mode">
+        <option v-for="mode in modes" :key="mode" :value="mode">
           {{ l('channel.mode.' + mode) }}
         </option>
       </select>
@@ -49,7 +49,7 @@
     </div>
     <template v-if="isChannelOwner">
       <h4>{{ l('manageChannel.mods') }}</h4>
-      <div v-for="(mod, index) in opList">
+      <div v-for="(mod, index) in opList" :key="mod">
         <a
           href="#"
           @click.prevent="opList.splice(index, 1)"
@@ -81,6 +81,7 @@
 
 <script lang="ts">
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import Modal from '@/components/Modal.vue';
   import { Editor } from './bbcode';
   import { getByteLength } from './common';
@@ -92,7 +93,8 @@
   const isPublicChannel = (channel: Channel): boolean =>
     core.channels.openRooms[channel.id] !== undefined;
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: {
       modal: Modal,
       'bbcode-editor': Editor,

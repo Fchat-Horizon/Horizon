@@ -1,11 +1,11 @@
 import _ from 'lodash';
 
-import { Character } from '@/site/character_page/interfaces';
-import { Message } from '../common';
-import { Conversation } from '../interfaces';
-import ChannelConversation = Conversation.ChannelConversation;
+import type { Character } from '@/site/character_page/interfaces';
+import type { Message } from '../common';
+import type { Conversation } from '../interfaces';
+type ChannelConversation = Conversation.ChannelConversation;
 
-import { NoteCheckerCount } from '@/site/note-checker';
+import type { NoteCheckerCount } from '@/site/note-checker';
 
 /**
  * 'imagepreview-dismiss': {url: string}

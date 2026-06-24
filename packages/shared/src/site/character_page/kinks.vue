@@ -179,14 +179,14 @@
     computed,
     watch,
     onMounted,
-    PropType
+    type PropType
   } from 'vue';
   import core from '@/chat/core';
   import { kinkComparisonSwaps } from '@/learn/matcher-types';
-  import { Kink, KinkChoice, KinkGroup } from '@/interfaces';
+  import type { Kink, KinkChoice, KinkGroup } from '@/interfaces';
   import * as Utils from '../utils';
   import { methods, Store } from './data_store';
-  import { Character, CharacterKink, DisplayKink } from './interfaces';
+  import type { Character, CharacterKink, DisplayKink } from './interfaces';
   import KinkView from './kink.vue';
   import l from '@/chat/localize';
   import anyAscii from 'any-ascii';

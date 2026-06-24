@@ -41,7 +41,7 @@
 import * as electron from 'electron';
 
 import Axios from 'axios';
-import * as qs from 'querystring';
+import { createApp } from 'vue';
 import { getKey } from '@horizon/shared/chat/common';
 import { EventBus } from '@horizon/shared/chat/preview/event-bus';
 import { init as initCore } from '@horizon/shared/chat/core';
@@ -49,11 +49,15 @@ import l, { setLanguage } from '@horizon/shared/chat/localize';
 import Socket from '@horizon/shared/chat/WebSocket';
 import Connection from '@horizon/shared/fchat/connection';
 import { Keys } from '@horizon/shared/keys';
-import { GeneralSettings /*, nativeRequire*/ } from '@horizon/shared/common';
+import type {
+  GeneralSettings /*, nativeRequire*/
+} from '@horizon/shared/common';
 import { Logs, SettingsStore } from './filesystem';
 import Notifications from './notifications';
 import { handleStartupImport } from './services';
 import Index from './Index.vue';
+import { registerComponents } from '@horizon/shared/chat/profile_api';
+import { getPlatform } from '@horizon/shared/platform/platform';
 import electronLog from 'electron-log/renderer';
 import { createLogger } from '@horizon/shared/logger';
 const log = createLogger('chat');
@@ -64,17 +68,17 @@ import {
 } from './logging';
 import { installRendererPlatform } from './platform-host';
 import { WordPosSearch } from '@horizon/shared/learn/dictionary/word-pos-search';
-import { MenuItemConstructorOptions } from 'electron/main';
+import type { MenuItemConstructorOptions } from 'electron/main';
 
 installElectronLogging(electronLog);
 installRendererPlatform();
 log.debug('init.chat');
 
-const appVersion = <string>electron.ipcRenderer.sendSync('app-version-sync');
+const appVersion = import.meta.env.VITE_APP_VERSION;
 
 document.addEventListener(
   'keydown',
-  process.platform !== 'darwin'
+  getPlatform() !== 'darwin'
     ? (e: KeyboardEvent) => {
         if (e.ctrlKey && e.shiftKey && getKey(e) === Keys.KeyI)
           electron.ipcRenderer.send('toggle-devtools');
@@ -87,7 +91,7 @@ document.addEventListener(
 
 Axios.defaults.params = { __fchat: `desktop/${appVersion}` };
 
-if (process.env.NODE_ENV === 'production') {
+if (import.meta.env.PROD) {
   electron.ipcRenderer.on('devtools-opened', () => {
     console.log(
       `%c${l('consoleWarning.head')}`,
@@ -200,13 +204,13 @@ electron.ipcRenderer.on(
         id: 'copyLink',
         label: l('action.copyLink'),
         click(): void {
-          if (process.platform === 'darwin')
+          if (getPlatform() === 'darwin')
             electron.clipboard.writeBookmark(props.linkText, props.linkURL);
           else electron.clipboard.writeText(props.linkURL);
         }
       });
 
-      if (process.platform === 'win32' || process.platform === 'linux')
+      if (getPlatform() === 'win32' || getPlatform() === 'linux')
         menuTemplate.push({
           id: 'incognito',
           label: l('action.incognito'),
@@ -276,15 +280,15 @@ electron.ipcRenderer.on(
       connection.isOpen &&
       props.srcURL.startsWith('https://static.f-list.net/images/eicon/')
     ) {
-      let eiconName = props.titleText;
+      const eiconName = props.titleText;
       //Electron on Mac allows for header context menu items, so we use that instead of a disabled item split of by a seperator.
       menuTemplate.unshift(
         {
           label: eiconName,
           enabled: false,
-          type: process.platform === 'darwin' ? 'header' : 'normal'
+          type: getPlatform() === 'darwin' ? 'header' : 'normal'
         },
-        ...(process.platform === 'darwin'
+        ...(getPlatform() === 'darwin'
           ? []
           : [
               {
@@ -352,7 +356,7 @@ electron.ipcRenderer.on(
 );
 
 const params = <{ [key: string]: string | undefined }>(
-  qs.parse(window.location.search.slice(1))
+  Object.fromEntries(new URLSearchParams(window.location.search.slice(1)))
 );
 let settings = <GeneralSettings>JSON.parse(params['settings']!);
 
@@ -383,7 +387,7 @@ try {
 log.debug('init.chat.core');
 
 const connection = new Connection(
-  `Horizon (${process.platform})`,
+  `Horizon (${getPlatform()})`,
   appVersion,
   Socket
 );
@@ -391,13 +395,11 @@ initCore(connection, settings, Logs, SettingsStore, Notifications);
 
 log.debug('init.chat.vue');
 
-//tslint:disable-next-line:no-unused-expression
-new Index({
-  el: '#app',
-  data: {
-    settings,
-    hasCompletedUpgrades: JSON.parse(params['hasCompletedUpgrades']!)
-  }
+const app = createApp(Index, {
+  initialSettings: settings,
+  initialHasCompletedUpgrades: JSON.parse(params['hasCompletedUpgrades']!)
 });
+registerComponents(app);
+app.mount('#app');
 
 log.debug('init.chat.vue.done');

@@ -9,8 +9,8 @@ import {
   Species,
   TagId
 } from '../matcher-types';
-import { SmartFilterSelection, SmartFilterSettings } from './types';
-import { Character } from '@/interfaces';
+import type { SmartFilterSelection, SmartFilterSettings } from './types';
+import type { Character } from '@/interfaces';
 import { createLogger } from '@/logger';
 const log = createLogger('smart-filter');
 import core from '@/chat/core';

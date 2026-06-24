@@ -1,32 +1,32 @@
 import * as _ from 'lodash';
 import core from '@/chat/core';
-import {
+import type {
   ChannelAdEvent,
   ChannelMessageEvent,
   CharacterDataEvent,
-  EventBus,
   SelectConversationEvent
 } from '@/chat/preview/event-bus';
-import { Channel, Conversation } from '@/chat/interfaces';
+import { EventBus } from '@/chat/preview/event-bus';
+import type { Channel } from '@/chat/interfaces';
+import { Conversation } from '@/chat/interfaces';
 import { methods } from '@/site/character_page/data_store';
-import { Character as ComplexCharacter } from '@/site/character_page/interfaces';
+import type { Character as ComplexCharacter } from '@/site/character_page/interfaces';
 import { AdCache } from './ad-cache';
 import { ChannelConversationCache } from './channel-conversation-cache';
 import { CharacterProfiler } from './character-profiler';
-import { CharacterCacheRecord, ProfileCache } from './profile-cache';
-import {
-  ConversationDraftCache,
-  ConversationDraftRecord
-} from './conversation-draft-cache';
-import ChannelConversation = Conversation.ChannelConversation;
+import type { CharacterCacheRecord } from './profile-cache';
+import { ProfileCache } from './profile-cache';
+import type { ConversationDraftRecord } from './conversation-draft-cache';
+import { ConversationDraftCache } from './conversation-draft-cache';
+type ChannelConversation = Conversation.ChannelConversation;
 import Message = Conversation.Message;
-import { Character } from '@/fchat/interfaces';
+import type { Character } from '@/fchat/interfaces';
 import { emptyMap } from '@/fchat/common';
-import ChatMessage = Conversation.ChatMessage;
-import { GeneralSettings } from '@/common';
-import { Gender } from './matcher-types';
+type ChatMessage = Conversation.ChatMessage;
+import type { GeneralSettings } from '@/common';
+import type { Gender } from './matcher-types';
 import { WorkerStore } from './store/worker';
-import { PermanentIndexedStore } from './store/types';
+import type { PermanentIndexedStore } from './store/types';
 
 import { createLogger } from '@/logger';
 const log = createLogger('cache-manager');
@@ -140,7 +140,7 @@ export class CacheManager {
 
     const key = ProfileCache.nameKey(name);
 
-    if (!!_.find(this.queue, (q: ProfileCacheQueueEntry) => q.key === key))
+    if (_.find(this.queue, (q: ProfileCacheQueueEntry) => q.key === key))
       return;
 
     const entry: ProfileCacheQueueEntry = {
@@ -329,7 +329,7 @@ export class CacheManager {
   async start(settings: GeneralSettings, skipFlush: boolean): Promise<void> {
     await this.stop();
 
-    this.profileStore = await WorkerStore.open('storeWorkerEndpoint.js');
+    this.profileStore = await WorkerStore.open();
 
     this.profileCache.setStore(this.profileStore);
 

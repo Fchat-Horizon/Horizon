@@ -28,20 +28,21 @@
       <h4 v-if="showPerCharacterFriends && characterFriends.length > 0">
         {{ l('users.characterFriends') }}
       </h4>
-      <div
-        v-if="showPerCharacterFriends"
-        v-for="character in characterFriends"
-        :key="'char-' + character.name"
-        class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-      >
-        <user
-          :character="character"
-          :showStatus="true"
-          :bookmark="false"
-          :isMarkerShown="shouldShowMarker"
-        ></user>
-      </div>
+      <template v-if="showPerCharacterFriends">
+        <div
+          v-for="character in characterFriends"
+          :key="'char-' + character.name"
+          class="userlist-item"
+          :class="{ dimmed: character.isIgnored }"
+        >
+          <user
+            :character="character"
+            :showStatus="true"
+            :bookmark="false"
+            :isMarkerShown="shouldShowMarker"
+          ></user>
+        </div>
+      </template>
       <h4 v-if="friends.length > 0">
         {{
           l(
@@ -281,21 +282,22 @@
       <h4 v-if="showPerCharacterFriends && allCharacterFriends.length > 0">
         {{ l('users.characterFriends.all') }}
       </h4>
-      <div
-        v-if="showPerCharacterFriends"
-        v-for="character in allCharacterFriends"
-        :key="'char-friends-all-' + character.name"
-        class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-      >
-        <user
-          :character="character"
-          :showStatus="false"
-          :bookmark="true"
-          :isMarkerShown="shouldShowMarker"
-          :loadColor="false"
-        ></user>
-      </div>
+      <template v-if="showPerCharacterFriends">
+        <div
+          v-for="character in allCharacterFriends"
+          :key="'char-friends-all-' + character.name"
+          class="userlist-item"
+          :class="{ dimmed: character.isIgnored }"
+        >
+          <user
+            :character="character"
+            :showStatus="false"
+            :bookmark="true"
+            :isMarkerShown="shouldShowMarker"
+            :loadColor="false"
+          ></user>
+        </div>
+      </template>
       <h4 v-if="allFriends.length > 0">
         {{
           l(
@@ -339,7 +341,7 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import Tabs from '@/components/tabs';
   import core from './core';
   import { Channel, Character, Conversation } from './interfaces';
@@ -360,7 +362,7 @@
 
   const availableSorts = ['normal', 'status', 'gender'] as const;
 
-  export default Vue.extend({
+  export default defineComponent({
     components: {
       characterPage,
       user: UserView,
@@ -703,9 +705,9 @@
 </script>
 
 <style lang="scss">
-  @import '~bootstrap/scss/functions';
-  @import '~bootstrap/scss/variables';
-  @import '~bootstrap/scss/mixins/breakpoints';
+  @import 'bootstrap/scss/functions';
+  @import 'bootstrap/scss/variables';
+  @import 'bootstrap/scss/mixins/breakpoints';
 
   #user-list {
     flex-direction: column;

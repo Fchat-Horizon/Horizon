@@ -1242,7 +1242,7 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent, type PropType } from 'vue';
   import l from '@horizon/shared/chat/localize';
   import { GeneralSettings } from '@horizon/shared/common';
   import path from 'path';
@@ -1252,16 +1252,22 @@
   import type { BackupCharacterInfo } from './services/importer/backup-import';
   import type { ExportManifest } from './services';
 
-  export default Vue.extend({
+  type ImportHint = 'auto' | 'vanilla' | 'advanced' | 'slimcat' | undefined;
+
+  export default defineComponent({
+    props: {
+      initialSettings: {
+        type: Object as PropType<GeneralSettings>,
+        required: true
+      },
+      importHint: {
+        type: String as PropType<ImportHint>,
+        default: undefined
+      }
+    },
     data() {
       return {
-        settings: undefined as any as GeneralSettings,
-        importHint: undefined as
-          | 'auto'
-          | 'vanilla'
-          | 'advanced'
-          | 'slimcat'
-          | undefined,
+        settings: this.initialSettings,
         l: l,
         osIsDark: ipcRenderer.sendSync('native-theme-dark-sync') as boolean,
         selectedSection: 'auto-backup' as
@@ -1375,14 +1381,16 @@
         const css = <string | null>(
           ipcRenderer.sendSync('themes-read-sync', this.getSyncedTheme())
         );
-        if (css === null) {
-          if (this.settings.theme !== 'default') {
-            this.settings.theme = 'default';
-            return this.styling;
-          }
+        if (css !== null) return `<style>${css}</style>`;
+        if (this.settings.theme === 'default') {
           throw new Error('Default theme is missing');
         }
-        return `<style>${css}</style>`;
+        // ^ missing theme falls back to default without mutating in a computed
+        const fallback = <string | null>(
+          ipcRenderer.sendSync('themes-read-sync', 'default')
+        );
+        if (fallback === null) throw new Error('Default theme is missing');
+        return `<style>${fallback}</style>`;
       },
       canRunVanillaImport(): boolean {
         if (!this.vanillaImportAvailable || this.vanillaImportInProgress)
@@ -1620,7 +1628,9 @@
           'get-connected-characters'
         );
         this.connectedCharacters = Array.isArray(list) ? list : [];
-      } catch {}
+      } catch {
+        // best-effort: leave connectedCharacters at its default
+      }
       ipcRenderer.on('connected-characters-updated', (_e, list: string[]) => {
         this.connectedCharacters = Array.isArray(list) ? list : [];
       });
@@ -1791,9 +1801,6 @@
         }
         this.exportAnimatedDots = '';
       },
-      close(): void {
-        ipcRenderer.send('window-close');
-      },
       getThemeClass() {
         try {
           if (process.platform === 'win32') {
@@ -1813,7 +1820,7 @@
             disableWindowsHighContrast:
               this.settings?.risingDisableWindowsHighContrast || false
           };
-        } catch (err) {
+        } catch {
           return {
             ['platform-' + this.platform]: true
           };

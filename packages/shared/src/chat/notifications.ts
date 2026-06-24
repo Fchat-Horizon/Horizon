@@ -1,7 +1,8 @@
 import { ipc } from '@/platform/ipc';
 import { createLogger } from '@/logger';
 import core from './core';
-import { Conversation, Notifications as Interface } from './interfaces';
+import type { Conversation, Notifications as Interface } from './interfaces';
+import notificationBadgeUrl from './assets/ic_notification.png';
 
 const log = createLogger('notifications');
 
@@ -10,6 +11,13 @@ const SUPPORTED_AUDIO_CODECS: { [key: string]: string } = {
   mpeg: 'mp3',
   wav: 'wav'
 };
+
+// Bundled fallback sounds, keyed by relative path (e.g. './assets/chat.mp3').
+const fallbackSoundUrls = import.meta.glob('./assets/*.{mp3,ogg,wav}', {
+  eager: true,
+  query: '?url',
+  import: 'default'
+}) as Record<string, string>;
 
 interface SoundTheme {
   name: string;
@@ -70,7 +78,7 @@ export default class Notifications implements Interface {
   }
 
   getOptions(conversation: Conversation, body: string, icon: string) {
-    const badge = require(`./assets/ic_notification.png`).default;
+    const badge = notificationBadgeUrl;
 
     return {
       body,
@@ -192,9 +200,11 @@ export default class Notifications implements Interface {
     // Fallback to default sounds
     for (const [format, extension] of Object.entries(SUPPORTED_AUDIO_CODECS)) {
       try {
+        const url = fallbackSoundUrls[`./assets/${sound}.${extension}`];
+        if (url === undefined) continue;
         const src = document.createElement('source');
         src.type = `audio/${format}`;
-        src.src = require(`./assets/${sound}.${extension}`).default;
+        src.src = url;
         audio.appendChild(src);
       } catch (error) {
         log.warn(`Failed to load fallback sound: ${sound}.${extension}`, error);

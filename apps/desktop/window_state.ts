@@ -67,9 +67,11 @@ export function getSavedWindowState(): SavedWindowState {
   };
   if (!fs.existsSync(windowStatePath)) return defaultState;
   try {
-    let savedState = <SavedWindowState>(
-      JSON.parse(fs.readFileSync(windowStatePath, 'utf-8'))
-    );
+    // A kill mid-save leaves window.json empty or truncated; treat that as
+    // "no saved state" instead of logging a parse error on every boot.
+    const raw = fs.readFileSync(windowStatePath, 'utf-8').trim();
+    if (raw === '') return defaultState;
+    let savedState = <SavedWindowState>JSON.parse(raw);
     savedState = mapToScreen(savedState);
     return savedState;
   } catch (e) {

@@ -291,6 +291,7 @@ export class Logger {
 export type Subsystem =
   | 'about'
   | 'ad-coordinator-guest'
+  | 'app-protocol'
   | 'ad-coordinator-host'
   | 'ad-manager'
   | 'auto-backup'

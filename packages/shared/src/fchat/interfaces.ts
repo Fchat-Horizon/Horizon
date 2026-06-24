@@ -1,5 +1,5 @@
-import { Character as CharacterProfile } from '@/site/character_page/interfaces';
-import { CharacterOverrides } from './characters';
+import type { Character as CharacterProfile } from '@/site/character_page/interfaces';
+import type { CharacterOverrides } from './characters';
 
 //tslint:disable:no-shadowed-variable
 export namespace Connection {

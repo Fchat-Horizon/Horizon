@@ -46,8 +46,8 @@
 </template>
 
 <script lang="ts">
-  import cloneDeep = require('lodash/cloneDeep'); //tslint:disable-line:no-require-imports
-  import Vue from 'vue';
+  import cloneDeep from 'lodash/cloneDeep';
+  import { defineComponent } from 'vue';
   import l from '@/chat/localize';
 
   type ParamDictionary = { [key: string]: number | undefined };
@@ -56,7 +56,7 @@
     params?: ParamDictionary;
   }
 
-  export default Vue.extend({
+  export default defineComponent({
     props: {
       nextLabel: { default: () => l('pager.nextPage') },
       prevLabel: { default: () => l('pager.previousPage') },
@@ -64,12 +64,14 @@
       prev: { required: true as const },
       routed: { default: false },
       route: {
-        default(this: Vue & { $route: RouteParams }): RouteParams {
-          return this.$route;
-        }
+        // Vue 3 prop default factories run with no `this`; `routed` is always
+        // false here (no router registered) so the value is unused. A routed
+        // consumer passes :route explicitly.
+        default: (): RouteParams => ({})
       },
       paramName: { default: 'page' }
     },
+    emits: ['next', 'prev'],
     data() {
       return {
         l: l

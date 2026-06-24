@@ -1,4 +1,4 @@
-import { WebSocketConnection } from '@/fchat';
+import type { WebSocketConnection } from '@/fchat';
 import { createLogger } from '@/logger';
 const log = createLogger('websocket');
 

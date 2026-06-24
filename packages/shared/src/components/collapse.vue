@@ -23,13 +23,14 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
 
-  export default Vue.extend({
+  export default defineComponent({
     props: {
       title: { required: true as const },
       headerClass: {}
     },
+    emits: ['open', 'close'],
     data() {
       return {
         collapsed: true,

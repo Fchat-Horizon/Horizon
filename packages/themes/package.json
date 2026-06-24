@@ -4,6 +4,11 @@
   "author": "The F-List Team",
   "description": "F-Chat Themes",
   "license": "MPL-2.0",
+  "type": "module",
+  "exports": {
+    "./sass-options": "./sass-options.ts",
+    "./package.json": "./package.json"
+  },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",
     "sass-embedded": "^1.85.1"

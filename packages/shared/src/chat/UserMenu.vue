@@ -98,7 +98,7 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import { BBCodeView } from '@/bbcode/view';
   import Modal from '@/components/Modal.vue';
   import CharacterAdView from './character/CharacterAdView.vue';
@@ -121,7 +121,7 @@
     ContextMenuItemProps
   } from '@/components/CustomContextMenu.vue';
 
-  export default Vue.extend({
+  export default defineComponent({
     components: {
       'match-tags': MatchTags,
       bbcode: BBCodeView(core.bbCodeParser),
@@ -129,6 +129,7 @@
       'ad-view': CharacterAdView,
       'custom-context-menu': CustomContextMenu
     },
+    emits: ['open', 'close'],
     props: {
       reportDialog: {
         type: Object as () => InstanceType<typeof ReportDialog>,
@@ -591,9 +592,9 @@
 </script>
 
 <style lang="scss">
-  @import '~bootstrap/scss/functions';
-  @import '~bootstrap/scss/variables';
-  @import '~bootstrap/scss/mixins/breakpoints';
+  @import 'bootstrap/scss/functions';
+  @import 'bootstrap/scss/variables';
+  @import 'bootstrap/scss/mixins/breakpoints';
 
   #userMenu .list-group-item {
     padding: 3px 5px 3px 5px;

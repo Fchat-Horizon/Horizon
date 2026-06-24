@@ -188,7 +188,7 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent, type PropType } from 'vue';
   import l, { setLanguage } from '@horizon/shared/chat/localize';
   import { GeneralSettings } from '@horizon/shared/common';
   import Axios from 'axios';
@@ -196,11 +196,9 @@
   import { alert } from '@mdit/plugin-alert';
   import electron from 'electron';
   import { createLogger } from '@horizon/shared/logger';
+  import logoSrc from './build/icon.png';
 
   const log = createLogger('changelog');
-
-  // tslint:disable-next-line:no-require-imports
-  const logoSrc = require('./build/icon.png').default;
 
   type ReleaseInfo = {
     html_url: string;
@@ -208,16 +206,25 @@
     body: string;
   };
 
-  export default Vue.extend({
+  export default defineComponent({
+    props: {
+      initialSettings: {
+        type: Object as PropType<GeneralSettings>,
+        required: true
+      },
+      updateVersion: { type: String, default: undefined },
+      updateMode: {
+        type: String as PropType<'auto' | 'manual'>,
+        default: 'auto'
+      },
+      currentVersion: { type: String, default: 'unknown' }
+    },
     data() {
       return {
-        settings: undefined as any as GeneralSettings,
+        settings: this.initialSettings,
         osIsDark: electron.ipcRenderer.sendSync(
           'native-theme-dark-sync'
         ) as boolean,
-        updateVersion: undefined as string | undefined,
-        updateMode: 'auto' as 'auto' | 'manual',
-        currentVersion: process.env.APP_VERSION,
         isMaximized: false,
         l,
         platform: process.platform,
@@ -230,19 +237,17 @@
     },
     computed: {
       styling(): string {
-        const css = <string | null>(
-          electron.ipcRenderer.sendSync(
-            'themes-read-sync',
-            this.getSyncedTheme()
-          )
+        const requested = this.getSyncedTheme();
+        let css = <string | null>(
+          electron.ipcRenderer.sendSync('themes-read-sync', requested)
         );
-        if (css === null) {
-          if (this.settings.theme !== 'default') {
-            this.settings.theme = 'default';
-            return this.styling;
-          }
-          throw new Error('Default theme is missing');
+        // Fall back to the default theme without mutating settings (computed must stay pure).
+        if (css === null && requested !== 'default') {
+          css = <string | null>(
+            electron.ipcRenderer.sendSync('themes-read-sync', 'default')
+          );
         }
+        if (css === null) throw new Error('Default theme is missing');
         return `<style>${css}</style>`;
       }
     },
@@ -270,9 +275,7 @@
       }
       let apiUrl =
         'https://api.github.com/repos/Fchat-Horizon/Horizon/releases/tags/' +
-        (this.updateVersion
-          ? this.updateVersion!
-          : 'v' + process.env.APP_VERSION);
+        (this.updateVersion ? this.updateVersion! : 'v' + this.currentVersion);
       let releaseInfo: ReleaseInfo = (await Axios.get<ReleaseInfo>(apiUrl))
         .data;
       let md = markdownit({ html: true, linkify: true, typographer: true });

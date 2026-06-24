@@ -7,7 +7,7 @@
     style="width: 98%"
     dialogClass="ads-dialog"
   >
-    <template slot="title">
+    <template #title>
       {{ l('characterAd.title') }}
       <user :character="character" :isMarkerShown="false">{{
         character.name
@@ -15,7 +15,7 @@
     </template>
 
     <div class="row ad-viewer" ref="pageBody" v-if="messages.length > 0">
-      <template v-for="message in messages">
+      <template v-for="(message, index) in messages" :key="index">
         <h3>
           #{{ message.channelName }}
           <span class="message-time">{{ formatTime(message.datePosted) }}</span>
@@ -43,9 +43,10 @@
   import UserView from '../UserView.vue';
   import { BBCodeView } from '@/bbcode/view';
   import l from '../localize';
-  import { PropType } from 'vue';
+  import { defineComponent, PropType } from 'vue';
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: {
       modal: Modal,
       user: UserView,
@@ -83,11 +84,9 @@
         ) as AdCachedPosting[];
       },
       async onOpen(): Promise<void> {
-        // empty
         return;
       },
       async onClose(): Promise<void> {
-        // empty
         return;
       }
     }

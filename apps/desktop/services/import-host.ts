@@ -13,18 +13,13 @@ import * as path from 'path';
 import { promisify } from 'util';
 import { addMinutes } from 'date-fns';
 import { GeneralSettings } from '@horizon/shared/common';
-import {
-  checkIndex,
-  getLogDir,
-  LogMessage,
-  serializeMessage
-} from '../log-format';
+import type { LogMessage } from '../log-format';
+import { checkIndex, getLogDir, serializeMessage } from '../log-format';
 
 let getSettings: (() => GeneralSettings) | undefined;
 
-/* --- Vanilla F-Chat importer ------------------------------------------------
-   Moved from vanilla-importer.ts; the renderer module of that name is now an
-   IPC proxy with the same API. */
+// Moved from vanilla-importer.ts; the renderer module of that name is now an
+// IPC proxy with the same API.
 
 export interface VanillaContext {
   readonly baseDir: string;
@@ -247,8 +242,7 @@ function importVanillaCharacter(
   return { logsCopied, logsSkipped, settingsCopied, settingsSkipped };
 }
 
-/* --- Slimcat importer -------------------------------------------------------
-   File access for importer.ts; the XML parsing stays in the renderer. */
+// File access for importer.ts; the XML parsing stays in the renderer.
 
 function getSlimcatRoamingDir(): string | undefined {
   const appdata = process.env.APPDATA;
@@ -455,9 +449,8 @@ const knownOfficialChannels = [
 ];
 
 /**
- * Converts a character's Slimcat text logs into Horizon's binary format.
- * The settings XML stays with the renderer (DOMParser lives there);
- * progress streams back over 'slimcat-import-progress'.
+ * The settings XML stays with the renderer (DOMParser lives there); only the
+ * log conversion runs here, streaming progress over 'slimcat-import-progress'.
  */
 async function importSlimcatLogs(
   sender: electron.WebContents,
@@ -585,13 +578,8 @@ async function importSlimcatLogs(
   }
 }
 
-/* --- IPC wiring ------------------------------------------------------------ */
-
 let initialized = false;
 
-/**
- * Registers the legacy importer IPC endpoints. Call once during app startup.
- */
 export function initImportHost(opts: { getSettings(): GeneralSettings }): void {
   if (initialized) return;
   initialized = true;
@@ -599,7 +587,6 @@ export function initImportHost(opts: { getSettings(): GeneralSettings }): void {
 
   const ipc = electron.ipcMain;
 
-  /* Vanilla F-Chat */
   ipc.handle('vanilla-resolve-context', (_e, customBaseDir?: string) =>
     resolveVanillaContext(customBaseDir)
   );
@@ -646,7 +633,6 @@ export function initImportHost(opts: { getSettings(): GeneralSettings }): void {
     }
   );
 
-  /* Slimcat */
   ipc.on('slimcat-can-import-general-sync', e => {
     e.returnValue =
       getSlimcatLocalDir() !== undefined &&

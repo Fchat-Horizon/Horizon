@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import { Conversation } from './interfaces';
   import CustomContextMenu, {
     ContextMenuItemProps
@@ -28,11 +28,12 @@
   import { Dialog } from '@/helpers/dialog';
   import core from './core';
 
-  export default Vue.extend({
+  export default defineComponent({
     name: 'ChannelGroupMenu',
     components: {
       CustomContextMenu
     },
+    emits: ['open', 'close', 'rename'],
     data() {
       return {
         l,

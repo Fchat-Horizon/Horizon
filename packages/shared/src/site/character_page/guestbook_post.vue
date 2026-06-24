@@ -82,18 +82,18 @@
 </template>
 
 <script lang="ts">
-  import Vue, { PropType } from 'vue';
+  import { defineComponent, type PropType } from 'vue';
   import CharacterLink from '@/components/character_link.vue';
   import DateDisplay from '@/components/date_display.vue';
   import * as Utils from '../utils';
   import { methods } from './data_store';
-  import { Character, GuestbookPost } from './interfaces';
+  import type { Character, GuestbookPost } from './interfaces';
   import { StandardBBCodeParser } from '@/bbcode/standard';
   import { BBCodeView } from '@/bbcode/view';
 
   const standardParser = new StandardBBCodeParser();
 
-  export default Vue.extend({
+  export default defineComponent({
     components: {
       'date-display': DateDisplay,
       'character-link': CharacterLink,
@@ -104,6 +104,7 @@
       post: { type: Object as PropType<GuestbookPost>, required: true },
       canEdit: { type: Boolean, required: true }
     },
+    emits: ['reload'],
     data() {
       return {
         replying: false,
@@ -129,7 +130,7 @@
             this.character.character.id,
             this.post.id
           );
-          Vue.set(this.post, 'deleted', true);
+          this.post.deleted = true;
           this.$emit('reload');
         } catch (e) {
           Utils.ajaxError(e, 'Unable to delete guestbook post.');

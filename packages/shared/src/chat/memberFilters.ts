@@ -1,5 +1,6 @@
-import { Channel, AvailableSort } from './interfaces';
-import { CharacterAnalysis, Matcher } from '@/learn/matcher';
+import type { Channel, AvailableSort } from './interfaces';
+import type { CharacterAnalysis } from '@/learn/matcher';
+import { Matcher } from '@/learn/matcher';
 import { Gender, Scoring, fchatGenderMap } from '@/learn/matcher-types';
 
 const genderPreferredOrder: Gender[] = [

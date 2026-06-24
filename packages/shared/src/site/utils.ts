@@ -1,5 +1,7 @@
-import axios, { AxiosError, AxiosResponse } from 'axios';
-import { InlineDisplayMode, Settings, SimpleCharacter } from '@/interfaces';
+import type { AxiosError, AxiosResponse } from 'axios';
+import axios from 'axios';
+import type { Settings, SimpleCharacter } from '@/interfaces';
+import { InlineDisplayMode } from '@/interfaces';
 import { createLogger } from '@/logger';
 
 const log = createLogger('site-utils');

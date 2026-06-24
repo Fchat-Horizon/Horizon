@@ -12,15 +12,16 @@
 import * as _ from 'lodash';
 
 import core from '@/chat/core';
-import {
+import type {
   Character as ComplexCharacter,
   CharacterGroup,
   Guestbook
 } from '@/site/character_page/interfaces';
 import { AsyncCache } from './async-cache';
-import { Matcher, MatchReport } from './matcher';
-import { PermanentIndexedStore } from './store/types';
-import { CharacterImage, SimpleCharacter } from '@/interfaces';
+import type { MatchReport } from './matcher';
+import { Matcher } from './matcher';
+import type { PermanentIndexedStore } from './store/types';
+import type { CharacterImage, SimpleCharacter } from '@/interfaces';
 import { Scoring } from './matcher-types';
 import { matchesSmartFilters } from './filter/smart-filter';
 import { ipc } from '@/platform/ipc';
@@ -414,7 +415,7 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
     if (avatarUrl) {
       if (!ProfileCache.isSafeRisingPortraitURL(avatarUrl)) {
         log.info('portrait.hq.invalid.domain', {
-          name,
+          name: c.character.name,
           url: avatarUrl
         });
       } else {

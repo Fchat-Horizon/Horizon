@@ -2,7 +2,12 @@ import _ from 'lodash';
 import { createLogger } from '@/logger';
 const log = createLogger('store-worker-client');
 
-import { IndexedRequest, IndexedResponse, ProfileStoreCommand } from './types';
+import StoreWorker from './store.worker.endpoint?worker';
+import type {
+  IndexedRequest,
+  IndexedResponse,
+  ProfileStoreCommand
+} from './types';
 
 export interface WaiterDef {
   id: string;
@@ -22,8 +27,8 @@ export class WorkerClient {
 
   private waiters: WaiterDef[] = [];
 
-  constructor(jsFile: string) {
-    this.worker = new Worker(jsFile);
+  constructor() {
+    this.worker = new StoreWorker();
     this.worker.onmessage = this.generateMessageProcessor();
   }
 
@@ -107,7 +112,7 @@ export class WorkerClient {
       try {
         this.when(id, resolve, reject, request);
 
-        this.worker.postMessage(request);
+        this.worker.postMessage(_.cloneDeep(request));
       } catch (err) {
         reject(err);
         this.clearWaiter(id);

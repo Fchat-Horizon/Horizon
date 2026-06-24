@@ -1,5 +1,5 @@
 import core from '../core';
-import { CharacterMemo } from '@/site/character_page/interfaces';
+import type { CharacterMemo } from '@/site/character_page/interfaces';
 import { EventBus } from '../preview/event-bus';
 import { decodeHTML } from '@/fchat/common';
 

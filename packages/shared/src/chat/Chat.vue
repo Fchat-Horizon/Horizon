@@ -185,7 +185,7 @@
 <script lang="ts">
   import { createLogger } from '@/logger';
   const log = createLogger('chat-view');
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import { getKey } from './common';
   import Modal from '@/components/Modal.vue';
   import CustomDialog from '@/components/custom_dialog';
@@ -271,7 +271,7 @@
     return hide ? '' : str;
   }
 
-  export default Vue.extend({
+  export default defineComponent({
     components: { chat: ChatView, modal: Modal, logs: Logs, tips: Tips },
     props: {
       ownCharacters: { type: Array as () => SimpleCharacter[], required: true },
@@ -331,11 +331,19 @@
         if (list.length > 0 && list[0].id === (this as any).defaultCharacter)
           result.push(list[0]);
         result.push(...pinned, ...others);
-        this.selectedCharacter = result[0];
         return result;
       },
       showTips(): boolean {
         return core.state.generalSettings?.horizonShowTips ?? false;
+      }
+    },
+    watch: {
+      // only reset when the current pick leaves the list (e.g. filtered out), not on every recompute
+      filteredCharacters(list: SimpleCharacter[]): void {
+        const stillVisible = list.some(
+          c => c.id === this.selectedCharacter?.id
+        );
+        if (!stillVisible) this.selectedCharacter = list[0];
       }
     },
     mounted(): void {
@@ -510,11 +518,8 @@
       },
 
       focusFilter() {
-        const el = this.$refs['filterInput'] as
-          | HTMLInputElement
-          | Vue
-          | undefined;
-        (el as any)?.focus?.();
+        const el = this.$refs['filterInput'] as HTMLInputElement | undefined;
+        el?.focus?.();
       },
 
       charTileKeyDown(e: KeyboardEvent): void {

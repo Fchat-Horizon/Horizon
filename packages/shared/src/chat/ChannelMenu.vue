@@ -27,18 +27,19 @@
 </template>
 
 <script lang="ts">
-  import Vue from 'vue';
+  import { defineComponent } from 'vue';
   import { Conversation } from './interfaces';
   import CustomContextMenu, {
     ContextMenuItemProps
   } from '@/components/CustomContextMenu.vue';
   import l from './localize';
 
-  export default Vue.extend({
+  export default defineComponent({
     name: 'ChannelMenu',
     components: {
       CustomContextMenu
     },
+    emits: ['open', 'close', 'assign', 'create-group'],
     data() {
       return {
         l,

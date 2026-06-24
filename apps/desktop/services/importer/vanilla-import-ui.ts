@@ -5,13 +5,10 @@ const log = createLogger('vanilla-import-ui');
 import l from '@horizon/shared/chat/localize';
 import type { ExporterVm } from '../exporter-vm';
 import * as VanillaImporter from './vanilla-importer';
+// Static: backup-export is already in this graph (the services barrel re-exports
+// it), so a dynamic import() couldn't split it into its own chunk anyway.
+import { refreshExportCharacters } from '../exporter/backup-export';
 
-/**
- * Initializes the vanilla F-Chat import UI state and determines if auto-prompt should be shown.
- *
- * @param vm - Vue component instance managing vanilla import state
- * @returns A promise that resolves when initialization is complete
- */
 export async function initializeVanillaImport(vm: ExporterVm): Promise<void> {
   await refreshVanillaContext(vm);
   vm.showVanillaAutoPrompt =
@@ -25,12 +22,6 @@ export async function initializeVanillaImport(vm: ExporterVm): Promise<void> {
   }
 }
 
-/**
- * Refreshes the vanilla F-Chat context and updates UI state with available data.
- *
- * @param vm - Vue component instance managing vanilla import state
- * @returns A promise that resolves when context is refreshed
- */
 export async function refreshVanillaContext(vm: ExporterVm): Promise<void> {
   const ctx = await VanillaImporter.resolveContext(
     vm.settings.vanillaCustomBaseDir
@@ -51,12 +42,6 @@ export async function refreshVanillaContext(vm: ExporterVm): Promise<void> {
   if (!canGeneral) vm.vanillaImportGeneral = false;
 }
 
-/**
- * Normalizes the custom vanilla base directory path and refreshes the context.
- *
- * @param vm - Vue component instance with settings containing vanillaCustomBaseDir
- * @returns A promise that resolves when normalization and refresh are complete
- */
 export async function normalizeVanillaBaseDir(vm: ExporterVm): Promise<void> {
   if (vm.vanillaImportInProgress) return;
   let v = vm.settings.vanillaCustomBaseDir?.trim() || '';
@@ -70,12 +55,6 @@ export async function normalizeVanillaBaseDir(vm: ExporterVm): Promise<void> {
   await refreshVanillaContext(vm);
 }
 
-/**
- * Prompts the user to select a custom vanilla F-Chat data directory.
- *
- * @param vm - Vue component instance managing vanilla import state
- * @returns A promise that resolves when directory is selected and normalized
- */
 export async function chooseVanillaImportDir(vm: ExporterVm): Promise<void> {
   if (vm.vanillaImportInProgress) return;
   const r: Electron.OpenDialogReturnValue = await ipcRenderer.invoke(
@@ -90,55 +69,24 @@ export async function chooseVanillaImportDir(vm: ExporterVm): Promise<void> {
   await normalizeVanillaBaseDir(vm);
 }
 
-/**
- * Resets the custom vanilla base directory to use platform defaults.
- *
- * @param vm - Vue component instance managing vanilla import state
- * @returns A promise that resolves when reset and refresh are complete
- */
 export async function resetVanillaImportDir(vm: ExporterVm): Promise<void> {
   if (vm.vanillaImportInProgress) return;
   vm.settings.vanillaCustomBaseDir = undefined;
   await normalizeVanillaBaseDir(vm);
 }
 
-/**
- * Handles manual edits to the vanilla base directory input field.
- *
- * @param vm - Vue component instance managing vanilla import state
- * @returns A promise that resolves when input is processed
- */
 export async function handleVanillaBaseDirInput(vm: ExporterVm): Promise<void> {
   await normalizeVanillaBaseDir(vm);
 }
 
-/**
- * Sets the selection state for all vanilla characters.
- *
- * @param vm - Vue component instance with vanillaCharacters array
- * @param selected - Whether to select (true) or deselect (false) all characters
- */
 export function setVanillaCharacters(vm: ExporterVm, selected: boolean): void {
   vm.vanillaCharacters.forEach(c => (c.selected = selected));
 }
 
-/**
- * Gets an array of character names selected for vanilla import.
- *
- * @param vm - Vue component instance with vanillaCharacters array
- * @returns Array of character names where selected is true
- */
 export function getSelectedVanillaCharacters(vm: ExporterVm): string[] {
   return vm.vanillaCharacters.filter(c => c.selected).map(c => c.name);
 }
 
-/**
- * Executes the vanilla F-Chat import process with UI feedback.
- * Imports general settings, character data (logs, settings, eicons) with progress tracking.
- *
- * @param vm - Vue component instance managing vanilla import state and user selections
- * @returns A promise that resolves when import completes
- */
 export async function runVanillaImport(vm: ExporterVm): Promise<void> {
   if (!vm.canRunVanillaImport) return;
 
@@ -211,8 +159,6 @@ export async function runVanillaImport(vm: ExporterVm): Promise<void> {
     );
     vm.showVanillaAutoPrompt = false;
 
-    const { refreshExportCharacters } =
-      await import('../exporter/backup-export');
     refreshExportCharacters(vm);
   } catch (error) {
     log.error('settings.import.vanilla.error', error);

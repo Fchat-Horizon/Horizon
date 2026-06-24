@@ -216,17 +216,14 @@
 
 <script lang="ts">
   import { clipboard, ipcRenderer } from 'electron';
-  import Vue from 'vue';
+  import { defineComponent, type PropType } from 'vue';
   import l, { setLanguage } from '@horizon/shared/chat/localize';
   import { GeneralSettings, defaultHost } from '@horizon/shared/common';
   import { createLogger } from '@horizon/shared/logger';
+  import logoSrc from './build/icon.png';
+  import aboutIconSrc from '@assets/images/logo.svg';
 
   const log = createLogger('about');
-
-  // tslint:disable-next-line:no-require-imports
-  const logoSrc = require('./build/icon.png').default;
-  // tslint:disable-next-line:no-require-imports
-  const aboutIconSrc = require('@assets/images/logo.svg').default;
 
   const PLATFORM_NAMES: Record<string, string> = {
     win32: 'Windows',
@@ -302,19 +299,27 @@
         result.renderer = String(gl.getParameter(gl.RENDERER) || '');
       result.version = String(gl.getParameter(gl.VERSION) || '');
       gl.getExtension('WEBGL_lose_context')?.loseContext();
-    } catch (e) {}
+    } catch {
+      // WebGL probing is best-effort; absent info falls back to main-process GL.
+    }
     return result;
   }
 
-  export default Vue.extend({
+  export default defineComponent({
+    props: {
+      initialSettings: {
+        type: Object as PropType<GeneralSettings>,
+        required: true
+      },
+      appCommit: { type: String, required: true },
+      appVersion: { type: String, required: true }
+    },
     data() {
       const versions = <{ [key: string]: string | undefined }>(
         ((ipcRenderer.sendSync('os-info-sync') as any).versions ?? {})
       );
       return {
-        settings: undefined as any as GeneralSettings,
-        appCommit: '',
-        appVersion: '',
+        settings: this.initialSettings,
         osIsDark: ipcRenderer.sendSync('native-theme-dark-sync') as boolean,
         l,
         platform: process.platform,
@@ -329,16 +334,17 @@
     },
     computed: {
       styling(): string {
-        const css = <string | null>(
-          ipcRenderer.sendSync('themes-read-sync', this.getSyncedTheme())
+        const theme = this.getSyncedTheme();
+        let css = <string | null>(
+          ipcRenderer.sendSync('themes-read-sync', theme)
         );
-        if (css === null) {
-          if (this.settings.theme !== 'default') {
-            this.settings.theme = 'default';
-            return this.styling;
-          }
-          throw new Error('Default theme is missing');
+        // Fall back to the default theme without mutating settings.
+        if (css === null && theme !== 'default') {
+          css = <string | null>(
+            ipcRenderer.sendSync('themes-read-sync', 'default')
+          );
         }
+        if (css === null) throw new Error('Default theme is missing');
         return `<style>${css}</style>`;
       },
       displayCommit(): string {

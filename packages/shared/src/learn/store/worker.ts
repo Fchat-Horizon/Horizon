@@ -1,10 +1,10 @@
-import {
+import type {
   Character as ComplexCharacter,
   CharacterGroup,
   Guestbook
 } from '@/site/character_page/interfaces';
-import { PermanentIndexedStore, ProfileRecord } from './types';
-import { CharacterImage, SimpleCharacter } from '@/interfaces';
+import type { PermanentIndexedStore, ProfileRecord } from './types';
+import type { CharacterImage, SimpleCharacter } from '@/interfaces';
 
 import { WorkerClient } from './worker/client';
 import { createLogger } from '@/logger';
@@ -16,15 +16,12 @@ export class WorkerStore implements PermanentIndexedStore {
 
   protected readonly workerClient: WorkerClient;
 
-  constructor(jsEndpointFile: string) {
-    this.workerClient = new WorkerClient(jsEndpointFile);
+  constructor() {
+    this.workerClient = new WorkerClient();
   }
 
-  static async open(
-    jsEndpointFile: string,
-    dbName?: string
-  ): Promise<WorkerStore> {
-    const store = new WorkerStore(jsEndpointFile);
+  static async open(dbName?: string): Promise<WorkerStore> {
+    const store = new WorkerStore();
 
     await store.workerClient.request('init', { dbName });
 

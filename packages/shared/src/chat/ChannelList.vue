@@ -53,7 +53,7 @@
           rowClass="channel-row"
           :resetKey="filterApplied"
         >
-          <template slot-scope="{ item: channel }">
+          <template #default="{ item: channel }">
             <div class="form-check">
               <input
                 class="form-check-input"
@@ -79,7 +79,7 @@
           rowClass="channel-row"
           :resetKey="filterApplied"
         >
-          <template slot-scope="{ item: channel }">
+          <template #default="{ item: channel }">
             <div class="form-check">
               <input
                 class="form-check-input"
@@ -115,6 +115,7 @@
 
 <script lang="ts">
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import Modal from '@/components/Modal.vue';
   import Tabs from '@/components/tabs';
   import VirtualList from '@/components/VirtualList.vue';
@@ -122,7 +123,8 @@
   import core from './core';
   import l from './localize';
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: { modal: Modal, tabs: Tabs, 'virtual-list': VirtualList },
     data() {
       return {
@@ -181,7 +183,7 @@
         }
       }
     },
-    beforeDestroy(): void {
+    beforeUnmount(): void {
       if (this.filterTimer !== undefined) {
         window.clearTimeout(this.filterTimer);
       }
@@ -259,15 +261,18 @@
         });
       },
       focusChannelFilter(): void {
-        (this.$refs['channelFilter'] as HTMLInputElement).focus();
+        // filter input only exists while the dialog body is mounted; a tab-change can fire first
+        const input = this.$refs['channelFilter'] as
+          | HTMLInputElement
+          | undefined;
+        if (input) input.focus();
       },
       closed(): void {
         this.createName = '';
       },
       setJoined(channel: Channel.ListItem): void {
-        channel.isJoined
-          ? core.channels.leave(channel.id)
-          : core.channels.join(channel.id);
+        if (channel.isJoined) core.channels.leave(channel.id);
+        else core.channels.join(channel.id);
       }
     }
   });

@@ -136,13 +136,15 @@
 
 <script lang="ts">
   import CustomDialog from '@/components/custom_dialog';
+  import { defineComponent } from 'vue';
   import SettingsRadio from '@/components/SettingsRadio.vue';
   import SettingsCheckbox from '@/components/SettingsCheckbox.vue';
   import Modal from '@/components/Modal.vue';
   import { Conversation } from './interfaces';
   import l from './localize';
 
-  export default CustomDialog.extend({
+  export default defineComponent({
+    extends: CustomDialog,
     components: {
       modal: Modal,
       'settings-radio': SettingsRadio,
@@ -183,6 +185,7 @@
         this.muted = settings.muted;
       },
       submit(): void {
+        // eslint-disable-next-line vue/no-mutating-props -- writes through the conversation store setter
         this.conversation.settings = {
           notify: this.notify,
           highlight: this.highlight,
