@@ -47,6 +47,7 @@
   "action.saveChanges": "Sauvegarder les modifications",
   "action.select": "Sélectionner",
   "action.selectAll": "Tout sélectionner",
+  "action.showAllWindows": "Afficher toutes les fenêtres",
   "action.suggestions": "Suggestions",
   "action.toggleStickyPreview": "Activer l'aperçu statique",
   "action.update": "Quitter et télécharger la mise à jour",
