@@ -1,0 +1,1270 @@
+<template>
+  <div
+    @mouseover="onMouseOver"
+    id="page"
+    style="position: relative; padding-top: 5px; overflow: clip"
+    :class="getThemeClass()"
+    @auxclick.prevent
+    @click.middle="unpinUrlPreview"
+  >
+    <div v-html="styling"></div>
+
+    <!-- Startup/upgrade initializer overlay -->
+    <div
+      class="initializer"
+      :class="{
+        visible: !hasCompletedUpgrades,
+        complete: hasCompletedUpgrades,
+        shouldShow: shouldShowSpinner
+      }"
+    >
+      <div class="title">
+        {{ l('initializer.title') }}
+        <small>{{ l('initializer.subtitle') }}</small>
+      </div>
+      <i class="fas fa-circle-notch fa-spin search-spinner"></i>
+    </div>
+
+    <BBCodeTester v-show="false"></BBCodeTester>
+
+    <!-- Login card -->
+    <div
+      v-if="!characters"
+      style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+      "
+    >
+      <div class="card bg-light" style="width: 400px">
+        <h3 class="card-header" style="margin-top: 0; display: flex">
+          {{ l('title') }}
+
+          <a
+            href="#"
+            @click.prevent="showLogs()"
+            class="btn btn-link"
+            style="flex: 1; text-align: right"
+          >
+            <span class="fa fa-file-alt"></span>
+            <span class="btn-text">{{ l('logs.title') }}</span>
+          </a>
+        </h3>
+        <div class="card-body">
+          <div class="alert alert-danger" v-show="error">
+            {{ error }}
+          </div>
+          <div class="mb-3">
+            <label class="control-label" for="account">{{
+              l('login.account')
+            }}</label>
+            <input
+              class="form-control"
+              id="account"
+              v-model="settings.account"
+              @keypress.enter="login()"
+              :disabled="loggingIn"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="control-label" for="password">{{
+              l('login.password')
+            }}</label>
+            <input
+              class="form-control"
+              type="password"
+              id="password"
+              v-model="password"
+              @keypress.enter="login()"
+              :disabled="loggingIn"
+            />
+          </div>
+          <div class="mb-3" v-show="showAdvanced">
+            <label class="control-label" for="host">{{
+              l('login.host')
+            }}</label>
+            <div class="input-group">
+              <input
+                class="form-control"
+                id="host"
+                v-model="settings.host"
+                @keypress.enter="login()"
+                :disabled="loggingIn"
+                @change="hostChanged = true"
+                @input="hostChanged = true"
+              />
+              <button class="btn btn-outline-secondary" @click="resetHost()">
+                <span class="fas fa-undo-alt"></span>
+              </button>
+            </div>
+            <div
+              id="host-warn"
+              class="form-text text-danger-emphasis"
+              v-if="hostChanged"
+            >
+              {{ l('login.host.presumedIncorrect') }}
+            </div>
+            <div style="height: 8px"></div>
+            <label class="control-label" for="proxy">{{
+              l('login.proxy')
+            }}</label>
+            <div class="input-group">
+              <input
+                class="form-control"
+                id="proxy"
+                v-model="settings.proxy"
+                @keypress.enter="login()"
+              />
+              <button class="btn btn-outline-secondary" @click="resetProxy()">
+                <span class="fas fa-undo-alt"></span>
+              </button>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="form-check">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                id="advanced"
+                v-model="showAdvanced"
+              />
+              <label class="form-check-label" for="advanced">
+                {{ l('login.advanced') }}
+              </label>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="form-check">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                id="save"
+                v-model="saveLogin"
+              />
+              <label class="form-check-label" for="save">
+                {{ l('login.save') }}
+              </label>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="form-check">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                id="autoLogin"
+                v-model="autoLogin"
+                :disabled="!saveLogin"
+                @change="onAutoLoginChange"
+              />
+              <label class="form-check-label" for="autoLogin">
+                {{ l('login.auto') }}
+              </label>
+            </div>
+          </div>
+          <div class="mb-3" style="margin: 0; text-align: right">
+            <button
+              class="btn btn-primary"
+              @click="login"
+              :disabled="loggingIn"
+            >
+              <div
+                v-if="loggingIn"
+                class="spinner-border spinner-border-sm"
+                role="status"
+              ></div>
+
+              {{ l(loggingIn ? 'login.working' : 'login.submit') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <chat
+      v-else
+      :ownCharacters="characters"
+      :defaultCharacter="defaultCharacter"
+      ref="chat"
+    ></chat>
+    <div ref="linkPreview" class="link-preview"></div>
+    <modal :action="l('importer.importing')" ref="importModal" :buttons="false">
+      <span style="white-space: pre-wrap">{{
+        l('importer.importingNote')
+      }}</span>
+      <div class="progress" style="margin-top: 5px">
+        <div
+          class="progress-bar"
+          :style="{ width: importProgress * 100 + '%' }"
+        ></div>
+      </div>
+    </modal>
+    <modal :buttons="false" ref="profileViewer" dialogClass="profile-viewer">
+      <character-page
+        :authenticated="true"
+        :oldApi="true"
+        :name="profileName"
+        :previewType="getProfileGalleryType()"
+        :animated-thumbs="animateProfileViewerThumbs()"
+        @gallery-type-updated="galleryTypeUpdated"
+        ref="characterPage"
+      ></character-page>
+      <template #title>
+        {{ profileName }}
+        <a class="btn" @click="openProfileInBrowser"
+          ><i class="fa fa-external-link-alt"
+        /></a>
+        <a class="btn" @click="openConversation"
+          ><i class="fa fa-comment"></i
+        ></a>
+        <a class="btn" @click="reloadCharacter"><i class="fa fa-sync" /></a>
+
+        <i
+          class="fas fa-circle-notch fa-spin profileRefreshSpinner"
+          v-show="isRefreshingProfile()"
+        ></i>
+
+        <bbcode
+          :text="profileStatus"
+          v-show="!!profileStatus"
+          class="status-text"
+        ></bbcode>
+
+        <div class="profile-title-right">
+          <button
+            class="btn"
+            @click="prevProfile"
+            :disabled="!prevProfileAvailable()"
+          >
+            <i class="fas fa-arrow-left fa-lg"></i>
+          </button>
+          <button
+            class="btn"
+            @click="nextProfile"
+            :disabled="!nextProfileAvailable()"
+          >
+            <i class="fas fa-arrow-right fa-lg"></i>
+          </button>
+        </div>
+      </template>
+    </modal>
+    <modal
+      :action="l('fixLogs.action')"
+      ref="fixLogsModal"
+      @submit="fixLogs"
+      buttonClass="btn-danger"
+      iconClass="fas fa-file-half-dashed"
+    >
+      <span style="white-space: pre-wrap">{{ l('fixLogs.text') }}</span>
+      <div class="mb-3">
+        <label class="control-label">{{ l('fixLogs.character') }}</label>
+        <select id="import" class="form-select" v-model="fixCharacter">
+          <option
+            v-for="character in fixCharacters"
+            :key="character"
+            :value="character"
+          >
+            {{ character }}
+          </option>
+        </select>
+      </div>
+    </modal>
+    <modal
+      :buttons="false"
+      ref="wordDefinitionViewer"
+      dialogClass="word-definition-viewer"
+    >
+      <word-definition
+        :expression="wordDefinitionLookup"
+        ref="wordDefinitionLookup"
+      ></word-definition>
+      <template #title>
+        {{ wordDefinitionLookup }}
+        <a
+          class="btn wordDefBtn merriam-webster"
+          @click="openDefinitionWithMerriamWebster"
+          ><i>MW</i></a
+        >
+        <a
+          class="btn wordDefBtn urbandictionary"
+          @click="openDefinitionWithUrbanDictionary"
+          ><i>UD</i></a
+        >
+        <a
+          class="btn wordDefBtn wiktionary"
+          @click="openDefinitionWithWiktionary"
+          ><i>W</i></a
+        >
+
+        <a class="btn" @click="openWordDefinitionInBrowser"
+          ><i class="fa fa-external-link-alt"
+        /></a>
+      </template>
+    </modal>
+
+    <logs ref="logsDialog"></logs>
+    <ui-test ref="uiTestDialog" v-if="isDevMode"> </ui-test>
+
+    <toast
+      v-for="t in toasts"
+      :key="t.id"
+      v-bind="t"
+      @dismiss="dismissToast(t.id)"
+    />
+  </div>
+</template>
+
+<script lang="ts">
+  import Axios from 'axios';
+  import * as electron from 'electron';
+  import { IpcKeyValueStore } from './ipc-store';
+  import { createLogger } from '@horizon/shared/logger';
+  import { getPlatform } from '@horizon/shared/platform/platform';
+  const log = createLogger('chat-window');
+  import { defineComponent, type PropType } from 'vue';
+  import Chat from '@horizon/shared/chat/Chat.vue';
+  import { Settings } from '@horizon/shared/chat/common';
+  import core from '@horizon/shared/chat/core';
+  import l from '@horizon/shared/chat/localize';
+  import Logs from '@horizon/shared/chat/Logs.vue';
+  import UITest from '@horizon/shared/chat/UITest.vue';
+  import Socket from '@horizon/shared/chat/WebSocket';
+  import Modal from '@horizon/shared/components/Modal.vue';
+  import Toast from '@horizon/shared/components/Toast.vue';
+  import {
+    toasts,
+    showToast,
+    updateToast,
+    dismissToast
+  } from '@horizon/shared/chat/toast';
+  import { SimpleCharacter } from '@horizon/shared/interfaces';
+  import CharacterPage from '@horizon/shared/site/character_page/character_page.vue';
+  import WordDefinition, {
+    DictionaryMode
+  } from '@horizon/shared/learn/dictionary/WordDefinition.vue';
+  import { defaultHost, GeneralSettings } from '@horizon/shared/common';
+  import { fixLogs } from './filesystem';
+  import { SlimcatImporter } from '@services';
+  import _ from 'lodash';
+  import { EventBus } from '@horizon/shared/chat/preview/event-bus';
+
+  import BBCodeTester from '@horizon/shared/bbcode/Tester.vue';
+  import { BBCodeView } from '@horizon/shared/bbcode/view';
+  import { EIconStore } from '@horizon/shared/learn/eicon/store';
+  import { SecureStore } from './secure-store';
+  import { ProfileViewerGalleryType } from '@horizon/shared/site/utils';
+
+  // import VueLazyload from 'vue-lazyload';
+  //
+  // Vue.use(VueLazyload, {
+  //   observer: true,
+  //
+  //   observerOptions: {
+  //     rootMargin: '0px',
+  //     threshold: 0,
+  //   }
+  // });
+
+  // log.info('init.chat.keytar.load.start');
+  //
+  /* tslint:disable: no-any no-unsafe-any */ //because this is hacky
+  //
+
+  // const keyStore = nativeRequire<
+  //   {
+  //     getPassword(service: string, account: string): Promise<string>
+  //     setPassword(service: string, account: string, password: string): Promise<void>
+  //     deletePassword(service: string, account: string): Promise<void>
+  //     findCredentials(service: string): Promise<{ account: string, password: string }>
+  //     findPassword(service: string): Promise<string>
+  //     [key: string]: (...args: any[]) => Promise<any>
+  //   }
+  // >('keytar/build/Release/keytar.node');
+
+  const keyStore = new SecureStore(
+    'fchat-rising-accounts',
+    new IpcKeyValueStore()
+  );
+
+  // const keyStore = import('keytar');
+  //
+  // for(const key in keyStore) keyStore[key] = promisify(<(...args: any[]) => any>keyStore[key].bind(keyStore, 'fchat'));
+  //tslint:enable
+
+  // log.info('init.chat.keytar.load.done');
+
+  export default defineComponent({
+    components: {
+      chat: Chat,
+      modal: Modal,
+      toast: Toast,
+      characterPage: CharacterPage,
+      logs: Logs,
+      'ui-test': UITest,
+      'word-definition': WordDefinition,
+      BBCodeTester: BBCodeTester,
+      bbcode: BBCodeView(core.bbCodeParser)
+    },
+    props: {
+      initialSettings: {
+        type: Object as PropType<GeneralSettings>,
+        required: true
+      },
+      initialHasCompletedUpgrades: { type: Boolean, default: false }
+    },
+    data() {
+      return {
+        showAdvanced: false,
+        saveLogin: false,
+        autoLogin: false,
+        loggingIn: false,
+        hostChanged: false,
+        password: '',
+        character: undefined as string | undefined,
+        characters: undefined as SimpleCharacter[] | undefined,
+        error: '',
+        defaultCharacter: undefined as number | undefined,
+        l: l,
+        settings: this.initialSettings,
+        osIsDark: electron.ipcRenderer.sendSync(
+          'native-theme-dark-sync'
+        ) as boolean,
+        hasCompletedUpgrades: this.initialHasCompletedUpgrades,
+        importProgress: 0,
+        profileName: '',
+        profileStatus: '',
+        adName: '',
+        fixCharacters: [] as ReadonlyArray<string>,
+        fixCharacter: '',
+        wordDefinitionLookup: '',
+        shouldShowSpinner: false,
+        profileNameHistory: [] as string[],
+        profilePointer: 0,
+        isDevMode: import.meta.env.DEV,
+        themeWatchListener: undefined as
+          | ((e: Electron.IpcRendererEvent, filename: string) => void)
+          | undefined,
+        themeWatchTimer: undefined as NodeJS.Timeout | undefined,
+        toasts: toasts,
+        dismissToast: dismissToast,
+        autoBackupStatusListener: undefined as any as (
+          e: Electron.IpcRendererEvent,
+          status: string,
+          progress?: number
+        ) => void
+      };
+    },
+    computed: {
+      styling(): string {
+        const themeName = this.getActiveThemeName();
+        return `<style id="themeStyle">${this.readThemeCss(themeName, true)}</style>`;
+      }
+    },
+    watch: {
+      profileName(newName: string): void {
+        if (this.profileNameHistory[this.profilePointer] !== newName) {
+          this.profileNameHistory = _.takeRight(
+            _.filter(
+              _.take(this.profileNameHistory, this.profilePointer + 1),
+              n => n !== newName
+            ),
+            30
+          );
+
+          this.profileNameHistory.push(newName);
+
+          this.profilePointer = this.profileNameHistory.length - 1;
+        }
+      }
+    },
+    mounted(): void {
+      log.debug('init.chat.mounted');
+      this.setupThemeHotReload();
+    },
+    async created(): Promise<void> {
+      // Register the auto-backup toast listener as early as possible. It used to
+      // live in ChatView, which is only mounted once a character is connected -
+      // so a backup triggered "on connect" in the tab that triggered it would
+      // fire before the listener existed and the toast was silently missed.
+      this.autoBackupStatusListener = (_e, status, progress) => {
+        const id = 'auto-backup';
+        if (status === 'started') {
+          showToast({
+            id,
+            message: l('settings.autoBackup.toastInProgress'),
+            icon: 'fa-sync',
+            iconSpin: true,
+            progress: 0
+          });
+        } else if (status === 'progress' && typeof progress === 'number') {
+          updateToast(id, { progress });
+        } else if (status === 'success') {
+          updateToast(id, {
+            message: l('settings.autoBackup.toastComplete'),
+            icon: 'fa-check',
+            iconSpin: false,
+            variant: 'success',
+            progress: 1,
+            autoDismiss: 5000
+          });
+        } else if (status === 'error') {
+          updateToast(id, {
+            message: l('settings.autoBackup.toastFailed'),
+            icon: 'fa-exclamation-triangle',
+            iconSpin: false,
+            variant: 'error',
+            progress: undefined,
+            autoDismiss: 5000
+          });
+        }
+      };
+      electron.ipcRenderer.on(
+        'auto-backup-status',
+        this.autoBackupStatusListener
+      );
+
+      await this.startAndUpgradeCache();
+
+      if (this.settings.account.length > 0) this.saveLogin = true;
+
+      // load auto-login flag from global settings
+      if (this.settings.horizonAutoLogin) this.autoLogin = true;
+
+      this.password =
+        (await keyStore.getPassword('f-list.net', this.settings.account)) || '';
+
+      log.debug('init.chat.keystore.get.done');
+
+      (core.state as any).generalSettings = this.settings;
+      electron.webFrame.setZoomLevel(this.settings.zoomLevel);
+
+      electron.ipcRenderer.on(
+        'settings',
+        (_e: Electron.IpcRendererEvent, settings: GeneralSettings) => {
+          log.debug('settings.update.index');
+          let soundChanged =
+            this.settings.soundTheme !== settings.soundTheme ||
+            (core.state.generalSettings &&
+              core.state.generalSettings.soundTheme !== settings.soundTheme);
+          core.state.generalSettings = this.settings = settings;
+          /*
+          We have to do this after the settings change is applied to  this.settings &
+          core.state.generalSettings because the initSounds function checks those values
+          to determine which sounds to initialize.
+          */
+          if (soundChanged) {
+            log.debug(
+              'settings.update.index.reinitSounds',
+              settings.soundTheme
+            );
+            core.notifications.initSounds([
+              'attention',
+              'login',
+              'logout',
+              'modalert',
+              'newnote',
+              'silence'
+            ]);
+          }
+        }
+      );
+
+      electron.ipcRenderer.on(
+        'open-profile',
+        (_e: Electron.IpcRendererEvent, name: string) => {
+          const profileViewer = this.$refs['profileViewer'] as InstanceType<
+            typeof Modal
+          >;
+
+          this.openProfile(name);
+
+          profileViewer.show();
+        }
+      );
+
+      electron.ipcRenderer.on(
+        'reopen-profile',
+        (_e: Electron.IpcRendererEvent) => {
+          if (
+            this.profileNameHistory.length > 0 &&
+            this.profilePointer < this.profileNameHistory.length &&
+            this.profilePointer >= 0
+          ) {
+            const name = this.profileNameHistory[this.profilePointer];
+            const profileViewer = this.$refs['profileViewer'] as InstanceType<
+              typeof Modal
+            >;
+
+            if (this.profileName === name && profileViewer.isShown) {
+              profileViewer.hide();
+              return;
+            }
+
+            this.openProfile(name);
+            profileViewer.show();
+          }
+        }
+      );
+
+      electron.ipcRenderer.on('fix-logs', async () => {
+        this.fixCharacters = await core.settingsStore.getAvailableCharacters();
+        this.fixCharacter = this.fixCharacters[0];
+        (this.$refs['fixLogsModal'] as InstanceType<typeof Modal>).show();
+      });
+
+      electron.ipcRenderer.on('ui-test', () => {
+        this.showUiTest();
+      });
+
+      electron.ipcRenderer.on('update-zoom', (_e, zoomLevel) => {
+        electron.webFrame.setZoomLevel(zoomLevel);
+        // log.info('INDEXVUE ZOOM UPDATE', zoomLevel);
+      });
+
+      electron.ipcRenderer.on('active-tab', () => {
+        core.cache.setTabActive(true);
+        electron.webFrame.setZoomLevel(this.settings.zoomLevel);
+      });
+
+      electron.ipcRenderer.on('inactive-tab', () => {
+        core.cache.setTabActive(false);
+      });
+
+      electron.ipcRenderer.on(
+        'native-theme-updated',
+        (_e: Electron.IpcRendererEvent, isDark: boolean) => {
+          this.osIsDark = isDark;
+        }
+      );
+
+      log.debug('init.chat.listeners.done');
+
+      // If auto-login is enabled globally and we have saved credentials, attempt to login
+      // This will skip the login screen if successful.
+      try {
+        if (
+          this.settings.horizonAutoLogin &&
+          this.saveLogin &&
+          this.settings.account.length > 0 &&
+          this.password.length > 0
+        ) {
+          void this.login();
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      /*if (process.env.NODE_ENV !== 'production') {
+                const dt = require('@vue/devtools');
+
+                dt.connect();
+            }*/
+    },
+    beforeUnmount(): void {
+      this.stopThemeWatch();
+      if (this.autoBackupStatusListener)
+        electron.ipcRenderer.removeListener(
+          'auto-backup-status',
+          this.autoBackupStatusListener
+        );
+    },
+    methods: {
+      async startAndUpgradeCache(): Promise<void> {
+        log.debug('init.chat.cache.start');
+
+        const timer = setTimeout(() => {
+          this.shouldShowSpinner = true;
+        }, 250);
+
+        void EIconStore.getSharedStore(); // intentionally background
+
+        log.debug('init.eicons.update.done');
+
+        clearTimeout(timer);
+
+        // & Main rebroadcasts this to every webContents, ours included.
+        electron.ipcRenderer.send('rising-upgrade-complete');
+
+        this.hasCompletedUpgrades = true;
+      },
+      async login(): Promise<void> {
+        if (this.loggingIn) return;
+        this.loggingIn = true;
+
+        // set proxy inside from the advanced option
+        if (this.settings.proxy) {
+          try {
+            await electron.ipcRenderer.invoke('session-set-proxy', {
+              proxyRules: this.settings.proxy, // Update dynamically if needed,
+              proxyBypassRules: 'localhost,127.0.0.1',
+              mode: 'fixed_servers'
+            });
+          } catch (e) {
+            this.error = l('login.error.proxy');
+            log.error('login.error.proxy', e);
+            return;
+          }
+        } else {
+          // deactivate the proxy
+          try {
+            await electron.ipcRenderer.invoke('session-set-proxy', {
+              mode: 'direct'
+            });
+          } catch (_) {
+            // Ignore error
+          }
+        }
+
+        try {
+          if (!this.saveLogin) {
+            await keyStore.deletePassword('f-list.net', this.settings.account);
+          }
+
+          core.siteSession.setCredentials(this.settings.account, this.password);
+
+          const data = <
+            {
+              ticket?: string;
+              error: string;
+              characters: { [key: string]: number };
+              default_character: number;
+            }
+          >(
+            await Axios.post(
+              'https://www.f-list.net/json/getApiTicket.php',
+              new URLSearchParams({
+                account: this.settings.account,
+                password: this.password,
+                no_friends: 'true',
+                no_bookmarks: 'true',
+                new_character_list: 'true'
+              }).toString()
+            )
+          ).data;
+          if (data.error !== '') {
+            this.error = data.error;
+            return;
+          }
+          if (this.saveLogin) {
+            electron.ipcRenderer.send(
+              'save-login',
+              this.settings.account,
+              this.settings.host,
+              this.settings.proxy
+            );
+            await keyStore.setPassword(
+              'f-list.net',
+              this.settings.account,
+              this.password
+            );
+          }
+          Socket.host = this.settings.host;
+
+          core.connection.onEvent('connecting', async () => {
+            if (
+              !electron.ipcRenderer.sendSync(
+                'connect',
+                core.connection.character
+              ) &&
+              import.meta.env.PROD
+            ) {
+              core.notifications.alert(l('login.alreadyLoggedIn'));
+              return core.connection.close();
+            }
+            electron.ipcRenderer.send(
+              'tab-connected',
+              core.connection.character
+            );
+            this.character = core.connection.character;
+            if (
+              (await core.settingsStore.get('settings')) === undefined &&
+              SlimcatImporter.canImportCharacter(core.connection.character)
+            ) {
+              if (!confirm(l('importer.importGeneral')))
+                return core.settingsStore.set('settings', new Settings());
+              (this.$refs['importModal'] as InstanceType<typeof Modal>).show(
+                true
+              );
+              await SlimcatImporter.importCharacter(
+                core.connection.character,
+                progress => (this.importProgress = progress)
+              );
+              (this.$refs['importModal'] as InstanceType<typeof Modal>).hide();
+            }
+          });
+          core.connection.onEvent('connected', () => {
+            core.watch(
+              () => core.conversations.hasNew,
+              newValue => electron.ipcRenderer.send('tab-has-new', newValue)
+            );
+
+            EventBus.$on('word-definition', (data: any) => {
+              this.wordDefinitionLookup = data.lookupWord;
+
+              if (data.lookupWord) {
+                (
+                  this.$refs.wordDefinitionViewer as InstanceType<typeof Modal>
+                ).show();
+              }
+            });
+          });
+          core.connection.onEvent('closed', () => {
+            if (this.character === undefined) return;
+            electron.ipcRenderer.send('disconnect', this.character);
+            this.character = undefined;
+            electron.ipcRenderer.send('tab-disconnected');
+          });
+          core.connection.setCredentials(this.settings.account, this.password);
+          this.characters = Object.keys(data.characters)
+            .map(name => ({ name, id: data.characters[name], deleted: false }))
+            .sort((x, y) => x.name.localeCompare(y.name));
+          this.defaultCharacter = data.default_character;
+        } catch (e) {
+          this.error = l('login.error');
+          log.error('connect.error', e);
+          if (import.meta.env.DEV) throw e;
+        } finally {
+          this.loggingIn = false;
+        }
+      },
+      async fixLogs(): Promise<void> {
+        if (!electron.ipcRenderer.sendSync('connect', this.fixCharacter))
+          return core.notifications.alert(l('login.alreadyLoggedIn'));
+        try {
+          await fixLogs(this.fixCharacter);
+          core.notifications.alert(l('fixLogs.success'));
+        } catch (e) {
+          core.notifications.alert(l('fixLogs.error'));
+          throw e;
+        } finally {
+          electron.ipcRenderer.send('disconnect', this.fixCharacter);
+        }
+      },
+      resetHost(): void {
+        this.settings.host = defaultHost;
+        this.hostChanged = false;
+      },
+      resetProxy(): void {
+        this.settings.proxy = '';
+      },
+      onAutoLoginChange(): void {
+        // Only allow auto-login if saveLogin is enabled
+        if (!this.saveLogin) {
+          this.autoLogin = false;
+        }
+
+        if (this.settings) this.settings.horizonAutoLogin = this.autoLogin;
+        // send updated general settings to main process
+        electron.ipcRenderer.send('general-settings-update', this.settings);
+      },
+      onMouseOver(e: MouseEvent): void {
+        const preview = <HTMLDivElement>this.$refs.linkPreview;
+        if ((<HTMLElement>e.target).tagName === 'A') {
+          const target = <HTMLAnchorElement>e.target;
+          if (target.hostname !== '') {
+            //tslint:disable-next-line:prefer-template
+            preview.className =
+              'link-preview ' +
+              (e.clientX < window.innerWidth / 2 &&
+              e.clientY > window.innerHeight - 150
+                ? ' right'
+                : '');
+            preview.textContent = target.href;
+            preview.style.display = 'block';
+            return;
+          }
+        }
+        preview.textContent = '';
+        preview.style.display = 'none';
+      },
+      async openProfileInBrowser(): Promise<void> {
+        electron.ipcRenderer.send(
+          'open-url-externally',
+          `https://www.f-list.net/c/${this.profileName}`
+        );
+        //await remote.shell.openExternal(`https://www.f-list.net/c/${this.profileName}`);
+
+        // tslint:disable-next-line: no-any no-unsafe-any
+        (this.$refs.profileViewer as any).hide();
+      },
+      openConversation(): void {
+        //this.
+        // this.profileName
+        const character = core.characters.get(this.profileName);
+        const conversation = core.conversations.getPrivate(character);
+
+        conversation.show();
+
+        // tslint:disable-next-line: no-any no-unsafe-any
+        (this.$refs.profileViewer as any).hide();
+      },
+      isRefreshingProfile(): boolean {
+        const cp = this.$refs.characterPage as InstanceType<
+          typeof CharacterPage
+        >;
+
+        return cp && cp.refreshing;
+      },
+      reloadCharacter(): void {
+        // tslint:disable-next-line: no-any no-unsafe-any
+        (this.$refs.characterPage as any).reload();
+      },
+      getThemeClass(): Record<string, boolean> {
+        try {
+          // Hack!
+          if (getPlatform() === 'win32') {
+            if (core.state.generalSettings?.risingDisableWindowsHighContrast) {
+              document
+                .querySelector('html')
+                ?.classList.add('disableWindowsHighContrast');
+            } else {
+              document
+                .querySelector('html')
+                ?.classList.remove('disableWindowsHighContrast');
+            }
+          }
+
+          return {
+            [`theme-${core.state.settings?.risingCharacterTheme || this.getSyncedTheme()}`]: true,
+            [`${this.getSyncedTheme()}`]: true,
+            colorblindMode: core.state.settings?.risingColorblindMode || false,
+            vanillaTextColors: this.settings.horizonVanillaTextColors,
+            vanillaGenderColors: this.settings.horizonVanillaGenderColors,
+            ['force-reduced-motion']: this.settings.reducedMotion || false,
+            bbcodeGlow: this.settings.horizonBbcodeGlow,
+            disableWindowsHighContrast:
+              this.settings.risingDisableWindowsHighContrast || false
+          };
+        } catch (err) {
+          return {
+            [`theme-${this.getSyncedTheme()}`]: true,
+
+            ['force-reduced-motion']: this.settings.reducedMotion || false,
+            disableWindowsHighContrast:
+              this.settings.risingDisableWindowsHighContrast || false
+          };
+        }
+      },
+      nextProfile(): void {
+        if (!this.nextProfileAvailable()) {
+          return;
+        }
+
+        this.profilePointer++;
+
+        this.openProfile(this.profileNameHistory[this.profilePointer]);
+      },
+      nextProfileAvailable(): boolean {
+        return this.profilePointer < this.profileNameHistory.length - 1;
+      },
+      prevProfile(): void {
+        if (!this.prevProfileAvailable()) {
+          return;
+        }
+
+        this.profilePointer--;
+
+        this.openProfile(this.profileNameHistory[this.profilePointer]);
+      },
+      prevProfileAvailable(): boolean {
+        return this.profilePointer > 0;
+      },
+      openProfile(name: string) {
+        this.profileName = name;
+
+        const character = core.characters.get(name);
+
+        this.profileStatus = character.statusText || '';
+      },
+      getProfileGalleryType(): ProfileViewerGalleryType {
+        return this.settings.profileViewerGalleryType;
+      },
+      animateProfileViewerThumbs(): boolean {
+        return this.settings.profileViewerThumbAnimate;
+      },
+      getActiveThemeName(): string {
+        return (
+          (this.character != undefined &&
+            core.state.settings.risingCharacterTheme) ||
+          this.getSyncedTheme()
+        );
+      },
+      readThemeCss(themeName: string, allowFallback = true): string {
+        const css = <string | null>(
+          electron.ipcRenderer.sendSync('themes-read-sync', themeName)
+        );
+        if (css === null) {
+          if (allowFallback && this.settings.theme !== 'default') {
+            this.settings.theme = 'default';
+            return this.readThemeCss(this.getSyncedTheme(), false);
+          }
+          throw new Error(`Theme not found: ${themeName}`);
+        }
+        return css;
+      },
+      getSyncedTheme() {
+        if (!this.settings.themeSync) return this.settings.theme;
+        return this.osIsDark
+          ? this.settings.themeSyncDark
+          : this.settings.themeSyncLight;
+      },
+      setupThemeHotReload(): void {
+        if (import.meta.env.PROD) return;
+        this.startThemeWatch();
+        this.$watch(
+          () => this.getActiveThemeName(),
+          () => {
+            this.startThemeWatch();
+            this.queueThemeReload();
+          }
+        );
+      },
+      startThemeWatch(): void {
+        if (import.meta.env.PROD) return;
+        this.stopThemeWatch();
+
+        // ~ The themes directory is watched by the main process in dev mode.
+        const themeFile = `${this.getActiveThemeName()}.css`;
+        this.themeWatchListener = (_e, filename) => {
+          if (!filename || filename === themeFile) this.queueThemeReload();
+        };
+        electron.ipcRenderer.on('theme-files-changed', this.themeWatchListener);
+      },
+      queueThemeReload(): void {
+        if (this.themeWatchTimer) clearTimeout(this.themeWatchTimer);
+        this.themeWatchTimer = setTimeout(() => {
+          try {
+            const style = document.getElementById('themeStyle');
+            if (style)
+              style.textContent = this.readThemeCss(
+                this.getActiveThemeName(),
+                false
+              );
+          } catch (err) {
+            log.debug('theme.hotReload.refresh.fail', err);
+          }
+        }, 60);
+      },
+      stopThemeWatch(): void {
+        if (this.themeWatchListener) {
+          electron.ipcRenderer.removeListener(
+            'theme-files-changed',
+            this.themeWatchListener
+          );
+          this.themeWatchListener = undefined;
+        }
+        if (this.themeWatchTimer) {
+          clearTimeout(this.themeWatchTimer);
+          this.themeWatchTimer = undefined;
+        }
+      },
+      showLogs(): void {
+        (this.$refs['logsDialog'] as InstanceType<typeof Logs>).show();
+      },
+      showUiTest(): void {
+        (this.$refs['uiTestDialog'] as InstanceType<typeof UITest>).show();
+      },
+      async openDefinitionWithMerriamWebster(): Promise<void> {
+        (this.$refs.wordDefinitionLookup as any).setMode(
+          DictionaryMode.MerriamWebster
+        );
+      },
+      async openDefinitionWithUrbanDictionary(): Promise<void> {
+        (this.$refs.wordDefinitionLookup as any).setMode(
+          DictionaryMode.UrbanDictionary
+        );
+      },
+      async openDefinitionWithWiktionary(): Promise<void> {
+        (this.$refs.wordDefinitionLookup as any).setMode(
+          DictionaryMode.Wiktionary
+        );
+      },
+      async openWordDefinitionInBrowser(): Promise<void> {
+        electron.ipcRenderer.send(
+          'open-url-externally',
+          (this.$refs.wordDefinitionLookup as any).getWebUrl()
+        );
+        //await remote.shell.openExternal((this.$refs.wordDefinitionLookup as any).getWebUrl());
+
+        // tslint:disable-next-line: no-any no-unsafe-any
+        (this.$refs.wordDefinitionViewer as any).hide();
+      },
+      unpinUrlPreview(e: Event): void {
+        const imagePreview = (this.$refs['chat'] as InstanceType<typeof Chat>)
+          ?.getChatView()
+          ?.getImagePreview();
+
+        // const imagePreview = this.$refs['imagePreview'] as ImagePreview;
+
+        if (imagePreview && imagePreview.isVisible() && imagePreview.sticky) {
+          e.stopPropagation();
+          e.preventDefault();
+
+          EventBus.$emit('imagepreview-toggle-stickyness', { force: true });
+        }
+      },
+      galleryTypeUpdated(profileGalleryType: ProfileViewerGalleryType): void {
+        electron.ipcRenderer.send('profile-gallery-type', profileGalleryType);
+      }
+    }
+  });
+</script>
+
+<style lang="scss">
+  html,
+  body,
+  #page {
+    height: 100%;
+  }
+
+  a[href^='#']:not([draggable]) {
+    -webkit-user-drag: none;
+    -webkit-app-region: no-drag;
+  }
+
+  .profileRefreshSpinner {
+    font-size: 12pt;
+    opacity: 0.5;
+  }
+
+  .profile-viewer {
+    .modal-title {
+      width: 100%;
+      position: relative;
+
+      .profile-title-right {
+        float: right;
+        top: 0px;
+        right: 0;
+        position: absolute;
+        .btn {
+          border: none;
+        }
+      }
+
+      .status-text {
+        font-size: 12pt;
+        display: block;
+        max-height: 3em;
+        overflow: auto;
+      }
+    }
+  }
+
+  .initializer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    backdrop-filter: blur(3px) grayscale(35%);
+
+    &.shouldShow {
+      transition: all 0.25s;
+
+      &.visible {
+        opacity: 1;
+      }
+    }
+
+    &.complete {
+      pointer-events: none !important;
+    }
+
+    i {
+      font-size: 130pt;
+      top: 50%;
+      right: 50%;
+      transform: translate(-50%, -50%);
+      width: fit-content;
+    }
+
+    .title {
+      position: absolute;
+      top: 0;
+      background: rgba(147, 255, 215, 0.6);
+      width: 100%;
+      text-align: center;
+      padding-top: 20px;
+      padding-bottom: 20px;
+      font-weight: bold;
+
+      small {
+        display: block;
+        opacity: 0.8;
+      }
+    }
+  }
+
+  .btn.wordDefBtn {
+    background-color: red;
+    padding: 0.2rem 0.2rem;
+    line-height: 90%;
+    margin-right: 0.2rem;
+    text-align: center;
+
+    i {
+      font-style: normal !important;
+      color: white;
+      font-weight: bold;
+    }
+
+    &.urbandictionary {
+      background-color: #d96a36;
+
+      i {
+        color: #fadf4b;
+        text-transform: lowercase;
+        font-family: monospace;
+      }
+    }
+
+    &.merriam-webster {
+      background-color: #0f3850;
+    }
+
+    &.wiktionary {
+      background-color: #ddd8d8;
+
+      i {
+        color: black;
+        font-family: serif;
+      }
+    }
+  }
+
+  .modal {
+    .word-definition-viewer {
+      max-width: 50rem !important;
+      width: 70% !important;
+      min-width: 22rem !important;
+
+      .modal-content {
+        min-height: 75%;
+      }
+
+      .definition-wrapper {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        margin-left: 20px;
+        margin-right: 20px;
+
+        webview {
+          height: 100%;
+          padding-bottom: 10px;
+        }
+      }
+    }
+  }
+
+  .disableWindowsHighContrast,
+  .disableWindowsHighContrast * {
+    forced-color-adjust: none;
+  }
+</style>

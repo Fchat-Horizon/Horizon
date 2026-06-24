@@ -171,14 +171,14 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1(supports-color@10.0.0)
 
-  apps/desktop:
+  src/electron:
     dependencies:
       '@ghostery/adblocker-electron-preload':
         specifier: ^2.14.1
         version: 2.14.1(electron@40.10.0(supports-color@10.0.0))
       '@horizon/shared':
         specifier: workspace:*
-        version: link:../../packages/shared
+        version: link:../shared
       '@mdit/plugin-alert':
         specifier: ^0.22.2
         version: 0.22.3(markdown-it@14.1.1)
@@ -191,7 +191,7 @@ importers:
     devDependencies:
       '@horizon/themes':
         specifier: workspace:*
-        version: link:../../packages/themes
+        version: link:../themes
       commander:
         specifier: ^14.0.0
         version: 14.0.2
@@ -205,9 +205,9 @@ importers:
         specifier: ^3.3.5
         version: 3.3.5(typescript@5.9.3)
 
-  packages/shared: {}
+  src/shared: {}
 
-  packages/themes:
+  src/themes:
     dependencies:
       '@fortawesome/fontawesome-free':
         specifier: ^7.2.0

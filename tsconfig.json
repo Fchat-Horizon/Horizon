@@ -15,8 +15,8 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "paths": {
-      "@horizon/shared/*": ["./packages/shared/src/*"],
-      "@/*": ["./packages/shared/src/*"]
+      "@horizon/shared/*": ["./src/shared/src/*"],
+      "@/*": ["./src/shared/src/*"]
     }
   },
   "exclude": ["./node_modules/**", "./src/**/node_modules/**"]

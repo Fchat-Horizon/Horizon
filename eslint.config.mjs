@@ -10,10 +10,10 @@ const ignores = [
   '**/dist/**',
   '**/.turbo/**',
   '**/coverage/**',
-  'apps/desktop/app/**',
-  'apps/desktop/build/**',
-  'apps/desktop/release_artifacts/**',
-  'packages/themes/**/*.css',
+  'src/electron/app/**',
+  'src/electron/build/**',
+  'src/electron/release_artifacts/**',
+  'src/themes/**/*.css',
   'webchat/dist/**',
   'reference/**',
   '**/*.bin'
@@ -21,19 +21,17 @@ const ignores = [
 
 // note: main/preload/build tooling run under Node; everything else is the renderer (browser).
 const nodeGlobs = [
-  'apps/desktop/main.ts',
-  'apps/desktop/preload.ts',
-  'apps/desktop/ipc-handlers.ts',
-  'apps/desktop/secure-store.ts',
-  'apps/desktop/browser_windows.ts',
-  'apps/desktop/tab-manager.ts',
-  'apps/desktop/build/**',
+  'src/electron/src/main/main.ts',
+  'src/electron/src/preload/preload.ts',
+  'src/electron/src/main/ipc-handlers.ts',
+  'src/electron/src/renderer/secure-store.ts',
+  'src/electron/src/main/browser_windows.ts',
+  'src/electron/src/main/tab-manager.ts',
+  'src/electron/build/**',
   '**/scripts/**/*.{js,mjs,cjs,ts}',
   '.github/**/*.{js,mjs,cjs}',
   '**/*.config.{js,mjs,cjs}',
-  'apps/desktop/webpack.config.js',
-  'webpack.js',
-  'packages/themes/**/*.js'
+  'src/themes/**/*.js'
 ];
 
 // note: Bare Node built-ins shared/ must not import. Listed as exact `paths`,
@@ -91,7 +89,7 @@ export default [
    * ! interface. This is the regression guard once the leaks are cleaned up.
    */
   {
-    files: ['packages/shared/**/*.{ts,js,vue}'],
+    files: ['src/shared/**/*.{ts,js,vue}'],
     rules: {
       'no-restricted-imports': [
         'error',

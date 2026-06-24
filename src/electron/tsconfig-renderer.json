@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "useDefineForClassFields": false,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "allowJs": true,
+    "noEmitHelpers": true,
+    "importHelpers": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@horizon/shared/*": ["../shared/src/*"],
+      "@/*": ["../shared/src/*"],
+      "@assets/*": ["../shared/assets/*"],
+      "@main/*": ["./src/main/*"],
+      "@renderer/*": ["./src/renderer/*"],
+      "@common/*": ["./src/common/*"],
+      "@services": ["./src/services/index"],
+      "@services/*": ["./src/services/*"],
+      "@build/*": ["./build/*"]
+    }
+  },
+  "include": [
+    "src/renderer/chat.ts",
+    "src/renderer/window.ts",
+    "src/renderer/settings.ts",
+    "src/renderer/changelog.ts",
+    "src/renderer/exporter.ts",
+    "src/renderer/about.ts",
+    "vite-env.d.ts",
+    "../shared/src/**/*.d.ts"
+  ],
+  "exclude": ["../../node_modules"]
+}
