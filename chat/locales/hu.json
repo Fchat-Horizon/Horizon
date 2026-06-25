@@ -905,6 +905,7 @@
   "settings.preview.link": "Előnézetet mutat hivatkozásról / képről, ha a kurzor hivatkozás fölé mozdul",
   "settings.profile": "Profil",
   "settings.profile.autoCompareKinks": "Automatikusan hasonlítsa össze a kinkeket karakterprofil megtekintése közben",
+  "settings.profile.autoFetchGroupChats": "...",
   "settings.profile.autoExpandCustoms": "Személyre szabott kinkek automatikus kitárása",
   "settings.profile.ignoredList": "Mellőzött karakterek",
   "settings.profile.ignoredList.empty": "Jelenleg nem mellőzöl egy felhasználót sem.",

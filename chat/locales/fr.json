@@ -905,6 +905,7 @@
   "settings.preview.link": "Montrer un aperçu de lien/image lorsque la souris passe sur un lien",
   "settings.profile": "Profil",
   "settings.profile.autoCompareKinks": "Comparer les kinks automatiquement quand vous regardez un profil",
+  "settings.profile.autoFetchGroupChats": "...",
   "settings.profile.autoExpandCustoms": "Étendre automatiquement les kinks personnalisés",
   "settings.profile.ignoredList": "Personnages ignorés",
   "settings.profile.ignoredList.empty": "Vous n'ignorez aucun utilisateur actuellement.",

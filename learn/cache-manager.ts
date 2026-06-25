@@ -461,7 +461,9 @@ export class CacheManager {
       message: message.text
     });
 
-    // await this.addProfile(message.sender.name);
+    if (core.state.settings.risingAutoFetchGroupChatProfiles) {
+      await this.addProfile(message.sender.name);
+    }
   }
 
   async onChannelAd(data: ChannelAdEvent): Promise<void> {

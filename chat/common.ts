@@ -112,6 +112,7 @@ export class Settings implements ISettings {
   risingAdScore = true;
   risingLinkPreview = true;
   risingAutoCompareKinks = true;
+  risingAutoFetchGroupChatProfiles = false;
 
   risingAutoExpandCustomKinks = true;
   risingCharacterPreview = true;

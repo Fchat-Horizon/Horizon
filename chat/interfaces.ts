@@ -313,6 +313,7 @@ export namespace Settings {
     readonly risingAdScore: boolean;
     readonly risingLinkPreview: boolean;
     readonly risingAutoCompareKinks: boolean;
+    readonly risingAutoFetchGroupChatProfiles: boolean;
 
     readonly risingAutoExpandCustomKinks: boolean;
     readonly risingCharacterPreview: boolean;

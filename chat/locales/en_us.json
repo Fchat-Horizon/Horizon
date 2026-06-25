@@ -911,6 +911,7 @@
   "settings.preview.link": "Show a link/ image preview when the mouse hovers over a link",
   "settings.profile": "Profile",
   "settings.profile.autoCompareKinks": "Automatically compare kinks when viewing a character profile",
+  "settings.profile.autoFetchGroupChats": "Auto fetch profiles in group chats",
   "settings.profile.autoExpandCustoms": "Automatically expand custom kinks",
   "settings.profile.ignoredList": "Ignored characters",
   "settings.profile.ignoredList.empty": "You aren't currently ignoring any users.",

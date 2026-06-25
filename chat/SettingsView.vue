@@ -840,6 +840,20 @@
           ></settings-checkbox>
         </div>
       </div>
+
+      <div class="mb-3">
+        <div class="d-flex p-2 justify-content-between align-items-start">
+          <div class="w-50">
+            <label class="control-label" for="risingAutoFetchGroupChatProfiles">
+              {{ l('settings.profile.autoFetchGroupChats') }}
+            </label>
+          </div>
+          <settings-checkbox
+            v-model="risingAutoFetchGroupChatProfiles"
+            :name="'risingAutoFetchGroupChatProfiles'"
+          ></settings-checkbox>
+        </div>
+      </div>
       <h5>{{ l('settings.profile.ignoredList') }}</h5>
       <div class="mb-3 p-2">
         <template v-if="ignored.length">
@@ -1216,6 +1230,7 @@
         risingAdScore: undefined as any as boolean,
         risingLinkPreview: undefined as any as boolean,
         risingAutoCompareKinks: undefined as any as boolean,
+        risingAutoFetchGroupChatProfiles: undefined as any as boolean,
 
         risingAutoExpandCustomKinks: undefined as any as boolean,
         risingCharacterPreview: undefined as any as boolean,
@@ -1311,6 +1326,8 @@
         this.risingAdScore = settings.risingAdScore;
         this.risingLinkPreview = settings.risingLinkPreview;
         this.risingAutoCompareKinks = settings.risingAutoCompareKinks;
+        this.risingAutoFetchGroupChatProfiles =
+          settings.risingAutoFetchGroupChatProfiles;
 
         this.risingAutoExpandCustomKinks = settings.risingAutoExpandCustomKinks;
         this.risingCharacterPreview = settings.risingCharacterPreview;
@@ -1458,6 +1475,8 @@
           risingAdScore: this.risingAdScore,
           risingLinkPreview: this.risingLinkPreview,
           risingAutoCompareKinks: this.risingAutoCompareKinks,
+          risingAutoFetchGroupChatProfiles:
+            this.risingAutoFetchGroupChatProfiles,
 
           risingAutoExpandCustomKinks: this.risingAutoExpandCustomKinks,
           risingCharacterPreview: this.risingCharacterPreview,
