@@ -844,13 +844,16 @@
       <div class="mb-3">
         <div class="d-flex p-2 justify-content-between align-items-start">
           <div class="w-50">
-            <label class="control-label" for="risingAutoFetchGroupChatProfiles">
+            <label
+              class="control-label"
+              for="horizonAutoFetchGroupChatProfiles"
+            >
               {{ l('settings.profile.autoFetchGroupChats') }}
             </label>
           </div>
           <settings-checkbox
-            v-model="risingAutoFetchGroupChatProfiles"
-            :name="'risingAutoFetchGroupChatProfiles'"
+            v-model="horizonAutoFetchGroupChatProfiles"
+            :name="'horizonAutoFetchGroupChatProfiles'"
           ></settings-checkbox>
         </div>
       </div>
@@ -1230,7 +1233,7 @@
         risingAdScore: undefined as any as boolean,
         risingLinkPreview: undefined as any as boolean,
         risingAutoCompareKinks: undefined as any as boolean,
-        risingAutoFetchGroupChatProfiles: undefined as any as boolean,
+        horizonAutoFetchGroupChatProfiles: undefined as any as boolean,
 
         risingAutoExpandCustomKinks: undefined as any as boolean,
         risingCharacterPreview: undefined as any as boolean,
@@ -1326,8 +1329,8 @@
         this.risingAdScore = settings.risingAdScore;
         this.risingLinkPreview = settings.risingLinkPreview;
         this.risingAutoCompareKinks = settings.risingAutoCompareKinks;
-        this.risingAutoFetchGroupChatProfiles =
-          settings.risingAutoFetchGroupChatProfiles;
+        this.horizonAutoFetchGroupChatProfiles =
+          settings.horizonAutoFetchGroupChatProfiles;
 
         this.risingAutoExpandCustomKinks = settings.risingAutoExpandCustomKinks;
         this.risingCharacterPreview = settings.risingCharacterPreview;
@@ -1475,8 +1478,8 @@
           risingAdScore: this.risingAdScore,
           risingLinkPreview: this.risingLinkPreview,
           risingAutoCompareKinks: this.risingAutoCompareKinks,
-          risingAutoFetchGroupChatProfiles:
-            this.risingAutoFetchGroupChatProfiles,
+          horizonAutoFetchGroupChatProfiles:
+            this.horizonAutoFetchGroupChatProfiles,
 
           risingAutoExpandCustomKinks: this.risingAutoExpandCustomKinks,
           risingCharacterPreview: this.risingCharacterPreview,

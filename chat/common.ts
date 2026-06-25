@@ -112,8 +112,6 @@ export class Settings implements ISettings {
   risingAdScore = true;
   risingLinkPreview = true;
   risingAutoCompareKinks = true;
-  risingAutoFetchGroupChatProfiles = false;
-
   risingAutoExpandCustomKinks = true;
   risingCharacterPreview = true;
   risingComparisonInUserMenu = true;
@@ -124,6 +122,8 @@ export class Settings implements ISettings {
   risingShowPortraitNearInput = true;
   risingShowPortraitInMessage = true;
   risingShowHighQualityPortraits = true;
+
+  horizonAutoFetchGroupChatProfiles = false;
   horizonMessagePortraitHighQuality: boolean = true;
   horizonShowCustomCharacterColors = true;
   horizonShowDeveloperBadges = true;

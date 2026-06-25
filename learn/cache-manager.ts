@@ -461,7 +461,7 @@ export class CacheManager {
       message: message.text
     });
 
-    if (core.state.settings.risingAutoFetchGroupChatProfiles) {
+    if (core.state.settings.horizonAutoFetchGroupChatProfiles) {
       await this.addProfile(message.sender.name);
     }
   }

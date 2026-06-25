@@ -313,8 +313,6 @@ export namespace Settings {
     readonly risingAdScore: boolean;
     readonly risingLinkPreview: boolean;
     readonly risingAutoCompareKinks: boolean;
-    readonly risingAutoFetchGroupChatProfiles: boolean;
-
     readonly risingAutoExpandCustomKinks: boolean;
     readonly risingCharacterPreview: boolean;
     readonly risingComparisonInUserMenu: boolean;
@@ -325,6 +323,8 @@ export namespace Settings {
     readonly risingShowPortraitNearInput: boolean;
     readonly risingShowPortraitInMessage: boolean;
     readonly risingShowHighQualityPortraits: boolean;
+
+    readonly horizonAutoFetchGroupChatProfiles: boolean;
     readonly horizonMessagePortraitHighQuality: boolean;
     readonly horizonShowCustomCharacterColors: boolean;
     readonly horizonShowDeveloperBadges: boolean;
