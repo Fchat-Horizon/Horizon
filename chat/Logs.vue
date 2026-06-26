@@ -170,6 +170,7 @@
           <message-view
             :message="item"
             :logs="true"
+            :highlight="pendingFilter"
             :previous="index > 0 ? filteredMessages[index - 1] : undefined"
             :selectable="selectionMode"
             :selected="selectedMessages.has(item.id)"
@@ -930,6 +931,17 @@
 
   .message-container {
     position: relative;
+  }
+
+  .logs-filter-highlight {
+    background-color: rgba(var(--bs-warning-rgb, 255, 193, 7), 0.45);
+    border-radius: 2px;
+    padding: 0 1px;
+  }
+
+  // gives highlighted text full contrast for system messages, which are hard to read
+  .message-event .logs-filter-highlight {
+    color: var(--bs-emphasis-color, var(--bs-body-color));
   }
 
   .message-jump-icon {
