@@ -160,7 +160,7 @@
       <template slot-scope="{ item, index, isScrolling }">
         <div v-if="!isScrolling" class="message-container">
           <span
-            v-if="filter.length > 0"
+            v-if="pendingFilter.length > 0"
             class="message-jump-icon"
             @click="jumpToMessage(item.id)"
             title="Jump to this message"
@@ -490,12 +490,14 @@
           clearTimeout(this.filterDebounce);
         this.filterDebounce = setTimeout(() => {
           const wasFiltered = this.pendingFilter.length > 0;
-          this.pendingFilter = this.filter;
+          // ignore whitespace-only searches
+          this.pendingFilter =
+            this.filter.trim().length === 0 ? '' : this.filter;
           const vl = this.$refs['messages'] as InstanceType<
             typeof VirtualList
           > | void;
           if (vl) vl.invalidate();
-          if (this.filter) {
+          if (this.pendingFilter) {
             this.searchMore();
           } else if (wasFiltered) {
             this.$nextTick().then(() => vl?.scrollToBottom());
