@@ -170,7 +170,7 @@
           <message-view
             :message="item"
             :logs="true"
-            :highlight="pendingFilter"
+            :highlight="highlightEnabled ? pendingFilter : ''"
             :previous="index > 0 ? filteredMessages[index - 1] : undefined"
             :selectable="selectionMode"
             :selected="selectedMessages.has(item.id)"
@@ -213,6 +213,15 @@
       <span v-if="searching" class="input-group-text">
         <span class="fas fa-spinner fa-spin"></span>
       </span>
+      <button
+        v-if="pendingFilter.length > 0 && !selectionMode"
+        class="btn btn-outline-secondary"
+        :class="{ active: highlightEnabled }"
+        :title="l('logs.toggleHighlight')"
+        @click="highlightEnabled = !highlightEnabled"
+      >
+        <span class="fas fa-highlighter"></span>
+      </button>
       <template v-if="selectionMode">
         <span class="input-group-text text-muted">
           {{ l('logs.selectedCount', selectedMessages.size) }}
@@ -353,7 +362,8 @@
         filterDebounce: undefined as ReturnType<typeof setTimeout> | undefined,
         nearTopDebounce: undefined as ReturnType<typeof setTimeout> | undefined,
         pendingFilter: '',
-        searching: false
+        searching: false,
+        highlightEnabled: true
       };
     },
     computed: {

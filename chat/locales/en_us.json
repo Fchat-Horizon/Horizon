@@ -551,6 +551,7 @@
   "logs.shareSuccess": "Logs shared successfully.",
   "logs.shareTooLong": "The selected messages are too long to send in a single message. Please select fewer messages.",
   "logs.title": "Logs",
+  "logs.toggleHighlight": "Toggle search highlighting",
   "manageChannel.action": "Manage {0}",
   "manageChannel.description": "Description",
   "manageChannel.isPublic": "Is public (i.e. in the channel list; anyone can join without an invite)",
