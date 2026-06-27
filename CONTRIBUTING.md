@@ -130,6 +130,29 @@ Issues that have not been triaged with a priority yet should be tagged with the 
 
 #### Project Board
 
+We track our project's progress using [GitHub's project boards](https://github.com/orgs/Fchat-Horizon/projects/2/). The priorities given in the [Issue Tracking](#issue-tracking) header are set with the 'Priority' field from this project board, not the one for individual issues. We use the following state columns:
+
+- **Backlog**  
+  The default state. A priority has not been given yet.
+- **Triage**  
+  Issues that have been given a priority-- or at least been looked at, but have not been slotted for a specific upcoming release yet.
+- **Blocks Release**  
+  For when an issue has been added to a release, but it's also _required_ to be resolved before the release can go live. Usually that means they're high priority. Issues tagged with 'Pre-release build' are given this tag, unless they're listed as "Low" priority.
+- **Does Not Block**  
+  Slotted for a release, but work has not been started yet.
+- **In progress**  
+  Work has been started, but it's not yet ready for review or merging. If a pull request is made for an existing issue, it's automatically assigned this state.
+- **Follow Up Before Release**  
+  Work is hopefully finished, but maintainers need to look at the pull request still. If a pull request is set to close one or more issues, and then gets assigned this state, its issues will also be set to this.
+- **~~Ready to Ship~~**  
+  _To get rid of? We're better off letting the integration automatically move them to Done and subsequently archive them._
+- **Done**  
+  Merged into development, will be in the upcoming release.
+
+When a release is done, all of the items under that milestone that are set to 'Done' will be archived. If items are under that milestone that are not marked as 'Done', they are kept in their current column and moved to the next release.
+
+Since the project board(s) group issues and pull request by milestones, all issues that are moved into a state further than 'Triage' should be assigned a release milestone.
+
 #### Pull requests
 
 We always appreciate contributions to our project, and even the fact that you're reading this section means you're cool for considering it.
