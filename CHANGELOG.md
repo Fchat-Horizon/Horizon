@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed issues on MacOS where opening URLs with custom browser path and arguments set would not pass the arguments to the browser executable correctly. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c042f5165ac79527f76a66014f7cb33c52ca4470)
+
+### Development
+
+- Fixed issues where `pnpm watch` would occassionally still try to watch items in the `scss/node_modules` directory, and then exiting as a result. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1e6140c463dd54a2aa5b071b4f8ba446b74bdb95)
+
 ## [2.2.2-beta.1] - 2026-06-23
 
 ### Pre-release fixes and changes
