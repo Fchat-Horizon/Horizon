@@ -1294,6 +1294,7 @@
           img {
             height: 40px;
             width: 40px;
+            object-fit: contain;
             margin: 0;
           }
 
@@ -1349,6 +1350,7 @@
       img {
         height: 40px;
         width: 40px;
+        object-fit: contain;
         margin: -1px 5px -1px -1px;
       }
       &:first-child img,
@@ -1410,6 +1412,7 @@
     img {
       width: 32px;
       height: 32px;
+      object-fit: contain;
       flex-shrink: 0;
     }
 
