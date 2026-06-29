@@ -1,7 +1,5 @@
-import * as remote from '@electron/remote';
-import os from 'os';
-import path from 'path';
 import { ipcRenderer } from 'electron';
+import path from 'path';
 import log from 'electron-log';
 import l from '../../../chat/localize';
 import type { ExporterVm } from '../exporter-vm';
@@ -33,9 +31,11 @@ export async function initializeVanillaImport(vm: ExporterVm): Promise<void> {
  * @returns A promise that resolves when context is refreshed
  */
 export async function refreshVanillaContext(vm: ExporterVm): Promise<void> {
-  const ctx = VanillaImporter.resolveContext(vm.settings.vanillaCustomBaseDir);
-  const chars = ctx ? VanillaImporter.listCharacters(ctx) : [];
-  const canGeneral = ctx && VanillaImporter.canImport(ctx);
+  const ctx = await VanillaImporter.resolveContext(
+    vm.settings.vanillaCustomBaseDir
+  );
+  const chars = ctx ? await VanillaImporter.listCharacters(ctx) : [];
+  const canGeneral = ctx && (await VanillaImporter.canImport(ctx));
 
   Object.assign(vm, {
     vanillaContext: ctx,
@@ -60,7 +60,10 @@ export async function normalizeVanillaBaseDir(vm: ExporterVm): Promise<void> {
   if (vm.vanillaImportInProgress) return;
   let v = vm.settings.vanillaCustomBaseDir?.trim() || '';
   if (v.startsWith('~'))
-    v = path.join(os.homedir(), v.slice(1).replace(/^[/\\]+/, ''));
+    v = path.join(
+      <string>ipcRenderer.sendSync('app-path-sync', 'home'),
+      v.slice(1).replace(/^[/\\]+/, '')
+    );
   vm.settings.vanillaCustomBaseDir = v ? path.normalize(v) : undefined;
   ipcRenderer.send('general-settings-update', vm.settings);
   await refreshVanillaContext(vm);
@@ -74,10 +77,13 @@ export async function normalizeVanillaBaseDir(vm: ExporterVm): Promise<void> {
  */
 export async function chooseVanillaImportDir(vm: ExporterVm): Promise<void> {
   if (vm.vanillaImportInProgress) return;
-  const r = await remote.dialog.showOpenDialog({
-    title: l('settings.import.vanilla.customDirDialogTitle'),
-    properties: ['openDirectory']
-  });
+  const r: Electron.OpenDialogReturnValue = await ipcRenderer.invoke(
+    'dialog-open',
+    {
+      title: l('settings.import.vanilla.customDirDialogTitle'),
+      properties: ['openDirectory']
+    }
+  );
   if (r.canceled || !r.filePaths?.[0]) return;
   vm.settings.vanillaCustomBaseDir = r.filePaths[0];
   await normalizeVanillaBaseDir(vm);
@@ -158,13 +164,17 @@ export async function runVanillaImport(vm: ExporterVm): Promise<void> {
     if (!destDir) throw new Error('No log directory configured');
 
     const selected = getSelectedVanillaCharacters(vm);
-    const summaries = VanillaImporter.importAll(vm.vanillaContext, destDir, {
-      includeLogs: vm.vanillaImportLogs,
-      includeSettings: vm.vanillaImportCharacterSettings,
-      includePinnedEicons: vm.vanillaImportPinnedEicons,
-      overwrite: vm.vanillaImportOverwrite,
-      characters: selected.length > 0 ? selected : undefined
-    });
+    const summaries = await VanillaImporter.importAll(
+      vm.vanillaContext,
+      destDir,
+      {
+        includeLogs: vm.vanillaImportLogs,
+        includeSettings: vm.vanillaImportCharacterSettings,
+        includePinnedEicons: vm.vanillaImportPinnedEicons,
+        overwrite: vm.vanillaImportOverwrite,
+        characters: selected.length > 0 ? selected : undefined
+      }
+    );
 
     let logs = 0,
       logsSkip = 0,
@@ -178,7 +188,7 @@ export async function runVanillaImport(vm: ExporterVm): Promise<void> {
     });
 
     if (vm.vanillaImportGeneral) {
-      const imported = VanillaImporter.importGeneralSettings(
+      const imported = await VanillaImporter.importGeneralSettings(
         vm.vanillaContext,
         destDir
       );

@@ -1,36 +1,23 @@
-import * as remote from '@electron/remote';
-import * as fs from 'fs';
-import * as path from 'path';
-import { promisify } from 'util';
+/**
+ * @module filesystem
+ * Renderer-side access to chat logs, per-character settings, and drafts.
+ *
+ * * All file IO lives in the main process (electron/filesystem-host.ts);
+ * * this module proxies over IPC and only reattaches live character objects
+ * * to the plain records that come back.
+ */
+
+import { ipcRenderer } from 'electron';
 import { Message as MessageImpl } from '../chat/common';
 import core from '../chat/core';
-import {
-  Character,
-  Conversation,
-  Logs as Logging,
-  Settings
-} from '../chat/interfaces';
+import { Conversation, Logs as Logging, Settings } from '../chat/interfaces';
 import l from '../chat/localize';
 import { GeneralSettings } from './common';
+import type { PlainLogMessage } from './log-format';
 
 declare module '../chat/interfaces' {
   interface State {
     generalSettings?: GeneralSettings;
-  }
-}
-
-const dayMs = 86400000;
-const read = promisify(fs.read);
-
-function writeFile(
-  p: fs.PathLike | number,
-  data: string | NodeJS.ArrayBufferView,
-  options?: fs.WriteFileOptions
-): void {
-  try {
-    fs.writeFileSync(p, data, options);
-  } catch (e) {
-    remote.dialog.showErrorBox(l('fs.error'), (<Error>e).message);
   }
 }
 
@@ -44,278 +31,62 @@ export type Message =
       readonly type: Conversation.Message.Type;
     };
 
-interface IndexItem {
-  index: { [key: number]: number | undefined };
-  name: string;
-  offsets: number[];
-}
-
-interface Index {
-  [key: string]: IndexItem | undefined;
-}
-
-export function getLogDir(this: void, character: string): string {
-  const dir = path.join(
-    core.state.generalSettings!.logDirectory,
-    character,
-    'logs'
-  );
-  fs.mkdirSync(dir, { recursive: true });
-  return dir;
-}
-
-function getLogFile(this: void, character: string, key: string): string {
-  return path.join(getLogDir(character), key);
-}
-
-/**
- * Gets the file path for saved draft messages.
- * @function
- * @param {string} character
- * The name of the logged-in character the user is using.
- */
-function getDraftFile(character: string): string {
-  return path.join(
-    core.state.generalSettings!.logDirectory,
-    character,
-    'drafts.txt'
+function toMessage(plain: PlainLogMessage): Conversation.Message {
+  return new MessageImpl(
+    <Conversation.Message.Type>plain.type,
+    core.characters.get(plain.sender),
+    plain.text,
+    new Date(plain.time)
   );
 }
 
-export function checkIndex(
-  this: void,
-  index: Index,
-  message: Message,
-  key: string,
-  name: string,
-  size: number | (() => number)
-): Buffer | undefined {
-  const date = Math.floor(
-    message.time.getTime() / dayMs - message.time.getTimezoneOffset() / 1440
-  );
-  let buffer: Buffer,
-    offset = 0;
-  let item = index[key];
-  if (item !== undefined) {
-    if (item.index[date] !== undefined) return;
-    buffer = Buffer.allocUnsafe(7);
-  } else {
-    index[key] = item = { name, index: {}, offsets: [] };
-    const nameLength = Buffer.byteLength(name);
-    buffer = Buffer.allocUnsafe(nameLength + 8);
-    buffer.writeUInt8(nameLength, 0);
-    buffer.write(name, 1);
-    offset = nameLength + 1;
-  }
-  const newValue = typeof size === 'function' ? size() : size;
-  item.index[date] = item.offsets.length;
-  item.offsets.push(newValue);
-  buffer.writeUInt16LE(date, offset);
-  buffer.writeUIntLE(newValue, offset + 2, 5);
-  return buffer;
+function alertCorruption(e: unknown): void {
+  console.error(e);
+  core.notifications.alert(l('logs.corruption.desktop'));
 }
 
-export function serializeMessage(message: Message): {
-  serialized: Buffer;
-  size: number;
-} {
-  const name =
-    message.type !== Conversation.Message.Type.Event ? message.sender.name : '';
-  const senderLength = Buffer.byteLength(name);
-  const messageLength = Buffer.byteLength(message.text);
-  const buffer = Buffer.allocUnsafe(senderLength + messageLength + 10);
-  buffer.writeUInt32LE(message.time.getTime() / 1000, 0);
-  buffer.writeUInt8(message.type, 4);
-  buffer.writeUInt8(senderLength, 5);
-  buffer.write(name, 6);
-  let offset = senderLength + 6;
-  buffer.writeUInt16LE(messageLength, offset);
-  buffer.write(message.text, (offset += 2));
-  buffer.writeUInt16LE((offset += messageLength), offset);
-  return { serialized: buffer, size: offset + 2 };
-}
-
-function deserializeMessage(
-  buffer: Buffer,
-  offset: number = 0,
-  characterGetter: (name: string) => Character = name =>
-    core.characters.get(name)
-): { size: number; message: Conversation.Message } {
-  const time = buffer.readUInt32LE(offset);
-  const type = buffer.readUInt8((offset += 4));
-  const senderLength = buffer.readUInt8((offset += 1));
-  const sender = buffer.toString(
-    'utf8',
-    (offset += 1),
-    (offset += senderLength)
-  );
-  const messageLength = buffer.readUInt16LE(offset);
-  const text = buffer.toString('utf8', (offset += 2), offset + messageLength);
-  const message = new MessageImpl(
-    type,
-    characterGetter(sender),
-    text,
-    new Date(time * 1000)
-  );
-  return { message, size: senderLength + messageLength + 10 };
-}
-
-export function fixLogs(character: string): void {
-  const dir = getLogDir(character);
-  const files = fs.readdirSync(dir);
-  const buffer = Buffer.allocUnsafe(50100);
-  for (const file of files) {
-    const full = path.join(dir, file);
-    if (file.substr(-4) === '.idx') {
-      if (!fs.existsSync(full.slice(0, -4))) fs.unlinkSync(full);
-      continue;
-    }
-    const fd = fs.openSync(full, 'r+');
-    const indexPath = path.join(dir, `${file}.idx`);
-    if (!fs.existsSync(indexPath)) {
-      const nameBuffer = Buffer.allocUnsafe(file.length + 1);
-      nameBuffer.writeUInt8(file.length, 0);
-      nameBuffer.write(file, 1);
-      fs.writeFileSync(indexPath, nameBuffer);
-    }
-    const indexFd = fs.openSync(indexPath, 'r+');
-    fs.readSync(indexFd, buffer, 0, 1, 0);
-    let pos = 0,
-      lastDay = 0;
-    const nameEnd = buffer.readUInt8(0) + 1;
-    fs.ftruncateSync(indexFd, nameEnd);
-    fs.readSync(indexFd, buffer, 0, nameEnd, null); //tslint:disable-line:no-null-keyword
-    const size = fs.fstatSync(fd).size;
-    try {
-      while (pos < size) {
-        buffer.fill(-1);
-        fs.readSync(fd, buffer, 0, 50100, pos);
-        const deserialized = deserializeMessage(buffer, 0, name => ({
-          gender: 'None',
-          status: 'online',
-          statusText: '',
-          isFriend: false,
-          isBookmarked: false,
-          isCharacterFriend: false,
-          isChatOp: false,
-          isIgnored: false,
-          name,
-          overrides: {},
-          hasStatusTextChanged: () => false
-        }));
-        const time = deserialized.message.time;
-        const day = Math.floor(
-          time.getTime() / dayMs - time.getTimezoneOffset() / 1440
-        );
-        if (day > lastDay) {
-          buffer.writeUInt16LE(day, 0);
-          buffer.writeUIntLE(pos, 2, 5);
-          fs.writeSync(indexFd, buffer, 0, 7);
-          lastDay = day;
-        }
-        if (
-          buffer.readUInt16LE(deserialized.size - 2) !==
-          deserialized.size - 2
-        )
-          throw new Error();
-        pos += deserialized.size;
-      }
-    } catch {
-      fs.ftruncateSync(fd, pos);
-    } finally {
-      fs.closeSync(fd);
-      fs.closeSync(indexFd);
-    }
-  }
-}
-
-function loadIndex(name: string): Index {
-  const index: Index = {};
-  const dir = getLogDir(name);
-  const files = fs.readdirSync(dir);
-  for (const file of files)
-    if (file.substr(-4) === '.idx')
-      try {
-        const content = fs.readFileSync(path.join(dir, file));
-        let offset = content.readUInt8(0) + 1;
-        const item: IndexItem = {
-          name: content.toString('utf8', 1, offset),
-          index: {},
-          offsets: new Array(content.length - offset)
-        };
-        for (; offset < content.length; offset += 7) {
-          const key = content.readUInt16LE(offset);
-          item.index[key] = item.offsets.length;
-          item.offsets.push(content.readUIntLE(offset + 2, 5));
-        }
-        index[file.slice(0, -4).toLowerCase()] = item;
-      } catch (e) {
-        console.error(e);
-        core.notifications.alert(l('logs.corruption.desktop'));
-      }
-  return index;
+export async function fixLogs(character: string): Promise<void> {
+  await ipcRenderer.invoke('logs-fix', character);
 }
 
 export class Logs implements Logging {
   canZip = true;
-  private index: Index = {};
-  private loadedIndex?: Index;
-  private loadedCharacter?: string;
 
   constructor() {
-    core.connection.onEvent('connecting', () => {
-      this.index = loadIndex(core.connection.character);
+    core.connection.onEvent('connecting', async () => {
+      const hadErrors = <boolean>(
+        await ipcRenderer.invoke('logs-init', core.connection.character)
+      );
+      if (hadErrors) core.notifications.alert(l('logs.corruption.desktop'));
     });
   }
 
   async getBacklog(
     conversation: Conversation
   ): Promise<ReadonlyArray<Conversation.Message>> {
-    const file = getLogFile(core.connection.character, conversation.key);
-    if (!fs.existsSync(file)) return [];
-    let count = 20;
-    let messages = new Array<Conversation.Message>(count);
-    const fd = fs.openSync(file, 'r');
     try {
-      let pos = fs.fstatSync(fd).size;
-      const buffer = Buffer.allocUnsafe(65536);
-      while (pos > 0 && count > 0) {
-        fs.readSync(fd, buffer, 0, 2, pos - 2);
-        const length = buffer.readUInt16LE(0);
-        pos = pos - length - 2;
-        fs.readSync(fd, buffer, 0, length, pos);
-        messages[--count] = deserializeMessage(buffer).message;
-      }
-      if (count !== 0) messages = messages.slice(count);
-      return messages;
+      const plain = <PlainLogMessage[]>(
+        await ipcRenderer.invoke(
+          'logs-get-backlog',
+          core.connection.character,
+          conversation.key
+        )
+      );
+      return plain.map(toMessage);
     } catch (e) {
-      console.error(e);
-      core.notifications.alert(l('logs.corruption.desktop'));
+      alertCorruption(e);
       return [];
-    } finally {
-      fs.closeSync(fd);
     }
-  }
-
-  private getIndex(name: string): Index {
-    if (this.loadedCharacter === name) return this.loadedIndex!;
-    this.loadedCharacter = name;
-    return (this.loadedIndex =
-      name === core.connection.character ? this.index : loadIndex(name));
   }
 
   async getLogDates(
     character: string,
     key: string
   ): Promise<ReadonlyArray<Date>> {
-    const entry = this.getIndex(character)[key];
-    if (entry === undefined) return [];
-    const dates = [];
-    for (const item in entry.index) {
-      const date = new Date(parseInt(item, 10) * dayMs);
-      dates.push(new Date(date.getTime() + date.getTimezoneOffset() * 60000));
-    }
-    return dates;
+    const dates = <number[]>(
+      await ipcRenderer.invoke('logs-get-log-dates', character, key)
+    );
+    return dates.map(time => new Date(time));
   }
 
   async getLogs(
@@ -323,37 +94,19 @@ export class Logs implements Logging {
     key: string,
     date: Date
   ): Promise<ReadonlyArray<Conversation.Message>> {
-    const index = this.getIndex(character)[key];
-    if (index === undefined) return [];
-    const dateOffset =
-      index.index[
-        Math.floor(date.getTime() / dayMs - date.getTimezoneOffset() / 1440)
-      ];
-    if (dateOffset === undefined) return [];
-    const messages: Conversation.Message[] = [];
-    const pos = index.offsets[dateOffset];
-    const fd = fs.openSync(getLogFile(character, key), 'r');
     try {
-      const end =
-        dateOffset + 1 < index.offsets.length
-          ? index.offsets[dateOffset + 1]
-          : fs.fstatSync(fd).size;
-      const length = end - pos;
-      const buffer = Buffer.allocUnsafe(length);
-      await read(fd, buffer, 0, length, pos);
-      let offset = 0;
-      while (offset < length) {
-        const deserialized = deserializeMessage(buffer, offset);
-        messages.push(deserialized.message);
-        offset += deserialized.size;
-      }
-      return messages;
+      const plain = <PlainLogMessage[]>(
+        await ipcRenderer.invoke(
+          'logs-get-logs',
+          character,
+          key,
+          date.getTime()
+        )
+      );
+      return plain.map(toMessage);
     } catch (e) {
-      console.error(e);
-      core.notifications.alert(l('logs.corruption.desktop'));
+      alertCorruption(e);
       return [];
-    } finally {
-      fs.closeSync(fd);
     }
   }
 
@@ -361,63 +114,45 @@ export class Logs implements Logging {
     conversation: { key: string; name: string },
     message: Message
   ): void {
-    const file = getLogFile(core.connection.character, conversation.key);
-    const buffer = serializeMessage(message).serialized;
-    const hasIndex = this.index[conversation.key] !== undefined;
-    const indexBuffer = checkIndex(
-      this.index,
-      message,
-      conversation.key,
-      conversation.name,
-      () => (fs.existsSync(file) ? fs.statSync(file).size : 0)
+    const plain: PlainLogMessage = {
+      type: message.type,
+      sender:
+        message.type !== Conversation.Message.Type.Event
+          ? message.sender.name
+          : '',
+      text: message.text,
+      time: message.time.getTime()
+    };
+    ipcRenderer.send(
+      'logs-log-message',
+      core.connection.character,
+      { key: conversation.key, name: conversation.name },
+      plain
     );
-    if (indexBuffer !== undefined)
-      writeFile(`${file}.idx`, indexBuffer, { flag: hasIndex ? 'a' : 'wx' });
-    writeFile(file, buffer, { flag: 'a' });
   }
 
   async getConversations(
     character: string
   ): Promise<ReadonlyArray<{ key: string; name: string }>> {
-    const index = this.getIndex(character);
-    const conversations: { key: string; name: string }[] = [];
-    for (const key in index)
-      conversations.push({ key, name: index[key]!.name });
-    return conversations;
+    return ipcRenderer.invoke('logs-get-conversations', character);
   }
 
   async getAvailableCharacters(): Promise<ReadonlyArray<string>> {
-    const baseDir = core.state.generalSettings!.logDirectory;
-    fs.mkdirSync(baseDir, { recursive: true });
-    return fs
-      .readdirSync(baseDir)
-      .filter(x => fs.statSync(path.join(baseDir, x)).isDirectory());
+    return ipcRenderer.invoke('logs-get-available-characters');
   }
-}
-
-function getSettingsDir(character: string = core.connection.character): string {
-  const dir = path.join(
-    core.state.generalSettings!.logDirectory,
-    character,
-    'settings'
-  );
-  fs.mkdirSync(dir, { recursive: true });
-  return dir;
 }
 
 export class SettingsStore implements Settings.Store {
   async get<K extends keyof Settings.Keys>(
     key: K,
-    character?: string
+    character: string = core.connection.character
   ): Promise<Settings.Keys[K] | undefined> {
     try {
-      const file = path.join(getSettingsDir(character), key);
-
-      if (!fs.existsSync(file)) {
-        return undefined;
-      }
-
-      return <Settings.Keys[K]>JSON.parse(fs.readFileSync(file, 'utf8'));
+      const raw = <string | undefined>(
+        await ipcRenderer.invoke('settings-get', character, key)
+      );
+      if (raw === undefined) return undefined;
+      return <Settings.Keys[K]>JSON.parse(raw);
     } catch (e) {
       console.error('READ KEY FAILURE', e, key, character);
       return undefined;
@@ -425,56 +160,47 @@ export class SettingsStore implements Settings.Store {
   }
 
   async getAvailableCharacters(): Promise<ReadonlyArray<string>> {
-    const baseDir = core.state.generalSettings!.logDirectory;
-    return fs
-      .readdirSync(baseDir)
-      .filter(x => fs.statSync(path.join(baseDir, x)).isDirectory());
+    return ipcRenderer.invoke('logs-get-available-characters');
   }
 
-  //tslint:disable-next-line:no-async-without-await
   async set<K extends keyof Settings.Keys>(
     key: K,
     value: Settings.Keys[K]
   ): Promise<void> {
-    writeFile(path.join(getSettingsDir(), key), JSON.stringify(value));
+    await ipcRenderer.invoke(
+      'settings-set',
+      core.connection.character,
+      key,
+      JSON.stringify(value)
+    );
   }
 }
 
 /**
- * Directly fetch the previously saved drafts from disk and return the resulting object to the cache.
- * @function
+ * Directly fetch the previously saved drafts from disk and return the
+ * resulting object to the cache. Synchronous because the draft cache loads
+ * it inline during connect; the file is small.
  * @internal
  */
 export function getDrafts(): any {
-  const file = getDraftFile(core.connection.character);
-  if (!fs.existsSync(file)) return null;
-
-  // This is a simple JSON parse in this case, we're much less worried about corruption or serialization issues for drafts.
-  // The file should be quite small, so a full load should be very safe. Potential edge case is where a user maintains thousands of
-  // drafts for some reason, but that could be rectified with some kind of limit or user-controlled setting.
-  const fd = fs.readFileSync(file, 'utf8');
+  const raw = <string | null>(
+    ipcRenderer.sendSync('drafts-get-sync', core.connection.character)
+  );
+  //tslint:disable-next-line:no-null-keyword
+  if (raw === null) return null;
   try {
-    const drafts = JSON.parse(fd);
-    return drafts;
+    return JSON.parse(raw);
   } catch (e) {
-    console.error(`Error encountered when parsing drafts from ${file}: ${e}`);
-    return null;
+    console.error(`Error encountered when parsing drafts: ${e}`);
+    return null; //tslint:disable-line:no-null-keyword
   }
 }
 
-//tslint:disable-next-line:no-async-without-await
-/**
- * Directly fetch the draft file location (located in the log folder for the character) and fully overwrite it with the new cache data.
- * @function
- * @param drafts
- * The full conversation cache object, to be dumped as raw JSON.
- * @internal
- */
+/** Persists the conversation draft cache as raw JSON. @internal */
 export async function saveDrafts(drafts: any): Promise<void> {
-  const file = getDraftFile(core.connection.character);
-
-  // Note: this is actually a wrapper around fs.writeFileSync, NOT the async method. If we get blocked loop, suspect this line.
-  // This function is cargo-culted from SettingsStore at the moment to maintain uniform behavior. TBH we're likely not
-  // concerned with any data loss here, consider async to prevent random freezes if the application locks up during normal use.
-  writeFile(file, JSON.stringify(drafts));
+  ipcRenderer.send(
+    'drafts-set',
+    core.connection.character,
+    JSON.stringify(drafts)
+  );
 }

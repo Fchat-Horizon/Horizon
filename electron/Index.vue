@@ -312,11 +312,8 @@
 <script lang="ts">
   import Axios from 'axios';
   import * as electron from 'electron';
-  import * as remote from '@electron/remote';
-  import settings from 'electron-settings';
+  import { IpcKeyValueStore } from './ipc-store';
   import log from 'electron-log'; //tslint:disable-line:match-default-export-name
-  import * as fs from 'fs';
-  import * as path from 'path';
   import * as qs from 'querystring';
   import Vue from 'vue';
   import Chat from '../chat/Chat.vue';
@@ -358,24 +355,6 @@
   //   }
   // });
 
-  const webContents = remote.getCurrentWebContents();
-  const parent = remote.getCurrentWindow().webContents;
-
-  // Allow requests to imgur.com
-  const session = remote.session;
-
-  /* tslint:disable:no-unsafe-any no-any no-unnecessary-type-assertion */
-  session!.defaultSession!.webRequest!.onBeforeSendHeaders(
-    {
-      urls: ['*://api.imgur.com/*', '*://i.imgur.com/*']
-    },
-    (details: any, callback: any) => {
-      details.requestHeaders['Origin'] = null;
-      details.headers['Origin'] = null;
-
-      callback({ requestHeaders: details.requestHeaders });
-    }
-  );
   // log.info('init.chat.keytar.load.start');
   //
   /* tslint:disable: no-any no-unsafe-any */ //because this is hacky
@@ -392,8 +371,10 @@
   //   }
   // >('keytar/build/Release/keytar.node');
 
-  settings.configure({ electron: remote as any });
-  const keyStore = new SecureStore('fchat-rising-accounts', remote, settings);
+  const keyStore = new SecureStore(
+    'fchat-rising-accounts',
+    new IpcKeyValueStore()
+  );
 
   // const keyStore = import('keytar');
   //
@@ -429,7 +410,9 @@
         defaultCharacter: undefined as number | undefined,
         l: l,
         settings: undefined as any as GeneralSettings,
-        osIsDark: remote.nativeTheme.shouldUseDarkColors as boolean,
+        osIsDark: electron.ipcRenderer.sendSync(
+          'native-theme-dark-sync'
+        ) as boolean,
         hasCompletedUpgrades: undefined as any as boolean,
         importProgress: 0,
         profileName: '',
@@ -442,7 +425,9 @@
         profileNameHistory: [] as string[],
         profilePointer: 0,
         isDevMode: (process.env.NODE_ENV !== 'production') as boolean,
-        themeWatchHandle: undefined as fs.FSWatcher | undefined,
+        themeWatchListener: undefined as
+          | ((e: Electron.IpcRendererEvent, filename: string) => void)
+          | undefined,
         themeWatchTimer: undefined as NodeJS.Timeout | undefined,
         toasts: toasts,
         dismissToast: dismissToast,
@@ -535,7 +520,7 @@
       log.debug('init.chat.keystore.get.done');
 
       Vue.set(core.state, 'generalSettings', this.settings);
-      webContents.setZoomLevel(this.settings.zoomLevel);
+      electron.webFrame.setZoomLevel(this.settings.zoomLevel);
 
       electron.ipcRenderer.on(
         'settings',
@@ -616,22 +601,25 @@
       });
 
       electron.ipcRenderer.on('update-zoom', (_e, zoomLevel) => {
-        webContents.setZoomLevel(zoomLevel);
+        electron.webFrame.setZoomLevel(zoomLevel);
         // log.info('INDEXVUE ZOOM UPDATE', zoomLevel);
       });
 
       electron.ipcRenderer.on('active-tab', () => {
         core.cache.setTabActive(true);
-        webContents.setZoomLevel(this.settings.zoomLevel);
+        electron.webFrame.setZoomLevel(this.settings.zoomLevel);
       });
 
       electron.ipcRenderer.on('inactive-tab', () => {
         core.cache.setTabActive(false);
       });
 
-      remote.nativeTheme.on('updated', () => {
-        this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
-      });
+      electron.ipcRenderer.on(
+        'native-theme-updated',
+        (_e: Electron.IpcRendererEvent, isDark: boolean) => {
+          this.osIsDark = isDark;
+        }
+      );
 
       log.debug('init.chat.listeners.done');
 
@@ -678,7 +666,7 @@
 
         clearTimeout(timer);
 
-        parent.send('rising-upgrade-complete');
+        // & Main rebroadcasts this to every webContents, ours included.
         electron.ipcRenderer.send('rising-upgrade-complete');
 
         this.hasCompletedUpgrades = true;
@@ -690,9 +678,7 @@
         // set proxy inside from the advanced option
         if (!!this.settings.proxy) {
           try {
-            // Get the current BrowserWindow's session
-            const currentWindow = remote.getCurrentWindow();
-            await currentWindow.webContents.session.setProxy({
+            await electron.ipcRenderer.invoke('session-set-proxy', {
               proxyRules: this.settings.proxy, // Update dynamically if needed,
               proxyBypassRules: 'localhost,127.0.0.1',
               mode: 'fixed_servers'
@@ -705,8 +691,7 @@
         } else {
           // deactivate the proxy
           try {
-            const currentWindow = remote.getCurrentWindow();
-            await currentWindow.webContents.session.setProxy({
+            await electron.ipcRenderer.invoke('session-set-proxy', {
               mode: 'direct'
             });
           } catch (_) {
@@ -770,7 +755,10 @@
               core.notifications.alert(l('login.alreadyLoggedIn'));
               return core.connection.close();
             }
-            parent.send('connect', webContents.id, core.connection.character);
+            electron.ipcRenderer.send(
+              'tab-connected',
+              core.connection.character
+            );
             this.character = core.connection.character;
             if (
               (await core.settingsStore.get('settings')) === undefined &&
@@ -791,7 +779,7 @@
           core.connection.onEvent('connected', () => {
             core.watch(
               () => core.conversations.hasNew,
-              newValue => parent.send('has-new', webContents.id, newValue)
+              newValue => electron.ipcRenderer.send('tab-has-new', newValue)
             );
 
             EventBus.$on('word-definition', (data: any) => {
@@ -808,7 +796,7 @@
             if (this.character === undefined) return;
             electron.ipcRenderer.send('disconnect', this.character);
             this.character = undefined;
-            parent.send('disconnect', webContents.id);
+            electron.ipcRenderer.send('tab-disconnected');
           });
           core.connection.setCredentials(this.settings.account, this.password);
           this.characters = Object.keys(data.characters)
@@ -823,11 +811,11 @@
           this.loggingIn = false;
         }
       },
-      fixLogs(): void {
+      async fixLogs(): Promise<void> {
         if (!electron.ipcRenderer.sendSync('connect', this.fixCharacter))
           return core.notifications.alert(l('login.alreadyLoggedIn'));
         try {
-          fixLogs(this.fixCharacter);
+          await fixLogs(this.fixCharacter);
           core.notifications.alert(l('fixLogs.success'));
         } catch (e) {
           core.notifications.alert(l('fixLogs.error'));
@@ -988,25 +976,17 @@
         );
       },
       readThemeCss(themeName: string, allowFallback = true): string {
-        try {
-          return fs
-            .readFileSync(
-              path.join(__dirname, `themes/${themeName}.css`),
-              'utf8'
-            )
-            .toString();
-        } catch (e) {
-          const error = e as Error & { code?: string };
-          if (
-            error.code === 'ENOENT' &&
-            allowFallback &&
-            this.settings.theme !== 'default'
-          ) {
+        const css = <string | null>(
+          electron.ipcRenderer.sendSync('themes-read-sync', themeName)
+        );
+        if (css === null) {
+          if (allowFallback && this.settings.theme !== 'default') {
             this.settings.theme = 'default';
             return this.readThemeCss(this.getSyncedTheme(), false);
           }
-          throw e;
+          throw new Error(`Theme not found: ${themeName}`);
         }
+        return css;
       },
       getSyncedTheme() {
         if (!this.settings.themeSync) return this.settings.theme;
@@ -1029,28 +1009,12 @@
         if (process.env.NODE_ENV === 'production') return;
         this.stopThemeWatch();
 
+        // ~ The themes directory is watched by the main process in dev mode.
         const themeFile = `${this.getActiveThemeName()}.css`;
-        const themesDir = path.join(__dirname, 'themes');
-        try {
-          this.themeWatchHandle = fs.watch(
-            themesDir,
-            { persistent: false },
-            (_event, filename) => {
-              if (!filename) {
-                this.queueThemeReload();
-                return;
-              }
-              const changed = path.basename(filename.toString());
-              if (changed === themeFile) this.queueThemeReload();
-            }
-          );
-          this.themeWatchHandle.on('error', err => {
-            log.debug('theme.hotReload.watch.error', err);
-            this.stopThemeWatch();
-          });
-        } catch (err) {
-          log.debug('theme.hotReload.watch.fail', err);
-        }
+        this.themeWatchListener = (_e, filename) => {
+          if (!filename || filename === themeFile) this.queueThemeReload();
+        };
+        electron.ipcRenderer.on('theme-files-changed', this.themeWatchListener);
       },
       queueThemeReload(): void {
         if (this.themeWatchTimer) clearTimeout(this.themeWatchTimer);
@@ -1068,9 +1032,12 @@
         }, 60);
       },
       stopThemeWatch(): void {
-        if (this.themeWatchHandle) {
-          this.themeWatchHandle.close();
-          this.themeWatchHandle = undefined;
+        if (this.themeWatchListener) {
+          electron.ipcRenderer.removeListener(
+            'theme-files-changed',
+            this.themeWatchListener
+          );
+          this.themeWatchListener = undefined;
         }
         if (this.themeWatchTimer) {
           clearTimeout(this.themeWatchTimer);

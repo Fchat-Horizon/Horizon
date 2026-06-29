@@ -35,30 +35,24 @@
             <div class="about-container d-flex flex-column align-items-center">
               <div class="image-container">
                 <div class="image-bg"></div>
-                <img
-                  class="about-logo"
-                  :src="logoSrc"
-                  :alt="l('about.logoAlt')"
-                />
+                <img class="about-logo" :src="logoSrc" alt="Horizon logo" />
               </div>
               <h1 class="h5 fw-semibold mb-1 text-body">Horizon</h1>
-              <p class="text-muted mb-2">{{ l('about.tagline') }}</p>
+              <p class="text-muted mb-2">
+                A modern, community-driven F-Chat client
+              </p>
 
               <div class="row g-2 w-100 version-grid">
                 <div
                   class="col-6 d-flex justify-content-between align-items-baseline"
                 >
-                  <span class="text-muted small me-4">{{
-                    l('about.version')
-                  }}</span>
+                  <span class="text-muted small me-4">Version</span>
                   <span class="small text-body">{{ appVersion }}</span>
                 </div>
                 <div
                   class="col-6 d-flex justify-content-between align-items-baseline"
                 >
-                  <span class="text-muted small me-4">{{
-                    l('about.commit')
-                  }}</span>
+                  <span class="text-muted small me-4">Commit</span>
                   <span class="small text-body about-mono">
                     <a
                       v-if="commitUrl"
@@ -92,9 +86,7 @@
                 <div
                   class="col-6 d-flex justify-content-between align-items-baseline"
                 >
-                  <span class="text-muted small me-4">{{
-                    l('about.platform')
-                  }}</span>
+                  <span class="text-muted small me-4">Platform</span>
                   <span
                     class="small text-body text-end platform-value ms-2"
                     :title="platformDetails"
@@ -108,11 +100,11 @@
                 <button
                   type="button"
                   class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-2 text-nowrap report-bug-btn"
-                  :title="l('about.opensInBrowser')"
+                  title="Opens in your browser"
                   @click="reportBug()"
                 >
                   <span class="fa fa-bug"></span>
-                  <span>{{ l('about.reportBug') }}</span>
+                  <span>Report a bug</span>
                   <span
                     class="fa fa-arrow-up-right-from-square report-bug-external"
                     aria-hidden="true"
@@ -126,11 +118,7 @@
                   <span
                     :class="copySuccess ? 'fa fa-check' : 'fa fa-copy'"
                   ></span>
-                  <span>{{
-                    copySuccess
-                      ? l('action.copy.success')
-                      : l('about.copyDebugInfo')
-                  }}</span>
+                  <span>{{ copySuccess ? 'Copied!' : 'Copy debug info' }}</span>
                 </button>
                 <button
                   type="button"
@@ -138,7 +126,7 @@
                   @click="openLogs()"
                 >
                   <span class="fa fa-folder-open"></span>
-                  <span>{{ l('about.openLogs') }}</span>
+                  <span>Open logs</span>
                 </button>
               </div>
 
@@ -156,12 +144,12 @@
                 </a>
                 <a
                   class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2 text-nowrap"
-                  href="https://github.com/Fchat-Horizon/Horizon/blob/main/CONTRIBUTORS.md"
+                  href="https://github.com/Fchat-Horizon/Horizon/blob/main/docs/CONTRIBUTORS.md"
                   target="_blank"
                   rel="noopener"
                 >
                   <span class="fa fa-users"></span>
-                  <span>{{ l('about.contributors') }}</span>
+                  <span>Contributors</span>
                 </a>
                 <a
                   class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2 text-nowrap"
@@ -186,7 +174,7 @@
               <hr class="w-100 my-3" />
 
               <p class="text-muted small mb-2">
-                {{ l('about.licensedUnder') }}
+                Licensed under the
                 <a
                   href="https://mozilla.org/MPL/2.0/"
                   target="_blank"
@@ -196,18 +184,17 @@
               </p>
 
               <p class="text-muted mb-0">
-                {{ madeWithParts[0] }}<span class="heart">❤</span
-                >{{ madeWithParts[1] }}
+                Made with <span class="heart">❤</span> by
                 <a href="https://github.com/CodingWithAnxiety" target="_blank"
                   >CodingWithAnxiety</a
                 >,
-                <a href="https://github.com/FatCatClient" target="_blank"
-                  >FatCatClient</a
-                >, and
                 <a href="https://github.com/kawinski" target="_blank"
                   >kawinski</a
+                >, and
+                <a href="https://github.com/FatCatClient" target="_blank"
+                  >FatCatClient</a
                 >. <br />
-                {{ l('about.thankYou') }}
+                Thank you for using Horizon!
               </p>
             </div>
 
@@ -228,17 +215,11 @@
 </template>
 
 <script lang="ts">
-  import * as remote from '@electron/remote';
-  import { clipboard, shell } from 'electron';
+  import { clipboard, ipcRenderer } from 'electron';
   import Vue from 'vue';
   import l, { setLanguage } from '../chat/localize';
   import { GeneralSettings, defaultHost } from './common';
-  import os from 'os';
-  import fs from 'fs';
-  import path from 'path';
-  import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 
-  const browserWindow = remote.getCurrentWindow();
   // tslint:disable-next-line:no-require-imports
   const logoSrc = require('./build/icon.png').default;
   // tslint:disable-next-line:no-require-imports
@@ -250,74 +231,46 @@
     linux: 'Linux'
   };
 
-  function readLinuxDistro(): string {
-    if (process.platform !== 'linux') return '';
-    for (const file of ['/etc/os-release', '/usr/lib/os-release']) {
-      try {
-        const data: Record<string, string> = {};
-        for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed.startsWith('#')) continue;
-          const eq = trimmed.indexOf('=');
-          if (eq === -1) continue;
-          const key = trimmed.slice(0, eq).trim();
-          let value = trimmed.slice(eq + 1).trim();
-          if (
-            value.length >= 2 &&
-            (value[0] === '"' || value[0] === "'") &&
-            value[value.length - 1] === value[0]
-          ) {
-            value = value.slice(1, -1);
-          }
-          data[key] = value;
-        }
-        if (data.PRETTY_NAME) return data.PRETTY_NAME;
-        const name = data.NAME || data.ID;
-        const version = data.VERSION || data.VERSION_ID;
-        if (name) return version ? `${name} ${version}` : name;
-      } catch (e) {}
-    }
-    return '';
-  }
-
-  const LINUX_ENV_KEYS = [
-    'XDG_SESSION_TYPE',
-    'XDG_CURRENT_DESKTOP',
-    'XDG_SESSION_DESKTOP',
-    'DESKTOP_SESSION',
-    'GDMSESSION',
-    'XDG_SESSION_CLASS',
-    'WAYLAND_DISPLAY',
-    'DISPLAY',
-    'GDK_BACKEND',
-    'QT_QPA_PLATFORM',
-    'OZONE_PLATFORM',
-    'ELECTRON_OZONE_PLATFORM_HINT',
-    'GTK_THEME',
-    'LANG',
-    'LC_ALL',
-    'LANGUAGE'
-  ];
-
-  function detectLinuxPackaging(): string {
-    const exists = (p: string): boolean => {
-      try {
-        return fs.existsSync(p);
-      } catch (e) {
-        return false;
-      }
+  /** Shape returned by the main-process `debug-info-collect` IPC handler. */
+  interface DebugInfo {
+    homedir: string;
+    v8: string;
+    cpuModel: string;
+    cpuThreads: number;
+    totalMem: number;
+    arch: string;
+    kernel: string;
+    osVersion: string;
+    locale: string;
+    isDark: boolean;
+    distro: string;
+    linuxEnv: [string, string][];
+    packaging: string;
+    logFolder: string;
+    gpu: {
+      glVendor: string;
+      glRenderer: string;
+      glVersion: string;
+      devices: {
+        vendorId: number | null;
+        deviceId: number | null;
+        active: boolean;
+      }[];
     };
-    if (process.env.FLATPAK_ID || exists('/.flatpak-info'))
-      return `Flatpak${process.env.FLATPAK_ID ? ` (${process.env.FLATPAK_ID})` : ''}`;
-    if (process.env.SNAP || process.env.SNAP_NAME)
-      return `Snap${process.env.SNAP_NAME ? ` (${process.env.SNAP_NAME})` : ''}`;
-    if (process.env.APPIMAGE) return 'AppImage';
-    if (process.env.container) return `Container (${process.env.container})`;
-    return 'Native';
+    gpuFeatureStatus: Record<string, string>;
+    displays: {
+      index: number;
+      primary: boolean;
+      width: number;
+      height: number;
+      scaleFactor: number;
+      colorDepth: number;
+    }[];
   }
 
-  // ^ Read from WebGL in-process: getGPUInfo's GL strings are often empty on
-  //   Linux under Wayland/EGL/ANGLE.
+  /* GPU vendor/renderer strings read from WebGL. getGPUInfo's GL strings are
+     often empty on Linux under Wayland/EGL/ANGLE, so this is the more reliable
+     source; it stays renderer-side because it is pure DOM, not Node. */
   function readWebglInfo(): {
     vendor: string;
     renderer: string;
@@ -352,36 +305,38 @@
 
   export default Vue.extend({
     data() {
+      const versions = <{ [key: string]: string | undefined }>(
+        ((ipcRenderer.sendSync('os-info-sync') as any).versions ?? {})
+      );
       return {
         settings: undefined as any as GeneralSettings,
         appCommit: '',
         appVersion: '',
-        osIsDark: remote.nativeTheme.shouldUseDarkColors,
+        osIsDark: ipcRenderer.sendSync('native-theme-dark-sync') as boolean,
         l,
         platform: process.platform,
         isMac: process.platform === 'darwin',
         logoSrc,
         aboutIconSrc,
-        electronVersion: process.versions.electron || 'N/A',
-        chromiumVersion: process.versions.chrome || 'N/A',
-        nodeVersion: process.versions.node || 'N/A',
+        electronVersion: versions.electron || 'N/A',
+        chromiumVersion: versions.chrome || 'N/A',
+        nodeVersion: versions.node || 'N/A',
         copySuccess: false
       };
     },
     computed: {
       styling(): string {
-        try {
-          return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
-        } catch (e) {
-          if (
-            (<Error & { code: string }>e).code === 'ENOENT' &&
-            this.settings.theme !== 'default'
-          ) {
+        const css = <string | null>(
+          ipcRenderer.sendSync('themes-read-sync', this.getSyncedTheme())
+        );
+        if (css === null) {
+          if (this.settings.theme !== 'default') {
             this.settings.theme = 'default';
             return this.styling;
           }
-          throw e;
+          throw new Error('Default theme is missing');
         }
+        return `<style>${css}</style>`;
       },
       displayCommit(): string {
         return this.appCommit && this.appCommit !== 'unknown'
@@ -393,9 +348,23 @@
         return `https://github.com/Fchat-Horizon/Horizon/commit/${this.appCommit}`;
       },
       platformDetails(): string {
-        const platformName = PLATFORM_NAMES[os.platform()] || os.platform();
+        const osInfo = <{ platform: string; arch: string; release: string }>(
+          ipcRenderer.sendSync('os-info-sync')
+        );
+        const platformName = (() => {
+          switch (osInfo.platform) {
+            case 'win32':
+              return 'Windows';
+            case 'darwin':
+              return 'macOS';
+            case 'linux':
+              return 'Linux';
+            default:
+              return osInfo.platform;
+          }
+        })();
         const archLabel = (() => {
-          switch (os.arch()) {
+          switch (osInfo.arch) {
             case 'x64':
               return '64-bit';
             case 'ia32':
@@ -403,10 +372,10 @@
             case 'arm64':
               return 'ARM64';
             default:
-              return os.arch();
+              return osInfo.arch;
           }
         })();
-        const release = os.release();
+        const release = osInfo.release;
         return `${platformName} ${archLabel}${release ? ` (${release})` : ''}`;
       },
       aboutIconStyle(): Record<string, string> {
@@ -414,18 +383,15 @@
           maskImage: `url(${this.aboutIconSrc})`,
           WebkitMaskImage: `url(${this.aboutIconSrc})`
         };
-      },
-      // The {0} placeholder is the animated heart, kept as markup; split the
-      // localized string around it so translators still get a whole phrase.
-      madeWithParts(): string[] {
-        const parts = l('about.madeWith').split('{0}');
-        return [parts[0] || '', parts[1] || ''];
       }
     },
     async mounted(): Promise<void> {
-      remote.nativeTheme.on('updated', () => {
-        this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
-      });
+      ipcRenderer.on(
+        'native-theme-updated',
+        (_e: Electron.IpcRendererEvent, isDark: boolean) => {
+          this.osIsDark = isDark;
+        }
+      );
       try {
         setLanguage(this.settings.displayLanguage);
       } catch (e) {
@@ -452,27 +418,12 @@
           : this.settings.themeSyncLight;
       },
       close(): void {
-        browserWindow.close();
-      },
-      resolveLogFile(): string {
-        try {
-          return log.transports.file.getFile().path;
-        } catch (e) {
-          return '';
-        }
+        ipcRenderer.send('window-close');
       },
       openLogs(): void {
-        const file = this.resolveLogFile();
-        if (file) {
-          try {
-            shell.showItemInFolder(file);
-            return;
-          } catch (e) {
-            console.warn('Failed to reveal log file', e);
-          }
-        }
         try {
-          void shell.openPath(remote.app.getPath('logs'));
+          const logs = ipcRenderer.sendSync('app-path-sync', 'logs') as string;
+          if (logs) ipcRenderer.send('open-dir', logs);
         } catch (e) {
           console.warn('Failed to open logs folder', e);
         }
@@ -495,11 +446,7 @@
           clipboard.writeText(info);
           url = `${base}?template=bug.yml`;
         }
-        try {
-          void shell.openExternal(url);
-        } catch (e) {
-          console.warn('Failed to open issue page', e);
-        }
+        ipcRenderer.send('open-url-externally', url);
       },
       async copyDebugInfo(): Promise<void> {
         let text: string;
@@ -515,18 +462,15 @@
           this.copySuccess = false;
         }, 1500);
       },
+      // Formats a privacy-scrubbed diagnostics report. All main-process data
+      // comes from the `debug-info-collect` IPC handler; only the WebGL probe
+      // and `this.settings` are read here in the renderer.
       async buildDebugInfo(): Promise<string> {
-        const safe = <T,>(fn: () => T, fallback: T): T => {
-          try {
-            return fn();
-          } catch (e) {
-            return fallback;
-          }
-        };
+        const d = (await ipcRenderer.invoke('debug-info-collect')) as DebugInfo;
 
         // ! Scrub the home dir for privacy; deliberately not the bare username,
         // ! which collides with real values (e.g. theme "wilted-rose").
-        const home = safe(() => os.homedir(), '');
+        const home = d.homedir || '';
         const scrub = (value: string): string =>
           home ? String(value).split(home).join('~') : String(value);
 
@@ -550,7 +494,7 @@
           ['Electron', this.electronVersion],
           ['Chromium', this.chromiumVersion],
           ['Node.js', this.nodeVersion],
-          ['V8', process.versions.v8 || 'N/A']
+          ['V8', d.v8 || 'N/A']
         ];
 
         // ! Allow-listed: account, proxy value and on-disk paths are excluded
@@ -580,112 +524,71 @@
           if (s.host && s.host !== defaultHost) config.push(['Host', s.host]);
         }
 
-        const cpus = safe(() => os.cpus(), []);
-        const cpuModel = cpus.length ? cpus[0].model.trim() : '';
-        const totalMemGb = safe(
-          () => `${(os.totalmem() / 1024 ** 3).toFixed(1)} GB`,
-          ''
-        );
-        const locale = safe(
-          () => remote.app.getLocale(),
-          process.env.LANG || ''
-        );
-        const kernel = os.release();
-        const osVersion = safe(
-          () => (process as any).getSystemVersion?.() || '',
-          ''
-        );
+        const totalMemGb = d.totalMem
+          ? `${(d.totalMem / 1024 ** 3).toFixed(1)} GB`
+          : '';
         // getSystemVersion means different things per OS: the kernel on Linux,
         // the build on Windows, the product version on macOS (where os.release
         // is separately the Darwin kernel). Label each so none reads as "Kernel"
         // on Windows.
         const versionRowsByOs: Record<string, [string, string][]> = {
           darwin: [
-            ['OS version', osVersion],
-            ['Kernel', kernel]
+            ['OS version', d.osVersion],
+            ['Kernel', d.kernel]
           ],
-          linux: [['Kernel', kernel]]
+          linux: [['Kernel', d.kernel]]
         };
         const versionRows = versionRowsByOs[this.platform] || [
-          ['OS version', osVersion || kernel]
+          ['OS version', d.osVersion || d.kernel]
         ];
-        const logFile = this.resolveLogFile();
-        const logDir = logFile ? path.dirname(logFile) : '';
         const system: [string, string][] = [
           ['OS', PLATFORM_NAMES[this.platform] || this.platform],
           ...versionRows,
-          ['Arch', safe(() => os.arch(), '')],
-          ['Distro', readLinuxDistro()],
-          ['CPU', cpuModel ? `${cpuModel} (${cpus.length} threads)` : ''],
+          ['Arch', d.arch],
+          ['Distro', d.distro],
+          ['CPU', d.cpuModel ? `${d.cpuModel} (${d.cpuThreads} threads)` : ''],
           ['Memory', totalMemGb],
-          ['Locale', locale],
-          [
-            'Color scheme',
-            remote.nativeTheme.shouldUseDarkColors ? 'dark' : 'light'
-          ],
-          ['Log folder', logDir]
+          ['Locale', d.locale],
+          ['Color scheme', d.isDark ? 'dark' : 'light'],
+          ['Log folder', d.logFolder]
         ];
 
         const linux: [string, string][] = [];
         if (this.platform === 'linux') {
-          for (const key of LINUX_ENV_KEYS) {
-            const value = process.env[key];
-            if (value) linux.push([key, value]);
-          }
-          linux.push(['Packaging', detectLinuxPackaging()]);
+          for (const [k, v] of d.linuxEnv) linux.push([k, v]);
+          linux.push(['Packaging', d.packaging]);
         }
 
         const gpu: [string, string][] = [];
         const webgl = readWebglInfo();
-        if (webgl.vendor) gpu.push(['Vendor', webgl.vendor]);
-        if (webgl.renderer) gpu.push(['Renderer', webgl.renderer]);
-        if (webgl.version) gpu.push(['GL Version', webgl.version]);
-        try {
-          const info: any = await remote.app.getGPUInfo('complete');
-          const aux = info?.auxAttributes || {};
-          if (!webgl.vendor && aux.glVendor) gpu.push(['Vendor', aux.glVendor]);
-          if (!webgl.renderer && aux.glRenderer)
-            gpu.push(['Renderer', aux.glRenderer]);
-          if (!webgl.version && aux.glVersion)
-            gpu.push(['GL Version', aux.glVersion]);
-          const devices: any[] = Array.isArray(info?.gpuDevice)
-            ? info.gpuDevice
-            : [];
-          devices.forEach((d, i) => {
-            const vendorId =
-              typeof d?.vendorId === 'number' ? d.vendorId : null;
-            const deviceId =
-              typeof d?.deviceId === 'number' ? d.deviceId : null;
-            if (vendorId == null && deviceId == null) return;
-            const parts = [
-              vendorId != null && `vendor 0x${vendorId.toString(16)}`,
-              deviceId != null && `device 0x${deviceId.toString(16)}`,
-              d?.active && 'active'
-            ].filter(Boolean);
-            gpu.push([
-              devices.length > 1 ? `Device ${i + 1}` : 'Device',
-              parts.join(', ')
-            ]);
-          });
-        } catch (e) {}
-        try {
-          const status = remote.app.getGPUFeatureStatus();
-          for (const [k, v] of Object.entries(status)) {
-            gpu.push([k, String(v)]);
-          }
-        } catch (e) {}
+        const glVendor = webgl.vendor || d.gpu.glVendor;
+        const glRenderer = webgl.renderer || d.gpu.glRenderer;
+        const glVersion = webgl.version || d.gpu.glVersion;
+        if (glVendor) gpu.push(['Vendor', glVendor]);
+        if (glRenderer) gpu.push(['Renderer', glRenderer]);
+        if (glVersion) gpu.push(['GL Version', glVersion]);
+        d.gpu.devices.forEach((dev, i) => {
+          if (dev.vendorId == null && dev.deviceId == null) return;
+          const parts = [
+            dev.vendorId != null && `vendor 0x${dev.vendorId.toString(16)}`,
+            dev.deviceId != null && `device 0x${dev.deviceId.toString(16)}`,
+            dev.active && 'active'
+          ].filter(Boolean);
+          gpu.push([
+            d.gpu.devices.length > 1 ? `Device ${i + 1}` : 'Device',
+            parts.join(', ')
+          ]);
+        });
+        for (const [k, v] of Object.entries(d.gpuFeatureStatus || {})) {
+          gpu.push([k, String(v)]);
+        }
 
-        const displays: [string, string][] = [];
-        try {
-          const primaryId = remote.screen.getPrimaryDisplay().id;
-          remote.screen.getAllDisplays().forEach((d, i) => {
-            const tag = d.id === primaryId ? ' (primary)' : '';
-            displays.push([
-              `Display ${i + 1}${tag}`,
-              `${d.size.width}x${d.size.height} @ ${d.scaleFactor}x, ${d.colorDepth}-bit`
-            ]);
-          });
-        } catch (e) {}
+        const displays: [string, string][] = d.displays.map(
+          (disp): [string, string] => [
+            `Display ${disp.index + 1}${disp.primary ? ' (primary)' : ''}`,
+            `${disp.width}x${disp.height} @ ${disp.scaleFactor}x, ${disp.colorDepth}-bit`
+          ]
+        );
 
         return [
           section('Horizon', versions),

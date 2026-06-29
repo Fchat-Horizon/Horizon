@@ -1,3 +1,4 @@
+import { ipcRenderer } from 'electron';
 import core from './core';
 import { Conversation, Notifications as Interface } from './interfaces';
 
@@ -141,23 +142,15 @@ export default class Notifications implements Interface {
 
   private async loadSoundTheme(soundTheme: string): Promise<SoundTheme | null> {
     try {
-      const fs = (window as any).require?.('fs');
-      const path = (window as any).require?.('path');
-
-      if (!fs || !path) return null;
-
-      const themeJsonPath = path.join(
-        __dirname,
-        'sound-themes',
-        soundTheme,
-        'sound.json'
+      const raw = <string | null>(
+        ipcRenderer.sendSync('sound-theme-read-sync', soundTheme)
       );
-
-      const themeData = JSON.parse(fs.readFileSync(themeJsonPath, 'utf8'));
-      return themeData;
+      //tslint:disable-next-line:no-null-keyword
+      if (raw === null) return null;
+      return <SoundTheme>JSON.parse(raw);
     } catch (error) {
       console.warn(`Failed to load sound theme "${soundTheme}":`, error);
-      return null;
+      return null; //tslint:disable-line:no-null-keyword
     }
   }
 

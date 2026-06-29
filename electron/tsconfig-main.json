@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    "target": "es2022",
+    "useDefineForClassFields": false,
     "module": "commonjs",
     "sourceMap": true,
     "allowJs": true,
@@ -15,5 +16,5 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
   },
-  "include": ["main.ts"]
+  "include": ["main.ts", "preload.ts"]
 }

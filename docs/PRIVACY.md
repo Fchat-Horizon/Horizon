@@ -11,9 +11,9 @@ No data about your sessions, chats, characters, passwords, et cetera, is shared 
 Horizon connects to the following hosts:
 
 - `f-list.net` – FChat, FList, profiles, character search, authentication, character images, etc.
-- `github.com` – F-Chat Horizon [update checks](./electron/pack.js)
-- `easylist.to`, `adblockplus.org`, `adtidy.org`, `githubusercontent.com` – [ad blocker updates](./electron/blocker/blocker.ts)
-- `xariah.net` – [eicon updates](./learn/eicon/updater.ts)
+- `github.com` – F-Chat Horizon [update checks](../electron/pack.js)
+- `easylist.to`, `adblockplus.org`, `adtidy.org`, `githubusercontent.com` – [ad blocker updates](../electron/blocker/blocker.ts)
+- `xariah.net` – [eicon updates](../learn/eicon/updater.ts)
 
 Your character name, password, messages, and any other private data is only sent to `f-list.net`; the other services are queried anonymously.
 Your IP address will be exposed to all of these services.

@@ -53,11 +53,11 @@ export class NoteChecker implements SiteSessionInterface {
     if (!core.state.settings.risingShowUnreadOfflineCount)
       return this.latestCount;
     const res = await this.session.get('/', true);
-    const messagesMatch = res.body.match(
+    const messagesMatch = res.data.match(
       /NavigationMessages.*?([0-9]+?) Messages/
     );
-    const notesMatch = res.body.match(/NavigationNotecount.*?([0-9]+?) Notes/);
-    const statsMatch = res.body.match(/Frontpage_Stats.*?([0-9]+?) characters/);
+    const notesMatch = res.data.match(/NavigationNotecount.*?([0-9]+?) Notes/);
+    const statsMatch = res.data.match(/Frontpage_Stats.*?([0-9]+?) characters/);
 
     // console.log('MATCH', messagesMatch[1], notesMatch[1], statsMatch[1]);
 

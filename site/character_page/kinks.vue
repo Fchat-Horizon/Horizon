@@ -591,7 +591,6 @@
         comparison,
         expandedCustoms,
         l,
-        _,
         toggleExpandedCustomKinks,
         toggleSort,
         clearComparison,

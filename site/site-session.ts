@@ -1,11 +1,22 @@
 import _ from 'lodash';
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 import throat from 'throat';
+import { ipcRenderer } from 'electron';
 import { NoteChecker } from './note-checker';
 
-import request from 'request-promise'; //tslint:disable-line:match-default-export-name
+import { AxiosRequestConfig } from 'axios';
 
 /* tslint:disable:no-unsafe-any */
+
+/**
+ * The serializable subset of an Axios response returned by the main-process
+ * transport (electron/site-session-host.ts). Cookie-jar requests need the
+ * Node http adapter, which only exists in the main-process bundle.
+ */
+export interface SiteSessionResponse {
+  status: number;
+  data: any;
+}
 
 export interface SiteSessionInterface {
   start(): Promise<void>;
@@ -29,10 +40,6 @@ export class SiteSession {
   private state: 'active' | 'inactive' = 'inactive';
   private account = '';
   private password = '';
-
-  private request: request.RequestPromiseAPI = request.defaults({
-    jar: request.jar()
-  });
 
   private csrf = '';
 
@@ -70,16 +77,17 @@ export class SiteSession {
   private async init(): Promise<void> {
     log.debug('sitesession.init');
 
-    this.request = request.defaults({ jar: request.jar() });
+    // & Fresh cookie jar in the main process for this tab.
+    await ipcRenderer.invoke('site-session-reset');
     this.csrf = '';
 
     const res = await this.get('/');
 
-    if (res.statusCode !== 200) {
+    if (res.status !== 200) {
       throw new Error(`SiteSession.init: Invalid status code: ${res.status}`);
     }
 
-    const input = res.body.match(/<input.*?csrf_token.*?>/);
+    const input = res.data.match(/<input.*?csrf_token.*?>/);
 
     if (!input || input.length < 1) {
       throw new Error('SiteSession.init: Missing csrf token');
@@ -110,12 +118,12 @@ export class SiteSession {
       },
       false,
       {
-        followRedirect: false,
-        simple: false
+        maxRedirects: 0,
+        validateStatus: null
       }
     );
 
-    if (res.statusCode !== 302) {
+    if (res.status !== 302) {
       throw new Error('Invalid status code');
     }
 
@@ -133,29 +141,22 @@ export class SiteSession {
 
   private async prepareRequest(
     method: string,
-    uri: string,
+    url: string,
     mustBeLoggedIn: boolean,
-    config: Partial<request.Options>
-  ): Promise<request.OptionsWithUri> {
+    config: AxiosRequestConfig
+  ): Promise<AxiosRequestConfig> {
     if (mustBeLoggedIn) {
       await this.ensureLogin();
     }
 
-    return _.merge(
-      {
-        method,
-        uri: `https://www.f-list.net${uri}`,
-        resolveWithFullResponse: true
-      },
-      config
-    );
+    return _.merge({ method, url }, config);
   }
 
   async get(
     uri: string,
     mustBeLoggedIn: boolean = false,
-    config: Partial<request.Options> = {}
-  ): Promise<request.RequestPromise> {
+    config: AxiosRequestConfig = {}
+  ): Promise<SiteSessionResponse> {
     return this.sessionThroat(async () => {
       const finalConfig = await this.prepareRequest(
         'get',
@@ -164,7 +165,7 @@ export class SiteSession {
         config
       );
 
-      return this.request(finalConfig);
+      return ipcRenderer.invoke('site-session-request', finalConfig);
     });
   }
 
@@ -172,17 +173,26 @@ export class SiteSession {
     uri: string,
     data: Record<string, any>,
     mustBeLoggedIn: boolean = false,
-    config: Partial<request.Options> = {}
-  ): Promise<request.RequestPromise> {
+    config: AxiosRequestConfig = {}
+  ): Promise<SiteSessionResponse> {
     return this.sessionThroat(async () => {
+      // ~ Form-encoded as a string: URLSearchParams cannot cross IPC.
       const finalConfig = await this.prepareRequest(
         'post',
         uri,
         mustBeLoggedIn,
-        _.merge({ form: data }, config)
+        _.merge(
+          {
+            data: new URLSearchParams(data).toString(),
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          },
+          config
+        )
       );
 
-      return this.request(finalConfig);
+      return ipcRenderer.invoke('site-session-request', finalConfig);
     });
   }
 

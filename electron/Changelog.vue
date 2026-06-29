@@ -188,12 +188,9 @@
 </template>
 
 <script lang="ts">
-  import * as remote from '@electron/remote';
   import Vue from 'vue';
   import l, { setLanguage } from '../chat/localize';
   import { GeneralSettings } from './common';
-  import fs from 'fs';
-  import path from 'path';
   import Axios from 'axios';
   import markdownit from 'markdown-it';
   import { alert } from '@mdit/plugin-alert';
@@ -208,13 +205,13 @@
     body: string;
   };
 
-  const browserWindow = remote.getCurrentWindow();
-
   export default Vue.extend({
     data() {
       return {
         settings: undefined as any as GeneralSettings,
-        osIsDark: remote.nativeTheme.shouldUseDarkColors,
+        osIsDark: electron.ipcRenderer.sendSync(
+          'native-theme-dark-sync'
+        ) as boolean,
         updateVersion: undefined as string | undefined,
         updateMode: 'auto' as 'auto' | 'manual',
         currentVersion: process.env.APP_VERSION,
@@ -230,27 +227,32 @@
     },
     computed: {
       styling(): string {
-        try {
-          return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
-        } catch (e) {
-          if (
-            (<Error & { code: string }>e).code === 'ENOENT' &&
-            this.settings.theme !== 'default'
-          ) {
+        const css = <string | null>(
+          electron.ipcRenderer.sendSync(
+            'themes-read-sync',
+            this.getSyncedTheme()
+          )
+        );
+        if (css === null) {
+          if (this.settings.theme !== 'default') {
             this.settings.theme = 'default';
             return this.styling;
           }
-          throw e;
+          throw new Error('Default theme is missing');
         }
+        return `<style>${css}</style>`;
       }
     },
     created(): void {
       this.autoDownloadChecked = !!this.settings.horizonAutoDownloadUpdates;
     },
     async mounted(): Promise<void> {
-      remote.nativeTheme.on('updated', () => {
-        this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
-      });
+      electron.ipcRenderer.on(
+        'native-theme-updated',
+        (_e: Electron.IpcRendererEvent, isDark: boolean) => {
+          this.osIsDark = isDark;
+        }
+      );
       try {
         setLanguage(this.settings.displayLanguage);
       } catch (e) {
@@ -300,7 +302,7 @@
           : this.settings.themeSyncLight;
       },
       close(): void {
-        browserWindow.close();
+        electron.ipcRenderer.send('window-close');
       },
       externalUrlHandler(url: string) {
         electron.ipcRenderer.send('open-url-externally', url);

@@ -40,11 +40,11 @@
 
 import * as electron from 'electron';
 
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import log from 'electron-log/main'; //tslint:disable-line:match-default-export-name
 import * as fs from 'fs';
 import * as path from 'path';
 import { execFile } from 'child_process';
-// import * as url from 'url';
+import { fileURLToPath } from 'url';
 import l from '../chat/localize';
 import { defaultHost, GeneralSettings } from './common';
 // import BrowserWindow = electron.BrowserWindow;
@@ -53,7 +53,13 @@ import * as _ from 'lodash';
 import { AdCoordinatorHost } from '../chat/ads/ad-coordinator-host';
 import { IpcMainEvent, session } from 'electron';
 import * as browserWindows from './browser_windows';
-import * as remoteMain from '@electron/remote/main';
+import * as tabManager from './tab-manager';
+import { initIpcHandlers } from './ipc-handlers';
+import { initSiteSessionHost } from './site-session-host';
+import { initFilesystemHost } from './filesystem-host';
+import { initIncognito } from './incognito';
+import { initBackupHost } from './services/backup-host';
+import { initImportHost } from './services/import-host';
 import { Event } from 'electron/main';
 import { autoUpdater } from 'electron-updater';
 import Axios from 'axios';
@@ -70,11 +76,53 @@ const resolvePartition = (
   return partition || fallback || 'default';
 };
 
+/*
+ * <webview> backstop: DOM attributes can't be trusted, so main re-asserts
+ * guest settings on attach.
+ * ! New webviews or dictionary sources must be allowlisted here.
+ */
+const allowedWebviewPreload = path.join(
+  __dirname,
+  'preview',
+  'assets',
+  'browser.pre.js'
+);
+const allowedWebviewHosts = new Set([
+  // ~ dictionary popup sources, see learn/dictionary/WordDefinition.vue
+  'www.dictionary.com',
+  'www.thesaurus.com',
+  'www.urbandictionary.com',
+  'en.m.wikipedia.org'
+]);
+
+// $ Attach-time src only; the webviews police their own navigation.
+const isAllowedWebviewSrc = (src: string | undefined): boolean => {
+  if (src === undefined || src === '' || src === 'about:blank') return true;
+  try {
+    const url = new URL(src);
+    return url.protocol === 'https:' && allowedWebviewHosts.has(url.hostname);
+  } catch {
+    return false;
+  }
+};
+
+const isAllowedWebviewPreload = (preload: string | undefined): boolean => {
+  if (preload === undefined || preload === '') return true;
+  try {
+    const file = preload.startsWith('file:')
+      ? fileURLToPath(preload)
+      : path.resolve(__dirname, preload);
+    return path.relative(allowedWebviewPreload, file) === '';
+  } catch {
+    return false;
+  }
+};
+
 // Module to control application life.
 const app = electron.app;
 let mainWindow: electron.BrowserWindow | undefined;
 
-remoteMain.initialize();
+log.initialize();
 
 const characters: string[] = [];
 let autoBackupScheduler:
@@ -573,6 +621,19 @@ export function openURLExternally(linkUrl: string): void {
 
 let zoomLevel = settings.zoomLevel;
 
+/**
+ * Creates a main chat window and registers it with the tab manager so it can
+ * host WebContentsView tabs.
+ */
+function openMainWindow(
+  importHint: 'auto' | 'none'
+): electron.BrowserWindow | undefined {
+  const window = browserWindows.createMainWindow(settings, importHint, baseDir);
+  if (window)
+    tabManager.adoptWindow(window, importHint === 'none' ? '' : importHint);
+  return window;
+}
+
 async function onReady(): Promise<void> {
   try {
     if (await tryHandleCli()) return;
@@ -584,6 +645,17 @@ async function onReady(): Promise<void> {
 
   let hasCompletedUpgrades = false;
 
+  initIpcHandlers();
+  initSiteSessionHost();
+  initFilesystemHost({ getSettings: () => settings });
+  initIncognito({ getSettings: () => settings });
+  initBackupHost({ getSettings: () => settings });
+  initImportHost({ getSettings: () => settings });
+  tabManager.initTabManager({
+    getSettings: () => settings,
+    hasCompletedUpgrades: () => hasCompletedUpgrades
+  });
+
   const logLevel = process.env.NODE_ENV === 'production' ? 'info' : 'silly';
 
   log.transports.file.level = settings.risingSystemLogLevel || logLevel;
@@ -594,8 +666,18 @@ async function onReady(): Promise<void> {
 
   app.setAppUserModelId('net.flist.fchat');
   app.on('open-file', () => {
-    browserWindows.createMainWindow(settings, 'none', baseDir);
+    openMainWindow('none');
   });
+
+  /* Strip the Origin header from imgur API requests so previews work; this
+     used to be registered from each chat tab through @electron/remote. */
+  session.defaultSession.webRequest.onBeforeSendHeaders(
+    { urls: ['*://api.imgur.com/*', '*://i.imgur.com/*'] },
+    (details, callback) => {
+      delete details.requestHeaders['Origin'];
+      callback({ requestHeaders: details.requestHeaders });
+    }
+  );
   const configurePermissionPolicy = (
     targetSession: electron.Session | null,
     fallbackLabel: string
@@ -690,6 +772,32 @@ async function onReady(): Promise<void> {
   app.on('web-contents-created', (_event, contents) => {
     const partition = resolvePartition(contents.session, 'dynamic');
     configurePermissionPolicy(contents.session, partition);
+
+    contents.on('will-attach-webview', (event, webPreferences, params) => {
+      if (
+        !isAllowedWebviewSrc(params.src) ||
+        params.partition !== 'persist:adblocked'
+      ) {
+        log.warn('webview.attach.blocked', {
+          src: params.src,
+          partition: params.partition
+        });
+        event.preventDefault();
+        return;
+      }
+      if (!isAllowedWebviewPreload(webPreferences.preload)) {
+        log.warn('webview.attach.preload.stripped', {
+          preload: webPreferences.preload
+        });
+        delete webPreferences.preload;
+      }
+      webPreferences.nodeIntegration = false;
+      webPreferences.nodeIntegrationInWorker = false;
+      webPreferences.nodeIntegrationInSubFrames = false;
+      webPreferences.contextIsolation = true;
+      webPreferences.sandbox = true;
+      webPreferences.webviewTag = false;
+    });
   });
   if (
     settings.version !== app.getVersion() &&
@@ -979,8 +1087,7 @@ async function onReady(): Promise<void> {
           {
             label: l('action.newWindow'),
             click: () => {
-              if (hasCompletedUpgrades)
-                browserWindows.createMainWindow(settings, 'none', baseDir);
+              if (hasCompletedUpgrades) openMainWindow('none');
             },
             accelerator: 'CmdOrCtrl+n'
           },
@@ -1113,17 +1220,6 @@ async function onReady(): Promise<void> {
       ...(process.env.NODE_ENV !== 'production' ? [devItem] : [])
     ])
   );
-
-  electron.ipcMain.on('tab-added', (_event: IpcMainEvent, id: number) => {
-    const webContents = electron.webContents.fromId(id);
-
-    if (webContents) {
-      browserWindows.tabAddHandler(webContents, settings);
-    }
-  });
-  electron.ipcMain.on('tab-closed', () => {
-    browserWindows.tabClosedHandler();
-  });
 
   electron.ipcMain.on(
     'update-now',
@@ -1355,6 +1451,10 @@ async function onReady(): Promise<void> {
             settings.horizonCustomCss,
             settings.horizonCustomCssEnabled
           );
+          void tabManager.updateCustomCssAllTabs(
+            settings.horizonCustomCss,
+            settings.horizonCustomCssEnabled
+          );
         }
         if (!settings.updateCheck) {
           browserWindows.toggleUpdateNotice(false);
@@ -1375,13 +1475,7 @@ async function onReady(): Promise<void> {
     openURLExternally(_url);
   });
 
-  setMainWindow(
-    browserWindows.createMainWindow(
-      settings,
-      shouldImportSettings ? 'auto' : 'none',
-      baseDir
-    )
-  );
+  setMainWindow(openMainWindow(shouldImportSettings ? 'auto' : 'none'));
   const bootWindow = getMainWindow();
   if (showChangelogOnBoot && bootWindow) {
     browserWindows.createChangelogWindow(
@@ -1421,7 +1515,7 @@ else
     });
   });
 app.on('second-instance', () => {
-  setMainWindow(browserWindows.createMainWindow(settings, 'none', baseDir));
+  setMainWindow(openMainWindow('none'));
 });
 app.on('before-quit', (event: Event) => {
   if (isUpdateRestarting) {

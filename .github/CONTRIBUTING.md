@@ -21,7 +21,7 @@ That being said, _Horizon is an opinionated fork_, and as such we enforce strong
 
 ## Contributor License Agreement
 
-By submitting a pull request or contributing to this project (including translations via Weblate), you agree to the terms of our [Contributor License Agreement](./CLA.md).
+By submitting a pull request or contributing to this project (including translations via Weblate), you agree to the terms of our [Contributor License Agreement](../docs/CLA.md).
 
 In short: you keep ownership of your code, but you grant the project lead the right to license contributions under MPL-2.0 and to provide them to Dragonfruit under MIT.
 
@@ -90,7 +90,7 @@ pnpm build:all
 >
 > Please read the [electron-builder](https://www.electron.build/multi-platform-build.html) wiki for more info. If you're a kickass electron dev, please make a pull request to fix this.
 
-Read [the electron README.md](./electron/README.md) for more info.
+Read [the electron README.md](../electron/README.md) for more info.
 
 #### Mobile
 
@@ -189,4 +189,4 @@ The options for the build script are quite varied, and thus won't be elaborated 
 node electron/build/build.mjs -h
 ```
 
-See also the [README](./electron/README.md) file for the Electron sub-project.
+See also the [README](../electron/README.md) file for the Electron sub-project.
