@@ -108,7 +108,7 @@ I've completely deleted the `ios` directory, and have no intention to support io
 
 ### Project layout and development flow
 
-The information here isn't exactly relevant for if you want to fork Horizon or just build the project for yourself, but it might be useful for contributors so that they
+We try to keep a (mostly) structured workflow when working on Horizon releases. The information here isn't exactly relevant for if you want to fork Horizon or just build the project for yourself, but it might be useful for contributors so that they know what to expect when they make a pull request.
 
 #### Issue tracking
 
