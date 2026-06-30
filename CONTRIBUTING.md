@@ -15,7 +15,7 @@ That being said, _Horizon is an opinionated fork_, and as such we enforce strong
     - [Building](#building)
       - [Electron](#electron)
       - [Mobile](#mobile)
-    - [Project layout and development flow](#project-layout-and-development-flow)
+    - [Workflow](#workflow)
       - [Issue tracking](#issue-tracking)
       - [Project Board](#project-board)
       - [Pull requests](#pull-requests)
@@ -106,7 +106,7 @@ Look at the `mobile` directory for more info. For `android`, we recommend you us
 
 I've completely deleted the `ios` directory, and have no intention to support ios at this time. However, for those interested, the `ios` directory was removed in [this commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814), and you're more then welcome to restore it.
 
-### Project layout and development flow
+### Workflow
 
 We try to keep a (mostly) structured workflow when working on Horizon releases. The information here isn't exactly relevant for if you want to fork Horizon or just build the project for yourself, but it might be useful for contributors so that they know what to expect when they make a pull request.
 
@@ -115,11 +115,11 @@ We try to keep a (mostly) structured workflow when working on Horizon releases. 
 Issues with the type "Bug" or "Task" are supposed to be sorted by level of priority, as tagged on the GitHub issue tracker. Though the levels are both self-explanatory, while also needing to be assigned loosely at the discretion of the team member triaging, we should aim to adhere to the following priorities:
 
 - **Critical**  
-  App crashes under _regular_ use, security issues, or similar problems. Likely requires a hotfix that might bypass the regular release flow and goes straight to the `main` branch. If an issue like this is found, it means we should likely drop whatever else we are working on until it's resolved. They should also be added to the appropriate milestone.
+  App crashes under _regular_ use\*, security issues, or similar problems. Likely requires a hotfix that might bypass the regular release flow and goes straight to the `main` branch. If an issue like this is found, it means we should likely drop whatever else we are working on until it's resolved. They should also be added to the appropriate milestone.
 - **High**  
-  App crashes under irregular circumstances, important features are broken or regressed hard. Should be resolved quickly, but does not require dropping anything else we might be working on. If (realistically) possible, these should be resolved before the next stable release. That also means they should be added to the appropriate milestone.
+  App crashes under irregular circumstances\*, important features are broken or regressed hard. Should be resolved quickly, but does not require dropping anything else we might be working on. If (realistically) possible, these should be resolved before the next stable release. That also means they should be added to the appropriate milestone.
 
-  Regressions found during (and originating _from_) a pre-release build are automatically given this priority as well.
+  Regressions found during (and originating _from_) a pre-release build are automatically given this priority as well, as are issues with the ["blocks release"](https://github.com/Fchat-Horizon/Horizon/issues?q=state%3Aopen%20label%3A%22blocks-release%22) tag.
 
 - **Medium**  
   Issues with obscure features, or issues that can be worked around. Issues that originate from 3.0, F-Chat Rising, or significantly older versions of Horizon mostly fall under this umbrella, unless they're also critical. Use sound judgement here. Can be added to the current, upcoming release, milestone- but depending on the existing workload or potential deadline, it might be best to just throw it under a future, patch-release milestone.
@@ -129,7 +129,9 @@ Issues with the type "Bug" or "Task" are supposed to be sorted by level of prior
 - **Low**  
   Minor annoyances and quirks, doubly so if they're older ones. They would be good to resolve, and if the issue itself can be done quickly then we don't need to hold back on them. Low priority issues should simply not get in the way of more important ones.
 
-Issues that have not been triaged with a priority yet should be tagged with the ["Needs Triage"](https://github.com/Fchat-Horizon/Horizon/issues?q=state%3Aopen%20label%3A%22Needs%20Triage%22) tag, which should be added automatically to any new issues created.
+Bugs and styling issues that have not been triaged with a priority yet should be tagged with the ["Needs Triage"](https://github.com/Fchat-Horizon/Horizon/issues?q=state%3Aopen%20label%3A%22Needs%20Triage%22) tag, which should be added automatically to any new issues created. Issues with the 'Task' type aren't able to be created from the templates and have to be defined by project members, but their priorities have to be defined on a case-by-case basis regardless.
+
+\* _"Regular" and "irregular" use aren't terms we can strictly define, so you have to rely on a bit of common sense to make those calls. Assume that a user action like searching for characters constitutes "regular use", but but "I pasted 50,000 characters in the EIcon searcher, and now the app crashes" is considered 'irregular' use._
 
 #### Project Board
 
@@ -139,16 +141,12 @@ We track our project's progress using [GitHub's project boards](https://github.c
   The default state. A priority has not been given yet.
 - **Triage**  
   Issues that have been given a priority-- or at least been looked at, but have not been slotted for a specific upcoming release yet.
-- **Blocks Release**  
-  For when an issue has been added to a release, but it's also _required_ to be resolved before the release can go live. Usually that means they're high priority. Issues tagged with 'Pre-release build' are given this tag, unless they're listed as "Low" priority.
-- **Does Not Block**  
+- **Planned**  
   Slotted for a release, but work has not been started yet.
 - **In progress**  
   Work has been started, but it's not yet ready for review or merging. If a pull request is made for an existing issue, it's automatically assigned this state.
 - **Follow Up Before Release**  
   Work is hopefully finished, but maintainers need to look at the pull request still. If a pull request is set to close one or more issues, and then gets assigned this state, its issues will also be set to this.
-- **~~Ready to Ship~~**  
-  _To get rid of? We're better off letting the integration automatically move them to Done and subsequently archive them._
 - **Done**  
   Merged into development, will be in the upcoming release.
 
