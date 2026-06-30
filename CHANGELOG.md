@@ -7,13 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Pre-release fixes and changes
+
+<!-- These do not go into the final 2.3 changelog-->
+
+- "Automatically download updates" is now enabled by default. Also resolved various timing issues where restarting the app after an update has been downloaded (but not installed) would show the main window for 10 seconds, before exiting to update. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4497ed82166253da961db6a442284982fac0fc10)
+  - If you have already used a pre-release build with the updater functionality built in, this will be set to the value you had it at before. You will need to manually enable it still.
+
 ### Fixed
 
-- Fixed issues on MacOS where opening URLs with custom browser path and arguments set would not pass the arguments to the browser executable correctly. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c042f5165ac79527f76a66014f7cb33c52ca4470)
+- Fixed issues on MacOS where opening URLs with a custom browser path and arguments set would not pass the arguments to the browser executable correctly. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c042f5165ac79527f76a66014f7cb33c52ca4470)
 
 ### Development
 
 - Fixed issues where `pnpm watch` would occassionally still try to watch items in the `scss/node_modules` directory, and then exiting as a result. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1e6140c463dd54a2aa5b071b4f8ba446b74bdb95)
+
+### Documentation
+
+- Added documentation for our project workflow. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/749aaba88390cb8f7c045ad64e1a47e8ef30a4d0)
+- Added documentation for the localization system. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/40661df38eca3618614b154e55052aef18bd0ddd)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/839 by @CodingWithAnxiety and @FatCatClient
 
 ## [2.2.2-beta.1] - 2026-06-23
 
