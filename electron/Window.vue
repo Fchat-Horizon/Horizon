@@ -370,6 +370,9 @@
           this.updateDownloaded = done;
         }
       );
+      // The first check can resolve before this window loads; pull whatever
+      // notice the main process already has.
+      electron.ipcRenderer.send('request-update-state');
       electron.ipcRenderer.on('fix-logs', () =>
         this.activeTab!.view.webContents.send('fix-logs')
       );
