@@ -681,7 +681,7 @@
   "settings.browserOptionArguments": "Argomentazioni da passare all'eseguibile",
   "settings.browserOptionArgumentsHelp": "Le argomentazioni sono separate da spazi. Usa %s per inserire il link/URL.",
   "settings.browserOptionArgumentsHelp.format": "Formato comandi:",
-  "settings.browserOptionArgumentsHelp.mac": "Gli argomenti sono separati da spazi. Usa % per inserire gli URL. Questi argomenti sono passati al terminale di comando \"aperto\", non direttamente al browser. Vedi questo link:",
+  "settings.browserOptionArgumentsHelp.mac": "Gli argomenti sono separati da spazi. Usa %s per inserire gli URL. Questi argomenti sono passati al terminale di comando \"open\", non direttamente al browser. Vedi questo link:",
   "settings.browserOptionArgumentsHelp.mac.ignoreMe": "Se non sai cosa significa tutto ciò, probabilmente puoi ignorare l'impostazione e lasciarla al valore standard.",
   "settings.browserOptionBrowse": "Naviga",
   "settings.browserOptionHeader": "Impostazione browser",
