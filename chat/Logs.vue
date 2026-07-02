@@ -217,7 +217,7 @@
         v-if="pendingFilter.length > 0 && !selectionMode"
         class="btn btn-outline-secondary"
         :class="{ active: highlightEnabled }"
-        :title="l('logs.toggleHighlight')"
+        :title="l('chat.toggleHighlight')"
         @click="highlightEnabled = !highlightEnabled"
       >
         <span class="fas fa-highlighter"></span>

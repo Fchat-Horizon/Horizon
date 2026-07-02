@@ -260,19 +260,17 @@
         ref="searchField"
         class="form-control"
       />
-      <a
-        class="btn btn-sm btn-light"
-        style="
-          position: absolute;
-          right: 5px;
-          top: 50%;
-          transform: translateY(-50%);
-          line-height: 0;
-          z-index: 10;
-        "
-        @click="hideSearch"
-        ><i class="fas fa-times"></i
-      ></a>
+      <button
+        class="btn btn-outline-secondary"
+        :class="{ active: highlightEnabled }"
+        :title="l('chat.toggleHighlight')"
+        @click="highlightEnabled = !highlightEnabled"
+      >
+        <span class="fas fa-highlighter"></span>
+      </button>
+      <a class="btn btn-light" @click="hideSearch">
+        <i class="fas fa-times"></i>
+      </a>
     </div>
     <div class="auto-ads" v-show="isAutopostingAds()">
       <h4>{{ l('admgr.activeHeader') }}</h4>
@@ -314,7 +312,7 @@
           :channel="isChannel(conversation) ? conversation.channel : undefined"
           :key="message.id"
           :classes="message == conversation.lastRead ? 'last-read' : ''"
-          :highlight="search"
+          :highlight="highlightEnabled ? search : ''"
           :previous="messages[i - 1]"
         >
         </message-view>
@@ -579,6 +577,7 @@
         showSearch: false,
         searchInput: '',
         search: '',
+        highlightEnabled: true,
         lastSearchInput: 0,
         messageCount: 0,
         searchTimer: 0,
@@ -722,11 +721,14 @@
         }) as EventListener)
       );
       this.searchTimer = window.setInterval(() => {
+        // ignore whitespace-only search
+        const committed =
+          this.searchInput.trim().length === 0 ? '' : this.searchInput;
         if (
           Date.now() - this.lastSearchInput > 500 &&
-          this.search !== this.searchInput
+          this.search !== committed
         )
-          this.search = this.searchInput;
+          this.search = committed;
       }, 500);
       this.messageView = <HTMLElement>this.$refs['messages'];
       this.$watch('conversation.nextAd', (value: number) => {
