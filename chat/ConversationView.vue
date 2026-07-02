@@ -314,6 +314,7 @@
           :channel="isChannel(conversation) ? conversation.channel : undefined"
           :key="message.id"
           :classes="message == conversation.lastRead ? 'last-read' : ''"
+          :highlight="search"
           :previous="messages[i - 1]"
         >
         </message-view>

@@ -45,7 +45,7 @@ function highlightTextNodes(root: HTMLElement, term: string): void {
           document.createTextNode(text.slice(lastIndex, match.index))
         );
       const mark = document.createElement('span');
-      mark.className = 'logs-filter-highlight';
+      mark.className = 'message-search-highlight';
       mark.textContent = match[0];
       frag.appendChild(mark);
       lastIndex = match.index + match[0].length;
@@ -58,7 +58,7 @@ function highlightTextNodes(root: HTMLElement, term: string): void {
 }
 
 function clearHighlights(root: HTMLElement): void {
-  const marks = root.querySelectorAll('.logs-filter-highlight');
+  const marks = root.querySelectorAll('.message-search-highlight');
   marks.forEach(mark => {
     const parent = mark.parentNode;
     if (parent === null) return;
@@ -260,14 +260,19 @@ export default Vue.extend({
     // shows as a blank line like classic view does.
     if (messageAdjustment === '') messageAdjustment = message.text;
     const isAd = message.type == Conversation.Message.Type.Ad && !this.logs;
+    // highlight whenever a search term is supplied (logs and in-chat find)
     const highlightTerm: string =
-      this.logs && typeof this.highlight === 'string' ? this.highlight : '';
+      typeof this.highlight === 'string' ? this.highlight : '';
+    const needsHighlight = highlightTerm.length > 0;
     const bbcodeNode = createElement(BBCodeView(core.bbCodeParser), {
-      ...(this.logs ? { staticClass: 'bbcode-message-text' } : {}),
+      ...(this.highlight !== undefined
+        ? { staticClass: 'bbcode-message-text' }
+        : {}),
       props: {
         unsafeText: isModern ? messageAdjustment : message.text,
         afterInsert: isAd
           ? (elm: HTMLElement) => {
+              if (needsHighlight) this.applyHighlight(elm);
               setImmediate(() => {
                 if (isModern) {
                   // Pushes elm up three times rather than one with modern to make it parent to the top level of a message.
@@ -294,7 +299,7 @@ export default Vue.extend({
                 }
               });
             }
-          : highlightTerm.length > 0
+          : needsHighlight
             ? (elm: HTMLElement) => this.applyHighlight(elm)
             : undefined
       }
@@ -403,7 +408,7 @@ export default Vue.extend({
   methods: {
     // clears and reapplies highlights, called by the watcher and afterInsert
     applyHighlight(root: HTMLElement | null): void {
-      if (!this.logs || root === null) return;
+      if (root === null) return;
       clearHighlights(root);
       const term = typeof this.highlight === 'string' ? this.highlight : '';
       if (term.length > 0) highlightTextNodes(root, term);
