@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixed issues on MacOS where opening URLs with a custom browser path and arguments set would not pass the arguments to the browser executable correctly. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c042f5165ac79527f76a66014f7cb33c52ca4470)
+- Fixed issues on MacOS where opening URLs with a custom browser path and arguments set would not correctly pass the arguments to the browser executable. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c042f5165ac79527f76a66014f7cb33c52ca4470)
 
 ### Development
 
@@ -57,8 +57,9 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 ### Added
 
 - Updates now automatically download, and you can easily install them with the click of a button. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4139ac84c1a19453d5e89383c7aada609346862b)
-  - On Linux, this requires using the AppImage builds. Unless you were using a package manager managed version of Horizon, in which case you always had this ability.
-  - For NixOS users, this also includes a new Nix Flake you can now use to easily install Horizon. With special thanks to Moonburst! [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/999c34c5e0c0d9395605243b45f4b160bc9c92cc)
+  - On Linux, this requires using the AppImage builds. If you are using a package manager managed version of Horizon, you always sort of had this ability.
+  - For NixOS users, this also includes a new Nix Flake you can now use to easily install Horizon. Check out the install instructions in our ReadMe file or on our website for more info. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/999c34c5e0c0d9395605243b45f4b160bc9c92cc)
+    - With special thanks to @MoonBurst
 
 ### Changed
 
@@ -72,7 +73,7 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 
 ### Fixed
 
-- Fixed a bug that would let you create an unnamed channel group if you somehow deleted all of your groups and created a new one by directly pinning a channel. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e66d1a6e51f43609fb5e440df000d17b40dec96c)
+- Fixed a bug that would let you create an improperly named channel group if you somehow deleted all of your groups, and created a new one by directly pinning a channel. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e66d1a6e51f43609fb5e440df000d17b40dec96c)
 - Fixed issues where F-List character memos would be saved with HTML entity characters (like `&amp;` or `&gt;`) if saved inside the app. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/871195c0bb87d9fd8060c3f80bfbe3facc8b12fa)
 - Fixed left clicking the tray icon not reopening your window(s). This was a bug apparently. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9eab9b42664ba9d2e74ad165c1ab847f66a82ec1)
 - Fixed message drafts not clearing after you send them. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7248e57e06c778d78983225f1642958f744a65e3)
