@@ -145,9 +145,7 @@
       this.jsMutator.init();
 
       EventBus.$on('imagepreview-dismiss', (eventData: EventBusEvent) => {
-        this.dismiss(
-          this.negotiateUrl((eventData.url as string) || '')
-        );
+        this.dismiss(this.negotiateUrl((eventData.url as string) || ''));
       });
 
       EventBus.$on('imagepreview-show', (eventData: EventBusEvent) => {
