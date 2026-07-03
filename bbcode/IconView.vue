@@ -7,8 +7,8 @@
     @mouseenter.prevent="show()"
     @mouseleave.prevent="dismiss()"
     @click.middle.prevent.stop="toggleStickyness()"
-    @click.right.passive="dismiss(true)"
-    @click.left.passive="dismiss(true)"
+    @click.right.passive="dismiss()"
+    @click.left.passive="dismiss()"
     ><img
       :src="characterImage(character.name, useOriginalAvatar)"
       class="character-avatar icon"
@@ -50,10 +50,9 @@
       getCharacterUrl(): string {
         return `flist-character://${normalizeCharacterName(this.character.name)}`;
       },
-      dismiss(force: boolean = false): void {
+      dismiss(): void {
         EventBus.$emit('imagepreview-dismiss', {
-          url: this.getCharacterUrl(),
-          force
+          url: this.getCharacterUrl()
         });
       },
       show(): void {

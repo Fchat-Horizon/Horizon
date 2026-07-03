@@ -502,14 +502,13 @@
         return `flist-character://${normalizeCharacterName(this.character.name)}`;
       },
 
-      dismiss(force: boolean = false): void {
+      dismiss(): void {
         if (!this.preview) {
           return;
         }
 
         EventBus.$emit('imagepreview-dismiss', {
-          url: this.getCharacterUrl(),
-          force
+          url: this.getCharacterUrl()
         });
       },
 
