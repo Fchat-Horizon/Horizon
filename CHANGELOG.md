@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-07-03
+
 ### Added
 
 - Updates now automatically download, and you can easily install them with the click of a button. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4139ac84c1a19453d5e89383c7aada609346862b)
@@ -1471,7 +1473,8 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - IOS build removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814)]
 - Webchat removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/b894a180b9be31f68d1458aaa3c59f9c4470da89)]
 
-[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.2.2-beta.2...development
+[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.3.0...development
+[2.3.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.2.2-beta.2...v2.3.0
 [2.2.2-beta.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.2.2-beta.1...v2.2.2-beta.2
 [2.2.2-beta.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.2.2-beta.0...v2.2.2-beta.1
 [2.2.2-beta.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.2.1...v2.2.2-beta.0
