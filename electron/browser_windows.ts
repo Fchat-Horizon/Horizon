@@ -98,6 +98,11 @@ const winIcon: string = path.join(
   <string>require('./build/icon.ico').default
 );
 
+const updaterSplashHtml: string = path.join(
+  __dirname,
+  <string>require('./updater-splash.html').default
+);
+
 /**
  * Badge icon path for the app icon overlay. Used for when there are new messages and numbered badges are disabled.
  */
@@ -685,6 +690,93 @@ export function toggleUpdateNotice(updateAvailable: boolean, version?: string) {
 export function sendUpdateProgress(percent: number, done: boolean = false) {
   for (const w of windows)
     w.webContents.send('update-download-progress', percent, done);
+}
+
+let updaterSplash: electron.BrowserWindow | undefined;
+
+let updaterSplashShownAt: number | undefined;
+
+let updaterSplashShown: Promise<void> | undefined;
+
+export function createUpdaterSplashWindow(
+  updateTag?: string
+): electron.BrowserWindow {
+  const window = new electron.BrowserWindow({
+    width: 360,
+    height: 140,
+    center: true,
+    frame: false,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    show: false,
+    backgroundColor: '#1b1b21',
+    icon: process.platform === 'win32' ? winIcon : pngIcon,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true
+    }
+  });
+
+  updaterSplashProgress = undefined;
+  window.loadFile(updaterSplashHtml, {
+    query: {
+      status: l('update.splash.updating'),
+      ...(updateTag ? { version: updateTag } : {})
+    }
+  });
+  window.webContents.on('did-finish-load', () => {
+    if (updaterSplashProgress !== undefined)
+      pushUpdaterSplashProgress(updaterSplashProgress);
+  });
+  updaterSplashShown = new Promise(resolve =>
+    window.once('ready-to-show', () => {
+      window.show();
+      updaterSplashShownAt = Date.now();
+      resolve();
+    })
+  );
+  window.on('closed', () => {
+    if (updaterSplash === window) updaterSplash = undefined;
+  });
+  updaterSplash = window;
+  return window;
+}
+
+export async function updaterSplashSeen(
+  minVisibleMs: number,
+  maxWaitMs: number
+): Promise<void> {
+  if (!updaterSplashShown) return;
+  const delay = (ms: number): Promise<void> =>
+    new Promise(resolve => setTimeout(resolve, ms));
+  await Promise.race([
+    updaterSplashShown.then(() =>
+      delay(Math.max(0, updaterSplashShownAt! + minVisibleMs - Date.now()))
+    ),
+    delay(maxWaitMs)
+  ]);
+}
+
+let updaterSplashProgress: number | undefined;
+
+function pushUpdaterSplashProgress(percent: number): void {
+  if (!updaterSplash || updaterSplash.isDestroyed()) return;
+  updaterSplash.webContents
+    .executeJavaScript(`window.setProgress && window.setProgress(${percent})`)
+    .catch(() => {});
+}
+
+export function setUpdaterSplashProgress(percent: number): void {
+  updaterSplashProgress = percent;
+  pushUpdaterSplashProgress(percent);
+}
+
+export function closeUpdaterSplash(): void {
+  if (updaterSplash && !updaterSplash.isDestroyed()) updaterSplash.close();
+  updaterSplash = undefined;
 }
 
 /**
