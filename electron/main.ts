@@ -261,6 +261,7 @@ const baseDir = app.getPath('userData');
 fs.mkdirSync(baseDir, { recursive: true });
 let shouldImportSettings = false;
 const updateCheckInterval = 60 * 60 * 1000; // 1 hour in milliseconds
+const startupInstallTimeout = 15_000;
 const releasesUrl =
   'https://api.github.com/repos/Fchat-Horizon/Horizon/releases';
 type ReleaseInfo = {
@@ -538,6 +539,77 @@ async function requestUpdateDownload(expectedTag?: string): Promise<void> {
     downloadingUpdate = false;
   }
 }
+async function stagePendingUpdate(expectedTag: string): Promise<boolean> {
+  autoUpdater.allowPrerelease = settings.beta;
+  const failed =
+    (stage: string) =>
+    (e: unknown): 'failed' => {
+      log.error(`autoUpdater.startupInstall.${stage}`, e);
+      return 'failed';
+    };
+  const timeout = new Promise<'timeout'>(resolve =>
+    setTimeout(() => resolve('timeout'), startupInstallTimeout)
+  );
+  const check = await Promise.race([
+    autoUpdater.checkForUpdates().catch(failed('check')),
+    timeout
+  ]);
+  if (check === 'timeout' || check === 'failed' || !check) return false;
+  if (normalizeVersionToTag(check.updateInfo?.version) !== expectedTag)
+    return false;
+  browserWindows.setUpdaterSplashProgress(30);
+  const download = await Promise.race([
+    autoUpdater.downloadUpdate().catch(failed('download')),
+    timeout
+  ]);
+  if (download === 'timeout' || download === 'failed') return false;
+  browserWindows.setUpdaterSplashProgress(90);
+  return true;
+}
+
+async function runStartupUpdateInstall(): Promise<boolean> {
+  if (!settings.updateCheck || !supportsAutoUpdates()) return false;
+  const pendingTag = settings.horizonPendingUpdateTag;
+  if (!pendingTag) return false;
+
+  const clearPendingTag = (): void => {
+    settings.horizonPendingUpdateTag = '';
+    setGeneralSettings(settings);
+  };
+
+  if (
+    pendingTag === normalizeVersionToTag(app.getVersion()) ||
+    pendingTag === settings.horizonSkippedUpdateVersion
+  ) {
+    clearPendingTag();
+    return false;
+  }
+
+  browserWindows.createUpdaterSplashWindow(pendingTag);
+  const onDownloadProgress = (progress: { percent: number }): void =>
+    browserWindows.setUpdaterSplashProgress(30 + progress.percent * 0.6);
+  autoUpdater.on('download-progress', onDownloadProgress);
+  let install = false;
+  try {
+    install = await stagePendingUpdate(pendingTag);
+  } catch (e) {
+    log.error('autoUpdater.startupInstall.failed', e);
+  } finally {
+    autoUpdater.removeListener('download-progress', onDownloadProgress);
+  }
+  clearPendingTag();
+  if (!install) {
+    browserWindows.closeUpdaterSplash();
+    return false;
+  }
+  log.info('autoUpdater.startupInstall', pendingTag);
+  browserWindows.setUpdaterSplashProgress(100);
+  await browserWindows.updaterSplashSeen(1500, 4000);
+  isUpdateRestarting = true;
+  autoUpdater.quitAndInstall(true, true);
+  return true;
+}
+
 function confirmUpdateWhileConnected(): boolean {
   if (getConnectedCharacterCount() === 0) return true;
   const focusedWindow = electron.BrowserWindow.getFocusedWindow();
@@ -764,7 +836,7 @@ async function onReady(): Promise<void> {
     const updateMode = supportsAutoUpdates() ? 'auto' : 'manual';
     autoUpdater.logger = log;
     autoUpdater.autoDownload = false;
-    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.autoInstallOnAppQuit = process.platform !== 'win32';
     autoUpdater.allowPrerelease = settings.beta;
 
     /**
@@ -785,6 +857,10 @@ async function onReady(): Promise<void> {
     }
 
     if (updateMode === 'auto') {
+      // A staged update quits into the installer here; nothing else may run,
+      // least of all a window.
+      if (await runStartupUpdateInstall()) return;
+
       autoUpdater.on('error', err => {
         log.error('autoUpdater.error', err);
         downloadingUpdate = false;
@@ -813,6 +889,10 @@ async function onReady(): Promise<void> {
       });
 
       autoUpdater.on('update-not-available', () => {
+        if (settings.horizonPendingUpdateTag) {
+          settings.horizonPendingUpdateTag = '';
+          setGeneralSettings(settings);
+        }
         setUpdateNotice(false);
       });
 
@@ -823,11 +903,16 @@ async function onReady(): Promise<void> {
       autoUpdater.on('update-downloaded', info => {
         downloadedUpdateTag = normalizeVersionToTag(info.version);
         downloadingUpdate = false;
+        if (
+          downloadedUpdateTag &&
+          settings.horizonPendingUpdateTag !== downloadedUpdateTag
+        ) {
+          settings.horizonPendingUpdateTag = downloadedUpdateTag;
+          setGeneralSettings(settings);
+        }
         setUpdateProgress(100, true);
       });
 
-      // Check before the window so a staged update installs on quit, not
-      // mid-session where it looks like a crash.
       void runAutoUpdateCheck();
       setInterval(() => runAutoUpdateCheck(), updateCheckInterval);
     } else {
@@ -1203,9 +1288,21 @@ async function onReady(): Promise<void> {
       );
     }
   });
-  electron.ipcMain.on('install-update', () => {
+  electron.ipcMain.on('install-update', async () => {
     if (!confirmUpdateWhileConnected()) return;
     isUpdateRestarting = true;
+    if (
+      autoBackupScheduler &&
+      settings.autoBackupEnabled &&
+      Array.isArray(settings.autoBackupTriggers) &&
+      settings.autoBackupTriggers.includes('close')
+    ) {
+      try {
+        await autoBackupScheduler.runOnClose();
+      } catch (e) {
+        log.error('autoUpdater.backupBeforeInstall.failed', e);
+      }
+    }
     autoUpdater.quitAndInstall(true, true);
   });
   electron.ipcMain.on('enable-auto-download-updates', () => {
@@ -1515,6 +1612,7 @@ let willQuitHandled = false;
 app.on('will-quit', (event: Event) => {
   if (
     !willQuitHandled &&
+    !isUpdateRestarting &&
     autoBackupScheduler &&
     settings.autoBackupEnabled &&
     Array.isArray(settings.autoBackupTriggers) &&

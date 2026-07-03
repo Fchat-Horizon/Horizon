@@ -45,6 +45,7 @@ export class GeneralSettings {
   horizonHideAutoUpdater = false;
   horizonAutoDownloadUpdates = true;
   horizonSkippedUpdateVersion = '';
+  horizonPendingUpdateTag = '';
   customDictionary: string[] = [];
   hwAcceleration = true;
   reducedMotion = false;
