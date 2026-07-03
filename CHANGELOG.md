@@ -7,58 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.2.2-beta.2] - 2026-07-02
-
-### Pre-release fixes and changes
-
-<!-- These do not go into the final 2.3 changelog-->
-
-- "Automatically download updates" is now enabled by default. Also resolved various timing issues where restarting the app after an update has been downloaded (but not installed) would show the main window for 10 seconds, before exiting to update. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4497ed82166253da961db6a442284982fac0fc10)
-  - If you have already used a pre-release build with the updater functionality built in, this will be set to the value you had it at before. You will need to manually enable it still.
-
-### Fixed
-
-- Fixed issues on MacOS where opening URLs with a custom browser path and arguments set would not correctly pass the arguments to the browser executable. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c042f5165ac79527f76a66014f7cb33c52ca4470)
-
-### Development
-
-- Fixed issues where `pnpm watch` would occassionally still try to watch items in the `scss/node_modules` directory, and then exiting as a result. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1e6140c463dd54a2aa5b071b4f8ba446b74bdb95)
-
-### Documentation
-
-- Added documentation for our project workflow. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/749aaba88390cb8f7c045ad64e1a47e8ef30a4d0)
-- Added documentation for the localization system. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/40661df38eca3618614b154e55052aef18bd0ddd)
-
-### Merged Pull Requests
-
-- https://github.com/Fchat-Horizon/Horizon/pull/839 by @CodingWithAnxiety and @FatCatClient
-
-## [2.2.2-beta.1] - 2026-06-23
-
-### Pre-release fixes and changes
-
-<!-- These do not go into the final 2.3 changelog-->
-
-- Fixed some issues where the tray icon would incorrectly open all or not enough windows depending on the items clicked. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3f20e61216052785ed83377c2e9a5b3c83d37a80)
-- The update download progress indicator is now a clock filling up instead of a blue bar. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9fc0578f7bd2baa274197607e83218536cde4dc6)
-  - Ironically, you won't be able to notice this one until the next beta (or full release) comes out.
-
-### Fixed
-
-- Channel-specific settings are no longer visible in the PM conversation settings dialog, where they were basically just useless. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6bcb6d64bf4744f4caa1d7b06168d7ec736725b5)
-- You can no longer send "empty" messages with just a space or a newline character. These also no longer look messed up in the 'Modern' chat view [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/fd704097bce7c9bb1e3e0a0a0886a43b15cf7b00)
-
-### Merged Pull Requests
-
-- https://github.com/Fchat-Horizon/Horizon/pull/827 by @freenutsxd
-
-Non PR'd changes by @CodingWithAnxiety and @FatCatClient
-
-## [2.2.2-beta.0] - 2026-06-16
-
 ### Added
 
 - Updates now automatically download, and you can easily install them with the click of a button. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4139ac84c1a19453d5e89383c7aada609346862b)
+  - The default setting automatically downloads updates and installs them for you when you restart. You can also disable this in the app settings window to simply prompt you to download and install it– which you can still do through the app.
   - On Linux, this requires using the AppImage builds. If you are using a package manager managed version of Horizon, you always sort of had this ability.
   - For NixOS users, this also includes a new Nix Flake you can now use to easily install Horizon. Check out the install instructions in our ReadMe file or on our website for more info. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/999c34c5e0c0d9395605243b45f4b160bc9c92cc)
     - With special thanks to @MoonBurst
@@ -77,9 +29,21 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 
 - Fixed a bug that would let you create an improperly named channel group if you somehow deleted all of your groups, and created a new one by directly pinning a channel. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e66d1a6e51f43609fb5e440df000d17b40dec96c)
 - Fixed issues where F-List character memos would be saved with HTML entity characters (like `&amp;` or `&gt;`) if saved inside the app. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/871195c0bb87d9fd8060c3f80bfbe3facc8b12fa)
+- You can no longer send "empty" messages with just a space or a newline character. These also no longer look messed up in the 'Modern' chat view [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/fd704097bce7c9bb1e3e0a0a0886a43b15cf7b00)
+- Fixed issues on MacOS where opening URLs with a custom browser path and arguments set would not correctly pass the arguments to the browser executable. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c042f5165ac79527f76a66014f7cb33c52ca4470)
+- Channel-specific settings are no longer visible in the PM conversation settings dialog, where they were basically just useless. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6bcb6d64bf4744f4caa1d7b06168d7ec736725b5)
 - Fixed left clicking the tray icon not reopening your window(s). This was a bug apparently. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9eab9b42664ba9d2e74ad165c1ab847f66a82ec1)
 - Fixed message drafts not clearing after you send them. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7248e57e06c778d78983225f1642958f744a65e3)
 - Fixed the automatic ad poster not always respecting your minimum delay between ads, including after a manual ad or a reconnect. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c469ced99205b9cc27e5ca2fbff0e46d72694f05)
+
+### Development
+
+- Fixed issues where `pnpm watch` would occassionally still try to watch items in the `scss/node_modules` directory, and then exiting as a result. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1e6140c463dd54a2aa5b071b4f8ba446b74bdb95)
+
+### Documentation
+
+- Added documentation for our project workflow. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/749aaba88390cb8f7c045ad64e1a47e8ef30a4d0)
+- Added documentation for the localization system. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/40661df38eca3618614b154e55052aef18bd0ddd)
 
 ### Merged Pull Requests
 
@@ -93,6 +57,10 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/820 by @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/824 by @MoonBurst
 - https://github.com/Fchat-Horizon/Horizon/pull/825 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/827 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/839 by @CodingWithAnxiety and @FatCatClient
+
+Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 
 ## [2.2.1] - 2026-06-08
 
