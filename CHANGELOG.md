@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - You can no longer send "empty" messages with just a space or a newline character. These also no longer look messed up in the 'Modern' chat view [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/fd704097bce7c9bb1e3e0a0a0886a43b15cf7b00)
 - Fixed issues on MacOS where opening URLs with a custom browser path and arguments set would not correctly pass the arguments to the browser executable. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c042f5165ac79527f76a66014f7cb33c52ca4470)
 - Channel-specific settings are no longer visible in the PM conversation settings dialog, where they were basically just useless. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6bcb6d64bf4744f4caa1d7b06168d7ec736725b5)
-- Fixed left clicking the tray icon not reopening your window(s). This was a bug apparently. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9eab9b42664ba9d2e74ad165c1ab847f66a82ec1)
+- Fixed double clicking the tray icon not reopening your window(s). There is also a menu option to do the same if you right-click. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9eab9b42664ba9d2e74ad165c1ab847f66a82ec1)
 - Fixed message drafts not clearing after you send them. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7248e57e06c778d78983225f1642958f744a65e3)
 - Fixed the automatic ad poster not always respecting your minimum delay between ads, including after a manual ad or a reconnect. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c469ced99205b9cc27e5ca2fbff0e46d72694f05)
 
@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/602 by @CodingWithAnxiety
 - https://github.com/Fchat-Horizon/Horizon/pull/795 by @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/796 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/800 by @Kannamoris
 - https://github.com/Fchat-Horizon/Horizon/pull/807 by @Kannamoris
 - https://github.com/Fchat-Horizon/Horizon/pull/808 by @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/809 by @FatCatClient
