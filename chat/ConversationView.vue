@@ -13,7 +13,12 @@
     <div style="display: flex" v-if="isPrivate(conversation)" class="header">
       <img
         :src="characterImage"
-        style="height: 60px; width: 60px; margin-right: 10px"
+        style="
+          height: 60px;
+          width: 60px;
+          margin-right: 10px;
+          object-fit: contain;
+        "
         v-if="settings.showAvatars"
       />
       <div

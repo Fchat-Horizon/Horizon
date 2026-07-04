@@ -41,7 +41,7 @@
                   height: 20px;
                   border-radius: 3px;
                   margin-right: 6px;
-                  object-fit: cover;
+                  object-fit: contain;
                 "
                 loading="lazy"
               />
@@ -94,7 +94,7 @@
                   height: 20px;
                   border-radius: 3px;
                   margin-right: 6px;
-                  object-fit: cover;
+                  object-fit: contain;
                 "
                 @error="$event.target.style.display = 'none'"
                 loading="lazy"
@@ -247,7 +247,12 @@
   import FilterableSelect from '../components/FilterableSelect.vue';
   import Modal from '../components/Modal.vue';
   import { Keys } from '../keys';
-  import { formatTime, getKey, messageToString } from './common';
+  import {
+    characterImage,
+    formatTime,
+    getKey,
+    messageToString
+  } from './common';
   import core from './core';
   import { Conversation, Logs as LogInterface } from './interfaces';
   import l from './localize';
@@ -908,7 +913,7 @@
       },
 
       getAvatarUrl(character: string): string {
-        return `https://static.f-list.net/images/avatar/${encodeURIComponent(character.toLowerCase())}.png`;
+        return characterImage(character);
       }
     }
   });
