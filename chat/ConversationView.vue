@@ -722,6 +722,19 @@
             this.$nextTick(() =>
               (<HTMLElement>this.$refs['searchField']).focus()
             );
+          } else if (
+            // ^ 'keypress' never fires for these keys
+            (getKey(e) === Keys.Enter || getKey(e) === Keys.Backspace) &&
+            !e.ctrlKey &&
+            !e.metaKey &&
+            !e.altKey &&
+            !anyDialogsShown &&
+            (document.activeElement === document.body ||
+              document.activeElement === null)
+          ) {
+            const selection = document.getSelection();
+            if (selection === null || selection.isCollapsed)
+              (<Editor>this.$refs['textBox']).focus();
           }
         }) as EventListener)
       );
