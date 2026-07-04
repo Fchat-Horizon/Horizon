@@ -146,19 +146,17 @@ export class IndexedStore implements PermanentIndexedStore {
       // groupCount: null
     };
 
+    // ^ _.merge combines arrays by index and never truncates
     return existing
-      ? _.merge(
-          existing,
-          data,
-          _.pick(existing, [
-            'firstSeen',
-            'lastMetaFetched',
-            'guestbook',
-            'images',
-            'friends',
-            'groups'
-          ])
-        )
+      ? {
+          ...data,
+          firstSeen: existing.firstSeen,
+          lastMetaFetched: existing.lastMetaFetched,
+          guestbook: existing.guestbook,
+          images: existing.images,
+          friends: existing.friends,
+          groups: existing.groups
+        }
       : data;
   }
 
