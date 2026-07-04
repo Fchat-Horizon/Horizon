@@ -321,16 +321,25 @@ export default function (this: void, connection: Connection): Interfaces.State {
     const ownName = (state.ownCharacter as Character | undefined)?.name;
     switch (data.type) {
       case 'trackadd':
-        state.bookmarkList.push(data.name);
+        if (state.bookmarkList.indexOf(data.name) === -1)
+          state.bookmarkList.push(data.name);
         character.isBookmarked = true;
-        if (character.status !== 'offline') state.bookmarks.push(character);
+        if (
+          character.status !== 'offline' &&
+          state.bookmarks.indexOf(character) === -1
+        )
+          state.bookmarks.push(character);
         break;
-      case 'trackrem':
-        state.bookmarkList.splice(state.bookmarkList.indexOf(data.name), 1);
+      case 'trackrem': {
+        const listIndex = state.bookmarkList.indexOf(data.name);
+        if (listIndex !== -1) state.bookmarkList.splice(listIndex, 1);
         character.isBookmarked = false;
-        if (character.status !== 'offline')
-          state.bookmarks.splice(state.bookmarks.indexOf(character), 1);
+        if (character.status !== 'offline') {
+          const index = state.bookmarks.indexOf(character);
+          if (index !== -1) state.bookmarks.splice(index, 1);
+        }
         break;
+      }
       case 'friendadd':
         // Always add to global friends (guard against duplicates when multiple characters share a friend)
         if (state.friendList.indexOf(data.name) === -1) {
@@ -368,10 +377,12 @@ export default function (this: void, connection: Connection): Interfaces.State {
         break;
       case 'friendremove':
         // Always remove from global friends
-        state.friendList.splice(state.friendList.indexOf(data.name), 1);
+        const friendListIndex = state.friendList.indexOf(data.name);
+        if (friendListIndex !== -1) state.friendList.splice(friendListIndex, 1);
         character.isFriend = false;
         if (character.status !== 'offline') {
-          state.friends.splice(state.friends.indexOf(character), 1);
+          const index = state.friends.indexOf(character);
+          if (index !== -1) state.friends.splice(index, 1);
         }
 
         // Once again, update character-specific friends list, regardless of setting
