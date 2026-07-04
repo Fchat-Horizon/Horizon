@@ -86,18 +86,24 @@ class State implements Interfaces.State {
     text: string
   ): void {
     if (character.status === 'offline' && status !== 'offline') {
-      if (character.isFriend) this.friends.push(character);
-      if (character.isBookmarked) this.bookmarks.push(character);
+      if (character.isFriend && this.friends.indexOf(character) === -1)
+        this.friends.push(character);
+      if (character.isBookmarked && this.bookmarks.indexOf(character) === -1)
+        this.bookmarks.push(character);
       if (this.characterFriendList.indexOf(character.name) !== -1) {
         if (this.characterFriends.indexOf(character) === -1) {
           this.characterFriends.push(character);
         }
       }
     } else if (status === 'offline' && character.status !== 'offline') {
-      if (character.isFriend)
-        this.friends.splice(this.friends.indexOf(character), 1);
-      if (character.isBookmarked)
-        this.bookmarks.splice(this.bookmarks.indexOf(character), 1);
+      if (character.isFriend) {
+        const index = this.friends.indexOf(character);
+        if (index !== -1) this.friends.splice(index, 1);
+      }
+      if (character.isBookmarked) {
+        const index = this.bookmarks.indexOf(character);
+        if (index !== -1) this.bookmarks.splice(index, 1);
+      }
       if (this.characterFriendList.indexOf(character.name) !== -1) {
         const index = this.characterFriends.indexOf(character);
         if (index !== -1) {
