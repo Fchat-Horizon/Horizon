@@ -66,11 +66,11 @@
     "webpack": "^5.99.9"
   },
   "dependencies": {
-    "@ghostery/adblocker": "^2.14.1",
-    "@ghostery/adblocker-content": "^2.14.1",
-    "@ghostery/adblocker-electron": "^2.14.1",
-    "@ghostery/adblocker-electron-preload": "^2.14.1",
-    "@ghostery/adblocker-extended-selectors": "^2.14.1",
+    "@ghostery/adblocker": "^2.18.1",
+    "@ghostery/adblocker-content": "^2.18.1",
+    "@ghostery/adblocker-electron": "^2.18.1",
+    "@ghostery/adblocker-electron-preload": "^2.18.1",
+    "@ghostery/adblocker-extended-selectors": "^2.18.1",
     "adm-zip": "^0.5.17",
     "archiver": "^7.0.1",
     "node-fetch": "^2.7.0",
