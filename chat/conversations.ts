@@ -128,7 +128,7 @@ abstract class Conversation implements Interfaces.Conversation {
   clearText(): void {
     setImmediate(() => {
       this.enteredText = '';
-      core.cache.conversationDraftCache.deregister(this.name);
+      core.cache.conversationDraftCache.deregister(this.key);
     });
   }
 
@@ -466,7 +466,7 @@ class PrivateConversation
       this.safeAddMessage(message);
 
       await this.logMessage(message, false);
-      core.cache.deregisterConversationDraft(this.name);
+      core.cache.deregisterConversationDraft(this.key);
       this.markRead();
     });
   }
@@ -1207,7 +1207,7 @@ async function initConversationCache(this: Conversation): Promise<void> {
   // Restore message draft if it exists (e.g. accidentally closing the tab). Be sure the cache is reset for a new character if needed.
   await core.cache.conversationDraftCache.resetCacheIfNeeded();
 
-  const draft = core.cache.getConversationDraft(this.name);
+  const draft = core.cache.getConversationDraft(this.key);
   this.enteredText = draft;
 
   if (!this.cacheActive) {
@@ -1227,8 +1227,8 @@ async function initConversationCache(this: Conversation): Promise<void> {
       }
 
       this.enteredText
-        ? core.cache.registerConversationDraft(this.name, this.enteredText)
-        : core.cache.deregisterConversationDraft(this.name);
+        ? core.cache.registerConversationDraft(this.key, this.enteredText)
+        : core.cache.deregisterConversationDraft(this.key);
     }, CONVERSATION_CACHE_UPDATE_FREQ_IN_MS);
   }
 }
