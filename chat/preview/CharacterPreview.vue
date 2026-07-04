@@ -152,6 +152,14 @@
     name: string;
   }
 
+  function truncateBBCode(text: string, max: number): string {
+    if (text.length <= max) return text;
+    let cut = text.substr(0, max);
+    if (cut.lastIndexOf('[') > cut.lastIndexOf(']'))
+      cut = cut.substr(0, cut.lastIndexOf('['));
+    return cut + '…';
+  }
+
   export default Vue.extend({
     components: {
       'match-tags': MatchTags,
@@ -331,7 +339,7 @@
           ),
           m => ({
             ...m,
-            text: m.text.length > 512 ? m.text.substr(0, 512) + '…' : m.text
+            text: truncateBBCode(m.text, 512)
           })
         );
       },
