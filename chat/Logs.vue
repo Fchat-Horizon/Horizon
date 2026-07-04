@@ -207,7 +207,6 @@
         :placeholder="l('filter')"
         v-show="messages"
         type="text"
-        :disabled="selectedConversation === undefined || messages.length === 0"
       />
       <span v-if="searching" class="input-group-text">
         <span class="fas fa-spinner fa-spin"></span>
@@ -484,7 +483,8 @@
       },
 
       onFilterChanged(): void {
-        if (this.selectedConversation === undefined) return;
+        if (this.selectedConversation === undefined || this.messages.length < 1)
+          return;
         if (this.filterDebounce !== undefined)
           clearTimeout(this.filterDebounce);
         this.filterDebounce = setTimeout(() => {
