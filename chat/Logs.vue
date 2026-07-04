@@ -670,9 +670,18 @@
         if (this.selectedCharacter !== '') {
           await this.loadConversations();
           if (this.conversation !== undefined) {
+            const previousKey = this.selectedConversation?.key;
             this.selectedConversation = this.conversations.filter(
               x => x.key === (this as any).conversation!.key
             )[0];
+            // ^ the selectedConversation watcher skips same-key updates
+            if (
+              this.selectedConversation !== undefined &&
+              this.selectedConversation.key === previousKey
+            ) {
+              await this.loadDates();
+              await this.loadMessages();
+            }
             (this.$refs['messageFilter'] as HTMLInputElement).focus();
           } else {
             await this.loadDates();
