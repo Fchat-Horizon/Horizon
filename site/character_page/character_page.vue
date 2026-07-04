@@ -593,12 +593,19 @@
           return;
         }
 
+        const expectedName = this.name;
         const cache = await this.fetchCharacterCache();
 
-        this.character =
+        if (this.name !== expectedName) return;
+
+        const character =
           cache && !skipCache
             ? cache.character
             : await methods.characterData(this.name, this.id, false);
+
+        if (this.name !== expectedName) return;
+
+        this.character = character;
 
         standardParser.inlines = this.character!.character.inlines;
 
