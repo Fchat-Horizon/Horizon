@@ -161,7 +161,10 @@
           )
             this.position.top = `${window.innerHeight - menu.offsetHeight - 1}px`;
         });
-        document.addEventListener('click', this.close, { once: true });
+        document.addEventListener('click', this.close, {
+          once: true,
+          capture: true
+        });
       },
       close(): void {
         if (!this.showMenu) return;

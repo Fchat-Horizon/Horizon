@@ -337,14 +337,14 @@
       },
       close(): void {
         if (!this.showContextMenu) return;
-        document.removeEventListener('click', this.closeOnOutsideClick);
+        document.removeEventListener('click', this.closeOnOutsideClick, true);
         this.showContextMenu = false;
         this.$emit('close');
       },
       closeOnOutsideClick(e: MouseEvent): void {
         const menu = this.getMenuElement();
         if (menu && menu.contains(e.target as Node)) return;
-        document.removeEventListener('click', this.closeOnOutsideClick);
+        document.removeEventListener('click', this.closeOnOutsideClick, true);
         this.close();
       },
       openConversation(jump: boolean): void {
@@ -583,8 +583,8 @@
             this.position.top = `${window.innerHeight - menu.offsetHeight - 1}px`;
         });
 
-        document.removeEventListener('click', this.closeOnOutsideClick);
-        document.addEventListener('click', this.closeOnOutsideClick);
+        document.removeEventListener('click', this.closeOnOutsideClick, true);
+        document.addEventListener('click', this.closeOnOutsideClick, true);
       }
     }
   });
