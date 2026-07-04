@@ -1118,6 +1118,11 @@
       },
 
       refreshMemo(event: { character: string; memo: CharacterMemo }): void {
+        if (
+          !this.isPrivate(this.conversation) ||
+          this.conversation.character.name !== event.character
+        )
+          return;
         this.userMemo = event.memo.memo;
       },
 
