@@ -678,6 +678,8 @@
 
           standardParser.inlines = this.character!.character.inlines;
 
+          this.parseTextToAscii(this.character!);
+
           await core.cache.profileCache.register(this.character!);
 
           this.updateMatches();
