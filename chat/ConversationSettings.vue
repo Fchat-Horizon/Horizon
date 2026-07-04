@@ -170,6 +170,11 @@
         return Conversation.isChannel(this.conversation);
       }
     },
+    watch: {
+      conversation(): void {
+        this.load();
+      }
+    },
     methods: {
       load(): void {
         const settings = this.conversation.settings;
