@@ -83,8 +83,7 @@
         ) as AdCachedPosting[];
       },
       async onOpen(): Promise<void> {
-        // empty
-        return;
+        this.update();
       },
       async onClose(): Promise<void> {
         // empty
