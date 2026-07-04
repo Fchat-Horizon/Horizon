@@ -346,7 +346,7 @@
         // Guestbook tab - key '3'
         if ((this as any).character?.settings?.guestbook) {
           const guestbookCount =
-            this.guestbook !== null ? ` (${this.guestbook.posts.length})` : '';
+            this.guestbook !== null ? ` (${this.guestbook.total})` : '';
           labels['3'] = this.l('profile.tab.guestbook') + guestbookCount;
         }
 
