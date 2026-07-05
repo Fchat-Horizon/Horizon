@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Opening the log viewer automatically focuses the search field again. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6c532ff3ffc4a0203730e298c95a53e3c0abf4b6)
+- Fixed some issues where non-1:1 HQ portraits would look weird in places like the conversation list or mobile-view quick switcher. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/efbcf9fc68d3e485fdc6c7067e14863e0d149c26)
+- Fixed gender icons in `[user]` tags spacing in the profile viewer's status bar. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0f723567048a3dcdd7f74e5e8d7891ef79920a45)
+
+### Development
+
+- Updated Ghostery (ad blocker for image previewer and the dictionary lookup tool) to 2.18 (was 2.14) [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e7d7c9becd5ee931209568bec032d0ece5508466)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/831 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/862 by @FatCatClient
+
 ## [2.3.0] - 2026-07-03
 
 ### Added
