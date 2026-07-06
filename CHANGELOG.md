@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Development
 
 - Updated Ghostery (ad blocker for image previewer and the dictionary lookup tool) to 2.18 (was 2.14) [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e7d7c9becd5ee931209568bec032d0ece5508466)
+- Added CI for announcing locale source file updates to the Discord. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/716cf19c3257397db5d5f8e0fba3de3a495d7e96)
+- Added CI for validating locale text placeholders matching the `en_us` source file. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/92bd63384627ed8a10564f5df22e140e8278d28e)
 
 ### Merged Pull Requests
 
