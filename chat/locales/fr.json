@@ -458,7 +458,7 @@
   "events.status.own": "Vous êtes maintenant {0}.",
   "events.status.ownMessage": "Vous êtes maintenant {0} : {1}",
   "events.timeout": "{2} a banni {1} du salon {0} pour {3} minutes.",
-  "events.uptime": "Le serveur fonctionne depuis {0} avec actuellement [1} salons et {2} utilisateurs, un total de {3} connexions acceptées et {4} utilisateurs maximum.",
+  "events.uptime": "Le serveur fonctionne depuis {0} avec actuellement {1} salons et {2} utilisateurs, un total de {3} connexions acceptées et {4} utilisateurs maximum.",
   "events.watchedUserPosted": "{0} a parlé dans le salon {1}.",
   "events.watchedUserPosted.notification": "a parlé dans le salon {0} :\n{1}",
   "filter": "Écrivez pour filtrer…",

@@ -205,7 +205,7 @@
   "chat.stats": "Statistiche chat",
   "chat.status": "Stato:",
   "chat.toggleAds": "Attiva/disattiva Pubblicità",
-  "chat.typing.paused": "[0] ha immesso testo.",
+  "chat.typing.paused": "{0} ha immesso testo.",
   "chat.typing.typing": "{0} sta scrivendo…",
   "chat.unpin": "Sblocca",
   "commands.badContext": "Questo comando non si può usare qui. Usa la guida (clicca il pulsante ?) se ti servono ulteriori informazioni.",
