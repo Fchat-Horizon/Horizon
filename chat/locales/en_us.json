@@ -142,7 +142,7 @@
   "channel.group.newGroup.counter": "New Group ({0})",
   "channel.group.noticePinned": "[b]Your pinned channels have gotten an upgrade, and now you can categorize them in groups.\n\nClick the + button in the channel list to create a new group. You can also drag your channels around, or right click channels and groups if you have any. Go ahead and give it a try!\n\nCheck out [url=https://horizn.moe/docs/channel-groups.html]our website[/url] for more info.[/b]",
   "channel.group.pinned": "Pinned",
-  "channel.group.removedUnjoinable": "[b]The following channels could no longer be joined (they were likely deleted) and have been removed from your groups:[/b] {0}",
+  "channel.group.removedUnjoinable": "[b]The following channels could no longer be joined, as they were likely deleted, and have been removed from your groups:[/b] {0}",
   "channel.menu.addToNewGroup": "Add to new group",
   "channel.menu.copyCode": "Copy channel code",
   "channel.menu.markRead": "Mark as read",
