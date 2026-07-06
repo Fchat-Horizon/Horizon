@@ -1,9 +1,12 @@
-[![Latest release](https://img.shields.io/github/v/release/Fchat-Horizon/Horizon?style=for-the-badge&label=Release)](https://github.com/Fchat-Horizon/Horizon/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/Fchat-Horizon/Horizon/total?style=for-the-badge&label=Downloads)](https://github.com/Fchat-Horizon/Horizon/releases)
-[![Nightly build](https://img.shields.io/github/actions/workflow/status/Fchat-Horizon/Horizon/nightly.yml?branch=development&style=for-the-badge&label=Nightly)](https://github.com/Fchat-Horizon/Horizon/actions/workflows/nightly.yml)
-[![Locale check](https://img.shields.io/github/actions/workflow/status/Fchat-Horizon/Horizon/i18n_check.yml?branch=development&style=for-the-badge&label=Locales)](https://github.com/Fchat-Horizon/Horizon/actions/workflows/i18n_check.yml)
-[![Translation status](https://img.shields.io/weblate/progress/horizon?server=https%3A%2F%2Ftranslate.horizn.moe&style=for-the-badge&label=Translated)](https://translate.horizn.moe/engage/horizon/)
-[![License](https://img.shields.io/github/license/Fchat-Horizon/Horizon?style=for-the-badge&label=License)](./LICENSE.md)
+<div align="center">
+
+[![Latest release](https://img.shields.io/github/v/release/Fchat-Horizon/Horizon?style=flat-square&label=release)](https://github.com/Fchat-Horizon/Horizon/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Fchat-Horizon/Horizon/total?style=flat-square&label=downloads)](https://github.com/Fchat-Horizon/Horizon/releases)
+[![Nightly build](https://img.shields.io/github/actions/workflow/status/Fchat-Horizon/Horizon/nightly.yml?branch=development&style=flat-square&label=nightly)](https://github.com/Fchat-Horizon/Horizon/actions/workflows/nightly.yml)
+[![Locale check](https://img.shields.io/github/actions/workflow/status/Fchat-Horizon/Horizon/i18n_check.yml?branch=development&style=flat-square&label=locales)](https://github.com/Fchat-Horizon/Horizon/actions/workflows/i18n_check.yml)
+[![Translation status](https://img.shields.io/weblate/progress/horizon?server=https%3A%2F%2Ftranslate.horizn.moe&style=flat-square&label=translated)](https://translate.horizn.moe/engage/horizon/)
+
+</div>
 
 # Table of Contents <!-- omit in toc -->
 
