@@ -172,7 +172,7 @@ You can then reference this input as a System Package or user-specific package:
       ];
 ```
 
-By default this flake input points to `main` as its source branch, which is what we use for _stable releases_. If you want to follow the beta update track, or use nightly builds, replace `main` with `beta` or `development` respectively in the `?ref=<source>` URL parameter for the Flake input.
+Our repository's default branch is ``development``, which is not strictly guaranteed to build (nor is it expected to!)-- so note the ``?ref=main`` after the Git URL, which is what we use for _stable releases_. If you want to follow the beta update track, or use nightly builds, replace `main` with `beta` or `development` respectively in the `?ref=<source>` URL parameter for the Flake input.
 
 #### AppImage
 
