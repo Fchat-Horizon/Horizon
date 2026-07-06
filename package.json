@@ -88,6 +88,7 @@
     "release": "release-it",
     "lint": "pnpm prettier --write .",
     "check": "pnpm prettier --check .",
+    "i18n:check": "node scripts/i18n-check.js",
     "typecheck": "pnpm --filter horizon-electron typecheck",
     "prepare": "husky"
   },
