@@ -82,11 +82,10 @@ function doVanillaGeneralImport(
 
   if (importedCharacters.length > 0) {
     alert(
-      l(
-        'importer.vanillaSuccess',
-        importedCharacters.length.toString(),
-        importedCharacters.map(([n]) => n).join(', ')
-      )
+      l('importer.vanillaSuccess', {
+        count: importedCharacters.length.toString(),
+        names: importedCharacters.map(([n]) => n).join(', ')
+      })
     );
   } else {
     alert(l('importer.vanillaNoData'));

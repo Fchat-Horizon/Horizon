@@ -565,7 +565,7 @@
         if (shown !== total) {
           return `${shown}/${total} ${this.l('users.members')}`;
         }
-        return this.l('users.memberCount', total);
+        return this.l('users.memberCount', { count: total });
       },
       dropdownWrapClass(): string {
         return !this.filterActive

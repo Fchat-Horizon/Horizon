@@ -64,7 +64,7 @@
               <span class="fas fa-plus"></span>
             </span>
             <span class="result-name">{{
-              l('quickJump.openNewConversation', searchQuery)
+              l('quickJump.openNewConversation', { character: searchQuery })
             }}</span>
           </div>
         </div>
@@ -168,10 +168,9 @@
             name: conversation.name,
             type: 'channel',
             conversation,
-            description: l(
-              'quickJump.members',
-              conversation.channel.sortedMembers.length
-            )
+            description: l('quickJump.members', {
+              count: conversation.channel.sortedMembers.length
+            })
           });
         }
 

@@ -129,18 +129,24 @@
       </div>
 
       <p class="matches">
-        <b>{{ matchCount }}</b> {{ l('admgr.matches') }}
+        <localized-text k="admgr.adsUsed">
+          <template #count>
+            <b>{{ matchCount }}</b>
+          </template>
+        </localized-text>
       </p>
     </div>
     <div v-else>
       <h5>{{ l('admgr.noAdsToPost') }}</h5>
 
       <p>
-        {{ l('admgr.useEditorPrefix') }}
-        <button class="btn btn-outline-secondary" @click="openAdEditor()">
-          <i class="fa-solid fa-pencil"></i> {{ l('admgr.editor') }}
-        </button>
-        {{ l('admgr.useEditorSuffix') }}
+        <localized-text k="admgr.useEditor">
+          <template #adEditor>
+            <button class="btn btn-outline-secondary" @click="openAdEditor()">
+              <i class="fa-solid fa-pencil"></i> {{ l('admgr.editor') }}
+            </button>
+          </template>
+        </localized-text>
       </p>
     </div>
   </modal>
@@ -148,13 +154,14 @@
 
 <script lang="ts">
   import CustomDialog from '../../components/custom_dialog';
+  import LocalizedText from '../../components/localized_text';
   import Modal from '../../components/Modal.vue';
   import core from '../core';
   import _ from 'lodash';
   import l from '../localize';
 
   export default CustomDialog.extend({
-    components: { modal: Modal },
+    components: { modal: Modal, 'localized-text': LocalizedText },
     data() {
       return {
         l: l,
@@ -165,17 +172,17 @@
         tags: [] as { value: boolean; title: string }[],
         channels: [] as { value: boolean; title: string; id: string }[],
         timeoutOptions: [
-          { value: 30, title: l('time.minutes', '30') },
+          { value: 30, title: l('time.minutes', { minutes: '30' }) },
           { value: 60, title: l('time.hour') },
-          { value: 120, title: l('time.hours', '2') },
-          { value: 180, title: l('time.hours', '3') }
+          { value: 120, title: l('time.hours', { hours: '2' }) },
+          { value: 180, title: l('time.hours', { hours: '3' }) }
         ],
         delayOptions: [
-          { value: 10, title: l('time.minutes', '10') },
-          { value: 15, title: l('time.minutes', '15') },
-          { value: 20, title: l('time.minutes', '20') },
-          { value: 30, title: l('time.minutes', '30') },
-          { value: 45, title: l('time.minutes', '45') },
+          { value: 10, title: l('time.minutes', { minutes: '10' }) },
+          { value: 15, title: l('time.minutes', { minutes: '15' }) },
+          { value: 20, title: l('time.minutes', { minutes: '20' }) },
+          { value: 30, title: l('time.minutes', { minutes: '30' }) },
+          { value: 45, title: l('time.minutes', { minutes: '45' }) },
           { value: 60, title: l('time.hour') }
         ]
       };
@@ -300,7 +307,7 @@
               return true;
             }
 
-            return confirm(l('admgr.overwriteWarning', chan.name));
+            return confirm(l('admgr.overwriteWarning', { channel: chan.name }));
           })
         ) {
           e.preventDefault();

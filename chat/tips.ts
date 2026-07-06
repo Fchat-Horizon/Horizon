@@ -90,5 +90,8 @@ function validateTips() {
  */
 export default function tip(): string {
   validateTips();
-  return l(`tips.${tips[currentTipIndex.value]}`, MODIFIER_KEY, ALT_KEY);
+  return l(`tips.${tips[currentTipIndex.value]}`, {
+    modifier: MODIFIER_KEY,
+    alt: ALT_KEY
+  });
 }

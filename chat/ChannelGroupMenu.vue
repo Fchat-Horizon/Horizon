@@ -98,10 +98,9 @@
             : otherGroups.length === 1
               ? [
                   {
-                    label: l(
-                      'channel.group.menu.merge.single',
-                      otherGroups[0].name
-                    ),
+                    label: l('channel.group.menu.merge.single', {
+                      name: otherGroups[0].name
+                    }),
                     iconClass: 'fas fa-fw fa-compress',
                     onClick: () => {
                       this.mergeGroup(otherGroups[0].id);
@@ -117,10 +116,9 @@
               if (
                 (this.channelGroup && this.channelGroup?.channels.length < 1) ||
                 Dialog.confirmDialog(
-                  l(
-                    'channel.group.delete.confirm',
-                    this.channelGroup?.name || ''
-                  )
+                  l('channel.group.delete.confirm', {
+                    name: this.channelGroup?.name || ''
+                  })
                 )
               ) {
                 core.conversations.deleteChannelGroup(this.channelGroup!.id);

@@ -1102,7 +1102,7 @@ async function onReady(): Promise<void> {
               process.env.NODE_ENV !== 'development'
                 ? 'version'
                 : 'developmentVersion',
-              process.env.APP_VERSION || app.getVersion()
+              { version: process.env.APP_VERSION || app.getVersion() }
             ),
             click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
               let win = w || electron.BrowserWindow.getFocusedWindow();

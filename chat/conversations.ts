@@ -398,12 +398,16 @@ class PrivateConversation
 
   public async sendMessageEx(messageText: string): Promise<void> {
     if (this.character.status === 'offline') {
-      this.errorText = l('chat.errorOffline', this.character.name);
+      this.errorText = l('chat.errorOffline', {
+        character: this.character.name
+      });
       return;
     }
 
     if (this.character.isIgnored) {
-      this.errorText = l('chat.errorIgnored', this.character.name);
+      this.errorText = l('chat.errorIgnored', {
+        character: this.character.name
+      });
       return;
     }
 
@@ -431,11 +435,15 @@ class PrivateConversation
   protected async doSend(): Promise<void> {
     await this.logPromise;
     if (this.character.status === 'offline') {
-      this.errorText = l('chat.errorOffline', this.character.name);
+      this.errorText = l('chat.errorOffline', {
+        character: this.character.name
+      });
       return;
     }
     if (this.character.isIgnored) {
-      this.errorText = l('chat.errorIgnored', this.character.name);
+      this.errorText = l('chat.errorIgnored', {
+        character: this.character.name
+      });
       return;
     }
 
@@ -1297,10 +1305,9 @@ export default function (this: any): Interfaces.State {
             !core.state.settings.joinMessages)
         )
           return;
-        const text = l(
-          'events.channelJoin',
-          `[user]${member.character.name}[/user]`
-        );
+        const text = l('events.channelJoin', {
+          character: `[user]${member.character.name}[/user]`
+        });
         await conv.addMessage(new EventMessage(text));
       }
     else if (member === undefined) {
@@ -1322,10 +1329,9 @@ export default function (this: any): Interfaces.State {
           !core.state.settings.joinMessages)
       )
         return;
-      const text = l(
-        'events.channelLeave',
-        `[user]${member.character.name}[/user]`
-      );
+      const text = l('events.channelLeave', {
+        character: `[user]${member.character.name}[/user]`
+      });
       await conv.addMessage(new EventMessage(text));
     }
   });
@@ -1395,7 +1401,11 @@ export default function (this: any): Interfaces.State {
       await core.notifications.notify(
         conversation,
         data.character,
-        l('chat.highlight', results[0], conversation.name, message.text),
+        l('chat.highlight', {
+          word: results[0],
+          channel: conversation.name,
+          message: message.text
+        }),
         characterImage(data.character),
         'attention'
       );
@@ -1406,12 +1416,11 @@ export default function (this: any): Interfaces.State {
       message.isHighlight = true;
       await state.consoleTab.addMessage(
         new EventMessage(
-          l(
-            'events.highlight',
-            `[user]${data.character}[/user]`,
-            results[0],
-            `[session=${conversation.name}]${data.channel}[/session]`
-          ),
+          l('events.highlight', {
+            character: `[user]${data.character}[/user]`,
+            message: results[0],
+            channel: `[session=${conversation.name}]${data.channel}[/session]`
+          }),
           time
         )
       );
@@ -1420,22 +1429,20 @@ export default function (this: any): Interfaces.State {
       await core.notifications.notify(
         conversation,
         data.character,
-        l(
-          'events.watchedUserPosted.notification',
-          conversation.name,
-          data.message
-        ),
+        l('events.watchedUserPosted.notification', {
+          channel: conversation.name,
+          message: data.message
+        }),
         characterImage(data.character),
         'attention'
       );
 
       await state.consoleTab.addMessage(
         new EventMessage(
-          l(
-            'events.watchedUserPosted',
-            `[user]${data.character}[/user]`,
-            `[session=${conversation.name}]${data.channel}[/session]`
-          ),
+          l('events.watchedUserPosted', {
+            character: `[user]${data.character}[/user]`,
+            channel: `[session=${conversation.name}]${data.channel}[/session]`
+          }),
           time
         )
       );
@@ -1486,13 +1493,13 @@ export default function (this: any): Interfaces.State {
     const sender = core.characters.get(data.character);
     let text: string;
     if (data.type === 'bottle')
-      text = l('chat.bottle', `[user]${data.target}[/user]`);
+      text = l('chat.bottle', { character: `[user]${data.target}[/user]` });
     else {
       const results =
         data.results.length > 1
           ? `${data.results.join('+')} = ${data.endresult}`
           : data.endresult.toString();
-      text = l('chat.roll', data.rolls.join('+'), results);
+      text = l('chat.roll', { rolls: data.rolls.join('+'), results });
     }
     const message = new Message(MessageType.Roll, sender, text, time);
     if ('channel' in data) {
@@ -1537,7 +1544,7 @@ export default function (this: any): Interfaces.State {
   connection.onMessage('NLN', async (data, time) => {
     if (!core.state.settings.horizonShowSigninNotifications) return;
     const message = new EventMessage(
-      l('events.login', `[user]${data.identity}[/user]`),
+      l('events.login', { character: `[user]${data.identity}[/user]` }),
       time
     );
     if (isOfInterest(core.characters.get(data.identity))) {
@@ -1547,7 +1554,7 @@ export default function (this: any): Interfaces.State {
         await core.notifications.notify(
           state.consoleTab,
           data.identity,
-          l('events.login', data.identity),
+          l('events.login', { character: data.identity }),
           characterImage(data.identity),
           'silence'
         );
@@ -1563,7 +1570,7 @@ export default function (this: any): Interfaces.State {
   connection.onMessage('FLN', async (data, time) => {
     if (!core.state.settings.horizonShowSigninNotifications) return;
     const message = new EventMessage(
-      l('events.logout', `[user]${data.character}[/user]`),
+      l('events.logout', { character: `[user]${data.character}[/user]` }),
       time
     );
     if (isOfInterest(core.characters.get(data.character)))
@@ -1584,44 +1591,48 @@ export default function (this: any): Interfaces.State {
   connection.onMessage('CBU', async (data, time) => {
     const conv = state.channelMap[data.channel.toLowerCase()];
     if (conv === undefined) return core.channels.leave(data.channel);
-    const logtext = l(
-      'events.ban',
-      conv.name,
-      data.character,
-      `[user]${data.operator}[/user]`
-    );
-    conv.infoText = l('events.ban', conv.name, data.character, data.operator);
+    const logtext = l('events.ban', {
+      channel: conv.name,
+      character: data.character,
+      operator: `[user]${data.operator}[/user]`
+    });
+    conv.infoText = l('events.ban', {
+      channel: conv.name,
+      character: data.character,
+      operator: data.operator
+    });
     return addEventMessage(new EventMessage(logtext, time));
   });
   connection.onMessage('CKU', async (data, time) => {
     const conv = state.channelMap[data.channel.toLowerCase()];
     if (conv === undefined) return core.channels.leave(data.channel);
-    const logtext = l(
-      'events.kick',
-      conv.name,
-      data.character,
-      `[user]${data.operator}[/user]`
-    );
-    conv.infoText = l('events.kick', conv.name, data.character, data.operator);
+    const logtext = l('events.kick', {
+      channel: conv.name,
+      character: data.character,
+      operator: `[user]${data.operator}[/user]`
+    });
+    conv.infoText = l('events.kick', {
+      channel: conv.name,
+      character: data.character,
+      operator: data.operator
+    });
     return addEventMessage(new EventMessage(logtext, time));
   });
   connection.onMessage('CTU', async (data, time) => {
     const conv = state.channelMap[data.channel.toLowerCase()];
     if (conv === undefined) return core.channels.leave(data.channel);
-    const logtext = l(
-      'events.timeout',
-      conv.name,
-      data.character,
-      `[user]${data.operator}[/user]`,
-      data.length.toString()
-    );
-    conv.infoText = l(
-      'events.timeout',
-      conv.name,
-      data.character,
-      data.operator,
-      data.length.toString()
-    );
+    const logtext = l('events.timeout', {
+      channel: conv.name,
+      character: data.character,
+      operator: `[user]${data.operator}[/user]`,
+      minutes: data.length.toString()
+    });
+    conv.infoText = l('events.timeout', {
+      channel: conv.name,
+      character: data.character,
+      operator: data.operator,
+      minutes: data.length.toString()
+    });
     return addEventMessage(new EventMessage(logtext, time));
   });
   connection.onMessage('BRO', async (data, time) => {
@@ -1631,7 +1642,10 @@ export default function (this: any): Interfaces.State {
       );
       const char = core.characters.get(data.character);
       const message = new BroadcastMessage(
-        l('events.broadcast', `[user]${data.character}[/user]`, content),
+        l('events.broadcast', {
+          character: `[user]${data.character}[/user]`,
+          message: content
+        }),
         char,
         time
       );
@@ -1640,7 +1654,7 @@ export default function (this: any): Interfaces.State {
       state.consoleTab.unreadCount++;
       await core.notifications.notify(
         state.consoleTab,
-        l('events.broadcast.notification', data.character),
+        l('events.broadcast.notification', { character: data.character }),
         content,
         characterImage(data.character),
         'attention'
@@ -1649,18 +1663,17 @@ export default function (this: any): Interfaces.State {
       return addEventMessage(new EventMessage(decodeHTML(data.message), time));
   });
   connection.onMessage('CIU', async (data, time) => {
-    const text = l(
-      'events.invite',
-      `[user]${data.sender}[/user]`,
-      `[session=${data.title}]${data.name}[/session]`
-    );
+    const text = l('events.invite', {
+      character: `[user]${data.sender}[/user]`,
+      channel: `[session=${data.title}]${data.name}[/session]`
+    });
     return addEventMessage(new EventMessage(text, time));
   });
   connection.onMessage('ERR', async (data, time) => {
     state.selectedConversation.errorText = data.message;
     return addEventMessage(
       new EventMessage(
-        `[color=red]${l('events.error', data.message)}[/color]`,
+        `[color=red]${l('events.error', { error: data.message })}[/color]`,
         time
       )
     );
@@ -1670,9 +1683,9 @@ export default function (this: any): Interfaces.State {
     if (data.action !== 'add' && data.action !== 'delete') return;
     const key = `events.ignore_${data.action}`;
     const name = data.character;
-    state.selectedConversation.infoText = l(key, name);
+    state.selectedConversation.infoText = l(key, { character: name });
     return addEventMessage(
-      new EventMessage(l(key, `[user]${name}[/user]`), time)
+      new EventMessage(l(key, { character: `[user]${name}[/user]` }), time)
     );
   });
   connection.onMessage('RTB', async (data, time) => {
@@ -1694,26 +1707,26 @@ export default function (this: any): Interfaces.State {
           url += `vote.php?id=${data.target_id}/#${data.id}`;
       }
       const key = `events.rtbComment${data.parent_id !== 0 ? 'Reply' : ''}`;
-      text = l(
-        key,
-        `[user]${data.name}[/user]`,
-        l(`events.rtbComment_${data.target_type}`),
-        `[url=${url}]${data.target}[/url]`
-      );
+      text = l(key, {
+        character: `[user]${data.name}[/user]`,
+        type: l(`events.rtbComment_${data.target_type}`),
+        link: `[url=${url}]${data.target}[/url]`
+      });
       character = data.name;
     } else if (data.type === 'note') {
       // tslint:disable-next-line:no-unsafe-any
       core.siteSession.interfaces.notes.incrementNotes();
-      text = l(
-        'events.rtb_note',
-        `[user]${data.sender}[/user]`,
-        `[url=${url}view_note.php?note_id=${data.id}]${data.subject}[/url]`
-      );
+      text = l('events.rtb_note', {
+        character: `[user]${data.sender}[/user]`,
+        link: `[url=${url}view_note.php?note_id=${data.id}]${data.subject}[/url]`
+      });
       character = data.sender;
     } else if (data.type === 'friendrequest') {
       // tslint:disable-next-line:no-unsafe-any
       core.siteSession.interfaces.notes.incrementMessages();
-      text = l(`events.rtb_friendrequest`, `[user]${data.name}[/user]`);
+      text = l(`events.rtb_friendrequest`, {
+        character: `[user]${data.name}[/user]`
+      });
       character = data.name;
     } else {
       switch (data.type) {
@@ -1735,11 +1748,10 @@ export default function (this: any): Interfaces.State {
         default: //TODO
           return;
       }
-      text = l(
-        `events.rtb_${data.type}`,
-        `[user]${data.name}[/user]`,
-        data.title !== undefined ? `[url=${url}]${data.title}[/url]` : url
-      );
+      text = l(`events.rtb_${data.type}`, {
+        character: `[user]${data.name}[/user]`,
+        link: data.title !== undefined ? `[url=${url}]${data.title}[/url]` : url
+      });
       character = data.name;
     }
     await addEventMessage(new EventMessage(text, time));
@@ -1756,12 +1768,11 @@ export default function (this: any): Interfaces.State {
   connection.onMessage('SFC', async (data, time) => {
     let text: string, message: Interfaces.Message;
     if (data.action === 'report') {
-      text = l(
-        'events.report',
-        `[user]${data.character}[/user]`,
-        decodeHTML(data.tab),
-        decodeHTML(data.report)
-      );
+      text = l('events.report', {
+        character: `[user]${data.character}[/user]`,
+        tab: decodeHTML(data.tab),
+        report: decodeHTML(data.report)
+      });
       if (!data.old)
         await core.notifications.notify(
           state.consoleTab,
@@ -1774,11 +1785,10 @@ export default function (this: any): Interfaces.State {
       safeAddMessage(sfcList, message, 500);
       (<Interfaces.SFCMessage>message).sfc = data;
     } else {
-      text = l(
-        'events.report.confirmed',
-        `[user]${data.moderator}[/user]`,
-        `[user]${data.character}[/user]`
-      );
+      text = l('events.report.confirmed', {
+        moderator: `[user]${data.moderator}[/user]`,
+        character: `[user]${data.character}[/user]`
+      });
       for (const item of sfcList)
         if (item.sfc.logid === data.logid) {
           item.sfc.confirmed = true;
@@ -1796,8 +1806,10 @@ export default function (this: any): Interfaces.State {
             data.statusmsg.length > 0
               ? 'events.status.ownMessage'
               : 'events.status.own',
-            l(`status.${data.status}`),
-            decodeHTML(data.statusmsg)
+            {
+              status: l(`status.${data.status}`),
+              message: decodeHTML(data.statusmsg)
+            }
           ),
           time
         )
@@ -1817,12 +1829,11 @@ export default function (this: any): Interfaces.State {
     const key =
       data.statusmsg.length > 0 ? 'events.status.message' : 'events.status';
     const message = new EventMessage(
-      l(
-        key,
-        `[user]${data.character}[/user]`,
+      l(key, {
+        character: `[user]${data.character}[/user]`,
         status,
-        decodeHTML(data.statusmsg)
-      ),
+        message: decodeHTML(data.statusmsg)
+      }),
       time
     );
     await addEventMessage(message);
@@ -1841,14 +1852,13 @@ export default function (this: any): Interfaces.State {
   connection.onMessage('UPT', async (data, time) =>
     addEventMessage(
       new EventMessage(
-        l(
-          'events.uptime',
-          data.startstring,
-          data.channels.toString(),
-          data.users.toString(),
-          data.accepted.toString(),
-          data.maxusers.toString()
-        ),
+        l('events.uptime', {
+          startTime: data.startstring,
+          channels: data.channels.toString(),
+          users: data.users.toString(),
+          connections: data.accepted.toString(),
+          maxUsers: data.maxusers.toString()
+        }),
         time
       )
     )

@@ -1,7 +1,7 @@
 <template>
   <modal
     id="reportDialog"
-    :action="l('reportDialog.actionFor', name)"
+    :action="l('reportDialog.actionFor', { character: name })"
     :disabled="!dataValid || submitting"
     @submit.prevent="submitReport()"
   >
@@ -53,14 +53,18 @@
       </div>
     </div>
     <div v-show="type === 'takedown'" class="alert alert-info">
-      {{ l('reportDialog.takedownInfo') }}
-      <a :href="ticketUrl">{{ l('reportDialog.ticketsPage') }}</a>
+      <localized-text k="reportDialog.takedown">
+        <template #ticketsPage>
+          <a :href="ticketUrl">{{ l('reportDialog.ticketsPage') }}</a>
+        </template>
+      </localized-text>
     </div>
   </modal>
 </template>
 
 <script lang="ts">
   import CustomDialog from '../../components/custom_dialog';
+  import LocalizedText from '../../components/localized_text';
   import Modal from '../../components/Modal.vue';
   import * as Utils from '../utils';
   import { methods } from './data_store';
@@ -68,7 +72,7 @@
   import l from './../../chat/localize';
 
   export default CustomDialog.extend({
-    components: { modal: Modal },
+    components: { modal: Modal, 'localized-text': LocalizedText },
     props: {
       character: { required: true as const }
     },

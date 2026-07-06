@@ -9,7 +9,7 @@
     <div style="overflow: auto">
       <div v-for="command in filteredCommands">
         <h4>{{ command.name }}</h4>
-        <i>{{ l('commands.help.syntax', command.syntax) }}</i>
+        <i>{{ l('commands.help.syntax', { syntax: command.syntax }) }}</i>
         <div>{{ command.help }}</div>
         <div v-if="command.params.length">
           {{ l('commands.help.parameters') }}
@@ -94,7 +94,7 @@
             const data = {
               name:
                 param.optional !== undefined
-                  ? l('commands.help.paramOptional', name)
+                  ? l('commands.help.paramOptional', { param: name })
                   : name,
               help: l(`commands.${paramKey}.help`)
             };

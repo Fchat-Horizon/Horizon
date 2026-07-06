@@ -213,7 +213,7 @@
       </span>
       <template v-if="selectionMode">
         <span class="input-group-text text-muted">
-          {{ l('logs.selectedCount', selectedMessages.size) }}
+          {{ l('logs.selectedCount', { count: selectedMessages.size }) }}
         </span>
         <button
           class="btn btn-primary"
@@ -632,7 +632,9 @@
       async downloadCharacter(): Promise<void> {
         if (
           this.selectedCharacter === '' ||
-          !Dialog.confirmDialog(l('logs.confirmExport', this.selectedCharacter))
+          !Dialog.confirmDialog(
+            l('logs.confirmExport', { character: this.selectedCharacter })
+          )
         )
           return;
         const zip = new AdmZip();
@@ -784,13 +786,18 @@
         const targetChar = core.characters.get(targetName);
 
         if (targetChar.status === 'offline') {
-          core.notifications.alert(l('logs.shareOffline', targetName));
+          core.notifications.alert(
+            l('logs.shareOffline', { character: targetName })
+          );
           return;
         }
 
         if (
           !Dialog.confirmDialog(
-            l('logs.selectConfirm', this.selectedMessages.size, targetName)
+            l('logs.selectConfirm', {
+              count: this.selectedMessages.size,
+              character: targetName
+            })
           )
         )
           return;

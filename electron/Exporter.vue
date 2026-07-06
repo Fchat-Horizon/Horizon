@@ -349,10 +349,9 @@
                         class="form-text text-muted"
                       >
                         {{
-                          l(
-                            'settings.autoBackup.estimatedUsage',
-                            estimatedRetentionSize
-                          )
+                          l('settings.autoBackup.estimatedUsage', {
+                            size: estimatedRetentionSize
+                          })
                         }}
                       </small>
                     </div>
@@ -386,10 +385,9 @@
                       </div>
                       <small class="form-text text-muted">
                         {{
-                          l(
-                            'settings.autoBackup.directoryDefault',
-                            defaultBackupDir
-                          )
+                          l('settings.autoBackup.directoryDefault', {
+                            dir: defaultBackupDir
+                          })
                         }}
                       </small>
                     </div>
@@ -643,7 +641,11 @@
                       {{ l('settings.import.zip.choose') }}
                     </button>
                     <div class="form-text" v-if="importZipName">
-                      {{ l('settings.import.zip.selected', importZipName) }}
+                      {{
+                        l('settings.import.zip.selected', {
+                          file: importZipName
+                        })
+                      }}
                     </div>
                     <div class="form-text text-muted" v-else>
                       {{ l('settings.import.zip.noFile') }}
@@ -662,17 +664,19 @@
                     class="alert alert-info small mb-3"
                   >
                     {{
-                      l(
-                        'settings.import.zip.manifestBanner',
-                        importZipManifest.version,
-                        importZipManifest.characters.length,
-                        importZipManifest.expectedFiles,
-                        new Date(importZipManifest.createdAt).toLocaleString(),
-                        importZipManifest.includes &&
+                      l('settings.import.zip.manifestBanner', {
+                        version: importZipManifest.version,
+                        characters: importZipManifest.characters.length,
+                        files: importZipManifest.expectedFiles,
+                        created: new Date(
+                          importZipManifest.createdAt
+                        ).toLocaleString(),
+                        logs:
+                          importZipManifest.includes &&
                           importZipManifest.includes.jsonLogs
-                          ? l('settings.import.zip.manifestBannerJson')
-                          : l('settings.import.zip.manifestBannerBinary')
-                      )
+                            ? l('settings.import.zip.manifestBannerJson')
+                            : l('settings.import.zip.manifestBannerBinary')
+                      })
                     }}
                   </div>
                   <div
@@ -1041,7 +1045,9 @@
                   <div v-if="vanillaImportAvailable" class="mb-3">
                     <div class="alert alert-info" v-if="vanillaBaseDir">
                       {{
-                        l('settings.import.vanilla.location', vanillaBaseDir)
+                        l('settings.import.vanilla.location', {
+                          dir: vanillaBaseDir
+                        })
                       }}
                     </div>
                     <div class="form-check mb-2">

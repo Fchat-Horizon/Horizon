@@ -83,21 +83,24 @@ export function parse(
             );
             if (matchedOption) values[i] = matchedOption;
             else
-              return l(
-                'commands.invalidParam',
-                l(`commands.${name}.param${i}`)
-              );
+              return l('commands.invalidParam', {
+                param: l(`commands.${name}.param${i}`)
+              });
           } else if (
             (param.options !== undefined ? param.options : []).indexOf(
               value
             ) === -1
           )
-            return l('commands.invalidParam', l(`commands.${name}.param${i}`));
+            return l('commands.invalidParam', {
+              param: l(`commands.${name}.param${i}`)
+            });
           break;
         case ParamType.Number:
           const num = parseInt(value, 10);
           if (isNaN(num))
-            return l('commands.invalidParam', l(`commands.${name}.param${i}`));
+            return l('commands.invalidParam', {
+              param: l(`commands.${name}.param${i}`)
+            });
           values[i] = num;
           break;
         case ParamType.Character:
@@ -338,10 +341,9 @@ const commands: { readonly [key: string]: Command | undefined } = {
   },
   ignorelist: {
     exec: (conv: Conversation) =>
-      (conv.infoText = l(
-        'chat.ignoreList',
-        core.characters.ignoreList.join(', ')
-      ))
+      (conv.infoText = l('chat.ignoreList', {
+        characters: core.characters.ignoreList.join(', ')
+      }))
   },
   makeroom: {
     exec: (_, channel: string) => core.connection.send('CCR', { channel }),
