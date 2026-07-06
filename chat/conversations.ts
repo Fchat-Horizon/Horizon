@@ -890,12 +890,15 @@ class State implements Interfaces.State {
     this.syncGroupChannels();
     void this.saveChannelGroups();
     void this.savePinned();
-    const names = removed.map(id => {
+    const links = removed.map(id => {
       const recent = this.recentChannels.find(c => c.channel === id);
-      return recent !== undefined ? recent.name : id;
+      const name = recent !== undefined ? recent.name : id;
+      return id.startsWith('adh-')
+        ? `[session=${name}]${id}[/session]`
+        : `[channel]${name}[/channel]`;
     });
     void this.consoleTab.addMessage(
-      new EventMessage(l('channel.group.removedUnjoinable', names.join(', ')))
+      new EventMessage(l('channel.group.removedUnjoinable', links.join(', ')))
     );
   }
 
