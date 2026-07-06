@@ -9,9 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed deleted channels (or channels you are banned from) remaining in grouped pins forever, constantly badgering you with error messages every time you connect. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5cc1f05599356cda588fdccc3b7b754126567e34)
 - Opening the log viewer automatically focuses the search field again. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6c532ff3ffc4a0203730e298c95a53e3c0abf4b6)
 - Fixed some issues where non-1:1 HQ portraits would look weird in places like the conversation list or mobile-view quick switcher. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/efbcf9fc68d3e485fdc6c7067e14863e0d149c26)
 - Fixed gender icons in `[user]` tags spacing in the profile viewer's status bar. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0f723567048a3dcdd7f74e5e8d7891ef79920a45)
+- Fixed pressing Enter and Backspace not redirecting you back to the chat input, like how letter keys do. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6efd34a81c923666f24f101071b627970aa3c1cd)
+- Fixed clicking some buttons (like BBCode editor buttons) not closing custom context menus. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f6c1ac407aecc995daf6e5ad701e0003ce449b44)
+- Console event messages thrown in conversations now visusally match the regular console messages in Modern view. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5328b599a7b1cbfe438c9c375308551cf83f03e1)
+- Fixed some locale text not having the appropriate placeholders. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a82e45182ac16c0ee93ad4f105c7c426606d672f)
 
 ### Development
 
@@ -21,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - https://github.com/Fchat-Horizon/Horizon/pull/831 by @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/862 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/848 by @Kannamoris
 
 ## [2.3.0] - 2026-07-03
 
