@@ -23,7 +23,7 @@ function warn(file, message) {
 }
 
 function placeholders(str) {
-  return new Set(str.match(/\{\d+\}/g) ?? []);
+  return new Set(str.match(/\{\w+\}/g) ?? []);
 }
 
 function keyPattern(raw) {

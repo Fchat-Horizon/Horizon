@@ -55,7 +55,14 @@ export function setLanguage(lang: string | undefined): void {
   i18nState.version++;
 }
 
-export default function l(key: string, ...args: (string | number)[]): string {
+export type LocalizeParams = Record<string, string | number>;
+
+export default function l(key: string, params: LocalizeParams): string;
+export default function l(key: string, ...args: (string | number)[]): string;
+export default function l(
+  key: string,
+  ...args: (string | number | LocalizeParams)[]
+): string {
   i18nState.version;
   let str = current[key];
   if (str === undefined) {
@@ -72,7 +79,14 @@ export default function l(key: string, ...args: (string | number)[]): string {
     str = str.replace(/\b\w+\b/g, 'test');
   }
 
+  if (args.length === 1 && typeof args[0] === 'object') {
+    const params = args[0];
+    return str.replace(/\{(\w+)\}/g, (match, name: string) =>
+      name in params ? String(params[name]) : match
+    );
+  }
+
   for (let i = args.length - 1; i >= 0; i--)
-    str = str.replace(new RegExp(`\\{${i}\\}`, 'g'), args[i].toString());
+    str = str.replace(new RegExp(`\\{${i}\\}`, 'g'), String(args[i]));
   return str;
 }

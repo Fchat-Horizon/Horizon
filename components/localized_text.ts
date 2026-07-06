@@ -1,0 +1,27 @@
+import Vue, { VNode } from 'vue';
+import l, { LocalizeParams } from '../chat/localize';
+
+// ^ Renders a localized string, substituting each {token} with the matching
+//   named slot so translations control where inline elements (links,
+//   buttons) sit in the sentence. Tokens covered by `params` are replaced
+//   with plain text by l() before slot substitution.
+export default Vue.extend({
+  name: 'localized-text',
+  props: {
+    k: { type: String, required: true },
+    tag: { type: String, default: 'span' },
+    params: { type: Object as () => LocalizeParams, default: undefined }
+  },
+  render(h): VNode {
+    const str = this.params !== undefined ? l(this.k, this.params) : l(this.k);
+    const children = str
+      .split(/\{(\w+)\}/g)
+      .map((part, i): VNode[] | string => {
+        if (i % 2 === 0) return part;
+        const slot = this.$scopedSlots[part];
+        return slot?.({}) ?? `{${part}}`;
+      })
+      .filter(part => part !== '');
+    return h(this.tag, children);
+  }
+});
