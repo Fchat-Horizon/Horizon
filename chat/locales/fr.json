@@ -1081,7 +1081,6 @@
   "unit.years": "Années",
   "update.autoInstall": "Télécharger et installer automatiquement les mises à jour à l'avenir",
   "update.installOnQuit.note": "La mise à jour s'installe lorsque vous quittez l'application.",
-  "update.restart.confirmConnected": "Vous êtes toujours connecté au chat.\nÊtes-vous sûr de vouloir redémarrer et installer la mise à jour maintenant ?",
   "update.splash.updating": "Mise à jour d'Horizon...",
   "update.titlebar.downloading": "Téléchargement de la mise à jour : {0}%",
   "update.titlebar.ready": "Mise à jour prête, cliquez pour l'installer",

@@ -610,11 +610,16 @@ async function runStartupUpdateInstall(): Promise<boolean> {
   return true;
 }
 
-function confirmUpdateWhileConnected(): boolean {
-  if (getConnectedCharacterCount() === 0) return true;
+function confirmUpdate(updateVersion: string): boolean {
+  let notConnected = getConnectedCharacterCount() < 1;
+  //if this setting isn't enabled, then dowloads start from user interaction anyway.
+  if (!settings.horizonAutoDownloadUpdates && notConnected) return true;
   const focusedWindow = electron.BrowserWindow.getFocusedWindow();
   const options = {
-    message: l('update.restart.confirmConnected'),
+    message: l(
+      `update.restart.confirm${!notConnected ? '.connected' : ''}`,
+      updateVersion
+    ),
     title: l('title'),
     buttons: [l('confirmYes'), l('confirmNo')],
     cancelId: 1
@@ -1110,6 +1115,22 @@ async function onReady(): Promise<void> {
               browserWindows.createChangelogWindow(settings, 'none', win);
             }
           },
+          {
+            label: l('action.checkForUpdates'),
+            click: (_m: electron.MenuItem, _w: electron.BrowserWindow) => {
+              if (supportsAutoUpdates()) {
+                void runAutoUpdateCheck();
+              } else {
+                void checkForGitRelease(
+                  `v${app.getVersion()}`,
+                  releasesUrl,
+                  'manual'
+                );
+              }
+            },
+            disabled: process.env.NODE_ENV !== 'production',
+            id: 'checkForUpdates'
+          },
           { type: 'separator' },
           {
             label: l('action.newWindow'),
@@ -1288,23 +1309,26 @@ async function onReady(): Promise<void> {
       );
     }
   });
-  electron.ipcMain.on('install-update', async () => {
-    if (!confirmUpdateWhileConnected()) return;
-    isUpdateRestarting = true;
-    if (
-      autoBackupScheduler &&
-      settings.autoBackupEnabled &&
-      Array.isArray(settings.autoBackupTriggers) &&
-      settings.autoBackupTriggers.includes('close')
-    ) {
-      try {
-        await autoBackupScheduler.runOnClose();
-      } catch (e) {
-        log.error('autoUpdater.backupBeforeInstall.failed', e);
+  electron.ipcMain.on(
+    'install-update',
+    async (_event: IpcMainEvent, updateVersion: string) => {
+      if (!confirmUpdate(updateVersion)) return;
+      isUpdateRestarting = true;
+      if (
+        autoBackupScheduler &&
+        settings.autoBackupEnabled &&
+        Array.isArray(settings.autoBackupTriggers) &&
+        settings.autoBackupTriggers.includes('close')
+      ) {
+        try {
+          await autoBackupScheduler.runOnClose();
+        } catch (e) {
+          log.error('autoUpdater.backupBeforeInstall.failed', e);
+        }
       }
+      autoUpdater.quitAndInstall(true, true);
     }
-    autoUpdater.quitAndInstall(true, true);
-  });
+  );
   electron.ipcMain.on('enable-auto-download-updates', () => {
     settings.horizonAutoDownloadUpdates = true;
     setGeneralSettings(settings);

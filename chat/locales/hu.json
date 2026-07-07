@@ -1081,7 +1081,6 @@
   "unit.years": "Év",
   "update.autoInstall": "Jövőbeli frissítések automatikus letöltése és telepítése",
   "update.installOnQuit.note": "A frissítések automatikusan települnek az app legközelebbi újraindításakor.",
-  "update.restart.confirmConnected": "Csatlakozva vagy még a csevegéshez.\nBiztos hogy újra akarsz indítani, és telepíteni a frissítést?",
   "update.splash.updating": "Horizon Frissítése...",
   "update.titlebar.downloading": "Frissítés letöltése: {0}%",
   "update.titlebar.ready": "Frissítés kész, kattints a telepítéshez",
