@@ -943,7 +943,7 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/367 by @ShiningVenus
   - This is her first contribution! 🎉
 
-## [1.33.3] - 2025-08-24
+## [1.33.3] - 2025-08-25
 
 ### Fixed
 
@@ -961,7 +961,7 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - The light theme's primary color has been reverted back to blue for legibility reasons. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/33ca6e96c6410d3ad2bdedebcea381478eba9474)
 - Regrouped the text color settings into their own header. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/80aa51dc63857c050f839a60dfb431d94182187b)
 
-## [1.33.2] - 2025-08-24
+## [1.33.2] - 2025-08-25
 
 ### Added
 
@@ -971,7 +971,7 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 
 - Fix regression with the character selector by adding a search bar [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7ff8955)
 
-## [1.33.1] - 2025-08-24
+## [1.33.1] - 2025-08-25
 
 ### Added
 
@@ -1262,7 +1262,7 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/201 from @FireUnderTheMountain
 - https://github.com/Fchat-Horizon/Horizon/pull/204 from @FatCatClient
 
-## [1.31.1] - 2024-05-25
+## [1.31.1] - 2025-05-25
 
 ### Added
 
@@ -1305,7 +1305,7 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/147 from @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/178 from @FatCatClient
 
-## [1.31.0] - 2024-05-09
+## [1.31.0] - 2025-05-09
 
 > [!WARNING]
 > This is a major update!
@@ -1376,7 +1376,7 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/133/ from @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/134/ from @astrayblackcat
 
-## [1.30.3] - 2024-04-25
+## [1.30.3] - 2025-04-25
 
 ### Fixed
 
@@ -1424,7 +1424,7 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 
 - Updated contributor information (#77)
 
-## [1.30.1] - 2024-03-25
+## [1.30.1] - 2025-03-25
 
 > [!WARNING]
 > This is a major update!
@@ -1476,7 +1476,7 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - #32 Note silencer feature (from @FatCatClient) [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ca50d101557b52a21f21fbd75890c5f2febaf0f1)
 - #33 Dark dimmed links fix (from @FatCatClient) [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f25cfbf9dd016ad72b7528663ba721a3bd10b77a)
 
-## [1.29.1] - 2024-03-02
+## [1.29.1] - 2025-03-02
 
 ### Added
 
