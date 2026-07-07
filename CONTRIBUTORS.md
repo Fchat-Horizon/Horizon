@@ -1,6 +1,25 @@
 # Contributors
 
-Contributors are now listed in [README.md](./README.md)
+## Code
+
+Our codebase has received contributions from the following people:
+
+<a href="https://github.com/Fchat-Horizon/Horizon/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Fchat-Horizon/Horizon" />
+</a>
+
+## Translation
+
+<!--Sort contributors alphabetically if you add more, please 🐟.-->
+
+- **French**: Azthenor, Fragile, Xav
+- **German**: Froggy, Peel
+- **Hungarian**: Firespark
+- **Italian**: Clovermoth
+- **Spanish**: A Day with a Carrot, Dess, DannyIW
+- **UWUnglish** (we're so sorry): @CodingWithAnxiety, @FatCatClient
+
+...and everyone else helping out on [Weblate](https://translate.horizn.moe/engage/horizon/).
 
 ## Original Project
 
