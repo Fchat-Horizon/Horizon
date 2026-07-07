@@ -213,7 +213,7 @@
       </span>
       <template v-if="selectionMode">
         <span class="input-group-text text-muted">
-          {{ l('logs.selectedCount', { count: selectedMessages.size }) }}
+          {{ lp('logs.selectedCount', selectedMessages.size) }}
         </span>
         <button
           class="btn btn-primary"
@@ -254,7 +254,7 @@
   } from './common';
   import core from './core';
   import { Conversation, Logs as LogInterface } from './interfaces';
-  import l from './localize';
+  import l, { lp } from './localize';
   import MessageView from './message_view';
   import VirtualList from '../components/VirtualList.vue';
   import AdmZip from 'adm-zip';
@@ -339,6 +339,7 @@
         dates: [] as ReadonlyArray<Date>,
         selectedDate: undefined as string | undefined,
         l: l,
+        lp: lp,
         filter: '',
         messages: [] as ReadonlyArray<Conversation.Message>,
         formatDate: formatDate,
@@ -794,8 +795,7 @@
 
         if (
           !Dialog.confirmDialog(
-            l('logs.selectConfirm', {
-              count: this.selectedMessages.size,
+            lp('logs.selectConfirm', this.selectedMessages.size, {
               character: targetName
             })
           )

@@ -80,7 +80,7 @@
   import core from './core';
   import { Conversation } from './interfaces';
   import { Keys } from '../keys';
-  import l from './localize';
+  import l, { lp } from './localize';
 
   interface SearchResult {
     key: string;
@@ -168,9 +168,10 @@
             name: conversation.name,
             type: 'channel',
             conversation,
-            description: l('quickJump.members', {
-              count: conversation.channel.sortedMembers.length
-            })
+            description: lp(
+              'quickJump.members',
+              conversation.channel.sortedMembers.length
+            )
           });
         }
 

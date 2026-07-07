@@ -129,7 +129,7 @@
       </div>
 
       <p class="matches">
-        <localized-text k="admgr.adsUsed">
+        <localized-text k="admgr.adsUsed" :count="matchCount">
           <template #count>
             <b>{{ matchCount }}</b>
           </template>
@@ -158,7 +158,7 @@
   import Modal from '../../components/Modal.vue';
   import core from '../core';
   import _ from 'lodash';
-  import l from '../localize';
+  import l, { lp } from '../localize';
 
   export default CustomDialog.extend({
     components: { modal: Modal, 'localized-text': LocalizedText },
@@ -172,18 +172,18 @@
         tags: [] as { value: boolean; title: string }[],
         channels: [] as { value: boolean; title: string; id: string }[],
         timeoutOptions: [
-          { value: 30, title: l('time.minutes', { minutes: '30' }) },
-          { value: 60, title: l('time.hour') },
-          { value: 120, title: l('time.hours', { hours: '2' }) },
-          { value: 180, title: l('time.hours', { hours: '3' }) }
+          { value: 30, title: lp('time.minutes', 30) },
+          { value: 60, title: lp('time.hours', 1) },
+          { value: 120, title: lp('time.hours', 2) },
+          { value: 180, title: lp('time.hours', 3) }
         ],
         delayOptions: [
-          { value: 10, title: l('time.minutes', { minutes: '10' }) },
-          { value: 15, title: l('time.minutes', { minutes: '15' }) },
-          { value: 20, title: l('time.minutes', { minutes: '20' }) },
-          { value: 30, title: l('time.minutes', { minutes: '30' }) },
-          { value: 45, title: l('time.minutes', { minutes: '45' }) },
-          { value: 60, title: l('time.hour') }
+          { value: 10, title: lp('time.minutes', 10) },
+          { value: 15, title: lp('time.minutes', 15) },
+          { value: 20, title: lp('time.minutes', 20) },
+          { value: 30, title: lp('time.minutes', 30) },
+          { value: 45, title: lp('time.minutes', 45) },
+          { value: 60, title: lp('time.hours', 1) }
         ]
       };
     },
