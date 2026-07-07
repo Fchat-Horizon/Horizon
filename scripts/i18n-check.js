@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const LOCALE_DIR = path.join(__dirname, '..', 'chat', 'locales');
-const SOURCE_FILE = 'en_us.json';
+const SOURCE_FILE = 'en-US.json';
 
 let errorCount = 0;
 let warningCount = 0;
@@ -28,14 +28,12 @@ function placeholders(str) {
 
 const CLDR_SUFFIX = /^(.+)_(zero|one|two|few|many|other)$/;
 
-// ! en_us and en_uwu are not valid BCP47; Intl.PluralRules throws
 function pluralCategories(file) {
-  const base = path.basename(file, '.json');
-  const code = base === 'en_us' || base === 'en_uwu' ? 'en' : base;
+  const code = path.basename(file, '.json');
   try {
     return new Intl.PluralRules(code).resolvedOptions().pluralCategories;
   } catch {
-    warn(file, `no plural rules for locale code ${code}, assuming one/other`);
+    warn(file, `${code} is not a valid BCP47 code, assuming one/other`);
     return ['one', 'other'];
   }
 }

@@ -1,8 +1,7 @@
 import Vue from 'vue';
 import type { Locale } from 'date-fns';
 import { enUS as dateEnUS, fr, de, es, it, hu, ru } from 'date-fns/locale';
-// Runtime uses en_us only. en.json exists for Weblate but is not referenced here.
-const enUS: { [k: string]: string } = require('./locales/en_us.json');
+const enUS: { [k: string]: string } = require('./locales/en-US.json');
 // Ensure Webpack can resolve dynamic locale filenames (including hyphens)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const localeContext: any = (require as any).context(
@@ -12,17 +11,17 @@ const localeContext: any = (require as any).context(
 );
 
 // Reactive state so templates depending on l() update when language changes.
-export const i18nState = Vue.observable({ locale: 'en_us', version: 0 });
+export const i18nState = Vue.observable({ locale: 'en-US', version: 0 });
 
 let current: { [k: string]: string } = { ...enUS }; // start with US English only
-// ^ lp() needs the raw locale layer; `current` merges en_us over it
+// ^ lp() needs the raw locale layer; `current` merges en-US over it
 let localeData: { [k: string]: string } = {};
 
 // List of available display languages (extend when new JSON files are added)
 // Name is what we show in the dropdown. Code is the file name (code.json)
 export const availableDisplayLanguages: { code: string; name: string }[] = [
-  { code: 'en_us', name: 'English (US)' },
-  { code: 'en_uwu', name: 'Cyute Engwish' },
+  { code: 'en-US', name: 'English (US)' },
+  { code: 'en-x-uwu', name: 'Cyute Engwish' },
   { code: 'fr', name: 'Français (France)' },
   { code: 'de', name: 'Deutsch (Deutschland)' },
   { code: 'es', name: 'Español (España)' },
@@ -30,16 +29,24 @@ export const availableDisplayLanguages: { code: string; name: string }[] = [
   { code: 'hu', name: 'Magyar (Magyarország)' },
   { code: 'ru', name: 'Русский (Россия)' },
   ...(process.env.NODE_ENV !== 'production'
-    ? [{ code: 'test', name: 'Pseudo-locale (dev)' }]
+    ? [{ code: 'en-x-pseudo', name: 'Pseudo-locale (dev)' }]
     : [])
 ];
 
+// ^ pre-2.4 settings stored these; migrate on the way in
+const legacyCodes: Record<string, string> = {
+  en_us: 'en-US',
+  en_uwu: 'en-x-uwu',
+  test: 'en-x-pseudo'
+};
+
 export function setLanguage(lang: string | undefined): void {
-  const code = (lang && String(lang)) || 'en_us';
+  let code = (lang && String(lang)) || 'en-US';
+  code = legacyCodes[code] ?? code;
   if (code === i18nState.locale) return;
 
-  // Handle special test language (dev mode only)
-  if (code === 'test' && process.env.NODE_ENV !== 'production') {
+  // Pseudo-locale has no file; it transforms en-US at render time (dev only)
+  if (code === 'en-x-pseudo' && process.env.NODE_ENV !== 'production') {
     current = { ...enUS };
     localeData = {};
     i18nState.locale = code;
@@ -55,7 +62,7 @@ export function setLanguage(lang: string | undefined): void {
   } catch (e) {
     current = { ...enUS };
     localeData = {};
-    i18nState.locale = 'en_us';
+    i18nState.locale = 'en-US';
     if (process.env.NODE_ENV !== 'production')
       console.warn('Missing locale file for', code, e);
   }
@@ -64,12 +71,6 @@ export function setLanguage(lang: string | undefined): void {
 
 export type LocalizeParams = Record<string, string | number>;
 
-// ! en_us, en_uwu and test are not valid BCP47; Intl.PluralRules throws
-const bcp47Overrides: Record<string, string> = {
-  en_us: 'en',
-  en_uwu: 'en',
-  test: 'en'
-};
 const pluralRulesCache = new Map<string, Intl.PluralRules>();
 
 const dateLocales: Record<string, Locale> = {
@@ -89,14 +90,10 @@ export function dateLocale(): Locale {
 }
 
 function pluralCategory(count: number): string {
-  const code = bcp47Overrides[i18nState.locale] ?? i18nState.locale;
+  const code = i18nState.locale;
   let rules = pluralRulesCache.get(code);
   if (rules === undefined) {
-    try {
-      rules = new Intl.PluralRules(code);
-    } catch {
-      rules = new Intl.PluralRules('en');
-    }
+    rules = new Intl.PluralRules(code);
     pluralRulesCache.set(code, rules);
   }
   return rules.select(count);
@@ -130,7 +127,10 @@ function pseudolocalize(str: string): string {
 }
 
 function format(str: string, params?: LocalizeParams): string {
-  if (i18nState.locale === 'test' && process.env.NODE_ENV !== 'production')
+  if (
+    i18nState.locale === 'en-x-pseudo' &&
+    process.env.NODE_ENV !== 'production'
+  )
     str = pseudolocalize(str);
   if (params === undefined) return str;
   return str.replace(/\{(\w+)\}/g, (match, name: string) =>
