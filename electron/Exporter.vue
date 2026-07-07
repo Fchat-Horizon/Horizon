@@ -1250,7 +1250,7 @@
 <script lang="ts">
   import * as remote from '@electron/remote';
   import Vue from 'vue';
-  import l from '../chat/localize';
+  import l, { setLanguage } from '../chat/localize';
   import { GeneralSettings } from './common';
   import fs from 'fs';
   import path from 'path';
@@ -1540,6 +1540,11 @@
       remote.nativeTheme.on('updated', () => {
         this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
       });
+      try {
+        setLanguage(this.settings.displayLanguage);
+      } catch (e) {
+        console.warn('Failed to set display language', e);
+      }
 
       window.addEventListener('beforeunload', e => {
         if (this.exportInProgress || this.importInProgress) {

@@ -752,7 +752,6 @@
   "settings.export.manageData": "Adatok Kezelése",
   "settings.export.noCharacters": "Nem érhető el karakteradat importáláshoz.",
   "settings.export.saveTitle": "Horizon export mentése",
-  "settings.export.summary": "Adatok importálva {count} karakterhez ide: {file}.",
   "settings.export.title": "Horizon adatok exportálása",
   "settings.export.zipping": "Export véglegesítése",
   "settings.filter.hideAds": "[b]Hirdetések[/b] elrejtése a passzoló karakterektől",

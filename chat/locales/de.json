@@ -748,7 +748,6 @@
   "settings.export.manageData": "Daten verwalten",
   "settings.export.noCharacters": "Keine Charakter-Daten zum exportieren vorhanden.",
   "settings.export.saveTitle": "Speichere Horizon-Exportierung",
-  "settings.export.summary": "Daten für {count} Charaktere nach {file} exportiert.",
   "settings.export.title": "Exportiere Horizon-Daten",
   "settings.export.zipping": "Exportierung abschließen",
   "settings.filter.hideAds": "[b]Ads[/b] von übereinstimmenden Charakteren ausblenden",

@@ -757,7 +757,6 @@
   "settings.export.manageData": "Gérer les données",
   "settings.export.noCharacters": "Aucune donnée de personnage n'est disponible pour l'export.",
   "settings.export.saveTitle": "Sauvegarder l'export d'Horizon",
-  "settings.export.summary": "Données de {count} personnage(s) exportées vers {file}.",
   "settings.export.title": "Exporter les données d'Horizon",
   "settings.export.zipping": "Finaliser l'export",
   "settings.filter.hideAds": "Cache les [b]annonces[/b] des personnages correspondants",

@@ -757,7 +757,6 @@
   "settings.export.manageData": "Organizza dati",
   "settings.export.noCharacters": "Nessun dato di personaggi è disponibile per l'esportazione.",
   "settings.export.saveTitle": "Salva esporto di Horizon",
-  "settings.export.summary": "Dati esportati di {count} personaggi in {file}.",
   "settings.export.title": "Esporta dati Horizon",
   "settings.export.zipping": "Finalizzazione esporto",
   "settings.filter.hideAds": "Nascondi le [b]pubblicità[/b] da personaggi riscontrati",

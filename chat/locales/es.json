@@ -757,7 +757,6 @@
   "settings.export.manageData": "Administrar datos",
   "settings.export.noCharacters": "No hay datos de personaje para importar.",
   "settings.export.saveTitle": "Guardar exportación de Horizon",
-  "settings.export.summary": "Datos exportados de {count} personaje(s) a {file}.",
   "settings.export.title": "Exportar datos de Horizon",
   "settings.export.zipping": "Finalizando exportación",
   "settings.filter.hideAds": "Ocultar [b]ads[/b] de personajes compatibles",
