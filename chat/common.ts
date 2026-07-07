@@ -1,4 +1,5 @@
 import { isToday, format } from 'date-fns';
+import { dateLocale } from './localize';
 import { Keys } from '../keys';
 import {
   AvailableSort,
@@ -261,9 +262,10 @@ export function formatTime(
     : showSeconds
       ? 'HH:mm:ss'
       : 'HH:mm';
-  if (noDate || isToday(date)) return format(date, timeOnlyFormat);
+  if (noDate || isToday(date))
+    return format(date, timeOnlyFormat, { locale: dateLocale() });
   const absoluteFormat = `yyyy-MM-dd ${timeOnlyFormat}`;
-  return format(date, absoluteFormat);
+  return format(date, absoluteFormat, { locale: dateLocale() });
 }
 
 /**

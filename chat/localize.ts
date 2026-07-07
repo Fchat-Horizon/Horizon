@@ -1,4 +1,6 @@
 import Vue from 'vue';
+import type { Locale } from 'date-fns';
+import { enUS as dateEnUS, fr, de, es, it, hu, ru } from 'date-fns/locale';
 // Runtime uses en_us only. en.json exists for Weblate but is not referenced here.
 const enUS: { [k: string]: string } = require('./locales/en_us.json');
 // Ensure Webpack can resolve dynamic locale filenames (including hyphens)
@@ -69,6 +71,22 @@ const bcp47Overrides: Record<string, string> = {
   test: 'en'
 };
 const pluralRulesCache = new Map<string, Intl.PluralRules>();
+
+const dateLocales: Record<string, Locale> = {
+  en: dateEnUS,
+  fr,
+  de,
+  es,
+  it,
+  hu,
+  ru
+};
+
+// ! Display formatting only - never for filenames or serialized dates
+export function dateLocale(): Locale {
+  i18nState.version;
+  return dateLocales[i18nState.locale.split('-')[0]] ?? dateEnUS;
+}
 
 function pluralCategory(count: number): string {
   const code = bcp47Overrides[i18nState.locale] ?? i18nState.locale;

@@ -668,9 +668,7 @@
                         version: importZipManifest.version,
                         characters: importZipManifest.characters.length,
                         files: importZipManifest.expectedFiles,
-                        created: new Date(
-                          importZipManifest.createdAt
-                        ).toLocaleString(),
+                        created: formatDateTime(importZipManifest.createdAt),
                         logs:
                           importZipManifest.includes &&
                           importZipManifest.includes.jsonLogs
@@ -1250,7 +1248,8 @@
 <script lang="ts">
   import * as remote from '@electron/remote';
   import Vue from 'vue';
-  import l, { setLanguage } from '../chat/localize';
+  import { format } from 'date-fns';
+  import l, { dateLocale, setLanguage } from '../chat/localize';
   import { GeneralSettings } from './common';
   import fs from 'fs';
   import path from 'path';
@@ -1713,12 +1712,15 @@
           this.autoBackups = [];
         }
       },
+      formatDateTime(value: string | number): string {
+        return format(new Date(value), 'PPpp', { locale: dateLocale() });
+      },
       formatBackupLabel(backup: {
         name: string;
         mtime: number;
         size: number;
       }): string {
-        const date = new Date(backup.mtime).toLocaleString();
+        const date = this.formatDateTime(backup.mtime);
         const mb = (backup.size / (1024 * 1024)).toFixed(1);
         return `${date} (${mb} MB)`;
       },
