@@ -28,7 +28,7 @@ export const availableDisplayLanguages: { code: string; name: string }[] = [
   { code: 'hu', name: 'Magyar (Magyarország)' },
   { code: 'ru', name: 'Русский (Россия)' },
   ...(process.env.NODE_ENV !== 'production'
-    ? [{ code: 'test', name: 'Test Language' }]
+    ? [{ code: 'test', name: 'Pseudo-locale (dev)' }]
     : [])
 ];
 
@@ -84,10 +84,36 @@ function pluralCategory(count: number): string {
   return rules.select(count);
 }
 
+// prettier-ignore
+const pseudoChars: Record<string, string> = {
+  a: 'á', b: 'ƀ', c: 'ç', d: 'ð', e: 'é', f: 'ƒ', g: 'ĝ', h: 'ĥ', i: 'í',
+  j: 'ĵ', k: 'ķ', l: 'ļ', m: 'ɱ', n: 'ñ', o: 'ó', p: 'þ', q: 'ǫ', r: 'ŕ',
+  s: 'š', t: 'ŧ', u: 'ú', v: 'ṽ', w: 'ŵ', x: 'ẋ', y: 'ý', z: 'ž',
+  A: 'Á', B: 'Ɓ', C: 'Ç', D: 'Ð', E: 'É', F: 'Ƒ', G: 'Ĝ', H: 'Ĥ', I: 'Í',
+  J: 'Ĵ', K: 'Ķ', L: 'Ļ', M: 'Ṁ', N: 'Ñ', O: 'Ó', P: 'Þ', Q: 'Ǫ', R: 'Ŕ',
+  S: 'Š', T: 'Ŧ', U: 'Ú', V: 'Ṽ', W: 'Ŵ', X: 'Ẋ', Y: 'Ý', Z: 'Ž'
+};
+
+// ^ Accents flag untranslated strings; the padding simulates the ~35%
+//   expansion of real translations so tight layouts clip visibly in dev.
+//   Long text wraps anyway, so the padding is capped.
+function pseudolocalize(str: string): string {
+  let visible = 0;
+  const mapped = str
+    .split(/(\{\w+\})/g)
+    .map((part, i) => {
+      if (i % 2 === 1) return part;
+      visible += part.length;
+      return part.replace(/[a-zA-Z]/g, c => pseudoChars[c]);
+    })
+    .join('');
+  const padding = Math.min(Math.ceil(visible * 0.35), 10);
+  return `[${mapped}${'·'.repeat(padding)}]`;
+}
+
 function format(str: string, params?: LocalizeParams): string {
-  // Test language transformation (dev mode only)
   if (i18nState.locale === 'test' && process.env.NODE_ENV !== 'production')
-    str = str.replace(/\b\w+\b/g, 'test');
+    str = pseudolocalize(str);
   if (params === undefined) return str;
   return str.replace(/\{(\w+)\}/g, (match, name: string) =>
     name in params ? String(params[name]) : match
