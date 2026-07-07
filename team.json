@@ -169,6 +169,10 @@
       "TeaLord": {
         "alias": "TeaLord",
         "characters": ["TeaBoy"]
+      },
+      "Catten": {
+        "alias": "Catten",
+        "characters": ["Avertly", "Dailen", "Dakota Flint"]
       }
     }
   }
