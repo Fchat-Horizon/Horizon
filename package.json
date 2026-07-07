@@ -1,6 +1,6 @@
 {
   "name": "fchat-horizon",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "author": "The F-List Team and Horizon Contributors",
   "description": "A heavily modded FChat 3.0 client for F-List, continued from Rising",
   "private": true,
@@ -88,6 +88,7 @@
     "release": "release-it",
     "lint": "pnpm prettier --write .",
     "check": "pnpm prettier --check .",
+    "i18n:check": "node scripts/i18n-check.js",
     "typecheck": "pnpm --filter horizon-electron typecheck",
     "prepare": "husky"
   },
@@ -117,8 +118,6 @@
   },
   "packageManager": "pnpm@10.33.0",
   "lint-staged": {
-    "**.*": [
-      "prettier --write"
-    ]
+    "*": "prettier --write --ignore-unknown"
   }
 }

@@ -698,14 +698,7 @@
       window.addEventListener(
         'keypress',
         (this.keypressHandler = () => {
-          const selection = document.getSelection();
-          if (
-            (selection === null || selection.isCollapsed) &&
-            !anyDialogsShown &&
-            (document.activeElement === document.body ||
-              document.activeElement === null ||
-              document.activeElement.tagName === 'A')
-          )
+          if (this.shouldRedirectTyping())
             (<Editor>this.$refs['textBox']).focus();
         })
       );
@@ -722,6 +715,17 @@
             this.$nextTick(() =>
               (<HTMLElement>this.$refs['searchField']).focus()
             );
+          } else if (
+            (getKey(e) === Keys.Enter || getKey(e) === Keys.Backspace) &&
+            !e.ctrlKey &&
+            !e.metaKey &&
+            !e.altKey &&
+            this.shouldRedirectTyping()
+          ) {
+            // ^ keypress never fires for Backspace, and for Enter it comes
+            // too late to be treated as a send; redirect both here.
+            (<Editor>this.$refs['textBox']).focus();
+            if (getKey(e) === Keys.Enter) void this.onKeyDown(e);
           }
         }) as EventListener)
       );
@@ -861,6 +865,17 @@
         this.scrolledDown =
           this.messageView.scrollTop + this.messageView.offsetHeight >=
           this.messageView.scrollHeight - 15;
+      },
+
+      shouldRedirectTyping(): boolean {
+        const selection = document.getSelection();
+        return (
+          (selection === null || selection.isCollapsed) &&
+          !anyDialogsShown &&
+          (document.activeElement === document.body ||
+            document.activeElement === null ||
+            document.activeElement.tagName === 'A')
+        );
       },
 
       async onKeyDown(e: KeyboardEvent): Promise<void> {

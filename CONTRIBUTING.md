@@ -10,7 +10,7 @@ That being said, _Horizon is an opinionated fork_, and as such we enforce strong
   - [Contributor License Agreement](#contributor-license-agreement)
   - [Where do I start?!](#where-do-i-start)
     - [Technology](#technology)
-    - [Setting up your development enviroment](#setting-up-your-development-enviroment)
+    - [Setting up your development environment](#setting-up-your-development-environment)
       - [Nix](#nix)
     - [Building](#building)
       - [Electron](#electron)
@@ -37,13 +37,13 @@ You wish to add a new feature to Horizon, or fix that one bug that's been pissin
 
 ### Technology
 
-Horizon is written primarily in _Vue_, _Typescript_, and _Javascript._ You'll need **[Node.js](https://nodejs.org/en/download)**, **[PNPM](https://pnpm.io/installation)**, and **[NVM](https://github.com/nvm-sh/nvm)** (or a similar node version manager, such as fnm). You might also want to consider using VScode to integrate with prettier.
+Horizon is written primarily in _Vue_, _TypeScript_, and _JavaScript._ You'll need **[Node.js](https://nodejs.org/en/download)**, **[PNPM](https://pnpm.io/installation)**, and **[NVM](https://github.com/nvm-sh/nvm)** (or a similar node version manager, such as fnm). You might also want to consider using VS Code to integrate with Prettier.
 
-You should use Node.js **v22.18.0**.
+You should use Node.js **v24.14.0** (see [.nvmrc](./.nvmrc)).
 
-If you intend on _packaging_ for MacOS, you need to install **Xcode 26+** or the build will fail with a error when packing into the desired format. **This includes the Xcode CLI tools**.
+If you intend on _packaging_ for MacOS, you need to install **Xcode 26+** or the build will fail with an error when packing into the desired format. **This includes the Xcode CLI tools**.
 
-### Setting up your development enviroment
+### Setting up your development environment
 
 In short, you can run the following commands:
 
@@ -55,13 +55,13 @@ pnpm install
 
 #### Nix
 
-If you're using [Nix](https://nixos.org/)— whether as a package manager or as part of NixOS, a flake has been provided so you don't need to install any NodeJS dependencies yourself. Simply run the following command from the project root:
+If you're using [Nix](https://nixos.org/), whether as a package manager or as part of NixOS, a flake has been provided so you don't need to install any Node.js dependencies yourself. Run the following command from the project root:
 
 ```bash
 nix develop
 ```
 
-Note that as of writing, the package `sass-embedded` is still required and doesn't directly work inside the Nix shell (because it's its own distributed binary). The Nix flake comes with its own patcher method that solve this, though you do need to run it every time you reinstall the PNPM packages:
+Note that as of writing, the package `sass-embedded` is still required and doesn't directly work inside the Nix shell (because it's its own distributed binary). The Nix flake comes with its own patcher method that solves this, though you do need to run it every time you reinstall the PNPM packages:
 
 ```bash
 pnpm install
@@ -86,13 +86,12 @@ Tip: this repo uses a pnpm workspace, so you can target subprojects with filters
 ```
 pnpm --filter horizon-electron build
 pnpm --filter horizon-electron start
-pnpm build:all
 ```
 
 **For distribution:**
 
 > [!NOTE]
-> While you can choose to build for OSes, it **will** fail if you attempt to build on a OS that's different from your own.
+> While you can choose to build for other OSes, it **will** fail if you attempt to build for an OS that's different from your own.
 >
 > Please read the [electron-builder](https://www.electron.build/multi-platform-build.html) wiki for more info. If you're a kickass electron dev, please make a pull request to fix this.
 
@@ -100,11 +99,7 @@ Read [the electron README.md](./electron/README.md) for more info.
 
 #### Mobile
 
-Mobile builds are currently unsupported, but if you're up to the challenge, _maybe you can fix it?_
-
-Look at the `mobile` directory for more info. For `android`, we recommend you use android studio to make your life more pleasent.
-
-I've completely deleted the `ios` directory, and have no intention to support ios at this time. However, for those interested, the `ios` directory was removed in [this commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814), and you're more then welcome to restore it.
+Mobile development has moved to its own project: [Solstice](https://github.com/Fchat-Horizon/Solstice). The old mobile build files have been removed from this repository, so if you want to contribute to the mobile experience, head over there.
 
 ### Workflow
 
@@ -122,7 +117,7 @@ Issues with the type "Bug" or "Task" are supposed to be sorted by level of prior
   Regressions found during (and originating _from_) a pre-release build are automatically given this priority as well, as are issues with the ["blocks release"](https://github.com/Fchat-Horizon/Horizon/issues?q=state%3Aopen%20label%3A%22blocks-release%22) tag.
 
 - **Medium**  
-  Issues with obscure features, or issues that can be worked around. Issues that originate from 3.0, F-Chat Rising, or significantly older versions of Horizon mostly fall under this umbrella, unless they're also critical. Use sound judgement here. Can be added to the current, upcoming release, milestone- but depending on the existing workload or potential deadline, it might be best to just throw it under a future, patch-release milestone.
+  Issues with obscure features, or issues that can be worked around. Issues that originate from 3.0, F-Chat Rising, or significantly older versions of Horizon mostly fall under this umbrella, unless they're also critical. Use sound judgement here. Can be added to the current upcoming-release milestone, but depending on the existing workload or potential deadline, it might be best to throw it under a future patch-release milestone.
 
   Most styling issues probably fall underneath this category, unless they seriously impede regular use.
 
@@ -131,7 +126,7 @@ Issues with the type "Bug" or "Task" are supposed to be sorted by level of prior
 
 Bugs and styling issues that have not been triaged with a priority yet should be tagged with the ["Needs Triage"](https://github.com/Fchat-Horizon/Horizon/issues?q=state%3Aopen%20label%3A%22Needs%20Triage%22) tag, which should be added automatically to any new issues created. Issues with the 'Task' type aren't able to be created from the templates and have to be defined by project members, but their priorities have to be defined on a case-by-case basis regardless.
 
-\* _"Regular" and "irregular" use aren't terms we can strictly define, so you have to rely on a bit of common sense to make those calls. Assume that a user action like searching for characters constitutes "regular use", but but "I pasted 50,000 characters in the EIcon searcher, and now the app crashes" is considered 'irregular' use._
+\* _"Regular" and "irregular" use aren't terms we can strictly define, so you have to rely on a bit of common sense to make those calls. Assume that a user action like searching for characters constitutes "regular use", but "I pasted 50,000 characters in the EIcon searcher, and now the app crashes" is considered 'irregular' use._
 
 #### Project Board
 
@@ -140,7 +135,7 @@ We track our project's progress using [GitHub's project boards](https://github.c
 - **Backlog**  
   The default state. A priority has not been given yet.
 - **Triage**  
-  Issues that have been given a priority-- or at least been looked at, but have not been slotted for a specific upcoming release yet.
+  Issues that have been given a priority, or at least been looked at, but have not been slotted for a specific upcoming release yet.
 - **Planned**  
   Slotted for a release, but work has not been started yet.
 - **In progress**  
@@ -169,7 +164,7 @@ If either of these two tags are still on the pull request, assume it's not yet r
 Maintainers should be assigned to pull requests for two reasons:
 
 - If a pull request is still marked as a work in progress, then this maintainer will (likely) be the one to finish it up to a finalized state.
-- If a pull request is marked as being ready for review, then the assigned maintainer is meant to review and/ or test the pull request. For big enough pull requests created by a maintainer instead of a contributor, the maintainer reviewing and testing it should ideally not be the creator.
+- If a pull request is marked as being ready for review, then the assigned maintainer is meant to review and/or test the pull request. For big enough pull requests created by a maintainer instead of a contributor, the maintainer reviewing and testing it should ideally not be the creator.
 
 If a pull request is meant to resolve an existing issue, then it should be given the same milestone as the issue (if applicable).
 
@@ -189,17 +184,17 @@ Oh and mind the ["do not merge"](https://github.com/Fchat-Horizon/Horizon/pulls?
 - **beta**
   The 'semi-stable' branch. Development is merged into beta when it is stable enough for a pre-release.
 
-- **develop**  
-  The main integration branch. New features and fixes are first merged into develop.
+- **development**  
+  The main integration branch. New features and fixes are first merged into development.
 
 - **feature/\***  
-  For new features, create a branch named `feature/your-feature-name` off of develop. Once finalized, open a PR to merge into develop.
+  For new features, create a branch named `feature/your-feature-name` off of development. Once finalized, open a PR to merge into development.
 
 - **fix/\***  
   Bug fixes, but not critical hotfix ones like the ones below. Use the format `fix/fix-description`.
 
 - **hotfix/\***  
-  For urgent fixes on production, create a branch named `hotfix/description` off of main, then merge back into both main and develop after the fix.
+  For urgent fixes on production, create a branch named `hotfix/description` off of main, then merge back into both main and development after the fix.
 
 - **experimental/\*** (optional)  
   For experimental changes that may not be merged immediately, create branches with the prefix `experimental/`.
@@ -227,7 +222,7 @@ We use [Prettier](https://prettier.io/) to enforce a consistent coding style. Pl
    - Ensure `<script>` and `<style>` in `.vue` files are properly indented.
    - Follow the [Vue style guide](https://v2.vuejs.org/v2/style-guide) to the best of your ability.
 
-A important part of Horizon is a strict code quality standard. Prettier should do most of the work for you.
+An important part of Horizon is a strict code quality standard. Prettier should do most of the work for you.
 
 When writing user-facing text strings, please make sure to **always** use the [localization system](./docs/localize.md).
 
@@ -252,7 +247,7 @@ pnpm build:dist
 
 Note that this does not build a distributable or installable release yet, this just leaves the transpiled scripts and compiled binaries in the build output directories. You'll still need the next step if you want to distribute or install it properly.
 
-4. Run the build/ package script:
+4. Run the build/package script:
 
 ```bash
 node electron/build/build.mjs --os <linux|windows|macos> <options>
