@@ -260,8 +260,8 @@ function broadcastConnectedCharacters(): void {
 const baseDir = app.getPath('userData');
 fs.mkdirSync(baseDir, { recursive: true });
 let shouldImportSettings = false;
-const updateCheckFirstDelay = 10_000; // 10 seconds
 const updateCheckInterval = 60 * 60 * 1000; // 1 hour in milliseconds
+const startupInstallTimeout = 15_000;
 const releasesUrl =
   'https://api.github.com/repos/Fchat-Horizon/Horizon/releases';
 type ReleaseInfo = {
@@ -284,6 +284,21 @@ let isUpdateRestarting = false;
 // second one, and the tag already downloaded so periodic checks don't re-fetch it.
 let downloadingUpdate = false;
 let downloadedUpdateTag: string | undefined;
+// The first check can resolve before any window exists (or mid-launch on slow
+// connections), so we keep the last notice and replay it once a window loads.
+const updateNoticeState: {
+  available: boolean;
+  version?: string;
+  downloadPercent: number;
+  downloaded: boolean;
+} = {
+  available: false,
+  version: undefined,
+  downloadPercent: 0,
+  downloaded: false
+};
+// Deferred when a check finds an update before any window can host the prompt.
+let pendingUpdatePromptTag: string | undefined;
 
 if (!fs.existsSync(settingsFile)) {
   shouldImportSettings = true;
@@ -382,6 +397,40 @@ function getPreferredWindow(
   return getMainWindow();
 }
 
+function setUpdateNotice(available: boolean, version?: string): void {
+  updateNoticeState.available = available;
+  if (available) {
+    if (version) updateNoticeState.version = version;
+  } else {
+    updateNoticeState.version = undefined;
+    updateNoticeState.downloadPercent = 0;
+    updateNoticeState.downloaded = false;
+  }
+  browserWindows.toggleUpdateNotice(available, updateNoticeState.version);
+}
+
+function setUpdateProgress(percent: number, done: boolean = false): void {
+  updateNoticeState.downloadPercent = done ? 100 : Math.round(percent);
+  updateNoticeState.downloaded = done;
+  browserWindows.sendUpdateProgress(percent, done);
+}
+
+function replayUpdateState(target: electron.WebContents): void {
+  if (target.isDestroyed()) return;
+  target.send(
+    'update-available',
+    updateNoticeState.available,
+    updateNoticeState.version
+  );
+  if (updateNoticeState.downloadPercent > 0 || updateNoticeState.downloaded) {
+    target.send(
+      'update-download-progress',
+      updateNoticeState.downloadPercent,
+      updateNoticeState.downloaded
+    );
+  }
+}
+
 function maybeShowUpdatePrompt(
   updateTag: string,
   updateMode: 'auto' | 'manual',
@@ -391,7 +440,11 @@ function maybeShowUpdatePrompt(
     return;
   if (lastPromptedUpdateTag === updateTag) return;
   const window = getPreferredWindow(targetWindow);
-  if (!window) return;
+  if (!window) {
+    pendingUpdatePromptTag = updateTag;
+    return;
+  }
+  pendingUpdatePromptTag = undefined;
   browserWindows.createChangelogWindow(
     settings,
     'none',
@@ -429,7 +482,7 @@ async function checkForGitRelease(
           'updateCheck.state.skipped',
           `Update skipped: ${release.tag_name}`
         );
-        browserWindows.toggleUpdateNotice(false);
+        setUpdateNotice(false);
         return;
       }
       if (release.tag_name == semVer) {
@@ -441,7 +494,7 @@ async function checkForGitRelease(
         `Update available: You're using ${semVer} instead of ${release.tag_name}`
       );
 
-      browserWindows.toggleUpdateNotice(true, release.tag_name);
+      setUpdateNotice(true, release.tag_name);
       maybeShowUpdatePrompt(release.tag_name, updateMode);
       return;
     }
@@ -486,6 +539,77 @@ async function requestUpdateDownload(expectedTag?: string): Promise<void> {
     downloadingUpdate = false;
   }
 }
+async function stagePendingUpdate(expectedTag: string): Promise<boolean> {
+  autoUpdater.allowPrerelease = settings.beta;
+  const failed =
+    (stage: string) =>
+    (e: unknown): 'failed' => {
+      log.error(`autoUpdater.startupInstall.${stage}`, e);
+      return 'failed';
+    };
+  const timeout = new Promise<'timeout'>(resolve =>
+    setTimeout(() => resolve('timeout'), startupInstallTimeout)
+  );
+  const check = await Promise.race([
+    autoUpdater.checkForUpdates().catch(failed('check')),
+    timeout
+  ]);
+  if (check === 'timeout' || check === 'failed' || !check) return false;
+  if (normalizeVersionToTag(check.updateInfo?.version) !== expectedTag)
+    return false;
+  browserWindows.setUpdaterSplashProgress(30);
+  const download = await Promise.race([
+    autoUpdater.downloadUpdate().catch(failed('download')),
+    timeout
+  ]);
+  if (download === 'timeout' || download === 'failed') return false;
+  browserWindows.setUpdaterSplashProgress(90);
+  return true;
+}
+
+async function runStartupUpdateInstall(): Promise<boolean> {
+  if (!settings.updateCheck || !supportsAutoUpdates()) return false;
+  const pendingTag = settings.horizonPendingUpdateTag;
+  if (!pendingTag) return false;
+
+  const clearPendingTag = (): void => {
+    settings.horizonPendingUpdateTag = '';
+    setGeneralSettings(settings);
+  };
+
+  if (
+    pendingTag === normalizeVersionToTag(app.getVersion()) ||
+    pendingTag === settings.horizonSkippedUpdateVersion
+  ) {
+    clearPendingTag();
+    return false;
+  }
+
+  browserWindows.createUpdaterSplashWindow(pendingTag);
+  const onDownloadProgress = (progress: { percent: number }): void =>
+    browserWindows.setUpdaterSplashProgress(30 + progress.percent * 0.6);
+  autoUpdater.on('download-progress', onDownloadProgress);
+  let install = false;
+  try {
+    install = await stagePendingUpdate(pendingTag);
+  } catch (e) {
+    log.error('autoUpdater.startupInstall.failed', e);
+  } finally {
+    autoUpdater.removeListener('download-progress', onDownloadProgress);
+  }
+  clearPendingTag();
+  if (!install) {
+    browserWindows.closeUpdaterSplash();
+    return false;
+  }
+  log.info('autoUpdater.startupInstall', pendingTag);
+  browserWindows.setUpdaterSplashProgress(100);
+  await browserWindows.updaterSplashSeen(1500, 4000);
+  isUpdateRestarting = true;
+  autoUpdater.quitAndInstall(true, true);
+  return true;
+}
+
 function confirmUpdateWhileConnected(): boolean {
   if (getConnectedCharacterCount() === 0) return true;
   const focusedWindow = electron.BrowserWindow.getFocusedWindow();
@@ -551,9 +675,10 @@ export function openURLExternally(linkUrl: string): void {
     // `open -a <app>`: args before --args are documents (the URL); flags follow
     // --args. NOTE: Safari-as-browser with a different OS default opens the URL
     // twice. https://developer.apple.com/forums/thread/685385
-    const flags = argTokens.filter(arg => !arg.includes('%s'));
-    const openArgs = ['-a', browserPath, url];
-    if (flags.length > 0) openArgs.push('--args', ...flags);
+    const flags = argTokens.map(arg => arg.replace('%s', url));
+    const openArgs = ['-a', browserPath];
+    if (flags.length > 0) openArgs.push(...flags);
+    log.debug('execFileBrowser.openArgs', openArgs);
     execFile('open', openArgs);
     return;
   }
@@ -711,7 +836,7 @@ async function onReady(): Promise<void> {
     const updateMode = supportsAutoUpdates() ? 'auto' : 'manual';
     autoUpdater.logger = log;
     autoUpdater.autoDownload = false;
-    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.autoInstallOnAppQuit = process.platform !== 'win32';
     autoUpdater.allowPrerelease = settings.beta;
 
     /**
@@ -732,10 +857,14 @@ async function onReady(): Promise<void> {
     }
 
     if (updateMode === 'auto') {
+      // A staged update quits into the installer here; nothing else may run,
+      // least of all a window.
+      if (await runStartupUpdateInstall()) return;
+
       autoUpdater.on('error', err => {
         log.error('autoUpdater.error', err);
         downloadingUpdate = false;
-        browserWindows.toggleUpdateNotice(false);
+        setUpdateNotice(false);
       });
 
       autoUpdater.on('update-available', info => {
@@ -746,11 +875,11 @@ async function onReady(): Promise<void> {
           return;
         }
         if (downloadedUpdateTag === updateTag) {
-          browserWindows.toggleUpdateNotice(true, updateTag);
-          browserWindows.sendUpdateProgress(100, true);
+          setUpdateNotice(true, updateTag);
+          setUpdateProgress(100, true);
           return;
         }
-        browserWindows.toggleUpdateNotice(true, updateTag);
+        setUpdateNotice(true, updateTag);
         if (settings.horizonAutoDownloadUpdates) {
           log.info('autoUpdater.autoDownload', updateTag);
           void requestUpdateDownload(updateTag);
@@ -760,27 +889,34 @@ async function onReady(): Promise<void> {
       });
 
       autoUpdater.on('update-not-available', () => {
-        browserWindows.toggleUpdateNotice(false);
+        if (settings.horizonPendingUpdateTag) {
+          settings.horizonPendingUpdateTag = '';
+          setGeneralSettings(settings);
+        }
+        setUpdateNotice(false);
       });
 
       autoUpdater.on('download-progress', progress => {
-        browserWindows.sendUpdateProgress(progress.percent);
+        setUpdateProgress(progress.percent);
       });
 
       autoUpdater.on('update-downloaded', info => {
         downloadedUpdateTag = normalizeVersionToTag(info.version);
         downloadingUpdate = false;
-        browserWindows.sendUpdateProgress(100, true);
+        if (
+          downloadedUpdateTag &&
+          settings.horizonPendingUpdateTag !== downloadedUpdateTag
+        ) {
+          settings.horizonPendingUpdateTag = downloadedUpdateTag;
+          setGeneralSettings(settings);
+        }
+        setUpdateProgress(100, true);
       });
 
-      setTimeout(() => runAutoUpdateCheck(), updateCheckFirstDelay);
+      void runAutoUpdateCheck();
       setInterval(() => runAutoUpdateCheck(), updateCheckInterval);
     } else {
-      setTimeout(
-        () =>
-          checkForGitRelease(`v${app.getVersion()}`, releasesUrl, updateMode),
-        updateCheckFirstDelay
-      );
+      void checkForGitRelease(`v${app.getVersion()}`, releasesUrl, updateMode);
       setInterval(
         () =>
           checkForGitRelease(`v${app.getVersion()}`, releasesUrl, updateMode),
@@ -1136,12 +1272,37 @@ async function onReady(): Promise<void> {
       if (!updateVersion) return;
       settings.horizonSkippedUpdateVersion = updateVersion;
       setGeneralSettings(settings);
-      browserWindows.toggleUpdateNotice(false);
+      setUpdateNotice(false);
     }
   );
-  electron.ipcMain.on('install-update', () => {
+  electron.ipcMain.on('request-update-state', (event: IpcMainEvent) => {
+    replayUpdateState(event.sender);
+    if (pendingUpdatePromptTag) {
+      const tag = pendingUpdatePromptTag;
+      pendingUpdatePromptTag = undefined;
+      const updateMode = supportsAutoUpdates() ? 'auto' : 'manual';
+      maybeShowUpdatePrompt(
+        tag,
+        updateMode,
+        electron.BrowserWindow.fromWebContents(event.sender)
+      );
+    }
+  });
+  electron.ipcMain.on('install-update', async () => {
     if (!confirmUpdateWhileConnected()) return;
     isUpdateRestarting = true;
+    if (
+      autoBackupScheduler &&
+      settings.autoBackupEnabled &&
+      Array.isArray(settings.autoBackupTriggers) &&
+      settings.autoBackupTriggers.includes('close')
+    ) {
+      try {
+        await autoBackupScheduler.runOnClose();
+      } catch (e) {
+        log.error('autoUpdater.backupBeforeInstall.failed', e);
+      }
+    }
     autoUpdater.quitAndInstall(true, true);
   });
   electron.ipcMain.on('enable-auto-download-updates', () => {
@@ -1356,7 +1517,7 @@ async function onReady(): Promise<void> {
           );
         }
         if (!settings.updateCheck) {
-          browserWindows.toggleUpdateNotice(false);
+          setUpdateNotice(false);
         }
         if (autoBackupScheduler) {
           autoBackupScheduler.reload();
@@ -1451,6 +1612,7 @@ let willQuitHandled = false;
 app.on('will-quit', (event: Event) => {
   if (
     !willQuitHandled &&
+    !isUpdateRestarting &&
     autoBackupScheduler &&
     settings.autoBackupEnabled &&
     Array.isArray(settings.autoBackupTriggers) &&

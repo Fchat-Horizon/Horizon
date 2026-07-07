@@ -47,6 +47,7 @@ export class ConversationDraftCache extends Cache<ConversationDraftRecord> {
   private diskSaveInterval: ReturnType<typeof setInterval> | null = null;
   private currentlyCachedCharacter = '';
   private resetListenerActive = false;
+  private loadPromise: Promise<void> | null = null;
 
   /**
    * Initialize the cache, including pulling the backup from disk if it exists. If setting.horizonCacheDraftMessages is false (opt-out)
@@ -64,6 +65,19 @@ export class ConversationDraftCache extends Cache<ConversationDraftRecord> {
 
     if (!core.connection.character || this.cacheAlreadyLoaded) return;
 
+    // prevents duplicate cache reads
+    if (this.loadPromise) return this.loadPromise;
+
+    this.loadPromise = this.populateCache();
+
+    try {
+      await this.loadPromise;
+    } finally {
+      this.loadPromise = null;
+    }
+  }
+
+  private async populateCache(): Promise<void> {
     const settings = await core.settingsStore.get('settings');
 
     // Check for opt-out setting on cache.
@@ -143,9 +157,10 @@ export class ConversationDraftCache extends Cache<ConversationDraftRecord> {
     if (!this.useCache) return;
 
     const k = Cache.nameKey(channel);
+    if (!(k in this.cache)) return;
 
     delete this.cache[k];
-    this.saveCacheToDisk();
+    this.saveCacheToDisk(true);
   }
 
   /**
@@ -153,12 +168,18 @@ export class ConversationDraftCache extends Cache<ConversationDraftRecord> {
    * @function
    * @private
    */
-  private saveCacheToDisk(): void {
+  private saveCacheToDisk(force = false): void {
     if (!this.useCache || !core.connection.character) return;
+
+    // in case user switches characters on the same tab
+    if (this.currentlyCachedCharacter !== core.connection.character) return;
 
     // Buffer close writes. Missing an occasional save isn't the end of the world.
     const now = Date.now();
-    if (now - this.lastCacheSave < MIN_CACHE_DISK_SAVE_IN_SECONDS * 1000)
+    if (
+      !force &&
+      now - this.lastCacheSave < MIN_CACHE_DISK_SAVE_IN_SECONDS * 1000
+    )
       return;
 
     this.lastCacheSave = now;

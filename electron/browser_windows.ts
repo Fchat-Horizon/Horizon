@@ -98,6 +98,11 @@ const winIcon: string = path.join(
   <string>require('./build/icon.ico').default
 );
 
+const updaterSplashHtml: string = path.join(
+  __dirname,
+  <string>require('./updater-splash.html').default
+);
+
 /**
  * Badge icon path for the app icon overlay. Used for when there are new messages and numbered badges are disabled.
  */
@@ -453,7 +458,29 @@ export function createMainWindow(
   if (!tray) {
     tray = new electron.Tray(trayIcon);
     tray.setToolTip(l('title'));
-    tray.on('click', _e => tray.popUpContextMenu());
+    // single click opens context menu, double click opens all windows
+    let clickTimeout: NodeJS.Timeout | undefined;
+    const showAll = () => {
+      if (clickTimeout) {
+        clearTimeout(clickTimeout);
+        clickTimeout = undefined;
+      }
+      showAllWindows();
+    };
+    // left clicking on tray icons doesn't do anything in linux and attaching a click handler
+    // messes things up even more, so right clicking to see the context menu is required
+    tray.on('click', _e => {
+      if (clickTimeout) {
+        showAll();
+      } else {
+        clickTimeout = setTimeout(() => {
+          clickTimeout = undefined;
+          tray.popUpContextMenu();
+        }, 200);
+      }
+    });
+    // works across windows/mac/linux
+    tray.on('double-click', _e => showAll());
 
     tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
     log.debug('init.window.add.tray');
@@ -565,17 +592,14 @@ function createTrayMenu(): electron.MenuItemConstructorOptions[] {
   ).map(([tabId, webContents]) => ({
     label: tabId,
     click: () => {
-      // Example: focus this tab, or any action you want
-      windows.forEach(winow => {
-        winow.webContents.focus();
-        winow.show();
-        winow.webContents.send('show-tab', webContents.id);
+      windows.forEach(window => {
+        window.webContents.send('show-tab', webContents.id);
       });
-      webContents.focus();
     }
   }));
   return [
     { label: l('title'), enabled: false },
+    { label: l('action.showAllWindows'), click: () => showAllWindows() },
     { type: 'separator' },
     ...tabItems,
     {
@@ -635,11 +659,15 @@ export async function quitAllWindows() {
 }
 
 /**
- * Shows all browser windows.
+ * Restores, shows, and focuses all browser windows.
  * @function
  */
 export function showAllWindows() {
-  for (const w of windows) w.show();
+  for (const w of windows) {
+    if (w.isMinimized()) w.restore();
+    w.show();
+    w.focus();
+  }
 }
 /**
  * Toggles the update notice in all browser windows through an IPC message.
@@ -662,6 +690,93 @@ export function toggleUpdateNotice(updateAvailable: boolean, version?: string) {
 export function sendUpdateProgress(percent: number, done: boolean = false) {
   for (const w of windows)
     w.webContents.send('update-download-progress', percent, done);
+}
+
+let updaterSplash: electron.BrowserWindow | undefined;
+
+let updaterSplashShownAt: number | undefined;
+
+let updaterSplashShown: Promise<void> | undefined;
+
+export function createUpdaterSplashWindow(
+  updateTag?: string
+): electron.BrowserWindow {
+  const window = new electron.BrowserWindow({
+    width: 360,
+    height: 140,
+    center: true,
+    frame: false,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    show: false,
+    backgroundColor: '#1b1b21',
+    icon: process.platform === 'win32' ? winIcon : pngIcon,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true
+    }
+  });
+
+  updaterSplashProgress = undefined;
+  window.loadFile(updaterSplashHtml, {
+    query: {
+      status: l('update.splash.updating'),
+      ...(updateTag ? { version: updateTag } : {})
+    }
+  });
+  window.webContents.on('did-finish-load', () => {
+    if (updaterSplashProgress !== undefined)
+      pushUpdaterSplashProgress(updaterSplashProgress);
+  });
+  updaterSplashShown = new Promise(resolve =>
+    window.once('ready-to-show', () => {
+      window.show();
+      updaterSplashShownAt = Date.now();
+      resolve();
+    })
+  );
+  window.on('closed', () => {
+    if (updaterSplash === window) updaterSplash = undefined;
+  });
+  updaterSplash = window;
+  return window;
+}
+
+export async function updaterSplashSeen(
+  minVisibleMs: number,
+  maxWaitMs: number
+): Promise<void> {
+  if (!updaterSplashShown) return;
+  const delay = (ms: number): Promise<void> =>
+    new Promise(resolve => setTimeout(resolve, ms));
+  await Promise.race([
+    updaterSplashShown.then(() =>
+      delay(Math.max(0, updaterSplashShownAt! + minVisibleMs - Date.now()))
+    ),
+    delay(maxWaitMs)
+  ]);
+}
+
+let updaterSplashProgress: number | undefined;
+
+function pushUpdaterSplashProgress(percent: number): void {
+  if (!updaterSplash || updaterSplash.isDestroyed()) return;
+  updaterSplash.webContents
+    .executeJavaScript(`window.setProgress && window.setProgress(${percent})`)
+    .catch(() => {});
+}
+
+export function setUpdaterSplashProgress(percent: number): void {
+  updaterSplashProgress = percent;
+  pushUpdaterSplashProgress(percent);
+}
+
+export function closeUpdaterSplash(): void {
+  if (updaterSplash && !updaterSplash.isDestroyed()) updaterSplash.close();
+  updaterSplash = undefined;
 }
 
 /**

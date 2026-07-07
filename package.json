@@ -1,6 +1,6 @@
 {
   "name": "fchat-horizon",
-  "version": "2.2.1",
+  "version": "2.3.1",
   "author": "The F-List Team and Horizon Contributors",
   "description": "A heavily modded FChat 3.0 client for F-List, continued from Rising",
   "private": true,
@@ -66,11 +66,11 @@
     "webpack": "^5.99.9"
   },
   "dependencies": {
-    "@ghostery/adblocker": "^2.14.1",
-    "@ghostery/adblocker-content": "^2.14.1",
-    "@ghostery/adblocker-electron": "^2.14.1",
-    "@ghostery/adblocker-electron-preload": "^2.14.1",
-    "@ghostery/adblocker-extended-selectors": "^2.14.1",
+    "@ghostery/adblocker": "^2.18.1",
+    "@ghostery/adblocker-content": "^2.18.1",
+    "@ghostery/adblocker-electron": "^2.18.1",
+    "@ghostery/adblocker-electron-preload": "^2.18.1",
+    "@ghostery/adblocker-extended-selectors": "^2.18.1",
     "adm-zip": "^0.5.17",
     "archiver": "^7.0.1",
     "node-fetch": "^2.7.0",
@@ -88,6 +88,7 @@
     "release": "release-it",
     "lint": "pnpm prettier --write .",
     "check": "pnpm prettier --check .",
+    "i18n:check": "node scripts/i18n-check.js",
     "typecheck": "pnpm --filter horizon-electron typecheck",
     "prepare": "husky"
   },
@@ -117,8 +118,6 @@
   },
   "packageManager": "pnpm@10.33.0",
   "lint-staged": {
-    "**.*": [
-      "prettier --write"
-    ]
+    "*": "prettier --write --ignore-unknown"
   }
 }

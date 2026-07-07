@@ -35,24 +35,30 @@
             <div class="about-container d-flex flex-column align-items-center">
               <div class="image-container">
                 <div class="image-bg"></div>
-                <img class="about-logo" :src="logoSrc" alt="Horizon logo" />
+                <img
+                  class="about-logo"
+                  :src="logoSrc"
+                  :alt="l('about.logoAlt')"
+                />
               </div>
               <h1 class="h5 fw-semibold mb-1 text-body">Horizon</h1>
-              <p class="text-muted mb-2">
-                A modern, community-driven F-Chat client
-              </p>
+              <p class="text-muted mb-2">{{ l('about.tagline') }}</p>
 
               <div class="row g-2 w-100 version-grid">
                 <div
                   class="col-6 d-flex justify-content-between align-items-baseline"
                 >
-                  <span class="text-muted small me-4">Version</span>
+                  <span class="text-muted small me-4">{{
+                    l('about.version')
+                  }}</span>
                   <span class="small text-body">{{ appVersion }}</span>
                 </div>
                 <div
                   class="col-6 d-flex justify-content-between align-items-baseline"
                 >
-                  <span class="text-muted small me-4">Commit</span>
+                  <span class="text-muted small me-4">{{
+                    l('about.commit')
+                  }}</span>
                   <span class="small text-body about-mono">
                     <a
                       v-if="commitUrl"
@@ -86,7 +92,9 @@
                 <div
                   class="col-6 d-flex justify-content-between align-items-baseline"
                 >
-                  <span class="text-muted small me-4">Platform</span>
+                  <span class="text-muted small me-4">{{
+                    l('about.platform')
+                  }}</span>
                   <span
                     class="small text-body text-end platform-value ms-2"
                     :title="platformDetails"
@@ -96,18 +104,41 @@
                 </div>
               </div>
 
-              <div class="d-flex justify-content-center mt-2">
+              <div class="d-flex flex-wrap justify-content-center gap-2 mt-2">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-2 text-nowrap report-bug-btn"
+                  :title="l('about.opensInBrowser')"
+                  @click="reportBug()"
+                >
+                  <span class="fa fa-bug"></span>
+                  <span>{{ l('about.reportBug') }}</span>
+                  <span
+                    class="fa fa-arrow-up-right-from-square report-bug-external"
+                    aria-hidden="true"
+                  ></span>
+                </button>
                 <button
                   type="button"
                   class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-2 text-nowrap"
-                  @click="copyVersionInfo()"
+                  @click="copyDebugInfo()"
                 >
                   <span
                     :class="copySuccess ? 'fa fa-check' : 'fa fa-copy'"
                   ></span>
                   <span>{{
-                    copySuccess ? 'Copied!' : 'Copy version info'
+                    copySuccess
+                      ? l('action.copy.success')
+                      : l('about.copyDebugInfo')
                   }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-2 text-nowrap"
+                  @click="openLogs()"
+                >
+                  <span class="fa fa-folder-open"></span>
+                  <span>{{ l('about.openLogs') }}</span>
                 </button>
               </div>
 
@@ -130,7 +161,7 @@
                   rel="noopener"
                 >
                   <span class="fa fa-users"></span>
-                  <span>Contributors</span>
+                  <span>{{ l('about.contributors') }}</span>
                 </a>
                 <a
                   class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2 text-nowrap"
@@ -155,7 +186,7 @@
               <hr class="w-100 my-3" />
 
               <p class="text-muted small mb-2">
-                Licensed under the
+                {{ l('about.licensedUnder') }}
                 <a
                   href="https://mozilla.org/MPL/2.0/"
                   target="_blank"
@@ -165,17 +196,18 @@
               </p>
 
               <p class="text-muted mb-0">
-                Made with <span class="heart">❤</span> by
+                {{ madeWithParts[0] }}<span class="heart">❤</span
+                >{{ madeWithParts[1] }}
                 <a href="https://github.com/CodingWithAnxiety" target="_blank"
                   >CodingWithAnxiety</a
                 >,
-                <a href="https://github.com/kawinski" target="_blank"
-                  >kawinski</a
-                >, and
                 <a href="https://github.com/FatCatClient" target="_blank"
                   >FatCatClient</a
+                >, and
+                <a href="https://github.com/kawinski" target="_blank"
+                  >kawinski</a
                 >. <br />
-                Thank you for using Horizon!
+                {{ l('about.thankYou') }}
               </p>
             </div>
 
@@ -197,19 +229,126 @@
 
 <script lang="ts">
   import * as remote from '@electron/remote';
-  import { clipboard } from 'electron';
+  import { clipboard, shell } from 'electron';
   import Vue from 'vue';
   import l, { setLanguage } from '../chat/localize';
-  import { GeneralSettings } from './common';
+  import { GeneralSettings, defaultHost } from './common';
   import os from 'os';
   import fs from 'fs';
   import path from 'path';
+  import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 
   const browserWindow = remote.getCurrentWindow();
   // tslint:disable-next-line:no-require-imports
   const logoSrc = require('./build/icon.png').default;
   // tslint:disable-next-line:no-require-imports
   const aboutIconSrc = require('../assets/images/logo.svg').default;
+
+  const PLATFORM_NAMES: Record<string, string> = {
+    win32: 'Windows',
+    darwin: 'macOS',
+    linux: 'Linux'
+  };
+
+  function readLinuxDistro(): string {
+    if (process.platform !== 'linux') return '';
+    for (const file of ['/etc/os-release', '/usr/lib/os-release']) {
+      try {
+        const data: Record<string, string> = {};
+        for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('#')) continue;
+          const eq = trimmed.indexOf('=');
+          if (eq === -1) continue;
+          const key = trimmed.slice(0, eq).trim();
+          let value = trimmed.slice(eq + 1).trim();
+          if (
+            value.length >= 2 &&
+            (value[0] === '"' || value[0] === "'") &&
+            value[value.length - 1] === value[0]
+          ) {
+            value = value.slice(1, -1);
+          }
+          data[key] = value;
+        }
+        if (data.PRETTY_NAME) return data.PRETTY_NAME;
+        const name = data.NAME || data.ID;
+        const version = data.VERSION || data.VERSION_ID;
+        if (name) return version ? `${name} ${version}` : name;
+      } catch (e) {}
+    }
+    return '';
+  }
+
+  const LINUX_ENV_KEYS = [
+    'XDG_SESSION_TYPE',
+    'XDG_CURRENT_DESKTOP',
+    'XDG_SESSION_DESKTOP',
+    'DESKTOP_SESSION',
+    'GDMSESSION',
+    'XDG_SESSION_CLASS',
+    'WAYLAND_DISPLAY',
+    'DISPLAY',
+    'GDK_BACKEND',
+    'QT_QPA_PLATFORM',
+    'OZONE_PLATFORM',
+    'ELECTRON_OZONE_PLATFORM_HINT',
+    'GTK_THEME',
+    'LANG',
+    'LC_ALL',
+    'LANGUAGE'
+  ];
+
+  function detectLinuxPackaging(): string {
+    const exists = (p: string): boolean => {
+      try {
+        return fs.existsSync(p);
+      } catch (e) {
+        return false;
+      }
+    };
+    if (process.env.FLATPAK_ID || exists('/.flatpak-info'))
+      return `Flatpak${process.env.FLATPAK_ID ? ` (${process.env.FLATPAK_ID})` : ''}`;
+    if (process.env.SNAP || process.env.SNAP_NAME)
+      return `Snap${process.env.SNAP_NAME ? ` (${process.env.SNAP_NAME})` : ''}`;
+    if (process.env.APPIMAGE) return 'AppImage';
+    if (process.env.container) return `Container (${process.env.container})`;
+    return 'Native';
+  }
+
+  // ^ Read from WebGL in-process: getGPUInfo's GL strings are often empty on
+  //   Linux under Wayland/EGL/ANGLE.
+  function readWebglInfo(): {
+    vendor: string;
+    renderer: string;
+    version: string;
+  } {
+    const result = { vendor: '', renderer: '', version: '' };
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = (canvas.getContext('webgl') ||
+        canvas.getContext(
+          'experimental-webgl'
+        )) as WebGLRenderingContext | null;
+      if (!gl) return result;
+      const debugExt = gl.getExtension('WEBGL_debug_renderer_info');
+      if (debugExt) {
+        result.vendor = String(
+          gl.getParameter(debugExt.UNMASKED_VENDOR_WEBGL) || ''
+        );
+        result.renderer = String(
+          gl.getParameter(debugExt.UNMASKED_RENDERER_WEBGL) || ''
+        );
+      }
+      if (!result.vendor)
+        result.vendor = String(gl.getParameter(gl.VENDOR) || '');
+      if (!result.renderer)
+        result.renderer = String(gl.getParameter(gl.RENDERER) || '');
+      result.version = String(gl.getParameter(gl.VERSION) || '');
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
+    } catch (e) {}
+    return result;
+  }
 
   export default Vue.extend({
     data() {
@@ -254,18 +393,7 @@
         return `https://github.com/Fchat-Horizon/Horizon/commit/${this.appCommit}`;
       },
       platformDetails(): string {
-        const platformName = (() => {
-          switch (os.platform()) {
-            case 'win32':
-              return 'Windows';
-            case 'darwin':
-              return 'macOS';
-            case 'linux':
-              return 'Linux';
-            default:
-              return os.platform();
-          }
-        })();
+        const platformName = PLATFORM_NAMES[os.platform()] || os.platform();
         const archLabel = (() => {
           switch (os.arch()) {
             case 'x64':
@@ -281,21 +409,17 @@
         const release = os.release();
         return `${platformName} ${archLabel}${release ? ` (${release})` : ''}`;
       },
-      versionInfoText(): string {
-        return [
-          `Version: ${this.appVersion || 'N/A'}`,
-          `Commit: ${this.displayCommit}`,
-          `Electron: ${this.electronVersion}`,
-          `Chromium: ${this.chromiumVersion}`,
-          `Node.js: ${this.nodeVersion}`,
-          `Platform: ${this.platformDetails}`
-        ].join('\n');
-      },
       aboutIconStyle(): Record<string, string> {
         return {
           maskImage: `url(${this.aboutIconSrc})`,
           WebkitMaskImage: `url(${this.aboutIconSrc})`
         };
+      },
+      // The {0} placeholder is the animated heart, kept as markup; split the
+      // localized string around it so translators still get a whole phrase.
+      madeWithParts(): string[] {
+        const parts = l('about.madeWith').split('{0}');
+        return [parts[0] || '', parts[1] || ''];
       }
     },
     async mounted(): Promise<void> {
@@ -330,12 +454,249 @@
       close(): void {
         browserWindow.close();
       },
-      copyVersionInfo(): void {
-        clipboard.writeText(this.versionInfoText);
+      resolveLogFile(): string {
+        try {
+          return log.transports.file.getFile().path;
+        } catch (e) {
+          return '';
+        }
+      },
+      openLogs(): void {
+        const file = this.resolveLogFile();
+        if (file) {
+          try {
+            shell.showItemInFolder(file);
+            return;
+          } catch (e) {
+            console.warn('Failed to reveal log file', e);
+          }
+        }
+        try {
+          void shell.openPath(remote.app.getPath('logs'));
+        } catch (e) {
+          console.warn('Failed to open logs folder', e);
+        }
+      },
+      async reportBug(): Promise<void> {
+        const base = 'https://github.com/Fchat-Horizon/Horizon/issues/new';
+        let info = '';
+        try {
+          info = await this.buildDebugInfo();
+        } catch (e) {
+          console.warn('Failed to build debug info', e);
+        }
+        const params = new URLSearchParams({ template: 'bug.yml' });
+        if (info) params.set('version-info', info);
+        let url = `${base}?${params.toString()}`;
+        // ! Browsers/GitHub reject very long URLs; if the prefilled form would
+        // ! overflow, copy the report to the clipboard and open a blank form so
+        // ! the user can paste into the field (its placeholder says to).
+        if (info && url.length > 6000) {
+          clipboard.writeText(info);
+          url = `${base}?template=bug.yml`;
+        }
+        try {
+          void shell.openExternal(url);
+        } catch (e) {
+          console.warn('Failed to open issue page', e);
+        }
+      },
+      async copyDebugInfo(): Promise<void> {
+        let text: string;
+        try {
+          text = await this.buildDebugInfo();
+        } catch (e) {
+          console.warn('Failed to build debug info', e);
+          text = `Version: ${this.appVersion || 'N/A'}\nCommit: ${this.displayCommit}`;
+        }
+        clipboard.writeText(text);
         this.copySuccess = true;
         window.setTimeout(() => {
           this.copySuccess = false;
         }, 1500);
+      },
+      async buildDebugInfo(): Promise<string> {
+        const safe = <T,>(fn: () => T, fallback: T): T => {
+          try {
+            return fn();
+          } catch (e) {
+            return fallback;
+          }
+        };
+
+        // ! Scrub the home dir for privacy; deliberately not the bare username,
+        // ! which collides with real values (e.g. theme "wilted-rose").
+        const home = safe(() => os.homedir(), '');
+        const scrub = (value: string): string =>
+          home ? String(value).split(home).join('~') : String(value);
+
+        const section = (
+          title: string,
+          rows: [string, string][]
+        ): string | null => {
+          const filtered = rows.filter(
+            ([, v]) => v != null && String(v).trim() !== ''
+          );
+          if (!filtered.length) return null;
+          return (
+            `[${title}]\n` +
+            filtered.map(([k, v]) => `${k}: ${scrub(String(v))}`).join('\n')
+          );
+        };
+
+        const versions: [string, string][] = [
+          ['Version', this.appVersion || 'N/A'],
+          ['Commit', this.displayCommit],
+          ['Electron', this.electronVersion],
+          ['Chromium', this.chromiumVersion],
+          ['Node.js', this.nodeVersion],
+          ['V8', process.versions.v8 || 'N/A']
+        ];
+
+        // ! Allow-listed: account, proxy value and on-disk paths are excluded
+        // ! so this never carries personal data.
+        const s = this.settings;
+        const config: [string, string][] = [];
+        if (s) {
+          config.push(
+            ['Release channel', s.beta ? 'beta' : 'stable'],
+            ['Hardware acceleration', String(s.hwAcceleration)],
+            [
+              'Theme',
+              s.themeSync
+                ? `sync (light: ${s.themeSyncLight}, dark: ${s.themeSyncDark})`
+                : s.theme
+            ],
+            ['Display language', s.displayLanguage],
+            ['Zoom level', String(s.zoomLevel)],
+            ['Reduced motion', String(s.reducedMotion)],
+            ['Window transparency', String(s.allowWindowTransparency)],
+            ['Native window controls', String(s.forceNativeWindowControls)],
+            ['Custom CSS', s.horizonCustomCssEnabled ? 'enabled' : 'disabled'],
+            ['Sound theme', s.soundTheme],
+            ['Log level', String(s.risingSystemLogLevel)],
+            ['Proxy', s.proxy ? 'configured' : 'none']
+          );
+          if (s.host && s.host !== defaultHost) config.push(['Host', s.host]);
+        }
+
+        const cpus = safe(() => os.cpus(), []);
+        const cpuModel = cpus.length ? cpus[0].model.trim() : '';
+        const totalMemGb = safe(
+          () => `${(os.totalmem() / 1024 ** 3).toFixed(1)} GB`,
+          ''
+        );
+        const locale = safe(
+          () => remote.app.getLocale(),
+          process.env.LANG || ''
+        );
+        const kernel = os.release();
+        const osVersion = safe(
+          () => (process as any).getSystemVersion?.() || '',
+          ''
+        );
+        // getSystemVersion means different things per OS: the kernel on Linux,
+        // the build on Windows, the product version on macOS (where os.release
+        // is separately the Darwin kernel). Label each so none reads as "Kernel"
+        // on Windows.
+        const versionRowsByOs: Record<string, [string, string][]> = {
+          darwin: [
+            ['OS version', osVersion],
+            ['Kernel', kernel]
+          ],
+          linux: [['Kernel', kernel]]
+        };
+        const versionRows = versionRowsByOs[this.platform] || [
+          ['OS version', osVersion || kernel]
+        ];
+        const logFile = this.resolveLogFile();
+        const logDir = logFile ? path.dirname(logFile) : '';
+        const system: [string, string][] = [
+          ['OS', PLATFORM_NAMES[this.platform] || this.platform],
+          ...versionRows,
+          ['Arch', safe(() => os.arch(), '')],
+          ['Distro', readLinuxDistro()],
+          ['CPU', cpuModel ? `${cpuModel} (${cpus.length} threads)` : ''],
+          ['Memory', totalMemGb],
+          ['Locale', locale],
+          [
+            'Color scheme',
+            remote.nativeTheme.shouldUseDarkColors ? 'dark' : 'light'
+          ],
+          ['Log folder', logDir]
+        ];
+
+        const linux: [string, string][] = [];
+        if (this.platform === 'linux') {
+          for (const key of LINUX_ENV_KEYS) {
+            const value = process.env[key];
+            if (value) linux.push([key, value]);
+          }
+          linux.push(['Packaging', detectLinuxPackaging()]);
+        }
+
+        const gpu: [string, string][] = [];
+        const webgl = readWebglInfo();
+        if (webgl.vendor) gpu.push(['Vendor', webgl.vendor]);
+        if (webgl.renderer) gpu.push(['Renderer', webgl.renderer]);
+        if (webgl.version) gpu.push(['GL Version', webgl.version]);
+        try {
+          const info: any = await remote.app.getGPUInfo('complete');
+          const aux = info?.auxAttributes || {};
+          if (!webgl.vendor && aux.glVendor) gpu.push(['Vendor', aux.glVendor]);
+          if (!webgl.renderer && aux.glRenderer)
+            gpu.push(['Renderer', aux.glRenderer]);
+          if (!webgl.version && aux.glVersion)
+            gpu.push(['GL Version', aux.glVersion]);
+          const devices: any[] = Array.isArray(info?.gpuDevice)
+            ? info.gpuDevice
+            : [];
+          devices.forEach((d, i) => {
+            const vendorId =
+              typeof d?.vendorId === 'number' ? d.vendorId : null;
+            const deviceId =
+              typeof d?.deviceId === 'number' ? d.deviceId : null;
+            if (vendorId == null && deviceId == null) return;
+            const parts = [
+              vendorId != null && `vendor 0x${vendorId.toString(16)}`,
+              deviceId != null && `device 0x${deviceId.toString(16)}`,
+              d?.active && 'active'
+            ].filter(Boolean);
+            gpu.push([
+              devices.length > 1 ? `Device ${i + 1}` : 'Device',
+              parts.join(', ')
+            ]);
+          });
+        } catch (e) {}
+        try {
+          const status = remote.app.getGPUFeatureStatus();
+          for (const [k, v] of Object.entries(status)) {
+            gpu.push([k, String(v)]);
+          }
+        } catch (e) {}
+
+        const displays: [string, string][] = [];
+        try {
+          const primaryId = remote.screen.getPrimaryDisplay().id;
+          remote.screen.getAllDisplays().forEach((d, i) => {
+            const tag = d.id === primaryId ? ' (primary)' : '';
+            displays.push([
+              `Display ${i + 1}${tag}`,
+              `${d.size.width}x${d.size.height} @ ${d.scaleFactor}x, ${d.colorDepth}-bit`
+            ]);
+          });
+        } catch (e) {}
+
+        return [
+          section('Horizon', versions),
+          section('Horizon Config', config),
+          section('System', system),
+          section('Linux Desktop', linux),
+          section('GPU', gpu),
+          section('Displays', displays)
+        ]
+          .filter(Boolean)
+          .join('\n\n');
       },
       getThemeClass() {
         try {
@@ -446,6 +807,21 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .report-bug-btn {
+    position: relative;
+  }
+
+  // Corner glyph marking the external (browser) action; absolute so it adds
+  // no width to the button.
+  .report-bug-external {
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    font-size: 0.5em;
+    opacity: 0.65;
+    pointer-events: none;
   }
 
   .about-mono {

@@ -39,13 +39,11 @@
       >
         <div
           v-if="updateDownloading"
-          class="btn btn-outline-info btn-update-progress"
           :title="l('update.titlebar.downloading', updateDownloadPercent)"
+          :style="{ '--progress-percent': updateDownloadPercent + '%' }"
+          class="btn-update-progress"
         >
-          <div
-            class="btn-update-progress-fill"
-            :style="{ width: updateDownloadPercent + '%' }"
-          ></div>
+          <span class="btn-update-progress-fill"></span>
           <span class="btn-update-progress-label"
             >{{ updateDownloadPercent }}%</span
           >
@@ -372,6 +370,9 @@
           this.updateDownloaded = done;
         }
       );
+      // The first check can resolve before this window loads; pull whatever
+      // notice the main process already has.
+      electron.ipcRenderer.send('request-update-state');
       electron.ipcRenderer.on('fix-logs', () =>
         this.activeTab!.view.webContents.send('fix-logs')
       );
@@ -511,7 +512,13 @@
       electron.ipcRenderer.on(
         'show-tab',
         (_e: Electron.IpcRendererEvent, id: number) => {
-          this.show(this.tabMap[id]);
+          const tab = this.tabMap[id];
+          // finds which window has which specific character when opening via context menu
+          if (!tab) return;
+          if (browserWindow.isMinimized()) browserWindow.restore();
+          if (!browserWindow.isVisible()) browserWindow.show();
+          browserWindow.focus();
+          this.show(tab);
         }
       );
       document.addEventListener('click', () =>
@@ -921,16 +928,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
+    --fill-color: var(--bs-body-color);
 
-  #window-tabs .btn-update-progress-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background: rgba(var(--bs-info-rgb, 13, 202, 240), 0.25);
-    transition: width 0.3s ease;
-    pointer-events: none;
+    .btn-update-progress-fill {
+      transition: --fill-color 0.55s ease-in-out;
+      position: absolute;
+      left: 0.75em;
+      height: 1.25em;
+      width: 1.25em;
+      background-image: conic-gradient(
+        var(--fill-color) 0% var(--progress-percent),
+        rgba(0, 0, 0, 0) var(--progress-percent)
+      );
+      border-radius: 100%;
+      border: var(--bs-border-color) 1px solid;
+    }
   }
 
   #window-tabs .btn-update-progress-label {
@@ -938,6 +950,7 @@
     z-index: 1;
     font-size: 11px;
     font-weight: 600;
+    visibility: hidden;
   }
 
   #window-tabs .btn-update-done {
