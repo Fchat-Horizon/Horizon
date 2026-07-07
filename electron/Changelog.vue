@@ -171,7 +171,7 @@
                 <button
                   type="button"
                   class="btn btn-primary"
-                  @click.stop="openLatestRelease()"
+                  @click.stop="openDownloadPage()"
                   v-if="updateMode === 'manual'"
                 >
                   <span class="me-1">{{ l('changelog.openReleases') }}</span
@@ -314,9 +314,10 @@
           this.externalUrlHandler(target.getAttribute('href') || '#');
         }
       },
-      openLatestRelease(): void {
+      openDownloadPage(): void {
         this.externalUrlHandler(
-          'https://github.com/Fchat-Horizon/Horizon/releases/latest'
+          'https://horizn.moe/download.html' +
+            (this.updateVersion ? '?ver=' + this.updateVersion : '')
         );
       },
       getThemeClass() {
