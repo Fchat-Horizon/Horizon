@@ -1326,6 +1326,13 @@ async function onReady(): Promise<void> {
           log.error('autoUpdater.backupBeforeInstall.failed', e);
         }
       }
+      //quitAndInstall doesn't call the app.quit() function (or touch any of its events), but
+      //instead closes all windows. Which has different behaviour in our app when we still have connected characters.
+      //On MacOS this has proven to be problematic because installing the update doesn't force-close the app anyway.
+      //As far as I could tell from testing, this check doesn't introduce any problems on other platforms,
+      //since 'will-quit' already checks for isUpdateRestarting,
+
+      if (getConnectedCharacterCount() > 0) app.quit();
       autoUpdater.quitAndInstall(true, true);
     }
   );
