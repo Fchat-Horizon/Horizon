@@ -609,8 +609,6 @@
         const versionRows = versionRowsByOs[this.platform] || [
           ['OS version', osVersion || kernel]
         ];
-        const logFile = this.resolveLogFile();
-        const logDir = logFile ? path.dirname(logFile) : '';
         const system: [string, string][] = [
           ['OS', PLATFORM_NAMES[this.platform] || this.platform],
           ...versionRows,
@@ -623,7 +621,7 @@
             'Color scheme',
             remote.nativeTheme.shouldUseDarkColors ? 'dark' : 'light'
           ],
-          ['Log folder', logDir]
+          ['Chat logs folder', s ? s.logDirectory : '']
         ];
 
         const linux: [string, string][] = [];
