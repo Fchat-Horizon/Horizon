@@ -157,6 +157,7 @@
     SubDomRole,
     TagId
   } from '../../learn/matcher-types';
+  import { truncateBBCode } from '../../bbcode/parser';
   import { BBCodeView } from '../../bbcode/view';
   import { EventBus } from './event-bus';
   import { Character, CustomKink } from '../../interfaces';
@@ -352,7 +353,7 @@
           ),
           m => ({
             ...m,
-            text: m.text.length > 512 ? m.text.substr(0, 512) + '…' : m.text
+            text: truncateBBCode(core.bbCodeParser, m.text, 512)
           })
         );
       },
