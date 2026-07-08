@@ -16,25 +16,25 @@ import core from '../chat/core';
 const MIN_CACHE_DISK_SAVE_IN_SECONDS = 5;
 
 export interface ConversationCachedMessage {
-  channel: string;
+  key: string;
   message: string;
 }
 
 export class ConversationDraftRecord {
-  channel: string;
+  key: string;
   message: string;
 
   /**
    * Fundamental layout of an F-Chat message. Sender is currently implied by core.connection.character.
    * @function
-   * @param {string} channel
-   * The intended recipient of the message, either a character name or a channel name.
+   * @param {string} key
+   * The unique key of the conversation the draft belongs to, e.g. `#adh-...` for a channel or a lowercased character name for a PM.
    * @param {string} message
    * The draft text as it currently exists in the input textbox.
    * @internal
    */
-  constructor(channel: string, message?: string) {
-    this.channel = channel;
+  constructor(key: string, message?: string) {
+    this.key = key;
     this.message = message || '';
   }
 }
@@ -135,28 +135,28 @@ export class ConversationDraftCache extends Cache<ConversationDraftRecord> {
    * Add or overwrite an entry in the cache.
    * @function
    * @param {ConversationCachedMessage} draft
-   * The message and intended recipient name (whether a private message, channel, or the console itself).
+   * The message and the key of the conversation it belongs to (whether a private message, channel, or the console itself).
    * @internal
    */
   register(draft: ConversationCachedMessage): void {
     if (!this.useCache) return;
 
-    const k = Cache.nameKey(draft.channel);
+    const k = Cache.nameKey(draft.key);
 
-    this.cache[k] = new ConversationDraftRecord(draft.channel, draft.message);
+    this.cache[k] = new ConversationDraftRecord(draft.key, draft.message);
   }
 
   /**
    * Remove an entry from the cache, then immediately remove from disk to prevent it from re-appearing.
    * @function
-   * @param {string} channel
-   * The character name or channel name that the draft was intended for.
+   * @param {string} key
+   * The unique key of the conversation that the draft was intended for.
    * @internal
    */
-  deregister(channel: string): void {
+  deregister(key: string): void {
     if (!this.useCache) return;
 
-    const k = Cache.nameKey(channel);
+    const k = Cache.nameKey(key);
     if (!(k in this.cache)) return;
 
     delete this.cache[k];
