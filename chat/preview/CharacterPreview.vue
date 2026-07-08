@@ -110,7 +110,28 @@
         </div>
       </div>
     </div>
-    <div v-else>Loading...</div>
+    <div class="row w-100" v-else>
+      <div class="col-2">
+        <div
+          class="throbber w-100 h-100"
+          style="border-radius: 4px; max-height: 90%"
+        ></div>
+      </div>
+      <div class="col-10">
+        <div class="w-100 mb-1" style="height: 2.5rem">
+          <div class="w-25 throbber h-100"></div>
+        </div>
+        <div class="w-100 mb-1" style="height: 2rem">
+          <div class="w-25 throbber h-100"></div>
+        </div>
+        <div class="w-100 mb-1" style="height: 1.8rem">
+          <div class="w-50 throbber h-100"></div>
+        </div>
+        <div class="w-100 mb-1" style="height: 1.8rem">
+          <div class="w-50 throbber h-100"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -136,6 +157,7 @@
     SubDomRole,
     TagId
   } from '../../learn/matcher-types';
+  import { truncateBBCode } from '../../bbcode/parser';
   import { BBCodeView } from '../../bbcode/view';
   import { EventBus } from './event-bus';
   import { Character, CustomKink } from '../../interfaces';
@@ -331,7 +353,7 @@
           ),
           m => ({
             ...m,
-            text: m.text.length > 512 ? m.text.substr(0, 512) + '…' : m.text
+            text: truncateBBCode(core.bbCodeParser, m.text, 512)
           })
         );
       },
