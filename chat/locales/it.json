@@ -1082,7 +1082,6 @@
   "unit.years": "Anni",
   "update.autoInstall": "Scarica e installa automaticamente gli aggiornamenti in futuro",
   "update.installOnQuit.note": "L'aggiornamento si installa automaticamente la prossima volta che riavvii l'app.",
-  "update.restart.confirmConnected": "Sei ancora connesso in chat.\nSei sicuro di voler riavviare e installare l'aggiornamento ora?",
   "update.splash.updating": "Aggiornando Horizon...",
   "update.titlebar.downloading": "Scaricando l'aggiornamento: {0}%",
   "update.titlebar.ready": "Aggiornamento pronto, clicca per installare",
