@@ -1,7 +1,15 @@
 import Vue from 'vue';
 import type { Locale } from 'date-fns';
 import { enUS as dateEnUS, fr, de, es, it, hu, ru } from 'date-fns/locale';
-const enUS: { [k: string]: string } = require('./locales/en-US.json');
+import enUSJson from './locales/en-US.json';
+const enUS: { [k: string]: string } = enUSJson;
+
+type PluralSuffix = 'zero' | 'one' | 'two' | 'few' | 'many' | 'other';
+export type LocaleKey = keyof typeof enUSJson;
+// ^ lp() takes the base key; the catalog stores base_<CLDR category> entries
+export type PluralKey = {
+  [K in LocaleKey]: K extends `${infer Base}_${PluralSuffix}` ? Base : never;
+}[LocaleKey];
 // Ensure Webpack can resolve dynamic locale filenames (including hyphens)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const localeContext: any = (require as any).context(
@@ -138,10 +146,10 @@ function format(str: string, params?: LocalizeParams): string {
   );
 }
 
-export default function l(key: string, params: LocalizeParams): string;
-export default function l(key: string, ...args: (string | number)[]): string;
+export default function l(key: LocaleKey, params: LocalizeParams): string;
+export default function l(key: LocaleKey, ...args: (string | number)[]): string;
 export default function l(
-  key: string,
+  key: LocaleKey,
   ...args: (string | number | LocalizeParams)[]
 ): string {
   i18nState.version;
@@ -165,7 +173,7 @@ export default function l(
 }
 
 export function lp(
-  key: string,
+  key: PluralKey,
   count: number,
   params?: LocalizeParams
 ): string {

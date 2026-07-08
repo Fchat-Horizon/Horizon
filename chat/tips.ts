@@ -1,5 +1,5 @@
 import { FisherYatesShuffle } from './common';
-import l from './localize';
+import l, { LocaleKey } from './localize';
 import Vue from 'vue';
 
 /**
@@ -90,7 +90,7 @@ function validateTips() {
  */
 export default function tip(): string {
   validateTips();
-  return l(`tips.${tips[currentTipIndex.value]}`, {
+  return l(`tips.${tips[currentTipIndex.value]}` as LocaleKey, {
     modifier: MODIFIER_KEY,
     alt: ALT_KEY
   });

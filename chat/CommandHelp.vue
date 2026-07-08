@@ -38,7 +38,7 @@
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import core from './core';
-  import l from './localize';
+  import l, { LocaleKey } from './localize';
   import commands, {
     CommandContext,
     ParamType,
@@ -90,13 +90,13 @@
               param.type === ParamType.Character
                 ? 'param_character'
                 : `${key}.param${i}`;
-            const name = l(`commands.${paramKey}`);
+            const name = l(`commands.${paramKey}` as LocaleKey);
             const data = {
               name:
                 param.optional !== undefined
                   ? l('commands.help.paramOptional', { param: name })
                   : name,
-              help: l(`commands.${paramKey}.help`)
+              help: l(`commands.${paramKey}.help` as LocaleKey)
             };
             params.push(data);
             syntax +=
@@ -113,12 +113,14 @@
             context += `${l('commands.help.contextConsole')}\n`;
         }
         this.commands.push({
-          name: `/${key} - ${l(`commands.${key}`)}`,
-          help: l(`commands.${key}.help`),
+          name: `/${key} - ${l(`commands.${key}` as LocaleKey)}`,
+          help: l(`commands.${key}.help` as LocaleKey),
           context,
           permission:
             command.permission !== undefined
-              ? l(`commands.help.permission${Permission[command.permission]}`)
+              ? l(
+                  `commands.help.permission${Permission[command.permission]}` as LocaleKey
+                )
               : undefined,
           params,
           syntax

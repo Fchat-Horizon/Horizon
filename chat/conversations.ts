@@ -11,7 +11,7 @@ import {
 } from './common';
 import core from './core';
 import { Channel, Character, Conversation as Interfaces } from './interfaces';
-import l from './localize';
+import l, { LocaleKey } from './localize';
 import {
   CommandContext,
   isAction,
@@ -1746,7 +1746,7 @@ export default function (this: any): Interfaces.State {
 
   connection.onMessage('IGN', async (data, time) => {
     if (data.action !== 'add' && data.action !== 'delete') return;
-    const key = `events.ignore_${data.action}`;
+    const key: LocaleKey = `events.ignore_${data.action}`;
     const name = data.character;
     state.selectedConversation.infoText = l(key, { character: name });
     return addEventMessage(
@@ -1771,7 +1771,9 @@ export default function (this: any): Interfaces.State {
         case 'feature':
           url += `vote.php?id=${data.target_id}/#${data.id}`;
       }
-      const key = `events.rtbComment${data.parent_id !== 0 ? 'Reply' : ''}`;
+      const key: LocaleKey = `events.rtbComment${
+        data.parent_id !== 0 ? 'Reply' : ''
+      }`;
       text = l(key, {
         character: `[user]${data.name}[/user]`,
         type: l(`events.rtbComment_${data.target_type}`),
