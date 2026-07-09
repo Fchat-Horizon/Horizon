@@ -135,3 +135,20 @@ jobs:
           name: Horizon-nightly-${{ github.run_number }}-${{ matrix.platform }}-${{ matrix.arch }}
           path: release_artifacts/**
           retention-days: 14
+  flake-build:
+    name: Check Nix flake
+    needs: check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Verify Nix
+        run: nix --version
+
+      - name: Build flake (no symlink)
+        run: nix build --no-link

@@ -23,14 +23,14 @@
 
             pnpmDeps = pkgs.fetchPnpmDeps {
               inherit pname version src;
-              hash = "sha256-iFzSKQ32vYVREc3kXjzQxgAot+kF7hf1anYEf8SEuBc=";
-              pnpm = pkgs.pnpm_9;
+              hash = "sha256-yoqJKknPTSdivPEbB5d43SK1P9Vc7wJiJsOr/oaFT2A=";
+              pnpm = pkgs.pnpm_10;
               fetcherVersion = 3;
             };
 
             nativeBuildInputs = [
-              pkgs.pnpm_9
-              (pkgs.pnpmConfigHook.override { pnpm = pkgs.pnpm_9; })
+              pkgs.pnpm_10
+              (pkgs.pnpmConfigHook.override { pnpm = pkgs.pnpm_10; })
               nodejs
               pkgs.autoPatchelfHook
               pkgs.copyDesktopItems

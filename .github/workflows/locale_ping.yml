@@ -1,0 +1,37 @@
+name: Translation Announcements
+
+on:
+  push:
+    branches:
+      - development
+    paths:
+      - 'chat/locales/*.json'
+  workflow_dispatch:
+    inputs:
+      before:
+        description: 'Base commit SHA (defaults to parent of head)'
+        required: false
+      after:
+        description: 'Head commit SHA (defaults to current HEAD)'
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  announce:
+    name: Announce locale changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # ! Full history so the pre-push commit is available for diffing.
+          fetch-depth: 0
+
+      - name: Send locale change notification to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_TRANSLATORS }}
+          BEFORE_SHA: ${{ inputs.before || github.event.before }}
+          AFTER_SHA: ${{ inputs.after || github.event.after || github.sha }}
+        run: node .github/scripts/locale-announce.js
