@@ -327,7 +327,8 @@
       'virtual-list': VirtualList
     },
     props: {
-      conversation: {}
+      conversation: {},
+      initialCharacter: {}
     },
     data() {
       return {
@@ -667,6 +668,8 @@
       },
 
       async onOpen(): Promise<void> {
+        if (this.initialCharacter !== undefined && this.initialCharacter !== '')
+          this.selectedCharacter = this.initialCharacter as string;
         if (this.selectedCharacter !== '') {
           await this.loadConversations();
           if (this.conversation !== undefined) {

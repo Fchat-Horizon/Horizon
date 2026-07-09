@@ -1,123 +1,144 @@
 <template>
   <div class="recon row">
-    <div
-      class="recon-summary row"
-      v-if="!loading && relationshipFlags.length > 0"
-    >
-      <div class="col-sm-10" style="margin-top: 5px">
-        <span class="recon-flags">
+    <div class="col-sm-10 recon-loading" v-if="loading">
+      <div class="alert alert-info">
+        <i class="fa-solid fa-spinner fa-spin fa-fw"></i>
+        {{ l('profile.recon.loading') }}
+      </div>
+    </div>
+
+    <div class="col-sm-10 recon-empty" v-else-if="isEmpty">
+      <div class="alert alert-info">{{ l('profile.recon.empty') }}</div>
+    </div>
+
+    <template v-else>
+      <div
+        class="col-sm-10 recon-section recon-summary"
+        v-if="relationshipFlags.length > 0"
+      >
+        <div class="recon-flags">
           <span
             class="badge recon-flag"
             v-for="flag in relationshipFlags"
             :key="flag.label"
             :class="flag.cls"
-            >{{ flag.label }}</span
           >
-        </span>
+            <i class="fa-solid fa-fw" :class="flag.icon"></i>
+            {{ flag.label }}
+          </span>
+        </div>
       </div>
-    </div>
 
-    <div class="shared-channels row" v-if="!loading">
-      <div class="col-sm-10" style="margin-top: 5px">
-        <h4>Shared Channels</h4>
+      <div class="col-sm-10 recon-section shared-channels">
+        <h4>
+          <i class="fa-solid fa-hashtag fa-fw"></i>
+          {{ l('profile.recon.sharedChannels') }}
+        </h4>
 
         <div class="shared-channel-list" v-if="sharedChannels.length > 0">
-          <a
+          <button
+            type="button"
             v-for="channel in sharedChannels"
             :key="channel.channel.id"
-            href="#"
             class="shared-channel-chip"
             :title="channel.name"
-            @click.prevent="jumpToChannel(channel)"
-            >#{{ channel.name }}</a
+            @click="jumpToChannel(channel)"
           >
+            #{{ channel.name }}
+          </button>
         </div>
-        <i v-else>{{ characterName() }} isn't in any channel you're in.</i>
+        <i v-else>{{
+          l('profile.recon.sharedChannels.none', characterName())
+        }}</i>
       </div>
-    </div>
-
-    <div class="character-history" v-if="history.length > 0">
-      <div class="col-sm-10" style="margin-top: 5px">
-        <h4>Your Characters' History</h4>
-
-        <div class="list-group">
-          <a
-            v-for="entry in history"
-            :key="entry.character"
-            href="#"
-            class="list-group-item"
-            :class="{ active: entry.character === selectedCharacter }"
-            @click.prevent="selectCharacter(entry.character)"
-          >
-            <img
-              :src="avatarUrl(entry.character)"
-              :title="entry.character"
-              style="
-                width: 24px;
-                height: 24px;
-                border-radius: 3px;
-                margin-right: 8px;
-                vertical-align: middle;
-                object-fit: cover;
-              "
-            />
-            {{ entry.character }}
-            <span v-if="isOwnCharacter(entry.character)"> (current)</span>
-            <span class="message-time">{{ formatDate(entry.lastDate) }}</span>
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <div class="conversation" v-if="conversation && conversation.length > 0">
-      <h4>Latest Messages (as {{ selectedCharacter }})</h4>
 
       <div
-        :class="getMessageWrapperClasses()"
-        class="col-sm-10"
-        style="margin-top: 5px"
+        class="col-sm-10 recon-section character-history"
+        v-if="history.length > 0"
       >
-        <template v-for="(message, i) in conversation">
-          <message-view
-            :message="message"
-            :key="message.id"
-            :previous="conversation[i - 1]"
+        <h4>
+          <i class="fa-solid fa-clock-rotate-left fa-fw"></i>
+          {{ l('profile.recon.history') }}
+        </h4>
+
+        <div class="list-group">
+          <button
+            type="button"
+            v-for="entry in history"
+            :key="entry.character"
+            class="list-group-item list-group-item-action recon-history-item"
+            :class="{ active: entry.character === selectedCharacter }"
+            @click="selectCharacter(entry.character)"
           >
-          </message-view>
-        </template>
+            <img
+              class="recon-avatar"
+              :src="avatarUrl(entry.character)"
+              :title="entry.character"
+              :alt="entry.character"
+            />
+            <span class="recon-history-name" :title="entry.character">{{
+              entry.character
+            }}</span>
+            <span
+              v-if="isOwnCharacter(entry.character)"
+              class="recon-history-current"
+            >
+              {{ l('profile.recon.history.current') }}
+            </span>
+            <span class="message-time">{{ formatDate(entry.lastDate) }}</span>
+          </button>
+        </div>
       </div>
-    </div>
 
-    <div class="row ad-viewer" v-if="ads.length > 0">
-      <div class="col-sm-10" style="margin-top: 5px">
-        <h4>Latest Ads</h4>
+      <div
+        class="col-sm-10 recon-section conversation"
+        v-if="conversation && conversation.length > 0"
+      >
+        <h4>
+          <i class="fa-solid fa-comments fa-fw"></i>
+          {{ l('profile.recon.latestMessages', selectedCharacter) }}
+          <button
+            type="button"
+            class="btn btn-sm btn-secondary recon-view-logs"
+            :title="l('profile.recon.viewFullLogs')"
+            @click="viewFullLogs"
+          >
+            <i class="fa-solid fa-book fa-fw"></i>
+            {{ l('profile.recon.viewFullLogs') }}
+          </button>
+        </h4>
 
-        <template v-for="message in ads">
-          <h3>
+        <div :class="getMessageWrapperClasses()">
+          <template v-for="(message, i) in conversation">
+            <message-view
+              :message="message"
+              :key="message.id"
+              :previous="conversation[i - 1]"
+            >
+            </message-view>
+          </template>
+        </div>
+      </div>
+
+      <div class="col-sm-10 recon-section ad-viewer" v-if="ads.length > 0">
+        <h4>
+          <i class="fa-solid fa-bullhorn fa-fw"></i>
+          {{ l('profile.recon.latestAds') }}
+        </h4>
+
+        <div class="recon-ad" v-for="(message, i) in ads" :key="i">
+          <h5 class="recon-ad-channel">
             #{{ message.channelName }}
             <span class="message-time">{{
               formatTime(message.datePosted)
             }}</span>
-          </h3>
+          </h5>
           <div class="border-bottom">
             <bbcode :text="message.message"></bbcode>
           </div>
-        </template>
+        </div>
       </div>
-    </div>
-
-    <div class="row" v-if="loading">
-      <div class="col-sm-10" style="margin-top: 5px">Loading…</div>
-    </div>
-
-    <div
-      class="row"
-      v-if="!loading && ads.length === 0 && history.length === 0"
-    >
-      <div class="col-sm-10" style="margin-top: 5px">
-        You have not seen any ads or messages from this character.
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -131,6 +152,7 @@
   import MessageView from '../../chat/message_view';
   import { BBCodeView } from '../../bbcode/view';
 
+  import l from '../../chat/localize';
   import { formatTime } from '../../chat/common';
   import { format } from 'date-fns';
   import { avatarURL } from '../utils';
@@ -144,6 +166,7 @@
   interface RelationshipFlag {
     label: string;
     cls: string;
+    icon: string;
   }
 
   export default Vue.extend({
@@ -162,6 +185,7 @@
         sharedChannels: [] as Conversation.ChannelConversation[],
         selectedCharacter: null as string | null,
         loading: false,
+        l: l,
         formatTime: formatTime
       };
     },
@@ -174,12 +198,33 @@
       relationshipFlags(): RelationshipFlag[] {
         const c = this.liveCharacter;
         const flags: RelationshipFlag[] = [];
-        if (c.isFriend) flags.push({ label: 'Friend', cls: 'text-bg-success' });
+        if (c.isFriend)
+          flags.push({
+            label: l('profile.recon.flag.friend'),
+            cls: 'text-bg-success',
+            icon: 'fa-user-group'
+          });
         if (c.isBookmarked)
-          flags.push({ label: 'Bookmarked', cls: 'text-bg-info' });
+          flags.push({
+            label: l('profile.recon.flag.bookmarked'),
+            cls: 'text-bg-info',
+            icon: 'fa-bookmark'
+          });
         if (c.isIgnored)
-          flags.push({ label: 'Ignored', cls: 'text-bg-danger' });
+          flags.push({
+            label: l('profile.recon.flag.ignored'),
+            cls: 'text-bg-danger',
+            icon: 'fa-ban'
+          });
         return flags;
+      },
+      isEmpty(): boolean {
+        return (
+          this.relationshipFlags.length === 0 &&
+          this.sharedChannels.length === 0 &&
+          this.history.length === 0 &&
+          this.ads.length === 0
+        );
       }
     },
     methods: {
@@ -231,23 +276,30 @@
       characterName(): string {
         return (this.character as Character).character.name;
       },
+      viewFullLogs(): void {
+        if (this.selectedCharacter === null) return;
+        const name = this.characterName();
+        this.$emit('view-logs', {
+          character: this.selectedCharacter,
+          conversation: { key: name.toLowerCase(), name }
+        });
+      },
       async loadHistory(): Promise<void> {
         const char = this.character as Character;
         const logKey = char.character.name.toLowerCase();
         const mine = await core.logs.getAvailableCharacters();
-        const results: CharacterHistory[] = [];
 
-        for (const ownName of mine) {
-          const logDates = await core.logs.getLogDates(ownName, logKey);
+        const results = await Promise.all(
+          mine.map(async ownName => {
+            const logDates = await core.logs.getLogDates(ownName, logKey);
 
-          if (logDates.length > 0)
-            results.push({
-              character: ownName,
-              lastDate: _.last(logDates) as Date
-            });
-        }
+            return logDates.length > 0
+              ? { character: ownName, lastDate: _.last(logDates) as Date }
+              : null;
+          })
+        );
 
-        this.history = results.sort(
+        this.history = _.compact(results).sort(
           (a, b) => b.lastDate.getTime() - a.lastDate.getTime()
         );
       },
@@ -300,43 +352,109 @@
 </script>
 
 <style lang="scss">
-  .recon .recon-summary {
-    .recon-flags {
+  .recon {
+    .recon-section {
+      padding: 10px 0 12px;
+
+      & + .recon-section {
+        border-top: 1px solid var(--bs-border-color, rgba(128, 128, 128, 0.3));
+      }
+
+      > h4 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+
+        > i {
+          opacity: 0.7;
+        }
+
+        .recon-view-logs {
+          margin-left: auto;
+          font-size: 0.8rem;
+          white-space: nowrap;
+        }
+      }
+    }
+
+    .recon-summary .recon-flags {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
     }
 
     .recon-flag {
-      font-weight: normal;
-    }
-  }
-
-  .recon .shared-channels {
-    .shared-channel-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 4px;
-    }
-
-    .shared-channel-chip {
       display: inline-flex;
       align-items: center;
-      padding: 1px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--bs-border-color, rgba(128, 128, 128, 0.4));
-      background-color: var(--bs-secondary-bg, rgba(128, 128, 128, 0.15));
-      color: var(--bs-body-color, inherit);
-      font-size: 0.875em;
-      line-height: 1.6;
-      text-decoration: none;
+      gap: 4px;
+      font-weight: normal;
+    }
 
-      &:hover,
-      &:focus {
-        background-color: var(--bs-tertiary-bg, rgba(128, 128, 128, 0.28));
-        text-decoration: none;
+    .shared-channels {
+      .shared-channel-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 4px;
       }
+
+      .shared-channel-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 1px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--bs-border-color, rgba(128, 128, 128, 0.4));
+        background-color: var(--bs-secondary-bg, rgba(128, 128, 128, 0.15));
+        color: var(--bs-body-color, inherit);
+        font-size: 0.875em;
+        line-height: 1.6;
+        cursor: pointer;
+
+        &:hover {
+          background-color: var(--bs-tertiary-bg, rgba(128, 128, 128, 0.28));
+        }
+
+        &:focus-visible {
+          outline: 2px solid var(--bs-focus-ring-color, rgba(13, 110, 253, 0.5));
+          outline-offset: 1px;
+        }
+      }
+    }
+
+    .recon-history-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-align: left;
+
+      &:focus-visible {
+        outline: 2px solid var(--bs-focus-ring-color, rgba(13, 110, 253, 0.5));
+        outline-offset: -2px;
+        z-index: 1;
+      }
+
+      .recon-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 3px;
+        object-fit: cover;
+        flex-shrink: 0;
+      }
+
+      .recon-history-current {
+        opacity: 0.7;
+        font-size: 0.875em;
+      }
+
+      .message-time {
+        margin-left: auto;
+        color: var(--messageTimeFgColor);
+      }
+    }
+
+    .recon-ad-channel {
+      margin-top: 8px;
     }
   }
 </style>

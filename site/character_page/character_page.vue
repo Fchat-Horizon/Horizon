@@ -228,6 +228,7 @@
                   <character-recon
                     :character="character"
                     ref="tab5"
+                    @view-logs="openReconLogs"
                   ></character-recon>
                 </div>
               </div>
@@ -236,6 +237,11 @@
         </div>
       </div>
     </div>
+    <logs
+      ref="logsDialog"
+      :conversation="logsConversation"
+      :initial-character="logsCharacter"
+    ></logs>
   </div>
 </template>
 
@@ -267,6 +273,7 @@
   import CharacterKinksView from './kinks.vue';
   import ReconView from './recon.vue';
   import Sidebar from './sidebar.vue';
+  import Logs from '../../chat/Logs.vue';
   import core from '../../chat/core';
   import { Matcher, MatchReport } from '../../learn/matcher';
   import MatchReportView from './match-report.vue';
@@ -297,6 +304,7 @@
       'character-recon': ReconView,
       'match-report': MatchReportView,
       'profile-analysis': ProfileAnalysis,
+      logs: Logs,
       bbcode: BBCodeView(standardParser)
     },
     props: {
@@ -326,7 +334,9 @@
         images: null as CharacterImage[] | null,
         l: l,
         selfCharacter: undefined as Character | undefined,
-        characterMatch: undefined as MatchReport | undefined
+        characterMatch: undefined as MatchReport | undefined,
+        logsCharacter: undefined as string | undefined,
+        logsConversation: undefined as { key: string; name: string } | undefined
       };
     },
     computed: {
@@ -404,6 +414,15 @@
     methods: {
       shouldShowMatch(): boolean {
         return core.state.settings.risingAdScore;
+      },
+      async openReconLogs(payload: {
+        character: string;
+        conversation: { key: string; name: string };
+      }): Promise<void> {
+        this.logsCharacter = payload.character;
+        this.logsConversation = payload.conversation;
+        await this.$nextTick();
+        (this.$refs['logsDialog'] as InstanceType<typeof Logs>).show();
       },
       async reload(): Promise<void> {
         await this.load(true, true);
