@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
-- Cleaned up a bunch of [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8b8e23df30cbe6a483788a9d8063c0e27b523c67)
+- Cleaned up a bunch of stuff in the Contributors and Contributing documents. Also brought the Readme up to modern standards. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8b8e23df30cbe6a483788a9d8063c0e27b523c67)
 - Cleaned up and fixed dates and headers in the changelog files (which now show the release date on our website too!) [[Cleanup]](https://github.com/Fchat-Horizon/Horizon/commit/23dafdaa35aa8bb07eb122d154f6a10487693213) [[Dates]](https://github.com/Fchat-Horizon/Horizon/commit/8eecddedf4a9c3f7f760634ee29f24ef627a1eb1)
 
 ## [2.3.1] - 2026-07-06
