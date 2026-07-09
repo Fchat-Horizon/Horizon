@@ -42,6 +42,10 @@ export class GeneralSettings {
   version = electron.app.getVersion();
   beta = false;
   updateCheck = true;
+  horizonHideAutoUpdater = false;
+  horizonAutoDownloadUpdates = true;
+  horizonSkippedUpdateVersion = '';
+  horizonPendingUpdateTag = '';
   customDictionary: string[] = [];
   hwAcceleration = true;
   reducedMotion = false;

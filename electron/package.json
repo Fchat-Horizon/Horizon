@@ -1,6 +1,6 @@
 {
   "name": "horizon-electron",
-  "version": "2.2.0",
+  "version": "2.3.1",
   "author": "The F-List Team and Horizon Contributors",
   "description": "Horizon",
   "homepage": "https://horizn.moe",
@@ -79,7 +79,14 @@
       "fpm": [
         "--rpm-rpmbuild-define=_build_id_links none"
       ]
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Fchat-Horizon",
+        "repo": "Horizon"
+      }
+    ]
   },
   "scripts": {
     "webpack:dev": "node -e \"require('fs').mkdirSync('dist', {recursive: true})\" && node ../webpack development",
@@ -106,6 +113,7 @@
   "dependencies": {
     "@ghostery/adblocker-electron-preload": "^2.14.1",
     "@mdit/plugin-alert": "^0.22.2",
+    "electron-updater": "^6.3.0",
     "markdown-it": "^14.1.1"
   },
   "packageManager": "pnpm@10.33.0"

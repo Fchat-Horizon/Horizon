@@ -31,11 +31,34 @@
         <i class="fas fa-bars"></i>
       </div>
       <div
-        class="btn btn-outline-success"
-        :class="'btn-download-' + (hasUpdate ? 'ready' : 'unavailable')"
-        @click="openUpdatePage"
+        class="btn-update-wrapper"
+        :class="{
+          'btn-update-visible':
+            hasUpdate || updateDownloading || updateDownloaded
+        }"
       >
-        <i class="fa fa-arrow-down"></i>
+        <div
+          v-if="updateDownloading"
+          :title="l('update.titlebar.downloading', updateDownloadPercent)"
+          :style="{ '--progress-percent': updateDownloadPercent + '%' }"
+          class="btn-update-progress"
+        >
+          <span class="btn-update-progress-fill"></span>
+          <span class="btn-update-progress-label"
+            >{{ updateDownloadPercent }}%</span
+          >
+        </div>
+        <div
+          v-else-if="updateDownloaded"
+          class="btn btn-success btn-update-done"
+          @click="installUpdate"
+          :title="l('update.titlebar.ready')"
+        >
+          <i class="fas fa-arrows-rotate fa-fade"></i>
+        </div>
+        <div v-else class="btn btn-outline-success" @click="openUpdatePage">
+          <i class="fa fa-arrow-down"></i>
+        </div>
       </div>
       <ul
         class="nav nav-tabs"
@@ -242,6 +265,9 @@
         l,
         hasUpdate: false,
         updateVersion: '',
+        updateDownloading: false,
+        updateDownloadPercent: 0,
+        updateDownloaded: false,
         platform: process.platform,
         lockTab: false,
         hasCompletedUpgrades: false,
@@ -326,9 +352,27 @@
           version?: string
         ) => {
           this.hasUpdate = updateAvailable;
-          if (version) this.updateVersion = version;
+          if (updateAvailable) {
+            if (version) this.updateVersion = version;
+          } else {
+            this.updateVersion = '';
+            this.updateDownloading = false;
+            this.updateDownloaded = false;
+            this.updateDownloadPercent = 0;
+          }
         }
       );
+      electron.ipcRenderer.on(
+        'update-download-progress',
+        (_e: Electron.IpcRendererEvent, percent: number, done: boolean) => {
+          this.updateDownloading = !done;
+          this.updateDownloadPercent = Math.round(percent);
+          this.updateDownloaded = done;
+        }
+      );
+      // The first check can resolve before this window loads; pull whatever
+      // notice the main process already has.
+      electron.ipcRenderer.send('request-update-state');
       electron.ipcRenderer.on('fix-logs', () =>
         this.activeTab!.view.webContents.send('fix-logs')
       );
@@ -468,7 +512,13 @@
       electron.ipcRenderer.on(
         'show-tab',
         (_e: Electron.IpcRendererEvent, id: number) => {
-          this.show(this.tabMap[id]);
+          const tab = this.tabMap[id];
+          // finds which window has which specific character when opening via context menu
+          if (!tab) return;
+          if (browserWindow.isMinimized()) browserWindow.restore();
+          if (!browserWindow.isVisible()) browserWindow.show();
+          browserWindow.focus();
+          this.show(tab);
         }
       );
       document.addEventListener('click', () =>
@@ -726,6 +776,9 @@
       openUpdatePage(): void {
         electron.ipcRenderer.send('open-update-changelog', this.updateVersion);
       },
+      installUpdate(): void {
+        electron.ipcRenderer.send('install-update', this.updateVersion);
+      },
       openSettingsMenu(): void {
         log.debug('settings clicked');
         electron.ipcRenderer.send('open-settings-menu');
@@ -858,12 +911,60 @@
     font-size: 14px;
   }
 
-  #window-tabs .btn-download-ready {
+  #window-tabs .btn-update-wrapper {
+    display: none;
+    align-items: stretch;
+  }
+
+  #window-tabs .btn-update-visible {
     display: flex;
   }
 
-  #window-tabs .btn-download-unavailable {
-    display: none;
+  #window-tabs .btn-update-progress {
+    position: relative;
+    overflow: hidden;
+    min-width: 48px;
+    cursor: default;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    --fill-color: var(--bs-body-color);
+
+    .btn-update-progress-fill {
+      transition: --fill-color 0.55s ease-in-out;
+      position: absolute;
+      left: 0.75em;
+      height: 1.25em;
+      width: 1.25em;
+      background-image: conic-gradient(
+        var(--fill-color) 0% var(--progress-percent),
+        rgba(0, 0, 0, 0) var(--progress-percent)
+      );
+      border-radius: 100%;
+      border: var(--bs-border-color) 1px solid;
+    }
+  }
+
+  #window-tabs .btn-update-progress-label {
+    position: relative;
+    z-index: 1;
+    font-size: 11px;
+    font-weight: 600;
+    visibility: hidden;
+  }
+
+  #window-tabs .btn-update-done {
+    animation: pulse-success 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse-success {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
   }
 
   .platform-darwin {

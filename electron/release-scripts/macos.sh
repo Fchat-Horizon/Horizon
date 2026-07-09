@@ -36,10 +36,13 @@ rm -rf "$DIST_PATH"
 cd electron
 rm -rf app dist
 node ../webpack production
-node build/build.mjs --os mac --format dmg --arch universal arm64 x64
+node build/build.mjs --os mac --format dmg zip --arch universal arm64 x64
 
 # & Prepare release directory
 mkdir -p "$RELEASE_PATH"
 
 # & Copy artifacts
 cp "$DIST_PATH"/*.dmg "$RELEASE_PATH"/ 2>/dev/null || true
+cp "$DIST_PATH"/*.zip "$RELEASE_PATH"/ 2>/dev/null || true
+cp "$DIST_PATH"/latest*.yml "$RELEASE_PATH"/ 2>/dev/null || true
+cp "$DIST_PATH"/*.blockmap "$RELEASE_PATH"/ 2>/dev/null || true

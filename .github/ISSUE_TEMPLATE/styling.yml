@@ -1,6 +1,6 @@
 name: Styling or visual issues
 description: Things don't look right, illegible text, misaligned elements, etc.
-labels: ['styling']
+labels: ['styling', 'Needs Triage']
 projects: ['FChat-Horizon/Horizon']
 body:
   - type: textarea

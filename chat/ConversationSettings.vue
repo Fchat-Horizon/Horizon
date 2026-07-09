@@ -25,7 +25,10 @@
           :id="'notify' + conversation.key"
         ></settings-radio>
       </div>
-      <div class="d-flex p-2 justify-content-between align-items-start">
+      <div
+        v-if="isChannel"
+        class="d-flex p-2 justify-content-between align-items-start"
+      >
         <div class="w-50">
           <label class="control-label" :for="'highlight' + conversation.key">{{
             l('settings.highlight')
@@ -38,7 +41,7 @@
         ></settings-radio>
       </div>
     </div>
-    <div class="mb-3">
+    <div v-if="isChannel" class="mb-3">
       <div class="d-flex p-2 justify-content-between align-items-start">
         <div class="w-50">
           <label
@@ -59,7 +62,7 @@
         ></settings-checkbox>
       </div>
     </div>
-    <div class="mb-3 p-2">
+    <div v-if="isChannel" class="mb-3 p-2">
       <label class="control-label" :for="'highlightWords' + conversation.key">{{
         l('settings.highlightWords')
       }}</label>
@@ -69,7 +72,7 @@
         v-model="highlightWords"
       />
     </div>
-    <div class="mb-3 p-2">
+    <div v-if="isChannel" class="mb-3 p-2">
       <label class="control-label" :for="'highlightUsers' + conversation.key">{{
         l('settings.highlightUsers.conversation')
       }}</label>
@@ -96,7 +99,10 @@
           :name="'muted' + conversation.key"
         ></settings-checkbox>
       </div>
-      <div class="d-flex p-2 justify-content-between align-items-start">
+      <div
+        v-if="isChannel"
+        class="d-flex p-2 justify-content-between align-items-start"
+      >
         <div class="w-50">
           <label
             class="control-label"
@@ -158,6 +164,11 @@
         logMessages: Conversation.Setting.Default,
         muted: false
       };
+    },
+    computed: {
+      isChannel(): boolean {
+        return Conversation.isChannel(this.conversation);
+      }
     },
     methods: {
       load(): void {

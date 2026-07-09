@@ -1,13 +1,12 @@
 {
-  description = "Horizon dev environment";
+  description = "Nix Flake for Horizon, including a dev shell for development.";
 
   inputs = {
-    # why is NixPKGS stable only on Electron 33 as of writing?? (2026-01-06)
-    nixpkgs. url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils. url = "github:numtide/flake-utils";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }: 
+  outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
@@ -16,7 +15,100 @@
         electron = pkgs.electron_40;
       in
       {
-        devShells.default = pkgs. mkShell {
+        packages = rec {
+          horizon-electron = pkgs.stdenv.mkDerivation rec {
+            pname = "horizon-electron";
+            version = "latest";
+            src = self;
+
+            pnpmDeps = pkgs.fetchPnpmDeps {
+              inherit pname version src;
+              hash = "sha256-yoqJKknPTSdivPEbB5d43SK1P9Vc7wJiJsOr/oaFT2A=";
+              pnpm = pkgs.pnpm_10;
+              fetcherVersion = 3;
+            };
+
+            nativeBuildInputs = [
+              pkgs.pnpm_10
+              (pkgs.pnpmConfigHook.override { pnpm = pkgs.pnpm_10; })
+              nodejs
+              pkgs.autoPatchelfHook
+              pkgs.copyDesktopItems
+            ];
+
+            env = {
+              APP_COMMIT = builtins.substring 0 7 (self.dirtyRev or self.rev or "0000000");
+            };
+
+            buildInputs = [
+              pkgs.stdenv.cc.cc.lib
+              pkgs.libsecret
+              pkgs.glib
+            ];
+
+            desktopItems = [
+              (pkgs.makeDesktopItem {
+                name = "horizon-electron";
+                exec = "@out@/bin/horizon-electron %U";
+                icon = "horizon-electron";
+                desktopName = "Horizon";
+                comment = "The F-Chat Horizon Client";
+                categories = [ "Network" "Chat" "InstantMessaging" ];
+                mimeTypes = [ "x-scheme-handler/fchat" ];
+              })
+            ];
+
+            autoPatchelfIgnoreMissingDeps = true;
+            ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
+
+            buildPhase = ''
+              runHook preBuild
+              autoPatchelf node_modules
+              pnpm build:dist
+              runHook postBuild
+            '';
+
+            installPhase = ''
+              runHook preInstall
+
+              mkdir -p $out/lib/horizon-electron
+              mkdir -p $out/bin
+              mkdir -p $out/share/icons/hicolor/256x256/apps
+              mkdir -p $out/share/applications
+
+              cp -r . $out/lib/horizon-electron/
+              find . -name "icon.png" -exec cp {} $out/share/icons/hicolor/256x256/apps/horizon-electron.png \;
+
+
+              cat << 'EOF' > $out/bin/horizon-electron
+              #!/bin/sh
+
+              export NODE_ENV=production
+              export NIXOS_OZONE_WL=1
+
+              exec ${electron}/bin/electron \
+                "@OUT@/lib/horizon-electron/electron/app" \
+                --ozone-platform=wayland \
+                "$@"
+              EOF
+
+              runHook postInstall
+            '';
+
+            postFixup = ''
+              substituteInPlace $out/bin/horizon-electron \
+                --replace-fail "@OUT@" "$out"
+              chmod +x $out/bin/horizon-electron
+              substituteInPlace $out/share/applications/horizon-electron.desktop \
+                --replace-fail "@out@" "$out" \
+                --replace-fail "Icon=horizon-electron" "Icon=$out/share/icons/hicolor/256x256/apps/horizon-electron.png"
+            '';
+          };
+          default = horizon-electron;
+        };
+
+        #The dev stuff, it's full of voodoo hoodoo and things I've not even tried. For my friends on the other side.
+        devShells.default = pkgs.mkShell {
           name = "fchat-horizon-dev";
 
           buildInputs = [
@@ -29,23 +121,23 @@
             pkgs.auto-patchelf
           ];
 
-          shellHook = ''
+         shellHook = ''
             export SHELL="${pkgs.bashInteractive}/bin/bash"
             echo "Horizon development environment"
             echo "Node version:  $(node --version)"
             echo "pnpm version:  $(pnpm --version)"
             echo "Electron version: ${electron.version}"
-            
+
             # Set up pnpm config
             pnpm config set manage-package-manager-versions false 2>/dev/null || true
-            
+
             # Set Electron environment variables
             export ELECTRON_SKIP_BINARY_DOWNLOAD=1
             export ELECTRON_OVERRIDE_DIST_PATH=${electron}/bin/
-            
+
             patch_sass_embedded() {
               echo "Patching sass-embedded binaries..."
-              
+
               # Patch root node_modules
               if [ -d "./node_modules/.pnpm" ]; then
                 for dir in ./node_modules/.pnpm/sass-embedded-linux-x64*; do
@@ -57,7 +149,7 @@
                   fi
                 done
               fi
-              
+
               # Patch electron node_modules
               if [ -d "./electron/node_modules/.pnpm" ]; then
                 for dir in ./electron/node_modules/.pnpm/sass-embedded-linux-x64*; do
@@ -69,12 +161,12 @@
                   fi
                 done
               fi
-              
+
               echo "sass-embedded patching complete!"
             }
-            
+
             export -f patch_sass_embedded
-            
+
             echo ""
             echo "To install dependencies:"
             echo "  pnpm install"

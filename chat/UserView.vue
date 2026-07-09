@@ -278,10 +278,10 @@
 
       if (character.gender) {
         if (!core.state.settings.horizonGenderMarkerOrigColor) {
-          genderClass = `fa ${getGenderIcon(character.gender, character.status)}`;
+          genderClass = `fa ${getGenderIcon(character.gender, character.status)} gender-icon`;
         } else {
           genderClass =
-            `fa ${getGenderIcon(character.gender, character.status)}` +
+            `fa ${getGenderIcon(character.gender, character.status)} gender-icon` +
             ` gender-icon-${gender}`;
         }
       }
