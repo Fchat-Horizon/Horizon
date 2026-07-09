@@ -28,6 +28,14 @@ class Character implements Interfaces.Character {
   }
 }
 
+function removeAllFromList(list: Character[], character: Character): void {
+  let index = list.indexOf(character);
+  while (index !== -1) {
+    list.splice(index, 1);
+    index = list.indexOf(character, index);
+  }
+}
+
 export interface CharacterOverrides {
   avatarUrl?: string;
   characterColor?: CharacterColor;
@@ -86,24 +94,20 @@ class State implements Interfaces.State {
     text: string
   ): void {
     if (character.status === 'offline' && status !== 'offline') {
-      if (character.isFriend) this.friends.push(character);
-      if (character.isBookmarked) this.bookmarks.push(character);
+      if (character.isFriend && this.friends.indexOf(character) === -1)
+        this.friends.push(character);
+      if (character.isBookmarked && this.bookmarks.indexOf(character) === -1)
+        this.bookmarks.push(character);
       if (this.characterFriendList.indexOf(character.name) !== -1) {
         if (this.characterFriends.indexOf(character) === -1) {
           this.characterFriends.push(character);
         }
       }
     } else if (status === 'offline' && character.status !== 'offline') {
-      if (character.isFriend)
-        this.friends.splice(this.friends.indexOf(character), 1);
-      if (character.isBookmarked)
-        this.bookmarks.splice(this.bookmarks.indexOf(character), 1);
-      if (this.characterFriendList.indexOf(character.name) !== -1) {
-        const index = this.characterFriends.indexOf(character);
-        if (index !== -1) {
-          this.characterFriends.splice(index, 1);
-        }
-      }
+      // Remove unconditionally so stale entries can't linger after logoff
+      removeAllFromList(this.friends, character);
+      removeAllFromList(this.bookmarks, character);
+      removeAllFromList(this.characterFriends, character);
     }
     character.status = status;
     character.statusText = decodeHTML(text);
