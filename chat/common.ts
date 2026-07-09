@@ -45,7 +45,11 @@ export function characterImage(
   const normalizedCharacter = normalizeCharacterName(character);
   const c = core.characters.get(normalizedCharacter);
 
-  if (c.overrides.avatarUrl && !useOriginalAvatar) {
+  if (
+    c.overrides.avatarUrl &&
+    !useOriginalAvatar &&
+    core.state.settings.risingShowHighQualityPortraits
+  ) {
     return c.overrides.avatarUrl;
   }
 
