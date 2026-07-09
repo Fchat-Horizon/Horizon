@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- You can send "empty" messages with just spaces again. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f712211f646a39ae21d941807e6465cce3309825)
+  - This was originally removed as a bugfix, but it's a funny and harmless quirk that people enjoyed.
+- Loading a character preview now has an animation. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2e8024ffedc79ed5f81a4dd6b8845d3c8f6a7bd7)
+- Spruced up some of the updater user experience [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b0a74325831d02c4466a0f2639f36406b561f953):
+  - The install button makes its purpose a bit clearer, with a different icon.
+  - You are now prompted to confirm a restart if you click the update button _and_ you have automatic downloads enabled.
+  - You can now manually check for updates in the app menu, under "Horizon" > "Check for updates".
+
+### Fixed
+
+- Fixed installing an update while you're connected to chat simply hiding the window intead of restarting the app on MacOS. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/95ccd5953ce2e66e6c8982a324ec27341f6d66d6)
+- Fixed BBCode sometimes being cut off in the 'Recent Messages' block on the profile viewer, or in the character mouse-hover preview. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c5b9e0536ebfcb3294bd76637f00eab759fd34f2)
+- Fixed the update notice linking you to GitHub instead of our website for Linux releases that can't auto-update. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7c8d23c9a3b054b6b57407045e0fa8a896c14523)
+- Fixed the system info you can copy in the 'About Horizon' window showing the folder where debug logs are kept, instead of your chat logs. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f75e501e9ab046d7d5d175ef321ea1a7374578d0)
+- If a profile has a broken custom pfp, the profile viewer now just displays the vanilla F-Chat one instead of a broken picture icon. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/34e57b648cf2d8351e985ff4899749bd9c60cbf2)
+
+### Development
+
+- Added a CI job for checking the build status of the Nix Flake. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f735cd8573fc784e52ee831c51d7b5479c8e3513)
+
+### Documentation
+
+- Cleaned up a bunch of [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8b8e23df30cbe6a483788a9d8063c0e27b523c67)
+- Cleaned up and fixed dates and headers in the changelog files (which now show the release date on our website too!) [[Cleanup]](https://github.com/Fchat-Horizon/Horizon/commit/23dafdaa35aa8bb07eb122d154f6a10487693213) [[Dates]](https://github.com/Fchat-Horizon/Horizon/commit/8eecddedf4a9c3f7f760634ee29f24ef627a1eb1)
+
 ## [2.3.1] - 2026-07-06
 
 ### Fixed
