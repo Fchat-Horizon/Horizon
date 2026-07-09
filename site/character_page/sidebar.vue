@@ -376,7 +376,11 @@
         const char = this.character;
         const onlineCharacter = core.characters.get(char.character.name);
 
-        if (onlineCharacter && onlineCharacter.overrides.avatarUrl) {
+        if (
+          onlineCharacter &&
+          onlineCharacter.overrides.avatarUrl &&
+          core.state.settings.risingShowHighQualityPortraits
+        ) {
           return onlineCharacter.overrides.avatarUrl;
         }
 

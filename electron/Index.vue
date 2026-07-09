@@ -320,7 +320,7 @@
   import * as qs from 'querystring';
   import Vue from 'vue';
   import Chat from '../chat/Chat.vue';
-  import { Settings } from '../chat/common';
+  import { characterImage, Settings } from '../chat/common';
   import core from '../chat/core';
   import l from '../chat/localize';
   import Logs from '../chat/Logs.vue';
@@ -521,6 +521,21 @@
         'auto-backup-status',
         this.autoBackupStatusListener
       );
+
+      // The shell window's tab avatar is otherwise only sent at profile load,
+      // so push the current (setting-gated) avatar whenever settings change.
+      EventBus.$on('configuration-update', () => {
+        const own = core.characters.ownCharacter;
+        if (!own) return;
+        const parent =
+          remote.getCurrentWindow() || remote.BrowserWindow.getAllWindows()[0];
+        if (parent)
+          parent.webContents.send(
+            'update-avatar-url',
+            own.name,
+            characterImage(own.name)
+          );
+      });
 
       await this.startAndUpgradeCache();
 
