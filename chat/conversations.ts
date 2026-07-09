@@ -142,8 +142,7 @@ abstract class Conversation implements Interfaces.Conversation {
   }
 
   async send(): Promise<void> {
-    // Block empty or whitespace/newline-only messages from being sent.
-    if (this.enteredText.trim().length === 0) return;
+    if (this.enteredText.length === 0) return;
 
     if (isCommand(this.enteredText)) {
       const parsed = parseCommand(this.enteredText, this.context);
