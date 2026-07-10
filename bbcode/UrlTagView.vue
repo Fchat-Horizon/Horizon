@@ -20,6 +20,7 @@
 
 <script lang="ts">
   import Vue from 'vue';
+  import core from '../chat/core';
   import { EventBus } from '../chat/preview/event-bus';
 
   export default Vue.extend({
@@ -57,8 +58,14 @@
         if (e.altKey) {
           this.toggleStickyness();
           e.preventDefault();
-        } else {
-          this.dismiss(true);
+          return;
+        }
+
+        this.dismiss(true);
+
+        if (core.state.generalSettings?.horizonAlwaysOpenIncognito) {
+          e.preventDefault();
+          EventBus.$emit('open-url-incognito', { url: this.url });
         }
       }
     }

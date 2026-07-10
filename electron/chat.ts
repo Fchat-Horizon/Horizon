@@ -334,6 +334,16 @@ function openIncognitoLinux(url: string): void {
 
 const wordPosSearch = new WordPosSearch();
 
+EventBus.$on('open-url-incognito', ({ url }: { url: string }) => {
+  if (process.platform === 'win32') {
+    openIncognitoWindows(url);
+  } else if (process.platform === 'linux') {
+    openIncognitoLinux(url);
+  } else {
+    electron.ipcRenderer.send('open-url-externally', url);
+  }
+});
+
 webContents.on('context-menu', (_, props) => {
   const hasText = props.selectionText.trim().length > 0;
   const can = (type: string) =>
