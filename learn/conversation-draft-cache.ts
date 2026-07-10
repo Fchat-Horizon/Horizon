@@ -3,8 +3,8 @@
  * Maintains an in-memory cache of draft messages, and occasionally saves them to disk.
  */
 
-import { Cache } from './cache';
-import { emptyMap, toMap } from '../fchat/common';
+import { Cache, CacheCollection } from './cache';
+import { emptyMap } from '../fchat/common';
 import { getDrafts, saveDrafts } from '../electron/filesystem';
 import core from '../chat/core';
 
@@ -37,6 +37,32 @@ export class ConversationDraftRecord {
     this.key = key;
     this.message = message || '';
   }
+}
+
+/**
+ * Rebuild the cache from raw draft data parsed off disk, keeping only records that match the current `{key, message}` shape.
+ * Records in the pre-key format (`{channel, message}`, stored under the conversation's display name) are dropped: their
+ * name-based keys share the namespace PM lookups use, which is exactly the collision behind issue #409, and old-format files
+ * can reappear at any time through backup import, so this has to filter on every load rather than migrate once. Kept records
+ * are re-keyed from the record itself, making the file robust against hand-edited or mismatched map keys.
+ * @function
+ * @param {any} drafts
+ * The parsed contents of the draft file, or null if it was missing or unreadable.
+ * @internal
+ */
+function sanitizeDrafts(drafts: any): CacheCollection<ConversationDraftRecord> {
+  const map = emptyMap<ConversationDraftRecord>();
+  if (typeof drafts !== 'object' || drafts === null) return map;
+
+  for (const record of Object.values<any>(drafts)) {
+    if (typeof record?.key === 'string' && typeof record?.message === 'string')
+      map[Cache.nameKey(record.key)] = new ConversationDraftRecord(
+        record.key,
+        record.message
+      );
+  }
+
+  return map;
 }
 
 export class ConversationDraftCache extends Cache<ConversationDraftRecord> {
@@ -95,8 +121,7 @@ export class ConversationDraftCache extends Cache<ConversationDraftRecord> {
     if (this.diskSaveTimerInSeconds < MIN_CACHE_DISK_SAVE_IN_SECONDS)
       this.diskSaveTimerInSeconds = MIN_CACHE_DISK_SAVE_IN_SECONDS;
 
-    const drafts = getDrafts();
-    this.cache = toMap(drafts);
+    this.cache = sanitizeDrafts(getDrafts());
 
     this.cacheAlreadyLoaded = true;
     this.currentlyCachedCharacter = core.connection.character;
