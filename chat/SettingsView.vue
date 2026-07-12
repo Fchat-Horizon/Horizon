@@ -175,12 +175,12 @@
             <div class="mb-3 p-2">
               <settings-array
                 id="disallowedTags"
-                v-model="disallowedTags"
+                v-model="settings.disallowedTags"
                 :placeholder="l('settings.disallowedTagsPlaceholder')"
-                :globalValue="disallowedTags"
+                :globalValue="settings.disallowedTags"
                 :overrideValue="characterOverrides.disallowedTags"
                 :usingGlobal="isUsingGlobal()"
-                @update:globalValue="disallowedTags = $event"
+                @update:globalValue="settings.disallowedTags = $event"
                 @update:overrideValue="
                   $set(characterOverrides, 'disallowedTags', $event)
                 "
@@ -196,11 +196,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="animatedEicons"
+                  :globalValue="settings.animatedEicons"
                   :overrideValue="characterOverrides.animatedEicons"
                   :usingGlobal="isUsingGlobal()"
                   name="animatedEicons"
-                  @update:globalValue="animatedEicons = $event"
+                  @update:globalValue="settings.animatedEicons = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'animatedEicons', $event)
                   "
@@ -215,11 +215,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="smoothMosaics"
+                  :globalValue="settings.smoothMosaics"
                   :overrideValue="characterOverrides.smoothMosaics"
                   :usingGlobal="isUsingGlobal()"
                   name="smoothMosaics"
-                  @update:globalValue="smoothMosaics = $event"
+                  @update:globalValue="settings.smoothMosaics = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'smoothMosaics', $event)
                   "
@@ -239,11 +239,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="bbCodeBar"
+                  :globalValue="settings.bbCodeBar"
                   :overrideValue="characterOverrides.bbCodeBar"
                   :usingGlobal="isUsingGlobal()"
                   name="bbCodeBar"
-                  @update:globalValue="bbCodeBar = $event"
+                  @update:globalValue="settings.bbCodeBar = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'bbCodeBar', $event)
                   "
@@ -259,11 +259,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="enterSend"
+                  :globalValue="settings.enterSend"
                   :overrideValue="characterOverrides.enterSend"
                   :usingGlobal="isUsingGlobal()"
                   name="enterSend"
-                  @update:globalValue="enterSend = $event"
+                  @update:globalValue="settings.enterSend = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'enterSend', $event)
                   "
@@ -279,15 +279,15 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="horizonUseColorPicker"
+                  :globalValue="settings.horizonUseColorPicker"
                   :overrideValue="characterOverrides.horizonUseColorPicker"
                   :usingGlobal="isUsingGlobal()"
                   name="horizonUseColorPicker"
-                  @update:globalValue="horizonUseColorPicker = $event"
+                  @update:globalValue="settings.horizonUseColorPicker = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'horizonUseColorPicker', $event)
                   "
-                  :disabled="!bbCodeBar"
+                  :disabled="!settings.bbCodeBar"
                 />
               </div>
             </div>
@@ -303,13 +303,15 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="risingShowPortraitNearInput"
+                  :globalValue="settings.risingShowPortraitNearInput"
                   :overrideValue="
                     characterOverrides.risingShowPortraitNearInput
                   "
                   :usingGlobal="isUsingGlobal()"
                   name="risingShowPortraitNearInput"
-                  @update:globalValue="risingShowPortraitNearInput = $event"
+                  @update:globalValue="
+                    settings.risingShowPortraitNearInput = $event
+                  "
                   @update:overrideValue="
                     $set(
                       characterOverrides,
@@ -333,11 +335,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="clickOpensMessage"
+                  :globalValue="settings.clickOpensMessage"
                   :overrideValue="characterOverrides.clickOpensMessage"
                   :usingGlobal="isUsingGlobal()"
                   name="clickOpensMessage"
-                  @update:globalValue="clickOpensMessage = $event"
+                  @update:globalValue="settings.clickOpensMessage = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'clickOpensMessage', $event)
                   "
@@ -351,10 +353,10 @@
               <settings-input
                 id="idleTimer"
                 type="number"
-                :globalValue="idleTimer"
+                :globalValue="settings.idleTimer"
                 :overrideValue="characterOverrides.idleTimer"
                 :usingGlobal="isUsingGlobal()"
-                @update:globalValue="idleTimer = $event"
+                @update:globalValue="settings.idleTimer = $event"
                 @update:overrideValue="
                   $set(characterOverrides, 'idleTimer', $event)
                 "
@@ -368,11 +370,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="showNeedsReply"
+                  :globalValue="settings.showNeedsReply"
                   :overrideValue="characterOverrides.showNeedsReply"
                   :usingGlobal="isUsingGlobal()"
                   name="showNeedsReply"
-                  @update:globalValue="showNeedsReply = $event"
+                  @update:globalValue="settings.showNeedsReply = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'showNeedsReply', $event)
                   "
@@ -390,13 +392,15 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="risingShowUnreadOfflineCount"
+                  :globalValue="settings.risingShowUnreadOfflineCount"
                   :overrideValue="
                     characterOverrides.risingShowUnreadOfflineCount
                   "
                   :usingGlobal="isUsingGlobal()"
                   name="risingShowUnreadOfflineCount"
-                  @update:globalValue="risingShowUnreadOfflineCount = $event"
+                  @update:globalValue="
+                    settings.risingShowUnreadOfflineCount = $event
+                  "
                   @update:overrideValue="
                     $set(
                       characterOverrides,
@@ -416,11 +420,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="colorBookmarks"
+                  :globalValue="settings.colorBookmarks"
                   :overrideValue="characterOverrides.colorBookmarks"
                   :usingGlobal="isUsingGlobal()"
                   name="colorBookmarks"
-                  @update:globalValue="colorBookmarks = $event"
+                  @update:globalValue="settings.colorBookmarks = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'colorBookmarks', $event)
                   "
@@ -436,11 +440,13 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="showPerCharacterFriends"
+                  :globalValue="settings.showPerCharacterFriends"
                   :overrideValue="characterOverrides.showPerCharacterFriends"
                   :usingGlobal="isUsingGlobal()"
                   name="showPerCharacterFriends"
-                  @update:globalValue="showPerCharacterFriends = $event"
+                  @update:globalValue="
+                    settings.showPerCharacterFriends = $event
+                  "
                   @update:overrideValue="
                     $set(characterOverrides, 'showPerCharacterFriends', $event)
                   "
@@ -456,11 +462,13 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="hideNonCharacterFriends"
+                  :globalValue="settings.hideNonCharacterFriends"
                   :overrideValue="characterOverrides.hideNonCharacterFriends"
                   :usingGlobal="isUsingGlobal()"
                   name="hideNonCharacterFriends"
-                  @update:globalValue="hideNonCharacterFriends = $event"
+                  @update:globalValue="
+                    settings.hideNonCharacterFriends = $event
+                  "
                   @update:overrideValue="
                     $set(characterOverrides, 'hideNonCharacterFriends', $event)
                   "
@@ -480,11 +488,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="logMessages"
+                  :globalValue="settings.logMessages"
                   :overrideValue="characterOverrides.logMessages"
                   :usingGlobal="isUsingGlobal()"
                   name="logMessages"
-                  @update:globalValue="logMessages = $event"
+                  @update:globalValue="settings.logMessages = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'logMessages', $event)
                   "
@@ -499,11 +507,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="logAds"
+                  :globalValue="settings.logAds"
                   :overrideValue="characterOverrides.logAds"
                   :usingGlobal="isUsingGlobal()"
                   name="logAds"
-                  @update:globalValue="logAds = $event"
+                  @update:globalValue="settings.logAds = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'logAds', $event)
                   "
@@ -523,11 +531,13 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="horizonCacheDraftMessages"
+                  :globalValue="settings.horizonCacheDraftMessages"
                   :overrideValue="characterOverrides.horizonCacheDraftMessages"
                   :usingGlobal="isUsingGlobal()"
                   name="horizonCacheDraftMessages"
-                  @update:globalValue="horizonCacheDraftMessages = $event"
+                  @update:globalValue="
+                    settings.horizonCacheDraftMessages = $event
+                  "
                   @update:overrideValue="
                     $set(
                       characterOverrides,
@@ -549,13 +559,13 @@
               <settings-input
                 id="horizonSaveDraftMessagesToDiskTimer"
                 type="number"
-                :globalValue="horizonSaveDraftMessagesToDiskTimer"
+                :globalValue="settings.horizonSaveDraftMessagesToDiskTimer"
                 :overrideValue="
                   characterOverrides.horizonSaveDraftMessagesToDiskTimer
                 "
                 :usingGlobal="isUsingGlobal()"
                 @update:globalValue="
-                  horizonSaveDraftMessagesToDiskTimer = $event
+                  settings.horizonSaveDraftMessagesToDiskTimer = $event
                 "
                 @update:overrideValue="
                   $set(
@@ -579,11 +589,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="risingLinkPreview"
+                  :globalValue="settings.risingLinkPreview"
                   :overrideValue="characterOverrides.risingLinkPreview"
                   :usingGlobal="isUsingGlobal()"
                   name="risingLinkPreview"
-                  @update:globalValue="risingLinkPreview = $event"
+                  @update:globalValue="settings.risingLinkPreview = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'risingLinkPreview', $event)
                   "
@@ -599,11 +609,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="risingCharacterPreview"
+                  :globalValue="settings.risingCharacterPreview"
                   :overrideValue="characterOverrides.risingCharacterPreview"
                   :usingGlobal="isUsingGlobal()"
                   name="risingCharacterPreview"
-                  @update:globalValue="risingCharacterPreview = $event"
+                  @update:globalValue="settings.risingCharacterPreview = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'risingCharacterPreview', $event)
                   "
@@ -622,10 +632,10 @@
               <settings-input
                 id="fontSize"
                 type="number"
-                :globalValue="fontSize"
+                :globalValue="settings.fontSize"
                 :overrideValue="characterOverrides.fontSize"
                 :usingGlobal="isUsingGlobal()"
-                @update:globalValue="fontSize = $event"
+                @update:globalValue="settings.fontSize = $event"
                 @update:overrideValue="
                   $set(characterOverrides, 'fontSize', $event)
                 "
@@ -637,7 +647,7 @@
                 <select
                   id="risingCharacterTheme"
                   class="form-select"
-                  v-model="risingCharacterTheme"
+                  v-model="characterOverrides.risingCharacterTheme"
                   style="flex: 1; margin-right: 10px"
                 >
                   <option value="undefined">
@@ -659,11 +669,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="showAvatars"
+                  :globalValue="settings.showAvatars"
                   :overrideValue="characterOverrides.showAvatars"
                   :usingGlobal="isUsingGlobal()"
                   name="showAvatars"
-                  @update:globalValue="showAvatars = $event"
+                  @update:globalValue="settings.showAvatars = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'showAvatars', $event)
                   "
@@ -682,13 +692,15 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="risingShowHighQualityPortraits"
+                  :globalValue="settings.risingShowHighQualityPortraits"
                   :overrideValue="
                     characterOverrides.risingShowHighQualityPortraits
                   "
                   :usingGlobal="isUsingGlobal()"
                   name="risingShowHighQualityPortraits"
-                  @update:globalValue="risingShowHighQualityPortraits = $event"
+                  @update:globalValue="
+                    settings.risingShowHighQualityPortraits = $event
+                  "
                   @update:overrideValue="
                     $set(
                       characterOverrides,
@@ -708,11 +720,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="forceQuickConvoList"
+                  :globalValue="settings.forceQuickConvoList"
                   :overrideValue="characterOverrides.forceQuickConvoList"
                   :usingGlobal="isUsingGlobal()"
                   name="forceQuickConvoList"
-                  @update:globalValue="forceQuickConvoList = $event"
+                  @update:globalValue="settings.forceQuickConvoList = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'forceQuickConvoList', $event)
                   "
@@ -734,7 +746,7 @@
               <select
                 id="chatLayoutMode"
                 class="form-select"
-                v-model="chatLayoutMode"
+                v-model="characterOverrides.chatLayoutMode"
               >
                 <option value="classic">
                   {{ l('settings.chatLayoutMode.classic') }}
@@ -758,11 +770,11 @@
                   </div>
                 </div>
                 <settings-override
-                  :globalValue="messageGrouping"
+                  :globalValue="settings.messageGrouping"
                   :overrideValue="characterOverrides.messageGrouping"
                   :usingGlobal="isUsingGlobal()"
                   name="messageGrouping"
-                  @update:globalValue="messageGrouping = $event"
+                  @update:globalValue="settings.messageGrouping = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'messageGrouping', $event)
                   "
@@ -778,11 +790,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="messageSeparators"
+                  :globalValue="settings.messageSeparators"
                   :overrideValue="characterOverrides.messageSeparators"
                   :usingGlobal="isUsingGlobal()"
                   name="messageSeparators"
-                  @update:globalValue="messageSeparators = $event"
+                  @update:globalValue="settings.messageSeparators = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'messageSeparators', $event)
                   "
@@ -800,13 +812,15 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="risingShowPortraitInMessage"
+                  :globalValue="settings.risingShowPortraitInMessage"
                   :overrideValue="
                     characterOverrides.risingShowPortraitInMessage
                   "
                   :usingGlobal="isUsingGlobal()"
                   name="risingShowPortraitInMessage"
-                  @update:globalValue="risingShowPortraitInMessage = $event"
+                  @update:globalValue="
+                    settings.risingShowPortraitInMessage = $event
+                  "
                   @update:overrideValue="
                     $set(
                       characterOverrides,
@@ -829,14 +843,14 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="horizonMessagePortraitHighQuality"
+                  :globalValue="settings.horizonMessagePortraitHighQuality"
                   :overrideValue="
                     characterOverrides.horizonMessagePortraitHighQuality
                   "
                   :usingGlobal="isUsingGlobal()"
                   name="horizonMessagePortraitHighQuality"
                   @update:globalValue="
-                    horizonMessagePortraitHighQuality = $event
+                    settings.horizonMessagePortraitHighQuality = $event
                   "
                   @update:overrideValue="
                     $set(
@@ -864,14 +878,14 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="horizonShowCustomCharacterColors"
+                  :globalValue="settings.horizonShowCustomCharacterColors"
                   :overrideValue="
                     characterOverrides.horizonShowCustomCharacterColors
                   "
                   :usingGlobal="isUsingGlobal()"
                   name="horizonShowCustomCharacterColors"
                   @update:globalValue="
-                    horizonShowCustomCharacterColors = $event
+                    settings.horizonShowCustomCharacterColors = $event
                   "
                   @update:overrideValue="
                     $set(
@@ -892,11 +906,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="risingColorblindMode"
+                  :globalValue="settings.risingColorblindMode"
                   :overrideValue="characterOverrides.risingColorblindMode"
                   :usingGlobal="isUsingGlobal()"
                   name="risingColorblindMode"
-                  @update:globalValue="risingColorblindMode = $event"
+                  @update:globalValue="settings.risingColorblindMode = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'risingColorblindMode', $event)
                   "
@@ -912,11 +926,13 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="horizonShowDeveloperBadges"
+                  :globalValue="settings.horizonShowDeveloperBadges"
                   :overrideValue="characterOverrides.horizonShowDeveloperBadges"
                   :usingGlobal="isUsingGlobal()"
                   name="horizonShowDeveloperBadges"
-                  @update:globalValue="horizonShowDeveloperBadges = $event"
+                  @update:globalValue="
+                    settings.horizonShowDeveloperBadges = $event
+                  "
                   @update:overrideValue="
                     $set(
                       characterOverrides,
@@ -936,11 +952,13 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="horizonShowGenderMarker"
+                  :globalValue="settings.horizonShowGenderMarker"
                   :overrideValue="characterOverrides.horizonShowGenderMarker"
                   :usingGlobal="isUsingGlobal()"
                   name="horizonShowGenderMarker"
-                  @update:globalValue="horizonShowGenderMarker = $event"
+                  @update:globalValue="
+                    settings.horizonShowGenderMarker = $event
+                  "
                   @update:overrideValue="
                     $set(characterOverrides, 'horizonShowGenderMarker', $event)
                   "
@@ -959,13 +977,15 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="horizonGenderMarkerOrigColor"
+                  :globalValue="settings.horizonGenderMarkerOrigColor"
                   :overrideValue="
                     characterOverrides.horizonGenderMarkerOrigColor
                   "
                   :usingGlobal="isUsingGlobal()"
                   name="horizonGenderMarkerOrigColor"
-                  @update:globalValue="horizonGenderMarkerOrigColor = $event"
+                  @update:globalValue="
+                    settings.horizonGenderMarkerOrigColor = $event
+                  "
                   @update:overrideValue="
                     $set(
                       characterOverrides,
@@ -973,7 +993,7 @@
                       $event
                     )
                   "
-                  :disabled="!horizonShowGenderMarker"
+                  :disabled="!settings.horizonShowGenderMarker"
                 />
               </div>
             </div>
@@ -986,11 +1006,13 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="horizonChangeOfflineColor"
+                  :globalValue="settings.horizonChangeOfflineColor"
                   :overrideValue="characterOverrides.horizonChangeOfflineColor"
                   :usingGlobal="isUsingGlobal()"
                   name="horizonChangeOfflineColor"
-                  @update:globalValue="horizonChangeOfflineColor = $event"
+                  @update:globalValue="
+                    settings.horizonChangeOfflineColor = $event
+                  "
                   @update:overrideValue="
                     $set(
                       characterOverrides,
@@ -1014,11 +1036,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="playSound"
+                  :globalValue="settings.playSound"
                   :overrideValue="characterOverrides.playSound"
                   :usingGlobal="isUsingGlobal()"
                   name="playSound"
-                  @update:globalValue="playSound = $event"
+                  @update:globalValue="settings.playSound = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'playSound', $event)
                   "
@@ -1033,15 +1055,15 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="alwaysNotify"
+                  :globalValue="settings.alwaysNotify"
                   :overrideValue="characterOverrides.alwaysNotify"
                   :usingGlobal="isUsingGlobal()"
                   name="alwaysNotify"
-                  @update:globalValue="alwaysNotify = $event"
+                  @update:globalValue="settings.alwaysNotify = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'alwaysNotify', $event)
                   "
-                  :disabled="!playSound"
+                  :disabled="!settings.playSound"
                 />
               </div>
             </div>
@@ -1053,15 +1075,15 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="notifications"
+                  :globalValue="settings.notifications"
                   :overrideValue="characterOverrides.notifications"
                   :usingGlobal="isUsingGlobal()"
                   name="notifications"
-                  @update:globalValue="notifications = $event"
+                  @update:globalValue="settings.notifications = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'notifications', $event)
                   "
-                  :disabled="!playSound"
+                  :disabled="!settings.playSound"
                 />
               </div>
             </div>
@@ -1078,26 +1100,26 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="highlight"
+                  :globalValue="settings.highlight"
                   :overrideValue="characterOverrides.highlight"
                   :usingGlobal="isUsingGlobal()"
                   name="highlight"
-                  @update:globalValue="highlight = $event"
+                  @update:globalValue="settings.highlight = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'highlight', $event)
                   "
-                  :disabled="!playSound"
+                  :disabled="!settings.playSound"
                 />
               </div>
             </div>
             <div class="mb-3 p-2">
               <settings-array
                 id="highlightWords"
-                v-model="highlightWords"
-                :globalValue="highlightWords"
+                v-model="settings.highlightWords"
+                :globalValue="settings.highlightWords"
                 :overrideValue="characterOverrides.highlightWords"
                 :usingGlobal="isUsingGlobal()"
-                @update:globalValue="highlightWords = $event"
+                @update:globalValue="settings.highlightWords = $event"
                 @update:overrideValue="
                   $set(characterOverrides, 'highlightWords', $event)
                 "
@@ -1107,11 +1129,11 @@
             <div class="mb-3 p-2">
               <settings-array
                 id="horizonHighlightUsers"
-                v-model="horizonHighlightUsers"
-                :globalValue="horizonHighlightUsers"
+                v-model="settings.horizonHighlightUsers"
+                :globalValue="settings.horizonHighlightUsers"
                 :overrideValue="characterOverrides.horizonHighlightUsers"
                 :usingGlobal="isUsingGlobal()"
-                @update:globalValue="horizonHighlightUsers = $event"
+                @update:globalValue="settings.horizonHighlightUsers = $event"
                 @update:overrideValue="
                   $set(characterOverrides, 'horizonHighlightUsers', $event)
                 "
@@ -1127,11 +1149,13 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="horizonNotifyFriendSignIn"
+                  :globalValue="settings.horizonNotifyFriendSignIn"
                   :overrideValue="characterOverrides.horizonNotifyFriendSignIn"
                   :usingGlobal="isUsingGlobal()"
                   name="horizonNotifyFriendSignIn"
-                  @update:globalValue="horizonNotifyFriendSignIn = $event"
+                  @update:globalValue="
+                    settings.horizonNotifyFriendSignIn = $event
+                  "
                   @update:overrideValue="
                     $set(
                       characterOverrides,
@@ -1154,11 +1178,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="eventMessages"
+                  :globalValue="settings.eventMessages"
                   :overrideValue="characterOverrides.eventMessages"
                   :usingGlobal="isUsingGlobal()"
                   name="eventMessages"
-                  @update:globalValue="eventMessages = $event"
+                  @update:globalValue="settings.eventMessages = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'eventMessages', $event)
                   "
@@ -1173,11 +1197,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="joinMessages"
+                  :globalValue="settings.joinMessages"
                   :overrideValue="characterOverrides.joinMessages"
                   :usingGlobal="isUsingGlobal()"
                   name="joinMessages"
-                  @update:globalValue="joinMessages = $event"
+                  @update:globalValue="settings.joinMessages = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'joinMessages', $event)
                   "
@@ -1195,13 +1219,15 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="horizonShowSigninNotifications"
+                  :globalValue="settings.horizonShowSigninNotifications"
                   :overrideValue="
                     characterOverrides.horizonShowSigninNotifications
                   "
                   :usingGlobal="isUsingGlobal()"
                   name="horizonShowSigninNotifications"
-                  @update:globalValue="horizonShowSigninNotifications = $event"
+                  @update:globalValue="
+                    settings.horizonShowSigninNotifications = $event
+                  "
                   @update:overrideValue="
                     $set(
                       characterOverrides,
@@ -1226,14 +1252,16 @@
                   </div>
                 </div>
                 <settings-override
-                  :globalValue="horizonShowDuplicateStatusNotifications"
+                  :globalValue="
+                    settings.horizonShowDuplicateStatusNotifications
+                  "
                   :overrideValue="
                     characterOverrides.horizonShowDuplicateStatusNotifications
                   "
                   :usingGlobal="isUsingGlobal()"
                   name="horizonShowDuplicateStatusNotifications"
                   @update:globalValue="
-                    horizonShowDuplicateStatusNotifications = $event
+                    settings.horizonShowDuplicateStatusNotifications = $event
                   "
                   @update:overrideValue="
                     $set(
@@ -1296,11 +1324,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="risingAdScore"
+                  :globalValue="settings.risingAdScore"
                   :overrideValue="characterOverrides.risingAdScore"
                   :usingGlobal="isUsingGlobal()"
                   name="risingAdScore"
-                  @update:globalValue="risingAdScore = $event"
+                  @update:globalValue="settings.risingAdScore = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'risingAdScore', $event)
                   "
@@ -1316,11 +1344,13 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="risingComparisonInUserMenu"
+                  :globalValue="settings.risingComparisonInUserMenu"
                   :overrideValue="characterOverrides.risingComparisonInUserMenu"
                   :usingGlobal="isUsingGlobal()"
                   name="risingComparisonInUserMenu"
-                  @update:globalValue="risingComparisonInUserMenu = $event"
+                  @update:globalValue="
+                    settings.risingComparisonInUserMenu = $event
+                  "
                   @update:overrideValue="
                     $set(
                       characterOverrides,
@@ -1340,11 +1370,13 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="risingComparisonInSearch"
+                  :globalValue="settings.risingComparisonInSearch"
                   :overrideValue="characterOverrides.risingComparisonInSearch"
                   :usingGlobal="isUsingGlobal()"
                   name="risingComparisonInSearch"
-                  @update:globalValue="risingComparisonInSearch = $event"
+                  @update:globalValue="
+                    settings.risingComparisonInSearch = $event
+                  "
                   @update:overrideValue="
                     $set(characterOverrides, 'risingComparisonInSearch', $event)
                   "
@@ -1364,11 +1396,11 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="risingAutoCompareKinks"
+                  :globalValue="settings.risingAutoCompareKinks"
                   :overrideValue="characterOverrides.risingAutoCompareKinks"
                   :usingGlobal="isUsingGlobal()"
                   name="risingAutoCompareKinks"
-                  @update:globalValue="risingAutoCompareKinks = $event"
+                  @update:globalValue="settings.risingAutoCompareKinks = $event"
                   @update:overrideValue="
                     $set(characterOverrides, 'risingAutoCompareKinks', $event)
                   "
@@ -1387,13 +1419,15 @@
                   </label>
                 </div>
                 <settings-override
-                  :globalValue="risingAutoExpandCustomKinks"
+                  :globalValue="settings.risingAutoExpandCustomKinks"
                   :overrideValue="
                     characterOverrides.risingAutoExpandCustomKinks
                   "
                   :usingGlobal="isUsingGlobal()"
                   name="risingAutoExpandCustomKinks"
-                  @update:globalValue="risingAutoExpandCustomKinks = $event"
+                  @update:globalValue="
+                    settings.risingAutoExpandCustomKinks = $event
+                  "
                   @update:overrideValue="
                     $set(
                       characterOverrides,
@@ -1449,7 +1483,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.hideAds"
-                  v-model="risingFilter.hideAds"
+                  v-model="settings.risingFilter.hideAds"
                 />
                 <label class="form-check-label" for="risingFilter.hideAds">
                   <bbcode :text="l('settings.filter.hideAds')"></bbcode>
@@ -1461,7 +1495,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.hideSearchResults"
-                  v-model="risingFilter.hideSearchResults"
+                  v-model="settings.risingFilter.hideSearchResults"
                 />
                 <label
                   class="form-check-label"
@@ -1478,7 +1512,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.hideChannelMembers"
-                  v-model="risingFilter.hideChannelMembers"
+                  v-model="settings.risingFilter.hideChannelMembers"
                 />
                 <label
                   class="form-check-label"
@@ -1495,7 +1529,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.hidePublicChannelMessages"
-                  v-model="risingFilter.hidePublicChannelMessages"
+                  v-model="settings.risingFilter.hidePublicChannelMessages"
                 />
                 <label
                   class="form-check-label"
@@ -1512,7 +1546,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.hidePrivateChannelMessages"
-                  v-model="risingFilter.hidePrivateChannelMessages"
+                  v-model="settings.risingFilter.hidePrivateChannelMessages"
                 />
                 <label
                   class="form-check-label"
@@ -1529,7 +1563,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.hidePrivateMessages"
-                  v-model="risingFilter.hidePrivateMessages"
+                  v-model="settings.risingFilter.hidePrivateMessages"
                 />
                 <label
                   class="form-check-label"
@@ -1546,7 +1580,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.showFilterIcon"
-                  v-model="risingFilter.showFilterIcon"
+                  v-model="settings.risingFilter.showFilterIcon"
                 />
                 <label
                   class="form-check-label"
@@ -1563,7 +1597,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.penalizeMatches"
-                  v-model="risingFilter.penalizeMatches"
+                  v-model="settings.risingFilter.penalizeMatches"
                 />
                 <label
                   class="form-check-label"
@@ -1578,7 +1612,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.rewardNonMatches"
-                  v-model="risingFilter.rewardNonMatches"
+                  v-model="settings.risingFilter.rewardNonMatches"
                 />
                 <label
                   class="form-check-label"
@@ -1609,13 +1643,15 @@
                   </div>
                 </div>
                 <settings-override
-                  :globalValue="horizonPersistentMemberFilters"
+                  :globalValue="settings.horizonPersistentMemberFilters"
                   :overrideValue="
                     characterOverrides.horizonPersistentMemberFilters
                   "
                   :usingGlobal="isUsingGlobal()"
                   name="horizonPersistentMemberFilters"
-                  @update:globalValue="horizonPersistentMemberFilters = $event"
+                  @update:globalValue="
+                    settings.horizonPersistentMemberFilters = $event
+                  "
                   @update:overrideValue="
                     $set(
                       characterOverrides,
@@ -1640,7 +1676,7 @@
                 id="risingFilter.minAge"
                 type="number"
                 class="form-control"
-                v-model="risingFilter.minAge"
+                v-model="settings.risingFilter.minAge"
                 :placeholder="l('settings.enterAge')"
               />
 
@@ -1651,7 +1687,7 @@
                 id="risingFilter.maxAge"
                 type="number"
                 class="form-control"
-                v-model="risingFilter.maxAge"
+                v-model="settings.risingFilter.maxAge"
                 :placeholder="l('settings.enterAge')"
               />
             </div>
@@ -1686,7 +1722,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.autoReply"
-                  v-model="risingFilter.autoReply"
+                  v-model="settings.risingFilter.autoReply"
                 />
                 <label class="form-check-label" for="risingFilter.autoReply">
                   {{ l('settings.autoReply') }}
@@ -1698,8 +1734,8 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.autoReplyCustom"
-                  v-model="risingFilter.autoReplyCustom"
-                  :disabled="!risingFilter.autoReply"
+                  v-model="settings.risingFilter.autoReplyCustom"
+                  :disabled="!settings.risingFilter.autoReply"
                 />
                 <label
                   class="form-check-label"
@@ -1710,12 +1746,13 @@
               </div>
 
               <editor
-                v-model="risingFilter.autoReplyCustomMessage"
+                v-model="settings.risingFilter.autoReplyCustomMessage"
                 :hasToolbar="true"
                 :classes="'form-control'"
                 rows="5"
                 :disabled="
-                  !risingFilter.autoReplyCustom || !risingFilter.autoReply
+                  !settings.risingFilter.autoReplyCustom ||
+                  !settings.risingFilter.autoReply
                 "
                 :placeholder="l('settings.autoReplyPlaceholder')"
                 maxlength="10000"
@@ -1834,84 +1871,11 @@
         settingsMode: '0',
         importCharacter: '',
         characterOverrides: {} as PartialSettings,
-        playSound: defaultSettings.playSound,
-        clickOpensMessage: defaultSettings.clickOpensMessage,
-        disallowedTags: [] as ReadonlyArray<string>,
-        notifications: defaultSettings.notifications,
-        highlight: defaultSettings.highlight,
-        highlightWords: [] as ReadonlyArray<string>,
-        showAvatars: defaultSettings.showAvatars,
-        animatedEicons: defaultSettings.animatedEicons,
-        smoothMosaics: defaultSettings.smoothMosaics,
-        idleTimer: 0 as number,
-        messageSeparators: defaultSettings.messageSeparators,
-        eventMessages: defaultSettings.eventMessages,
-        joinMessages: defaultSettings.joinMessages,
-        alwaysNotify: defaultSettings.alwaysNotify,
-        logMessages: defaultSettings.logMessages,
-        logAds: defaultSettings.logAds,
-        fontSize: defaultSettings.fontSize,
-        showNeedsReply: defaultSettings.showNeedsReply,
-        enterSend: defaultSettings.enterSend,
-        colorBookmarks: defaultSettings.colorBookmarks,
-        showPerCharacterFriends: defaultSettings.showPerCharacterFriends,
-        hideNonCharacterFriends: defaultSettings.hideNonCharacterFriends,
-        bbCodeBar: defaultSettings.bbCodeBar,
 
-        risingAdScore: defaultSettings.risingAdScore,
-        risingLinkPreview: defaultSettings.risingLinkPreview,
-        risingAutoCompareKinks: defaultSettings.risingAutoCompareKinks,
-
-        risingAutoExpandCustomKinks:
-          defaultSettings.risingAutoExpandCustomKinks,
-        risingCharacterPreview: defaultSettings.risingCharacterPreview,
-        risingComparisonInUserMenu: defaultSettings.risingComparisonInUserMenu,
-        risingComparisonInSearch: defaultSettings.risingComparisonInSearch,
-
-        risingShowUnreadOfflineCount:
-          defaultSettings.risingShowUnreadOfflineCount,
-        risingColorblindMode: defaultSettings.risingColorblindMode,
-
-        risingShowPortraitNearInput:
-          defaultSettings.risingShowPortraitNearInput,
-        risingShowPortraitInMessage:
-          defaultSettings.risingShowPortraitInMessage,
-        risingShowHighQualityPortraits:
-          defaultSettings.risingShowHighQualityPortraits,
-        horizonMessagePortraitHighQuality:
-          defaultSettings.horizonMessagePortraitHighQuality,
-        horizonShowCustomCharacterColors:
-          defaultSettings.horizonShowCustomCharacterColors,
-        horizonShowDeveloperBadges: defaultSettings.horizonShowDeveloperBadges,
-        horizonShowGenderMarker: defaultSettings.horizonShowGenderMarker,
-        horizonGenderMarkerOrigColor:
-          defaultSettings.horizonGenderMarkerOrigColor,
-        horizonChangeOfflineColor: defaultSettings.horizonChangeOfflineColor,
-        horizonNotifyFriendSignIn: defaultSettings.horizonNotifyFriendSignIn,
-        horizonShowSigninNotifications:
-          defaultSettings.horizonShowSigninNotifications,
-        horizonShowDuplicateStatusNotifications:
-          defaultSettings.horizonShowDuplicateStatusNotifications,
-        horizonHighlightUsers: [] as ReadonlyArray<string>,
-        chatLayoutMode: defaultSettings.chatLayoutMode,
-        messageGrouping: defaultSettings.messageGrouping,
-        forceQuickConvoList: defaultSettings.forceQuickConvoList,
-        horizonUseColorPicker: defaultSettings.horizonUseColorPicker,
-
-        horizonCacheDraftMessages: defaultSettings.horizonCacheDraftMessages,
-        horizonSaveDraftMessagesToDiskTimer:
-          defaultSettings.horizonSaveDraftMessagesToDiskTimer,
-
-        risingFilter: _.cloneDeep(
-          defaultSettings.risingFilter
-        ) as SmartFilterSettings,
-
-        horizonPersistentMemberFilters:
-          defaultSettings.horizonPersistentMemberFilters,
         risingAvailableThemes: [] as ReadonlyArray<string>,
-        risingCharacterTheme: undefined as string | undefined,
-
         smartFilterTypes: smartFilterTypesOrigin,
+        settings: { ...defaultSettings } as DefaultSettings,
+        risingFilter: {} as any as SmartFilterSettings,
         hiddenFilter: ''
       };
     },
@@ -1950,95 +1914,15 @@
           if (globalSettings[key] === undefined) globalSettings[key] = value;
         }
 
-        this.playSound = globalSettings.playSound;
-        this.clickOpensMessage = globalSettings.clickOpensMessage;
-        this.disallowedTags = globalSettings.disallowedTags ?? [];
-        this.notifications = globalSettings.notifications;
-        this.highlight = globalSettings.highlight;
-        this.highlightWords = globalSettings.highlightWords ?? [];
-        this.showAvatars = globalSettings.showAvatars;
-        this.animatedEicons = globalSettings.animatedEicons;
-        this.smoothMosaics = globalSettings.smoothMosaics;
-        this.idleTimer = globalSettings.idleTimer ?? 0;
-        this.messageSeparators = globalSettings.messageSeparators;
-        this.eventMessages = globalSettings.eventMessages;
-        this.joinMessages = globalSettings.joinMessages;
-        this.alwaysNotify = globalSettings.alwaysNotify;
-        this.logMessages = globalSettings.logMessages;
-        this.logAds = globalSettings.logAds;
-        this.fontSize = globalSettings.fontSize;
-        this.showNeedsReply = globalSettings.showNeedsReply;
-        this.enterSend = globalSettings.enterSend;
-        this.colorBookmarks = globalSettings.colorBookmarks;
-        this.showPerCharacterFriends = globalSettings.showPerCharacterFriends;
-        this.hideNonCharacterFriends = globalSettings.hideNonCharacterFriends;
-        this.bbCodeBar = globalSettings.bbCodeBar;
+        this.settings = { ...globalSettings };
         this.availableImports = (
           await core.settingsStore.getAvailableCharacters()
         ).filter(x => x !== core.connection.character);
-
-        // settings.rising
-
-        this.risingAdScore = globalSettings.risingAdScore;
-        this.risingLinkPreview = globalSettings.risingLinkPreview;
-        this.risingAutoCompareKinks = globalSettings.risingAutoCompareKinks;
-
-        this.risingAutoExpandCustomKinks =
-          globalSettings.risingAutoExpandCustomKinks;
-        this.risingCharacterPreview = globalSettings.risingCharacterPreview;
-        this.risingComparisonInUserMenu =
-          globalSettings.risingComparisonInUserMenu;
-        this.risingComparisonInSearch = globalSettings.risingComparisonInSearch;
-        this.risingShowUnreadOfflineCount =
-          globalSettings.risingShowUnreadOfflineCount;
-
-        this.risingColorblindMode = globalSettings.risingColorblindMode;
-        this.risingShowPortraitNearInput =
-          globalSettings.risingShowPortraitNearInput;
-        this.risingShowPortraitInMessage =
-          globalSettings.risingShowPortraitInMessage;
-        this.risingShowHighQualityPortraits =
-          globalSettings.risingShowHighQualityPortraits;
-        this.horizonMessagePortraitHighQuality =
-          globalSettings.horizonMessagePortraitHighQuality;
-        this.horizonShowCustomCharacterColors =
-          globalSettings.horizonShowCustomCharacterColors;
-        this.horizonShowDeveloperBadges =
-          globalSettings.horizonShowDeveloperBadges;
-        this.horizonShowGenderMarker = globalSettings.horizonShowGenderMarker;
-        this.horizonGenderMarkerOrigColor =
-          globalSettings.horizonGenderMarkerOrigColor;
-        this.horizonChangeOfflineColor =
-          globalSettings.horizonChangeOfflineColor;
-        this.chatLayoutMode = globalSettings.chatLayoutMode || 'classic';
-        this.messageGrouping = globalSettings.messageGrouping;
-        this.forceQuickConvoList = globalSettings.forceQuickConvoList;
-        this.horizonUseColorPicker = globalSettings.horizonUseColorPicker;
-
-        this.horizonCacheDraftMessages =
-          globalSettings.horizonCacheDraftMessages;
-        this.horizonSaveDraftMessagesToDiskTimer =
-          globalSettings.horizonSaveDraftMessagesToDiskTimer;
-
-        this.horizonNotifyFriendSignIn =
-          globalSettings.horizonNotifyFriendSignIn;
-        this.horizonShowSigninNotifications =
-          globalSettings.horizonShowSigninNotifications;
-        this.horizonShowDuplicateStatusNotifications =
-          globalSettings.horizonShowDuplicateStatusNotifications;
-        this.horizonHighlightUsers = globalSettings.horizonHighlightUsers ?? [];
-        this.risingFilter = globalSettings.risingFilter;
 
         this.risingAvailableThemes = fs
           .readdirSync(path.join(__dirname, 'themes'))
           .filter(x => x.substr(-4) === '.css')
           .map(x => x.slice(0, -4));
-        this.risingCharacterTheme = globalSettings.risingCharacterTheme;
-        this.horizonPersistentMemberFilters =
-          typeof (globalSettings as any).horizonPersistentMemberFilters ===
-          'boolean'
-            ? (globalSettings as any).horizonPersistentMemberFilters
-            : false;
 
         this.characterOverrides = { ...core.state.characterSettings };
       },
@@ -2088,117 +1972,56 @@
           JSON.stringify(core.state.settings.risingFilter)
         );
 
-        const minAge = this.getAsNumber(this.risingFilter.minAge);
-        const maxAge = this.getAsNumber(this.risingFilter.maxAge);
+        const minAge = this.getAsNumber(this.settings.risingFilter.minAge);
+        const maxAge = this.getAsNumber(this.settings.risingFilter.maxAge);
 
         const diskDraftTimer = this.getAsNumber(
-          this.horizonSaveDraftMessagesToDiskTimer
+          this.settings.horizonSaveDraftMessagesToDiskTimer
         );
 
         const previousSettings = core.state.globalSettings;
 
-        core.state.globalSettings = {
-          playSound: this.playSound,
-          soundTheme: previousSettings.soundTheme || 'default',
-          soundThemeSoundVolumes: previousSettings.soundThemeSoundVolumes,
-          clickOpensMessage: this.clickOpensMessage,
-          disallowedTags: this.disallowedTags,
-          notifications: this.notifications,
-          highlight: this.highlight,
-          highlightWords: this.highlightWords,
-          showAvatars: this.showAvatars,
-          animatedEicons: this.animatedEicons,
-          smoothMosaics: this.smoothMosaics,
-          idleTimer:
-            this.idleTimer < 0
-              ? 0
-              : this.idleTimer > 1440
-                ? 1440
-                : this.idleTimer,
-          messageSeparators: this.messageSeparators,
-          eventMessages: this.eventMessages,
-          joinMessages: this.joinMessages,
-          alwaysNotify: this.alwaysNotify,
-          logMessages: this.logMessages,
-          logAds: this.logAds,
-          fontSize:
-            this.fontSize < 10 ? 10 : this.fontSize > 24 ? 24 : this.fontSize,
-          showNeedsReply: this.showNeedsReply,
-          enterSend: this.enterSend,
-          colorBookmarks: this.colorBookmarks,
-          showPerCharacterFriends: this.showPerCharacterFriends,
-          hideNonCharacterFriends: this.hideNonCharacterFriends,
-          bbCodeBar: this.bbCodeBar,
-
-          risingAdScore: this.risingAdScore,
-          risingLinkPreview: this.risingLinkPreview,
-          risingAutoCompareKinks: this.risingAutoCompareKinks,
-
-          risingAutoExpandCustomKinks: this.risingAutoExpandCustomKinks,
-          risingCharacterPreview: this.risingCharacterPreview,
-          risingComparisonInUserMenu: this.risingComparisonInUserMenu,
-          risingComparisonInSearch: this.risingComparisonInSearch,
-          risingShowUnreadOfflineCount: this.risingShowUnreadOfflineCount,
-          risingShowPortraitNearInput: this.risingShowPortraitNearInput,
-          risingShowPortraitInMessage: this.risingShowPortraitInMessage,
-          risingShowHighQualityPortraits: this.risingShowHighQualityPortraits,
-          horizonMessagePortraitHighQuality:
-            this.horizonMessagePortraitHighQuality,
-          horizonShowCustomCharacterColors:
-            this.horizonShowCustomCharacterColors,
-          horizonShowDeveloperBadges: this.horizonShowDeveloperBadges,
-          horizonAutoGenderFilter: (previousSettings as any)
-            .horizonAutoGenderFilter,
-          horizonSavedGenderFilters: (previousSettings as any)
-            .horizonSavedGenderFilters,
-          horizonSavedMembersSort: (previousSettings as any)
-            .horizonSavedMembersSort,
-          horizonPersistentMemberFilters: this.horizonPersistentMemberFilters,
-          horizonShowGenderMarker: this.horizonShowGenderMarker,
-          horizonGenderMarkerOrigColor: this.horizonGenderMarkerOrigColor,
-          horizonChangeOfflineColor: this.horizonChangeOfflineColor,
-          horizonNotifyFriendSignIn: this.horizonNotifyFriendSignIn,
-          horizonShowSigninNotifications: this.horizonShowSigninNotifications,
-          horizonShowDuplicateStatusNotifications:
-            this.horizonShowDuplicateStatusNotifications,
-          horizonHighlightUsers: this.horizonHighlightUsers,
-          chatLayoutMode: this.chatLayoutMode,
-          messageGrouping: this.messageGrouping,
-          forceQuickConvoList: this.forceQuickConvoList,
-          horizonCacheDraftMessages: this.horizonCacheDraftMessages,
-          horizonSaveDraftMessagesToDiskTimer:
-            diskDraftTimer === null
-              ? 60
-              : diskDraftTimer > 5
-                ? diskDraftTimer
-                : 5,
-          horizonUseColorPicker: this.horizonUseColorPicker,
-
-          risingColorblindMode: this.risingColorblindMode,
+        const newSettings = {
+          ...this.settings,
           risingFilter: {
-            ...this.risingFilter,
-            minAge:
-              minAge !== null && maxAge !== null
-                ? Math.min(minAge, maxAge)
-                : minAge,
-            maxAge:
-              minAge !== null && maxAge !== null
-                ? Math.max(minAge, maxAge)
-                : maxAge
-          },
-
-          risingCharacterTheme:
-            this.risingCharacterTheme != 'undefined'
-              ? this.risingCharacterTheme
-              : undefined
+            ...this.settings.risingFilter,
+            minAge,
+            maxAge
+          }
         };
-        console.log(
-          'GLOBAL SETTINGS',
-          minAge,
-          maxAge,
-          core.state.globalSettings
-        );
 
+        newSettings.idleTimer =
+          this.settings.idleTimer < 0
+            ? 0
+            : this.settings.idleTimer > 1440
+              ? 1440
+              : this.settings.idleTimer;
+
+        newSettings.horizonAutoGenderFilter =
+          previousSettings.horizonAutoGenderFilter;
+        //  newSettings.horizonSavedGenderFilters =
+        //   previousSettings.horizonSavedGenderFilters;
+        newSettings.horizonSavedMembersSort =
+          previousSettings.horizonSavedMembersSort;
+
+        newSettings.horizonSaveDraftMessagesToDiskTimer =
+          diskDraftTimer === null
+            ? 60
+            : diskDraftTimer > 5
+              ? diskDraftTimer
+              : 5;
+
+        newSettings.risingCharacterTheme = newSettings.risingCharacterTheme
+          ? newSettings.risingCharacterTheme
+          : undefined;
+        core.state.globalSettings = {
+          ...newSettings,
+          risingFilter: {
+            ...newSettings.risingFilter,
+            minAge,
+            maxAge
+          }
+        };
         const newRisingFilter = JSON.parse(
           JSON.stringify(core.state.settings.risingFilter)
         );
@@ -2207,7 +2030,8 @@
           this.rebuildFilters();
         }
 
-        if (this.notifications) await core.notifications.requestPermission();
+        if (this.settings.notifications)
+          await core.notifications.requestPermission();
 
         EventBus.$emit('configuration-update', core.state.settings);
       },
