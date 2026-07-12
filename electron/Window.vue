@@ -376,6 +376,9 @@
       electron.ipcRenderer.on('fix-logs', () =>
         this.activeTab!.view.webContents.send('fix-logs')
       );
+      electron.ipcRenderer.on('settings-menu', () =>
+        this.activeTab!.view.webContents.send('settings-menu')
+      );
       electron.ipcRenderer.on('ui-test', () =>
         this.activeTab!.view.webContents.send('ui-test')
       );
@@ -780,8 +783,7 @@
         electron.ipcRenderer.send('install-update');
       },
       openSettingsMenu(): void {
-        log.debug('settings clicked');
-        electron.ipcRenderer.send('open-settings-menu');
+        this.activeTab!.view.webContents.send('settings-menu');
       },
       onTabBeforeEnter(el: HTMLElement): void {
         if (this.isClosing) return;
