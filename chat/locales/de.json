@@ -1077,7 +1077,6 @@
   "unit.years": "Jahre",
   "update.autoInstall": "Zukünftig Updates automatisch herunterladen und installieren",
   "update.installOnQuit.note": "Updates installieren wenn du die App schließt.",
-  "update.restart.confirmConnected": "Du bist noch mit dem Chat verbunden.\nBist du sicher, dass du neustarten und das Update jetzt installieren willst?",
   "update.titlebar.downloading": "Lade Update: {0}%",
   "update.titlebar.ready": "Update bereit, klicke zum installieren",
   "user.bookmark": "Lesezeichen",
