@@ -40,6 +40,10 @@
         "characters": ["Grimokk", "Greyhoof"]
       }
     },
+      "Moon Burst": {
+        "alias": "Moon Burst",
+        "characters": ["Moon Burst"]
+      },
     "translators": {
       "Layne Autumnal": {
         "characters": ["Layne Autumnal"],
@@ -173,10 +177,6 @@
       "Catten": {
         "alias": "Catten",
         "characters": ["Averly", "Dailen", "Dakota Flint"]
-      },
-      "Moon Burst": {
-        "alias": "Moon Burst",
-        "characters": ["Moon Burst"]
       }
     }
   }
