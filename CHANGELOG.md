@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- You can send "empty" messages with just spaces again. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f712211f646a39ae21d941807e6465cce3309825)
+- Reverted a 2.3.0 change that prevented "empty" messages with just spaces from being sent. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f712211f646a39ae21d941807e6465cce3309825)
   - This was originally removed as a bugfix, but it's a funny and harmless quirk that people enjoyed.
 - Loading a character preview now has an animation. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2e8024ffedc79ed5f81a4dd6b8845d3c8f6a7bd7)
 - Spruced up some of the updater user experience [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b0a74325831d02c4466a0f2639f36406b561f953):
@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed installing an update while you're connected to chat simply hiding the window intead of restarting the app on MacOS. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/95ccd5953ce2e66e6c8982a324ec27341f6d66d6)
+- Fixed issues where the URL preview would stay open, especially on MacOS, until you moved your cursor back to the original link. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c4f9b9233a669694782cb035721c2f10c2fbc255)
 - Fixed BBCode sometimes being cut off in the 'Recent Messages' block on the profile viewer, or in the character mouse-hover preview. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c5b9e0536ebfcb3294bd76637f00eab759fd34f2)
 - Fixed the update notice linking you to GitHub instead of our website for Linux releases that can't auto-update. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7c8d23c9a3b054b6b57407045e0fa8a896c14523)
 - Fixed the system info you can copy in the 'About Horizon' window showing the folder where debug logs are kept, instead of your chat logs. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f75e501e9ab046d7d5d175ef321ea1a7374578d0)
@@ -33,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Cleaned up a bunch of stuff in the Contributors and Contributing documents. Also brought the Readme up to modern standards. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8b8e23df30cbe6a483788a9d8063c0e27b523c67)
 - Cleaned up and fixed dates and headers in the changelog files (which now show the release date on our website too!) [[Cleanup]](https://github.com/Fchat-Horizon/Horizon/commit/23dafdaa35aa8bb07eb122d154f6a10487693213) [[Dates]](https://github.com/Fchat-Horizon/Horizon/commit/8eecddedf4a9c3f7f760634ee29f24ef627a1eb1)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/856 by @min-xy
+- https://github.com/Fchat-Horizon/Horizon/pull/873 by @FatCatClient
+
+Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 
 ## [2.3.1] - 2026-07-06
 
