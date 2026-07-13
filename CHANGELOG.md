@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.2] - 2026-07-13
+
 ### Changed
 
 - Reverted a 2.3.0 change that prevented "empty" messages with just spaces from being sent. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f712211f646a39ae21d941807e6465cce3309825)
@@ -1534,7 +1536,8 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - IOS build removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814)]
 - Webchat removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/b894a180b9be31f68d1458aaa3c59f9c4470da89)]
 
-[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.3.1...development
+[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.3.2...development
+[2.3.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.3.1...v2.3.2
 [2.3.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.2.2-beta.2...v2.3.0
 [2.2.2-beta.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.2.2-beta.1...v2.2.2-beta.2
