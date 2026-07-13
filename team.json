@@ -10,19 +10,32 @@
     "contributors": {
       "amonodrama": {
         "alias": "amonodrama",
-        "characters": ["Sparkle of Masks", "Content Monetization"]
+        "characters": [
+          "Sparkle of Masks",
+          "Content Monetization"
+        ]
       },
       "Firespark": {
         "alias": "Firespark",
-        "characters": ["Cinder the Cat", "Vera Io", "J u c i k a"]
+        "characters": [
+          "Cinder the Cat",
+          "Vera Io",
+          "J u c i k a"
+        ]
       },
       "Peel": {
         "alias": "Peel",
-        "characters": ["Peel", "Inai", "Amaya Shigo"]
+        "characters": [
+          "Peel",
+          "Inai",
+          "Amaya Shigo"
+        ]
       },
       "Fops": {
         "alias": "Fops",
-        "characters": ["3A Levi"]
+        "characters": [
+          "3A Levi"
+        ]
       },
       "Arianna": {
         "alias": "Arianna",
@@ -34,40 +47,70 @@
       },
       "SmileyTatsu": {
         "alias": "SmileyTatsu",
-        "characters": ["happyrockhub"]
+        "characters": [
+          "happyrockhub"
+        ]
       },
       "Grimokk": {
-        "characters": ["Grimokk", "Greyhoof"]
-      }
-    },
+        "characters": [
+          "Grimokk",
+          "Greyhoof"
+        ]
+      },
       "Moon Burst": {
         "alias": "Moon Burst",
-        "characters": ["Moon Burst"]
-      },
+        "characters": [
+          "Moon Burst"
+        ]
+      }
+    },
     "translators": {
       "Layne Autumnal": {
-        "characters": ["Layne Autumnal"],
-        "languages": ["French"]
+        "characters": [
+          "Layne Autumnal"
+        ],
+        "languages": [
+          "French"
+        ]
       },
       "Clovermoth": {
         "alias": "Clovermoth",
-        "characters": ["Reggie", "Sparky-", "Prefecta"],
-        "languages": ["Italian"]
+        "characters": [
+          "Reggie",
+          "Sparky-",
+          "Prefecta"
+        ],
+        "languages": [
+          "Italian"
+        ]
       },
       "Regi Kaname": {
         "alias": "Contri-bun-or",
-        "characters": ["Regi Kaname"],
-        "languages": ["Spanish"]
+        "characters": [
+          "Regi Kaname"
+        ],
+        "languages": [
+          "Spanish"
+        ]
       },
       "Spark": {
         "alias": "Spanish Spark",
-        "characters": ["A Youngster Trainer"],
-        "languages": ["Spanish"]
+        "characters": [
+          "A Youngster Trainer"
+        ],
+        "languages": [
+          "Spanish"
+        ]
       },
       "Fragile": {
         "alias": "French Touch",
-        "characters": ["Suchiru", "Lurking Suchiru"],
-        "languages": ["French"]
+        "characters": [
+          "Suchiru",
+          "Lurking Suchiru"
+        ],
+        "languages": [
+          "French"
+        ]
       },
       "WickedVince": {
         "alias": "French Breed",
@@ -77,14 +120,22 @@
           "Pit Fighting",
           "Icy Popstar"
         ],
-        "languages": ["French"]
+        "languages": [
+          "French"
+        ]
       }
     },
     "staff": {
       "Snowsune": {
         "alias": "Snowsune",
-        "characters": ["Vixi Argorrok", "Alice Prairie", "Rhettan"],
-        "roles": ["Contribution Manager"]
+        "characters": [
+          "Vixi Argorrok",
+          "Alice Prairie",
+          "Rhettan"
+        ],
+        "roles": [
+          "Contribution Manager"
+        ]
       },
       "Shining Venus": {
         "alias": "Shining Venus",
@@ -95,7 +146,9 @@
           "Usagi-Tsukino",
           "Morgendorffer Daria"
         ],
-        "roles": ["Community Lead"]
+        "roles": [
+          "Community Lead"
+        ]
       },
       "Lucirina": {
         "alias": "Glutton",
@@ -107,7 +160,9 @@
           "Phaedras",
           "Charity Adelaide"
         ],
-        "roles": ["Community Lead"]
+        "roles": [
+          "Community Lead"
+        ]
       },
       "Pankake": {
         "alias": "Pankake",
@@ -120,17 +175,28 @@
           "Sachi Nakamura",
           "Lilly Whitman"
         ],
-        "roles": ["Community Lead"]
+        "roles": [
+          "Community Lead"
+        ]
       },
       "Bootsie": {
         "alias": "Bootsie",
-        "characters": ["BootsieWootsie", "Isla Barnes"],
-        "roles": ["Assistant Development"]
+        "characters": [
+          "BootsieWootsie",
+          "Isla Barnes"
+        ],
+        "roles": [
+          "Assistant Development"
+        ]
       },
       "Kara": {
         "alias": "febreeze",
-        "characters": ["Kara Ross"],
-        "roles": ["Assistant Development"]
+        "characters": [
+          "Kara Ross"
+        ],
+        "roles": [
+          "Assistant Development"
+        ]
       },
       "Joy-Con": {
         "alias": "Joy-Con",
@@ -146,7 +212,9 @@
           "Stardew Abi",
           "Nicotine"
         ],
-        "roles": ["Assistant Development"]
+        "roles": [
+          "Assistant Development"
+        ]
       }
     },
     "supporters": {},
@@ -172,11 +240,17 @@
       },
       "TeaLord": {
         "alias": "TeaLord",
-        "characters": ["TeaBoy"]
+        "characters": [
+          "TeaBoy"
+        ]
       },
       "Catten": {
         "alias": "Catten",
-        "characters": ["Averly", "Dailen", "Dakota Flint"]
+        "characters": [
+          "Averly",
+          "Dailen",
+          "Dakota Flint"
+        ]
       }
     }
   }
