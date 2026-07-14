@@ -300,4 +300,4 @@ This ensures consistency while allowing flexibility for different build scenario
 - **Output**: All builds go to `dist/` directory
 - **Icons**: Platform-specific icons in `build/` directory
 
-For more information, see the main [project documentation](../CONTRIBUTING.md) or the GitHub Actions workflows in `.github/workflows/`.
+For more information, see the main [project documentation](../.github/CONTRIBUTING.md) or the GitHub Actions workflows in `.github/workflows/`.

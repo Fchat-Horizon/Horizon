@@ -184,7 +184,7 @@
             echo "To start your local build"
             echo "  pnpm build:dist"
             echo ""
-            echo "For packaging instructions, please see CONTRIBUTING.md"
+            echo "For packaging instructions, please see .github/CONTRIBUTING.md"
             echo ""
             echo "Double warning!!: Run 'patch_sass_embedded' after pnpm install to fix sass-embedded. It won't work in the Nix shell otherwise!!"
           '';

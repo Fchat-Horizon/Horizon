@@ -114,7 +114,7 @@ Horizon is an opinionated fork. Beyond adding features, we aim to:
   Features, usability, and reliability come first. Adopt modern feature sets and evolving standards.
 
 - **Be community-driven.**  
-  Development happens in the open, guided by the people who use the client. See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
+  Development happens in the open, guided by the people who use the client. See [CONTRIBUTING.md](./.github/CONTRIBUTING.md) for details.
 
 - **Keep the code safe and high-quality.**  
   Enforce strict standards for readability, maintainability, and safety.
@@ -259,7 +259,7 @@ Our repository's default branch is `development`, which is not strictly guarante
 
 ## From Source
 
-If you want to compile and install Horizon from the source code yourself, please see the build and packaging instructions in the [contributing document](./CONTRIBUTING.md).
+If you want to compile and install Horizon from the source code yourself, please see the build and packaging instructions in the [contributing document](./.github/CONTRIBUTING.md).
 
 # Getting started
 
@@ -279,8 +279,8 @@ For guides on everything else, from channel groups to backups, head to [the docs
 
 # Development
 
-Everything you need to start hacking on Horizon lives in [CONTRIBUTING.md](./CONTRIBUTING.md). We welcome bug reports, translations, and pull requests.
+Everything you need to start hacking on Horizon lives in [CONTRIBUTING.md](./.github/CONTRIBUTING.md). We welcome bug reports, translations, and pull requests.
 
 # Credits
 
-Horizon exists thanks to a lot of lovely people: code contributors, translators, and the original F-Chat 3.0 team. See [CONTRIBUTORS.md](./CONTRIBUTORS.md) for the full list.
+Horizon exists thanks to a lot of lovely people: code contributors, translators, and the original F-Chat 3.0 team. See [CONTRIBUTORS.md](./docs/CONTRIBUTORS.md) for the full list.
