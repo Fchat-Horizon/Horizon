@@ -33,7 +33,6 @@
     "electron": "40.10.0",
     "electron-builder": "^26.8.1",
     "electron-log": "^4.4.8",
-    "electron-settings": "~4.0.4",
     "esbuild-loader": "^4.4.3",
     "file-loader": "^6.2.0",
     "fork-ts-checker-webpack-plugin": "^9.1.0",
