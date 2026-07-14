@@ -52,6 +52,7 @@ const log = createLogger('main');
 import * as fs from 'fs';
 import * as path from 'path';
 import { execFile } from 'child_process';
+import { fileURLToPath } from 'url';
 import l from '../chat/localize';
 import { defaultHost, GeneralSettings } from './common';
 // import BrowserWindow = electron.BrowserWindow;
@@ -81,6 +82,48 @@ const resolvePartition = (
   const partition = (targetSession as unknown as { partition?: string })
     .partition;
   return partition || fallback || 'default';
+};
+
+/*
+ * <webview> backstop: DOM attributes can't be trusted, so main re-asserts
+ * guest settings on attach.
+ * ! New webviews or dictionary sources must be allowlisted here.
+ */
+const allowedWebviewPreload = path.join(
+  __dirname,
+  'preview',
+  'assets',
+  'browser.pre.js'
+);
+const allowedWebviewHosts = new Set([
+  // ~ dictionary popup sources, see learn/dictionary/WordDefinition.vue
+  'www.dictionary.com',
+  'www.thesaurus.com',
+  'www.urbandictionary.com',
+  'en.m.wikipedia.org'
+]);
+
+// $ Attach-time src only; the webviews police their own navigation.
+const isAllowedWebviewSrc = (src: string | undefined): boolean => {
+  if (src === undefined || src === '' || src === 'about:blank') return true;
+  try {
+    const url = new URL(src);
+    return url.protocol === 'https:' && allowedWebviewHosts.has(url.hostname);
+  } catch {
+    return false;
+  }
+};
+
+const isAllowedWebviewPreload = (preload: string | undefined): boolean => {
+  if (preload === undefined || preload === '') return true;
+  try {
+    const file = preload.startsWith('file:')
+      ? fileURLToPath(preload)
+      : path.resolve(__dirname, preload);
+    return path.relative(allowedWebviewPreload, file) === '';
+  } catch {
+    return false;
+  }
 };
 
 // Module to control application life.
@@ -872,6 +915,32 @@ async function onReady(): Promise<void> {
   app.on('web-contents-created', (_event, contents) => {
     const partition = resolvePartition(contents.session, 'dynamic');
     configurePermissionPolicy(contents.session, partition);
+
+    contents.on('will-attach-webview', (event, webPreferences, params) => {
+      if (
+        !isAllowedWebviewSrc(params.src) ||
+        params.partition !== 'persist:adblocked'
+      ) {
+        log.warn('webview.attach.blocked', {
+          src: params.src,
+          partition: params.partition
+        });
+        event.preventDefault();
+        return;
+      }
+      if (!isAllowedWebviewPreload(webPreferences.preload)) {
+        log.warn('webview.attach.preload.stripped', {
+          preload: webPreferences.preload
+        });
+        delete webPreferences.preload;
+      }
+      webPreferences.nodeIntegration = false;
+      webPreferences.nodeIntegrationInWorker = false;
+      webPreferences.nodeIntegrationInSubFrames = false;
+      webPreferences.contextIsolation = true;
+      webPreferences.sandbox = true;
+      webPreferences.webviewTag = false;
+    });
   });
   if (
     settings.version !== app.getVersion() &&
