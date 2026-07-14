@@ -26,6 +26,7 @@ export interface ExporterVm {
     | 'export'
     | 'import'
     | 'vanilla'
+    | 'device-sync'
     | (string & {});
   importHint: 'auto' | 'vanilla' | 'advanced' | 'slimcat' | undefined;
 
@@ -77,6 +78,15 @@ export interface ExporterVm {
   importSummary: string | undefined;
   importError: string | undefined;
   readonly canRunZipImport: boolean;
+
+  syncActive: boolean;
+  syncState: string;
+  syncQrDataUrl: string | undefined;
+  syncPayloadText: string | undefined;
+  syncAddressText: string | undefined;
+  syncPeerName: string | undefined;
+  syncSummary: string | undefined;
+  syncError: string | undefined;
 
   vanillaContext: VanillaContext | undefined;
   vanillaCharacters: ExporterCharacterEntry[];
