@@ -131,8 +131,11 @@
             v-model="settingsMode"
             :fullWidth="true"
             :tabs="[
-              l('settings.tab.global'),
-              l('settings.tab.character', currentCharacter || '')
+              { id: '0', label: l('settings.tab.global') },
+              {
+                id: '1',
+                label: l('settings.tab.character', currentCharacter || '')
+              }
             ]"
           ></tabs>
           <div class="warning" v-if="settingsMode === '0'">

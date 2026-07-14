@@ -1,81 +1,64 @@
 import { defineComponent, ref, computed, watch, PropType } from 'vue';
 import { CreateElement, VNode } from 'vue';
 
-interface TabListTabItem {
-  readonly type: 'tab';
-  readonly key: string;
-  readonly label: string;
-  readonly iconClass?: string;
-}
-
-interface TabListLabelItem {
-  readonly type: 'label';
-  readonly label: string;
-  readonly iconClass?: string;
-}
-
-interface TabListDividerItem {
-  readonly type: 'divider';
-}
-
-type TabListItem = TabListTabItem | TabListLabelItem | TabListDividerItem;
-
-interface TabInputTabItem {
+/**
+ * Tab item interface for regular tabs.
+ * @interface TabTabItem
+ * @property {string} [type] The type of the item, always 'tab' for this interface. Used internally.
+ * @property {string} id The unique identifier for the tab. The tab component uses this to track the opened tab, while its parent is expected to show content dynamically based on this value.
+ * @property {string} label The label text for the tab.
+ * @property {string} [iconClass] Optional CSS class for an icon to display in the tab. Mostly a FontAwesome one.
+ */
+interface TabTabItem {
   readonly type?: 'tab';
-  readonly id?: string;
-  readonly key?: string;
-  readonly value?: string;
+  readonly id: string;
   readonly label: string;
   readonly iconClass?: string;
 }
 
-interface TabInputLabelItem {
+/**
+ * Tab label item interface.
+ * @interface TabLabelItem
+ * @property {string} type The type of the item, always 'label'. Used internally.
+ * @property {string} label The label text for the tab.
+ * @property {string} [iconClass] Optional CSS class for an icon to display in the tab. Mostly a FontAwesome one.
+ */
+interface TabLabelItem {
   readonly type: 'label';
   readonly label: string;
   readonly iconClass?: string;
 }
 
-interface TabInputDividerItem {
+/**
+ * Tab divider item interface.
+ * @interface TabDividerItem
+ * @property {string} type The type of the item, always 'divider'. Used internally.
+ */
+interface TabDividerItem {
   readonly type: 'divider';
 }
+/**
+ * Union type for all possible tab items.
+ * @type {TabItem}
+ * @property {TabTabItem} Tab item.
+ * @property {TabLabelItem} Label item.
+ * @property {TabDividerItem} Divider item.
+ */
+type TabItem = TabTabItem | TabLabelItem | TabDividerItem;
 
-type TabInputItem = TabInputTabItem | TabInputLabelItem | TabInputDividerItem;
-
+/**
+ * Props interface for the Tabs component.
+ * @interface TabsProps
+ * @property {string} [value] The currently selected tab's id.
+ * @property {ReadonlyArray<TabItem>} [tabs] The array of tab items to display.
+ * @property {boolean} [fullWidth] Whether the tabs should take the full width of the container.
+ * @property {string} [tabClass] Optional CSS class for the tab container.
+ */
 interface TabsProps {
   value?: string;
-  tabs?: { readonly [key: string]: string } | Array<string | TabInputItem>;
+  tabs?: ReadonlyArray<TabItem>;
   fullWidth?: boolean;
   tabClass?: string;
-}
-
-// I'm so sorry for this. It's a (hopefully temporary!!!) placeholder.
-// We didn't want to update every instance of the tabs component to use the new format yet, so we need to support both the old and the new format for now.
-// This is a bit of a mess, but it should be fine as long as we remove the old format support soon™.
-// Trust me, it's on the checklist for the settings PR. (#640)
-
-function isDividerItem(item: unknown): item is TabInputDividerItem {
-  return (
-    typeof item === 'object' &&
-    item !== null &&
-    (item as { type?: string }).type === 'divider'
-  );
-}
-
-function isLabelItem(item: unknown): item is TabInputLabelItem {
-  return (
-    typeof item === 'object' &&
-    item !== null &&
-    (item as { type?: string }).type === 'label'
-  );
-}
-
-function isTabItem(item: unknown): item is TabInputTabItem {
-  return (
-    typeof item === 'object' &&
-    item !== null &&
-    (!('type' in (item as object)) ||
-      (item as { type?: string }).type === 'tab')
-  );
 }
 
 const Tabs = defineComponent({
@@ -86,10 +69,8 @@ const Tabs = defineComponent({
       default: undefined
     },
     tabs: {
-      type: [Object, Array] as PropType<
-        { readonly [key: string]: string } | Array<string | TabInputItem>
-      >,
-      default: () => ({})
+      type: Array as PropType<ReadonlyArray<TabItem>>,
+      default: () => []
     },
     fullWidth: {
       type: Boolean,
@@ -104,84 +85,31 @@ const Tabs = defineComponent({
   setup(props: TabsProps, { emit }) {
     const internalValue = ref<string | undefined>(props.value);
 
-    const items = computed<TabListItem[]>(() => {
-      const tabs = props.tabs || [];
+    const items = computed<ReadonlyArray<TabItem>>(() => props.tabs || []);
 
-      if (Array.isArray(tabs)) {
-        return tabs.reduce<TabListItem[]>((result, tab, index) => {
-          if (typeof tab === 'string') {
-            result.push({ type: 'tab', key: String(index), label: tab });
-            return result;
-          }
-
-          if (isDividerItem(tab)) {
-            result.push({ type: 'divider' });
-            return result;
-          }
-
-          if (isLabelItem(tab)) {
-            result.push({
-              type: 'label',
-              label: tab.label,
-              iconClass: tab.iconClass
-            });
-            return result;
-          }
-
-          if (isTabItem(tab)) {
-            const key = tab.id ?? tab.key ?? tab.value ?? String(index);
-            result.push({
-              type: 'tab',
-              key,
-              label: tab.label,
-              iconClass: tab.iconClass
-            });
-          }
-
-          return result;
-        }, []);
-      }
-
-      return Object.keys(tabs).map(key => ({
-        type: 'tab' as const,
-        key,
-        label: tabs[key]!
-      }));
-    });
-
-    const tabsByKey = computed<{ [key: string]: TabListTabItem }>(() => {
-      const result: { [key: string]: TabListTabItem } = {};
-      items.value.forEach(item => {
-        if (item.type === 'tab') {
-          result[item.key] = item;
-        }
-      });
-      return result;
-    });
-
-    const keys = computed(() =>
+    const tabIds = computed(() =>
       items.value.reduce<string[]>((result, item) => {
-        if (item.type === 'tab') {
-          result.push(item.key);
+        if (item.type !== 'label' && item.type !== 'divider') {
+          result.push(item.id);
         }
         return result;
       }, [])
     );
 
-    const isTabActive = (key: string) => internalValue.value === key;
+    const isTabActive = (id: string) => internalValue.value === id;
 
-    const getFirstTabKey = () => keys.value[0];
+    const getFirstTabId = () => tabIds.value[0];
 
     const shouldSelectFirstTab = () =>
       internalValue.value === undefined ||
-      tabsByKey.value[internalValue.value] === undefined;
+      !tabIds.value.includes(internalValue.value);
 
     const selectFirstTabIfNeeded = () => {
       if (shouldSelectFirstTab()) {
-        const firstKey = getFirstTabKey();
-        if (firstKey) {
-          internalValue.value = firstKey;
-          emit('input', firstKey);
+        const firstId = getFirstTabId();
+        if (firstId) {
+          internalValue.value = firstId;
+          emit('input', firstId);
         }
       }
     };
@@ -216,7 +144,7 @@ const Tabs = defineComponent({
     };
   },
   render(createElement: CreateElement): VNode {
-    const renderItem = (item: TabListItem, index: number) => {
+    const renderItem = (item: TabItem, index: number) => {
       if (item.type === 'divider') {
         return createElement('li', {
           key: `divider-${index}`,
@@ -265,18 +193,18 @@ const Tabs = defineComponent({
 
       return createElement(
         'li',
-        { key: `tab-${item.key}`, staticClass: 'nav-item' },
+        { key: `tab-${item.id}`, staticClass: 'nav-item' },
         [
           createElement(
             'a',
             {
               attrs: { href: '#' },
               staticClass: 'nav-link',
-              class: { active: this.isTabActive(item.key) },
+              class: { active: this.isTabActive(item.id) },
               on: {
                 click: (event: MouseEvent) => {
                   event.preventDefault();
-                  this.handleTabClick(item.key);
+                  this.handleTabClick(item.id);
                 }
               }
             },
@@ -293,7 +221,7 @@ const Tabs = defineComponent({
       },
       [
         createElement('ul', { staticClass: `nav ${this.tabClass}` }, [
-          this.items.map((item: TabListItem, index: number) =>
+          this.items.map((item: TabItem, index: number) =>
             renderItem(item, index)
           ),
           ...(this.fullWidth

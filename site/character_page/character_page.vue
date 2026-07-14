@@ -330,37 +330,39 @@
       };
     },
     computed: {
-      tabLabels(): { [key: string]: string } {
-        const labels: { [key: string]: string } = {};
+      tabLabels(): Array<{ id: string; label: string }> {
+        const tabs: Array<{ id: string; label: string }> = [
+          { id: '0', label: this.l('profile.tab.overview') },
+          { id: '1', label: this.l('profile.tab.info') }
+        ];
 
-        // Overview tab - key '0'
-        labels['0'] = this.l('profile.tab.overview');
-
-        // Info tab - key '1'
-        labels['1'] = this.l('profile.tab.info');
-
-        // Images tab - key '2'
         const imageCount = (this as any).character?.character?.image_count || 0;
-        labels['2'] = this.l('profile.tab.images') + ` (${imageCount})`;
+        tabs.push({
+          id: '2',
+          label: `${this.l('profile.tab.images')} (${imageCount})`
+        });
 
-        // Guestbook tab - key '3'
         if ((this as any).character?.settings?.guestbook) {
           const guestbookCount =
             this.guestbook !== null ? ` (${this.guestbook.posts.length})` : '';
-          labels['3'] = this.l('profile.tab.guestbook') + guestbookCount;
+          tabs.push({
+            id: '3',
+            label: `${this.l('profile.tab.guestbook')}${guestbookCount}`
+          });
         }
 
-        // Friends tab - key '4'
         if (this.character?.is_self || this.character?.settings?.show_friends) {
           const friendsCount =
             this.friends !== null ? ` (${this.friends.length})` : '';
-          labels['4'] = this.l('profile.tab.friends') + friendsCount;
+          tabs.push({
+            id: '4',
+            label: `${this.l('profile.tab.friends')}${friendsCount}`
+          });
         }
 
-        // Recon tab - key '5'
-        labels['5'] = this.l('profile.tab.recon');
+        tabs.push({ id: '5', label: this.l('profile.tab.recon') });
 
-        return labels;
+        return tabs;
       }
     },
     watch: {
