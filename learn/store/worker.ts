@@ -7,7 +7,8 @@ import { PermanentIndexedStore, ProfileRecord } from './types';
 import { CharacterImage, SimpleCharacter } from '../../interfaces';
 
 import { WorkerClient } from './worker/client';
-import log from 'electron-log';
+import { createLogger } from '../../logger';
+const log = createLogger('store-worker');
 
 export class WorkerStore implements PermanentIndexedStore {
   // @ts-ignore

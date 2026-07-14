@@ -23,8 +23,9 @@ import { PermanentIndexedStore } from './store/types';
 import { CharacterImage, SimpleCharacter } from '../interfaces';
 import { Scoring } from './matcher-types';
 import { matchesSmartFilters } from './filter/smart-filter';
-import * as remote from '@electron/remote';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { ipc } from '../platform/ipc';
+import { createLogger } from '../logger';
+const log = createLogger('profile-cache');
 
 export interface MetaRecord {
   images: CharacterImage[] | null;
@@ -413,16 +414,8 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
         log.info('portrait.hq.invalid.domain', { name, url: avatarUrl });
       } else {
         if (c.character.name === core.characters.ownCharacter.name) {
-          const parent =
-            remote.getCurrentWindow() ||
-            remote.BrowserWindow.getAllWindows()[0];
-          if (parent) {
-            parent.webContents.send(
-              'update-avatar-url',
-              c.character.name,
-              avatarUrl
-            );
-          }
+          // ~ Routed by the main process to this tab's host window.
+          ipc.send('tab-avatar-url', c.character.name, avatarUrl);
         }
 
         log.info('portrait.hq.url', { name: c.character.name, url: avatarUrl });
@@ -438,16 +431,7 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
         });
       } else {
         if (c.character.name === core.characters.ownCharacter.name) {
-          const parent =
-            remote.getCurrentWindow() ||
-            remote.BrowserWindow.getAllWindows()[0];
-          if (parent) {
-            parent.webContents.send(
-              'update-character-color',
-              c.character.name,
-              characterColor
-            );
-          }
+          ipc.send('tab-character-color', c.character.name, characterColor);
         }
 
         log.info('character.custom.color.applied', {

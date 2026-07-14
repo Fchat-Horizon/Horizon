@@ -183,7 +183,8 @@
 </template>
 
 <script lang="ts">
-  import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+  import { createLogger } from '../logger';
+  const log = createLogger('chat-view');
   import Vue from 'vue';
   import { getKey } from './common';
   import Modal from '../components/Modal.vue';

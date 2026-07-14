@@ -217,7 +217,7 @@ export default Vue.extend({
         unsafeText: isModern ? messageAdjustment : message.text,
         afterInsert: isAd
           ? (elm: HTMLElement) => {
-              setImmediate(() => {
+              setTimeout(() => {
                 if (isModern) {
                   // Pushes elm up three times rather than one with modern to make it parent to the top level of a message.
                   elm = elm.parentElement!.parentElement!.parentElement!;

@@ -205,7 +205,7 @@ export class StandardBBCodeParser extends CoreBBCodeParser {
           else {
             clearTimeout(timeout);
             body.style.transition = 'initial';
-            setImmediate(() => {
+            setTimeout(() => {
               body.style.transition = '';
               body.style.height = '0';
             });

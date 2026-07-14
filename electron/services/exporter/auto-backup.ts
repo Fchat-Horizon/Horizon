@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import * as electron from 'electron';
-import log from 'electron-log';
+import { createLogger } from '../../../logger';
+const log = createLogger('auto-backup');
 import { runExportCli } from './backup-export-cli';
 import type { GeneralSettings } from '../../common';
 

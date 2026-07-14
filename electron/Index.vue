@@ -311,13 +311,9 @@
 
 <script lang="ts">
   import Axios from 'axios';
-  import * as electron from 'electron';
-  import * as remote from '@electron/remote';
-  import settings from 'electron-settings';
-  import log from 'electron-log'; //tslint:disable-line:match-default-export-name
-  import * as fs from 'fs';
-  import * as path from 'path';
-  import * as qs from 'querystring';
+  import { ipcRenderer, webFrame } from './host-bridge';
+  import { IpcKeyValueStore } from './ipc-store';
+  import { createLogger } from '../logger';
   import Vue from 'vue';
   import Chat from '../chat/Chat.vue';
   import { Settings } from '../chat/common';
@@ -358,24 +354,6 @@
   //   }
   // });
 
-  const webContents = remote.getCurrentWebContents();
-  const parent = remote.getCurrentWindow().webContents;
-
-  // Allow requests to imgur.com
-  const session = remote.session;
-
-  /* tslint:disable:no-unsafe-any no-any no-unnecessary-type-assertion */
-  session!.defaultSession!.webRequest!.onBeforeSendHeaders(
-    {
-      urls: ['*://api.imgur.com/*', '*://i.imgur.com/*']
-    },
-    (details: any, callback: any) => {
-      details.requestHeaders['Origin'] = null;
-      details.headers['Origin'] = null;
-
-      callback({ requestHeaders: details.requestHeaders });
-    }
-  );
   // log.info('init.chat.keytar.load.start');
   //
   /* tslint:disable: no-any no-unsafe-any */ //because this is hacky
@@ -392,8 +370,12 @@
   //   }
   // >('keytar/build/Release/keytar.node');
 
-  settings.configure({ electron: remote as any });
-  const keyStore = new SecureStore('fchat-rising-accounts', remote, settings);
+  const log = createLogger('chat-window');
+
+  const keyStore = new SecureStore(
+    'fchat-rising-accounts',
+    new IpcKeyValueStore()
+  );
 
   // const keyStore = import('keytar');
   //
@@ -429,7 +411,7 @@
         defaultCharacter: undefined as number | undefined,
         l: l,
         settings: undefined as any as GeneralSettings,
-        osIsDark: remote.nativeTheme.shouldUseDarkColors as boolean,
+        osIsDark: ipcRenderer.sendSync('native-theme-dark-sync') as boolean,
         hasCompletedUpgrades: undefined as any as boolean,
         importProgress: 0,
         profileName: '',
@@ -442,7 +424,9 @@
         profileNameHistory: [] as string[],
         profilePointer: 0,
         isDevMode: (process.env.NODE_ENV !== 'production') as boolean,
-        themeWatchHandle: undefined as fs.FSWatcher | undefined,
+        themeWatchListener: undefined as
+          | ((e: Electron.IpcRendererEvent, filename: string) => void)
+          | undefined,
         themeWatchTimer: undefined as NodeJS.Timeout | undefined,
         toasts: toasts,
         dismissToast: dismissToast,
@@ -517,10 +501,7 @@
           });
         }
       };
-      electron.ipcRenderer.on(
-        'auto-backup-status',
-        this.autoBackupStatusListener
-      );
+      ipcRenderer.on('auto-backup-status', this.autoBackupStatusListener);
 
       await this.startAndUpgradeCache();
 
@@ -535,9 +516,9 @@
       log.debug('init.chat.keystore.get.done');
 
       Vue.set(core.state, 'generalSettings', this.settings);
-      webContents.setZoomLevel(this.settings.zoomLevel);
+      webFrame.setZoomLevel(this.settings.zoomLevel);
 
-      electron.ipcRenderer.on(
+      ipcRenderer.on(
         'settings',
         (_e: Electron.IpcRendererEvent, settings: GeneralSettings) => {
           log.debug('settings.update.index');
@@ -568,7 +549,7 @@
         }
       );
 
-      electron.ipcRenderer.on(
+      ipcRenderer.on(
         'open-profile',
         (_e: Electron.IpcRendererEvent, name: string) => {
           const profileViewer = this.$refs['profileViewer'] as InstanceType<
@@ -581,57 +562,57 @@
         }
       );
 
-      electron.ipcRenderer.on(
-        'reopen-profile',
-        (_e: Electron.IpcRendererEvent) => {
-          if (
-            this.profileNameHistory.length > 0 &&
-            this.profilePointer < this.profileNameHistory.length &&
-            this.profilePointer >= 0
-          ) {
-            const name = this.profileNameHistory[this.profilePointer];
-            const profileViewer = this.$refs['profileViewer'] as InstanceType<
-              typeof Modal
-            >;
+      ipcRenderer.on('reopen-profile', (_e: Electron.IpcRendererEvent) => {
+        if (
+          this.profileNameHistory.length > 0 &&
+          this.profilePointer < this.profileNameHistory.length &&
+          this.profilePointer >= 0
+        ) {
+          const name = this.profileNameHistory[this.profilePointer];
+          const profileViewer = this.$refs['profileViewer'] as InstanceType<
+            typeof Modal
+          >;
 
-            if (this.profileName === name && profileViewer.isShown) {
-              profileViewer.hide();
-              return;
-            }
-
-            this.openProfile(name);
-            profileViewer.show();
+          if (this.profileName === name && profileViewer.isShown) {
+            profileViewer.hide();
+            return;
           }
-        }
-      );
 
-      electron.ipcRenderer.on('fix-logs', async () => {
+          this.openProfile(name);
+          profileViewer.show();
+        }
+      });
+
+      ipcRenderer.on('fix-logs', async () => {
         this.fixCharacters = await core.settingsStore.getAvailableCharacters();
         this.fixCharacter = this.fixCharacters[0];
         (this.$refs['fixLogsModal'] as InstanceType<typeof Modal>).show();
       });
 
-      electron.ipcRenderer.on('ui-test', () => {
+      ipcRenderer.on('ui-test', () => {
         this.showUiTest();
       });
 
-      electron.ipcRenderer.on('update-zoom', (_e, zoomLevel) => {
-        webContents.setZoomLevel(zoomLevel);
+      ipcRenderer.on('update-zoom', (_e, zoomLevel) => {
+        webFrame.setZoomLevel(zoomLevel);
         // log.info('INDEXVUE ZOOM UPDATE', zoomLevel);
       });
 
-      electron.ipcRenderer.on('active-tab', () => {
+      ipcRenderer.on('active-tab', () => {
         core.cache.setTabActive(true);
-        webContents.setZoomLevel(this.settings.zoomLevel);
+        webFrame.setZoomLevel(this.settings.zoomLevel);
       });
 
-      electron.ipcRenderer.on('inactive-tab', () => {
+      ipcRenderer.on('inactive-tab', () => {
         core.cache.setTabActive(false);
       });
 
-      remote.nativeTheme.on('updated', () => {
-        this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
-      });
+      ipcRenderer.on(
+        'native-theme-updated',
+        (_e: Electron.IpcRendererEvent, isDark: boolean) => {
+          this.osIsDark = isDark;
+        }
+      );
 
       log.debug('init.chat.listeners.done');
 
@@ -659,7 +640,7 @@
     beforeDestroy(): void {
       this.stopThemeWatch();
       if (this.autoBackupStatusListener)
-        electron.ipcRenderer.removeListener(
+        ipcRenderer.removeListener(
           'auto-backup-status',
           this.autoBackupStatusListener
         );
@@ -678,8 +659,8 @@
 
         clearTimeout(timer);
 
-        parent.send('rising-upgrade-complete');
-        electron.ipcRenderer.send('rising-upgrade-complete');
+        // & Main rebroadcasts this to every webContents, ours included.
+        ipcRenderer.send('rising-upgrade-complete');
 
         this.hasCompletedUpgrades = true;
       },
@@ -690,9 +671,7 @@
         // set proxy inside from the advanced option
         if (!!this.settings.proxy) {
           try {
-            // Get the current BrowserWindow's session
-            const currentWindow = remote.getCurrentWindow();
-            await currentWindow.webContents.session.setProxy({
+            await ipcRenderer.invoke('session-set-proxy', {
               proxyRules: this.settings.proxy, // Update dynamically if needed,
               proxyBypassRules: 'localhost,127.0.0.1',
               mode: 'fixed_servers'
@@ -705,8 +684,7 @@
         } else {
           // deactivate the proxy
           try {
-            const currentWindow = remote.getCurrentWindow();
-            await currentWindow.webContents.session.setProxy({
+            await ipcRenderer.invoke('session-set-proxy', {
               mode: 'direct'
             });
           } catch (_) {
@@ -731,13 +709,13 @@
           >(
             await Axios.post(
               'https://www.f-list.net/json/getApiTicket.php',
-              qs.stringify({
+              new URLSearchParams({
                 account: this.settings.account,
                 password: this.password,
-                no_friends: true,
-                no_bookmarks: true,
-                new_character_list: true
-              })
+                no_friends: 'true',
+                no_bookmarks: 'true',
+                new_character_list: 'true'
+              }).toString()
             )
           ).data;
           if (data.error !== '') {
@@ -745,7 +723,7 @@
             return;
           }
           if (this.saveLogin) {
-            electron.ipcRenderer.send(
+            ipcRenderer.send(
               'save-login',
               this.settings.account,
               this.settings.host,
@@ -761,16 +739,13 @@
 
           core.connection.onEvent('connecting', async () => {
             if (
-              !electron.ipcRenderer.sendSync(
-                'connect',
-                core.connection.character
-              ) &&
+              !ipcRenderer.sendSync('connect', core.connection.character) &&
               process.env.NODE_ENV === 'production'
             ) {
               core.notifications.alert(l('login.alreadyLoggedIn'));
               return core.connection.close();
             }
-            parent.send('connect', webContents.id, core.connection.character);
+            ipcRenderer.send('tab-connected', core.connection.character);
             this.character = core.connection.character;
             if (
               (await core.settingsStore.get('settings')) === undefined &&
@@ -791,7 +766,7 @@
           core.connection.onEvent('connected', () => {
             core.watch(
               () => core.conversations.hasNew,
-              newValue => parent.send('has-new', webContents.id, newValue)
+              newValue => ipcRenderer.send('tab-has-new', newValue)
             );
 
             EventBus.$on('word-definition', (data: any) => {
@@ -806,9 +781,9 @@
           });
           core.connection.onEvent('closed', () => {
             if (this.character === undefined) return;
-            electron.ipcRenderer.send('disconnect', this.character);
+            ipcRenderer.send('disconnect', this.character);
             this.character = undefined;
-            parent.send('disconnect', webContents.id);
+            ipcRenderer.send('tab-disconnected');
           });
           core.connection.setCredentials(this.settings.account, this.password);
           this.characters = Object.keys(data.characters)
@@ -823,17 +798,17 @@
           this.loggingIn = false;
         }
       },
-      fixLogs(): void {
-        if (!electron.ipcRenderer.sendSync('connect', this.fixCharacter))
+      async fixLogs(): Promise<void> {
+        if (!ipcRenderer.sendSync('connect', this.fixCharacter))
           return core.notifications.alert(l('login.alreadyLoggedIn'));
         try {
-          fixLogs(this.fixCharacter);
+          await fixLogs(this.fixCharacter);
           core.notifications.alert(l('fixLogs.success'));
         } catch (e) {
           core.notifications.alert(l('fixLogs.error'));
           throw e;
         } finally {
-          electron.ipcRenderer.send('disconnect', this.fixCharacter);
+          ipcRenderer.send('disconnect', this.fixCharacter);
         }
       },
       resetHost(): void {
@@ -851,7 +826,7 @@
 
         if (this.settings) this.settings.horizonAutoLogin = this.autoLogin;
         // send updated general settings to main process
-        electron.ipcRenderer.send('general-settings-update', this.settings);
+        ipcRenderer.send('general-settings-update', this.settings);
       },
       onMouseOver(e: MouseEvent): void {
         const preview = <HTMLDivElement>this.$refs.linkPreview;
@@ -874,7 +849,7 @@
         preview.style.display = 'none';
       },
       async openProfileInBrowser(): Promise<void> {
-        electron.ipcRenderer.send(
+        ipcRenderer.send(
           'open-url-externally',
           `https://www.f-list.net/c/${this.profileName}`
         );
@@ -988,25 +963,17 @@
         );
       },
       readThemeCss(themeName: string, allowFallback = true): string {
-        try {
-          return fs
-            .readFileSync(
-              path.join(__dirname, `themes/${themeName}.css`),
-              'utf8'
-            )
-            .toString();
-        } catch (e) {
-          const error = e as Error & { code?: string };
-          if (
-            error.code === 'ENOENT' &&
-            allowFallback &&
-            this.settings.theme !== 'default'
-          ) {
+        const css = <string | null>(
+          ipcRenderer.sendSync('themes-read-sync', themeName)
+        );
+        if (css === null) {
+          if (allowFallback && this.settings.theme !== 'default') {
             this.settings.theme = 'default';
             return this.readThemeCss(this.getSyncedTheme(), false);
           }
-          throw e;
+          throw new Error(`Theme not found: ${themeName}`);
         }
+        return css;
       },
       getSyncedTheme() {
         if (!this.settings.themeSync) return this.settings.theme;
@@ -1029,28 +996,12 @@
         if (process.env.NODE_ENV === 'production') return;
         this.stopThemeWatch();
 
+        // ~ The themes directory is watched by the main process in dev mode.
         const themeFile = `${this.getActiveThemeName()}.css`;
-        const themesDir = path.join(__dirname, 'themes');
-        try {
-          this.themeWatchHandle = fs.watch(
-            themesDir,
-            { persistent: false },
-            (_event, filename) => {
-              if (!filename) {
-                this.queueThemeReload();
-                return;
-              }
-              const changed = path.basename(filename.toString());
-              if (changed === themeFile) this.queueThemeReload();
-            }
-          );
-          this.themeWatchHandle.on('error', err => {
-            log.debug('theme.hotReload.watch.error', err);
-            this.stopThemeWatch();
-          });
-        } catch (err) {
-          log.debug('theme.hotReload.watch.fail', err);
-        }
+        this.themeWatchListener = (_e, filename) => {
+          if (!filename || filename === themeFile) this.queueThemeReload();
+        };
+        ipcRenderer.on('theme-files-changed', this.themeWatchListener);
       },
       queueThemeReload(): void {
         if (this.themeWatchTimer) clearTimeout(this.themeWatchTimer);
@@ -1068,9 +1019,12 @@
         }, 60);
       },
       stopThemeWatch(): void {
-        if (this.themeWatchHandle) {
-          this.themeWatchHandle.close();
-          this.themeWatchHandle = undefined;
+        if (this.themeWatchListener) {
+          ipcRenderer.removeListener(
+            'theme-files-changed',
+            this.themeWatchListener
+          );
+          this.themeWatchListener = undefined;
         }
         if (this.themeWatchTimer) {
           clearTimeout(this.themeWatchTimer);
@@ -1099,7 +1053,7 @@
         );
       },
       async openWordDefinitionInBrowser(): Promise<void> {
-        electron.ipcRenderer.send(
+        ipcRenderer.send(
           'open-url-externally',
           (this.$refs.wordDefinitionLookup as any).getWebUrl()
         );
@@ -1123,7 +1077,7 @@
         }
       },
       galleryTypeUpdated(profileGalleryType: ProfileViewerGalleryType): void {
-        electron.ipcRenderer.send('profile-gallery-type', profileGalleryType);
+        ipcRenderer.send('profile-gallery-type', profileGalleryType);
       }
     }
   });

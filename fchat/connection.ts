@@ -2,7 +2,8 @@ import Axios, { AxiosError, AxiosResponse } from 'axios';
 import * as qs from 'qs';
 import { Connection as Interfaces, WebSocketConnection } from './interfaces';
 import ReadyState = WebSocketConnection.ReadyState;
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '../logger';
+const log = createLogger('connection');
 import core from '../chat/core';
 import throat from 'throat';
 

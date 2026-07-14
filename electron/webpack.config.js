@@ -126,7 +126,13 @@ const mainConfig = {
       filename: '[name].js'
     },
     context: __dirname,
-    target: 'electron-renderer',
+    /*
+    ! Renderers are context-isolated and sandboxed (no Node), so they build
+    ! as plain web bundles. Host access goes through the preload context
+    ! bridge (preload.ts), injected into shared code via platform/ipc.ts and
+    ! wrapped for electron's own renderers by host-bridge.ts.
+    */
+    target: 'web',
     module: {
       rules: [
         {
@@ -275,8 +281,10 @@ const mainConfig = {
       })
     ],
     resolve: {
-      extensions: ['.ts', '.js', '.vue', '.css']
-      // alias: {qs: 'querystring'}
+      extensions: ['.ts', '.js', '.vue', '.css'],
+      alias: {
+        path: require.resolve('path-browserify')
+      }
     },
     experiments: { cacheUnaffected: true },
     optimization: {
@@ -285,6 +293,26 @@ const mainConfig = {
       chunkIds: 'named'
     }
   };
+
+/*
+ * The preload runs sandboxed inside every renderer; everything it needs
+ * (including electron-log/preload) must be bundled in, with only the
+ * `electron` module left external.
+ */
+const preloadConfig = _.assign(_.cloneDeep(mainConfig), {
+  entry: [path.join(__dirname, 'preload.ts')],
+  output: {
+    path: __dirname + '/app',
+    filename: 'preload.js'
+  },
+  target: 'electron-preload',
+  plugins: [
+    new DefinePlugin({
+      'process.env.APP_VERSION': JSON.stringify(APP_VERSION),
+      'process.env.APP_COMMIT': JSON.stringify(APP_COMMIT)
+    })
+  ]
+});
 
 const storeWorkerEndpointConfig = _.assign(_.cloneDeep(mainConfig), {
   entry: [
@@ -303,10 +331,14 @@ const storeWorkerEndpointConfig = _.assign(_.cloneDeep(mainConfig), {
     globalObject: 'this'
   },
 
-  target: 'electron-renderer',
+  target: 'webworker',
 
   node: {
     global: true
+  },
+
+  resolve: {
+    extensions: ['.ts', '.js']
   },
 
   module: {
@@ -378,7 +410,12 @@ module.exports = function (mode) {
     ignored: ['**/node_modules/**', '**/.git/**'],
     aggregateTimeout: 300
   };
-  for (const cfg of [mainConfig, rendererConfig, storeWorkerEndpointConfig]) {
+  for (const cfg of [
+    mainConfig,
+    preloadConfig,
+    rendererConfig,
+    storeWorkerEndpointConfig
+  ]) {
     Object.assign(cfg, sharedConfig);
     cfg.watchOptions = watchOptions;
   }
@@ -391,6 +428,14 @@ module.exports = function (mode) {
   mainConfig.cache = {
     type: 'filesystem',
     name: `main-${mode}`,
+    version: cacheVersion,
+    buildDependencies: {
+      config: [...sharedBuildDeps, path.join(__dirname, 'tsconfig-main.json')]
+    }
+  };
+  preloadConfig.cache = {
+    type: 'filesystem',
+    name: `preload-${mode}`,
     version: cacheVersion,
     buildDependencies: {
       config: [...sharedBuildDeps, path.join(__dirname, 'tsconfig-main.json')]
@@ -423,11 +468,13 @@ module.exports = function (mode) {
     process.env.NODE_ENV = 'production';
 
     mainConfig.devtool = false;
+    preloadConfig.devtool = false;
     rendererConfig.devtool = false;
     storeWorkerEndpointConfig.devtool = false;
 
     const esbuildMinifier = new EsbuildPlugin({ target: 'es2022' });
     mainConfig.optimization.minimizer = [esbuildMinifier];
+    preloadConfig.optimization.minimizer = [esbuildMinifier];
     storeWorkerEndpointConfig.optimization.minimizer = [esbuildMinifier];
     rendererConfig.optimization.minimizer = [
       esbuildMinifier,
@@ -435,13 +482,15 @@ module.exports = function (mode) {
     ];
   } else {
     mainConfig.devtool = 'eval-source-map';
+    preloadConfig.devtool = 'eval-source-map';
     rendererConfig.devtool = 'eval-source-map';
     storeWorkerEndpointConfig.devtool = 'eval-source-map';
 
     mainConfig.output.pathinfo = false;
+    preloadConfig.output.pathinfo = false;
     rendererConfig.output.pathinfo = false;
     storeWorkerEndpointConfig.output.pathinfo = false;
   }
 
-  return [storeWorkerEndpointConfig, mainConfig, rendererConfig];
+  return [storeWorkerEndpointConfig, mainConfig, preloadConfig, rendererConfig];
 };

@@ -12,7 +12,8 @@
 import throat from 'throat';
 import * as _ from 'lodash';
 
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '../../logger';
+const log = createLogger('ad-manager');
 
 import core from '../core';
 import { Conversation } from '../interfaces';

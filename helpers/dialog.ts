@@ -1,10 +1,10 @@
-import * as remote from '@electron/remote';
+import { ipc } from '../platform/ipc';
 
 import l from '../chat/localize';
 
 export class Dialog {
   static confirmDialog(message: string, defaultNo: boolean = false): boolean {
-    const result = remote.dialog.showMessageBoxSync({
+    const result = <number>ipc.sendSync('dialog-message-box-sync', {
       message,
       title: l('title'),
       type: 'question',

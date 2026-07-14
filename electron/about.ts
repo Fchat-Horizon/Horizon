@@ -1,14 +1,23 @@
-import * as qs from 'querystring';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import electronLog from 'electron-log/renderer';
+import {
+  installElectronLogging,
+  applySharedLogLevel,
+  applyHumanReadableLogs
+} from './logging';
+import { installRendererPlatform } from './platform-host';
+import { createLogger } from '../logger';
+const log = createLogger('about');
 
 import { GeneralSettings } from './common';
 import About from './About.vue';
 import Vue from 'vue';
 
+installElectronLogging(electronLog);
+installRendererPlatform();
 log.info('init.about');
 
 const params = <{ [key: string]: string | undefined }>(
-  qs.parse(window.location.search.substr(1))
+  Object.fromEntries(new URLSearchParams(window.location.search.substr(1)))
 );
 const settings = <GeneralSettings>JSON.parse(params['settings'] || '{}');
 const appCommit = params['commit'] || process.env.APP_COMMIT || 'unknown';
@@ -16,9 +25,8 @@ const appVersion = params['version'] || process.env.APP_VERSION || 'unknown';
 
 const logLevel = process.env.NODE_ENV === 'production' ? 'info' : 'silly';
 
-log.transports.file.level = settings.risingSystemLogLevel || logLevel;
-log.transports.console.level = settings.risingSystemLogLevel || logLevel;
-log.transports.file.maxSize = 5 * 1024 * 1024;
+applySharedLogLevel(settings.risingSystemLogLevel || logLevel);
+applyHumanReadableLogs(!!settings.horizonHumanReadableLogs);
 
 log.info('init.about.vue', Vue.version);
 

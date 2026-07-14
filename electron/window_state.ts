@@ -1,5 +1,6 @@
 import { app, screen } from 'electron';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '../logger';
+const log = createLogger('window-state');
 import * as fs from 'fs';
 import * as path from 'path';
 

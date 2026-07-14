@@ -244,7 +244,8 @@
 
   import anyAscii from 'any-ascii';
   import Vue from 'vue';
-  import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+  import { createLogger } from '../../logger';
+  const log = createLogger('character-page');
 
   import { StandardBBCodeParser } from '../../bbcode/standard';
   import { BBCodeView } from '../../bbcode/view';

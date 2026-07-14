@@ -22,8 +22,9 @@ import {
 import MessageType = Interfaces.Message.Type;
 import { EventBus } from './preview/event-bus';
 import throat from 'throat';
-import Bluebird from 'bluebird';
-import log from 'electron-log';
+import { delay } from '../helpers/async';
+import { createLogger } from '../logger';
+const log = createLogger('conversations');
 import isChannel = Interfaces.isChannel;
 
 /**
@@ -135,7 +136,7 @@ abstract class Conversation implements Interfaces.Conversation {
   }
 
   clearText(): void {
-    setImmediate(() => {
+    setTimeout(() => {
       this.enteredText = '';
       core.cache.conversationDraftCache.deregister(this.name);
     });
@@ -266,7 +267,7 @@ abstract class Conversation implements Interfaces.Conversation {
     const lastPostDelta = Date.now() - core.cache.getLastPost().getTime();
 
     if (lastPostDelta < Conversation.POST_DELAY && lastPostDelta > 0) {
-      await Bluebird.delay(Conversation.POST_DELAY - lastPostDelta);
+      await delay(Conversation.POST_DELAY - lastPostDelta);
     }
   }
 

@@ -11,7 +11,8 @@ import {
 } from '../matcher-types';
 import { SmartFilterSelection, SmartFilterSettings } from './types';
 import { Character } from '../../interfaces';
-import log from 'electron-log';
+import { createLogger } from '../../logger';
+const log = createLogger('smart-filter');
 import core from '../../chat/core';
 
 export interface SmartFilterOpts {

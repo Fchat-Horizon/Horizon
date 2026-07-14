@@ -1148,8 +1148,7 @@
 </template>
 
 <script lang="ts">
-  import * as fs from 'fs';
-  import * as path from 'path';
+  import { ipc } from '../platform/ipc';
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import { Editor } from './bbcode';
@@ -1350,10 +1349,7 @@
         this.horizonHighlightUsers = settings.horizonHighlightUsers.join(',');
         this.risingFilter = settings.risingFilter;
 
-        this.risingAvailableThemes = fs
-          .readdirSync(path.join(__dirname, 'themes'))
-          .filter(x => x.substr(-4) === '.css')
-          .map(x => x.slice(0, -4));
+        this.risingAvailableThemes = <string[]>ipc.sendSync('themes-list-sync');
         this.risingCharacterTheme = settings.risingCharacterTheme;
         this.horizonPersistentMemberFilters =
           typeof (settings as any).horizonPersistentMemberFilters === 'boolean'

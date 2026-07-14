@@ -232,7 +232,8 @@
 </template>
 
 <script setup lang="ts">
-  import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+  import { createLogger } from '../../logger';
+  const log = createLogger('character-images');
   import { onUnmounted, ref, watch } from 'vue';
   import { CharacterImage } from '../../interfaces';
   import * as Utils from '../utils';

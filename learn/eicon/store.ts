@@ -1,7 +1,6 @@
-import * as remote from '@electron/remote';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
-import * as fs from 'fs';
-import * as path from 'path';
+import { ipc } from '../../platform/ipc';
+import { createLogger } from '../../logger';
+const log = createLogger('eicon-store');
 import { FisherYatesShuffle } from '../../chat/common';
 
 import { EIconUpdater } from './updater';
@@ -101,26 +100,19 @@ export class EIconStore {
     if (this.lookup.length > 0 && this.asOfTimestamp > 0) {
       log.info('eicons.save', {
         records: this.lookup.length,
-        asOfTimestamp: this.asOfTimestamp,
-        file: this.getStoreFilename()
+        asOfTimestamp: this.asOfTimestamp
       });
 
-      try {
-        fs.writeFileSync(
-          this.getStoreFilename(),
-          JSON.stringify({
-            version: CURRENT_STORE_VERSION,
-            asOfTimestamp: this.asOfTimestamp,
-            records: this.lookup
-          })
-        );
-      } catch (e) {
-        // This is not a showstopper.
-        log.error('eicons.save.failure', { e });
-      }
+      // & Written by the main process; failures are logged there.
+      ipc.send(
+        'eicons-write',
+        JSON.stringify({
+          version: CURRENT_STORE_VERSION,
+          asOfTimestamp: this.asOfTimestamp,
+          records: this.lookup
+        })
+      );
     }
-
-    remote.ipcMain.emit('eicons.reload', { asOfTimestamp: this.asOfTimestamp });
   }
 
   /**
@@ -135,11 +127,12 @@ export class EIconStore {
    * "array of eicon names".
    */
   private async load(): Promise<void> {
-    const fn = this.getStoreFilename();
-    log.info('eicons.load', { fn });
+    log.info('eicons.load');
 
     try {
-      const data = JSON.parse(fs.readFileSync(fn, 'utf-8'));
+      const raw = <string | null>await ipc.invoke('eicons-read');
+      if (raw === null) throw new Error('No local eicon store');
+      const data = JSON.parse(raw);
 
       /** Handling old formats is a must.
        *
@@ -207,23 +200,6 @@ export class EIconStore {
         });
       }
     }
-  }
-
-  /**
-   * Returns the hardcoded name for the eicon db file.
-   *
-   * Depends on electron's `userData` path to already be set correctly.
-   *
-   * Uses "data" as a hardcoded settings directory and "eicons.json" as a
-   * hardcoded filename.
-   *
-   * @returns The full path to the eicon db file.
-   */
-  private getStoreFilename(): string {
-    const baseDir = remote.app.getPath('userData');
-    const settingsDir = path.join(baseDir, 'data');
-
-    return path.join(settingsDir, 'eicons.json');
   }
 
   /**

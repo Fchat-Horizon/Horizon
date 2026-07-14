@@ -5,8 +5,8 @@
 
 import * as electron from 'electron';
 import * as windowState from './window_state';
-import * as remoteMain from '@electron/remote/main';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '../logger';
+const log = createLogger('browser-windows');
 import path from 'path';
 import { GeneralSettings } from './common';
 import { openURLExternally } from './main';
@@ -270,7 +270,12 @@ electron.ipcMain.on('disconnect', (_event: IpcMainEvent, character: string) => {
  * The browser window in which to open the new tab.
  */
 export function openTab(w: electron.BrowserWindow) {
-  if (tabCount < maxTabCount) w.webContents.send('open-tab');
+  if (canAddTab()) w.webContents.send('open-tab');
+}
+
+/** Whether another tab may be opened without exceeding {@link maxTabCount}. */
+export function canAddTab(): boolean {
+  return tabCount < maxTabCount;
 }
 
 /**
@@ -340,14 +345,13 @@ export function createMainWindow(
       : undefined,
     transparent: settings.allowWindowTransparency,
     webPreferences: {
-      webviewTag: true,
-      nodeIntegration: true,
-      nodeIntegrationInWorker: true,
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
       spellcheck: true,
-      enableRemoteModule: true,
-      contextIsolation: false,
       partition: 'persist:fchat'
-    } as any
+    }
   };
 
   if (process.platform === 'darwin') {
@@ -359,18 +363,13 @@ export function createMainWindow(
   const window = new electron.BrowserWindow(windowProperties);
 
   newMessagesMap[window.id] = 0;
-  remoteMain.enable(window.webContents);
 
   windows.push(window);
 
   // window.setIcon(process.platform === 'win32' ? winIcon : pngIcon);
 
-  window.webContents.on('will-attach-webview', () => {
-    const all = electron.webContents.getAllWebContents();
-    all.forEach(item => {
-      remoteMain.enable(item);
-    });
-  });
+  if (process.argv.includes('--devtools'))
+    window.webContents.openDevTools({ mode: 'detach' });
 
   window.on('show', () => {
     applyWin32OverlayIcon(
@@ -529,8 +528,6 @@ export function setUpWebContents(
   webContents: electron.WebContents,
   settings: GeneralSettings
 ): void {
-  remoteMain.enable(webContents);
-
   const openLinkExternally = (e: Event, linkUrl: string) => {
     e.preventDefault();
     const profileMatch = linkUrl.match(
@@ -813,14 +810,13 @@ export function createSettingsWindow(
     parent: parentWindow,
     maximizable: false,
     webPreferences: {
-      webviewTag: true,
-      nodeIntegration: true,
-      nodeIntegrationInWorker: true,
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
       spellcheck: true,
-      enableRemoteModule: true,
-      contextIsolation: false,
       partition: 'persist:fchat'
-    } as any
+    }
   };
 
   if (process.platform === 'darwin') {
@@ -832,7 +828,6 @@ export function createSettingsWindow(
     windowProperties.autoHideMenuBar = true;
   }
   const browserWindow = new electron.BrowserWindow(windowProperties);
-  remoteMain.enable(browserWindow.webContents);
   browserWindow.loadFile(path.join(__dirname, 'settings.html'), {
     query: {
       settings: JSON.stringify(settings),
@@ -886,14 +881,13 @@ export function createChangelogWindow(
     parent: parentWindow,
     maximizable: false,
     webPreferences: {
-      webviewTag: true,
-      nodeIntegration: true,
-      nodeIntegrationInWorker: true,
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
       spellcheck: true,
-      enableRemoteModule: true,
-      contextIsolation: false,
       partition: 'persist:fchat'
-    } as any
+    }
   };
 
   if (process.platform === 'darwin') {
@@ -905,7 +899,6 @@ export function createChangelogWindow(
     windowProperties.autoHideMenuBar = true;
   }
   const browserWindow = new electron.BrowserWindow(windowProperties);
-  remoteMain.enable(browserWindow.webContents);
   browserWindow.loadFile(path.join(__dirname, 'changelog.html'), {
     query: {
       settings: JSON.stringify(settings),
@@ -956,14 +949,13 @@ export function createExporterWindow(
     parent: parentWindow,
     maximizable: false,
     webPreferences: {
-      webviewTag: true,
-      nodeIntegration: true,
-      nodeIntegrationInWorker: true,
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
       spellcheck: true,
-      enableRemoteModule: true,
-      contextIsolation: false,
       partition: 'persist:fchat'
-    } as any
+    }
   };
 
   if (process.platform === 'darwin') {
@@ -976,7 +968,6 @@ export function createExporterWindow(
   }
 
   const browserWindow = new electron.BrowserWindow(windowProperties);
-  remoteMain.enable(browserWindow.webContents);
   browserWindow.loadFile(path.join(__dirname, 'exporter.html'), {
     query: {
       settings: JSON.stringify(settings),
@@ -1025,14 +1016,13 @@ export function createAboutWindow(
     useContentSize: true,
     autoHideMenuBar: true,
     webPreferences: {
-      webviewTag: true,
-      nodeIntegration: true,
-      nodeIntegrationInWorker: true,
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
       spellcheck: true,
-      enableRemoteModule: true,
-      contextIsolation: false,
       partition: 'persist:fchat'
-    } as any
+    }
   };
 
   if (process.platform === 'darwin') {
@@ -1042,8 +1032,6 @@ export function createAboutWindow(
   }
 
   const about = new electron.BrowserWindow(aboutWindowProperties);
-
-  remoteMain.enable(about.webContents);
 
   // Handle external links
   about.webContents.setWindowOpenHandler(({ url }) => {

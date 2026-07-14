@@ -1,4 +1,5 @@
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '../../logger';
+const log = createLogger('indexed-store');
 import * as _ from 'lodash';
 
 import {

@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { createLogger } from '../../../logger';
+const log = createLogger('store-worker-client');
 
 import { IndexedRequest, IndexedResponse, ProfileStoreCommand } from './types';
 

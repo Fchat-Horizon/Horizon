@@ -1,15 +1,20 @@
 import throat from 'throat';
-import Bluebird from 'bluebird';
-import { IpcMainEvent } from 'electron';
-import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+import { delay } from '../../helpers/async';
+import { createLogger } from '../../logger';
+const log = createLogger('ad-coordinator-host');
 
 const adCoordinatorThroat = throat(1);
+
+// The slice of the host's IPC event this coordinator needs to answer a guest.
+interface AdReplyTarget {
+  reply(channel: string, ...args: unknown[]): void;
+}
 
 export class AdCoordinatorHost {
   static readonly MIN_DISTANCE = 7500;
   private lastPost = Date.now();
 
-  async processAdRequest(event: IpcMainEvent, adId: string): Promise<void> {
+  async processAdRequest(event: AdReplyTarget, adId: string): Promise<void> {
     await adCoordinatorThroat(async () => {
       const sinceLastPost = Date.now() - this.lastPost;
       const waitTime = Math.max(
@@ -19,7 +24,7 @@ export class AdCoordinatorHost {
 
       log.debug('adid.request.host', { adId, sinceLastPost, waitTime });
 
-      await Bluebird.delay(waitTime);
+      await delay(waitTime);
 
       log.debug('adid.request.host.grant', { adId, sinceLastPost, waitTime });
 

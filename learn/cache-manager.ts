@@ -22,16 +22,13 @@ import ChannelConversation = Conversation.ChannelConversation;
 import Message = Conversation.Message;
 import { Character } from '../fchat/interfaces';
 import { emptyMap } from '../fchat/common';
-import Bluebird from 'bluebird';
 import ChatMessage = Conversation.ChatMessage;
 import { GeneralSettings } from '../electron/common';
 import { Gender } from './matcher-types';
 import { WorkerStore } from './store/worker';
 import { PermanentIndexedStore } from './store/types';
-import * as path from 'path';
-// import * as electron from 'electron';
-
-import log from 'electron-log';
+import { createLogger } from '../logger';
+const log = createLogger('cache-manager');
 import { testSmartFilterForPrivateMessage } from '../chat/conversations'; //tslint:disable-line:match-default-export-name
 
 export interface ProfileCacheQueueEntry {
@@ -331,9 +328,7 @@ export class CacheManager {
   async start(settings: GeneralSettings, skipFlush: boolean): Promise<void> {
     await this.stop();
 
-    this.profileStore = await WorkerStore.open(
-      path.join(/*electron.remote.app.getAppPath(),*/ 'storeWorkerEndpoint.js')
-    ); // await IndexedStore.open();
+    this.profileStore = await WorkerStore.open('storeWorkerEndpoint.js'); // await IndexedStore.open();
 
     this.profileCache.setStore(this.profileStore);
 
@@ -512,48 +507,47 @@ export class CacheManager {
       const checkedNames: Record<string, boolean> = emptyMap();
 
       // Add fetchers for unknown profiles in ads
-      await Bluebird.each(
-        _.filter(conversation!.messages, m => {
-          if (m.type !== Message.Type.Ad) {
-            return false;
-          }
-
-          const chatMessage = m as unknown as ChatMessage;
-
-          if (chatMessage.sender.name in checkedNames) {
-            return false;
-          }
-
-          checkedNames[chatMessage.sender.name] = true;
-          return true;
-        }),
-        async (m: Message) => {
-          const chatMessage: ChatMessage = m as unknown as ChatMessage;
-
-          if (
-            chatMessage.score ||
-            chatMessage.sender.name === core.characters.ownCharacter.name
-          ) {
-            return;
-          }
-
-          const p = await this.resolveProfileScore(
-            false,
-            chatMessage.sender,
-            conversation as ChannelConversation,
-            chatMessage,
-            true
-          );
-
-          if (!p) {
-            await this.queueForFetching(
-              chatMessage.sender.name,
-              true,
-              channel.id
-            );
-          }
+      const adMessages = _.filter(conversation!.messages, m => {
+        if (m.type !== Message.Type.Ad) {
+          return false;
         }
-      );
+
+        const chatMessage = m as unknown as ChatMessage;
+
+        if (chatMessage.sender.name in checkedNames) {
+          return false;
+        }
+
+        checkedNames[chatMessage.sender.name] = true;
+        return true;
+      });
+
+      for (const m of adMessages) {
+        const chatMessage: ChatMessage = m as unknown as ChatMessage;
+
+        if (
+          chatMessage.score ||
+          chatMessage.sender.name === core.characters.ownCharacter.name
+        ) {
+          continue;
+        }
+
+        const p = await this.resolveProfileScore(
+          false,
+          chatMessage.sender,
+          conversation as ChannelConversation,
+          chatMessage,
+          true
+        );
+
+        if (!p) {
+          await this.queueForFetching(
+            chatMessage.sender.name,
+            true,
+            channel.id
+          );
+        }
+      }
     }
   }
 

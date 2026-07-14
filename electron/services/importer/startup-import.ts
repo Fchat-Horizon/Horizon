@@ -1,6 +1,4 @@
-import * as remote from '@electron/remote';
-import fs from 'node:fs';
-import { ipcRenderer } from 'electron';
+import { ipcRenderer } from '../../host-bridge';
 import l from '../../../chat/localize';
 import * as VanillaImporter from './vanilla-importer';
 import { SlimcatImporter } from '../index';
@@ -15,11 +13,12 @@ type ImporterHint = 'auto' | 'vanilla' | 'advanced' | 'slimcat' | undefined;
  * @param logDirectory - Path to the Horizon log directory
  * @returns true if logs exist, false otherwise
  */
-function hasExistingHorizonLogs(logDirectory: string): boolean {
+async function hasExistingHorizonLogs(): Promise<boolean> {
   try {
-    if (!fs.existsSync(logDirectory)) return false;
-    const entries = fs.readdirSync(logDirectory, { withFileTypes: true });
-    return entries.some(entry => entry.isDirectory());
+    const characters = <string[]>(
+      await ipcRenderer.invoke('logs-get-available-characters')
+    );
+    return characters.length > 0;
   } catch {
     return false;
   }
@@ -46,21 +45,22 @@ function getFinalHint(
   return undefined;
 }
 
-function doVanillaGeneralImport(
-  rctx: NonNullable<ReturnType<typeof VanillaImporter.resolveContext>>,
+async function doVanillaGeneralImport(
+  rctx: VanillaImporter.VanillaContext,
   settings: GeneralSettings
-): GeneralSettings {
+): Promise<GeneralSettings> {
   const destinationDir = settings.logDirectory;
-  fs.mkdirSync(destinationDir, { recursive: true });
 
-  const importedSettings = VanillaImporter.importGeneralSettings(
+  const importedSettings = await VanillaImporter.importGeneralSettings(
     rctx,
     destinationDir
   );
+  // ! No `new GeneralSettings()` here: its field initializers read app info
+  // ! only the main process injects, so a renderer copy would carry defaults.
   if (importedSettings)
-    settings = Object.assign(new GeneralSettings(), settings, importedSettings);
+    settings = Object.assign({}, settings, importedSettings);
 
-  const summaries = VanillaImporter.importAll(rctx, destinationDir, {
+  const summaries = await VanillaImporter.importAll(rctx, destinationDir, {
     includePinnedEicons: true,
     // ! we should avoid overwriting any existing logs during startup import
     // This shouldn't even be offered if you have logs already, but better safe than sorry.
@@ -71,7 +71,7 @@ function doVanillaGeneralImport(
   );
 
   settings.hasImportedVanillaLogs = true;
-  settings.version = remote.app.getVersion();
+  settings.version = ipcRenderer.sendSync('app-version-sync') as string;
   ipcRenderer.send('general-settings-update', settings);
   ipcRenderer.send(
     'save-login',
@@ -94,11 +94,11 @@ function doVanillaGeneralImport(
   return settings;
 }
 
-function handleVanillaImportPrompt(
-  ctx: NonNullable<ReturnType<typeof VanillaImporter.resolveContext>>,
+async function handleVanillaImportPrompt(
+  ctx: VanillaImporter.VanillaContext,
   settings: GeneralSettings
-): GeneralSettings {
-  const choice = remote.dialog.showMessageBoxSync({
+): Promise<GeneralSettings> {
+  const choice = ipcRenderer.sendSync('dialog-message-box-sync', {
     message: l('importer.vanillaImportGeneral'),
     title: l('title'),
     type: 'question',
@@ -110,7 +110,7 @@ function handleVanillaImportPrompt(
   if (choice === 1) {
     ipcRenderer.send('open-exporter-window', 'vanilla');
   } else if (choice === 0) {
-    return doVanillaGeneralImport(ctx, settings);
+    return await doVanillaGeneralImport(ctx, settings);
   } else {
     settings.hasDismissedVanillaImport = true;
     ipcRenderer.send('general-settings-update', settings);
@@ -146,7 +146,7 @@ export async function handleStartupImport(
   try {
     const ctx =
       rawHint === 'auto' || rawHint === 'vanilla'
-        ? VanillaImporter.resolveContext(settings.vanillaCustomBaseDir)
+        ? await VanillaImporter.resolveContext(settings.vanillaCustomBaseDir)
         : undefined;
 
     const finalHint = getFinalHint(
@@ -158,13 +158,12 @@ export async function handleStartupImport(
     if (!finalHint) return settings;
     if (
       finalHint === 'vanilla' &&
-      (settings.hasDismissedVanillaImport ||
-        hasExistingHorizonLogs(settings.logDirectory))
+      (settings.hasDismissedVanillaImport || (await hasExistingHorizonLogs()))
     )
       return settings;
 
     if (finalHint === 'vanilla' && ctx) {
-      settings = handleVanillaImportPrompt(ctx, settings);
+      settings = await handleVanillaImportPrompt(ctx, settings);
     } else if (finalHint === 'slimcat') {
       handleSlimcatImport(settings);
     }
