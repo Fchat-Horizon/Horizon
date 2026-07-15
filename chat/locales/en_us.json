@@ -208,6 +208,7 @@
   "chat.roll": "rolls {0}: {1}",
   "chat.search": "Search in messages…",
   "chat.send": "Send",
+  "chat.toggleHighlight": "Toggle search highlighting",
   "chat.setStatus": "Set status",
   "chat.setStatus.message": "Status message (optional)",
   "chat.setStatus.status": "Status",
