@@ -207,6 +207,7 @@
   "chat.stats": "Estadísticas del chat",
   "chat.status": "Estado:",
   "chat.toggleAds": "Activar anuncios",
+  "chat.toggleHighlight": "Resaltar resultados de búsqueda",
   "chat.typing.paused": "{0} ha escrito.",
   "chat.typing.typing": "{0} está escribiendo…",
   "chat.unpin": "Desfijar",
