@@ -1262,6 +1262,9 @@ async function initConversationCache(this: Conversation): Promise<void> {
   // Restore message draft if it exists (e.g. accidentally closing the tab). Be sure the cache is reset for a new character if needed.
   await core.cache.conversationDraftCache.resetCacheIfNeeded();
 
+  // Only an open conversation knows both the display name pre-key drafts were stored under and its unique key.
+  core.cache.migrateConversationDraft(this.name, this.key);
+
   const draft = core.cache.getConversationDraft(this.key);
   this.enteredText = draft;
 

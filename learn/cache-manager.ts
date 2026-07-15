@@ -600,6 +600,19 @@ export class CacheManager {
   }
 
   /**
+   * Migrate any pre-key draft stored under a conversation's display name to the conversation's unique key.
+   * @function
+   * @param {string} name
+   * The display name of the conversation, which pre-key drafts were stored under.
+   * @param {string} key
+   * The unique key of the conversation the draft belongs to, e.g. `#adh-...` for a channel or a lowercased character name for a PM.
+   * @internal
+   */
+  public migrateConversationDraft(name: string, key: string): void {
+    this.conversationDraftCache.migrateLegacyDraft(name, key);
+  }
+
+  /**
    * Match a character, score their message (if provided), and return their scored Character.
    * @param skipStore Don't store profile in cache; just retrieve scoring info
    * @param char Character who posted the message
