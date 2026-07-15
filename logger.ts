@@ -67,7 +67,8 @@ const ANSI_BY_LEVEL: Record<string, string> = {
   SILLY: '\x1b[90m'
 };
 
-let globalLogLevel: LogLevel = LogLevel.Info;
+// needs to match the old electron-log default.
+let globalLogLevel: LogLevel = LogLevel.Silly;
 
 export function setGlobalLogLevel(level: LogLevel): void {
   globalLogLevel = level;

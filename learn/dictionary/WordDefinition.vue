@@ -57,6 +57,32 @@
       webview.addEventListener('update-target-url', eventProcessor);
       webview.addEventListener('dom-ready', eventProcessor);
 
+      const allowedHosts = new Set([
+        'www.merriam-webster.com',
+        'www.urbandictionary.com',
+        'en.wiktionary.org'
+      ]);
+      const isAllowedNavigation = (url: string): boolean => {
+        if (url === 'about:blank') return true;
+        try {
+          const parsed = new URL(url);
+          return (
+            parsed.protocol === 'https:' && allowedHosts.has(parsed.hostname)
+          );
+        } catch {
+          return false;
+        }
+      };
+      const navigationGuard = (event: any): void => {
+        const url = event.url;
+        if (isAllowedNavigation(url)) return;
+        event.preventDefault();
+        webview.stop();
+        log.debug('word-definition.navigation.blocked', { url });
+      };
+      webview.addEventListener('will-navigate', navigationGuard);
+      webview.addEventListener('will-redirect', navigationGuard);
+
       // await remote.webContents.fromId(webview.getWebContentsId()).session.clearStorageData({storages: ['cookies', 'indexdb']});
     },
     methods: {

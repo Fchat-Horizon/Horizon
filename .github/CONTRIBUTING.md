@@ -201,7 +201,7 @@ Oh and mind the ["do not merge"](https://github.com/Fchat-Horizon/Horizon/pulls?
 
 #### Tags
 
-We follow a [semantic versioning](https://semver.org) format. Please read our [versioning document](./VERSIONING.md) for more information, including the way we plan releases.
+We follow a [semantic versioning](https://semver.org) format. Please read our [versioning document](../docs/VERSIONING.md) for more information, including the way we plan releases.
 
 ## Style guidelines
 

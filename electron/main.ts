@@ -97,10 +97,9 @@ const allowedWebviewPreload = path.join(
 );
 const allowedWebviewHosts = new Set([
   // ~ dictionary popup sources, see learn/dictionary/WordDefinition.vue
-  'www.dictionary.com',
-  'www.thesaurus.com',
+  'www.merriam-webster.com',
   'www.urbandictionary.com',
-  'en.m.wikipedia.org'
+  'en.wiktionary.org'
 ]);
 
 // $ Attach-time src only; the webviews police their own navigation.

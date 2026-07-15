@@ -177,18 +177,23 @@ export async function updateCustomCssAllTabs(
     for (const view of host.tabs.values()) {
       const contents = view.webContents;
       if (contents.isDestroyed()) continue;
-      const key = cssKeys.get(contents.id);
-      if (key !== undefined) {
-        await contents.removeInsertedCSS(key);
+      try {
+        const key = cssKeys.get(contents.id);
+        if (key !== undefined) {
+          await contents.removeInsertedCSS(key);
+          cssKeys.delete(contents.id);
+        }
+        if (useCustomCss)
+          cssKeys.set(
+            contents.id,
+            await contents.insertCSS(`html {${styleSheet}}`, {
+              cssOrigin: 'author'
+            })
+          );
+      } catch {
+        // Tab may be torn down mid-await; drop its stale key and move on.
         cssKeys.delete(contents.id);
       }
-      if (useCustomCss)
-        cssKeys.set(
-          contents.id,
-          await contents.insertCSS(`html {${styleSheet}}`, {
-            cssOrigin: 'author'
-          })
-        );
     }
 }
 
