@@ -2,6 +2,16 @@ import fs from 'fs';
 import path from 'path';
 import AdmZip from 'adm-zip';
 import { shouldIncludeSettingsFile } from '../exporter/manifest';
+import {
+  buildLogImportContext,
+  ensureLogIndex,
+  jsonLogToBinary,
+  parseJsonLog,
+  recoverLogName,
+  removeStaleJsonLogArtifact,
+  writeLogWithIndex
+} from '../log-backup';
+import type { LogImportContext } from '../log-backup';
 
 /**
  * Configuration options for CLI-based import operations.
@@ -163,18 +173,22 @@ function shouldSkipExistingFile(
   return true;
 }
 
+interface CliImportStats {
+  logsCopied: number;
+  logsSkipped: number;
+  settingsCopied: number;
+  settingsSkipped: number;
+  filesErrored: number;
+  touched: Set<string>;
+}
+
 function processZipEntry(
   entry: AdmZip.IZipEntry,
   dataDir: string,
   allowed: Set<string>,
   opts: ImportCliOptions,
-  stats: {
-    logsCopied: number;
-    logsSkipped: number;
-    settingsCopied: number;
-    settingsSkipped: number;
-    touched: Set<string>;
-  }
+  context: LogImportContext,
+  stats: CliImportStats
 ): void {
   if (entry.isDirectory) return;
 
@@ -184,23 +198,76 @@ function processZipEntry(
 
   if (!decision.should || !decision.character) return;
 
-  const relative = normalized.substring('characters/'.length);
-  const destination = getSafeDestination(dataDir, relative);
-  if (!destination) return;
+  let relative = normalized.substring('characters/'.length);
 
-  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  try {
+    let data: Buffer | undefined;
+    let converted = false;
+    let logName: string | undefined;
+    let recoveredName: string | undefined;
 
-  if (shouldSkipExistingFile(destination, decision, opts)) {
-    if (decision.isLog) stats.logsSkipped++;
-    else stats.settingsSkipped++;
-    return;
+    // JSON logs re-serialize to binary; anything else .json copies through.
+    if (decision.isLog && normalized.endsWith('.json')) {
+      const logKey = segments.slice(3).join('/').slice(0, -5);
+      if (logKey && !logKey.endsWith('/')) {
+        // ^ A binary twin in the ZIP is authoritative; the .json is stale.
+        if (context.binaryLogs.has(`${decision.character}/${logKey}`)) {
+          stats.logsSkipped++;
+          return;
+        }
+        data = entry.getData();
+        const parsedLog = parseJsonLog(data);
+        if (parsedLog) {
+          data = jsonLogToBinary(parsedLog.messages);
+          relative = relative.slice(0, -5);
+          converted = true;
+          logName =
+            context.names.get(decision.character)?.get(logKey) ??
+            parsedLog.name;
+          if (logName === undefined)
+            recoveredName = recoverLogName(
+              logKey,
+              decision.character,
+              context,
+              parsedLog.messages
+            );
+        }
+      }
+    }
+
+    const destination = getSafeDestination(dataDir, relative);
+    if (!destination) return;
+
+    fs.mkdirSync(path.dirname(destination), { recursive: true });
+
+    if (shouldSkipExistingFile(destination, decision, opts)) {
+      if (decision.isLog) {
+        stats.logsSkipped++;
+        // Heal pre-2.4 imports that never wrote indexes (#886).
+        if (converted) {
+          const healed = ensureLogIndex(destination, logName ?? recoveredName);
+          if (removeStaleJsonLogArtifact(destination) || healed)
+            stats.touched.add(decision.character);
+        }
+      } else stats.settingsSkipped++;
+      return;
+    }
+
+    if (data === undefined) data = entry.getData();
+    if (converted) {
+      writeLogWithIndex(destination, data, logName, recoveredName);
+      removeStaleJsonLogArtifact(destination);
+    } else fs.writeFileSync(destination, data);
+    stats.touched.add(decision.character);
+    if (decision.isLog) stats.logsCopied++;
+    else stats.settingsCopied++;
+  } catch (err) {
+    stats.filesErrored++;
+    console.warn(
+      `Failed to import ${normalized}:`,
+      err instanceof Error ? err.message : err
+    );
   }
-
-  const data = entry.getData();
-  fs.writeFileSync(destination, data);
-  stats.touched.add(decision.character);
-  if (decision.isLog) stats.logsCopied++;
-  else stats.settingsCopied++;
 }
 
 function printDryRunGeneralSettings(
@@ -268,7 +335,11 @@ function handleDryRun(
   zip: AdmZip,
   dataDir: string,
   wantedChars: string[]
-): { touchedCharacters: string[]; generalImported: boolean } {
+): {
+  touchedCharacters: string[];
+  generalImported: boolean;
+  filesErrored: number;
+} {
   console.log('=== DRY RUN MODE - No files will be modified ===');
   console.log(`Source ZIP: ${opts.zip}`);
   console.log(`Target directory: ${dataDir}`);
@@ -286,7 +357,8 @@ function handleDryRun(
 
   return {
     touchedCharacters: wantedChars,
-    generalImported: opts.includeGeneral && hasGeneral
+    generalImported: opts.includeGeneral && hasGeneral,
+    filesErrored: 0
   };
 }
 
@@ -295,31 +367,38 @@ function performActualImport(
   dataDir: string,
   wantedChars: string[],
   opts: ImportCliOptions
-): { touchedCharacters: string[]; generalImported: boolean } {
+): {
+  touchedCharacters: string[];
+  generalImported: boolean;
+  filesErrored: number;
+} {
   fs.mkdirSync(dataDir, { recursive: true });
 
   const generalImported = importGeneralSettingsFromZip(zip, dataDir, opts);
 
   const allowed = new Set<string>(wantedChars);
 
-  const stats = {
+  const stats: CliImportStats = {
     logsCopied: 0,
     logsSkipped: 0,
     settingsCopied: 0,
     settingsSkipped: 0,
+    filesErrored: 0,
     touched: new Set<string>()
   };
 
   const entries = zip.getEntries();
+  const context = buildLogImportContext(entries);
   for (const entry of entries) {
-    processZipEntry(entry, dataDir, allowed, opts, stats);
+    processZipEntry(entry, dataDir, allowed, opts, context, stats);
   }
 
   return {
     touchedCharacters: Array.from(stats.touched.values()).sort((a, b) =>
       a.localeCompare(b)
     ),
-    generalImported
+    generalImported,
+    filesErrored: stats.filesErrored
   };
 }
 
@@ -328,12 +407,13 @@ function performActualImport(
  * Supports both dry-run mode (preview only) and actual import with selective data import and conflict handling.
  *
  * @param opts - Configuration options specifying what to import and how to handle conflicts
- * @returns A promise that resolves with the list of imported characters and whether general settings were imported
+ * @returns A promise that resolves with the list of imported characters, whether general settings were imported, and how many files failed
  * @throws {Error} If the data directory is not provided or the ZIP file cannot be opened
  */
 export async function runImportCli(opts: ImportCliOptions): Promise<{
   touchedCharacters: string[];
   generalImported: boolean;
+  filesErrored: number;
 }> {
   const dataDir = opts.dataDir;
   if (!dataDir) throw new Error('No data dir provided');
