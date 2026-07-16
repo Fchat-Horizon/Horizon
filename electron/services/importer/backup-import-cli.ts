@@ -5,6 +5,7 @@ import { shouldIncludeSettingsFile } from '../exporter/manifest';
 import {
   buildLogImportContext,
   ensureLogIndex,
+  isFilesystemArtifact,
   jsonLogToBinary,
   parseJsonLog,
   recoverLogName,
@@ -197,6 +198,7 @@ function processZipEntry(
   const decision = classifyEntry(normalized, segments, allowed, opts);
 
   if (!decision.should || !decision.character) return;
+  if (decision.isLog && segments.slice(3).some(isFilesystemArtifact)) return;
 
   let relative = normalized.substring('characters/'.length);
 

@@ -51,6 +51,16 @@ export interface JsonLog {
  */
 export const conversationNamesFile = 'conversation-names.json';
 
+/**
+ * ^ Filesystem litter (.DS_Store, ._* AppleDouble, Thumbs.db) is never a log:
+ *   log names are channel keys, lowercased character names, or `_`, none of
+ *   which can start with a dot. Old imports copied litter verbatim (#886), so
+ *   every seam that treats a file as a log must screen through this.
+ */
+export function isFilesystemArtifact(fileName: string): boolean {
+  return /^\.|^(thumbs\.db|desktop\.ini)(\.json)?$/i.test(fileName);
+}
+
 const dayMs = 86400000;
 
 function localDay(timeSeconds: number): number {
@@ -267,7 +277,8 @@ export function buildLogImportContext(
       segments.length >= 4 &&
       segments[2] === 'logs' &&
       !normalized.endsWith('.json') &&
-      !normalized.endsWith('.idx')
+      !normalized.endsWith('.idx') &&
+      !segments.slice(3).some(isFilesystemArtifact)
     ) {
       binaryLogs.add(`${segments[1]}/${segments.slice(3).join('/')}`);
     }

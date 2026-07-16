@@ -25,6 +25,7 @@ import type { ExporterVm } from '../exporter-vm';
 import {
   binaryLogToJson,
   conversationNamesFile,
+  isFilesystemArtifact,
   readLogIndexName
 } from '../log-backup';
 
@@ -187,6 +188,7 @@ function buildExportEntries(
         for (const abs of files) {
           if (abs.endsWith('.idx')) continue;
           const rel = path.relative(logsDir, abs).replace(/\\/g, '/');
+          if (rel.split('/').some(isFilesystemArtifact)) continue;
           const zip = path.posix.join(
             'characters',
             character,

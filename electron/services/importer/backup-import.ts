@@ -25,6 +25,7 @@ import type { ExporterVm } from '../exporter-vm';
 import {
   buildLogImportContext,
   ensureLogIndex,
+  isFilesystemArtifact,
   jsonLogToBinary,
   parseJsonLog,
   recoverLogName,
@@ -600,6 +601,7 @@ function importCharacterFile(
   const category = segments[2];
   const decision = shouldImportEntry(vm, category, segments, info);
   if (!decision.shouldImport) return;
+  if (decision.isLog && segments.slice(3).some(isFilesystemArtifact)) return;
 
   let relative = normalized.substring('characters/'.length);
 
