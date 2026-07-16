@@ -238,10 +238,11 @@ EXAMPLES:
         dryRun,
         zip,
         touchedCharacters: importResult.touchedCharacters.length,
-        generalImported: importResult.generalImported
+        generalImported: importResult.generalImported,
+        filesErrored: importResult.filesErrored
       })
     );
-    app.exit(0);
+    app.exit(importResult.filesErrored > 0 ? 1 : 0);
     return true;
   }
   return false;

@@ -22,6 +22,17 @@ import {
 } from '../exporter/manifest';
 import type { ExportManifest, SettingsSelection } from '../exporter/manifest';
 import type { ExporterVm } from '../exporter-vm';
+import {
+  buildLogImportContext,
+  ensureLogIndex,
+  isFilesystemArtifact,
+  jsonLogToBinary,
+  parseJsonLog,
+  recoverLogName,
+  removeStaleJsonLogArtifact,
+  writeLogWithIndex
+} from '../log-backup';
+import type { LogImportContext } from '../log-backup';
 /** Default log directory in the renderer process (avoids instantiating GeneralSettings). */
 const defaultLogDirectory = path.join(remote.app.getPath('userData'), 'data');
 /**
@@ -430,29 +441,6 @@ function isEffectivelyEmptyDraftsFile(p: string): boolean {
   }
 }
 
-export function jsonLogToBinary(
-  json: { time: number; type: number; sender: string; text: string }[]
-): Buffer {
-  const chunks: Buffer[] = [];
-  for (const msg of json) {
-    const sender = msg.sender || '';
-    const senderLength = Buffer.byteLength(sender);
-    const textLength = Buffer.byteLength(msg.text);
-    const buf = Buffer.allocUnsafe(senderLength + textLength + 10);
-    buf.writeUInt32LE(msg.time, 0);
-    buf.writeUInt8(msg.type, 4);
-    buf.writeUInt8(senderLength, 5);
-    buf.write(sender, 6);
-    let offset = 6 + senderLength;
-    buf.writeUInt16LE(textLength, offset);
-    buf.write(msg.text, offset + 2);
-    offset += 2 + textLength;
-    buf.writeUInt16LE(offset, offset);
-    chunks.push(buf);
-  }
-  return Buffer.concat(chunks);
-}
-
 interface ImportStats {
   logsCopied: number;
   logsSkipped: number;
@@ -593,6 +581,7 @@ function importCharacterFile(
   dataDir: string,
   selectedCharacters: Set<string>,
   characterInfo: Map<string, BackupCharacterInfo>,
+  context: LogImportContext,
   stats: ImportStats
 ): void {
   if (!entry || !entry.entryName) return;
@@ -612,44 +601,76 @@ function importCharacterFile(
   const category = segments[2];
   const decision = shouldImportEntry(vm, category, segments, info);
   if (!decision.shouldImport) return;
+  if (decision.isLog && segments.slice(3).some(isFilesystemArtifact)) return;
 
   let relative = normalized.substring('characters/'.length);
-  // Strip .json suffix for JSON log files so they're written as binary
-  if (decision.isLog && relative.endsWith('.json')) {
-    relative = relative.slice(0, -5);
-  }
-  const destination = getSafeDestination(dataDir, relative);
-  if (!destination) return;
 
   try {
+    let fileData: Buffer | undefined;
+    let converted = false;
+    let logName: string | undefined;
+    let recoveredName: string | undefined;
+
+    // JSON logs re-serialize to binary; anything else .json copies through.
+    if (decision.isLog && normalized.endsWith('.json')) {
+      const logKey = segments.slice(3).join('/').slice(0, -5);
+      if (logKey && !logKey.endsWith('/')) {
+        // ^ A binary twin in the ZIP is authoritative; the .json is stale.
+        if (context.binaryLogs.has(`${characterName}/${logKey}`)) {
+          stats.logsSkipped++;
+          return;
+        }
+        fileData = entry.getData();
+        const parsedLog = parseJsonLog(fileData);
+        if (parsedLog) {
+          try {
+            fileData = jsonLogToBinary(parsedLog.messages);
+          } catch (err) {
+            stats.filesErrored++;
+            log.warn('import.file.json-convert-error', normalized, err);
+            return;
+          }
+          relative = relative.slice(0, -5);
+          converted = true;
+          logName =
+            context.names.get(characterName)?.get(logKey) ?? parsedLog.name;
+          if (logName === undefined)
+            recoveredName = recoverLogName(
+              logKey,
+              characterName,
+              context,
+              parsedLog.messages
+            );
+        }
+      }
+    }
+
+    const destination = getSafeDestination(dataDir, relative);
+    if (!destination) return;
+
     fs.mkdirSync(path.dirname(destination), { recursive: true });
 
     const exists = fs.existsSync(destination);
     if (
       shouldSkipExistingFile(destination, exists, vm.importOverwrite, decision)
     ) {
-      if (decision.isLog) stats.logsSkipped++;
-      else stats.settingsSkipped++;
+      if (decision.isLog) {
+        stats.logsSkipped++;
+        // Heal pre-2.4 imports that never wrote indexes.
+        if (converted) {
+          const healed = ensureLogIndex(destination, logName ?? recoveredName);
+          if (removeStaleJsonLogArtifact(destination) || healed)
+            stats.charactersTouched.add(characterName);
+        }
+      } else stats.settingsSkipped++;
       return;
     }
 
-    let fileData: Buffer = entry.getData();
-
-    // JSON log from export: re-serialize to binary
-    if (decision.isLog && normalized.endsWith('.json')) {
-      try {
-        const parsed = JSON.parse(fileData.toString('utf8'));
-        if (Array.isArray(parsed)) {
-          fileData = jsonLogToBinary(parsed);
-        }
-      } catch (err) {
-        stats.filesErrored++;
-        log.warn('import.file.json-convert-error', normalized, err);
-        return;
-      }
-    }
-
-    fs.writeFileSync(destination, fileData);
+    if (fileData === undefined) fileData = entry.getData();
+    if (converted) {
+      writeLogWithIndex(destination, fileData, logName, recoveredName);
+      removeStaleJsonLogArtifact(destination);
+    } else fs.writeFileSync(destination, fileData);
     stats.charactersTouched.add(characterName);
 
     if (decision.isLog) stats.logsCopied++;
@@ -669,6 +690,7 @@ function importCharacterData(
   stats: ImportStats
 ): void {
   const entries = zip.getEntries();
+  const context = buildLogImportContext(entries);
   for (const entry of entries) {
     if (!entry || entry.isDirectory) continue;
     importCharacterFile(
@@ -677,6 +699,7 @@ function importCharacterData(
       dataDir,
       selectedCharacters,
       characterInfo,
+      context,
       stats
     );
   }

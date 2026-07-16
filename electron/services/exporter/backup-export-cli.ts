@@ -37,36 +37,6 @@ export interface ExportCliOptions {
   onProgress?: (fraction: number) => void;
 }
 
-export function binaryLogToJson(
-  buffer: Buffer
-): { time: number; type: number; sender: string; text: string }[] {
-  const messages: {
-    time: number;
-    type: number;
-    sender: string;
-    text: string;
-  }[] = [];
-  let offset = 0;
-  while (offset + 10 <= buffer.length) {
-    const time = buffer.readUInt32LE(offset);
-    const type = buffer.readUInt8(offset + 4);
-    const senderLength = buffer.readUInt8(offset + 5);
-    if (offset + 6 + senderLength + 2 > buffer.length) break;
-    const sender = buffer.toString(
-      'utf8',
-      offset + 6,
-      offset + 6 + senderLength
-    );
-    const textLength = buffer.readUInt16LE(offset + 6 + senderLength);
-    const textStart = offset + 6 + senderLength + 2;
-    if (textStart + textLength + 2 > buffer.length) break;
-    const text = buffer.toString('utf8', textStart, textStart + textLength);
-    messages.push({ time, type, sender, text });
-    offset = textStart + textLength + 2;
-  }
-  return messages;
-}
-
 function getCharacters(dataDir: string, filter?: string[]): string[] {
   const list: string[] = [];
   try {
