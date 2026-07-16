@@ -323,7 +323,11 @@ export default function (this: void, connection: Connection): Interfaces.State {
       case 'trackadd':
         state.bookmarkList.push(data.name);
         character.isBookmarked = true;
-        if (character.status !== 'offline') state.bookmarks.push(character);
+        if (
+          character.status !== 'offline' &&
+          state.bookmarks.indexOf(character) === -1
+        )
+          state.bookmarks.push(character);
         break;
       case 'trackrem':
         state.bookmarkList.splice(state.bookmarkList.indexOf(data.name), 1);
