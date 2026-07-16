@@ -298,6 +298,7 @@ export function recoverLogName(
   messages: JsonLogMessage[]
 ): string | undefined {
   const key = logKey.split('/').pop()!;
+  if (key === '_') return 'Console';
   if (key.startsWith('#'))
     return context.channelNames.get(character)?.get(key.toLowerCase());
   const match = messages.find(
