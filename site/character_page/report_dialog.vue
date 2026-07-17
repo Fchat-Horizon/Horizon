@@ -53,7 +53,7 @@
       </div>
     </div>
     <div v-show="type === 'takedown'" class="alert alert-info">
-      <localized-text k="reportDialog.takedown">
+      <localized-text k="reportDialog.takedownInfo">
         <template #ticketsPage>
           <a :href="ticketUrl">{{ l('reportDialog.ticketsPage') }}</a>
         </template>
