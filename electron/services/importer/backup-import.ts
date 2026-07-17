@@ -14,7 +14,7 @@ import fs from 'fs';
 import path from 'path';
 import { ipcRenderer } from 'electron';
 import log from 'electron-log';
-import l from '../../../chat/localize';
+import l, { lp } from '../../../chat/localize';
 import AdmZip from 'adm-zip';
 import type { IZipEntry } from 'adm-zip';
 import {
@@ -729,9 +729,7 @@ function finalizeImport(vm: ExporterVm, stats: ImportStats): void {
     generalSettings: generalState
   });
   if (stats.filesErrored > 0) {
-    summary += ` ${l('settings.import.zip.summaryFailed', {
-      count: stats.filesErrored
-    })}`;
+    summary += ` ${lp('settings.import.zip.summaryFailed', stats.filesErrored)}`;
   }
   vm.importSummary = summary;
 }
