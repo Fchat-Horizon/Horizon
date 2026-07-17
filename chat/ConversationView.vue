@@ -380,7 +380,11 @@
           :bookmark="false"
           :isMarkerShown="shouldShowMarker"
         ></user
-        >&nbsp;{{ l('chat.typing.' + conversation.typingStatus, '').trim() }}
+        >&nbsp;{{
+          l('chat.typing.' + conversation.typingStatus, {
+            character: ''
+          }).trim()
+        }}
       </span>
       <div v-show="conversation.infoText" class="chat-info-text">
         <span
