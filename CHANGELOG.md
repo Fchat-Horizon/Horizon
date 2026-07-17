@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.3] - 2026-07-17
+
 ### Changed
 
 - Filtering for specific words and phrases in the log viewer now highlights them in the search results. This also works if you use Ctrl/ Cmd + F while looking at a conversations. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e28c3341d4c7c18ccc37f3825d9dfe1627e6c1f9)
@@ -1559,7 +1561,8 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - IOS build removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814)]
 - Webchat removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/b894a180b9be31f68d1458aaa3c59f9c4470da89)]
 
-[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.3.2...development
+[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.3.3...development
+[2.3.3]: https://github.com/Fchat-Horizon/Horizon/compare/v2.3.2...v2.3.3
 [2.3.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.3.1...v2.3.2
 [2.3.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.2.2-beta.2...v2.3.0
