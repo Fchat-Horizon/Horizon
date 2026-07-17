@@ -12,6 +12,7 @@ import {
 } from '../chat/interfaces';
 import l from '../chat/localize';
 import { GeneralSettings } from './common';
+import { isFilesystemArtifact } from './services/log-backup';
 
 declare module '../chat/interfaces' {
   interface State {
@@ -165,6 +166,7 @@ export function fixLogs(character: string): void {
   const files = fs.readdirSync(dir);
   const buffer = Buffer.allocUnsafe(50100);
   for (const file of files) {
+    if (isFilesystemArtifact(file)) continue;
     const full = path.join(dir, file);
     if (file.substr(-4) === '.idx') {
       if (!fs.existsSync(full.slice(0, -4))) fs.unlinkSync(full);
@@ -234,7 +236,7 @@ function loadIndex(name: string): Index {
   const dir = getLogDir(name);
   const files = fs.readdirSync(dir);
   for (const file of files)
-    if (file.substr(-4) === '.idx')
+    if (file.substr(-4) === '.idx' && !isFilesystemArtifact(file))
       try {
         const content = fs.readFileSync(path.join(dir, file));
         let offset = content.readUInt8(0) + 1;

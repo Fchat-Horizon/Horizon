@@ -38,8 +38,12 @@ const CONVERSATION_CACHE_UPDATE_FREQ_IN_MS = 1000;
  * before pinned channels that never joined are treated as removed and pruned.
  * The timer resets on every successful join, so a slow connection that delivers
  * joins gradually keeps deferring the cleanup until the joins actually stop.
+ * Sits at the client's ping stale threshold (the pin timeout in
+ * fchat/connection.ts): a connection that survives this long without a join
+ * arriving is demonstrably alive, so the channels that still have not joined
+ * are gone for good rather than merely slow.
  */
-const PINNED_CLEANUP_SETTLE_IN_MS = 10000;
+const PINNED_CLEANUP_SETTLE_IN_MS = 90000;
 
 function createMessage(
   this: any,
@@ -137,13 +141,12 @@ abstract class Conversation implements Interfaces.Conversation {
   clearText(): void {
     setImmediate(() => {
       this.enteredText = '';
-      core.cache.conversationDraftCache.deregister(this.name);
+      core.cache.conversationDraftCache.deregister(this.key);
     });
   }
 
   async send(): Promise<void> {
-    // Block empty or whitespace/newline-only messages from being sent.
-    if (this.enteredText.trim().length === 0) return;
+    if (this.enteredText.length === 0) return;
 
     if (isCommand(this.enteredText)) {
       const parsed = parseCommand(this.enteredText, this.context);
@@ -483,7 +486,7 @@ class PrivateConversation
       this.safeAddMessage(message);
 
       await this.logMessage(message, false);
-      core.cache.deregisterConversationDraft(this.name);
+      core.cache.deregisterConversationDraft(this.key);
       this.markRead();
     });
   }
@@ -1270,7 +1273,10 @@ async function initConversationCache(this: Conversation): Promise<void> {
   // Restore message draft if it exists (e.g. accidentally closing the tab). Be sure the cache is reset for a new character if needed.
   await core.cache.conversationDraftCache.resetCacheIfNeeded();
 
-  const draft = core.cache.getConversationDraft(this.name);
+  // Only an open conversation knows both the display name pre-key drafts were stored under and its unique key.
+  core.cache.migrateConversationDraft(this.name, this.key);
+
+  const draft = core.cache.getConversationDraft(this.key);
   this.enteredText = draft;
 
   if (!this.cacheActive) {
@@ -1290,8 +1296,8 @@ async function initConversationCache(this: Conversation): Promise<void> {
       }
 
       this.enteredText
-        ? core.cache.registerConversationDraft(this.name, this.enteredText)
-        : core.cache.deregisterConversationDraft(this.name);
+        ? core.cache.registerConversationDraft(this.key, this.enteredText)
+        : core.cache.deregisterConversationDraft(this.key);
     }, CONVERSATION_CACHE_UPDATE_FREQ_IN_MS);
   }
 }
@@ -1338,6 +1344,10 @@ export default function (this: any): Interfaces.State {
     // pinned channels that never joined (removed server-side).
     state.pinnedCleanupArmed = true;
     state.schedulePinnedCleanup();
+  });
+  connection.onEvent('closed', () => {
+    state.pinnedCleanupArmed = false;
+    clearTimeout(state.pinnedCleanupTimer);
   });
   core.channels.onEvent(async (type, channel, member) => {
     if (type === 'join')

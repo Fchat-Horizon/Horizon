@@ -56,7 +56,7 @@
           @click="installUpdate"
           :title="l('update.titlebar.ready')"
         >
-          <i class="fa fa-check"></i>
+          <i class="fas fa-arrows-rotate fa-fade"></i>
         </div>
         <div v-else class="btn btn-outline-success" @click="openUpdatePage">
           <i class="fa fa-arrow-down"></i>
@@ -779,7 +779,7 @@
         electron.ipcRenderer.send('open-update-changelog', this.updateVersion);
       },
       installUpdate(): void {
-        electron.ipcRenderer.send('install-update');
+        electron.ipcRenderer.send('install-update', this.updateVersion);
       },
       openSettingsMenu(): void {
         log.debug('settings clicked');

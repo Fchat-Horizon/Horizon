@@ -23,7 +23,12 @@ import {
 } from './manifest';
 import type { ExportManifest, SettingsSelection } from './manifest';
 import type { ExporterVm } from '../exporter-vm';
-import { binaryLogToJson } from './backup-export-cli';
+import {
+  binaryLogToJson,
+  conversationNamesFile,
+  isFilesystemArtifact,
+  readLogIndexName
+} from '../log-backup';
 
 /**
  * Directory holding the general (app-wide) settings file. This is fixed at
@@ -141,7 +146,22 @@ function listFilesRecursive(rootDir: string): string[] {
   return results;
 }
 
-type ExportEntry = { abs: string; zip: string; isLog?: boolean };
+type ExportEntry = {
+  zip: string;
+  abs?: string;
+  isLog?: boolean;
+  data?: string;
+};
+
+// ^ The .idx name is the only copy of ad-hoc names and capitalization; it
+//   must travel with the export (#886).
+function readLogName(logPath: string): string | undefined {
+  try {
+    return readLogIndexName(fs.readFileSync(`${logPath}.idx`));
+  } catch {
+    return undefined;
+  }
+}
 
 function buildExportEntries(
   dataDir: string,
@@ -165,17 +185,30 @@ function buildExportEntries(
       const logsDir = path.join(characterDir, 'logs');
       if (fs.existsSync(logsDir)) {
         const files = listFilesRecursive(logsDir);
+        const names: Record<string, string> = {};
         for (const abs of files) {
           if (abs.endsWith('.idx')) continue;
           const rel = path.relative(logsDir, abs).replace(/\\/g, '/');
+          if (rel.split('/').some(isFilesystemArtifact)) continue;
           const zip = path.posix.join(
             'characters',
             character,
             'logs',
             rel + '.json'
           );
+          const name = readLogName(abs);
+          if (name !== undefined) names[rel] = name;
           entries.push({ abs, zip, isLog: true });
         }
+        if (Object.keys(names).length > 0)
+          entries.push({
+            zip: path.posix.join(
+              'characters',
+              character,
+              conversationNamesFile
+            ),
+            data: JSON.stringify(names)
+          });
       }
     }
 
@@ -347,18 +380,25 @@ export async function runExport(vm: ExporterVm): Promise<void> {
     const failedFiles: string[] = [];
     for (const e of entries) {
       try {
-        if (fs.existsSync(e.abs)) {
+        if (e.data !== undefined) {
+          archive.append(e.data, { name: e.zip });
+          count++;
+        } else if (e.abs !== undefined && fs.existsSync(e.abs)) {
           if (e.isLog) {
             const buf = fs.readFileSync(e.abs);
-            const json = binaryLogToJson(buf);
-            archive.append(JSON.stringify(json), { name: e.zip });
+            // ! Bare arrays only: released clients write other shapes verbatim.
+            archive.append(JSON.stringify(binaryLogToJson(buf)), {
+              name: e.zip
+            });
           } else {
             archive.file(e.abs, { name: e.zip });
           }
           count++;
-          if (count % 10 === 0) {
-            await yieldToUi(vm);
-          }
+        } else {
+          continue;
+        }
+        if (count % 10 === 0) {
+          await yieldToUi(vm);
         }
       } catch (err) {
         failedFiles.push(e.zip);
