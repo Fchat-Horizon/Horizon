@@ -137,8 +137,11 @@
           </div>
 
           <div class="courtesy">
-            {{ l('eicon.courtesy') }}
-            <a href="https://xariah.net/eicons">xariah.net</a>
+            <localized-text k="eicon.credit">
+              <template #xariah>
+                <a href="https://xariah.net/eicons">xariah.net</a>
+              </template>
+            </localized-text>
           </div>
 
           <div class="upload">
@@ -256,6 +259,7 @@
   import core from '../chat/core';
   import modal from '../components/Modal.vue';
   import CustomDialog from '../components/custom_dialog';
+  import LocalizedText from '../components/localized_text';
   import l from '../chat/localize';
   import { EventBus } from '../chat/preview/event-bus';
 
@@ -275,7 +279,7 @@
   let store: EIconStore | undefined;
 
   export default CustomDialog.extend({
-    components: { modal, draggable },
+    components: { modal, draggable, 'localized-text': LocalizedText },
     props: {
       onSelect: Function
     },

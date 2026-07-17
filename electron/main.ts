@@ -314,6 +314,15 @@ if (!fs.existsSync(settingsFile)) {
   }
 }
 
+// ^ pre-2.4 builds persisted snake_case ids; keep in sync with legacyCodes in chat/localize.ts
+const legacyDisplayLanguages: Record<string, string> = {
+  en_us: 'en-US',
+  en_uwu: 'en-x-uwu',
+  test: 'en-x-pseudo'
+};
+settings.displayLanguage =
+  legacyDisplayLanguages[settings.displayLanguage] ?? settings.displayLanguage;
+
 if (!settings.hwAcceleration) {
   log.info('Disabling hardware acceleration.');
   app.disableHardwareAcceleration();
@@ -617,10 +626,9 @@ function confirmUpdate(updateVersion: string): boolean {
   if (!settings.horizonAutoDownloadUpdates && notConnected) return true;
   const focusedWindow = electron.BrowserWindow.getFocusedWindow();
   const options = {
-    message: l(
-      `update.restart.confirm${!notConnected ? '.connected' : ''}`,
-      updateVersion
-    ),
+    message: l(`update.restart.confirm${!notConnected ? '.connected' : ''}`, {
+      version: updateVersion
+    }),
     title: l('title'),
     buttons: [l('confirmYes'), l('confirmNo')],
     cancelId: 1
@@ -1108,7 +1116,7 @@ async function onReady(): Promise<void> {
               process.env.NODE_ENV !== 'development'
                 ? 'version'
                 : 'developmentVersion',
-              process.env.APP_VERSION || app.getVersion()
+              { version: process.env.APP_VERSION || app.getVersion() }
             ),
             click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
               let win = w || electron.BrowserWindow.getFocusedWindow();

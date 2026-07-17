@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Dates and timestamps shown in the app now follow your display language instead of always using English formatting. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3b517be9132ff62f3a6acfc5ba2f129f7a3acd10)
+- The summary messages shown after exporting or importing a backup are now translated. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/fb2764690c075ec603ba0d38bf172b370e4eda6f)
+- Counted things ("5 messages", "1 channel") now use the correct plural forms for your display language, including languages with more than two plural forms like Russian. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/591a635260cbdb89b270de002bcdc8d018aaaec1)
+
+### Development
+
+- The localization runtime now supports named placeholders (`l('key', { name })` with `{name}` in the string), plus a new `LocalizedText` component for using them in templates. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b2991aaaeddda4877ecab1aaa264f2d8818ba83d)
+  - All existing locale strings were migrated to full sentences with named placeholders, so translators can reorder words naturally instead of translating sentence fragments. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/76230fe5443c63bd8b5d065cda6f3fc7f672ceae)
+- Added `lp()` for plural-aware string lookups backed by CLDR plural rules (via `Intl.PluralRules`). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ebc2307bc456bc4226aaa2011cfaa5eabee062dd)
+  - The locale checker now validates plural groups too, so locale files with missing or bogus plural categories fail CI. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/79615f6d93341e63a71500e84f795fb0a33392c0)
+- The dev-only "Test Language" is now a readable pseudo-locale: accented characters and length padding make untranslated strings and too-tight layouts easy to spot. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/15e2e530c0ff0b89fd98e414a20da56a14122079)
+- Locale codes are now valid BCP47 (`en-US`, `en-x-uwu`, `en-x-pseudo`); previously saved display language settings are migrated automatically. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a3c2d2ec54d379aa6a262e8654d9123a3f133113)
+- Removed locale keys that were no longer referenced anywhere. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9033b8422904ae53e387fd82583558eb6f642d8f)
+
+### Documentation
+
+- Updated the localization docs (`docs/localize.md`) to cover named placeholders and plural groups. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/64e3dae92500ef3956bffb038a2253d35cf59500)
+
 ## [2.3.3] - 2026-07-17
 
 ### Changed

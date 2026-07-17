@@ -190,14 +190,13 @@ export async function runVanillaImport(vm: ExporterVm): Promise<void> {
     vm.settings.hasImportedVanillaLogs = true;
     ipcRenderer.send('general-settings-update', vm.settings);
 
-    vm.vanillaImportSummary = l(
-      'settings.import.vanilla.summary',
-      summaries.size,
-      logs,
-      logsSkip,
-      settings,
-      settingsSkip
-    );
+    vm.vanillaImportSummary = l('settings.import.vanilla.summary', {
+      count: summaries.size,
+      logsCopied: logs,
+      logsSkipped: logsSkip,
+      settingsCopied: settings,
+      settingsSkipped: settingsSkip
+    });
     vm.showVanillaAutoPrompt = false;
 
     const { refreshExportCharacters } =

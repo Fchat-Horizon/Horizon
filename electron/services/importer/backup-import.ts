@@ -14,6 +14,7 @@ import fs from 'fs';
 import path from 'path';
 import { ipcRenderer } from 'electron';
 import log from 'electron-log';
+import l from '../../../chat/localize';
 import AdmZip from 'adm-zip';
 import type { IZipEntry } from 'adm-zip';
 import {
@@ -712,16 +713,25 @@ function finalizeImport(vm: ExporterVm, stats: ImportStats): void {
 
   let generalState: string;
   if (stats.generalImported) {
-    generalState = 'updated';
+    generalState = l('settings.import.zip.generalUpdated');
   } else if (stats.generalCandidate) {
-    generalState = 'skipped';
+    generalState = l('settings.import.zip.generalSkipped');
   } else {
-    generalState = 'not imported';
+    generalState = l('settings.import.zip.generalNotImported');
   }
 
-  let summary = `Restored data for ${stats.charactersTouched.size} character(s). Logs copied: ${stats.logsCopied} (skipped ${stats.logsSkipped}). Settings copied: ${stats.settingsCopied} (skipped ${stats.settingsSkipped}). General settings: ${generalState}.`;
+  let summary = l('settings.import.zip.summary', {
+    count: stats.charactersTouched.size,
+    logsCopied: stats.logsCopied,
+    logsSkipped: stats.logsSkipped,
+    settingsCopied: stats.settingsCopied,
+    settingsSkipped: stats.settingsSkipped,
+    generalSettings: generalState
+  });
   if (stats.filesErrored > 0) {
-    summary += ` ${stats.filesErrored} file(s) failed to import.`;
+    summary += ` ${l('settings.import.zip.summaryFailed', {
+      count: stats.filesErrored
+    })}`;
   }
   vm.importSummary = summary;
 }

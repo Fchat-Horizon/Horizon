@@ -379,7 +379,11 @@
           :bookmark="false"
           :isMarkerShown="shouldShowMarker"
         ></user
-        >&nbsp;{{ l('chat.typing.' + conversation.typingStatus, '').trim() }}
+        >&nbsp;{{
+          l('chat.typing.' + conversation.typingStatus, {
+            character: ''
+          }).trim()
+        }}
       </span>
       <div v-show="conversation.infoText" class="chat-info-text">
         <span
@@ -751,11 +755,10 @@
             this.adCountdown = 0;
             this.adsMode = l('channel.mode.ads');
           } else
-            this.adsMode = l(
-              'channel.mode.ads.countdown',
-              Math.floor(diff / 60),
-              Math.floor(diff % 60)
-            );
+            this.adsMode = l('channel.mode.ads.countdown', {
+              minutes: Math.floor(diff / 60),
+              seconds: Math.floor(diff % 60)
+            });
         };
         if (Date.now() < value && this.adCountdown === 0)
           this.adCountdown = window.setInterval(setAdCountdown, 1000);
@@ -1086,14 +1089,17 @@
           const expDiffMins = Math.floor(expDiff / 60);
           const expDiffSecs = Math.floor(expDiff % 60);
 
-          this.adAutoPostUpdate =
-            l(
-              adManager.getNextPostDue() && !adManager.getFirstPost()
-                ? 'admgr.postingBegins'
-                : 'admgr.nextPostDue',
-              diffMins,
-              diffSecs
-            ) + l('admgr.expiresIn', expDiffMins, expDiffSecs);
+          this.adAutoPostUpdate = l(
+            adManager.getNextPostDue() && !adManager.getFirstPost()
+              ? 'admgr.postingBeginsExpires'
+              : 'admgr.nextPostDueExpires',
+            {
+              postMinutes: diffMins,
+              postSeconds: diffSecs,
+              expireMinutes: expDiffMins,
+              expireSeconds: expDiffSecs
+            }
+          );
 
           this.adsRequireSetup = false;
         } else {

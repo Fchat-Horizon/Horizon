@@ -13,6 +13,7 @@ import * as remote from '@electron/remote';
 import fs from 'fs';
 import path from 'path';
 import log from 'electron-log';
+import l from '../../../chat/localize';
 import archiver from 'archiver';
 import AdmZip from 'adm-zip';
 import {
@@ -435,9 +436,15 @@ export async function runExport(vm: ExporterVm): Promise<void> {
       return;
     }
 
-    let summary = `Exported ${count} file(s) for ${selectedCharacters.length} character(s) to ${outputPath}`;
+    let summary = l('settings.export.summary', {
+      fileCount: count,
+      count: selectedCharacters.length,
+      file: outputPath
+    });
     if (failedFiles.length > 0) {
-      summary += ` (${failedFiles.length} file(s) skipped due to errors)`;
+      summary += ` ${l('settings.export.summarySkipped', {
+        count: failedFiles.length
+      })}`;
     }
     vm.exportSummary = summary;
   } catch (error) {
