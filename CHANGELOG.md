@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Filtering for specific words and phrases in the log viewer now highlights them in the search results. This also works if you use Ctrl/ Cmd + F while looking at a conversations. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e28c3341d4c7c18ccc37f3825d9dfe1627e6c1f9)
+
+### Fixed
+
+- Fixed logs being broken after importing a manual backup into a fully empty folder-- like on a fresh install, or if you migrate logs to a different location. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7f6e9fc80f4d6f282aa907d826165146b30e7bbd)
+  - If you've ran into this issue, reimporting a "broken", pre-2.3.3 export will restore the conversation index files mostly-- only missing titles for channels not in your "Recent Channels" list. Importing a 2.3.3, or an auto backup should fully restore all channel titles.
+- Fixed a bunch of cases where friends and bookmarks would appear twice in your friends list, or not show a message in the console when signing in and out. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e09eaa2b7802825342c7a03edf7fff54dad1d73d)
+- Fixed conversation drafts being tracked based on the conversation name, instead of their unique ID number. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/bc30926d91b2a0038ec71d370b0f1aac3c33d386)
+  - This should fix cases where a channel having the same name as a character-- or two channels having the same name, would cause draft messages to be shared between them.
+
+### Development
+
+- Discord Pull Request build notifications now show the PR title properly. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/fc0511544e78cbcd09f127cbc23b932514c03c19)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/840 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/883 by @Kannamoris
+- https://github.com/Fchat-Horizon/Horizon/pull/884 by @freenutsxd and @CodingWithAnxiety
+- https://github.com/Fchat-Horizon/Horizon/issues/886 by @CodingWithAnxiety
+
 ## [2.3.2] - 2026-07-13
 
 ### Changed
