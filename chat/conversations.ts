@@ -909,7 +909,9 @@ class State implements Interfaces.State {
         : `[channel]${name}[/channel]`;
     });
     void this.consoleTab.addMessage(
-      new EventMessage(l('channel.group.removedUnjoinable', links.join(', ')))
+      new EventMessage(
+        l('channel.group.removedUnjoinable', { channels: links.join(', ') })
+      )
     );
   }
 

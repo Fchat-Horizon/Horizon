@@ -626,10 +626,9 @@ function confirmUpdate(updateVersion: string): boolean {
   if (!settings.horizonAutoDownloadUpdates && notConnected) return true;
   const focusedWindow = electron.BrowserWindow.getFocusedWindow();
   const options = {
-    message: l(
-      `update.restart.confirm${!notConnected ? '.connected' : ''}`,
-      updateVersion
-    ),
+    message: l(`update.restart.confirm${!notConnected ? '.connected' : ''}`, {
+      version: updateVersion
+    }),
     title: l('title'),
     buttons: [l('confirmYes'), l('confirmNo')],
     cancelId: 1
