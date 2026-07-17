@@ -3,7 +3,7 @@ import os from 'os';
 import path from 'path';
 import { ipcRenderer } from 'electron';
 import log from 'electron-log';
-import l from '../../../chat/localize';
+import l, { lp } from '../../../chat/localize';
 import type { ExporterVm } from '../exporter-vm';
 import * as VanillaImporter from './vanilla-importer';
 
@@ -191,7 +191,7 @@ export async function runVanillaImport(vm: ExporterVm): Promise<void> {
     ipcRenderer.send('general-settings-update', vm.settings);
 
     vm.vanillaImportSummary = l('settings.import.vanilla.summary', {
-      count: summaries.size,
+      characters: lp('settings.summary.characters', summaries.size),
       logsCopied: logs,
       logsSkipped: logsSkip,
       settingsCopied: settings,

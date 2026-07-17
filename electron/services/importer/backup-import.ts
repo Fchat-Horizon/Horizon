@@ -721,7 +721,7 @@ function finalizeImport(vm: ExporterVm, stats: ImportStats): void {
   }
 
   let summary = l('settings.import.zip.summary', {
-    count: stats.charactersTouched.size,
+    characters: lp('settings.summary.characters', stats.charactersTouched.size),
     logsCopied: stats.logsCopied,
     logsSkipped: stats.logsSkipped,
     settingsCopied: stats.settingsCopied,

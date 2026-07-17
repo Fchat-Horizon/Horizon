@@ -437,8 +437,8 @@ export async function runExport(vm: ExporterVm): Promise<void> {
     }
 
     let summary = l('settings.export.summary', {
-      fileCount: count,
-      count: selectedCharacters.length,
+      files: lp('settings.summary.files', count),
+      characters: lp('settings.summary.characters', selectedCharacters.length),
       file: outputPath
     });
     if (failedFiles.length > 0) {
