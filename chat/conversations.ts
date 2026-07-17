@@ -38,8 +38,12 @@ const CONVERSATION_CACHE_UPDATE_FREQ_IN_MS = 1000;
  * before pinned channels that never joined are treated as removed and pruned.
  * The timer resets on every successful join, so a slow connection that delivers
  * joins gradually keeps deferring the cleanup until the joins actually stop.
+ * Sits at the client's ping stale threshold (the pin timeout in
+ * fchat/connection.ts): a connection that survives this long without a join
+ * arriving is demonstrably alive, so the channels that still have not joined
+ * are gone for good rather than merely slow.
  */
-const PINNED_CLEANUP_SETTLE_IN_MS = 10000;
+const PINNED_CLEANUP_SETTLE_IN_MS = 90000;
 
 function createMessage(
   this: any,
@@ -1332,6 +1336,10 @@ export default function (this: any): Interfaces.State {
     // pinned channels that never joined (removed server-side).
     state.pinnedCleanupArmed = true;
     state.schedulePinnedCleanup();
+  });
+  connection.onEvent('closed', () => {
+    state.pinnedCleanupArmed = false;
+    clearTimeout(state.pinnedCleanupTimer);
   });
   core.channels.onEvent(async (type, channel, member) => {
     if (type === 'join')
