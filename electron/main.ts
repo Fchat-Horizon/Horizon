@@ -313,6 +313,15 @@ if (!fs.existsSync(settingsFile)) {
   }
 }
 
+// ^ pre-2.4 builds persisted snake_case ids; keep in sync with legacyCodes in chat/localize.ts
+const legacyDisplayLanguages: Record<string, string> = {
+  en_us: 'en-US',
+  en_uwu: 'en-x-uwu',
+  test: 'en-x-pseudo'
+};
+settings.displayLanguage =
+  legacyDisplayLanguages[settings.displayLanguage] ?? settings.displayLanguage;
+
 if (!settings.hwAcceleration) {
   log.info('Disabling hardware acceleration.');
   app.disableHardwareAcceleration();
