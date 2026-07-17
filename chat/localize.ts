@@ -80,6 +80,18 @@ export function setLanguage(lang: string | undefined): void {
 export type LocalizeParams = Record<string, string | number>;
 
 const pluralRulesCache = new Map<string, Intl.PluralRules>();
+const numberFormatCache = new Map<string, Intl.NumberFormat>();
+
+// ^ numeric params get locale digit grouping; pass a string to keep raw digits
+function formatNumber(value: number): string {
+  const code = i18nState.locale;
+  let nf = numberFormatCache.get(code);
+  if (nf === undefined) {
+    nf = new Intl.NumberFormat(code);
+    numberFormatCache.set(code, nf);
+  }
+  return nf.format(value);
+}
 
 const dateLocales: Record<string, Locale> = {
   en: dateEnUS,
@@ -141,9 +153,11 @@ function format(str: string, params?: LocalizeParams): string {
   )
     str = pseudolocalize(str);
   if (params === undefined) return str;
-  return str.replace(/\{(\w+)\}/g, (match, name: string) =>
-    name in params ? String(params[name]) : match
-  );
+  return str.replace(/\{(\w+)\}/g, (match, name: string) => {
+    if (!(name in params)) return match;
+    const value = params[name];
+    return typeof value === 'number' ? formatNumber(value) : String(value);
+  });
 }
 
 export default function l(key: LocaleKey, params: LocalizeParams): string;
@@ -167,8 +181,13 @@ export default function l(
     return format(str, args[0]);
 
   str = format(str);
-  for (let i = args.length - 1; i >= 0; i--)
-    str = str.replace(new RegExp(`\\{${i}\\}`, 'g'), String(args[i]));
+  for (let i = args.length - 1; i >= 0; i--) {
+    const arg = args[i];
+    str = str.replace(
+      new RegExp(`\\{${i}\\}`, 'g'),
+      typeof arg === 'number' ? formatNumber(arg) : String(arg)
+    );
+  }
   return str;
 }
 
