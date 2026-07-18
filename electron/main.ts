@@ -1531,6 +1531,11 @@ async function onReady(): Promise<void> {
     browserWindows.quitAllWindows();
     settings.logDirectory = _path;
     setGeneralSettings(settings);
+    app.relaunch();
+    //"Note that this method does not quit the app when executed.
+    //You have to call app.quit or app.exit after calling app.relaunch to make the app restart."
+    //Source: https://www.electronjs.org/docs/latest/api/app#apprelaunchoptions
+    //What the hell, sure.
     app.quit();
   });
 
