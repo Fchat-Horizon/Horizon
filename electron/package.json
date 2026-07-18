@@ -107,7 +107,7 @@
   },
   "devDependencies": {
     "commander": "^14.0.0",
-    "electron": "40.10.0",
+    "electron": "42.4.1",
     "electron-builder": "^26.8.1"
   },
   "dependencies": {
@@ -116,5 +116,5 @@
     "electron-updater": "^6.3.0",
     "markdown-it": "^14.1.1"
   },
-  "packageManager": "pnpm@10.33.0"
+  "packageManager": "pnpm@11.7.0"
 }

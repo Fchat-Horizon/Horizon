@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Development
+
+- Upgraded to Electron 42 (`v42.4.1`) from `40.10.0`.
+- Upgraded the pinned package manager to pnpm 11 (`v11.7.0`) from `10.33.0`. pnpm settings moved into `pnpm-workspace.yaml`, using the new `allowBuilds` map for build approvals and disabling the release-age cooldown.
+
 ### Changed
 
 - Dates and timestamps shown in the app now follow your display language instead of always using English formatting. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3b517be9132ff62f3a6acfc5ba2f129f7a3acd10)
