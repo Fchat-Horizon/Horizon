@@ -1810,7 +1810,7 @@ export const speciesMapping: SpeciesMap = {
     'behemoth'
   ],
 
-  [Species.Naga]: ['naga', 'lamia', 'coatl', 'quetzalcoatl'],
+  [Species.Naga]: ['naga', 'coatl', 'quetzalcoatl'],
   [Species.Taur]: [
     'centaur',
     'chakat',
