@@ -1348,7 +1348,7 @@
         this.horizonShowDuplicateStatusNotifications =
           settings.horizonShowDuplicateStatusNotifications;
         this.horizonHighlightUsers = settings.horizonHighlightUsers.join(',');
-        this.risingFilter = settings.risingFilter;
+        this.risingFilter = JSON.parse(JSON.stringify(settings.risingFilter));
 
         this.risingAvailableThemes = fs
           .readdirSync(path.join(__dirname, 'themes'))
@@ -1550,6 +1550,9 @@
             );
           }
         });
+
+        // if a sender's filtered status is stale (not in memory), rematch them
+        void core.cache.rematchStaleAdsInConversations();
       },
       getAsNumber(input: any): number | null {
         if (_.isNil(input) || input === '') {
