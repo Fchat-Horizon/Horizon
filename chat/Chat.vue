@@ -177,14 +177,19 @@
     -->
     <modal
       :action="l('settings.migration.title')"
-      :buttonText="l('settings.migration.useCurrent')"
+      :buttonText="
+        l('settings.migration.useCurrent', {
+          characterName: selectedCharacter?.name || ''
+        })
+      "
       ref="settingsMigration"
       @submit="migrateSettings(true)"
       :showCancel="true"
       :cancelText="l('settings.migration.startFresh')"
+      :iconClass="'fas fa-exclamation-triangle'"
       @cancel="migrateSettings(false)"
     >
-      <p>{{ l('settings.migration.prompt') }}</p>
+      <p>{{ l('settings.migration.prompt', { title: l('title') }) }}</p>
     </modal>
     <logs ref="logsDialog"></logs>
     <div
@@ -208,6 +213,7 @@
   import { errorToString, characterImage } from './common';
   import core from './core';
   import l from './localize';
+  import LocalizedText from '../components/localized_text';
   import Logs from './Logs.vue';
   import Tips from './Tips.vue';
   import { init as profileApiInit } from './profile_api';
@@ -285,7 +291,13 @@
   }
 
   export default Vue.extend({
-    components: { chat: ChatView, modal: Modal, logs: Logs, tips: Tips },
+    components: {
+      chat: ChatView,
+      modal: Modal,
+      logs: Logs,
+      tips: Tips,
+      LocalizedText
+    },
     props: {
       ownCharacters: { type: Array as () => SimpleCharacter[], required: true },
       defaultCharacter: { type: Number, required: true },

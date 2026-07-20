@@ -134,7 +134,9 @@
               { id: '0', label: l('settings.tab.global') },
               {
                 id: '1',
-                label: l('settings.tab.character', currentCharacter || '')
+                label: l('settings.tab.character', {
+                  characterName: currentCharacter || ''
+                })
               }
             ]"
           ></tabs>
@@ -148,7 +150,11 @@
           <div class="warning" v-else>
             <h5>{{ l('warning.info') }}</h5>
             <div>
-              {{ l('settings.mode.character', currentCharacter || '') }}
+              {{
+                l('settings.mode.character', {
+                  characterName: currentCharacter || ''
+                })
+              }}
             </div>
           </div>
         </div>
