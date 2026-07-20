@@ -1818,6 +1818,9 @@
 </template>
 
 <script lang="ts">
+  // I'm so, so sorry Joycon
+  // We'll get rid of this for 2.5 when we'll write a unified event system.
+  import * as electron from 'electron';
   import * as fs from 'fs';
   import * as path from 'path';
   import CustomDialog from '../components/custom_dialog';
@@ -1850,6 +1853,10 @@
   import VirtualList from '../components/VirtualList.vue';
 
   const bbcodeParser = new UserInterfaceBBCodeParser();
+
+  function notifySettingsReload(): void {
+    electron.ipcRenderer.send('request-reload-settings');
+  }
 
   export default CustomDialog.extend({
     components: {
@@ -2036,6 +2043,7 @@
           await core.notifications.requestPermission();
 
         EventBus.$emit('configuration-update', core.state.settings);
+        notifySettingsReload();
       },
       async submitCharacterOverrides(): Promise<void> {
         const oldRisingFilter = JSON.parse(
@@ -2053,6 +2061,7 @@
         }
 
         EventBus.$emit('configuration-update', core.state.settings);
+        notifySettingsReload();
       },
       rebuildFilters() {
         core.cache.profileCache.onEachInMemory(c => {

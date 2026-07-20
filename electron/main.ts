@@ -1577,6 +1577,13 @@ async function onReady(): Promise<void> {
     }
   );
 
+  electron.ipcMain.on('request-reload-settings', event => {
+    for (const w of electron.webContents.getAllWebContents()) {
+      if (w.id === event.sender.id) continue;
+      w.send('reload-settings');
+    }
+  });
+
   electron.ipcMain.on('open-url-externally', (_e, _url: string) => {
     openURLExternally(_url);
   });

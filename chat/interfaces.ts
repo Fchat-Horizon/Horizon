@@ -291,6 +291,7 @@ export namespace Settings {
   }
 
   export interface Settings {
+    readonly version: number;
     readonly playSound: boolean;
     readonly clickOpensMessage: boolean;
     readonly disallowedTags: ReadonlyArray<string>;

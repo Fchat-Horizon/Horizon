@@ -341,6 +341,7 @@ export interface Core {
   toggleHidden(name: string): void;
 
   watch<T>(getter: (this: VueState) => T, callback: WatchHandler<T>): void;
+  reloadSettings(): Promise<void>;
   migrateToGlobalSettings(useCurrentAsGlobal: boolean): Promise<void>;
 }
 

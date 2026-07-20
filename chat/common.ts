@@ -85,7 +85,10 @@ export function getByteLength(this: any | never, str: string): number {
   return byteLen;
 }
 
+const SETTINGS_VERSION = 1;
+
 export class Settings implements ISettings {
+  version = SETTINGS_VERSION;
   playSound = true;
   clickOpensMessage = false;
   disallowedTags: string[] = [];
