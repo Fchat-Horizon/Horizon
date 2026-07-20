@@ -52,11 +52,11 @@
         </div>
         <div
           v-else-if="updateDownloaded"
-          class="btn btn-success btn-update-done"
+          class="btn btn-outline-success btn-update-done"
           @click="installUpdate"
           :title="l('update.titlebar.ready')"
         >
-          <i class="fas fa-arrows-rotate fa-fade"></i>
+          <i class="fas fa-arrows-rotate"></i>
         </div>
         <div v-else class="btn btn-outline-success" @click="openUpdatePage">
           <i class="fa fa-arrow-down"></i>
@@ -956,16 +956,18 @@
   }
 
   #window-tabs .btn-update-done {
-    animation: pulse-success 1.5s ease-in-out infinite;
+    animation: pulse-success 1.5s ease-in-out 5;
   }
 
   @keyframes pulse-success {
     0%,
     100% {
-      opacity: 1;
+      background-color: rgba(var(--bs-success-rgb), 0);
+      color: var(--bs-success);
     }
     50% {
-      opacity: 0.6;
+      background-color: rgba(var(--bs-success-rgb), 1);
+      color: var(--bs-light);
     }
   }
 
