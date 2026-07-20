@@ -1932,11 +1932,10 @@
       async doImport(): Promise<void> {
         if (
           !confirm(
-            l(
-              'settings.import.confirm',
-              this.importCharacter,
-              core.connection.character
-            )
+            l('settings.import.confirm', {
+              source: this.importCharacter,
+              target: core.connection.character
+            })
           )
         )
           return;
@@ -2072,6 +2071,9 @@
             );
           }
         });
+
+        // if a sender's filtered status is stale (not in memory), rematch them
+        void core.cache.rematchStaleAdsInConversations();
       },
       getAsNumber(input: any): number | null {
         if (_.isNil(input) || input === '') {

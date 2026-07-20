@@ -78,7 +78,8 @@ remoteMain.initialize();
 
 const characters: string[] = [];
 let autoBackupScheduler:
-  import('./services/exporter/auto-backup').AutoBackupScheduler | undefined;
+  | import('./services/exporter/auto-backup').AutoBackupScheduler
+  | undefined;
 
 async function tryHandleCli(): Promise<boolean> {
   const argv = process.argv.slice(1);
@@ -237,10 +238,11 @@ EXAMPLES:
         dryRun,
         zip,
         touchedCharacters: importResult.touchedCharacters.length,
-        generalImported: importResult.generalImported
+        generalImported: importResult.generalImported,
+        filesErrored: importResult.filesErrored
       })
     );
-    app.exit(0);
+    app.exit(importResult.filesErrored > 0 ? 1 : 0);
     return true;
   }
   return false;
@@ -311,6 +313,15 @@ if (!fs.existsSync(settingsFile)) {
     log.error(`Error loading settings: ${e}`);
   }
 }
+
+// ^ pre-2.4 builds persisted snake_case ids; keep in sync with legacyCodes in chat/localize.ts
+const legacyDisplayLanguages: Record<string, string> = {
+  en_us: 'en-US',
+  en_uwu: 'en-x-uwu',
+  test: 'en-x-pseudo'
+};
+settings.displayLanguage =
+  legacyDisplayLanguages[settings.displayLanguage] ?? settings.displayLanguage;
 
 if (!settings.hwAcceleration) {
   log.info('Disabling hardware acceleration.');
@@ -615,10 +626,9 @@ function confirmUpdate(updateVersion: string): boolean {
   if (!settings.horizonAutoDownloadUpdates && notConnected) return true;
   const focusedWindow = electron.BrowserWindow.getFocusedWindow();
   const options = {
-    message: l(
-      `update.restart.confirm${!notConnected ? '.connected' : ''}`,
-      updateVersion
-    ),
+    message: l(`update.restart.confirm${!notConnected ? '.connected' : ''}`, {
+      version: updateVersion
+    }),
     title: l('title'),
     buttons: [l('confirmYes'), l('confirmNo')],
     cancelId: 1
@@ -1106,7 +1116,7 @@ async function onReady(): Promise<void> {
               process.env.NODE_ENV !== 'development'
                 ? 'version'
                 : 'developmentVersion',
-              process.env.APP_VERSION || app.getVersion()
+              { version: process.env.APP_VERSION || app.getVersion() }
             ),
             click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
               let win = w || electron.BrowserWindow.getFocusedWindow();
@@ -1522,6 +1532,11 @@ async function onReady(): Promise<void> {
     browserWindows.quitAllWindows();
     settings.logDirectory = _path;
     setGeneralSettings(settings);
+    app.relaunch();
+    //"Note that this method does not quit the app when executed.
+    //You have to call app.quit or app.exit after calling app.relaunch to make the app restart."
+    //Source: https://www.electronjs.org/docs/latest/api/app#apprelaunchoptions
+    //What the hell, sure.
     app.quit();
   });
 

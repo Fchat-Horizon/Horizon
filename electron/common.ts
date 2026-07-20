@@ -34,7 +34,7 @@ export class GeneralSettings {
   host = defaultHost;
   logDirectory = path.join(electron.app.getPath('userData'), 'data');
   spellcheckLang: string[] | string | undefined = [getDefaultLanguage()];
-  displayLanguage: string = 'en_us';
+  displayLanguage: string = 'en-US';
   theme = 'default';
   themeSync: boolean = false;
   themeSyncDark: string = 'dark';

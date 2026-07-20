@@ -145,10 +145,7 @@
       this.jsMutator.init();
 
       EventBus.$on('imagepreview-dismiss', (eventData: EventBusEvent) => {
-        this.dismiss(
-          this.negotiateUrl((eventData.url as string) || ''),
-          eventData.force as boolean
-        );
+        this.dismiss(this.negotiateUrl((eventData.url as string) || ''));
       });
 
       EventBus.$on('imagepreview-show', (eventData: EventBusEvent) => {
@@ -680,7 +677,7 @@
 
         this.reRenderStyles();
       },
-      dismiss(initialUrl: string, force: boolean = false): void {
+      dismiss(initialUrl: string): void {
         const url = this.jsMutator.mutateUrl(initialUrl);
 
         this.debugLog('ImagePreview: dismiss', url);
@@ -703,8 +700,6 @@
 
         this.exitUrl = this.url;
         this.shouldDismiss = true;
-
-        if (!this.hasMouseMovedSince() && !force) return;
 
         this.debugLog(
           'ImagePreview: dismiss.exec',

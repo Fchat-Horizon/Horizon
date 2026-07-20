@@ -349,10 +349,9 @@
                         class="form-text text-muted"
                       >
                         {{
-                          l(
-                            'settings.autoBackup.estimatedUsage',
-                            estimatedRetentionSize
-                          )
+                          l('settings.autoBackup.estimatedUsage', {
+                            size: estimatedRetentionSize
+                          })
                         }}
                       </small>
                     </div>
@@ -386,10 +385,9 @@
                       </div>
                       <small class="form-text text-muted">
                         {{
-                          l(
-                            'settings.autoBackup.directoryDefault',
-                            defaultBackupDir
-                          )
+                          l('settings.autoBackup.directoryDefault', {
+                            dir: defaultBackupDir
+                          })
                         }}
                       </small>
                     </div>
@@ -643,7 +641,11 @@
                       {{ l('settings.import.zip.choose') }}
                     </button>
                     <div class="form-text" v-if="importZipName">
-                      {{ l('settings.import.zip.selected', importZipName) }}
+                      {{
+                        l('settings.import.zip.selected', {
+                          file: importZipName
+                        })
+                      }}
                     </div>
                     <div class="form-text text-muted" v-else>
                       {{ l('settings.import.zip.noFile') }}
@@ -662,17 +664,17 @@
                     class="alert alert-info small mb-3"
                   >
                     {{
-                      l(
-                        'settings.import.zip.manifestBanner',
-                        importZipManifest.version,
-                        importZipManifest.characters.length,
-                        importZipManifest.expectedFiles,
-                        new Date(importZipManifest.createdAt).toLocaleString(),
-                        importZipManifest.includes &&
+                      l('settings.import.zip.manifestBanner', {
+                        version: importZipManifest.version,
+                        characters: importZipManifest.characters.length,
+                        files: importZipManifest.expectedFiles,
+                        created: formatDateTime(importZipManifest.createdAt),
+                        logs:
+                          importZipManifest.includes &&
                           importZipManifest.includes.jsonLogs
-                          ? l('settings.import.zip.manifestBannerJson')
-                          : l('settings.import.zip.manifestBannerBinary')
-                      )
+                            ? l('settings.import.zip.manifestBannerJson')
+                            : l('settings.import.zip.manifestBannerBinary')
+                      })
                     }}
                   </div>
                   <div
@@ -1041,7 +1043,9 @@
                   <div v-if="vanillaImportAvailable" class="mb-3">
                     <div class="alert alert-info" v-if="vanillaBaseDir">
                       {{
-                        l('settings.import.vanilla.location', vanillaBaseDir)
+                        l('settings.import.vanilla.location', {
+                          dir: vanillaBaseDir
+                        })
                       }}
                     </div>
                     <div class="form-check mb-2">
@@ -1244,7 +1248,8 @@
 <script lang="ts">
   import * as remote from '@electron/remote';
   import Vue from 'vue';
-  import l from '../chat/localize';
+  import { format } from 'date-fns';
+  import l, { dateLocale, setLanguage } from '../chat/localize';
   import { GeneralSettings } from './common';
   import fs from 'fs';
   import path from 'path';
@@ -1534,6 +1539,11 @@
       remote.nativeTheme.on('updated', () => {
         this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
       });
+      try {
+        setLanguage(this.settings.displayLanguage);
+      } catch (e) {
+        console.warn('Failed to set display language', e);
+      }
 
       window.addEventListener('beforeunload', e => {
         if (this.exportInProgress || this.importInProgress) {
@@ -1702,12 +1712,15 @@
           this.autoBackups = [];
         }
       },
+      formatDateTime(value: string | number): string {
+        return format(new Date(value), 'PPpp', { locale: dateLocale() });
+      },
       formatBackupLabel(backup: {
         name: string;
         mtime: number;
         size: number;
       }): string {
-        const date = new Date(backup.mtime).toLocaleString();
+        const date = this.formatDateTime(backup.mtime);
         const mb = (backup.size / (1024 * 1024)).toFixed(1);
         return `${date} (${mb} MB)`;
       },

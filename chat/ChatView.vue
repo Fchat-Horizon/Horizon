@@ -1143,14 +1143,16 @@
               (newGroupNameCounter === 0 &&
                 g.name === l('channel.group.newGroup')) ||
               g.name ===
-                l('channel.group.newGroup.counter', newGroupNameCounter)
+                l('channel.group.newGroup.counter', {
+                  count: newGroupNameCounter
+                })
           )
         ) {
           newGroupNameCounter++;
         }
         return newGroupNameCounter === 0
           ? l('channel.group.newGroup')
-          : l('channel.group.newGroup.counter', newGroupNameCounter);
+          : l('channel.group.newGroup.counter', { count: newGroupNameCounter });
       },
 
       showQuickJump(): void {

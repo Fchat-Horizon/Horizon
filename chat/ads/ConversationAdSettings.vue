@@ -1,6 +1,6 @@
 <template>
   <modal
-    :action="l('admgr.actionFor', conversation.name)"
+    :action="l('admgr.actionFor', { name: conversation.name })"
     @submit="submit"
     ref="dialog"
     @open="load()"
@@ -13,15 +13,18 @@
       <h4>{{ l('admgr.prepareToMove') }}</h4>
 
       <p>
-        {{ l('admgr.phasedOutPrefix') }}
-        <button class="btn btn-outline-secondary" @click="openAdEditor()">
-          {{ l('admgr.editor') }}
-        </button>
-        {{ l('admgr.and') }}
-        <button class="btn btn-outline-secondary" @click="openPostAds()">
-          {{ l('ads.post') }}
-        </button>
-        {{ l('admgr.phasedOutSuffix') }}
+        <localized-text k="admgr.phasedOut">
+          <template #adEditor>
+            <button class="btn btn-outline-secondary" @click="openAdEditor()">
+              {{ l('admgr.editor') }}
+            </button>
+          </template>
+          <template #postAds>
+            <button class="btn btn-outline-secondary" @click="openPostAds()">
+              {{ l('ads.post') }}
+            </button>
+          </template>
+        </localized-text>
       </p>
 
       <p>
@@ -47,7 +50,7 @@
 
     <div class="mb-3 ad-list" v-for="(_, index) in ads">
       <label :for="'ad' + conversation.key + '-' + index" class="control-label"
-        >{{ l('admgr.adNumber', index + 1) }}
+        >{{ l('admgr.adNumber', { count: index + 1 }) }}
         <a v-if="index > 0" @click="moveAdUp(index)" :title="l('admgr.moveUp')"
           ><i class="fa fa-arrow-up"></i
         ></a>
@@ -79,6 +82,7 @@
 
 <script lang="ts">
   import CustomDialog from '../../components/custom_dialog';
+  import LocalizedText from '../../components/localized_text';
   import Modal from '../../components/Modal.vue';
   import { Conversation } from '../interfaces';
   import l from '../localize';
@@ -88,7 +92,11 @@
   import _ from 'lodash';
 
   export default CustomDialog.extend({
-    components: { modal: Modal, editor: Editor },
+    components: {
+      modal: Modal,
+      editor: Editor,
+      'localized-text': LocalizedText
+    },
     props: {
       conversation: { type: Object as () => Conversation, required: true }
     },

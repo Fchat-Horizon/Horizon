@@ -335,7 +335,7 @@
   import Tabs from '../components/tabs';
   import core from './core';
   import { Channel, Character, Conversation } from './interfaces';
-  import l from './localize';
+  import l, { lp } from './localize';
   import Sidebar from './Sidebar.vue';
   import UserView from './UserView.vue';
   import characterPage from '../site/character_page/character_page.vue';
@@ -577,7 +577,7 @@
         if (shown !== total) {
           return `${shown}/${total} ${this.l('users.members')}`;
         }
-        return this.l('users.memberCount', total);
+        return lp('users.memberCount', total);
       },
       dropdownWrapClass(): string {
         return !this.filterActive

@@ -9,12 +9,12 @@
 //BBCode colors.
 $red-color: $dracula-red;
 $green-color: $dracula-green;
-$blue-color: #1185fe;
+$blue-color: #6a9bcf;
 $yellow-color: $dracula-yellow;
 $purple-color: $dracula-purple;
 $cyan-color: $dracula-cyan;
 $white-color: $dracula-foreground;
-$black-color: $dracula-comment;
+$black-color: color.scale($dracula-comment, $lightness: -20%);
 $brown-color: #b89383;
 $pink-color: $dracula-pink;
 $gray-color: $gray-600;

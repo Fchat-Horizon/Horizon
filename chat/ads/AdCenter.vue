@@ -10,7 +10,7 @@
   >
     <div class="mb-3 ad-list" v-for="(ad, index) in ads">
       <label :for="'adm-content-' + index" class="control-label"
-        >{{ l('admgr.adNumber', index + 1) }}
+        >{{ l('admgr.adNumber', { count: index + 1 }) }}
         <a
           v-if="index > 0"
           @click="moveAdUp(index)"

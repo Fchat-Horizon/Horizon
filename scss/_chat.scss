@@ -420,6 +420,14 @@ $bookmark-color: #66cc33 !default;
   color: $text-muted;
 }
 
+// search-term highlighting, shared by the log viewer and in-chat find
+.message-search-highlight {
+  background-color: rgba(var(--bs-warning-rgb, 255, 193, 7), 0.45);
+  color: color-contrast($body-bg);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
 .message-time {
   color: $text-dark;
 }

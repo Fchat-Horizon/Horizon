@@ -57,7 +57,7 @@
           this.name = '';
           this.error = '';
         } else {
-          this.error = l('user.unknownCharacter', this.name);
+          this.error = l('user.unknownCharacter', { character: this.name });
         }
       },
       onEnter(): void {
