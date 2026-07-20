@@ -7,19 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Development
-
-- Upgraded to Electron 42 (`v42.4.1`) from `40.10.0`.
-- Upgraded the pinned package manager to pnpm 11 (`v11.7.0`) from `10.33.0`. pnpm settings moved into `pnpm-workspace.yaml`, using the new `allowBuilds` map for build approvals and disabling the release-age cooldown.
-
 ### Changed
 
 - Dates and timestamps shown in the app now follow your display language instead of always using English formatting. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3b517be9132ff62f3a6acfc5ba2f129f7a3acd10)
 - The summary messages shown after exporting or importing a backup are now translated. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/fb2764690c075ec603ba0d38bf172b370e4eda6f)
 - Counted things ("5 messages", "1 channel") now use the correct plural forms for your display language, including languages with more than two plural forms like Russian. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/591a635260cbdb89b270de002bcdc8d018aaaec1)
+- Changing your log directory now restarts the app instead of shutting it down. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3180593704853b47b9faaa0834a484bacb3c0145)
+- Places with character select dropdowns (like on the profile viewer and friends dialog) now show the selected character's avatar. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2f1c47fe2a692835b7df6d36122de482c57804e0)
+
+### Fixed
+
+- The grouped channel pruning now has a more sensible grace period. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/312e4a7b95f52688dbb3daaacb6347e9533ca5e3)
+  - This should fix issues where your channels would be ungrouped (with a console message too!) even though you managed to join them correctly 10 seconds after connecting.
+- Fixed various F-Chat Rising bugs with ads and smart filters not firing correctly: [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/421eef66fad3fb65b6589fe167b77359b7ef4f43)
+  - Smart filters should now work, even if you disable 'Colorize ads'
+  - Having too many ads in the queue no longer lets some of them slip by without getting matched/ filtered. First in, first out.
+  - Ads are now shown/ hidden retroactively if you change filter settings.
+- Fixed various bad colors in colorblind mode. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6b10c5ae7eefb50343ec6529c25fc0e920dd3d0e)
+- Fixed various buttons not using proper 4.7:1 contrast ratios for their text. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5291c3fb5da76bb24fda2eb737ce6900870f7ec3)
 
 ### Development
 
+- Upgraded to Electron 42 (`v42.4.1`) from `40.10.0`.
+- Upgraded the pinned package manager to pnpm 11 (`v11.7.0`) from `10.33.0`. pnpm settings moved into `pnpm-workspace.yaml`, using the new `allowBuilds` map for build approvals and disabling the release-age cooldown.
 - The localization runtime now supports named placeholders (`l('key', { name })` with `{name}` in the string), plus a new `LocalizedText` component for using them in templates. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b2991aaaeddda4877ecab1aaa264f2d8818ba83d)
   - All existing locale strings were migrated to full sentences with named placeholders, so translators can reorder words naturally instead of translating sentence fragments. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/76230fe5443c63bd8b5d065cda6f3fc7f672ceae)
 - Added `lp()` for plural-aware string lookups backed by CLDR plural rules (via `Intl.PluralRules`). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ebc2307bc456bc4226aaa2011cfaa5eabee062dd)
@@ -31,6 +41,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Documentation
 
 - Updated the localization docs (`docs/localize.md`) to cover named placeholders and plural groups. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/64e3dae92500ef3956bffb038a2253d35cf59500)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/793 by @SmileyTatsu
+- https://github.com/Fchat-Horizon/Horizon/pull/826 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/832 by @CodingWithAnxiety and @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/878 by @CodingWithAnxiety
+- https://github.com/Fchat-Horizon/Horizon/pull/882 by @Kannamoris
+- https://github.com/Fchat-Horizon/Horizon/pull/898 by @Kannamoris
+- https://github.com/Fchat-Horizon/Horizon/pull/901 by @FatCatClient
 
 ## [2.3.3] - 2026-07-17
 
