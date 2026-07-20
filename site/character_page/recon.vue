@@ -48,7 +48,9 @@
           </button>
         </div>
         <i v-else>{{
-          l('profile.recon.sharedChannels.none', characterName())
+          l('profile.recon.sharedChannels.none', {
+            character: characterName()
+          })
         }}</i>
       </div>
 
@@ -82,8 +84,9 @@
             <span
               v-if="isOwnCharacter(entry.character)"
               class="recon-history-current"
+              :title="l('profile.recon.currentCharacter')"
             >
-              {{ l('profile.recon.history.current') }}
+              <i class="fa-solid fa-user-check fa-fw"></i>
             </span>
             <span class="message-time">{{ formatDate(entry.lastDate) }}</span>
           </button>
@@ -96,7 +99,9 @@
       >
         <h4>
           <i class="fa-solid fa-comments fa-fw"></i>
-          {{ l('profile.recon.latestMessages', selectedCharacter) }}
+          {{
+            l('profile.recon.latestMessages', { character: selectedCharacter })
+          }}
           <button
             type="button"
             class="btn btn-sm btn-secondary recon-view-logs"
@@ -200,7 +205,7 @@
         const flags: RelationshipFlag[] = [];
         if (c.isFriend)
           flags.push({
-            label: l('profile.recon.flag.friend'),
+            label: l('user.friend'),
             cls: 'text-bg-success',
             icon: 'fa-user-group'
           });
@@ -444,7 +449,6 @@
 
       .recon-history-current {
         opacity: 0.7;
-        font-size: 0.875em;
       }
 
       .message-time {
