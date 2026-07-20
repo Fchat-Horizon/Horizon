@@ -1,3 +1,7 @@
+// If you are making a custom theme, and you are using this as a base.
+// Stop it. It's bad, it's jank, and it keeps having contrast problems that none of the derivatives ever solve.
+// Base your theme on the default blue or light ones instead.
+
 @use 'sass:color';
 
 //Dracula colors
@@ -31,13 +35,15 @@ $black: $dracula-foreground;
 
 // Bootstrap 5 contrast colors
 $light-color: $dracula-foreground;
-$dark-color: $dracula-bg;
+$dark-color: #14141a;
 $component-active-color: $light-color;
 
+$color-contrast-dark: #000;
+$color-contrast-light: #fff;
 $primary: $dracula-purple;
 $secondary: $gray-400;
 $success: $dracula-green;
-$info: $dracula-comment;
+$info: $dracula-cyan;
 $warning: $dracula-orange;
 $danger: $dracula-red;
 $light: $gray-100;

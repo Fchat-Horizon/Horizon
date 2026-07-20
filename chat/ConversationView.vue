@@ -265,19 +265,17 @@
         ref="searchField"
         class="form-control"
       />
-      <a
-        class="btn btn-sm btn-light"
-        style="
-          position: absolute;
-          right: 5px;
-          top: 50%;
-          transform: translateY(-50%);
-          line-height: 0;
-          z-index: 10;
-        "
-        @click="hideSearch"
-        ><i class="fas fa-times"></i
-      ></a>
+      <button
+        class="btn btn-outline-secondary"
+        :class="{ active: highlightEnabled }"
+        :title="l('chat.toggleHighlight')"
+        @click="highlightEnabled = !highlightEnabled"
+      >
+        <span class="fas fa-highlighter"></span>
+      </button>
+      <a class="btn btn-light" @click="hideSearch">
+        <i class="fas fa-times"></i>
+      </a>
     </div>
     <div class="auto-ads" v-show="isAutopostingAds()">
       <h4>{{ l('admgr.activeHeader') }}</h4>
@@ -319,6 +317,7 @@
           :channel="isChannel(conversation) ? conversation.channel : undefined"
           :key="message.id"
           :classes="message == conversation.lastRead ? 'last-read' : ''"
+          :highlight="highlightEnabled ? search : ''"
           :previous="messages[i - 1]"
         >
         </message-view>
@@ -380,7 +379,11 @@
           :bookmark="false"
           :isMarkerShown="shouldShowMarker"
         ></user
-        >&nbsp;{{ l('chat.typing.' + conversation.typingStatus, '').trim() }}
+        >&nbsp;{{
+          l('chat.typing.' + conversation.typingStatus, {
+            character: ''
+          }).trim()
+        }}
       </span>
       <div v-show="conversation.infoText" class="chat-info-text">
         <span
@@ -583,6 +586,7 @@
         showSearch: false,
         searchInput: '',
         search: '',
+        highlightEnabled: true,
         lastSearchInput: 0,
         messageCount: 0,
         searchTimer: 0,
@@ -730,11 +734,14 @@
         }) as EventListener)
       );
       this.searchTimer = window.setInterval(() => {
+        // ignore whitespace-only search
+        const committed =
+          this.searchInput.trim().length === 0 ? '' : this.searchInput;
         if (
           Date.now() - this.lastSearchInput > 500 &&
-          this.search !== this.searchInput
+          this.search !== committed
         )
-          this.search = this.searchInput;
+          this.search = committed;
       }, 500);
       this.messageView = <HTMLElement>this.$refs['messages'];
       this.$watch('conversation.nextAd', (value: number) => {
@@ -748,11 +755,10 @@
             this.adCountdown = 0;
             this.adsMode = l('channel.mode.ads');
           } else
-            this.adsMode = l(
-              'channel.mode.ads.countdown',
-              Math.floor(diff / 60),
-              Math.floor(diff % 60)
-            );
+            this.adsMode = l('channel.mode.ads.countdown', {
+              minutes: Math.floor(diff / 60),
+              seconds: Math.floor(diff % 60)
+            });
         };
         if (Date.now() < value && this.adCountdown === 0)
           this.adCountdown = window.setInterval(setAdCountdown, 1000);
@@ -1083,14 +1089,17 @@
           const expDiffMins = Math.floor(expDiff / 60);
           const expDiffSecs = Math.floor(expDiff % 60);
 
-          this.adAutoPostUpdate =
-            l(
-              adManager.getNextPostDue() && !adManager.getFirstPost()
-                ? 'admgr.postingBegins'
-                : 'admgr.nextPostDue',
-              diffMins,
-              diffSecs
-            ) + l('admgr.expiresIn', expDiffMins, expDiffSecs);
+          this.adAutoPostUpdate = l(
+            adManager.getNextPostDue() && !adManager.getFirstPost()
+              ? 'admgr.postingBeginsExpires'
+              : 'admgr.nextPostDueExpires',
+            {
+              postMinutes: diffMins,
+              postSeconds: diffSecs,
+              expireMinutes: expDiffMins,
+              expireSeconds: expDiffSecs
+            }
+          );
 
           this.adsRequireSetup = false;
         } else {

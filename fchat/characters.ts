@@ -28,6 +28,14 @@ class Character implements Interfaces.Character {
   }
 }
 
+function removeAllFromList(list: Character[], character: Character): void {
+  let index = list.indexOf(character);
+  while (index !== -1) {
+    list.splice(index, 1);
+    index = list.indexOf(character, index);
+  }
+}
+
 export interface CharacterOverrides {
   avatarUrl?: string;
   characterColor?: CharacterColor;
@@ -86,24 +94,21 @@ class State implements Interfaces.State {
     text: string
   ): void {
     if (character.status === 'offline' && status !== 'offline') {
-      if (character.isFriend) this.friends.push(character);
-      if (character.isBookmarked) this.bookmarks.push(character);
+      if (character.isFriend && this.friends.indexOf(character) === -1)
+        this.friends.push(character);
+      if (character.isBookmarked && this.bookmarks.indexOf(character) === -1)
+        this.bookmarks.push(character);
       if (this.characterFriendList.indexOf(character.name) !== -1) {
+        character.isCharacterFriend = true;
         if (this.characterFriends.indexOf(character) === -1) {
           this.characterFriends.push(character);
         }
       }
     } else if (status === 'offline' && character.status !== 'offline') {
-      if (character.isFriend)
-        this.friends.splice(this.friends.indexOf(character), 1);
-      if (character.isBookmarked)
-        this.bookmarks.splice(this.bookmarks.indexOf(character), 1);
-      if (this.characterFriendList.indexOf(character.name) !== -1) {
-        const index = this.characterFriends.indexOf(character);
-        if (index !== -1) {
-          this.characterFriends.splice(index, 1);
-        }
-      }
+      // Remove unconditionally so stale entries can't linger after logoff
+      removeAllFromList(this.friends, character);
+      removeAllFromList(this.bookmarks, character);
+      removeAllFromList(this.characterFriends, character);
     }
     character.status = status;
     character.statusText = decodeHTML(text);
@@ -190,6 +195,7 @@ export default function (this: void, connection: Connection): Interfaces.State {
       character.isBookmarked = state.bookmarkList.some(
         b => b.toLowerCase() === key
       );
+      character.isCharacterFriend = false;
       character.status = 'offline';
       character.statusText = '';
     }
@@ -317,7 +323,11 @@ export default function (this: void, connection: Connection): Interfaces.State {
       case 'trackadd':
         state.bookmarkList.push(data.name);
         character.isBookmarked = true;
-        if (character.status !== 'offline') state.bookmarks.push(character);
+        if (
+          character.status !== 'offline' &&
+          state.bookmarks.indexOf(character) === -1
+        )
+          state.bookmarks.push(character);
         break;
       case 'trackrem':
         state.bookmarkList.splice(state.bookmarkList.indexOf(data.name), 1);
@@ -352,12 +362,14 @@ export default function (this: void, connection: Connection): Interfaces.State {
         // TODO: We may want to alter this in the future for the 'all' list. For now, it's fine.
         if (
           ownName &&
-          state.characterFriendList.indexOf(character.name) !== -1 &&
-          character.status !== 'offline' &&
-          state.characterFriends.indexOf(character) === -1
+          state.characterFriendList.indexOf(character.name) !== -1
         ) {
-          state.characterFriends.push(character);
           character.isCharacterFriend = true;
+          if (
+            character.status !== 'offline' &&
+            state.characterFriends.indexOf(character) === -1
+          )
+            state.characterFriends.push(character);
         }
         break;
       case 'friendremove':
@@ -381,14 +393,11 @@ export default function (this: void, connection: Connection): Interfaces.State {
         // If this character is no longer a friend of our character, remove from characterFriends
         if (
           ownName &&
-          state.characterFriendList.indexOf(character.name) === -1 &&
-          character.status !== 'offline'
+          state.characterFriendList.indexOf(character.name) === -1
         ) {
+          character.isCharacterFriend = false;
           const index = state.characterFriends.indexOf(character);
-          if (index !== -1) {
-            state.characterFriends.splice(index, 1);
-            character.isCharacterFriend = false;
-          }
+          if (index !== -1) state.characterFriends.splice(index, 1);
         }
     }
   });

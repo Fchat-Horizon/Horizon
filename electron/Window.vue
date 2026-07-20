@@ -39,7 +39,9 @@
       >
         <div
           v-if="updateDownloading"
-          :title="l('update.titlebar.downloading', updateDownloadPercent)"
+          :title="
+            l('update.titlebar.downloading', { percent: updateDownloadPercent })
+          "
           :style="{ '--progress-percent': updateDownloadPercent + '%' }"
           class="btn-update-progress"
         >
@@ -406,7 +408,7 @@
         (_e: Electron.IpcRendererEvent, id: number, name: string) => {
           const tab = this.tabMap[id];
           tab.user = name;
-          tab.title = l('title.connected', name);
+          tab.title = l('title.connected', { character: name });
           this.refreshWindowTitle();
           const menu = this.createTrayMenu(tab);
           menu.unshift(

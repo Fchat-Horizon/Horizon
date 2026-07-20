@@ -1,7 +1,7 @@
 <template>
   <modal
     ref="dialog"
-    :action="l('manageChannel.action', channel.name)"
+    :action="l('manageChannel.action', { channel: channel.name })"
     :buttonText="l('manageChannel.submit')"
     @submit="submit"
     dialogClass="modal-70"

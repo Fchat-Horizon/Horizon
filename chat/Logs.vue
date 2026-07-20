@@ -160,7 +160,7 @@
       <template slot-scope="{ item, index, isScrolling }">
         <div v-if="!isScrolling" class="message-container">
           <span
-            v-if="filter.length > 0"
+            v-if="pendingFilter.length > 0"
             class="message-jump-icon"
             @click="jumpToMessage(item.id)"
             title="Jump to this message"
@@ -170,6 +170,7 @@
           <message-view
             :message="item"
             :logs="true"
+            :highlight="highlightEnabled ? pendingFilter : ''"
             :previous="index > 0 ? filteredMessages[index - 1] : undefined"
             :selectable="selectionMode"
             :selected="selectedMessages.has(item.id)"
@@ -211,9 +212,18 @@
       <span v-if="searching" class="input-group-text">
         <span class="fas fa-spinner fa-spin"></span>
       </span>
+      <button
+        v-if="pendingFilter.length > 0 && !selectionMode"
+        class="btn btn-outline-secondary"
+        :class="{ active: highlightEnabled }"
+        :title="l('chat.toggleHighlight')"
+        @click="highlightEnabled = !highlightEnabled"
+      >
+        <span class="fas fa-highlighter"></span>
+      </button>
       <template v-if="selectionMode">
         <span class="input-group-text text-muted">
-          {{ l('logs.selectedCount', selectedMessages.size) }}
+          {{ lp('logs.selectedCount', selectedMessages.size) }}
         </span>
         <button
           class="btn btn-primary"
@@ -254,7 +264,7 @@
   } from './common';
   import core from './core';
   import { Conversation, Logs as LogInterface } from './interfaces';
-  import l from './localize';
+  import l, { lp } from './localize';
   import MessageView from './message_view';
   import VirtualList from '../components/VirtualList.vue';
   import AdmZip from 'adm-zip';
@@ -340,6 +350,7 @@
         dates: [] as ReadonlyArray<Date>,
         selectedDate: undefined as string | undefined,
         l: l,
+        lp: lp,
         filter: '',
         messages: [] as ReadonlyArray<Conversation.Message>,
         formatDate: formatDate,
@@ -357,7 +368,8 @@
         filterDebounce: undefined as ReturnType<typeof setTimeout> | undefined,
         nearTopDebounce: undefined as ReturnType<typeof setTimeout> | undefined,
         pendingFilter: '',
-        searching: false
+        searching: false,
+        highlightEnabled: true
       };
     },
     computed: {
@@ -495,12 +507,14 @@
           clearTimeout(this.filterDebounce);
         this.filterDebounce = setTimeout(() => {
           const wasFiltered = this.pendingFilter.length > 0;
-          this.pendingFilter = this.filter;
+          // ignore whitespace-only searches
+          this.pendingFilter =
+            this.filter.trim().length === 0 ? '' : this.filter;
           const vl = this.$refs['messages'] as InstanceType<
             typeof VirtualList
           > | void;
           if (vl) vl.invalidate();
-          if (this.filter) {
+          if (this.pendingFilter) {
             this.searchMore();
           } else if (wasFiltered) {
             this.$nextTick().then(() => vl?.scrollToBottom());
@@ -633,7 +647,9 @@
       async downloadCharacter(): Promise<void> {
         if (
           this.selectedCharacter === '' ||
-          !Dialog.confirmDialog(l('logs.confirmExport', this.selectedCharacter))
+          !Dialog.confirmDialog(
+            l('logs.confirmExport', { character: this.selectedCharacter })
+          )
         )
           return;
         const zip = new AdmZip();
@@ -787,13 +803,17 @@
         const targetChar = core.characters.get(targetName);
 
         if (targetChar.status === 'offline') {
-          core.notifications.alert(l('logs.shareOffline', targetName));
+          core.notifications.alert(
+            l('logs.shareOffline', { character: targetName })
+          );
           return;
         }
 
         if (
           !Dialog.confirmDialog(
-            l('logs.selectConfirm', this.selectedMessages.size, targetName)
+            lp('logs.selectConfirm', this.selectedMessages.size, {
+              character: targetName
+            })
           )
         )
           return;
