@@ -658,8 +658,6 @@
   "settings.filter.penalizeMatches": "Penyawize [b]match scowes[/b] fow matching chawactews",
   "settings.filter.rewardNonMatches": "Incwease [b]match scowes[/b] fow nyon-matching chawactews",
   "settings.filter.showFilterIcon": "Show [b]fiwtew icon[/b] on matching chawactews",
-  "settings.filteringWarning1": "By activating fiwtewing, you may nyo wongew be abwe to see ow weceive aww messages fwom F-Chat. Fiwtews do nyot appwy to fwiends ow bookmawked chawactews.",
-  "settings.filteringWarning2": "Beta vewsion. Some of these featuwes and behaviows may be wemoved ow signyificantwy changed in the futuwe.",
   "settings.flashWindow": "Enabwe taskbaw fwashing",
   "settings.flashWindow.note": "On Winux, this featuwe might nyot be suppowted by uw window managew ow desktop enviwonment.",
   "settings.fontSize": "Moji size",

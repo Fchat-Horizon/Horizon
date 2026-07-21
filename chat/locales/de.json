@@ -766,8 +766,6 @@
   "settings.filter.penalizeMatches": "[b]Match Scores[/b] für übereinstimmende Charaktere verringern",
   "settings.filter.rewardNonMatches": "[b]Match Scores[/b] für nicht-übereinstimmende Charaktere erhöhen",
   "settings.filter.showFilterIcon": "[b]Filter Icon[/b] für übereinstimmende Charaktere zeigen",
-  "settings.filteringWarning1": "Durch das Aktivieren von Filtern, kann es sein, dass du nicht mehr alle Nachrichten von F-Chat siehst oder erhältst. Filter werden nicht auf Freunde oder Lesezeichen angewendet.",
-  "settings.filteringWarning2": "Beta-Version. Einige dieser Features und Funktionsweisen werden möglicherweise in der Zukunft entfernt oder stark verändert.",
   "settings.flashWindow": "Aufleuchten der Taskleiste aktivieren",
   "settings.flashWindow.note": "Diese Funktion wird in Linux möglicherweise nicht von deinem Window Manager oder deiner Desktop-Umgebungen unterstützt.",
   "settings.fontSize": "Schriftgröße",

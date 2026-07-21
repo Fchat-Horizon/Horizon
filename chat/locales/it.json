@@ -772,8 +772,6 @@
   "settings.filter.penalizeMatches": "Penalizza [b]punteggio di match[/b] di personaggi riscontrati",
   "settings.filter.rewardNonMatches": "Aumenta il [b]punteggio di match[/b] dei personaggi non riscontrati",
   "settings.filter.showFilterIcon": "Mostra un'[b]icona di filtro[/b] su personaggi riscontrati",
-  "settings.filteringWarning1": "Attivando il filtro, potresti non poter vedere o ricevere messaggi da F-chat. I filtri non si applicano agli amici o i segnalibri.",
-  "settings.filteringWarning2": "Versione Beta. Alcune di queste feature e comportamenti potrebbero essere rimossi o alterati in futuro.",
   "settings.flashWindow": "Abilita lampeggio nella barra applicazioni",
   "settings.flashWindow.note": "Su Linux questa opzione potrebbe non essere supportata dal tuo window manager o il tuo ambiente desktop.",
   "settings.fontSize": "Dimensione font",

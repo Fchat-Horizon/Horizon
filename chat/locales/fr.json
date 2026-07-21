@@ -771,8 +771,6 @@
   "settings.filter.penalizeMatches": "Pénalise les [b]scores de correspondance[/b] des personnages correspondants",
   "settings.filter.rewardNonMatches": "Augmente le [b]score de correspondance[/b] des personnages qui ne correspondent pas",
   "settings.filter.showFilterIcon": "Montre l'[b]icone de filtre[/b] sur les personnages correspondants",
-  "settings.filteringWarning1": "En activant le filtrage, vous pourriez ne plus voir ou recevoir tous les messages de F-Chat. Les filtres ne s'appliquent aux personnages amis et favoris.",
-  "settings.filteringWarning2": "Version Beta. Certaines fonctionnalités et comportements pourraient être retirés ou significativement modifiés dans le futur.",
   "settings.flashWindow": "Activer le clignotement de la barre des tâches",
   "settings.flashWindow.note": "Sur Linux, cette fonctionnalité peut ne pas être supportée par votre environnement de bureau ou votre gestionnaire de fenêtres.",
   "settings.fontSize": "Taille de police",

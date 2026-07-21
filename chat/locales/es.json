@@ -772,8 +772,6 @@
   "settings.filter.penalizeMatches": "Reducir los [b]puntajes de compatibilidad[/b] de los personajes compatibles",
   "settings.filter.rewardNonMatches": "Incrementar los [b]puntajes de compatibilidad[/b] de los personajes incompatibles.",
   "settings.filter.showFilterIcon": "Mostrar el [b]icono de filtro[/b] en los personajes compatibles",
-  "settings.filteringWarning1": "Al activar el filtrado, es posible que ya no puedas ver o recibir todos los mensajes de F-Chat. Los filtros no se aplican a amigos ni a personajes marcados como favoritos.",
-  "settings.filteringWarning2": "Versión beta. Algunas de estas funciones y comportamientos podrían eliminarse o cambiarse significativamente en el futuro.",
   "settings.flashWindow": "Activar parpadeo en la barra de tareas",
   "settings.flashWindow.note": "En Linux, esta característica puede que no esté soportada por tu administrador de ventanas o por el entorno de escritorio.",
   "settings.fontSize": "Tamaño de fuente",

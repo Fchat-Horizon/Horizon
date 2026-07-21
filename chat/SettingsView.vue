@@ -658,7 +658,7 @@
 
             <div class="mb-3 p-2">
               <label class="control-label" for="fontSize">{{
-                l('settings.experimental', l('settings.fontSize'))
+                l('settings.experimental', { name: l('settings.fontSize') })
               }}</label>
               <settings-input
                 id="fontSize"
@@ -769,7 +769,9 @@
 
             <div class="mb-3 p-2">
               <label class="control-label" for="chatLayoutMode">{{
-                l('settings.experimental', l('settings.chatLayoutMode'))
+                l('settings.experimental', {
+                  name: l('settings.chatLayoutMode')
+                })
               }}</label>
               <!--TODO
               Do this for global settings too. Maybe with a parent component or something.
