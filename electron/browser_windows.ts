@@ -186,7 +186,9 @@ export function updateNotificationBadges(numberedBadges: boolean) {
     windows.forEach(browserWindow => {
       applyWin32OverlayIcon(browserWindow, totalCount, numberedBadges);
     });
-    tray.setImage(totalCount > 0 ? trayIconNotif : trayIcon);
+    if (tray) {
+      tray.setImage(totalCount > 0 ? trayIconNotif : trayIcon);
+    }
   }
 }
 
@@ -245,7 +247,12 @@ electron.ipcMain.on(
     if (e.sender) {
       //browserWindows.tabAddHandler(webContents, settings);
       tabMap[character] = e.sender;
-      tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
+      if (tray) {
+        tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
+      }
+      if (app.dock) {
+        app.dock.setMenu(electron.Menu.buildFromTemplate(createDockMenu()));
+      }
     }
   }
 );
@@ -261,7 +268,13 @@ electron.ipcMain.on(
  */
 electron.ipcMain.on('disconnect', (_event: IpcMainEvent, character: string) => {
   delete tabMap[character];
-  tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
+
+  if (tray) {
+    tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
+  }
+  if (app.dock) {
+    app.dock.setMenu(electron.Menu.buildFromTemplate(createDockMenu()));
+  }
 });
 /**
  * Opens a new tab in the specified browser window.
@@ -455,7 +468,7 @@ export function createMainWindow(
       }
     });
   }
-  if (!tray) {
+  if (!tray && process.platform !== 'darwin') {
     tray = new electron.Tray(trayIcon);
     tray.setToolTip(l('title'));
     // single click opens context menu, double click opens all windows
@@ -587,16 +600,7 @@ export async function updateCustomCssAllWindows(
  * @internal
  */
 function createTrayMenu(): electron.MenuItemConstructorOptions[] {
-  const tabItems: electron.MenuItemConstructorOptions[] = Object.entries(
-    tabMap
-  ).map(([tabId, webContents]) => ({
-    label: tabId,
-    click: () => {
-      windows.forEach(window => {
-        window.webContents.send('show-tab', webContents.id);
-      });
-    }
-  }));
+  const tabItems: electron.MenuItemConstructorOptions[] = createTabMenuItems();
   return [
     { label: l('title'), enabled: false },
     { label: l('action.showAllWindows'), click: () => showAllWindows() },
@@ -609,6 +613,22 @@ function createTrayMenu(): electron.MenuItemConstructorOptions[] {
       }
     }
   ];
+}
+
+function createDockMenu(): electron.MenuItemConstructorOptions[] {
+  const tabItems: electron.MenuItemConstructorOptions[] = createTabMenuItems();
+  return [...tabItems];
+}
+
+function createTabMenuItems(): electron.MenuItemConstructorOptions[] {
+  return Object.entries(tabMap).map(([tabId, webContents]) => ({
+    label: tabId,
+    click: () => {
+      windows.forEach(window => {
+        window.webContents.send('show-tab', webContents.id);
+      });
+    }
+  }));
 }
 
 /**
