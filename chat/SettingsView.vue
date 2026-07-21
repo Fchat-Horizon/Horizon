@@ -78,34 +78,15 @@
           },
           { id: 'profiles.hiddenAds', label: l('settings.tabs.hideAds') },
           { id: 'profiles.matching', label: l('settings.matching') },
+          {
+            id: 'profiles.smartFilters',
+            label: l('settings.tabs.smartFilters')
+          },
           { id: 'profiles.viewer', label: l('settings.profile.viewer') },
           {
             id: 'profiles.ignoredList',
             label: l('settings.profile.ignoredList')
           },
-
-          {
-            type: 'label',
-            label: l('settings.tabs.smartFilters'),
-            iconClass: 'fas fa-filter'
-          },
-          { id: 'smartFilters.dangerZone', label: l('settings.dangerZone') },
-          { id: 'smartFilters.visibility', label: l('settings.visibility') },
-          {
-            id: 'smartFilters.channelMembersFilters',
-            label: l('settings.channelMembersFilters')
-          },
-          { id: 'smartFilters.ageMatch', label: l('settings.ageMatch') },
-          { id: 'smartFilters.typeMatch', label: l('settings.typeMatch') },
-          {
-            id: 'smartFilters.automaticReplies',
-            label: l('settings.automaticReplies')
-          },
-          {
-            id: 'smartFilters.exceptionList',
-            label: l('settings.exceptionList')
-          },
-
           { type: 'divider' },
           { id: 'import.main', label: l('settings.tabs.import') }
         ]"
@@ -140,23 +121,29 @@
               }
             ]"
           ></tabs>
-          <div class="warning" v-if="settingsMode === '0'">
-            <h5>{{ l('warning.info') }}</h5>
-            <div>
-              {{ l('settings.mode.global') }}
-            </div>
-          </div>
 
-          <div class="warning" v-else>
-            <h5>{{ l('warning.info') }}</h5>
-            <div>
-              {{
-                l('settings.mode.character', {
-                  characterName: currentCharacter || ''
-                })
-              }}
+          <!--
+              Having an exception for the smartFilter tab isn't clean, but we also don't fill this menu dynamically yet so this will have to do for now.
+          -->
+          <template v-if="selectedTab !== 'profiles.smartFilters'">
+            <div class="warning" v-if="settingsMode === '0'">
+              <h5>{{ l('warning.info') }}</h5>
+              <div>
+                {{ l('settings.mode.global') }}
+              </div>
             </div>
-          </div>
+
+            <div class="warning" v-else>
+              <h5>{{ l('warning.info') }}</h5>
+              <div>
+                {{
+                  l('settings.mode.character', {
+                    characterName: currentCharacter || ''
+                  })
+                }}
+              </div>
+            </div>
+          </template>
         </div>
 
         <div class="overflow-auto h-100">
@@ -185,7 +172,9 @@
               <settings-array
                 id="disallowedTags"
                 v-model="settings.disallowedTags"
-                :placeholder="l('settings.disallowedTagsPlaceholder')"
+                :placeholder="
+                  l('settings.disallowedTags.placeholder', { tagName: 'eicon' })
+                "
                 :globalValue="settings.disallowedTags"
                 :overrideValue="characterOverrides.disallowedTags"
                 :usingGlobal="isUsingGlobal()"
@@ -480,6 +469,39 @@
                   "
                   @update:overrideValue="
                     $set(characterOverrides, 'hideNonCharacterFriends', $event)
+                  "
+                />
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="horizonPersistentMemberFilters"
+                  >
+                    {{ l('settings.horizon.persistentMemberFilters') }}
+                  </label>
+                  <div class="form-text text-muted">
+                    {{ l('settings.horizon.persistentMemberFilters.help') }}
+                  </div>
+                </div>
+                <settings-override
+                  :globalValue="settings.horizonPersistentMemberFilters"
+                  :overrideValue="
+                    characterOverrides.horizonPersistentMemberFilters
+                  "
+                  :usingGlobal="isUsingGlobal()"
+                  name="horizonPersistentMemberFilters"
+                  @update:globalValue="
+                    settings.horizonPersistentMemberFilters = $event
+                  "
+                  @update:overrideValue="
+                    $set(
+                      characterOverrides,
+                      'horizonPersistentMemberFilters',
+                      $event
+                    )
                   "
                 />
               </div>
@@ -1470,20 +1492,17 @@
             </div>
           </div>
 
-          <div v-show="selectedTab === 'smartFilters.dangerZone'">
+          <div v-show="selectedTab === 'profiles.smartFilters'">
             <div class="warning">
               <h5>{{ l('settings.dangerZone') }}</h5>
               <div>
-                {{ l('settings.filteringWarning1') }}
+                {{ l('settings.filter.deprecated') }}
               </div>
-
-              <div>
-                {{ l('settings.filteringWarning2') }}
+              <div v-if="settingsMode === '0'">
+                {{ l('settings.filter.deprecated.characterOnly') }}
               </div>
             </div>
-          </div>
 
-          <div v-show="selectedTab === 'smartFilters.visibility'">
             <h5>{{ l('settings.visibility') }}</h5>
 
             <div class="mb-3 filters">
@@ -1633,47 +1652,7 @@
                 </label>
               </div>
             </div>
-          </div>
 
-          <div v-show="selectedTab === 'smartFilters.channelMembersFilters'">
-            <h5>{{ l('settings.channelMembersFilters') }}</h5>
-
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label
-                    class="control-label"
-                    for="horizonPersistentMemberFilters"
-                  >
-                    {{ l('settings.horizon.persistentMemberFilters') }}
-                  </label>
-                  <div class="form-text text-muted">
-                    {{ l('settings.horizon.persistentMemberFilters.help') }}
-                  </div>
-                </div>
-                <settings-override
-                  :globalValue="settings.horizonPersistentMemberFilters"
-                  :overrideValue="
-                    characterOverrides.horizonPersistentMemberFilters
-                  "
-                  :usingGlobal="isUsingGlobal()"
-                  name="horizonPersistentMemberFilters"
-                  @update:globalValue="
-                    settings.horizonPersistentMemberFilters = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'horizonPersistentMemberFilters',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
-          </div>
-
-          <div v-show="selectedTab === 'smartFilters.ageMatch'">
             <h5>{{ l('settings.ageMatch') }}</h5>
             <div class="mb-3">{{ l('settings.leaveEmptyNoLimit') }}</div>
 
@@ -1700,9 +1679,7 @@
                 :placeholder="l('settings.enterAge')"
               />
             </div>
-          </div>
 
-          <div v-show="selectedTab === 'smartFilters.typeMatch'">
             <h5>{{ l('settings.typeMatch') }}</h5>
             <div class="mb-3 filters">
               <div class="form-check" v-for="(value, key) in smartFilterTypes">
@@ -1721,9 +1698,6 @@
                 </label>
               </div>
             </div>
-          </div>
-
-          <div v-show="selectedTab === 'smartFilters.automaticReplies'">
             <h5>{{ l('settings.automaticReplies') }}</h5>
             <div class="mb-3 filters">
               <div class="form-check">
@@ -1772,9 +1746,6 @@
                 {{ l('settings.autoReplyNote') }}
               </div>
             </div>
-          </div>
-
-          <div v-show="selectedTab === 'smartFilters.exceptionList'">
             <h5>{{ l('settings.exceptionList') }}</h5>
             <div class="mb-3">
               {{ l('settings.exceptionList.help') }}
@@ -2053,13 +2024,13 @@
       },
       async submitCharacterOverrides(): Promise<void> {
         const oldRisingFilter = JSON.parse(
-          JSON.stringify(core.state.settings.risingFilter)
+          JSON.stringify(core.state.characterSettings.risingFilter)
         );
 
         core.state.characterSettings = this.characterOverrides;
 
         const newRisingFilter = JSON.parse(
-          JSON.stringify(core.state.settings.risingFilter)
+          JSON.stringify(core.state.characterSettings.risingFilter)
         );
 
         if (!_.isEqual(oldRisingFilter, newRisingFilter)) {
