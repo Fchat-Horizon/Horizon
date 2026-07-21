@@ -18,7 +18,7 @@ $dark-color: $gray-base;
 $component-active-color: $dark-color; // Use dark color for light primary
 
 $moon-prism-silver: #c8d5e8;
-$moon-prism-blue: #6b8cff;
+$moon-prism-blue: #4c4cff;
 $moon-prism-purple: #a685ff;
 $moon-prism-pink: #ff85c7;
 $moon-prism-cyan: #85ffff;
@@ -29,7 +29,7 @@ $moon-prism-magenta: #d485ff;
 $moon-prism-orange: #ffb785;
 
 $primary: #8ba4d9;
-$secondary: $gray-400;
+$secondary: $gray-300;
 $success: $moon-prism-green;
 $info: color.scale($moon-prism-blue, $lightness: -30%);
 $warning: $moon-prism-gold;
@@ -54,7 +54,6 @@ $grid-gutter-width: 20px;
 $input-bg: $gray-200;
 $input-color: $black;
 $custom-select-bg: $gray-200;
-$form-check-input-checked-bg-color: $primary;
 
 $list-group-bg: $gray-200;
 
