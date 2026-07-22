@@ -758,6 +758,7 @@
   "settings.export.description": "Create a ZIP backup of your settings, logs, pinned conversations, and eicons for selected characters.",
   "settings.export.errorGeneric": "Export failed. Please check the logs for details.",
   "settings.export.filter": "ZIP archives",
+  "settings.export.globalSettings": "Global default settings",
   "settings.export.inProgress": "Exporting…",
   "settings.export.includeCharacterSettings": "Include character settings",
   "settings.export.includeDrafts": "Include post drafts",

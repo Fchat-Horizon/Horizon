@@ -104,7 +104,7 @@ class State implements StateInterface {
     this._settings = createMergedSettingsProxy(value, this._characterSettings);
     //tslint:disable-next-line:no-floating-promises
     if (data.settingsStore !== undefined)
-      data.settingsStore.set('settings', value, '_');
+      data.settingsStore.set('settings', value, GLOBAL_SETTINGS_CHARACTER);
     data.bbCodeParser = createBBCodeParser();
   }
 
@@ -197,7 +197,10 @@ const data = {
   },
   async reloadSettings(): Promise<void> {
     // Load global settings from '_' character
-    const globalRaw = await core.settingsStore.get('settings', '_');
+    const globalRaw = await core.settingsStore.get(
+      'settings',
+      GLOBAL_SETTINGS_CHARACTER
+    );
 
     const needsMigration = globalRaw === undefined;
 
@@ -241,7 +244,11 @@ const data = {
       state.needsSettingsMigration = true;
     } else if (needsMigration) {
       //No existing settings at all, just use defaults as global
-      await core.settingsStore.set('settings', globalSettings, '_');
+      await core.settingsStore.set(
+        'settings',
+        globalSettings,
+        GLOBAL_SETTINGS_CHARACTER
+      );
       state.needsSettingsMigration = false;
     } else {
       state.needsSettingsMigration = false;
@@ -257,14 +264,22 @@ const data = {
     if (useCurrentAsGlobal) {
       // Use current character's settings as the global settings
       const currentSettings = state._settings!;
-      await core.settingsStore.set('settings', currentSettings, '_');
+      await core.settingsStore.set(
+        'settings',
+        currentSettings,
+        GLOBAL_SETTINGS_CHARACTER
+      );
       state._globalSettings = currentSettings;
       // Clear character overrides since they're now global
       state._characterSettings = {};
       await core.settingsStore.set('settings', {});
     } else {
       const defaults = new SettingsImpl();
-      await core.settingsStore.set('settings', defaults, '_');
+      await core.settingsStore.set(
+        'settings',
+        defaults,
+        GLOBAL_SETTINGS_CHARACTER
+      );
       state._globalSettings = defaults;
       // Keep current character settings as overrides (they're already loaded)
     }
@@ -346,5 +361,11 @@ export interface Core {
 }
 
 const core = <Core>(<any>data); /*tslint:disable-line:no-any*/ //hack
+
+/**
+ * The "character" name used to store global settings in the settings store.
+ * Since F-List does not allow a character named "_", we can safely use this as a reserved name for global settings.
+ */
+export const GLOBAL_SETTINGS_CHARACTER = '_';
 
 export default core;
