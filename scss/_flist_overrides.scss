@@ -288,6 +288,21 @@ input:checked {
   unicode-range: U+1F1E6-1F1FF;
 }
 
+@font-face {
+  font-family: 'Horizon Icons';
+  src: url('../../../assets/fonts/HorizonIcons.woff2') format('woff2');
+}
+
+i.fa-horizon {
+  font-family: 'Horizon Icons';
+  min-width: 1.25em;
+  font-style: normal;
+  font-size: 1.7em;
+  &.fa-logo::after {
+    content: 'H';
+  }
+}
+
 $font-family-base:
   system-ui,
   -apple-system,

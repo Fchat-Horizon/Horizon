@@ -13,11 +13,10 @@
         style="flex-shrink: 0; margin-bottom: 10px"
         v-model="selectedTab"
         :tabs="[
-          //discord icon is a placeholder because icba to make a css class with the horizon icon right now
           {
             type: 'label',
             label: l('settings.tabs.app'),
-            iconClass: 'fa-brands fa-discord'
+            iconClass: 'fa-horizon fa-logo'
           },
           { id: 'app.general', label: l('settings.tabs.general') },
           { id: 'app.look', label: l('settings.tabs.look') },
