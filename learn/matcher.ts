@@ -50,6 +50,7 @@ import {
   speciesMapping,
   SpeciesMappingCache,
   speciesNames,
+  speciesPreferenceMapping,
   SubDomRole,
   TagId
 } from './matcher-types';
@@ -1344,7 +1345,10 @@ export class Matcher {
     c: Character,
     species: Species
   ): KinkPreference | null {
-    return Matcher.getKinkPreference(c, species);
+    // Some display species share another species' F-List preference id for
+    // scoring (e.g. Lamia borrows Naga's "Lamia / Naga" preference).
+    const preferenceSpecies = speciesPreferenceMapping[species] ?? species;
+    return Matcher.getKinkPreference(c, preferenceSpecies);
   }
 
   static has(c: Character, kinkId: Kink): boolean {
