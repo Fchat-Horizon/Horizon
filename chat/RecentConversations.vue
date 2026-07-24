@@ -8,7 +8,10 @@
     <tabs
       style="flex-shrink: 0; margin-bottom: 10px"
       v-model="selectedTab"
-      :tabs="[l('chat.pms'), l('chat.channels')]"
+      :tabs="[
+        { id: '0', label: l('chat.pms') },
+        { id: '1', label: l('chat.channels') }
+      ]"
     ></tabs>
     <div>
       <div v-show="selectedTab === '0'" class="recent-conversations">

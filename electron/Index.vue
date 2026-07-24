@@ -298,6 +298,7 @@
     </modal>
 
     <logs ref="logsDialog"></logs>
+    <settings-view ref="settingsView" v-if="isDevMode"> </settings-view>
     <ui-test ref="uiTestDialog" v-if="isDevMode"> </ui-test>
 
     <toast
@@ -324,6 +325,7 @@
   import core from '../chat/core';
   import l from '../chat/localize';
   import Logs from '../chat/Logs.vue';
+  import SettingsView from '../chat/SettingsView.vue';
   import UITest from '../chat/UITest.vue';
   import Socket from '../chat/WebSocket';
   import Modal from '../components/Modal.vue';
@@ -409,6 +411,7 @@
       toast: Toast,
       characterPage: CharacterPage,
       logs: Logs,
+      settingsView: SettingsView,
       'ui-test': UITest,
       'word-definition': WordDefinition,
       BBCodeTester: BBCodeTester,
@@ -609,6 +612,12 @@
         this.fixCharacters = await core.settingsStore.getAvailableCharacters();
         this.fixCharacter = this.fixCharacters[0];
         (this.$refs['fixLogsModal'] as InstanceType<typeof Modal>).show();
+      });
+
+      electron.ipcRenderer.on('settings-menu', () => {
+        (
+          this.$refs['settingsView'] as InstanceType<typeof SettingsView>
+        ).show();
       });
 
       electron.ipcRenderer.on('ui-test', () => {

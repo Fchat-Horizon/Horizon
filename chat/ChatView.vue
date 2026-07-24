@@ -77,7 +77,7 @@
               role="button"
               class="userInfo-button-item btn btn-outline-secondary"
               :title="l('settings.character')"
-              @click.prevent="showSettings()"
+              disabled
             >
               <i class="fa-solid fa-user-gear fa-fw"></i>
             </button>
@@ -400,7 +400,6 @@
     <character-search ref="searchDialog"></character-search>
     <adLauncher ref="adLauncher"></adLauncher>
     <adCenter ref="adCenter"></adCenter>
-    <settings ref="settingsDialog"></settings>
     <report-dialog ref="reportDialog"></report-dialog>
     <user-menu
       ref="userMenu"
@@ -452,7 +451,6 @@
   import PmPartnerAdder from './PmPartnerAdder.vue';
   import RecentConversations from './RecentConversations.vue';
   import ReportDialog from './ReportDialog.vue';
-  import SettingsView from './SettingsView.vue';
   import Sidebar from './Sidebar.vue';
   import StatusSwitcher from './StatusSwitcher.vue';
   import { getStatusIcon } from './UserView.vue';
@@ -493,7 +491,6 @@
       channels: ChannelList,
       'status-switcher': StatusSwitcher,
       'character-search': CharacterSearch,
-      settings: SettingsView,
       conversation: ConversationView,
       'report-dialog': ReportDialog,
       sidebar: Sidebar,
@@ -980,10 +977,6 @@
       logOut(): void {
         if (Dialog.confirmDialog(l('chat.confirmLeave')))
           core.connection.close();
-      },
-
-      showSettings(): void {
-        (<SettingsView>this.$refs['settingsDialog']).show();
       },
 
       showSearch(): void {
