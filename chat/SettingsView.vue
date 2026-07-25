@@ -109,6 +109,7 @@
           <tabs
             style="flex-shrink: 0; margin-bottom: 10px"
             v-model="settingsMode"
+            v-if="currentCharacter"
             :fullWidth="true"
             :tabs="[
               { id: '0', label: l('settings.tab.global') },

@@ -298,7 +298,7 @@
     </modal>
 
     <logs ref="logsDialog"></logs>
-    <settings-view ref="settingsView" v-if="isDevMode"> </settings-view>
+    <settings-view ref="settingsView"> </settings-view>
     <ui-test ref="uiTestDialog" v-if="isDevMode"> </ui-test>
 
     <toast
