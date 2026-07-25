@@ -246,7 +246,14 @@
           </dropdown>
         </div>
 
-        <div ref="channelGroups" class="border-bottom pb-2 border-opacity-50">
+        <div
+          ref="channelGroups"
+          :class="
+            sortedChannelGroups.length > 1
+              ? 'border-bottom pb-2 border-opacity-50'
+              : ''
+          "
+        >
           <channel-group-section
             v-for="group in sortedChannelGroups"
             :key="group.id"
@@ -290,6 +297,11 @@
                 @click.stop="conversation.toggleAutomatedAds()"
               ></span>
               <span
+                class="pin fas fa-thumbtack"
+                @click="pinConversation(conversation)"
+                :aria-label="l('chat.pin')"
+              ></span>
+              <span
                 class="fas fa-times leave"
                 @click.stop="conversation.close()"
                 :aria-label="l('chat.closeTab')"
@@ -326,7 +338,7 @@
           >
             {{ conversations.consoleTab.unreadCount }}
           </span>
-          {{ conversations.consoleTab.name }}
+          <div class="name">{{ conversations.consoleTab.name }}</div>
         </a>
         <a
           v-for="conversation in conversations.privateConversations"
@@ -354,7 +366,7 @@
           <div class="name">{{ conversation.character.name }}</div>
         </a>
         <a
-          v-for="conversation in conversations.channelConversations"
+          v-for="conversation in orderedChannelConversations"
           href="#"
           @click.prevent="conversation.show()"
           @click.middle.prevent.stop="conversation.close()"
@@ -393,16 +405,22 @@
     <user-menu
       ref="userMenu"
       :reportDialog="$refs['reportDialog']"
-      @open="onMenuOpen('user')"
-      @close="onMenuClose('user')"
+      @open="onMenuOpen(ContextMenuTypes.User)"
+      @close="onMenuClose(ContextMenuTypes.User)"
     ></user-menu>
     <channel-menu
       ref="channelMenu"
       @assign="onChannelAssign"
       @create-group="onChannelCreateGroup"
-      @open="onMenuOpen('channel')"
-      @close="onMenuClose('channel')"
+      @open="onMenuOpen(ContextMenuTypes.Channel)"
+      @close="onMenuClose(ContextMenuTypes.Channel)"
     ></channel-menu>
+    <channel-group-menu
+      ref="channelGroupMenu"
+      @rename="onChannelGroupRename"
+      @open="onMenuOpen(ContextMenuTypes.ChannelGroup)"
+      @close="onMenuClose(ContextMenuTypes.ChannelGroup)"
+    ></channel-group-menu>
     <recent-conversations ref="recentDialog"></recent-conversations>
     <image-preview ref="imagePreview"></image-preview>
     <add-pm-partner ref="addPmPartnerDialog"></add-pm-partner>
@@ -424,8 +442,10 @@
   import core from './core';
   import {
     endChannelDragging,
+    endGroupDragging,
     setActiveDropZone,
-    startChannelDragging
+    startChannelDragging,
+    startGroupDragging
   } from './channelDragDropHighlight';
   import { Character, Connection, Conversation } from './interfaces';
   import l from './localize';
@@ -446,10 +466,12 @@
   import AdCenterDialog from './ads/AdCenter.vue';
   import AdLauncherDialog from './ads/AdLauncher.vue';
   import ChannelGroupSection from './ChannelGroupSection.vue';
+  import ChannelGroupMenu from './ChannelGroupMenu.vue';
   import ChannelMenu from './ChannelMenu.vue';
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import QuickJump from './QuickJump.vue';
+  import { group, log } from 'node:console';
 
   const unreadClasses = {
     [Conversation.UnreadState.None]: '',
@@ -461,7 +483,8 @@
     User = 'user',
     Channel = 'channel',
     ChannelGroup = 'channelGroup',
-    Eicon = 'eicon'
+    Eicon = 'eicon',
+    None = 'none'
   }
 
   export default Vue.extend({
@@ -484,6 +507,7 @@
       modal: Modal,
       'quick-jump': QuickJump,
       'channel-group-section': ChannelGroupSection,
+      'channel-group-menu': ChannelGroupMenu,
       'channel-menu': ChannelMenu,
       dropdown: Dropdown
     },
@@ -511,7 +535,8 @@
         ) => boolean,
         mouseButtonListener: undefined as any as (e: MouseEvent) => void,
         pendingRenameGroupId: null as string | null,
-        activeMenuType: 'none' as 'none' | 'user' | 'channel'
+        activeMenuType: 'none' as ContextMenuTypes,
+        ContextMenuTypes: ContextMenuTypes
       };
     },
     computed: {
@@ -524,6 +549,14 @@
         return core.conversations.channelConversations.filter(
           (c: any) => !core.conversations.channelGroupAssignments[c.channel.id]
         );
+      },
+      orderedChannelConversations(): any[] {
+        return [
+          ...this.sortedChannelGroups.flatMap((g: any) =>
+            this.channelsInGroup(g.id)
+          ),
+          ...this.ungroupedChannels
+        ];
       },
       showAvatars(): boolean {
         return core.state.settings.showAvatars;
@@ -591,7 +624,11 @@
         handle: '.channel-group-header',
         animation: 150,
         fallbackTolerance: 5,
+        swapThreshold: 0.65,
+        invertSwap: true,
+        onStart: () => startGroupDragging(),
         onEnd: (e: Sortable.SortableEvent) => {
+          endGroupDragging();
           if (e.oldIndex === e.newIndex) return;
           const sorted = [...core.conversations.channelGroups].sort(
             (a, b) => a.order - b.order
@@ -603,7 +640,7 @@
         }
       });
       Sortable.create(<HTMLElement>this.$refs['channelConversations'], {
-        group: { name: 'channels', pull: true, put: true },
+        group: { name: 'channels', pull: true, put: ['channels'] },
         sort: true,
         animation: 150,
         fallbackTolerance: 5,
@@ -725,12 +762,7 @@
       onKeyDown(e: KeyboardEvent): void {
         const selected = this.conversations.selectedConversation;
         const pms = this.conversations.privateConversations;
-        const channels = [
-          ...this.sortedChannelGroups.flatMap((g: any) =>
-            this.channelsInGroup(g.id)
-          ),
-          ...this.ungroupedChannels
-        ];
+        const channels = this.orderedChannelConversations;
         const console = this.conversations.consoleTab;
         if (getKey(e) === Keys.ArrowUp) {
           if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
@@ -1003,19 +1035,34 @@
         (<PmPartnerAdder>this.$refs['addPmPartnerDialog']).show();
       },
 
-      onMenuOpen(menuType: 'user' | 'channel'): void {
+      onMenuOpen(menuType: ContextMenuTypes): void {
         this.activeMenuType = menuType;
       },
 
-      onMenuClose(menuType: 'user' | 'channel'): void {
+      onMenuClose(menuType: ContextMenuTypes): void {
         if (this.activeMenuType === menuType) {
-          this.activeMenuType = 'none';
+          this.activeMenuType = ContextMenuTypes.None;
         }
       },
 
+      closeAllMenus(): void {
+        //i wanna rework this instancetype nonsense in a proper file that exposes types so we don't have to do this dumb casting bullshit anymore
+        //but it's out of scope for what i want to do now, so I'll do it when I want to clean up things again
+        (this.$refs.userMenu as InstanceType<typeof UserMenu>).close();
+        (this.$refs.channelMenu as InstanceType<typeof ChannelMenu>).close();
+        (
+          this.$refs.channelGroupMenu as InstanceType<typeof ChannelGroupMenu>
+        ).close();
+      },
+
       userMenuHandle(e: MouseEvent | TouchEvent): void {
-        const userMenu = this.$refs['userMenu'] as any;
-        const channelMenu = this.$refs['channelMenu'] as any;
+        const userMenu = this.$refs.userMenu as InstanceType<typeof UserMenu>;
+        const channelMenu = this.$refs.channelMenu as InstanceType<
+          typeof ChannelMenu
+        >;
+        const channelGroupMenu = this.$refs.channelGroupMenu as InstanceType<
+          typeof ChannelGroupMenu
+        >;
 
         if (e.type === 'contextmenu') {
           const channelEl = (e.target as HTMLElement).closest(
@@ -1028,9 +1075,7 @@
               (c: any) => c.channel.id === channelId
             );
             if (conv) {
-              if (this.activeMenuType === 'user') {
-                userMenu.close();
-              }
+              this.closeAllMenus();
               channelMenu.handleEvent(
                 e,
                 conv,
@@ -1040,16 +1085,49 @@
               return;
             }
           }
+
+          const groupHeaderEl = (e.target as HTMLElement).closest(
+            '[data-group-id]'
+          );
+          if (groupHeaderEl) {
+            e.preventDefault();
+            const groupId = (groupHeaderEl as HTMLElement).dataset.groupId!;
+            const group = core.conversations.channelGroups.find(
+              g => g.id === groupId
+            );
+            if (group) {
+              this.closeAllMenus();
+              channelGroupMenu.handleEvent(
+                e as MouseEvent,
+                group,
+                core.conversations.channelGroups
+              );
+              return;
+            }
+          }
         }
 
-        if (
-          this.activeMenuType === 'channel' &&
-          (e.type === 'contextmenu' || e.type === 'touchstart')
-        ) {
+        if (e.type === 'contextmenu' || e.type === 'touchstart') {
           channelMenu.close();
+          channelGroupMenu.close();
         }
 
         userMenu.handleEvent(e);
+      },
+      onChannelGroupRename(groupId: string): void {
+        this.pendingRenameGroupId = groupId;
+      },
+      pinConversation(conversation: Conversation.ChannelConversation): void {
+        let groupId = '';
+        if (core.conversations.channelGroups.length < 1) {
+          groupId = core.conversations.createChannelGroup(
+            l('channel.group.pinned')
+          );
+        } else {
+          groupId = core.conversations.channelGroups[0].id;
+        }
+        console.log(`id: ${groupId}`);
+        this.onChannelAssign(conversation.channel.id, groupId);
       },
 
       onChannelAssign(channelId: string, groupId: string | null): void {
@@ -1075,14 +1153,16 @@
               (newGroupNameCounter === 0 &&
                 g.name === l('channel.group.newGroup')) ||
               g.name ===
-                l('channel.group.newGroup.counter', newGroupNameCounter)
+                l('channel.group.newGroup.counter', {
+                  count: newGroupNameCounter
+                })
           )
         ) {
           newGroupNameCounter++;
         }
         return newGroupNameCounter === 0
           ? l('channel.group.newGroup')
-          : l('channel.group.newGroup.counter', newGroupNameCounter);
+          : l('channel.group.newGroup.counter', { count: newGroupNameCounter });
       },
 
       showQuickJump(): void {
@@ -1219,6 +1299,7 @@
           img {
             height: 40px;
             width: 40px;
+            object-fit: contain;
             margin: 0;
           }
 
@@ -1274,6 +1355,7 @@
       img {
         height: 40px;
         width: 40px;
+        object-fit: contain;
         margin: -1px 5px -1px -1px;
       }
       &:first-child img,
@@ -1289,7 +1371,8 @@
 
   #quick-switcher {
     margin: 0 45px 5px;
-    overflow: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
     display: none;
     align-items: stretch;
     flex-direction: row;
@@ -1305,11 +1388,15 @@
     }
 
     a {
-      width: 40px;
+      width: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 5px 4px;
       position: relative;
-      text-align: center;
       line-height: 1;
-      padding: 5px 5px 0;
       overflow: hidden;
       flex-shrink: 0;
       &:first-child {
@@ -1321,29 +1408,44 @@
       &:last-child {
         border-radius: 0 4px 4px 0;
       }
+      &.active {
+        z-index: 1;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+      }
     }
 
     img {
-      width: 30px;
-    }
-
-    .name {
-      overflow: hidden;
-      white-space: nowrap;
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      flex-shrink: 0;
     }
 
     .conversation-icon {
       font-size: 1.6rem;
-      height: 30px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .name {
+      max-width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 0.7rem;
     }
 
     .badge {
       position: absolute;
       top: 2px;
       right: 2px;
-      font-size: 0.9em;
-      min-width: 2em;
-      height: 2em;
+      font-size: 0.8em;
+      min-width: 1.6em;
+      height: 1.6em;
       padding: 0 4px;
       border-radius: 9px;
       display: inline-flex;
@@ -1351,7 +1453,7 @@
       justify-content: center;
       line-height: 1;
       z-index: 1;
-      box-shadow: 0 0 0 3px var(--bs-list-group-bg, var(--bs-body-bg));
+      box-shadow: 0 0 0 2px var(--bs-list-group-bg, var(--bs-body-bg));
     }
   }
 
@@ -1443,6 +1545,15 @@
       &.sortable-over {
         --bs-border-color: var(--bs-primary);
       }
+    }
+  }
+
+  // Keep every group a stable, non-zero height while reordering groups so
+  // collapsed/empty groups don't collapse toward 0px and destabilise SortableJS
+  // hit-testing.
+  #conversations.group-dragging {
+    .channel-group {
+      min-height: 28px;
     }
   }
 

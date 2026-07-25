@@ -14,13 +14,34 @@ import fs from 'fs';
 import path from 'path';
 import { ipcRenderer } from 'electron';
 import log from 'electron-log';
+import l, { lp } from '../../../chat/localize';
 import AdmZip from 'adm-zip';
 import type { IZipEntry } from 'adm-zip';
-import { isValidManifest } from '../exporter/manifest';
-import type { ExportManifest } from '../exporter/manifest';
+import {
+  isValidManifest,
+  shouldIncludeSettingsFile
+} from '../exporter/manifest';
+import type { ExportManifest, SettingsSelection } from '../exporter/manifest';
 import type { ExporterVm } from '../exporter-vm';
+import {
+  buildLogImportContext,
+  ensureLogIndex,
+  isFilesystemArtifact,
+  jsonLogToBinary,
+  parseJsonLog,
+  recoverLogName,
+  removeStaleJsonLogArtifact,
+  writeLogWithIndex
+} from '../log-backup';
+import type { LogImportContext } from '../log-backup';
 /** Default log directory in the renderer process (avoids instantiating GeneralSettings). */
 const defaultLogDirectory = path.join(remote.app.getPath('userData'), 'data');
+/**
+ * Directory holding the general (app-wide) settings file. Fixed at
+ * `{userData}/data` regardless of the user's custom `logDirectory`, matching
+ * where the main process reads/writes general settings.
+ */
+const generalSettingsDir = defaultLogDirectory;
 
 /**
  * Information about a character found in a Horizon backup ZIP file.
@@ -421,29 +442,6 @@ function isEffectivelyEmptyDraftsFile(p: string): boolean {
   }
 }
 
-export function jsonLogToBinary(
-  json: { time: number; type: number; sender: string; text: string }[]
-): Buffer {
-  const chunks: Buffer[] = [];
-  for (const msg of json) {
-    const sender = msg.sender || '';
-    const senderLength = Buffer.byteLength(sender);
-    const textLength = Buffer.byteLength(msg.text);
-    const buf = Buffer.allocUnsafe(senderLength + textLength + 10);
-    buf.writeUInt32LE(msg.time, 0);
-    buf.writeUInt8(msg.type, 4);
-    buf.writeUInt8(senderLength, 5);
-    buf.write(sender, 6);
-    let offset = 6 + senderLength;
-    buf.writeUInt16LE(textLength, offset);
-    buf.write(msg.text, offset + 2);
-    offset += 2 + textLength;
-    buf.writeUInt16LE(offset, offset);
-    chunks.push(buf);
-  }
-  return Buffer.concat(chunks);
-}
-
 interface ImportStats {
   logsCopied: number;
   logsSkipped: number;
@@ -478,32 +476,25 @@ function shouldImportEntry(
     decision.shouldImport = true;
     decision.isDrafts = true;
   } else if (category === 'settings' && info.hasSettings) {
-    decision.shouldImport = shouldImportSettingsFile(vm, segments, info);
+    decision.shouldImport = shouldImportSettingsFile(vm, segments);
   }
 
   return decision;
 }
 
-function shouldImportSettingsFile(
-  vm: ExporterVm,
-  segments: string[],
-  info: BackupCharacterInfo
-): boolean {
-  if (vm.importIncludeCharacterSettings) return true;
-
+function shouldImportSettingsFile(vm: ExporterVm, segments: string[]): boolean {
   const fileName = segments.slice(3).join('/');
-  return (
-    (fileName === 'pinned' &&
-      vm.importIncludePinnedConversations &&
-      info.hasPinnedConversations) ||
-    (fileName === 'favoriteEIcons' &&
-      vm.importIncludePinnedEicons &&
-      info.hasPinnedEicons) ||
-    ((fileName === 'recent' || fileName === 'recentChannels') &&
-      vm.importIncludeRecents &&
-      info.hasRecents) ||
-    (fileName === 'hiddenUsers' && vm.importIncludeHidden && info.hasHidden)
-  );
+  return shouldIncludeSettingsFile(fileName, importSettingsSelection(vm));
+}
+
+function importSettingsSelection(vm: ExporterVm): SettingsSelection {
+  return {
+    includeCharacterSettings: vm.importIncludeCharacterSettings,
+    includePinnedConversations: vm.importIncludePinnedConversations,
+    includePinnedEicons: vm.importIncludePinnedEicons,
+    includeRecents: vm.importIncludeRecents,
+    includeHidden: vm.importIncludeHidden
+  };
 }
 
 /**
@@ -538,7 +529,6 @@ async function checkConnectedCharacters(): Promise<boolean> {
 function importGeneralSettings(
   vm: ExporterVm,
   zip: AdmZip,
-  dataDir: string,
   stats: ImportStats
 ): void {
   if (!vm.importGeneralAvailable || !vm.importIncludeGeneralSettings) return;
@@ -547,7 +537,9 @@ function importGeneralSettings(
   const generalEntry = zip.getEntry('settings');
   if (!generalEntry) return;
 
-  const destination = getSafeDestination(dataDir, 'settings');
+  // General settings always belong at the fixed location, not under a custom
+  // log directory, so the main process can read them back.
+  const destination = getSafeDestination(generalSettingsDir, 'settings');
   if (!destination) return;
 
   fs.mkdirSync(path.dirname(destination), { recursive: true });
@@ -590,6 +582,7 @@ function importCharacterFile(
   dataDir: string,
   selectedCharacters: Set<string>,
   characterInfo: Map<string, BackupCharacterInfo>,
+  context: LogImportContext,
   stats: ImportStats
 ): void {
   if (!entry || !entry.entryName) return;
@@ -609,44 +602,76 @@ function importCharacterFile(
   const category = segments[2];
   const decision = shouldImportEntry(vm, category, segments, info);
   if (!decision.shouldImport) return;
+  if (decision.isLog && segments.slice(3).some(isFilesystemArtifact)) return;
 
   let relative = normalized.substring('characters/'.length);
-  // Strip .json suffix for JSON log files so they're written as binary
-  if (decision.isLog && relative.endsWith('.json')) {
-    relative = relative.slice(0, -5);
-  }
-  const destination = getSafeDestination(dataDir, relative);
-  if (!destination) return;
 
   try {
+    let fileData: Buffer | undefined;
+    let converted = false;
+    let logName: string | undefined;
+    let recoveredName: string | undefined;
+
+    // JSON logs re-serialize to binary; anything else .json copies through.
+    if (decision.isLog && normalized.endsWith('.json')) {
+      const logKey = segments.slice(3).join('/').slice(0, -5);
+      if (logKey && !logKey.endsWith('/')) {
+        // ^ A binary twin in the ZIP is authoritative; the .json is stale.
+        if (context.binaryLogs.has(`${characterName}/${logKey}`)) {
+          stats.logsSkipped++;
+          return;
+        }
+        fileData = entry.getData();
+        const parsedLog = parseJsonLog(fileData);
+        if (parsedLog) {
+          try {
+            fileData = jsonLogToBinary(parsedLog.messages);
+          } catch (err) {
+            stats.filesErrored++;
+            log.warn('import.file.json-convert-error', normalized, err);
+            return;
+          }
+          relative = relative.slice(0, -5);
+          converted = true;
+          logName =
+            context.names.get(characterName)?.get(logKey) ?? parsedLog.name;
+          if (logName === undefined)
+            recoveredName = recoverLogName(
+              logKey,
+              characterName,
+              context,
+              parsedLog.messages
+            );
+        }
+      }
+    }
+
+    const destination = getSafeDestination(dataDir, relative);
+    if (!destination) return;
+
     fs.mkdirSync(path.dirname(destination), { recursive: true });
 
     const exists = fs.existsSync(destination);
     if (
       shouldSkipExistingFile(destination, exists, vm.importOverwrite, decision)
     ) {
-      if (decision.isLog) stats.logsSkipped++;
-      else stats.settingsSkipped++;
+      if (decision.isLog) {
+        stats.logsSkipped++;
+        // Heal pre-2.4 imports that never wrote indexes.
+        if (converted) {
+          const healed = ensureLogIndex(destination, logName ?? recoveredName);
+          if (removeStaleJsonLogArtifact(destination) || healed)
+            stats.charactersTouched.add(characterName);
+        }
+      } else stats.settingsSkipped++;
       return;
     }
 
-    let fileData: Buffer = entry.getData();
-
-    // JSON log from export: re-serialize to binary
-    if (decision.isLog && normalized.endsWith('.json')) {
-      try {
-        const parsed = JSON.parse(fileData.toString('utf8'));
-        if (Array.isArray(parsed)) {
-          fileData = jsonLogToBinary(parsed);
-        }
-      } catch (err) {
-        stats.filesErrored++;
-        log.warn('import.file.json-convert-error', normalized, err);
-        return;
-      }
-    }
-
-    fs.writeFileSync(destination, fileData);
+    if (fileData === undefined) fileData = entry.getData();
+    if (converted) {
+      writeLogWithIndex(destination, fileData, logName, recoveredName);
+      removeStaleJsonLogArtifact(destination);
+    } else fs.writeFileSync(destination, fileData);
     stats.charactersTouched.add(characterName);
 
     if (decision.isLog) stats.logsCopied++;
@@ -666,6 +691,7 @@ function importCharacterData(
   stats: ImportStats
 ): void {
   const entries = zip.getEntries();
+  const context = buildLogImportContext(entries);
   for (const entry of entries) {
     if (!entry || entry.isDirectory) continue;
     importCharacterFile(
@@ -674,6 +700,7 @@ function importCharacterData(
       dataDir,
       selectedCharacters,
       characterInfo,
+      context,
       stats
     );
   }
@@ -686,16 +713,23 @@ function finalizeImport(vm: ExporterVm, stats: ImportStats): void {
 
   let generalState: string;
   if (stats.generalImported) {
-    generalState = 'updated';
+    generalState = l('settings.import.zip.generalUpdated');
   } else if (stats.generalCandidate) {
-    generalState = 'skipped';
+    generalState = l('settings.import.zip.generalSkipped');
   } else {
-    generalState = 'not imported';
+    generalState = l('settings.import.zip.generalNotImported');
   }
 
-  let summary = `Restored data for ${stats.charactersTouched.size} character(s). Logs copied: ${stats.logsCopied} (skipped ${stats.logsSkipped}). Settings copied: ${stats.settingsCopied} (skipped ${stats.settingsSkipped}). General settings: ${generalState}.`;
+  let summary = l('settings.import.zip.summary', {
+    characters: lp('settings.summary.characters', stats.charactersTouched.size),
+    logsCopied: stats.logsCopied,
+    logsSkipped: stats.logsSkipped,
+    settingsCopied: stats.settingsCopied,
+    settingsSkipped: stats.settingsSkipped,
+    generalSettings: generalState
+  });
   if (stats.filesErrored > 0) {
-    summary += ` ${stats.filesErrored} file(s) failed to import.`;
+    summary += ` ${lp('settings.import.zip.summaryFailed', stats.filesErrored)}`;
   }
   vm.importSummary = summary;
 }
@@ -752,7 +786,7 @@ export async function runZipImport(vm: ExporterVm): Promise<void> {
       charactersTouched: new Set<string>()
     };
 
-    importGeneralSettings(vm, zip, dataDir, stats);
+    importGeneralSettings(vm, zip, stats);
     importCharacterData(
       vm,
       zip,

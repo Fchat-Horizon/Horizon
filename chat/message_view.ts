@@ -19,6 +19,54 @@ const userPostfix: { [key: number]: string | undefined } = {
   [Conversation.Message.Type.Ad]: ': ',
   [Conversation.Message.Type.Action]: ''
 };
+
+function highlightTextNodes(root: HTMLElement, term: string): void {
+  if (term.length === 0) return;
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(escaped, 'gi');
+  const nodes: Text[] = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  let current = walker.nextNode();
+  while (current !== null) {
+    nodes.push(current as Text);
+    current = walker.nextNode();
+  }
+  for (const node of nodes) {
+    const text = node.nodeValue!;
+    regex.lastIndex = 0;
+    if (!regex.test(text)) continue;
+    regex.lastIndex = 0;
+    const frag = document.createDocumentFragment();
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > lastIndex)
+        frag.appendChild(
+          document.createTextNode(text.slice(lastIndex, match.index))
+        );
+      const mark = document.createElement('span');
+      mark.className = 'message-search-highlight';
+      mark.textContent = match[0];
+      frag.appendChild(mark);
+      lastIndex = match.index + match[0].length;
+      if (match[0].length === 0) regex.lastIndex++;
+    }
+    if (lastIndex < text.length)
+      frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+    node.parentNode!.replaceChild(frag, node);
+  }
+}
+
+function clearHighlights(root: HTMLElement): void {
+  const marks = root.querySelectorAll('.message-search-highlight');
+  marks.forEach(mark => {
+    const parent = mark.parentNode;
+    if (parent === null) return;
+    while (mark.firstChild !== null) parent.insertBefore(mark.firstChild, mark);
+    parent.removeChild(mark);
+    parent.normalize();
+  });
+}
 export default Vue.extend({
   render(this: any, createElement: CreateElement): VNode {
     const message = this.message;
@@ -31,7 +79,11 @@ export default Vue.extend({
     // Classic layout: existing inline format.
     // Modern layout: avatar-first with header (name + time) and bubble content.
     let children: VNodeChildrenArrayContents;
-    if (isModern && message.type !== Conversation.Message.Type.Event) {
+    if (
+      isModern &&
+      message.type !== Conversation.Message.Type.Event &&
+      message.type !== Conversation.Message.Type.Bcast
+    ) {
       children = [];
     } else {
       children = [
@@ -59,13 +111,17 @@ export default Vue.extend({
       `message message-${Conversation.Message.Type[message.type].toLowerCase()}` +
       (separators ? ' message-block' : ' message-blockless') +
       (message.type !== Conversation.Message.Type.Event &&
+      message.type !== Conversation.Message.Type.Bcast &&
       message.sender.name === core.connection.character
         ? ' message-own'
         : '') +
       (this.classes !== undefined ? ` ${this.classes}` : '') +
       ` ${this.scoreClasses}` +
       ` ${this.filterClasses}`;
-    if (message.type !== Conversation.Message.Type.Event) {
+    if (
+      message.type !== Conversation.Message.Type.Event &&
+      message.type !== Conversation.Message.Type.Bcast
+    ) {
       if (isModern) {
         // Modern layout: separate avatar column so time can sit directly after name
         const headerChildren: VNodeChildrenArrayContents = [];
@@ -199,12 +255,24 @@ export default Vue.extend({
         messageAdjustment = ' ' + messageAdjustment;
         break;
     }
+    // A newline-only message collapses to empty after the strip above and renders
+    // as a broken, empty bubble in modern view; fall back to the raw text so it
+    // shows as a blank line like classic view does.
+    if (messageAdjustment === '') messageAdjustment = message.text;
     const isAd = message.type == Conversation.Message.Type.Ad && !this.logs;
+    // highlight whenever a search term is supplied (logs and in-chat find)
+    const highlightTerm: string =
+      typeof this.highlight === 'string' ? this.highlight : '';
+    const needsHighlight = highlightTerm.length > 0;
     const bbcodeNode = createElement(BBCodeView(core.bbCodeParser), {
+      ...(this.highlight !== undefined
+        ? { staticClass: 'bbcode-message-text' }
+        : {}),
       props: {
         unsafeText: isModern ? messageAdjustment : message.text,
         afterInsert: isAd
           ? (elm: HTMLElement) => {
+              if (needsHighlight) this.applyHighlight(elm);
               setImmediate(() => {
                 if (isModern) {
                   // Pushes elm up three times rather than one with modern to make it parent to the top level of a message.
@@ -231,7 +299,9 @@ export default Vue.extend({
                 }
               });
             }
-          : undefined
+          : needsHighlight
+            ? (elm: HTMLElement) => this.applyHighlight(elm)
+            : undefined
       }
     });
 
@@ -271,7 +341,11 @@ export default Vue.extend({
       children.push(bbcodeNode);
     }
 
-    if (isModern && message.type !== Conversation.Message.Type.Event)
+    if (
+      isModern &&
+      message.type !== Conversation.Message.Type.Event &&
+      message.type !== Conversation.Message.Type.Bcast
+    )
       classes += ' message-modern';
     if (this.selectable) {
       classes += ' message-selectable';
@@ -299,7 +373,17 @@ export default Vue.extend({
     logs: {},
     previous: {},
     selectable: {},
-    selected: {}
+    selected: {},
+    highlight: {}
+  },
+  watch: {
+    // finds when search term changed on an already rendered row
+    highlight(this: any): void {
+      if (!this.$el) return;
+      this.applyHighlight(
+        (this.$el as HTMLElement).querySelector('.bbcode-message-text')
+      );
+    }
   },
   data() {
     return {
@@ -307,10 +391,11 @@ export default Vue.extend({
       filterClasses: (this as any).getMessageFilterClasses(
         (this as any).message
       ),
-      scoreWatcher: ((this as any).message.type ===
-        Conversation.Message.Type.Ad && (this as any).message.score === 0
-        ? (this as any).$watch('message.score', () =>
-            (this as any).scoreUpdate()
+      scoreWatcher: ((this as any).message.type === Conversation.Message.Type.Ad
+        ? (this as any).$watch(
+            () =>
+              `${(this as any).message.score}|${(this as any).message.filterMatch}`,
+            () => (this as any).scoreUpdate()
           )
         : null) as (() => void) | null
     };
@@ -322,6 +407,14 @@ export default Vue.extend({
     }
   },
   methods: {
+    // clears and reapplies highlights, called by the watcher and afterInsert
+    applyHighlight(root: HTMLElement | null): void {
+      if (root === null) return;
+      clearHighlights(root);
+      const term = typeof this.highlight === 'string' ? this.highlight : '';
+      if (term.length > 0) highlightTextNodes(root, term);
+    },
+
     // @Watch('message.score')
     scoreUpdate(): void {
       const oldScoreClasses = this.scoreClasses;
@@ -335,11 +428,6 @@ export default Vue.extend({
         this.filterClasses !== oldFilterClasses
       ) {
         this.$forceUpdate();
-      }
-
-      if (this.scoreWatcher) {
-        this.scoreWatcher(); // stop watching
-        this.scoreWatcher = null;
       }
     },
 

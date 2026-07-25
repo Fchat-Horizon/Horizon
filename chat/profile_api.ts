@@ -38,6 +38,7 @@ import {
 import * as Utils from '../site/utils';
 import core from './core';
 import { EventBus } from './preview/event-bus';
+import { decodeHTML } from '../fchat/common';
 
 let horizonDevs: string[] = [];
 let horizonContributors: Map<string, string | undefined> = new Map();
@@ -378,7 +379,9 @@ async function executeCharacterData(
       timezone: data.timezone,
       deleted: false
     },
-    memo: data.memo,
+    memo: data.memo
+      ? { id: data.memo.id, memo: decodeHTML(data.memo.memo) }
+      : data.memo,
     character_list: data.character_list,
     badges: badges,
     settings: data.settings,

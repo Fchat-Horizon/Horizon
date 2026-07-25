@@ -81,7 +81,7 @@
           class="btn btn-light btn-sm"
           v-for="button in buttons"
           :class="button.outerClass"
-          :title="l(button.titleKey, shortcutModifierKey)"
+          :title="l(button.titleKey, { modifier: shortcutModifierKey })"
           @click.prevent.stop="apply(button)"
         >
           <i
@@ -94,8 +94,12 @@
           :class="preview ? 'active' : ''"
           :title="
             preview
-              ? l('editor.closePreview', `${shortcutModifierKey}+Shift+P`)
-              : l('editor.preview', `${shortcutModifierKey}+Shift+P`)
+              ? l('editor.closePreview', {
+                  modifier: `${shortcutModifierKey}+Shift+P`
+                })
+              : l('editor.preview', {
+                  modifier: `${shortcutModifierKey}+Shift+P`
+                })
           "
         >
           <i class="fa" :class="preview ? 'fa-eye' : 'far fa-eye'"></i>
@@ -113,7 +117,9 @@
       @click="previewBBCode"
       v-if="preview && !hasToolbar"
       class="btn btn-light btn-sm bbcode-editor-preview active"
-      :title="l('editor.closePreview', `${shortcutModifierKey}+Shift+P`)"
+      :title="
+        l('editor.closePreview', { modifier: `${shortcutModifierKey}+Shift+P` })
+      "
     >
       <i class="fa fa-eye-slash"></i>
     </div>

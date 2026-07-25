@@ -6,6 +6,7 @@
   import { ref, onMounted, watch } from 'vue';
   import { formatDistanceToNow, format } from 'date-fns';
   import core from '../chat/core';
+  import { dateLocale } from '../chat/localize';
 
   interface Props {
     time?: string | number | null;
@@ -25,8 +26,11 @@
 
     const use12 = core?.state?.generalSettings?.use12HourTime || false;
     const timeFormat = use12 ? 'yyyy-MM-dd hh:mm a' : 'yyyy-MM-dd HH:mm';
-    const absolute = format(date, timeFormat);
-    const relative = formatDistanceToNow(date, { addSuffix: true });
+    const absolute = format(date, timeFormat, { locale: dateLocale() });
+    const relative = formatDistanceToNow(date, {
+      addSuffix: true,
+      locale: dateLocale()
+    });
     const fuzzy = core.state.generalSettings?.fuzzyDates ?? true;
 
     if (fuzzy) {

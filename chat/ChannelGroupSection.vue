@@ -1,6 +1,10 @@
 <template>
-  <div class="channel-group">
-    <div class="channel-group-header" @click="toggleCollapse">
+  <div class="channel-group" :class="{ collapsed: group.collapsed }">
+    <div
+      class="channel-group-header"
+      :data-group-id="group.id"
+      @click="toggleCollapse"
+    >
       <span
         class="fas fa-fw fa-chevron-right channel-group-chevron"
         :class="{ expanded: !group.collapsed }"
@@ -78,17 +82,27 @@
             v-show="shouldShowNotificationBadge(conversation)"
             >{{ conversation.unreadCount }}</span
           >
+
           <span
             v-if="conversation.hasAutomatedAds()"
             class="fas fa-ad ads"
             :class="{ active: conversation.isSendingAutomatedAds() }"
             :aria-label="l('chat.toggleAds')"
             @click.stop="conversation.toggleAutomatedAds()"
+            role="button"
           ></span>
+          <span
+            class="fas fa-thumbtack pin active"
+            @click="unpinConversation(conversation)"
+            :aria-label="l('chat.pin.remove')"
+            role="button"
+          >
+          </span>
           <span
             class="fas fa-times leave"
             @click.stop="conversation.close()"
             :aria-label="l('chat.closeTab')"
+            role="button"
           ></span>
         </span>
       </a>
@@ -107,6 +121,7 @@
   } from './channelDragDropHighlight';
   import { Conversation } from './interfaces';
   import l from './localize';
+  import { Dialog } from '../helpers/dialog';
 
   const unreadClasses = {
     [Conversation.UnreadState.None]: '',
@@ -156,6 +171,16 @@
         return hasMention ? 'text-bg-danger' : 'text-bg-warning';
       }
     },
+    watch: {
+      startEditing(val: boolean) {
+        if (val) {
+          this.$nextTick(() => {
+            this.startRename();
+            this.$emit('editing-started');
+          });
+        }
+      }
+    },
     mounted() {
       if (this.startEditing) {
         this.$nextTick(() => {
@@ -164,7 +189,7 @@
         });
       }
       Sortable.create(<HTMLElement>this.$refs['channelList'], {
-        group: { name: 'channels', pull: true, put: true },
+        group: { name: 'channels', pull: true, put: ['channels'] },
         animation: 50,
         fallbackTolerance: 5,
         onStart: () => startChannelDragging(),
@@ -244,8 +269,19 @@
       cancelRename() {
         this.renaming = false;
       },
-      deleteGroup() {
-        core.conversations.deleteChannelGroup(this.group.id);
+      deleteGroup(e: MouseEvent) {
+        if (
+          e.getModifierState('Shift') ||
+          this.group.channels.length < 1 ||
+          Dialog.confirmDialog(
+            l('channel.group.delete.confirm', { name: this.group.name || '' })
+          )
+        ) {
+          core.conversations.deleteChannelGroup(this.group.id);
+        }
+      },
+      unpinConversation(conversation: Conversation.ChannelConversation) {
+        core.conversations.setChannelGroup(conversation.channel.id, null);
       },
       getClasses(conversation: Conversation.Conversation): string {
         return conversation === core.conversations.selectedConversation
@@ -274,6 +310,14 @@
 </script>
 
 <style>
+  .channel-group:only-child:not(.editing):not(.collapsed) {
+    .channel-group-header {
+      display: none;
+    }
+    .channel-group-list .list-group-item.item-channel {
+      margin-left: 0px;
+    }
+  }
   .channel-group-header {
     display: flex;
     align-items: center;
@@ -281,7 +325,6 @@
     padding: 4px 8px;
     font-size: 0.8rem;
     font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0.05em;
     opacity: 0.8;
     user-select: none;
@@ -331,8 +374,5 @@
   }
   .channel-group-delete:hover {
     opacity: 1 !important;
-  }
-  .channel-group-list {
-    padding-left: 8px;
   }
 </style>

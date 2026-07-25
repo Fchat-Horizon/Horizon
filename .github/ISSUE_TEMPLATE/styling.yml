@@ -1,6 +1,6 @@
 name: Styling or visual issues
 description: Things don't look right, illegible text, misaligned elements, etc.
-labels: ['styling']
+labels: ['styling', 'Needs Triage']
 projects: ['FChat-Horizon/Horizon']
 body:
   - type: textarea
@@ -14,7 +14,7 @@ body:
     id: version-info
     attributes:
       label: Version Information
-      placeholder: In the app menu, go to Horizon > About Horizon, click "Copy Version Info" and paste it here.
+      placeholder: In the app menu, go to Horizon > About Horizon, click "Copy Debug Info" and paste it here.
     validations:
       required: true
   - type: textarea

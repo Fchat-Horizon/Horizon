@@ -14,6 +14,7 @@ import { CacheManager } from '../learn/cache-manager';
 import { Channels, Characters } from '../fchat';
 import BBCodeParser from './bbcode';
 import { Settings as SettingsImpl } from './common';
+import { emptyMap, toMap } from '../fchat/common';
 import Conversations from './conversations';
 import {
   Channel,
@@ -42,7 +43,7 @@ class State implements StateInterface {
   generalSettings?: GeneralSettings | undefined;
   _settings: Settings | undefined = undefined;
   hiddenUsers: string[] = [];
-  favoriteEIcons: Record<string, boolean> = {};
+  favoriteEIcons: Record<string, boolean> = emptyMap();
   recentEIcons: string[] = [];
 
   get settings(): Settings {
@@ -143,7 +144,7 @@ const data = {
     rebuildHiddenUsersSet();
 
     const favoriteEIcons = await core.settingsStore.get('favoriteEIcons');
-    state.favoriteEIcons = favoriteEIcons !== undefined ? favoriteEIcons : {};
+    state.favoriteEIcons = toMap(favoriteEIcons);
 
     const recentEIcons = await core.settingsStore.get('recentEIcons');
     state.recentEIcons = recentEIcons !== undefined ? recentEIcons : [];

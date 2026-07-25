@@ -1,5 +1,5 @@
 import { queuedJoin } from '../fchat/channels';
-import { decodeHTML } from '../fchat/common';
+import { decodeHTML, emptyMap, toMap } from '../fchat/common';
 import { AdManager } from './ads/ad-manager';
 import {
   characterImage,
@@ -11,7 +11,7 @@ import {
 } from './common';
 import core from './core';
 import { Channel, Character, Conversation as Interfaces } from './interfaces';
-import l from './localize';
+import l, { LocaleKey } from './localize';
 import {
   CommandContext,
   isAction,
@@ -31,6 +31,19 @@ import isChannel = Interfaces.isChannel;
  * How frequently the contents of the textbox in each conversation should save to the in-memory cache, if enabled.
  */
 const CONVERSATION_CACHE_UPDATE_FREQ_IN_MS = 1000;
+
+/**
+ * @constant
+ * How long the startup auto-join must be quiet (no new channel join arriving)
+ * before pinned channels that never joined are treated as removed and pruned.
+ * The timer resets on every successful join, so a slow connection that delivers
+ * joins gradually keeps deferring the cleanup until the joins actually stop.
+ * Sits at the client's ping stale threshold (the pin timeout in
+ * fchat/connection.ts): a connection that survives this long without a join
+ * arriving is demonstrably alive, so the channels that still have not joined
+ * are gone for good rather than merely slow.
+ */
+const PINNED_CLEANUP_SETTLE_IN_MS = 90000;
 
 function createMessage(
   this: any,
@@ -128,7 +141,7 @@ abstract class Conversation implements Interfaces.Conversation {
   clearText(): void {
     setImmediate(() => {
       this.enteredText = '';
-      core.cache.conversationDraftCache.deregister(this.name);
+      core.cache.conversationDraftCache.deregister(this.key);
     });
   }
 
@@ -397,12 +410,16 @@ class PrivateConversation
 
   public async sendMessageEx(messageText: string): Promise<void> {
     if (this.character.status === 'offline') {
-      this.errorText = l('chat.errorOffline', this.character.name);
+      this.errorText = l('chat.errorOffline', {
+        character: this.character.name
+      });
       return;
     }
 
     if (this.character.isIgnored) {
-      this.errorText = l('chat.errorIgnored', this.character.name);
+      this.errorText = l('chat.errorIgnored', {
+        character: this.character.name
+      });
       return;
     }
 
@@ -430,11 +447,15 @@ class PrivateConversation
   protected async doSend(): Promise<void> {
     await this.logPromise;
     if (this.character.status === 'offline') {
-      this.errorText = l('chat.errorOffline', this.character.name);
+      this.errorText = l('chat.errorOffline', {
+        character: this.character.name
+      });
       return;
     }
     if (this.character.isIgnored) {
-      this.errorText = l('chat.errorIgnored', this.character.name);
+      this.errorText = l('chat.errorIgnored', {
+        character: this.character.name
+      });
       return;
     }
 
@@ -465,7 +486,7 @@ class PrivateConversation
       this.safeAddMessage(message);
 
       await this.logMessage(message, false);
-      core.cache.deregisterConversationDraft(this.name);
+      core.cache.deregisterConversationDraft(this.key);
       this.markRead();
     });
   }
@@ -614,7 +635,6 @@ class ChannelConversation
   }
 
   close(): void {
-    state.setChannelGroup(this.channel.id, null);
     core.connection.send('LCH', { channel: this.channel.id });
     clearInterval(this.cacheInterval);
     state.removeFromNavigationHistory(this);
@@ -771,8 +791,8 @@ class ConsoleConversation extends Conversation {
 class State implements Interfaces.State {
   privateConversations: PrivateConversation[] = [];
   channelConversations: ChannelConversation[] = [];
-  privateMap: { [key: string]: PrivateConversation | undefined } = {};
-  channelMap: { [key: string]: ChannelConversation | undefined } = {};
+  privateMap: { [key: string]: PrivateConversation | undefined } = emptyMap();
+  channelMap: { [key: string]: ChannelConversation | undefined } = emptyMap();
   consoleTab!: ConsoleConversation;
   selectedConversation: Conversation = this.consoleTab;
   lastConversation: Conversation = this.selectedConversation;
@@ -782,9 +802,11 @@ class State implements Interfaces.State {
   settings!: { [key: string]: Interfaces.Settings };
   modes!: { [key: string]: Channel.Mode | undefined };
   channelGroups: Interfaces.ChannelGroup[] = [];
+  pinnedCleanupTimer?: ReturnType<typeof setTimeout>;
+  pinnedCleanupArmed = false;
 
   get channelGroupAssignments(): { [channelId: string]: string } {
-    const map: { [id: string]: string } = {};
+    const map: { [id: string]: string } = emptyMap();
     for (const g of this.channelGroups)
       for (const id of g.channels) map[id] = g.id;
     return map;
@@ -845,6 +867,52 @@ class State implements Interfaces.State {
       group.channels = this.channelConversations
         .filter(c => assignments[c.channel.id] === group.id)
         .map(c => c.channel.id);
+  }
+
+  /**
+   * Arms (or, if already armed, restarts) the settle timer that prunes pinned
+   * channels which failed to join. Called once after the startup auto-join and
+   * again on every successful join, so the prune only runs once joins have
+   * stopped arriving — never while a slow connection is still delivering them.
+   */
+  schedulePinnedCleanup(): void {
+    if (!this.pinnedCleanupArmed) return;
+    clearTimeout(this.pinnedCleanupTimer);
+    this.pinnedCleanupTimer = setTimeout(() => {
+      this.pinnedCleanupArmed = false;
+      this.pruneRemovedChannels();
+    }, PINNED_CLEANUP_SETTLE_IN_MS);
+  }
+
+  /**
+   * Removes pinned/grouped channels that could not be joined on startup. FServ
+   * does not report failed joins, so once the startup join burst has settled,
+   * any grouped channel that never produced a live conversation is treated as
+   * removed server-side. Mirrors the pre-grouping behavior where the pinned
+   * list was re-derived from live conversations, and additionally tells the
+   * user which channels were dropped.
+   */
+  pruneRemovedChannels(): void {
+    if (!core.connection.isOpen) return;
+    const removed = Object.keys(this.channelGroupAssignments).filter(
+      id => this.channelMap[id] === undefined
+    );
+    if (removed.length === 0) return;
+    this.syncGroupChannels();
+    void this.saveChannelGroups();
+    void this.savePinned();
+    const links = removed.map(id => {
+      const recent = this.recentChannels.find(c => c.channel === id);
+      const name = recent !== undefined ? recent.name : id;
+      return id.startsWith('adh-')
+        ? `[session=${name}]${id}[/session]`
+        : `[channel]${name}[/channel]`;
+    });
+    void this.consoleTab.addMessage(
+      new EventMessage(
+        l('channel.group.removedUnjoinable', { channels: links.join(', ') })
+      )
+    );
   }
 
   async savePinned(): Promise<void> {
@@ -983,17 +1051,18 @@ class State implements Interfaces.State {
       private: [],
       channels: []
     };
-    this.modes = (await core.settingsStore.get('modes')) || {};
+    this.modes = toMap(await core.settingsStore.get('modes'));
     for (const conversation of this.privateConversations)
       conversation._isPinned =
         this.pinned.private.indexOf(conversation.name) !== -1;
     this.recent = (await core.settingsStore.get('recent')) || [];
     this.recentChannels =
       (await core.settingsStore.get('recentChannels')) || [];
-    const settings =
+    const settings = toMap(
       <{ [key: string]: ConversationSettings }>(
         await core.settingsStore.get('conversationSettings')
-      ) || {};
+      )
+    );
     for (const key in settings) {
       settings[key] = Object.assign(new ConversationSettings(), settings[key]);
       const conv = this.byKey(key);
@@ -1022,12 +1091,15 @@ class State implements Interfaces.State {
       const groupId = `group_${Date.now()}`;
       this.channelGroups.push({
         id: groupId,
-        name: 'Pinned',
+        name: l('channel.group.pinned'),
         collapsed: false,
         order: this.channelGroups.length,
         channels: ungroupedPinned
       });
       await this.saveChannelGroups();
+      this.consoleTab.addMessage(
+        new EventMessage(l('channel.group.noticePinned'))
+      );
     }
     this.pinned.channels = this.channelGroups.flatMap(g => g.channels);
     //tslint:enable
@@ -1203,7 +1275,10 @@ async function initConversationCache(this: Conversation): Promise<void> {
   // Restore message draft if it exists (e.g. accidentally closing the tab). Be sure the cache is reset for a new character if needed.
   await core.cache.conversationDraftCache.resetCacheIfNeeded();
 
-  const draft = core.cache.getConversationDraft(this.name);
+  // Only an open conversation knows both the display name pre-key drafts were stored under and its unique key.
+  core.cache.migrateConversationDraft(this.name, this.key);
+
+  const draft = core.cache.getConversationDraft(this.key);
   this.enteredText = draft;
 
   if (!this.cacheActive) {
@@ -1223,8 +1298,8 @@ async function initConversationCache(this: Conversation): Promise<void> {
       }
 
       this.enteredText
-        ? core.cache.registerConversationDraft(this.name, this.enteredText)
-        : core.cache.deregisterConversationDraft(this.name);
+        ? core.cache.registerConversationDraft(this.key, this.enteredText)
+        : core.cache.deregisterConversationDraft(this.key);
     }, CONVERSATION_CACHE_UPDATE_FREQ_IN_MS);
   }
 }
@@ -1246,12 +1321,14 @@ export default function (this: any): Interfaces.State {
   });
   const connection = core.connection;
   connection.onEvent('connecting', async isReconnect => {
+    state.pinnedCleanupArmed = false;
+    clearTimeout(state.pinnedCleanupTimer);
     state.channelConversations = [];
-    state.channelMap = {};
+    state.channelMap = emptyMap();
     if (!isReconnect) {
       state.consoleTab = new ConsoleConversation();
       state.privateConversations = [];
-      state.privateMap = {};
+      state.privateMap = emptyMap();
     } else state.consoleTab.unread = Interfaces.UnreadState.None;
     state.selectedConversation = state.consoleTab;
     EventBus.$emit('select-conversation', {
@@ -1264,6 +1341,15 @@ export default function (this: any): Interfaces.State {
     for (const item of state.pinned.private)
       state.getPrivate(core.characters.get(item));
     queuedJoin(state.pinned.channels.slice());
+    // Arm the settle timer; it restarts on every join (see the join handler
+    // below) and only fires once joins have stopped arriving, then prunes any
+    // pinned channels that never joined (removed server-side).
+    state.pinnedCleanupArmed = true;
+    state.schedulePinnedCleanup();
+  });
+  connection.onEvent('closed', () => {
+    state.pinnedCleanupArmed = false;
+    clearTimeout(state.pinnedCleanupTimer);
   });
   core.channels.onEvent(async (type, channel, member) => {
     if (type === 'join')
@@ -1272,6 +1358,9 @@ export default function (this: any): Interfaces.State {
         state.channelMap[channel.id] = conv;
         state.channelConversations.push(conv);
         void state.savePinned();
+        // A pinned channel joined: defer the dead-channel cleanup until the
+        // join burst goes quiet, so slow connections aren't pruned mid-join.
+        state.schedulePinnedCleanup();
         const index = state.recentChannels.findIndex(
           c => c.channel === channel.id
         );
@@ -1293,10 +1382,9 @@ export default function (this: any): Interfaces.State {
             !core.state.settings.joinMessages)
         )
           return;
-        const text = l(
-          'events.channelJoin',
-          `[user]${member.character.name}[/user]`
-        );
+        const text = l('events.channelJoin', {
+          character: `[user]${member.character.name}[/user]`
+        });
         await conv.addMessage(new EventMessage(text));
       }
     else if (member === undefined) {
@@ -1318,10 +1406,9 @@ export default function (this: any): Interfaces.State {
           !core.state.settings.joinMessages)
       )
         return;
-      const text = l(
-        'events.channelLeave',
-        `[user]${member.character.name}[/user]`
-      );
+      const text = l('events.channelLeave', {
+        character: `[user]${member.character.name}[/user]`
+      });
       await conv.addMessage(new EventMessage(text));
     }
   });
@@ -1391,7 +1478,11 @@ export default function (this: any): Interfaces.State {
       await core.notifications.notify(
         conversation,
         data.character,
-        l('chat.highlight', results[0], conversation.name, message.text),
+        l('chat.highlight', {
+          word: results[0],
+          channel: conversation.name,
+          message: message.text
+        }),
         characterImage(data.character),
         'attention'
       );
@@ -1402,12 +1493,11 @@ export default function (this: any): Interfaces.State {
       message.isHighlight = true;
       await state.consoleTab.addMessage(
         new EventMessage(
-          l(
-            'events.highlight',
-            `[user]${data.character}[/user]`,
-            results[0],
-            `[session=${conversation.name}]${data.channel}[/session]`
-          ),
+          l('events.highlight', {
+            character: `[user]${data.character}[/user]`,
+            message: results[0],
+            channel: `[session=${conversation.name}]${data.channel}[/session]`
+          }),
           time
         )
       );
@@ -1416,22 +1506,20 @@ export default function (this: any): Interfaces.State {
       await core.notifications.notify(
         conversation,
         data.character,
-        l(
-          'events.watchedUserPosted.notification',
-          conversation.name,
-          data.message
-        ),
+        l('events.watchedUserPosted.notification', {
+          channel: conversation.name,
+          message: data.message
+        }),
         characterImage(data.character),
         'attention'
       );
 
       await state.consoleTab.addMessage(
         new EventMessage(
-          l(
-            'events.watchedUserPosted',
-            `[user]${data.character}[/user]`,
-            `[session=${conversation.name}]${data.channel}[/session]`
-          ),
+          l('events.watchedUserPosted', {
+            character: `[user]${data.character}[/user]`,
+            channel: `[session=${conversation.name}]${data.channel}[/session]`
+          }),
           time
         )
       );
@@ -1482,13 +1570,13 @@ export default function (this: any): Interfaces.State {
     const sender = core.characters.get(data.character);
     let text: string;
     if (data.type === 'bottle')
-      text = l('chat.bottle', `[user]${data.target}[/user]`);
+      text = l('chat.bottle', { character: `[user]${data.target}[/user]` });
     else {
       const results =
         data.results.length > 1
           ? `${data.results.join('+')} = ${data.endresult}`
           : data.endresult.toString();
-      text = l('chat.roll', data.rolls.join('+'), results);
+      text = l('chat.roll', { rolls: data.rolls.join('+'), results });
     }
     const message = new Message(MessageType.Roll, sender, text, time);
     if ('channel' in data) {
@@ -1533,7 +1621,7 @@ export default function (this: any): Interfaces.State {
   connection.onMessage('NLN', async (data, time) => {
     if (!core.state.settings.horizonShowSigninNotifications) return;
     const message = new EventMessage(
-      l('events.login', `[user]${data.identity}[/user]`),
+      l('events.login', { character: `[user]${data.identity}[/user]` }),
       time
     );
     if (isOfInterest(core.characters.get(data.identity))) {
@@ -1543,7 +1631,7 @@ export default function (this: any): Interfaces.State {
         await core.notifications.notify(
           state.consoleTab,
           data.identity,
-          l('events.login', data.identity),
+          l('events.login', { character: data.identity }),
           characterImage(data.identity),
           'silence'
         );
@@ -1559,7 +1647,7 @@ export default function (this: any): Interfaces.State {
   connection.onMessage('FLN', async (data, time) => {
     if (!core.state.settings.horizonShowSigninNotifications) return;
     const message = new EventMessage(
-      l('events.logout', `[user]${data.character}[/user]`),
+      l('events.logout', { character: `[user]${data.character}[/user]` }),
       time
     );
     if (isOfInterest(core.characters.get(data.character)))
@@ -1580,44 +1668,48 @@ export default function (this: any): Interfaces.State {
   connection.onMessage('CBU', async (data, time) => {
     const conv = state.channelMap[data.channel.toLowerCase()];
     if (conv === undefined) return core.channels.leave(data.channel);
-    const logtext = l(
-      'events.ban',
-      conv.name,
-      data.character,
-      `[user]${data.operator}[/user]`
-    );
-    conv.infoText = l('events.ban', conv.name, data.character, data.operator);
+    const logtext = l('events.ban', {
+      channel: conv.name,
+      character: data.character,
+      operator: `[user]${data.operator}[/user]`
+    });
+    conv.infoText = l('events.ban', {
+      channel: conv.name,
+      character: data.character,
+      operator: data.operator
+    });
     return addEventMessage(new EventMessage(logtext, time));
   });
   connection.onMessage('CKU', async (data, time) => {
     const conv = state.channelMap[data.channel.toLowerCase()];
     if (conv === undefined) return core.channels.leave(data.channel);
-    const logtext = l(
-      'events.kick',
-      conv.name,
-      data.character,
-      `[user]${data.operator}[/user]`
-    );
-    conv.infoText = l('events.kick', conv.name, data.character, data.operator);
+    const logtext = l('events.kick', {
+      channel: conv.name,
+      character: data.character,
+      operator: `[user]${data.operator}[/user]`
+    });
+    conv.infoText = l('events.kick', {
+      channel: conv.name,
+      character: data.character,
+      operator: data.operator
+    });
     return addEventMessage(new EventMessage(logtext, time));
   });
   connection.onMessage('CTU', async (data, time) => {
     const conv = state.channelMap[data.channel.toLowerCase()];
     if (conv === undefined) return core.channels.leave(data.channel);
-    const logtext = l(
-      'events.timeout',
-      conv.name,
-      data.character,
-      `[user]${data.operator}[/user]`,
-      data.length.toString()
-    );
-    conv.infoText = l(
-      'events.timeout',
-      conv.name,
-      data.character,
-      data.operator,
-      data.length.toString()
-    );
+    const logtext = l('events.timeout', {
+      channel: conv.name,
+      character: data.character,
+      operator: `[user]${data.operator}[/user]`,
+      minutes: data.length.toString()
+    });
+    conv.infoText = l('events.timeout', {
+      channel: conv.name,
+      character: data.character,
+      operator: data.operator,
+      minutes: data.length.toString()
+    });
     return addEventMessage(new EventMessage(logtext, time));
   });
   connection.onMessage('BRO', async (data, time) => {
@@ -1627,7 +1719,10 @@ export default function (this: any): Interfaces.State {
       );
       const char = core.characters.get(data.character);
       const message = new BroadcastMessage(
-        l('events.broadcast', `[user]${data.character}[/user]`, content),
+        l('events.broadcast', {
+          character: `[user]${data.character}[/user]`,
+          message: content
+        }),
         char,
         time
       );
@@ -1636,7 +1731,7 @@ export default function (this: any): Interfaces.State {
       state.consoleTab.unreadCount++;
       await core.notifications.notify(
         state.consoleTab,
-        l('events.broadcast.notification', data.character),
+        l('events.broadcast.notification', { character: data.character }),
         content,
         characterImage(data.character),
         'attention'
@@ -1645,18 +1740,17 @@ export default function (this: any): Interfaces.State {
       return addEventMessage(new EventMessage(decodeHTML(data.message), time));
   });
   connection.onMessage('CIU', async (data, time) => {
-    const text = l(
-      'events.invite',
-      `[user]${data.sender}[/user]`,
-      `[session=${data.title}]${data.name}[/session]`
-    );
+    const text = l('events.invite', {
+      character: `[user]${data.sender}[/user]`,
+      channel: `[session=${data.title}]${data.name}[/session]`
+    });
     return addEventMessage(new EventMessage(text, time));
   });
   connection.onMessage('ERR', async (data, time) => {
     state.selectedConversation.errorText = data.message;
     return addEventMessage(
       new EventMessage(
-        `[color=red]${l('events.error', data.message)}[/color]`,
+        `[color=red]${l('events.error', { error: data.message })}[/color]`,
         time
       )
     );
@@ -1664,11 +1758,11 @@ export default function (this: any): Interfaces.State {
 
   connection.onMessage('IGN', async (data, time) => {
     if (data.action !== 'add' && data.action !== 'delete') return;
-    const key = `events.ignore_${data.action}`;
+    const key: LocaleKey = `events.ignore_${data.action}`;
     const name = data.character;
-    state.selectedConversation.infoText = l(key, name);
+    state.selectedConversation.infoText = l(key, { character: name });
     return addEventMessage(
-      new EventMessage(l(key, `[user]${name}[/user]`), time)
+      new EventMessage(l(key, { character: `[user]${name}[/user]` }), time)
     );
   });
   connection.onMessage('RTB', async (data, time) => {
@@ -1689,27 +1783,29 @@ export default function (this: any): Interfaces.State {
         case 'feature':
           url += `vote.php?id=${data.target_id}/#${data.id}`;
       }
-      const key = `events.rtbComment${data.parent_id !== 0 ? 'Reply' : ''}`;
-      text = l(
-        key,
-        `[user]${data.name}[/user]`,
-        l(`events.rtbComment_${data.target_type}`),
-        `[url=${url}]${data.target}[/url]`
-      );
+      const key: LocaleKey = `events.rtbComment${
+        data.parent_id !== 0 ? 'Reply' : ''
+      }`;
+      text = l(key, {
+        character: `[user]${data.name}[/user]`,
+        type: l(`events.rtbComment_${data.target_type}`),
+        link: `[url=${url}]${data.target}[/url]`
+      });
       character = data.name;
     } else if (data.type === 'note') {
       // tslint:disable-next-line:no-unsafe-any
       core.siteSession.interfaces.notes.incrementNotes();
-      text = l(
-        'events.rtb_note',
-        `[user]${data.sender}[/user]`,
-        `[url=${url}view_note.php?note_id=${data.id}]${data.subject}[/url]`
-      );
+      text = l('events.rtb_note', {
+        character: `[user]${data.sender}[/user]`,
+        link: `[url=${url}view_note.php?note_id=${data.id}]${data.subject}[/url]`
+      });
       character = data.sender;
     } else if (data.type === 'friendrequest') {
       // tslint:disable-next-line:no-unsafe-any
       core.siteSession.interfaces.notes.incrementMessages();
-      text = l(`events.rtb_friendrequest`, `[user]${data.name}[/user]`);
+      text = l(`events.rtb_friendrequest`, {
+        character: `[user]${data.name}[/user]`
+      });
       character = data.name;
     } else {
       switch (data.type) {
@@ -1731,11 +1827,10 @@ export default function (this: any): Interfaces.State {
         default: //TODO
           return;
       }
-      text = l(
-        `events.rtb_${data.type}`,
-        `[user]${data.name}[/user]`,
-        data.title !== undefined ? `[url=${url}]${data.title}[/url]` : url
-      );
+      text = l(`events.rtb_${data.type}`, {
+        character: `[user]${data.name}[/user]`,
+        link: data.title !== undefined ? `[url=${url}]${data.title}[/url]` : url
+      });
       character = data.name;
     }
     await addEventMessage(new EventMessage(text, time));
@@ -1752,12 +1847,11 @@ export default function (this: any): Interfaces.State {
   connection.onMessage('SFC', async (data, time) => {
     let text: string, message: Interfaces.Message;
     if (data.action === 'report') {
-      text = l(
-        'events.report',
-        `[user]${data.character}[/user]`,
-        decodeHTML(data.tab),
-        decodeHTML(data.report)
-      );
+      text = l('events.report', {
+        character: `[user]${data.character}[/user]`,
+        tab: decodeHTML(data.tab),
+        report: decodeHTML(data.report)
+      });
       if (!data.old)
         await core.notifications.notify(
           state.consoleTab,
@@ -1770,11 +1864,10 @@ export default function (this: any): Interfaces.State {
       safeAddMessage(sfcList, message, 500);
       (<Interfaces.SFCMessage>message).sfc = data;
     } else {
-      text = l(
-        'events.report.confirmed',
-        `[user]${data.moderator}[/user]`,
-        `[user]${data.character}[/user]`
-      );
+      text = l('events.report.confirmed', {
+        moderator: `[user]${data.moderator}[/user]`,
+        character: `[user]${data.character}[/user]`
+      });
       for (const item of sfcList)
         if (item.sfc.logid === data.logid) {
           item.sfc.confirmed = true;
@@ -1792,8 +1885,10 @@ export default function (this: any): Interfaces.State {
             data.statusmsg.length > 0
               ? 'events.status.ownMessage'
               : 'events.status.own',
-            l(`status.${data.status}`),
-            decodeHTML(data.statusmsg)
+            {
+              status: l(`status.${data.status}`),
+              message: decodeHTML(data.statusmsg)
+            }
           ),
           time
         )
@@ -1813,12 +1908,11 @@ export default function (this: any): Interfaces.State {
     const key =
       data.statusmsg.length > 0 ? 'events.status.message' : 'events.status';
     const message = new EventMessage(
-      l(
-        key,
-        `[user]${data.character}[/user]`,
+      l(key, {
+        character: `[user]${data.character}[/user]`,
         status,
-        decodeHTML(data.statusmsg)
-      ),
+        message: decodeHTML(data.statusmsg)
+      }),
       time
     );
     await addEventMessage(message);
@@ -1837,14 +1931,13 @@ export default function (this: any): Interfaces.State {
   connection.onMessage('UPT', async (data, time) =>
     addEventMessage(
       new EventMessage(
-        l(
-          'events.uptime',
-          data.startstring,
-          data.channels.toString(),
-          data.users.toString(),
-          data.accepted.toString(),
-          data.maxusers.toString()
-        ),
+        l('events.uptime', {
+          startTime: data.startstring,
+          channels: data.channels.toString(),
+          users: data.users.toString(),
+          connections: data.accepted.toString(),
+          maxUsers: data.maxusers.toString()
+        }),
         time
       )
     )

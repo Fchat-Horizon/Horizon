@@ -36,5 +36,6 @@ function compilerCallback(err, stats) {
 }
 
 const compiler = webpack(config);
-if (mode === 'watch') compiler.watch({}, compilerCallback);
+if (mode === 'watch')
+  compiler.watch(config[0].watchOptions || {}, compilerCallback);
 else compiler.run(compilerCallback);

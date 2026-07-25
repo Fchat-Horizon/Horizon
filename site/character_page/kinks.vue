@@ -22,27 +22,6 @@
       >
         <character-select v-model="characterToCompare"></character-select>
 
-        <div
-          class="form-label mb-0"
-          :style="`
-            aspect-ratio: 1;
-            height: 100%;
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
-            background-image: url(${getCompareAvatarUrl()});
-            `"
-        >
-          <a
-            v-if="compareCharacter"
-            :href="compareHref"
-            target="_blank"
-            class="compare-avatar-wrapper"
-            style="height: 100%; width: 100%"
-          >
-          </a>
-        </div>
-
         <!-- small filter icon merged into compare area; highlighted when active -->
         <button
           type="button"
@@ -330,43 +309,6 @@
         await compareKinks();
       };
 
-      const getCompareAvatarUrl = (): string => {
-        //There should be a site util for sanitizing avatars like this tbqh.
-        return Utils.avatarURL(compareName.value).replace(/ /g, '%20');
-      };
-
-      const compareCharacter = computed(() => {
-        try {
-          const id = characterToCompare.value;
-          if (id === undefined || id === null) return undefined;
-
-          const scs = Utils.characters || [];
-          const found = scs.find((c: any) => c.id === id);
-          const name = found ? found.name : undefined;
-          if (!name) return undefined;
-
-          return core.characters.get(name);
-        } catch (e) {
-          return undefined;
-        }
-      });
-
-      const compareName = computed(() => {
-        try {
-          const cc = compareCharacter.value as any;
-          if (!cc) return undefined;
-          return cc.name || (cc.character && cc.character.name) || undefined;
-        } catch (e) {
-          return undefined;
-        }
-      });
-
-      const compareHref = computed(() => {
-        const name = compareName.value;
-        if (!name) return '#';
-        return Utils.characterURL(name);
-      });
-
       const groupedKinks = computed(
         (): { [key in KinkChoice]: DisplayKink[] } => {
           const kinks = Store.shared.kinks;
@@ -578,10 +520,6 @@
       return {
         shared,
         characterToCompare,
-        compareCharacter,
-        compareName,
-        compareHref,
-        getCompareAvatarUrl,
         highlightGroup,
         search,
         sortByViewerPriorities,
@@ -638,25 +576,5 @@
   }
   .quick-compare-block > button {
     flex: 0 0 auto;
-  }
-
-  .compare-avatar {
-    flex: 0 0 auto;
-    width: 37px;
-    height: 37px;
-    max-height: 37px;
-    max-width: 37px;
-    object-fit: cover;
-    align-self: center;
-  }
-
-  .compare-avatar-wrapper {
-    display: inline-flex;
-    align-items: center;
-  }
-  .compare-avatar-wrapper {
-    width: auto;
-    height: auto;
-    justify-content: center;
   }
 </style>

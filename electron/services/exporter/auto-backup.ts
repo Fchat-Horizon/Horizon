@@ -60,6 +60,7 @@ export async function performAutoBackup(
   try {
     await runExportCli({
       dataDir: settings.logDirectory,
+      settingsDir: path.join(baseDir, 'data'),
       out: outPath,
       includeGeneral: settings.autoBackupIncludeGeneralSettings,
       includeCharacterSettings: settings.autoBackupIncludeCharacterSettings,

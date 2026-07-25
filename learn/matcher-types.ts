@@ -395,6 +395,7 @@ export enum Species {
   Vampire = 182,
   Naga = 619,
   Monster = 483,
+  Plant = 249,
 
   Minotaur = 12121212,
   Giraffe = 13131313,
@@ -409,7 +410,8 @@ export enum Species {
   Hub = 22222222,
   Pinniped = 23232323,
   Hybrid = 24242424,
-  Xenarthra = 25252525
+  Xenarthra = 25252525,
+  Lamia = 26262626
 }
 
 export const nonAnthroSpecies = [
@@ -426,7 +428,8 @@ export const nonAnthroSpecies = [
   Species.Fae,
   Species.Vampire,
   Species.Monster,
-  Species.Hub
+  Species.Hub,
+  Species.Plant
 ];
 
 export const mammalSpecies = [
@@ -473,13 +476,23 @@ export interface SpeciesStrMap {
   [key: number]: string;
 }
 
+// Some species are shown as distinct in search/results but do not have their
+// own F-List preference id, so for scoring they borrow another species' id
+// (i.e. the "kink" prevalence entry looked up in a character's profile).
+// e.g. Lamia is its own species for display, but shares Naga's "Lamia / Naga"
+// preference (619) when scoring how much a player likes/dislikes them.
+export const speciesPreferenceMapping: { [key: number]: Species } = {
+  [Species.Lamia]: Species.Naga
+};
+
 export const speciesNames: SpeciesStrMap = {
   [Species.MarineMammal]: 'marine mammals',
   [Species.Elf]: 'elves',
   [Species.Fish]: 'fishes',
   [Species.Mephitidae]: 'mephitis',
   [Species.Rhinoceros]: 'rhinoceros',
-  [Species.Suidae]: 'swine'
+  [Species.Suidae]: 'swine',
+  [Species.Plant]: 'plants'
 };
 
 const humanLikeNekoSpecies = [
@@ -1807,7 +1820,8 @@ export const speciesMapping: SpeciesMap = {
     'behemoth'
   ],
 
-  [Species.Naga]: ['naga', 'lamia', 'coatl', 'quetzalcoatl'],
+  [Species.Naga]: ['naga', 'coatl', 'quetzalcoatl'],
+  [Species.Lamia]: ['lamia'],
   [Species.Taur]: [
     'centaur',
     'chakat',
@@ -1922,6 +1936,35 @@ export const speciesMapping: SpeciesMap = {
     'flexible',
     'any',
     'partner preference'
+  ],
+
+  [Species.Plant]: [
+    'floran',
+    'fungus',
+    'fungi',
+    'mushroom',
+    'vine',
+    'flower',
+    'moss',
+    'fern',
+    'cactus',
+    'succulent',
+    'sprout',
+    'seedling',
+    'mycelium',
+    'spore',
+    'vegetable',
+    'vegetal',
+    'chlorophyll',
+    'living[ -]?wood',
+    'wood[ -]?sprite',
+    'nature[ -]?spirit',
+    '🪴',
+    '🌱',
+    '🌻',
+    '🍄',
+    '🍄‍🟫',
+    gen('(plant|flora|dryad|treant|myconid)')
   ]
 };
 

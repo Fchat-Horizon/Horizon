@@ -27,6 +27,7 @@ export interface RecoverableAd {
   nextPostDue: Date | undefined;
   firstPost: Date | undefined;
   expireDue: Date | undefined;
+  minPostDelaySeconds: number;
 }
 
 export class AdManager {
@@ -159,9 +160,12 @@ export class AdManager {
     );
 
     // tslint:disable-next-line: no-unnecessary-type-assertion
-    this.interval = setTimeout(async () => {
-      await this.sendNextPost();
-    }, nextInMs) as Timer;
+    this.interval = setTimeout(
+      async () => {
+        await this.sendNextPost();
+      },
+      Math.max(0, this.nextPostDue.getTime() - Date.now())
+    ) as Timer;
   }
 
   generateAdMap(): number[] {
@@ -241,11 +245,14 @@ export class AdManager {
     this.adMap = this.generateAdMap();
 
     // tslint:disable-next-line: no-unnecessary-type-assertion
-    this.interval = setTimeout(async () => {
-      this.firstPost = new Date();
+    this.interval = setTimeout(
+      async () => {
+        this.firstPost = new Date();
 
-      await this.sendNextPost();
-    }, initialWait) as Timer;
+        await this.sendNextPost();
+      },
+      Math.max(0, this.nextPostDue.getTime() - Date.now())
+    ) as Timer;
   }
 
   protected forceTimeout(waitTime: number): void {
@@ -300,7 +307,8 @@ export class AdManager {
           index: adManager.adIndex,
           nextPostDue: adManager.nextPostDue,
           firstPost: adManager.firstPost,
-          expireDue: adManager.expireDue
+          expireDue: adManager.expireDue,
+          minPostDelaySeconds: adManager.minPostDelaySeconds
         };
       }
     );
@@ -334,7 +342,7 @@ export class AdManager {
     const adManager = channel.adManager;
 
     adManager.stop();
-    adManager.start();
+    adManager.start(AdManager.POSTING_PERIOD, ra.minPostDelaySeconds);
 
     adManager.adIndex = ra.index;
     adManager.firstPost = ra.firstPost;

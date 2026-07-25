@@ -20,6 +20,7 @@ export * from './importer/vanilla-import-ui';
 export * from './exporter/backup-export';
 export type { ExportManifest } from './exporter/manifest';
 export * from './importer/backup-import';
+export * from './log-backup';
 export * as SlimcatImporter from './importer/importer';
 
 export type {

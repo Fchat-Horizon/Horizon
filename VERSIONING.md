@@ -116,10 +116,12 @@ Shows exactly what would happen without touching anything.
 
 | Type             | Cadence                                                      |
 | ---------------- | ------------------------------------------------------------ |
-| Patch (`Z`)      | Weekly (Mondays), skipped only if nothing has been merged    |
-| Minor (`Y`)      | As features are ready; no more than 6 weeks between releases |
+| Patch (`Z`)      | As needed, typically a hotfix wave in the days after a minor |
+| Minor (`Y`)      | Every 4 weeks on a Thursday, time-boxed: ship what is ready  |
 | Major (`X`)      | As needed, no fixed schedule                                 |
 | Beta (`-beta.N`) | Cut freely whenever there is something worth testing         |
+
+Minors are time-boxed, not feature-gated, where each ships on its target Thursday with whatever is ready, and unfinished work rolls to the next milestone (see Feature Freeze Rule). Every upcoming minor has a milestone with a due date set four weeks after the last one, and the Release Board project tracks what is in play and whether anything is flagged "Blocks Release" before the cut. Things marked as blocking the release should either be demoted in advance to next release or focused on to finish before the stable is cut.
 
 ---
 

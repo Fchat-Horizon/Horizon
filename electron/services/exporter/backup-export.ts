@@ -13,12 +13,29 @@ import * as remote from '@electron/remote';
 import fs from 'fs';
 import path from 'path';
 import log from 'electron-log';
+import l, { lp } from '../../../chat/localize';
 import archiver from 'archiver';
 import AdmZip from 'adm-zip';
-import { createManifest, isValidManifest } from './manifest';
-import type { ExportManifest } from './manifest';
+import {
+  createManifest,
+  isValidManifest,
+  shouldIncludeSettingsFile
+} from './manifest';
+import type { ExportManifest, SettingsSelection } from './manifest';
 import type { ExporterVm } from '../exporter-vm';
-import { binaryLogToJson } from './backup-export-cli';
+import {
+  binaryLogToJson,
+  conversationNamesFile,
+  isFilesystemArtifact,
+  readLogIndexName
+} from '../log-backup';
+
+/**
+ * Directory holding the general (app-wide) settings file. This is fixed at
+ * `{userData}/data` regardless of the user's custom `logDirectory`, since the
+ * main process always reads/writes general settings there.
+ */
+const generalSettingsDir = path.join(remote.app.getPath('userData'), 'data');
 
 async function yieldToUi(vm?: ExporterVm): Promise<void> {
   try {
@@ -129,7 +146,22 @@ function listFilesRecursive(rootDir: string): string[] {
   return results;
 }
 
-type ExportEntry = { abs: string; zip: string; isLog?: boolean };
+type ExportEntry = {
+  zip: string;
+  abs?: string;
+  isLog?: boolean;
+  data?: string;
+};
+
+// ^ The .idx name is the only copy of ad-hoc names and capitalization; it
+//   must travel with the export (#886).
+function readLogName(logPath: string): string | undefined {
+  try {
+    return readLogIndexName(fs.readFileSync(`${logPath}.idx`));
+  } catch {
+    return undefined;
+  }
+}
 
 function buildExportEntries(
   dataDir: string,
@@ -139,7 +171,8 @@ function buildExportEntries(
   const entries: ExportEntry[] = [];
 
   if (vm.exportIncludeGeneralSettings) {
-    const generalSettingsFile = path.join(dataDir, 'settings');
+    // General settings always live at the fixed location, not under logDirectory.
+    const generalSettingsFile = path.join(generalSettingsDir, 'settings');
     if (fs.existsSync(generalSettingsFile))
       entries.push({ abs: generalSettingsFile, zip: 'settings' });
   }
@@ -152,17 +185,30 @@ function buildExportEntries(
       const logsDir = path.join(characterDir, 'logs');
       if (fs.existsSync(logsDir)) {
         const files = listFilesRecursive(logsDir);
+        const names: Record<string, string> = {};
         for (const abs of files) {
           if (abs.endsWith('.idx')) continue;
           const rel = path.relative(logsDir, abs).replace(/\\/g, '/');
+          if (rel.split('/').some(isFilesystemArtifact)) continue;
           const zip = path.posix.join(
             'characters',
             character,
             'logs',
             rel + '.json'
           );
+          const name = readLogName(abs);
+          if (name !== undefined) names[rel] = name;
           entries.push({ abs, zip, isLog: true });
         }
+        if (Object.keys(names).length > 0)
+          entries.push({
+            zip: path.posix.join(
+              'characters',
+              character,
+              conversationNamesFile
+            ),
+            data: JSON.stringify(names)
+          });
       }
     }
 
@@ -177,27 +223,13 @@ function buildExportEntries(
 
     const settingsDir = path.join(characterDir, 'settings');
     if (fs.existsSync(settingsDir)) {
-      if (vm.exportIncludeCharacterSettings) {
-        const files = listFilesRecursive(settingsDir);
-        for (const abs of files) {
-          const rel = path.relative(settingsDir, abs).replace(/\\/g, '/');
-          const zip = path.posix.join('characters', character, 'settings', rel);
-          entries.push({ abs, zip });
-        }
-      } else {
-        const includeFiles = getSettingsFilesToInclude(vm);
-        for (const file of Array.from(includeFiles)) {
-          const filePath = path.join(settingsDir, file);
-          if (fs.existsSync(filePath)) {
-            const zip = path.posix.join(
-              'characters',
-              character,
-              'settings',
-              file
-            );
-            entries.push({ abs: filePath, zip });
-          }
-        }
+      const selection = exportSettingsSelection(vm);
+      const files = listFilesRecursive(settingsDir);
+      for (const abs of files) {
+        const rel = path.relative(settingsDir, abs).replace(/\\/g, '/');
+        if (!shouldIncludeSettingsFile(rel, selection)) continue;
+        const zip = path.posix.join('characters', character, 'settings', rel);
+        entries.push({ abs, zip });
       }
     }
   }
@@ -205,16 +237,14 @@ function buildExportEntries(
   return entries;
 }
 
-function getSettingsFilesToInclude(vm: ExporterVm): Set<string> {
-  const includeFiles = new Set<string>();
-  if (vm.exportIncludePinnedConversations) includeFiles.add('pinned');
-  if (vm.exportIncludePinnedEicons) includeFiles.add('favoriteEIcons');
-  if (vm.exportIncludeRecents) {
-    includeFiles.add('recent');
-    includeFiles.add('recentChannels');
-  }
-  if (vm.exportIncludeHidden) includeFiles.add('hiddenUsers');
-  return includeFiles;
+function exportSettingsSelection(vm: ExporterVm): SettingsSelection {
+  return {
+    includeCharacterSettings: vm.exportIncludeCharacterSettings,
+    includePinnedConversations: vm.exportIncludePinnedConversations,
+    includePinnedEicons: vm.exportIncludePinnedEicons,
+    includeRecents: vm.exportIncludeRecents,
+    includeHidden: vm.exportIncludeHidden
+  };
 }
 
 /**
@@ -350,18 +380,25 @@ export async function runExport(vm: ExporterVm): Promise<void> {
     const failedFiles: string[] = [];
     for (const e of entries) {
       try {
-        if (fs.existsSync(e.abs)) {
+        if (e.data !== undefined) {
+          archive.append(e.data, { name: e.zip });
+          count++;
+        } else if (e.abs !== undefined && fs.existsSync(e.abs)) {
           if (e.isLog) {
             const buf = fs.readFileSync(e.abs);
-            const json = binaryLogToJson(buf);
-            archive.append(JSON.stringify(json), { name: e.zip });
+            // ! Bare arrays only: released clients write other shapes verbatim.
+            archive.append(JSON.stringify(binaryLogToJson(buf)), {
+              name: e.zip
+            });
           } else {
             archive.file(e.abs, { name: e.zip });
           }
           count++;
-          if (count % 10 === 0) {
-            await yieldToUi(vm);
-          }
+        } else {
+          continue;
+        }
+        if (count % 10 === 0) {
+          await yieldToUi(vm);
         }
       } catch (err) {
         failedFiles.push(e.zip);
@@ -399,9 +436,13 @@ export async function runExport(vm: ExporterVm): Promise<void> {
       return;
     }
 
-    let summary = `Exported ${count} file(s) for ${selectedCharacters.length} character(s) to ${outputPath}`;
+    let summary = l('settings.export.summary', {
+      files: lp('settings.summary.files', count),
+      characters: lp('settings.summary.characters', selectedCharacters.length),
+      file: outputPath
+    });
     if (failedFiles.length > 0) {
-      summary += ` (${failedFiles.length} file(s) skipped due to errors)`;
+      summary += ` ${lp('settings.export.summarySkipped', failedFiles.length)}`;
     }
     vm.exportSummary = summary;
   } catch (error) {

@@ -46,6 +46,12 @@
                 class="card-body settings-content"
                 style="height: 100%; width: 100%"
               >
+                <div class="h5 pb-2 border-bottom border-warning w-75 mb-0">
+                  {{ l('admgr.prepareToMove') }}
+                </div>
+                <div class="text-muted mb-4 w-75 bg-light p-3 bg-opacity-10">
+                  {{ l('settings.charactersToGeneral.generalInfo') }}
+                </div>
                 <h5>
                   {{ l('settings.tabs.general') }}
                 </h5>
@@ -203,6 +209,38 @@
                     <label class="form-check-label" for="beta">
                       {{ l('settings.beta') }}
                     </label>
+                  </div>
+                </div>
+                <div class="mb-3" v-if="settings.updateCheck">
+                  <div class="form-check">
+                    <input
+                      type="checkbox"
+                      id="hideAutoUpdater"
+                      v-model="settings.horizonHideAutoUpdater"
+                      class="form-check-input"
+                    />
+                    <label class="form-check-label" for="hideAutoUpdater">
+                      {{ l('settings.updateHideAutoUpdater') }}
+                    </label>
+                  </div>
+                  <div class="form-text text-muted">
+                    {{ l('settings.updateHideAutoUpdater.note') }}
+                  </div>
+                </div>
+                <div v-if="settings.updateCheck">
+                  <div class="form-check">
+                    <input
+                      type="checkbox"
+                      id="autoDownloadUpdates"
+                      v-model="settings.horizonAutoDownloadUpdates"
+                      class="form-check-input"
+                    />
+                    <label class="form-check-label" for="autoDownloadUpdates">
+                      {{ l('settings.autoDownloadUpdates') }}
+                    </label>
+                  </div>
+                  <div class="form-text text-muted">
+                    {{ l('settings.autoDownloadUpdates.note') }}
                   </div>
                 </div>
               </div>
@@ -389,18 +427,16 @@
                         <div>{{ currentSoundThemeDetails.description }}</div>
                         <div v-if="currentSoundThemeDetails.author">
                           {{
-                            l(
-                              'settings.soundTheme.by',
-                              currentSoundThemeDetails.author
-                            )
+                            l('settings.soundTheme.by', {
+                              name: currentSoundThemeDetails.author
+                            })
                           }}
                         </div>
                         <div class="small">
                           {{
-                            l(
-                              'settings.soundTheme.version',
-                              currentSoundThemeDetails.version
-                            )
+                            l('settings.soundTheme.version', {
+                              version: currentSoundThemeDetails.version
+                            })
                           }}
                         </div>
                       </div>
@@ -635,6 +671,23 @@
                   </div>
                 </div>
 
+                <div class="mb-3" v-if="settings.profileViewer">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="profileViewerSmallerDefaultAvatars"
+                      v-model="settings.profileViewerSmallerDefaultAvatars"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="profileViewerSmallerDefaultAvatars"
+                    >
+                      {{ l('settings.profileViewer.smallerDefaultAvatars') }}
+                    </label>
+                  </div>
+                </div>
+
                 <div class="mb-3">
                   <div class="form-check">
                     <input
@@ -680,10 +733,9 @@
                         class="btn btn-outline-secondary"
                         @click="openLogDir()"
                         :title="
-                          l(
-                            'platform.open',
-                            l(`platform.fileExplorer.${platformName}`)
-                          )
+                          l('platform.open', {
+                            name: l(`platform.fileExplorer.${platformName}`)
+                          })
                         "
                       >
                         <span class="far fa-fw fa-folder-open"></span>
@@ -704,8 +756,11 @@
                           `https://horizn.moe/docs/guides/backup.html`
                         )
                       "
-                      ><span>{{ `${l('settings.logDir.note')} ` }}</span>
-                      <i class="fa-solid fa-arrow-up-right-from-square"></i>.
+                      ><localized-text k="settings.logDir.guide">
+                        <template #icon>
+                          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </template>
+                      </localized-text>
                     </a>
                   </div>
                 </div>
@@ -751,10 +806,9 @@
                       for="forceNativeWindowControls"
                     >
                       {{
-                        l(
-                          'settings.experimental',
-                          l('settings.forceNativeWindowControls')
-                        )
+                        l('settings.experimental', {
+                          name: l('settings.forceNativeWindowControls')
+                        })
                       }}
                     </label>
                   </div>
@@ -970,9 +1024,40 @@
                       v-model="settings.browserArgs"
                     />
                   </div>
-                  <small class="form-text text-muted">{{
+                  <small class="form-text text-muted" v-if="!isMac">{{
                     l('settings.browserOptionArgumentsHelp')
                   }}</small>
+                  <small class="form-text text-muted" v-else>
+                    <span
+                      >{{ l('settings.browserOptionArgumentsHelp.mac') }}
+                    </span>
+
+                    <a
+                      class="fa-solid fa-arrow-up-right-from-square"
+                      href="#"
+                      @click="
+                        externalUrlHandler(
+                          'https://support.apple.com/guide/terminal/execute-commands-and-run-tools-apdb66b5242-0d18-49fc-9c47-a2498b7c91d5/mac'
+                        )
+                      "
+                    ></a>
+                    <p>
+                      <span>
+                        {{ l('settings.browserOptionArgumentsHelp.format') }}
+                      </span>
+                      <kbd>
+                        {{
+                          `open -a ${settings.browserPath} ${settings.browserArgs}`
+                        }}
+                      </kbd>
+                    </p>
+
+                    <p>
+                      {{
+                        l('settings.browserOptionArgumentsHelp.mac.ignoreMe')
+                      }}
+                    </p>
+                  </small>
                 </label>
 
                 <div class="mb-3" v-if="!isMac">
@@ -994,7 +1079,11 @@
                   </label>
                 </div>
                 <h5>
-                  {{ l('settings.experimental', l('settings.customCss')) }}
+                  {{
+                    l('settings.experimental', {
+                      name: l('settings.customCss')
+                    })
+                  }}
                 </h5>
 
                 <div class="mb-3">
@@ -1025,10 +1114,9 @@
                       />
                       <label class="form-check-label" for="windowTransparency">
                         {{
-                          l(
-                            'settings.experimental',
-                            l('settings.customCss.transparency')
-                          )
+                          l('settings.experimental', {
+                            name: l('settings.customCss.transparency')
+                          })
                         }}
                       </label>
                     </div>
@@ -1087,6 +1175,7 @@
   import * as remote from '@electron/remote';
   import Vue from 'vue';
   import l, { setLanguage, availableDisplayLanguages } from '../chat/localize';
+  import LocalizedText from '../components/localized_text';
   import { GeneralSettings } from './common';
   import fs from 'fs';
   import path from 'path';
@@ -1105,7 +1194,11 @@
   const browserWindow = remote.getCurrentWindow();
 
   export default Vue.extend({
-    components: { tabs: Tabs, 'filterable-select': FilterableSelect },
+    components: {
+      tabs: Tabs,
+      'filterable-select': FilterableSelect,
+      'localized-text': LocalizedText
+    },
     data() {
       return {
         sortedLangs: [] as string[],
@@ -1469,7 +1562,10 @@
 
           if (
             Dialog.confirmDialog(
-              l('settings.logDir.confirm', dir[0], this.settings.logDirectory)
+              l('settings.logDir.confirm', {
+                newDir: dir[0],
+                currentDir: this.settings.logDirectory
+              })
             )
           ) {
             ipcRenderer.send('log-path-update', dir[0]);

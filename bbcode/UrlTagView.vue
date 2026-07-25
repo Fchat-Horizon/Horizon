@@ -45,8 +45,8 @@
       this.dismiss();
     },
     methods: {
-      dismiss(force: boolean = false): void {
-        EventBus.$emit('imagepreview-dismiss', { url: this.url, force });
+      dismiss(): void {
+        EventBus.$emit('imagepreview-dismiss', { url: this.url });
       },
       show(): void {
         EventBus.$emit('imagepreview-show', { url: this.url });

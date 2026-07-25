@@ -1,0 +1,52 @@
+name: Release Checklist
+description: Track the steps to release a minor or patch release.
+title: 'Release: vX.Y.Z'
+labels: ['release']
+projects: ['FChat-Horizon/Horizon']
+body:
+  - type: markdown
+    attributes:
+      value: One checklist per release. Steps follow VERSIONING.md. You should file this *prior* to a release and fill it out as you go.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: e.g. 2.3.0
+    validations:
+      required: true
+  - type: input
+    id: target-date
+    attributes:
+      label: Target date
+      description: Minors ship on Thursdays, every 4 weeks.
+      placeholder: e.g. 2026-07-02
+    validations:
+      required: true
+  - type: checkboxes
+    id: pre-release
+    attributes:
+      label: Pre-release (beta)
+      options:
+        - label: Latest nightly dev build succeeded on all 6 platform targets
+        - label: No open item is marked Blocks Release on the board
+        - label: CHANGELOG [Unreleased] reflects everything merged
+        - label: Cut beta; pnpm release-it --preRelease=beta
+        - label: Merge development into beta and push
+  - type: checkboxes
+    id: soak
+    attributes:
+      label: Soak and promote to stable
+      options:
+        - label: Final beta soaked 72h with no regressions
+        - label: Cut stable; pnpm release-it
+        - label: Merge forward development into beta into main
+        - label: Push beta and main
+        - label: Review and publish the draft GitHub release
+  - type: checkboxes
+    id: post-release
+    attributes:
+      label: Post-release
+      options:
+        - label: Auto-update delivers the new version
+        - label: Roll any deferred items to the next milestone
+        - label: Confirm next milestone has a due date (View versioning.md)

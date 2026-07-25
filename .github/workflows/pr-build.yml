@@ -47,13 +47,13 @@ jobs:
           echo "sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
@@ -101,7 +101,7 @@ jobs:
           .\electron\release-scripts\windows-dev.ps1 -ReleaseVersion "$env:PR_VERSION" -ReleasePath "$env:GITHUB_WORKSPACE\release_artifacts\windows\$env:PR_VERSION" -Arch "$env:BUILD_ARCH"
 
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Horizon-PR${{ github.event.pull_request.number }}-${{ steps.info.outputs.sha }}-${{ matrix.platform }}-${{ matrix.arch }}
           path: release_artifacts/**
@@ -114,7 +114,7 @@ jobs:
 
       - name: Upload PR number
         if: matrix.platform == 'linux' && matrix.arch == 'x64'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pr-number
           path: pr_number.txt

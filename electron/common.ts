@@ -29,11 +29,12 @@ export class GeneralSettings {
   profileViewer = true;
   profileViewerGalleryType: ProfileViewerGalleryType = 'thumbnail';
   profileViewerThumbAnimate = false;
+  profileViewerSmallerDefaultAvatars = false;
   proxy: string = '';
   host = defaultHost;
   logDirectory = path.join(electron.app.getPath('userData'), 'data');
   spellcheckLang: string[] | string | undefined = [getDefaultLanguage()];
-  displayLanguage: string = 'en_us';
+  displayLanguage: string = 'en-US';
   theme = 'default';
   themeSync: boolean = false;
   themeSyncDark: string = 'dark';
@@ -41,6 +42,10 @@ export class GeneralSettings {
   version = electron.app.getVersion();
   beta = false;
   updateCheck = true;
+  horizonHideAutoUpdater = false;
+  horizonAutoDownloadUpdates = true;
+  horizonSkippedUpdateVersion = '';
+  horizonPendingUpdateTag = '';
   customDictionary: string[] = [];
   hwAcceleration = true;
   reducedMotion = false;

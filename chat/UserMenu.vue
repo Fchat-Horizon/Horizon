@@ -34,7 +34,7 @@
           id="userMenuStatus"
           :text="character.statusText"
           v-show="character.statusText"
-          class="list-group-item"
+          class="list-group-item bbcode"
           style="max-height: 200px; overflow: auto; clear: both"
         ></bbcode>
 
@@ -66,7 +66,7 @@
       ></textarea>
     </modal>
     <modal
-      :action="l('user.channelTimeout.name', displayName || '')"
+      :action="l('user.channelTimeout.name', { character: displayName || '' })"
       ref="timeoutPrompt"
       @submit="channelTimeout"
       :buttonText="l('user.channelTimeout')"
@@ -75,7 +75,10 @@
       v-if="channel"
     >
       <label for="timeoutValue" class="form-label">{{
-        l('user.channelTimeout.prompt', displayName || '""', channel.name)
+        l('user.channelTimeout.prompt', {
+          character: displayName || '""',
+          channel: channel.name
+        })
       }}</label>
       <div class="input-group mb-3">
         <input
@@ -182,18 +185,11 @@
 
         const items: ContextMenuItemProps[] = [];
 
-        const showProfile = () => {
-          if (this.profileLink) {
-            window.open(this.profileLink, '_blank');
-          }
-          this.close();
-        };
-
         if (this.showProfileFirst) {
           items.push({
             label: this.l('user.profile'),
-            iconClass: 'fa fa-fw fa-user',
-            onClick: showProfile
+            iconClass: 'fa fa-fw fa-address-card',
+            href: this.profileLink
           });
         }
 
@@ -220,7 +216,7 @@
           items.push({
             label: this.l('user.profile'),
             iconClass: 'fas fa-fw fa-address-card',
-            onClick: showProfile
+            href: this.profileLink
           });
         }
 
@@ -344,8 +340,15 @@
       },
       close(): void {
         if (!this.showContextMenu) return;
+        document.removeEventListener('click', this.closeOnOutsideClick, true);
         this.showContextMenu = false;
         this.$emit('close');
+      },
+      closeOnOutsideClick(e: MouseEvent): void {
+        const menu = this.getMenuElement();
+        if (menu && menu.contains(e.target as Node)) return;
+        document.removeEventListener('click', this.closeOnOutsideClick, true);
+        this.close();
       },
       openConversation(jump: boolean): void {
         const conversation = core.conversations.getPrivate(this.character!);
@@ -382,7 +385,10 @@
           this.displayName &&
           this.channel &&
           Dialog.confirmDialog(
-            l('user.channelBan.confirm', this.displayName, this.channel.name),
+            l('user.channelBan.confirm', {
+              character: this.displayName,
+              channel: this.channel.name
+            }),
             true
           )
         ) {
@@ -583,7 +589,10 @@
             this.position.top = `${window.innerHeight - menu.offsetHeight - 1}px`;
         });
 
-        document.addEventListener('click', this.close, { once: true });
+        // ^ Capture phase, so clicks that stop propagation (e.g. the bbcode
+        // editor's toolbar buttons) still dismiss the menu.
+        document.removeEventListener('click', this.closeOnOutsideClick, true);
+        document.addEventListener('click', this.closeOnOutsideClick, true);
       }
     }
   });

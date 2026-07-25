@@ -3,7 +3,9 @@
     <div class="card-body">
       <div
         class="character-page-avatar-bg d-inline-block"
+        :class="smallDefaultAvatar ? 'small-default-avatar' : ''"
         :style="
+          smallDefaultAvatar &&
           getAvatarUrl().startsWith('https://static.f-list.net/images/avatar')
             ? `--character-avatar-bg: url('${getAvatarUrl()}')`
             : ''
@@ -12,6 +14,7 @@
         <img
           :src="getAvatarUrl()"
           class="character-page-avatar character-avatar"
+          @error="avatarFailed = true"
         />
       </div>
 
@@ -315,8 +318,14 @@
         shared: Store as SharedStore,
         quickInfoIds: [1, 3, 2, 49, 9, 29, 15, 41, 25] as ReadonlyArray<number>,
         avatarUrl: Utils.avatarURL,
-        bookmarkPending: false
+        bookmarkPending: false,
+        avatarFailed: false
       };
+    },
+    watch: {
+      'character.character.name'(): void {
+        this.avatarFailed = false;
+      }
     },
     mounted() {
       this.character.bookmarked =
@@ -361,6 +370,12 @@
       },
       bookmarked(): boolean {
         return this.character.bookmarked || false;
+      },
+      smallDefaultAvatar(): boolean {
+        return (
+          core.state.generalSettings?.profileViewerSmallerDefaultAvatars ===
+          true
+        );
       }
     },
     methods: {
@@ -368,7 +383,11 @@
         const char = this.character;
         const onlineCharacter = core.characters.get(char.character.name);
 
-        if (onlineCharacter && onlineCharacter.overrides.avatarUrl) {
+        if (
+          !this.avatarFailed &&
+          onlineCharacter &&
+          onlineCharacter.overrides.avatarUrl
+        ) {
           return onlineCharacter.overrides.avatarUrl;
         }
 

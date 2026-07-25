@@ -1,4 +1,5 @@
 import { isToday, format } from 'date-fns';
+import { dateLocale } from './localize';
 import { Keys } from '../keys';
 import {
   AvailableSort,
@@ -202,6 +203,24 @@ export class Settings implements ISettings {
   soundThemeSoundVolumes: { [theme: string]: { [sound: string]: number } } = {};
 }
 
+// settings that still require filtering even if the "colorize ads" setting is disabled
+export function requiresProfileMatching(settings: ISettings): boolean {
+  const f = settings.risingFilter;
+  return (
+    settings.risingAdScore ||
+    f.hideAds ||
+    f.hideSearchResults ||
+    f.hideChannelMembers ||
+    f.hidePublicChannelMessages ||
+    f.hidePrivateChannelMessages ||
+    f.hidePrivateMessages ||
+    f.showFilterIcon ||
+    f.penalizeMatches ||
+    f.rewardNonMatches ||
+    f.autoReply
+  );
+}
+
 export class AdSettings implements Conversation.AdSettings {
   ads: string[] = [];
   randomOrder = false;
@@ -261,9 +280,10 @@ export function formatTime(
     : showSeconds
       ? 'HH:mm:ss'
       : 'HH:mm';
-  if (noDate || isToday(date)) return format(date, timeOnlyFormat);
+  if (noDate || isToday(date))
+    return format(date, timeOnlyFormat, { locale: dateLocale() });
   const absoluteFormat = `yyyy-MM-dd ${timeOnlyFormat}`;
-  return format(date, absoluteFormat);
+  return format(date, absoluteFormat, { locale: dateLocale() });
 }
 
 /**

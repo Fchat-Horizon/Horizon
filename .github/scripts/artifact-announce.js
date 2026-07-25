@@ -50,9 +50,21 @@ module.exports = async ({ github, context, core }) => {
   let title, color, sourceLine;
 
   if (pr) {
+    // workflow_run payloads carry a minimal PR object without a title.
+    let prTitle;
+    try {
+      const { data } = await github.rest.pulls.get({
+        owner,
+        repo,
+        pull_number: pr.number
+      });
+      prTitle = data.title;
+    } catch (error) {
+      core.notice(`Could not fetch title for PR #${pr.number}: ${error}`);
+    }
     title = `PR #${pr.number} artifacts ready`;
     color = 0x57f287;
-    sourceLine = `**PR #${pr.number}** — ${pr.title}\nBranch: \`${run.head_branch}\` @ \`${run.head_sha.slice(0, 7)}\``;
+    sourceLine = `**PR #${pr.number}**${prTitle ? ` — ${prTitle}` : ''}\nBranch: \`${run.head_branch}\` @ \`${run.head_sha.slice(0, 7)}\``;
   } else if (run.name === 'Build & Create Draft Release') {
     // This workflow only triggers on tag pushes, so head_branch is the tag name.
     const tag = run.head_branch || run.head_sha.slice(0, 7);

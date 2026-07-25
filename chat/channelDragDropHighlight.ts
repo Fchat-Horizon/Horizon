@@ -33,3 +33,11 @@ export function endChannelDragging(): void {
   getConversationsElement()?.classList.remove('channel-dragging');
   clearActiveDropZones();
 }
+
+export function startGroupDragging(): void {
+  getConversationsElement()?.classList.add('group-dragging');
+}
+
+export function endGroupDragging(): void {
+  getConversationsElement()?.classList.remove('group-dragging');
+}
