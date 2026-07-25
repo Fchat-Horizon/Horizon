@@ -366,7 +366,7 @@
           <div class="name">{{ conversation.character.name }}</div>
         </a>
         <a
-          v-for="conversation in conversations.channelConversations"
+          v-for="conversation in orderedChannelConversations"
           href="#"
           @click.prevent="conversation.show()"
           @click.middle.prevent.stop="conversation.close()"
@@ -549,6 +549,14 @@
         return core.conversations.channelConversations.filter(
           (c: any) => !core.conversations.channelGroupAssignments[c.channel.id]
         );
+      },
+      orderedChannelConversations(): any[] {
+        return [
+          ...this.sortedChannelGroups.flatMap((g: any) =>
+            this.channelsInGroup(g.id)
+          ),
+          ...this.ungroupedChannels
+        ];
       },
       showAvatars(): boolean {
         return core.state.settings.showAvatars;
@@ -754,12 +762,7 @@
       onKeyDown(e: KeyboardEvent): void {
         const selected = this.conversations.selectedConversation;
         const pms = this.conversations.privateConversations;
-        const channels = [
-          ...this.sortedChannelGroups.flatMap((g: any) =>
-            this.channelsInGroup(g.id)
-          ),
-          ...this.ungroupedChannels
-        ];
+        const channels = this.orderedChannelConversations;
         const console = this.conversations.consoleTab;
         if (getKey(e) === Keys.ArrowUp) {
           if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
