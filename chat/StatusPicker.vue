@@ -50,7 +50,7 @@
 
     <form class="status-picker" v-if="history.length > 0">
       <p class="text-sm-end">
-        {{ l('statusHistory.count', history.length, 15) }}
+        {{ l('statusHistory.count', { index: history.length, total: 15 }) }}
       </p>
       <div
         class="row"

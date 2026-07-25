@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' 'unsafe-inline'; img-src file:"
+    />
+    <title>Horizon</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        background: #1b1b21;
+        color: #e6e5ec;
+        font-family: system-ui, sans-serif;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-app-region: drag;
+      }
+      img {
+        width: 56px;
+        height: 56px;
+      }
+      #status {
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+      #version {
+        font-size: 11px;
+        color: #8b8a94;
+        margin-top: 8px;
+      }
+      .bar {
+        width: 210px;
+        height: 4px;
+        border-radius: 2px;
+        background: #34343e;
+        overflow: hidden;
+        position: relative;
+      }
+      .bar::after {
+        content: '';
+        position: absolute;
+        height: 100%;
+        border-radius: 2px;
+        background: #7971d6;
+        width: 40%;
+        animation: slide 1.2s ease-in-out infinite;
+      }
+      .bar.real::after {
+        animation: none;
+        left: 0;
+        width: var(--p, 0%);
+        transition: width 0.5s ease;
+      }
+      @keyframes slide {
+        from {
+          left: -40%;
+        }
+        to {
+          left: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <img src="icon.png" alt="" />
+    <div>
+      <div id="status"></div>
+      <div class="bar" id="bar"></div>
+      <div id="version"></div>
+    </div>
+    <script>
+      const params = new URLSearchParams(location.search);
+      document.getElementById('status').textContent =
+        params.get('status') || 'Updating...';
+      document.getElementById('version').textContent =
+        params.get('version') || '';
+      window.setProgress = percent => {
+        const bar = document.getElementById('bar');
+        bar.classList.add('real');
+        bar.style.setProperty('--p', Math.round(percent) + '%');
+      };
+    </script>
+  </body>
+</html>

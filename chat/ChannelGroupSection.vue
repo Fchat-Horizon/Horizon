@@ -274,7 +274,7 @@
           e.getModifierState('Shift') ||
           this.group.channels.length < 1 ||
           Dialog.confirmDialog(
-            l('channel.group.delete.confirm', this.group.name || '')
+            l('channel.group.delete.confirm', { name: this.group.name || '' })
           )
         ) {
           core.conversations.deleteChannelGroup(this.group.id);

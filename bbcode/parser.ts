@@ -98,6 +98,57 @@ export class BBCodeTextTag extends BBCodeTag {
   }
 }
 
+/* Function: Cut input to maxLength without leaving broken BBCode behind:
+   severed tag tokens are dropped, text tags ([url], [icon], ...) whose raw
+   content was sliced are removed entirely, remaining open tags are re-closed. */
+export function truncateBBCode(
+  parser: BBCodeParser,
+  input: string,
+  maxLength: number
+): string {
+  if (input.length <= maxLength) return input;
+  let cut = input.substring(0, maxLength);
+  const open: { tag: string; start: number; isText: boolean }[] = [];
+  const token = /\[(\/?)([^\[\]=]*)(?:=([^\]]*))?\]/g;
+  let match: RegExpExecArray | null;
+  while ((match = token.exec(cut)) !== null) {
+    const closing = match[1] === '/';
+    const name = match[2].trim().toLowerCase();
+    const top = open[open.length - 1];
+    if (top !== undefined && top.isText) {
+      if (closing && name === top.tag) open.pop();
+      continue;
+    }
+    const tag = parser.getTag(name);
+    if (tag === undefined) continue;
+    if (closing) {
+      if (top !== undefined && top.tag === name) open.pop();
+    } else if (!tag.noClosingTag)
+      open.push({
+        tag: name,
+        start: match.index,
+        isText: tag instanceof BBCodeTextTag
+      });
+  }
+  const innermost = open[open.length - 1];
+  // ^ A text tag's content is raw -- a partial slice of it renders as
+  // garbage, so drop the whole tag instead.
+  if (innermost !== undefined && innermost.isText) {
+    cut = cut.substring(0, innermost.start);
+    open.pop();
+  }
+  const lastBracket = cut.lastIndexOf('[');
+  if (lastBracket > cut.lastIndexOf(']')) cut = cut.substring(0, lastBracket);
+  return (
+    cut +
+    '…' +
+    open
+      .reverse()
+      .map(x => `[/${x.tag}]`)
+      .join('')
+  );
+}
+
 export class BBCodeParser {
   private _warnings: string[] = [];
   private _tags: { [tag: string]: BBCodeTag | undefined } = {};

@@ -1,7 +1,7 @@
 import * as remote from '@electron/remote';
 import fs from 'node:fs';
 import { ipcRenderer } from 'electron';
-import l from '../../../chat/localize';
+import l, { lp } from '../../../chat/localize';
 import * as VanillaImporter from './vanilla-importer';
 import { SlimcatImporter } from '../index';
 import { GeneralSettings } from '../../common';
@@ -82,11 +82,9 @@ function doVanillaGeneralImport(
 
   if (importedCharacters.length > 0) {
     alert(
-      l(
-        'importer.vanillaSuccess',
-        importedCharacters.length.toString(),
-        importedCharacters.map(([n]) => n).join(', ')
-      )
+      lp('importer.vanillaSuccess', importedCharacters.length, {
+        names: importedCharacters.map(([n]) => n).join(', ')
+      })
     );
   } else {
     alert(l('importer.vanillaNoData'));

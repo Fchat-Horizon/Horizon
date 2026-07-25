@@ -1,6 +1,6 @@
 <template>
   <modal
-    :action="l('conversationSettings.action', conversation.name)"
+    :action="l('conversationSettings.action', { name: conversation.name })"
     @submit="submit"
     ref="dialog"
     @open="load()"

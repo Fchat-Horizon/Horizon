@@ -1,6 +1,6 @@
 <template>
   <Modal
-    :action="l('friends.titleFor', name)"
+    :action="l('friends.titleFor', { character: name })"
     :buttons="false"
     dialog-class="modal-dialog-centered modal-lg"
     iconClass="fas fa-user-group"
@@ -183,7 +183,7 @@
       async dissolve(friendship: Friend): Promise<void> {
         if (
           Dialog.confirmDialog(
-            l('friends.remove.confirm', friendship.target.name)
+            l('friends.remove.confirm', { character: friendship.target.name })
           )
         ) {
           try {

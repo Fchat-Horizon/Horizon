@@ -98,6 +98,11 @@ const winIcon: string = path.join(
   <string>require('./build/icon.ico').default
 );
 
+const updaterSplashHtml: string = path.join(
+  __dirname,
+  <string>require('./updater-splash.html').default
+);
+
 /**
  * Badge icon path for the app icon overlay. Used for when there are new messages and numbered badges are disabled.
  */
@@ -181,7 +186,9 @@ export function updateNotificationBadges(numberedBadges: boolean) {
     windows.forEach(browserWindow => {
       applyWin32OverlayIcon(browserWindow, totalCount, numberedBadges);
     });
-    tray.setImage(totalCount > 0 ? trayIconNotif : trayIcon);
+    if (tray) {
+      tray.setImage(totalCount > 0 ? trayIconNotif : trayIcon);
+    }
   }
 }
 
@@ -240,7 +247,12 @@ electron.ipcMain.on(
     if (e.sender) {
       //browserWindows.tabAddHandler(webContents, settings);
       tabMap[character] = e.sender;
-      tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
+      if (tray) {
+        tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
+      }
+      if (app.dock) {
+        app.dock.setMenu(electron.Menu.buildFromTemplate(createDockMenu()));
+      }
     }
   }
 );
@@ -256,7 +268,13 @@ electron.ipcMain.on(
  */
 electron.ipcMain.on('disconnect', (_event: IpcMainEvent, character: string) => {
   delete tabMap[character];
-  tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
+
+  if (tray) {
+    tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
+  }
+  if (app.dock) {
+    app.dock.setMenu(electron.Menu.buildFromTemplate(createDockMenu()));
+  }
 });
 /**
  * Opens a new tab in the specified browser window.
@@ -450,7 +468,7 @@ export function createMainWindow(
       }
     });
   }
-  if (!tray) {
+  if (!tray && process.platform !== 'darwin') {
     tray = new electron.Tray(trayIcon);
     tray.setToolTip(l('title'));
     // single click opens context menu, double click opens all windows
@@ -582,16 +600,7 @@ export async function updateCustomCssAllWindows(
  * @internal
  */
 function createTrayMenu(): electron.MenuItemConstructorOptions[] {
-  const tabItems: electron.MenuItemConstructorOptions[] = Object.entries(
-    tabMap
-  ).map(([tabId, webContents]) => ({
-    label: tabId,
-    click: () => {
-      windows.forEach(window => {
-        window.webContents.send('show-tab', webContents.id);
-      });
-    }
-  }));
+  const tabItems: electron.MenuItemConstructorOptions[] = createTabMenuItems();
   return [
     { label: l('title'), enabled: false },
     { label: l('action.showAllWindows'), click: () => showAllWindows() },
@@ -604,6 +613,22 @@ function createTrayMenu(): electron.MenuItemConstructorOptions[] {
       }
     }
   ];
+}
+
+function createDockMenu(): electron.MenuItemConstructorOptions[] {
+  const tabItems: electron.MenuItemConstructorOptions[] = createTabMenuItems();
+  return [...tabItems];
+}
+
+function createTabMenuItems(): electron.MenuItemConstructorOptions[] {
+  return Object.entries(tabMap).map(([tabId, webContents]) => ({
+    label: tabId,
+    click: () => {
+      windows.forEach(window => {
+        window.webContents.send('show-tab', webContents.id);
+      });
+    }
+  }));
 }
 
 /**
@@ -685,6 +710,93 @@ export function toggleUpdateNotice(updateAvailable: boolean, version?: string) {
 export function sendUpdateProgress(percent: number, done: boolean = false) {
   for (const w of windows)
     w.webContents.send('update-download-progress', percent, done);
+}
+
+let updaterSplash: electron.BrowserWindow | undefined;
+
+let updaterSplashShownAt: number | undefined;
+
+let updaterSplashShown: Promise<void> | undefined;
+
+export function createUpdaterSplashWindow(
+  updateTag?: string
+): electron.BrowserWindow {
+  const window = new electron.BrowserWindow({
+    width: 360,
+    height: 140,
+    center: true,
+    frame: false,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    show: false,
+    backgroundColor: '#1b1b21',
+    icon: process.platform === 'win32' ? winIcon : pngIcon,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true
+    }
+  });
+
+  updaterSplashProgress = undefined;
+  window.loadFile(updaterSplashHtml, {
+    query: {
+      status: l('update.splash.updating'),
+      ...(updateTag ? { version: updateTag } : {})
+    }
+  });
+  window.webContents.on('did-finish-load', () => {
+    if (updaterSplashProgress !== undefined)
+      pushUpdaterSplashProgress(updaterSplashProgress);
+  });
+  updaterSplashShown = new Promise(resolve =>
+    window.once('ready-to-show', () => {
+      window.show();
+      updaterSplashShownAt = Date.now();
+      resolve();
+    })
+  );
+  window.on('closed', () => {
+    if (updaterSplash === window) updaterSplash = undefined;
+  });
+  updaterSplash = window;
+  return window;
+}
+
+export async function updaterSplashSeen(
+  minVisibleMs: number,
+  maxWaitMs: number
+): Promise<void> {
+  if (!updaterSplashShown) return;
+  const delay = (ms: number): Promise<void> =>
+    new Promise(resolve => setTimeout(resolve, ms));
+  await Promise.race([
+    updaterSplashShown.then(() =>
+      delay(Math.max(0, updaterSplashShownAt! + minVisibleMs - Date.now()))
+    ),
+    delay(maxWaitMs)
+  ]);
+}
+
+let updaterSplashProgress: number | undefined;
+
+function pushUpdaterSplashProgress(percent: number): void {
+  if (!updaterSplash || updaterSplash.isDestroyed()) return;
+  updaterSplash.webContents
+    .executeJavaScript(`window.setProgress && window.setProgress(${percent})`)
+    .catch(() => {});
+}
+
+export function setUpdaterSplashProgress(percent: number): void {
+  updaterSplashProgress = percent;
+  pushUpdaterSplashProgress(percent);
+}
+
+export function closeUpdaterSplash(): void {
+  if (updaterSplash && !updaterSplash.isDestroyed()) updaterSplash.close();
+  updaterSplash = undefined;
 }
 
 /**

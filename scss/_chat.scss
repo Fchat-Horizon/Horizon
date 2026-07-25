@@ -209,6 +209,9 @@ $bookmark-color: #66cc33 !default;
 #userInfo-avatar {
   object-fit: contain;
 }
+.user-avatar {
+  object-fit: contain;
+}
 .userInfo-buttons-container {
   display: flex;
   flex-wrap: wrap;
@@ -417,6 +420,14 @@ $bookmark-color: #66cc33 !default;
   color: $text-muted;
 }
 
+// search-term highlighting, shared by the log viewer and in-chat find
+.message-search-highlight {
+  background-color: rgba(var(--bs-warning-rgb, 255, 193, 7), 0.45);
+  color: color-contrast($body-bg);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
 .message-time {
   color: $text-dark;
 }
@@ -586,11 +597,13 @@ $bookmark-color: #66cc33 !default;
     border-left: solid 2px
       color.change(mix($white, $success, 7.5 * 8%), $saturation: 450);
   }
-  .message-block {
+  // ^ Event/bcast messages keep the classic inline rendering even in modern
+  // layout; skip the spacer borders so they match the console's height.
+  .message-block:not(.message-event):not(.message-bcast) {
     border-top: solid 1px $card-border-color;
     border-bottom: solid 1px transparent;
   }
-  .message-blockless {
+  .message-blockless:not(.message-event):not(.message-bcast) {
     border-top: solid 1px transparent;
     border-bottom: solid 1px transparent;
   }

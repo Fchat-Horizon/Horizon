@@ -181,7 +181,7 @@
     outline: none !important;
   }
 
-  .modal-title .fa-fw {
+  .modal-title .fa-fw:not(.gender-icon) {
     margin-right: 0.5rem;
   }
   .slide-enter-active {

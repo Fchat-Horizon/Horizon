@@ -14,6 +14,7 @@
         <img
           :src="getAvatarUrl()"
           class="character-page-avatar character-avatar"
+          @error="avatarFailed = true"
         />
       </div>
 
@@ -317,8 +318,14 @@
         shared: Store as SharedStore,
         quickInfoIds: [1, 3, 2, 49, 9, 29, 15, 41, 25] as ReadonlyArray<number>,
         avatarUrl: Utils.avatarURL,
-        bookmarkPending: false
+        bookmarkPending: false,
+        avatarFailed: false
       };
+    },
+    watch: {
+      'character.character.name'(): void {
+        this.avatarFailed = false;
+      }
     },
     mounted() {
       this.character.bookmarked =
@@ -377,6 +384,7 @@
         const onlineCharacter = core.characters.get(char.character.name);
 
         if (
+          !this.avatarFailed &&
           onlineCharacter &&
           onlineCharacter.overrides.avatarUrl &&
           core.state.settings.risingShowHighQualityPortraits

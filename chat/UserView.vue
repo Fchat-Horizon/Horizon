@@ -243,7 +243,10 @@
         core.characters.setOverride(character.name, 'characterColor', null);
         core.cache.addProfile(character.name, true, true);
       }
-      if (cache === null && showMatch) {
+      if (
+        cache === null &&
+        (showMatch || core.state.settings.risingFilter.showFilterIcon)
+      ) {
         void core.cache.addProfile(character.name);
       }
 
@@ -278,10 +281,10 @@
 
       if (character.gender) {
         if (!core.state.settings.horizonGenderMarkerOrigColor) {
-          genderClass = `fa ${getGenderIcon(character.gender, character.status)}`;
+          genderClass = `fa ${getGenderIcon(character.gender, character.status)} gender-icon`;
         } else {
           genderClass =
-            `fa ${getGenderIcon(character.gender, character.status)}` +
+            `fa ${getGenderIcon(character.gender, character.status)} gender-icon` +
             ` gender-icon-${gender}`;
         }
       }
@@ -502,14 +505,13 @@
         return `flist-character://${normalizeCharacterName(this.character.name)}`;
       },
 
-      dismiss(force: boolean = false): void {
+      dismiss(): void {
         if (!this.preview) {
           return;
         }
 
         EventBus.$emit('imagepreview-dismiss', {
-          url: this.getCharacterUrl(),
-          force
+          url: this.getCharacterUrl()
         });
       },
 
