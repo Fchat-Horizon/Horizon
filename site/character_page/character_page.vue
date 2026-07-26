@@ -284,6 +284,24 @@
 
   const standardParser = new StandardBBCodeParser();
 
+  // anyAscii turns decorative unicode brackets (「」【】［］) into real ASCII
+  // brackets, which the bbcode parser then tries to convert. this skips those characters
+  function safeAnyAscii(s: string): string {
+    let out = '';
+
+    for (const ch of s) {
+      if (ch.codePointAt(0)! < 128) {
+        out += ch;
+        continue;
+      }
+
+      const converted = anyAscii(ch);
+      out += /[[\]]/.test(converted) ? ch : converted;
+    }
+
+    return out;
+  }
+
   export default Vue.extend({
     components: {
       sidebar: Sidebar,
@@ -687,12 +705,12 @@
           core.state.generalSettings &&
           core.state.generalSettings.horizonForceAsciiProfiles
         ) {
-          character.character.description = anyAscii(
+          character.character.description = safeAnyAscii(
             character.character.description
           );
 
           if (character.character.title) {
-            character.character.title = anyAscii(character.character.title);
+            character.character.title = safeAnyAscii(character.character.title);
           }
 
           // We don't do customs and infotags here, so that they are at least sorted before parsing.
