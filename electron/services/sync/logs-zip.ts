@@ -18,7 +18,7 @@
 import archiver from 'archiver';
 import * as fs from 'fs';
 import * as path from 'path';
-import { binaryLogToJson } from '../exporter/backup-export-cli';
+import { binaryLogToJson } from '../log-backup';
 import { createManifest } from '../exporter/manifest';
 import { readIndexName } from './log-merge';
 
