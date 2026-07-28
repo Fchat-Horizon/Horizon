@@ -687,8 +687,7 @@
 
   const hideHoverPreview = (image: CharacterImage): void => {
     EventBus.$emit('imagepreview-dismiss', {
-      url: imageUrl(image),
-      force: false
+      url: imageUrl(image)
     });
   };
 

@@ -8,10 +8,13 @@
     dialogClass="ads-dialog"
   >
     <template slot="title">
-      {{ l('characterAd.title') }}
-      <user :character="character" :isMarkerShown="false">{{
-        character.name
-      }}</user>
+      <localized-text k="characterAd.header">
+        <template #character>
+          <user :character="character" :isMarkerShown="false">{{
+            character.name
+          }}</user>
+        </template>
+      </localized-text>
     </template>
 
     <div class="row ad-viewer" ref="pageBody" v-if="messages.length > 0">
@@ -27,7 +30,7 @@
     </div>
 
     <div class="row ad-viewer" ref="pageBody" v-else>
-      <i>{{ l('characterAd.noAds', character.name) }}</i>
+      <i>{{ l('characterAd.noAds', { character: character.name }) }}</i>
     </div>
   </modal>
 </template>
@@ -35,6 +38,7 @@
 <script lang="ts">
   import * as _ from 'lodash';
   import CustomDialog from '../../components/custom_dialog';
+  import LocalizedText from '../../components/localized_text';
   import Modal from '../../components/Modal.vue';
   import { Character } from '../../fchat/interfaces';
   import { AdCachedPosting } from '../../learn/ad-cache';
@@ -49,6 +53,7 @@
     components: {
       modal: Modal,
       user: UserView,
+      'localized-text': LocalizedText,
       bbcode: BBCodeView(core.bbCodeParser)
     },
     props: {

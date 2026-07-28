@@ -363,11 +363,10 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
     return false;
   }
 
+  // The HQ portrait URL is always extracted and stored regardless of the
+  // risingShowHighQualityPortraits setting; whether it is shown is decided at
+  // render time (characterImage) so toggling the setting applies live.
   static extractHighQualityPortraitURL(description: string): string | null {
-    if (!core.state.settings.risingShowHighQualityPortraits) {
-      return null;
-    }
-
     // * We should check for both:
     //  [url=https://some.domain.ext/path/to/image.png]Horizon Portrait[/url]
     //  [url=https://some.domain.ext/path/to/image.png]Rising Portrait[/url]
@@ -400,7 +399,7 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
   }
 
   updateOverrides(c: ComplexCharacter): void {
-    const avatarUrl = ProfileCache.extractHighQualityPortraitURL(
+    let avatarUrl = ProfileCache.extractHighQualityPortraitURL(
       c.character.description
     );
 
@@ -408,26 +407,34 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
       c.character.description
     );
 
-    if (avatarUrl) {
-      if (!ProfileCache.isSafeRisingPortraitURL(avatarUrl)) {
-        log.info('portrait.hq.invalid.domain', { name, url: avatarUrl });
-      } else {
-        if (c.character.name === core.characters.ownCharacter.name) {
-          const parent =
-            remote.getCurrentWindow() ||
-            remote.BrowserWindow.getAllWindows()[0];
-          if (parent) {
-            parent.webContents.send(
-              'update-avatar-url',
-              c.character.name,
-              avatarUrl
-            );
-          }
-        }
+    if (avatarUrl && !ProfileCache.isSafeRisingPortraitURL(avatarUrl)) {
+      log.info('portrait.hq.invalid.domain', {
+        name: c.character.name,
+        url: avatarUrl
+      });
+      avatarUrl = null;
+    }
 
-        log.info('portrait.hq.url', { name: c.character.name, url: avatarUrl });
-        core.characters.setOverride(c.character.name, 'avatarUrl', avatarUrl);
+    if (avatarUrl) {
+      if (
+        c.character.name === core.characters.ownCharacter.name &&
+        core.state.settings.risingShowHighQualityPortraits
+      ) {
+        const parent =
+          remote.getCurrentWindow() || remote.BrowserWindow.getAllWindows()[0];
+        if (parent) {
+          parent.webContents.send(
+            'update-avatar-url',
+            c.character.name,
+            avatarUrl
+          );
+        }
       }
+
+      log.info('portrait.hq.url', { name: c.character.name, url: avatarUrl });
+      core.characters.setOverride(c.character.name, 'avatarUrl', avatarUrl);
+    } else {
+      core.characters.setOverride(c.character.name, 'avatarUrl', undefined);
     }
 
     if (characterColor) {

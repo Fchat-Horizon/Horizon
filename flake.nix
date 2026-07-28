@@ -12,7 +12,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
         nodejs = pkgs.nodejs_24;
         pnpm = pkgs.pnpm;
-        electron = pkgs.electron_40;
+        electron = pkgs.electron_42;
       in
       {
         packages = rec {
@@ -23,14 +23,14 @@
 
             pnpmDeps = pkgs.fetchPnpmDeps {
               inherit pname version src;
-              hash = "sha256-yoqJKknPTSdivPEbB5d43SK1P9Vc7wJiJsOr/oaFT2A=";
-              pnpm = pkgs.pnpm_10;
-              fetcherVersion = 3;
+              hash = "sha256-DZ+PL6yO1luImQtpKS2cL7etSfMUR5yFRi2YZ8koVF4=";
+              pnpm = pkgs.pnpm_11;
+              fetcherVersion = 4;
             };
 
             nativeBuildInputs = [
-              pkgs.pnpm_10
-              (pkgs.pnpmConfigHook.override { pnpm = pkgs.pnpm_10; })
+              pkgs.pnpm_11
+              (pkgs.pnpmConfigHook.override { pnpm = pkgs.pnpm_11; })
               nodejs
               pkgs.autoPatchelfHook
               pkgs.copyDesktopItems

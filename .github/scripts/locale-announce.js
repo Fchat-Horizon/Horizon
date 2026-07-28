@@ -4,15 +4,15 @@ const { execFileSync } = require('child_process');
 const path = require('path');
 
 const LOCALE_DIR = 'chat/locales';
-const SOURCE_FILE = 'en_us.json';
+const SOURCE_FILE = 'en-US.json';
 const WEBLATE_BASE = 'https://translate.horizn.moe';
 const WEBLATE_COMPONENT = `${WEBLATE_BASE}/projects/horizon/User-Interface`;
 const MAX_LISTED_KEYS = 15;
 const MAX_SEARCH_KEYS = 30;
 
 const LANGUAGE_NAMES = {
-  en_us: 'English (US)',
-  en_uwu: 'Cyute Engwish',
+  'en-US': 'English (US)',
+  'en-x-uwu': 'Cyute Engwish',
   fr: 'Français',
   de: 'Deutsch',
   es: 'Español',

@@ -14,7 +14,7 @@
               {{
                 updateVersion
                   ? l('action.updateTitle')
-                  : l('changelog.version', currentVersion || '')
+                  : l('changelog.version', { version: currentVersion || '' })
               }}
             </h4>
             <button
@@ -44,11 +44,10 @@
               >
                 <div class="changelog-header__title">
                   {{
-                    l(
-                      'changelog.compare',
-                      updateVersion || '',
-                      currentVersion || ''
-                    )
+                    l('changelog.compare', {
+                      latest: updateVersion || '',
+                      current: currentVersion || ''
+                    })
                   }}
                 </div>
                 <div class="changelog-header__subtitle">
