@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
   import { computed } from 'vue';
-  import anyAscii from 'any-ascii';
+  import { safeAnyAscii } from './safe-ascii';
   import core from '../../chat/core';
   import { CharacterInfotag, Infotag, ListItem } from '../../interfaces';
   import { formatContactLink, formatContactValue } from './contact_utils';
@@ -100,7 +100,7 @@
     switch (props.infotag.type) {
       case 'text':
         return shouldFormatAscii
-          ? anyAscii(props.data.string!)
+          ? safeAnyAscii(props.data.string!)
           : props.data.string!;
       case 'number':
         if (props.infotag.allow_legacy && !props.data.number) {
@@ -111,7 +111,7 @@
           //we do that before returning.
           return props.data.string !== undefined
             ? shouldFormatAscii
-              ? anyAscii(props.data.string)
+              ? safeAnyAscii(props.data.string)
               : props.data.string
             : '';
         }
