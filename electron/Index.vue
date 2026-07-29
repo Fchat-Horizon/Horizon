@@ -874,12 +874,10 @@
         preview.style.display = 'none';
       },
       async openProfileInBrowser(): Promise<void> {
-        const url = `https://www.f-list.net/c/${this.profileName}`;
-        if (core.state.generalSettings?.horizonAlwaysOpenIncognito) {
-          EventBus.$emit('open-url-incognito', { url });
-        } else {
-          electron.ipcRenderer.send('open-url-externally', url);
-        }
+        electron.ipcRenderer.send(
+          'open-url-externally',
+          `https://www.f-list.net/c/${this.profileName}`
+        );
 
         // tslint:disable-next-line: no-any no-unsafe-any
         (this.$refs.profileViewer as any).hide();

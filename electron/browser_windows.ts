@@ -1067,7 +1067,7 @@ export function createAboutWindow(
 
   // Handle external links
   about.webContents.setWindowOpenHandler(({ url }) => {
-    electron.shell.openExternal(url);
+    openURLExternally(url);
     return { action: 'deny' };
   });
 

@@ -31,7 +31,6 @@
               :href="imageUrl(image)"
               target="_blank"
               :title="image.description"
-              @click="openImageRespectingIncognito($event, image)"
               @mouseover.prevent="showHoverPreview(image)"
               @mouseenter.prevent="showHoverPreview(image)"
               @mouseleave.prevent="hideHoverPreview(image)"
@@ -49,11 +48,7 @@
           :key="image.id"
           class="character-image-wrapper"
         >
-          <a
-            :href="imageUrl(image)"
-            target="_blank"
-            @click="openImageRespectingIncognito($event, image)"
-          >
+          <a :href="imageUrl(image)" target="_blank">
             <img :src="imageUrl(image)" class="character-image" />
           </a>
           <div class="image-description" v-if="!!image.description">
@@ -165,7 +160,6 @@
                 :href="imageUrl(previewImage)"
                 class="btn btn-outline-secondary"
                 :title="l('action.openBrowser')"
-                @click.stop="openImageRespectingIncognito($event, previewImage)"
               >
                 <i class="fa-solid fa-fw fa-arrow-up-right-from-square"></i>
               </a>
@@ -530,15 +524,6 @@
       showPreview(image);
       e.preventDefault();
     }
-  };
-
-  const openImageRespectingIncognito = (
-    e: MouseEvent,
-    image: CharacterImage
-  ): void => {
-    if (!core.state.generalSettings?.horizonAlwaysOpenIncognito) return;
-    e.preventDefault();
-    EventBus.$emit('open-url-incognito', { url: imageUrl(image) });
   };
 
   const zoomOutClicked = (_e: MouseEvent): void => {
