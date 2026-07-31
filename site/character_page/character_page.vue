@@ -345,8 +345,11 @@
 
         // Guestbook tab - key '3'
         if ((this as any).character?.settings?.guestbook) {
+          // falls back to the first page's length rather than showing nothing if postCount doesn't exist
           const guestbookCount =
-            this.guestbook !== null ? ` (${this.guestbook.posts.length})` : '';
+            this.guestbook !== null
+              ? ` (${this.guestbook.postCount ?? this.guestbook.posts.length})`
+              : '';
           labels['3'] = this.l('profile.tab.guestbook') + guestbookCount;
         }
 
@@ -459,9 +462,8 @@
             return;
           }
 
-          const result = await methods.guestbookPageGet(
-            this.character.character.id,
-            1
+          const result = await methods.guestbookCountedGet(
+            this.character.character.id
           );
 
           if (this.name !== expectedName) return;
