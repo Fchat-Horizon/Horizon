@@ -569,7 +569,9 @@
                           v-model="character.selected"
                         />
                         <span class="form-check-label">{{
-                          character.name
+                          character.name === '_'
+                            ? l('settings.export.globalSettings')
+                            : character.name
                         }}</span>
                       </label>
                       <div

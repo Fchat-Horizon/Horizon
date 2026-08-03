@@ -10,7 +10,11 @@
       style="flex-shrink: 0; margin-bottom: 10px"
       v-model="selectedTab"
       :fullWidth="true"
-      :tabs="[l('ui.genericItems'), l('ui.messages'), l('ui.messages.modern')]"
+      :tabs="[
+        { id: '0', label: l('ui.genericItems') },
+        { id: '1', label: l('ui.messages') },
+        { id: '2', label: l('ui.messages.modern') }
+      ]"
     ></tabs>
 
     <div v-show="selectedTab === '0'">

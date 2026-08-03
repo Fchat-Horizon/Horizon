@@ -31,12 +31,12 @@
               v-model="selectedTab"
               :fullWidth="true"
               :tabs="[
-                l('settings.tabs.general'),
-                l('settings.tabs.look'),
-                l('settings.tabs.notifications'),
-                l('settings.tabs.behavior'),
-                l('settings.tabs.accessibility'),
-                l('settings.tabs.advanced')
+                { id: '0', label: l('settings.tabs.general') },
+                { id: '1', label: l('settings.tabs.look') },
+                { id: '2', label: l('settings.tabs.notifications') },
+                { id: '3', label: l('settings.tabs.behavior') },
+                { id: '4', label: l('settings.tabs.accessibility') },
+                { id: '5', label: l('settings.tabs.advanced') }
               ]"
             ></tabs>
             <div class="tab-content hidden-scrollbar">

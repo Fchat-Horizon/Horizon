@@ -1157,6 +1157,7 @@ async function onReady(): Promise<void> {
             id: 'newTab',
             accelerator: 'CmdOrCtrl+Shift+T'
           },
+          //TODO remove this once we move the actual app settings stuff to the unified SettingsView
           {
             label: l('action.preferences'),
             click: (_m, window: electron.BrowserWindow) => {
@@ -1167,6 +1168,13 @@ async function onReady(): Promise<void> {
               );
             },
             accelerator: 'CmdOrCtrl+,'
+          },
+          {
+            label: l('action.preferences'),
+            click: (_m, window: electron.BrowserWindow) => {
+              window.webContents.send('settings-menu');
+            }
+            // accelerator: 'CmdOrCtrl+,'
           },
           {
             label: l('fixLogs.action'),
@@ -1366,13 +1374,6 @@ async function onReady(): Promise<void> {
       );
     }
   );
-  electron.ipcMain.on('open-settings-menu', (_event: IpcMainEvent) => {
-    browserWindows.createSettingsWindow(
-      settings,
-      'none',
-      electron.BrowserWindow.getFocusedWindow()!
-    );
-  });
 
   electron.ipcMain.on(
     'open-exporter-window',
@@ -1575,6 +1576,13 @@ async function onReady(): Promise<void> {
       }
     }
   );
+
+  electron.ipcMain.on('request-reload-settings', event => {
+    for (const w of electron.webContents.getAllWebContents()) {
+      if (w.id === event.sender.id) continue;
+      w.send('reload-settings');
+    }
+  });
 
   electron.ipcMain.on('open-url-externally', (_e, _url: string) => {
     openURLExternally(_url);
