@@ -17,7 +17,8 @@ import {
   isAction,
   isCommand,
   isWarn,
-  parse as parseCommand
+  parse as parseCommand,
+  trimCommandWhitespace
 } from './slash_commands';
 import MessageType = Interfaces.Message.Type;
 import { EventBus } from './preview/event-bus';
@@ -147,6 +148,9 @@ abstract class Conversation implements Interfaces.Conversation {
 
   async send(): Promise<void> {
     if (this.enteredText.length === 0) return;
+
+    const trimmed = trimCommandWhitespace(this.enteredText);
+    if (trimmed !== this.enteredText) this.enteredText = trimmed;
 
     if (isCommand(this.enteredText)) {
       const parsed = parseCommand(this.enteredText, this.context);
