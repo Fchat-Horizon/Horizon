@@ -241,7 +241,7 @@
       ) {
         //Don't bother checking again if we don't get a result.
         core.characters.setOverride(character.name, 'characterColor', null);
-        core.cache.addProfile(character.name, true, true);
+        void core.cache.profileCache.applyOverridesFromStore(character.name);
       }
       if (
         cache === null &&

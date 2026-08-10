@@ -266,6 +266,26 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
     return cacheRecord;
   }
 
+  /**
+   * Applies a profile's character overrides (HQ portrait, custom name color).
+   *
+   * Skips register on purpose. Registering runs the matcher, which costs performance
+   * per profile, and the member list calls this once per member. Nothing here needs
+   * a match score, so don't add one.
+   *
+   * Does nothing if the profile isn't on disk
+   * @param name Character to apply overrides for
+   */
+  async applyOverridesFromStore(name: string): Promise<void> {
+    const profile =
+      this.getSync(name)?.character ??
+      (await this.store?.getProfile(name))?.profileData;
+
+    if (profile) {
+      this.updateOverrides(profile);
+    }
+  }
+
   delete(name: string): void {
     const key = AsyncCache.nameKey(name);
 
