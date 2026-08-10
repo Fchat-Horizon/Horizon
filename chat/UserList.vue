@@ -669,6 +669,16 @@
         if (list) list.resetScroll();
       });
 
+      // font size is applied via injected css, so it never re-renders. re-measure on
+      // nextTick, after ChatView's watcher has actually applied the new size
+      this.$watch(
+        () => core.state.settings.fontSize,
+        () => {
+          this.rowHeightMeasured = false;
+          this.$nextTick(() => this.syncRowHeight());
+        }
+      );
+
       this.$nextTick(() => this.syncRowHeight());
     },
     updated(): void {
@@ -715,8 +725,8 @@
         return member.character.name;
       },
 
-      // rows are always the same height for a user unless they change their font size,
-      // so we can measure it once and call it a day
+      // rows are always the same height for a user, so we can measure it once and
+      // call it a day. the font size watcher in mounted() re-arms this if it changes
       syncRowHeight(): void {
         const list = this.$refs['memberList'] as Vue | undefined;
         const row = list?.$el.querySelector('.virtual-list-row');
