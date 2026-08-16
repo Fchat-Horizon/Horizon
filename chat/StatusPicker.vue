@@ -212,7 +212,6 @@
       gap: 0.5rem;
       padding: 0.35rem 0.5rem;
       border-radius: 4px;
-      border-left: 3px solid transparent;
       cursor: pointer;
 
       &.group-break {
@@ -227,14 +226,13 @@
 
       &.selected,
       &.selected:hover {
-        background: color-mix(in srgb, var(--bs-primary) 22%, transparent);
-        border-left-color: var(--bs-primary);
+        background: color-mix(in srgb, var(--bs-body-color) 18%, transparent);
       }
 
       .status-check {
         width: 1.3rem;
         flex-shrink: 0;
-        color: var(--bs-primary);
+        color: currentColor;
       }
 
       .status-text {
