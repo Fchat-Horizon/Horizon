@@ -55,6 +55,7 @@ export class GeneralSettings {
   risingDisableWindowsHighContrast = false;
   browserPath = '';
   browserArgs = '%s';
+  horizonAlwaysOpenIncognito: boolean = false;
   zoomLevel = 0.0;
   horizonCustomCss: string = '';
   horizonCustomCssEnabled: boolean = false;
