@@ -386,7 +386,8 @@
         if (
           !this.avatarFailed &&
           onlineCharacter &&
-          onlineCharacter.overrides.avatarUrl
+          onlineCharacter.overrides.avatarUrl &&
+          core.state.settings.risingShowHighQualityPortraits
         ) {
           return onlineCharacter.overrides.avatarUrl;
         }

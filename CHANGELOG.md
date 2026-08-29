@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MacOS versions no longer use a tray icon and its functionality is now inside the dock icon's context menu. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9ac4d7dd5b025209105ea451304c6fa515dbd5c2)
 - Changing your log directory now restarts the app instead of shutting it down. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3180593704853b47b9faaa0834a484bacb3c0145)
 - Places with character select dropdowns (like on the profile viewer and friends dialog) now show the selected character's avatar. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2f1c47fe2a692835b7df6d36122de482c57804e0)
+- Lamia and naga are not marked as the same species in the hover preview. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6ed5a54d0c5bc3bc7c131c855bafc3795241aa91)
 
 ### Fixed
 
@@ -27,7 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Ads are now shown/ hidden retroactively if you change filter settings.
 - Fixed various bad colors in colorblind mode. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6b10c5ae7eefb50343ec6529c25fc0e920dd3d0e)
 - Fixed various buttons not using proper 4.7:1 contrast ratios for their text. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5291c3fb5da76bb24fda2eb737ce6900870f7ec3)
+- Guestbooks with more than 15 posts now show an accurate number. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/13d97021e5f914a376119e006913da1e8376a268)
+- Switching between disabling/ enabling HQ profile pictures from being visible now works without restarting. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/29d9ab752442ba250319651a9ed2378cb2defc59)
+- Scrolling up in the log viewer while searching now loads older messages better, without you needing to scroll upward more than once. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/425dfa03350cf33606bbf03b364d24cc609b522f)
+- The mobile quick switcher on top now respects channel group orders. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/23c4beb648f692758d4207bca05ee52c41c91b75)
 - Names in the "All Friends" tab to the right are no longer all green if you have "Color friends/ bookmarks in a different color" enabled. Obviously, those are your friends and bookmarks. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b3036a275e5629c2418b9e305e56226bafd45153)
+- Fixed screen reader and tooltip labels for the public and private channels always claiming a channel is official. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/93b48b418d55d2abb2841fe51da9cc24ecdb53ef)
 
 ### Development
 
@@ -50,10 +56,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/793 by @SmileyTatsu
 - https://github.com/Fchat-Horizon/Horizon/pull/826 by @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/832 by @CodingWithAnxiety and @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/885 by @Kannamoris
 - https://github.com/Fchat-Horizon/Horizon/pull/878 by @CodingWithAnxiety
 - https://github.com/Fchat-Horizon/Horizon/pull/882 by @Kannamoris
 - https://github.com/Fchat-Horizon/Horizon/pull/898 by @Kannamoris
+- https://github.com/Fchat-Horizon/Horizon/pull/900 by @saalisu
+  - This is their first contribution! 🎉
 - https://github.com/Fchat-Horizon/Horizon/pull/901 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/907 by @Kannamoris
+- https://github.com/Fchat-Horizon/Horizon/pull/914 by @freenutsxd
 
 ## [2.3.3] - 2026-07-17
 
