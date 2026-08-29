@@ -242,7 +242,7 @@
 <script lang="ts">
   import * as _ from 'lodash';
 
-  import anyAscii from 'any-ascii';
+  import { safeAnyAscii } from './safe-ascii';
   import Vue from 'vue';
   import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 
@@ -689,12 +689,12 @@
           core.state.generalSettings &&
           core.state.generalSettings.horizonForceAsciiProfiles
         ) {
-          character.character.description = anyAscii(
+          character.character.description = safeAnyAscii(
             character.character.description
           );
 
           if (character.character.title) {
-            character.character.title = anyAscii(character.character.title);
+            character.character.title = safeAnyAscii(character.character.title);
           }
 
           // We don't do customs and infotags here, so that they are at least sorted before parsing.
