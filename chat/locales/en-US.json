@@ -143,6 +143,7 @@
   "channel.mode.both": "Both",
   "channel.mode.chat": "Chat",
   "channel.official": "Official channel",
+  "channel.private": "Open room",
   "channelList.create": "Create room",
   "channelList.createName": "Room name",
   "channelList.private": "Open rooms",
