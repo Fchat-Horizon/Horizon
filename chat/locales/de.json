@@ -644,7 +644,6 @@
   "settings.autoBackup.directoryBrowse": "Durchsuchen",
   "settings.autoBackup.directoryDefault": "Standard: {dir}",
   "settings.autoBackup.directoryLabel": "Benutzdefiniertes BackUp-Verzeichnis (optional)",
-  "settings.autoBackup.directoryReset": "Reset",
   "settings.autoBackup.enable": "Auto-BackUp aktivieren",
   "settings.autoBackup.estimatedUsage": "Geschätzte Nutzung: ~{size}",
   "settings.autoBackup.intervalHours": "Stunden zwischen den BackUps",

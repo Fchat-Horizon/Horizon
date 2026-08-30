@@ -644,7 +644,6 @@
   "settings.autoBackup.directoryBrowse": "Böngészés",
   "settings.autoBackup.directoryDefault": "Alapértelmezett: {dir}",
   "settings.autoBackup.directoryLabel": "Személyre szabott tartalék könyvtár (választható)",
-  "settings.autoBackup.directoryReset": "Visszaállítás",
   "settings.autoBackup.enable": "Automatikus tartalék engedélyezése",
   "settings.autoBackup.estimatedUsage": "Becsült használat: ~{size}",
   "settings.autoBackup.intervalHours": "Órák száma a tartalékok között",

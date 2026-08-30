@@ -893,7 +893,6 @@
           'open-url-externally',
           `https://www.f-list.net/c/${this.profileName}`
         );
-        //await remote.shell.openExternal(`https://www.f-list.net/c/${this.profileName}`);
 
         // tslint:disable-next-line: no-any no-unsafe-any
         (this.$refs.profileViewer as any).hide();
