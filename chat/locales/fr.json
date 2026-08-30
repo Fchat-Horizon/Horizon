@@ -649,7 +649,6 @@
   "settings.autoBackup.directoryBrowse": "Parcourir",
   "settings.autoBackup.directoryDefault": "Par défaut : {dir}",
   "settings.autoBackup.directoryLabel": "Dossier de sauvegarde personnalisé (optionnel)",
-  "settings.autoBackup.directoryReset": "Réinitialiser",
   "settings.autoBackup.enable": "Activer la sauvegarde auto",
   "settings.autoBackup.estimatedUsage": "Utilisation estimée : ~{size}",
   "settings.autoBackup.intervalHours": "Heures entre les sauvegardes",

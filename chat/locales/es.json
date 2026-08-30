@@ -649,7 +649,6 @@
   "settings.autoBackup.directoryBrowse": "Explorar",
   "settings.autoBackup.directoryDefault": "Por defecto: {dir}",
   "settings.autoBackup.directoryLabel": "Directorio de copias de seguridad personalizado (opcional)",
-  "settings.autoBackup.directoryReset": "Reiniciar",
   "settings.autoBackup.enable": "Activar copia de seguridad automática",
   "settings.autoBackup.estimatedUsage": "Uso estimado: ~{size}",
   "settings.autoBackup.intervalHours": "Horas entre copias de seguridad",

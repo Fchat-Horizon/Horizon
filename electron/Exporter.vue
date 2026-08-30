@@ -370,38 +370,56 @@
                         <button
                           class="btn btn-outline-secondary"
                           type="button"
-                          @click="chooseAutoBackupDir"
+                          @click="openAutoBackupDir"
+                          :title="
+                            l('platform.open', {
+                              name: l(`platform.fileExplorer.${platform}`)
+                            })
+                          "
                         >
-                          {{ l('settings.autoBackup.directoryBrowse') }}
+                          <span class="fas fa-fw fa-folder-open"></span>
+                        </button>
+                        <button
+                          class="btn btn-outline-secondary"
+                          type="button"
+                          @click="chooseAutoBackupDir"
+                          :title="l('settings.autoBackup.directoryBrowse')"
+                        >
+                          <span class="fas fa-fw fa-folder-plus"></span>
                         </button>
                         <button
                           v-if="settings.autoBackupDirectory"
-                          class="btn btn-outline-secondary"
+                          class="btn btn-outline-danger"
                           type="button"
                           @click="settings.autoBackupDirectory = ''"
+                          :title="l('action.reset')"
                         >
-                          {{ l('settings.autoBackup.directoryReset') }}
+                          <span class="fas fa-fw fa-rotate-left"></span>
                         </button>
                       </div>
                       <small class="form-text text-muted">
                         {{
-                          l('settings.autoBackup.directoryDefault', {
-                            dir: defaultBackupDir
-                          })
+                          settings.autoBackupDirectory
+                            ? l('settings.autoBackup.directoryDefault', {
+                                dir: defaultBackupDir
+                              })
+                            : l('settings.autoBackup.directoryDefault.unset')
                         }}
                       </small>
                     </div>
                   </div>
 
-                  <div v-if="settings.autoBackupEnabled" class="mt-3 mb-2">
+                  <div
+                    v-if="settings.autoBackupEnabled"
+                    class="mt-3 mb-2 w-100"
+                  >
                     <h6>{{ l('settings.autoBackup.restoreTitle') }}</h6>
                     <p class="text-muted small">
                       {{ l('settings.autoBackup.restoreDescription') }}
                     </p>
-                    <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="input-group mb-2">
                       <select
                         class="form-select"
-                        style="max-width: 400px"
                         v-model="selectedAutoBackup"
                         :disabled="importInProgress"
                       >
@@ -421,10 +439,11 @@
                         </option>
                       </select>
                       <button
-                        class="btn btn-outline-secondary btn-sm"
+                        class="btn btn-outline-secondary"
                         type="button"
-                        :disabled="importInProgress"
+                        :disabled="importInProgress || !selectedAutoBackup"
                         @click="refreshAutoBackups"
+                        :title="l('action.restore')"
                       >
                         <i class="fas fa-sync-alt"></i>
                       </button>
@@ -1704,6 +1723,9 @@
         if (!result.canceled && result.filePaths.length > 0) {
           this.settings.autoBackupDirectory = result.filePaths[0];
         }
+      },
+      async openAutoBackupDir(): Promise<void> {
+        ipcRenderer.send('open-dir', this.settings.logDirectory);
       },
       async refreshAutoBackups(): Promise<void> {
         try {

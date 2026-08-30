@@ -649,7 +649,6 @@
   "settings.autoBackup.directoryBrowse": "Naviga",
   "settings.autoBackup.directoryDefault": "Standard: {dir}",
   "settings.autoBackup.directoryLabel": "Cartella di backup personale (opzionale)",
-  "settings.autoBackup.directoryReset": "Reimposta",
   "settings.autoBackup.enable": "Abilita il backup automatico",
   "settings.autoBackup.estimatedUsage": "Uso stimato: ~{size}",
   "settings.autoBackup.intervalHours": "Ore tra i backup",
