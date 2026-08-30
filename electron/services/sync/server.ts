@@ -30,6 +30,7 @@ import {
   encryptBody,
   generateSessionSecrets,
   tokensMatch,
+  SYNC_ACTIVE_IDLE_TIMEOUT_MS,
   SYNC_MAX_AUTH_FAILURES,
   SYNC_MAX_BODY_BYTES,
   SYNC_PROTOCOL_VERSION,
@@ -87,7 +88,7 @@ export class LogSyncServer {
   private readonly server: http.Server;
   private readonly options: LogSyncServerOptions;
   private readonly sockets = new Set<Socket>();
-  private expiryTimer: NodeJS.Timeout | undefined;
+  private idleTimer: NodeJS.Timeout | undefined;
   private authFailures = 0;
   private busy = false;
 
@@ -106,6 +107,14 @@ export class LogSyncServer {
   static start(options: LogSyncServerOptions): Promise<LogSyncServer> {
     const secrets = generateSessionSecrets();
     const server = http.createServer();
+    // Bound a peer that opens a connection and then stalls mid-request
+    // without closing it: the abort-safe body reads and the idle timer only
+    // cover a socket that actually closes or a session that goes idle
+    // between requests. headersTimeout catches a slow-header client;
+    // requestTimeout caps the whole request while still leaving room for a
+    // large but legitimate upload (bodies are capped at SYNC_MAX_BODY_BYTES).
+    server.headersTimeout = 60 * 1000;
+    server.requestTimeout = 10 * 60 * 1000;
     return new Promise<LogSyncServer>((resolve, reject) => {
       server.once('error', reject);
       server.listen(0, '0.0.0.0', () => {
@@ -119,9 +128,7 @@ export class LogSyncServer {
         server.on('request', (req, res) => {
           void instance.handleRequest(req, res);
         });
-        instance.expiryTimer = setTimeout(() => {
-          if (instance.state === 'waiting') instance.fail('expired');
-        }, SYNC_SESSION_TIMEOUT_MS);
+        instance.bumpIdleTimer();
         resolve(instance);
       });
     });
@@ -131,8 +138,7 @@ export class LogSyncServer {
   stop(finalState: SyncServerState = 'stopped'): void {
     if (this.state === 'stopped' || this.state === 'error') return;
     if (this.state !== 'finished') this.state = finalState;
-    if (this.expiryTimer !== undefined) clearTimeout(this.expiryTimer);
-    this.expiryTimer = undefined;
+    this.clearIdleTimer();
     this.server.close();
     for (const socket of this.sockets) socket.destroy();
     this.sockets.clear();
@@ -141,13 +147,48 @@ export class LogSyncServer {
 
   private fail(code: string): void {
     this.errorCode = code;
-    if (this.expiryTimer !== undefined) clearTimeout(this.expiryTimer);
-    this.expiryTimer = undefined;
+    this.clearIdleTimer();
     this.state = 'error';
     this.server.close();
     for (const socket of this.sockets) socket.destroy();
     this.sockets.clear();
     this.notify();
+  }
+
+  /** The idle window for the current state: long before pairing, short once
+   * a session is live so an abandoned peer is cleaned up quickly. */
+  private currentIdleTimeout(): number {
+    return this.state === 'waiting'
+      ? SYNC_SESSION_TIMEOUT_MS
+      : SYNC_ACTIVE_IDLE_TIMEOUT_MS;
+  }
+
+  /** (Re)arms the rolling idle timeout for the current state. No-op once the
+   * session has reached a terminal state so a late transfer `finally` can't
+   * resurrect a timer after stop()/fail(). */
+  private bumpIdleTimer(): void {
+    this.clearIdleTimer();
+    if (
+      this.state === 'finished' ||
+      this.state === 'stopped' ||
+      this.state === 'error'
+    )
+      return;
+    this.idleTimer = setTimeout(() => {
+      this.idleTimer = undefined;
+      if (
+        this.state === 'finished' ||
+        this.state === 'stopped' ||
+        this.state === 'error'
+      )
+        return;
+      this.fail(this.state === 'waiting' ? 'expired' : 'timed-out');
+    }, this.currentIdleTimeout());
+  }
+
+  private clearIdleTimer(): void {
+    if (this.idleTimer !== undefined) clearTimeout(this.idleTimer);
+    this.idleTimer = undefined;
   }
 
   private notify(): void {
@@ -183,17 +224,34 @@ export class LogSyncServer {
     return new Promise<Buffer>((resolve, reject) => {
       const chunks: Buffer[] = [];
       let total = 0;
+      let settled = false;
+      const settle = (run: () => void): void => {
+        if (settled) return;
+        settled = true;
+        run();
+      };
       req.on('data', (chunk: Buffer) => {
         total += chunk.length;
         if (total > SYNC_MAX_BODY_BYTES) {
           req.destroy();
-          reject(syncError(413, 'body-too-large'));
+          settle(() => reject(syncError(413, 'body-too-large')));
           return;
         }
         chunks.push(chunk);
       });
-      req.on('end', () => resolve(Buffer.concat(chunks)));
-      req.on('error', () => reject(syncError(400, 'read-failed')));
+      req.on('end', () => settle(() => resolve(Buffer.concat(chunks))));
+      req.on('error', () =>
+        settle(() => reject(syncError(400, 'read-failed')))
+      );
+      // A peer that dies mid-upload never emits 'end'; without these the
+      // promise would hang forever and wedge busy=true / state='receiving'.
+      req.on('aborted', () =>
+        settle(() => reject(syncError(400, 'read-aborted')))
+      );
+      req.on('close', () => {
+        if (req.complete) return;
+        settle(() => reject(syncError(400, 'read-aborted')));
+      });
     });
   }
 
@@ -290,10 +348,11 @@ export class LogSyncServer {
     )
       throw syncError(403, 'account-mismatch');
 
-    if (this.expiryTimer !== undefined) clearTimeout(this.expiryTimer);
-    this.expiryTimer = undefined;
     this.peerName = handshake.deviceName;
     this.setState('paired');
+    // Switch from the long pre-handshake window to the short paired-session
+    // idle window now that a peer is actively driving the session.
+    this.bumpIdleTimer();
     this.respondJson(res, 200, {
       ok: true,
       deviceName: os.hostname(),
@@ -306,7 +365,13 @@ export class LogSyncServer {
     if (this.state !== 'paired') throw syncError(409, 'not-paired');
     if (this.busy) throw syncError(409, 'busy');
     this.busy = true;
+    // Suspend the idle timeout for the duration of the transfer; a large log
+    // set may legitimately take longer than the paired-session idle window.
+    this.clearIdleTimer();
     this.setState('sending');
+    // A client that vanishes mid-download makes the response stream emit
+    // ECONNRESET/EPIPE; swallow it so an unhandled 'error' can't crash us.
+    res.on('error', () => {});
     const zipFile = path.join(
       this.options.tempDir,
       `horizon-sync-out-${process.pid}-${Date.now()}.zip`
@@ -322,6 +387,7 @@ export class LogSyncServer {
       this.setState('paired');
     } finally {
       this.busy = false;
+      this.bumpIdleTimer();
       try {
         fs.rmSync(zipFile, { force: true });
       } catch {}
@@ -335,6 +401,9 @@ export class LogSyncServer {
     if (this.state !== 'paired') throw syncError(409, 'not-paired');
     if (this.busy) throw syncError(409, 'busy');
     this.busy = true;
+    // Suspend the idle timeout for the duration of the transfer; a large
+    // upload may legitimately take longer than the paired-session window.
+    this.clearIdleTimer();
     this.setState('receiving');
     try {
       const body = await this.readEncryptedBody(req);
@@ -353,6 +422,7 @@ export class LogSyncServer {
       throw error;
     } finally {
       this.busy = false;
+      this.bumpIdleTimer();
     }
   }
 

@@ -1041,6 +1041,7 @@
   "sync.error.expired": "The sync session expired. Start a new one and scan the fresh QR code.",
   "sync.error.generic": "Sync failed: {0}",
   "sync.error.lockedWhileConnected": "Device sync is disabled while signed into a character.",
+  "sync.error.timedOut": "The sync session timed out because the other device stopped responding. Start a new session to try again.",
   "sync.manualHint": "If scanning doesn't work, paste this connection code into Solstice instead:",
   "sync.qrAlt": "Sync session QR code",
   "sync.scanHint": "Scan this QR code with Solstice to sync your chat logs.",

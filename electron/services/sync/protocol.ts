@@ -36,6 +36,14 @@ export const SYNC_MAX_BODY_BYTES = 512 * 1024 * 1024;
 /** A session that has not completed a handshake expires after this long. */
 export const SYNC_SESSION_TIMEOUT_MS = 10 * 60 * 1000;
 
+/**
+ * Once a session is paired (or otherwise active) it is torn down after this
+ * long without a request, so a peer that disappears mid-session cannot leave
+ * the server running indefinitely. Suspended while a transfer is actually in
+ * flight, which may legitimately take longer than this.
+ */
+export const SYNC_ACTIVE_IDLE_TIMEOUT_MS = 2 * 60 * 1000;
+
 /** The session aborts after this many failed authorization attempts. */
 export const SYNC_MAX_AUTH_FAILURES = 5;
 

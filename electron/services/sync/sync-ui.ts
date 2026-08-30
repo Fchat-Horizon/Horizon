@@ -37,6 +37,8 @@ function describeError(code: string | undefined): string {
   switch (code) {
     case 'expired':
       return l('sync.error.expired');
+    case 'timed-out':
+      return l('sync.error.timedOut');
     case 'too-many-auth-failures':
       return l('sync.error.authFailures');
     default:

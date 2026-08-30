@@ -32,7 +32,7 @@ When the user starts a sync session, Horizon:
 - `addrs` lists every non-internal IPv4 address of the desktop; the client should try them in order until one connects.
 - `account` lets the client check it is signed into the right account _before_ attempting a handshake and show a friendly error otherwise.
 
-The session ends when: the user stops it, the window closes, `/v1/finish` completes, 10 minutes pass without a successful handshake, or 5 requests fail authorization/decryption. Sessions and their secrets are never reused; every sync shows a fresh QR code.
+The session ends when: the user stops it, the window closes, `/v1/finish` completes, 10 minutes pass without a successful handshake, 2 minutes pass with no request once the session is paired (so a peer that disappears mid-session does not leave the server running, though this idle timer is suspended while a transfer is actually in flight), or 5 requests fail authorization/decryption. Sessions and their secrets are never reused; every sync shows a fresh QR code.
 
 ## Transport security
 
