@@ -28,6 +28,11 @@ import * as path from 'path';
 import { buildLogIndexBuffer, isFilesystemArtifact } from '../log-backup';
 import type { LogMergeStats } from './protocol';
 
+// Highest Conversation.Message.Type enum value (Bcast); see chat/interfaces.ts
+// and docs/log-sync-protocol.md. Kept as a literal because this module is pure
+// Node and must not import chat/.
+const MAX_MESSAGE_TYPE = 6;
+
 export interface LogMessage {
   time: number;
   type: number;
@@ -99,7 +104,7 @@ export function isValidLogMessage(value: unknown): value is LogMessage {
     m.time <= 0xffffffff &&
     Number.isInteger(m.type) &&
     m.type >= 0 &&
-    m.type <= 0xff &&
+    m.type <= MAX_MESSAGE_TYPE &&
     typeof m.sender === 'string' &&
     Buffer.byteLength(m.sender) <= 0xff &&
     typeof m.text === 'string' &&
