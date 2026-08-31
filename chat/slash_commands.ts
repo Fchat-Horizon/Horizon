@@ -30,16 +30,18 @@ export function isCommand(this: void, text: string): boolean {
 
 // leading spaces followed by a command e.g. ' /me waves'
 // does not handle newlines before commands, since that's probably intended by the user
-const indentedCommand = /^([^\S\r\n]+)\/([a-z]+)\b/i;
+const indentedCommand = /^[^\S\r\n]+\/([a-z]+)\b/i;
 
-// checks that the trimmed command attempt is an actual command before sending
-// prevents intentional cases like ' /shrug' from being sent as a command, since it's not one
-export function trimCommandWhitespace(this: void, text: string): string {
+// names the command the text was probably meant to be, so send() can warn about it
+// only matches real commands, since ' /shrug' is not one and is meant to be sent as-is
+export function indentedCommandName(
+  this: void,
+  text: string
+): string | undefined {
   const match = indentedCommand.exec(text);
-  if (match === null) return text;
-  return commands[match[2].toLowerCase()] !== undefined
-    ? text.substring(match[1].length)
-    : text;
+  if (match === null) return undefined;
+  const name = match[1].toLowerCase();
+  return commands[name] !== undefined ? name : undefined;
 }
 
 export function parse(

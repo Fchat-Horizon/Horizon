@@ -323,6 +323,7 @@
   "commands.setmode.param0.help": "A valid room mode, namely \"ads\", \"chat\" or \"both\".",
   "commands.setowner": "Set channel owner",
   "commands.setowner.help": "Set the owner of a channel to another character. The previous owner will be demoted to a member.",
+  "commands.spacedCommand": "\"/{command}\" has a space in front of it, so it will be sent as a message instead of run as a command. Press Enter again to send it anyway.",
   "commands.status": "Set status",
   "commands.status.help": "Sets your status along with an optional message.",
   "commands.status.param0": "Status",

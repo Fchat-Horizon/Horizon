@@ -541,7 +541,7 @@
   import ManageChannel from './ManageChannel.vue';
   import MessageView from './message_view';
   import ReportDialog from './ReportDialog.vue';
-  import { isCommand, trimCommandWhitespace } from './slash_commands';
+  import { isCommand } from './slash_commands';
   import UserView from './UserView.vue';
   import CharacterChannelList from './character/CharacterChannelList.vue';
   import * as _ from 'lodash';
@@ -929,10 +929,7 @@
             if (this.tabOptionsIndex >= this.tabOptions.length)
               this.tabOptionsIndex = 0;
             const name = this.tabOptions[this.tabOptionsIndex];
-            // send() will trim this, so complete to a bare name instead of a [user] tag
-            const userName = isCommand(
-              trimCommandWhitespace(this.conversation.enteredText)
-            )
+            const userName = isCommand(this.conversation.enteredText)
               ? name
               : `[user]${name}[/user]`;
             this.tabOptionSelection.end =
