@@ -655,7 +655,7 @@
   "settings.autoBackup.directoryDefault.unset": "Voici le dossier par défaut.",
   "settings.autoBackup.directoryLabel": "Dossier de sauvegarde personnalisé (optionnel)",
   "settings.autoBackup.enable": "Activer la sauvegarde auto",
-  "settings.autoBackup.estimatedUsage": "Utilisation estimée : ~{size}",
+  "settings.autoBackup.estimatedUsage": "Utilisation estimée : ~{size}",
   "settings.autoBackup.intervalHours": "Heures entre les sauvegardes",
   "settings.autoBackup.noBackups": "Aucune sauvegarde auto trouvée",
   "settings.autoBackup.restoreDescription": "Choisissez une sauvegarde auto à restaurer. Cela va l'importer dans la section en dessous.",
