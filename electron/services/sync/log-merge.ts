@@ -25,9 +25,8 @@
 import type AdmZip from 'adm-zip';
 import * as fs from 'fs';
 import * as path from 'path';
+import { buildLogIndexBuffer } from '../log-backup';
 import type { LogMergeStats } from './protocol';
-
-const dayMs = 86400000;
 
 export interface LogMessage {
   time: number;
@@ -108,12 +107,6 @@ export function isValidLogMessage(value: unknown): value is LogMessage {
   );
 }
 
-/** Same local-timezone day math as `checkIndex` in electron/filesystem.ts. */
-function dayNumber(timeSeconds: number): number {
-  const date = new Date(timeSeconds * 1000);
-  return Math.floor(date.getTime() / dayMs - date.getTimezoneOffset() / 1440);
-}
-
 /** Reads the conversation display name stored in a `.idx` file. */
 export function readIndexName(idxFile: string): string | undefined {
   try {
@@ -126,23 +119,6 @@ export function readIndexName(idxFile: string): string | undefined {
   } catch {
     return undefined;
   }
-}
-
-function buildIndexBuffer(
-  name: string,
-  entries: { day: number; offset: number }[]
-): Buffer {
-  const nameLength = Buffer.byteLength(name);
-  const buffer = Buffer.allocUnsafe(1 + nameLength + entries.length * 7);
-  buffer.writeUInt8(nameLength, 0);
-  buffer.write(name, 1);
-  let offset = 1 + nameLength;
-  for (const entry of entries) {
-    buffer.writeUInt16LE(entry.day, offset);
-    buffer.writeUIntLE(entry.offset, offset + 2, 5);
-    offset += 7;
-  }
-  return buffer;
 }
 
 function dedupeKey(message: LogMessage): string {
@@ -192,26 +168,20 @@ export function mergeLogFile(
       ? fallbackName
       : key);
 
-  const chunks: Buffer[] = [];
-  const indexEntries: { day: number; offset: number }[] = [];
-  const daysSeen = new Set<number>();
-  let offset = 0;
-  for (const message of merged) {
-    const day = dayNumber(message.time);
-    if (!daysSeen.has(day)) {
-      daysSeen.add(day);
-      indexEntries.push({ day, offset });
-    }
-    const chunk = serializeLogMessage(message);
-    chunks.push(chunk);
-    offset += chunk.length;
-  }
+  const logBuffer = Buffer.concat(merged.map(serializeLogMessage));
+  // Build the index from the finished log BEFORE swapping it in, reusing the
+  // exporter/backup builder so both agree on name truncation and day-range
+  // handling. Building here can no longer abort after the log is replaced, so
+  // a live log is never left paired with a stale or missing index.
+  const indexBuffer = buildLogIndexBuffer(name, logBuffer);
 
   fs.mkdirSync(logsDir, { recursive: true });
   const tempFile = `${file}.syncmerge`;
-  fs.writeFileSync(tempFile, Buffer.concat(chunks));
+  fs.writeFileSync(tempFile, logBuffer);
   fs.renameSync(tempFile, file);
-  fs.writeFileSync(`${file}.idx`, buildIndexBuffer(name, indexEntries));
+  const indexFile = `${file}.idx`;
+  if (indexBuffer) fs.writeFileSync(indexFile, indexBuffer);
+  else if (fs.existsSync(indexFile)) fs.unlinkSync(indexFile);
 
   return { added: added.length, created: !exists };
 }
