@@ -202,7 +202,11 @@ export class LogSyncServer {
 
   /** Returns a failed transfer to the paired state so the peer can retry. */
   private recoverToPaired(): void {
-    if (this.state === 'receiving' || this.state === 'merging')
+    if (
+      this.state === 'sending' ||
+      this.state === 'receiving' ||
+      this.state === 'merging'
+    )
       this.setState('paired');
   }
 
@@ -385,6 +389,9 @@ export class LogSyncServer {
       });
       res.end(encrypted);
       this.setState('paired');
+    } catch (error) {
+      this.recoverToPaired();
+      throw error;
     } finally {
       this.busy = false;
       this.bumpIdleTimer();
