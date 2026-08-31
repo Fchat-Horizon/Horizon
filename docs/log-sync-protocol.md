@@ -164,5 +164,5 @@ On Horizon, merged conversations are rewritten in the binary log format of `elec
 
 ## Constraints for Horizon
 
-- Sync is only available while **no character is connected** to chat; a running session is aborted if a character connects. This avoids racing the chat renderer's append-only log writes and in-memory day index.
+- Sync and a connected character are mutually exclusive, enforced by a lock in the main process: a session cannot start while any character is connected, and while a session holds the lock the main process refuses every character connection until the session ends. Both checks run synchronously on the main-process thread, so there is no window in which a character could connect during a merge and race the chat renderer's append-only log writes and in-memory day index.
 - Encrypted bodies are capped at 512 MiB.

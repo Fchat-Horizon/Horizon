@@ -523,6 +523,7 @@
   "login.save": "Save login",
   "login.selectCharacter": "Select a character",
   "login.submit": "Log in",
+  "login.syncInProgress": "You can't sign in while a device sync is in progress. Finish or stop the sync first.",
   "login.working": "Logging in…",
   "logs.allDates": "Show all",
   "logs.cancelSelect": "Cancel",

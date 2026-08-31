@@ -77,6 +77,12 @@ let mainWindow: electron.BrowserWindow | undefined;
 remoteMain.initialize();
 
 const characters: string[] = [];
+// webContents.id of the exporter window holding the device-sync lock, or
+// undefined when no sync session is active. While a session holds the lock,
+// character connections are refused; while any character is connected, the
+// lock cannot be acquired. Both are enforced synchronously on this thread, so
+// the two are mutually exclusive with no time-of-check/time-of-use window.
+let syncSessionOwner: number | undefined;
 let autoBackupScheduler:
   | import('./services/exporter/auto-backup').AutoBackupScheduler
   | undefined;
@@ -1645,14 +1651,45 @@ async function onReady(): Promise<void> {
   electron.ipcMain.on(
     'connect',
     (e: IpcMainEvent & { sender: electron.WebContents }, character: string) => {
+      if (syncSessionOwner !== undefined) {
+        e.returnValue = 'sync-in-progress';
+        return;
+      }
       if (characters.indexOf(character) !== -1) {
-        e.returnValue = false;
+        e.returnValue = 'already-connected';
         return;
       }
       characters.push(character);
       e.returnValue = true;
       broadcastConnectedCharacters();
       if (autoBackupScheduler) autoBackupScheduler.runOnConnect();
+    }
+  );
+  // Device-sync lock. The exporter renderer acquires this before starting a
+  // sync session and releases it when the session ends. Acquiring is refused if
+  // any character is connected, which (together with the connect gate above)
+  // keeps a sync merge and the chat renderer's log appends from ever racing.
+  electron.ipcMain.on(
+    'sync-lock-acquire',
+    (e: IpcMainEvent & { sender: electron.WebContents }) => {
+      if (syncSessionOwner !== undefined || characters.length > 0) {
+        e.returnValue = false;
+        return;
+      }
+      syncSessionOwner = e.sender.id;
+      // Safety net: free the lock if the exporter window is destroyed without
+      // releasing (crash, force close), so connections are not blocked forever.
+      e.sender.once('destroyed', () => {
+        if (syncSessionOwner === e.sender.id) syncSessionOwner = undefined;
+      });
+      e.returnValue = true;
+    }
+  );
+  electron.ipcMain.on(
+    'sync-lock-release',
+    (e: IpcMainEvent & { sender: electron.WebContents }) => {
+      if (syncSessionOwner === e.sender.id) syncSessionOwner = undefined;
+      e.returnValue = true;
     }
   );
   electron.ipcMain.on(

@@ -775,11 +775,18 @@
           Socket.host = this.settings.host;
 
           core.connection.onEvent('connecting', async () => {
+            const connectResult = electron.ipcRenderer.sendSync(
+              'connect',
+              core.connection.character
+            );
+            // A device sync holds the main-process lock; block the connection
+            // in every environment so a merge can never race log appends.
+            if (connectResult === 'sync-in-progress') {
+              core.notifications.alert(l('login.syncInProgress'));
+              return core.connection.close();
+            }
             if (
-              !electron.ipcRenderer.sendSync(
-                'connect',
-                core.connection.character
-              ) &&
+              connectResult !== true &&
               process.env.NODE_ENV === 'production'
             ) {
               core.notifications.alert(l('login.alreadyLoggedIn'));
@@ -839,8 +846,16 @@
         }
       },
       fixLogs(): void {
-        if (!electron.ipcRenderer.sendSync('connect', this.fixCharacter))
-          return core.notifications.alert(l('login.alreadyLoggedIn'));
+        const connectResult = electron.ipcRenderer.sendSync(
+          'connect',
+          this.fixCharacter
+        );
+        if (connectResult !== true)
+          return core.notifications.alert(
+            connectResult === 'sync-in-progress'
+              ? l('login.syncInProgress')
+              : l('login.alreadyLoggedIn')
+          );
         try {
           fixLogs(this.fixCharacter);
           core.notifications.alert(l('fixLogs.success'));

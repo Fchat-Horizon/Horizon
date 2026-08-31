@@ -24,6 +24,15 @@ import { LogSyncServer } from './server';
 
 let activeServer: LogSyncServer | undefined;
 
+/**
+ * Releases the main-process device-sync lock so characters can connect again.
+ * Idempotent: releasing when the lock is not held is a no-op in the main
+ * process, so it is safe to call on every session-end path.
+ */
+function releaseSyncLock(): void {
+  ipcRenderer.send('sync-lock-release');
+}
+
 function resetSyncViewState(vm: ExporterVm): void {
   vm.syncActive = false;
   vm.syncState = 'idle';
@@ -76,30 +85,22 @@ function applyServerState(vm: ExporterVm, server: LogSyncServer): void {
     case 'finished':
       vm.syncSummary = buildSummary(server);
       activeServer = undefined;
+      releaseSyncLock();
       resetSyncViewState(vm);
       break;
     case 'error':
       vm.syncError = describeError(server.errorCode);
       activeServer = undefined;
+      releaseSyncLock();
       resetSyncViewState(vm);
       break;
     case 'stopped':
       activeServer = undefined;
+      releaseSyncLock();
       resetSyncViewState(vm);
       break;
     default:
       break;
-  }
-}
-
-async function anyCharactersConnected(): Promise<boolean> {
-  try {
-    const connected: string[] = await ipcRenderer.invoke(
-      'get-connected-characters'
-    );
-    return Array.isArray(connected) && connected.length > 0;
-  } catch {
-    return false;
   }
 }
 
@@ -117,13 +118,19 @@ export async function startSyncSession(vm: ExporterVm): Promise<void> {
     vm.syncError = l('sync.error.accountMissing');
     return;
   }
-  if (await anyCharactersConnected()) {
-    vm.syncError = l('sync.error.lockedWhileConnected');
-    return;
-  }
   const dataDir = vm.settings.logDirectory;
   if (!dataDir) {
     vm.syncError = l('sync.error.generic', 'no log directory configured');
+    return;
+  }
+
+  // Take the main-process lock before opening the server. This atomically
+  // refuses if a character is connected and, once held, blocks any character
+  // from connecting for the whole session, so a merge can never race the chat
+  // renderer's log writes. Placed after the early-return checks above so the
+  // lock is never acquired and then leaked by an early return.
+  if (!ipcRenderer.sendSync('sync-lock-acquire')) {
+    vm.syncError = l('sync.error.lockedWhileConnected');
     return;
   }
 
@@ -163,6 +170,7 @@ export function stopSyncSession(vm: ExporterVm): void {
   const server = activeServer;
   activeServer = undefined;
   if (server !== undefined) server.stop();
+  releaseSyncLock();
   resetSyncViewState(vm);
 }
 
