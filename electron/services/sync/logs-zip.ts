@@ -18,7 +18,7 @@
 import archiver from 'archiver';
 import * as fs from 'fs';
 import * as path from 'path';
-import { binaryLogToJson } from '../log-backup';
+import { binaryLogToJson, isFilesystemArtifact } from '../log-backup';
 import { createManifest } from '../exporter/manifest';
 import { readIndexName } from './log-merge';
 
@@ -52,7 +52,8 @@ function listLogFiles(logsDir: string): string[] {
         entry =>
           entry.isFile() &&
           !entry.name.endsWith('.idx') &&
-          !entry.name.endsWith('.syncmerge')
+          !entry.name.endsWith('.syncmerge') &&
+          !isFilesystemArtifact(entry.name)
       )
       .map(entry => entry.name);
   } catch {

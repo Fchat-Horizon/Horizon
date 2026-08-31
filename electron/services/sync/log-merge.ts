@@ -25,7 +25,7 @@
 import type AdmZip from 'adm-zip';
 import * as fs from 'fs';
 import * as path from 'path';
-import { buildLogIndexBuffer } from '../log-backup';
+import { buildLogIndexBuffer, isFilesystemArtifact } from '../log-backup';
 import type { LogMergeStats } from './protocol';
 
 export interface LogMessage {
@@ -255,6 +255,9 @@ export function mergeLogsZip(dataDir: string, zip: AdmZip): LogMergeStats {
     if (!isSafeSegment(character) || !isSafeSegment(key)) continue;
     if (character === 'settings' || character === 'eicons') continue;
     if (key.endsWith('.idx')) continue;
+    // A sender that did not screen its log dir can ship Thumbs.db/.DS_Store as
+    // a `.json` entry; never materialize filesystem litter as a conversation.
+    if (isFilesystemArtifact(key)) continue;
 
     let incoming: unknown;
     try {
