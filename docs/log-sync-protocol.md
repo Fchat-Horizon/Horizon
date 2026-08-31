@@ -85,11 +85,11 @@ A second handshake on an already-paired session yields `409 {"error": "already-p
 
 ### 2. `GET /v1/logs`
 
-No request body. The response body (after decryption) is a **zip archive** containing Horizon's logs for all local characters, in the _sync zip format_ described below. The client merges it into its own store using the merge semantics below.
+No request body. The response body (after decryption) is a **zip archive** containing Horizon's logs for all local characters, in the _sync zip format_ described below. The client merges it into its own store using the merge semantics below. If Horizon's own archive exceeds the outgoing size cap (see _Constraints for Horizon_), it answers `413 {"error": "archive-too-large"}` instead; this is not retryable within the session.
 
 ### 3. `POST /v1/logs`
 
-The request body (before encryption) is a zip archive in the same format, containing the client's logs. Horizon merges it into its local store and responds `200`:
+The request body (before encryption) is a zip archive in the same format, containing the client's logs. If the archive's total uncompressed size exceeds the cap (see _Constraints for Horizon_), Horizon answers `413 {"error": "archive-too-large"}` before merging and leaves its logs untouched. Otherwise Horizon merges it into its local store and responds `200`:
 
 ```json
 {
@@ -165,4 +165,5 @@ On Horizon, merged conversations are rewritten in the binary log format of `elec
 ## Constraints for Horizon
 
 - Sync and a connected character are mutually exclusive, enforced by a lock in the main process: a session cannot start while any character is connected, and while a session holds the lock the main process refuses every character connection until the session ends. Both checks run synchronously on the main-process thread, so there is no window in which a character could connect during a merge and race the chat renderer's append-only log writes and in-memory day index.
-- Encrypted bodies are capped at 512 MiB.
+- Encrypted bodies are capped at 512 MiB, in either direction (the outgoing `GET /v1/logs` archive is bounded to the same limit before it is read into memory).
+- A received archive's total uncompressed size is capped at 2 GiB, checked from the zip's central directory before any entry is decompressed, so a compressed upload cannot expand without bound in memory. Solstice must apply the same limit for the two sides to agree.

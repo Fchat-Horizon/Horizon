@@ -229,6 +229,18 @@ function parseNamesEntry(zip: AdmZip, character: string): Map<string, string> {
 }
 
 /**
+ * Total declared uncompressed size of every entry in a sync zip. AdmZip
+ * allocates each entry's decompressed buffer from this header value, so the
+ * sum bounds the memory `mergeLogsZip` will allocate. Read from the central
+ * directory, so it is available before any entry is decompressed.
+ */
+export function archiveUncompressedBytes(zip: AdmZip): number {
+  let total = 0;
+  for (const entry of zip.getEntries()) total += entry.header.size;
+  return total;
+}
+
+/**
  * Merges every `characters/{char}/logs/{key}.json` entry of a sync zip
  * (the logs-only export format, see docs/log-sync-protocol.md) into the
  * local log store at `dataDir`.

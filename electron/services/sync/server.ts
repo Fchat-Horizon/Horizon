@@ -21,7 +21,7 @@ import type { AddressInfo } from 'net';
 import type { Socket } from 'net';
 import * as os from 'os';
 import * as path from 'path';
-import { mergeLogsZip } from './log-merge';
+import { archiveUncompressedBytes, mergeLogsZip } from './log-merge';
 import { buildLogsZip } from './logs-zip';
 import type { LogsZipResult } from './logs-zip';
 import {
@@ -33,6 +33,7 @@ import {
   SYNC_ACTIVE_IDLE_TIMEOUT_MS,
   SYNC_MAX_AUTH_FAILURES,
   SYNC_MAX_BODY_BYTES,
+  SYNC_MAX_UNCOMPRESSED_BYTES,
   SYNC_PROTOCOL_VERSION,
   SYNC_SESSION_TIMEOUT_MS
 } from './protocol';
@@ -381,7 +382,13 @@ export class LogSyncServer {
       `horizon-sync-out-${process.pid}-${Date.now()}.zip`
     );
     try {
-      this.sentResult = await buildLogsZip(this.options.dataDir, zipFile);
+      const result = await buildLogsZip(this.options.dataDir, zipFile);
+      // The zip is streamed to disk; refuse to pull an oversized archive (plus
+      // its encrypt copies) into memory. Bounds the outgoing side to the same
+      // compressed body cap as an incoming upload.
+      if (fs.statSync(zipFile).size > SYNC_MAX_BODY_BYTES)
+        throw syncError(413, 'archive-too-large');
+      this.sentResult = result;
       const encrypted = encryptBody(this.secrets.key, fs.readFileSync(zipFile));
       res.writeHead(200, {
         'Content-Type': 'application/octet-stream',
@@ -421,6 +428,11 @@ export class LogSyncServer {
       } catch {
         throw syncError(400, 'bad-zip');
       }
+      // The 512 MiB body cap bounds the compressed upload, but the zip can
+      // inflate far past that. Reject before decompressing anything, using the
+      // central-directory sizes AdmZip will allocate from.
+      if (archiveUncompressedBytes(zip) > SYNC_MAX_UNCOMPRESSED_BYTES)
+        throw syncError(413, 'archive-too-large');
       this.mergeStats = mergeLogsZip(this.options.dataDir, zip);
       this.respondJson(res, 200, { ok: true, ...this.mergeStats });
       this.setState('paired');

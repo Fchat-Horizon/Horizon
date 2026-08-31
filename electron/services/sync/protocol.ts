@@ -33,6 +33,16 @@ export const SYNC_TOKEN_LENGTH = 32;
 /** Upper bound for any (encrypted) HTTP body, to bound memory usage. */
 export const SYNC_MAX_BODY_BYTES = 512 * 1024 * 1024;
 
+/**
+ * Upper bound on the total *uncompressed* size of a received sync archive.
+ * The encrypted HTTP body is already capped at SYNC_MAX_BODY_BYTES, but a
+ * compressed zip can expand far beyond that once inflated. AdmZip allocates
+ * each entry's buffer from its declared uncompressed size, so the sum of the
+ * entry header sizes bounds how much memory the merge will allocate; anything
+ * larger is rejected before any entry is read. Must match Solstice's limit.
+ */
+export const SYNC_MAX_UNCOMPRESSED_BYTES = 2 * 1024 * 1024 * 1024;
+
 /** A session that has not completed a handshake expires after this long. */
 export const SYNC_SESSION_TIMEOUT_MS = 10 * 60 * 1000;
 
