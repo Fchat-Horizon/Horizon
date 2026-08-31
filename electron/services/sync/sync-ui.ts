@@ -106,10 +106,13 @@ function applyServerState(vm: ExporterVm, server: LogSyncServer): void {
 
 /**
  * Starts a sync session: spins up the single-use server and shows its QR
- * code. No-op if a session is already running.
+ * code. Concurrency is guarded by the authoritative main-process lock, not the
+ * renderer-local `activeServer`: the lock is taken synchronously before the
+ * first await below, so a rapid double-click or a second Data Manager window
+ * cannot open two servers. A start that finds a session already running is a
+ * silent no-op.
  */
 export async function startSyncSession(vm: ExporterVm): Promise<void> {
-  if (activeServer !== undefined) return;
   vm.syncError = undefined;
   vm.syncSummary = undefined;
 
@@ -124,12 +127,15 @@ export async function startSyncSession(vm: ExporterVm): Promise<void> {
     return;
   }
 
-  // Take the main-process lock before opening the server. This atomically
-  // refuses if a character is connected and, once held, blocks any character
-  // from connecting for the whole session, so a merge can never race the chat
-  // renderer's log writes. Placed after the early-return checks above so the
-  // lock is never acquired and then leaked by an early return.
-  if (!ipcRenderer.sendSync('sync-lock-acquire')) {
+  // Take the main-process lock before opening the server. This is the
+  // authoritative, cross-window guard: acquired synchronously (before the first
+  // await below), it atomically refuses if a character is connected and, once
+  // held, blocks any character from connecting for the whole session so a merge
+  // can never race the chat renderer's log writes. Placed after the early
+  // returns above so the lock is never acquired and then leaked by one.
+  const lock = ipcRenderer.sendSync('sync-lock-acquire');
+  if (lock === 'in-progress') return;
+  if (lock !== 'ok') {
     vm.syncError = l('sync.error.lockedWhileConnected');
     return;
   }

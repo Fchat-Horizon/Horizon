@@ -1672,8 +1672,16 @@ async function onReady(): Promise<void> {
   electron.ipcMain.on(
     'sync-lock-acquire',
     (e: IpcMainEvent & { sender: electron.WebContents }) => {
-      if (syncSessionOwner !== undefined || characters.length > 0) {
-        e.returnValue = false;
+      // Authoritative, cross-window guard. Returns a reason so the renderer can
+      // tell a redundant start (a session is already running, in this or another
+      // Data Manager window) apart from a genuine connected-character refusal:
+      // the former is a silent no-op, the latter surfaces an error.
+      if (syncSessionOwner !== undefined) {
+        e.returnValue = 'in-progress';
+        return;
+      }
+      if (characters.length > 0) {
+        e.returnValue = 'connected';
         return;
       }
       syncSessionOwner = e.sender.id;
@@ -1682,7 +1690,7 @@ async function onReady(): Promise<void> {
       e.sender.once('destroyed', () => {
         if (syncSessionOwner === e.sender.id) syncSessionOwner = undefined;
       });
-      e.returnValue = true;
+      e.returnValue = 'ok';
     }
   );
   electron.ipcMain.on(
