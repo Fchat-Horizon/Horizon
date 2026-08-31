@@ -366,8 +366,8 @@ export class LogSyncServer {
   }
 
   private async handleGetLogs(res: http.ServerResponse): Promise<void> {
-    if (this.state !== 'paired') throw syncError(409, 'not-paired');
     if (this.busy) throw syncError(409, 'busy');
+    if (this.state !== 'paired') throw syncError(409, 'not-paired');
     this.busy = true;
     // Suspend the idle timeout for the duration of the transfer; a large log
     // set may legitimately take longer than the paired-session idle window.
@@ -405,8 +405,8 @@ export class LogSyncServer {
     req: http.IncomingMessage,
     res: http.ServerResponse
   ): Promise<void> {
-    if (this.state !== 'paired') throw syncError(409, 'not-paired');
     if (this.busy) throw syncError(409, 'busy');
+    if (this.state !== 'paired') throw syncError(409, 'not-paired');
     this.busy = true;
     // Suspend the idle timeout for the duration of the transfer; a large
     // upload may legitimately take longer than the paired-session window.
