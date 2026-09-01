@@ -1922,6 +1922,7 @@
           });
           if (choice === 0) return;
         }
+        ImportExport.stopSyncSession(this);
         browserWindow.close();
       },
       toggleVanillaCharacters(): void {
@@ -1949,10 +1950,6 @@
           this.exportAnimationTimer = undefined;
         }
         this.exportAnimatedDots = '';
-      },
-      close(): void {
-        ImportExport.stopSyncSession(this);
-        browserWindow.close();
       },
       getThemeClass() {
         try {
