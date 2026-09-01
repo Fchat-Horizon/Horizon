@@ -1296,7 +1296,7 @@
                       {{ describeSyncState() }}
                     </p>
                     <p v-if="syncAddressText" class="text-muted small mb-3">
-                      {{ l('sync.addresses', syncAddressText) }}
+                      {{ l('sync.addresses', { addresses: syncAddressText }) }}
                     </p>
                     <div class="mb-3">
                       <label class="form-label label-full">

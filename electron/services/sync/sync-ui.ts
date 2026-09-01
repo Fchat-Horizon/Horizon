@@ -51,7 +51,7 @@ function describeError(code: string | undefined): string {
     case 'too-many-auth-failures':
       return l('sync.error.authFailures');
     default:
-      return l('sync.error.generic', code ?? 'unknown');
+      return l('sync.error.generic', { reason: code ?? 'unknown' });
   }
 }
 
@@ -62,19 +62,22 @@ function buildSummary(server: LogSyncServer): string {
   const parts: string[] = [];
   if (received !== undefined)
     parts.push(
-      l(
-        'sync.summary.received',
-        received.messagesAdded,
-        received.conversationsUpdated + received.conversationsCreated,
-        received.conversationsCreated
-      )
+      l('sync.summary.received', {
+        messages: received.messagesAdded,
+        conversations:
+          received.conversationsUpdated + received.conversationsCreated,
+        created: received.conversationsCreated
+      })
     );
   if (sent !== undefined)
     parts.push(
-      l('sync.summary.sent', sent.conversations, sent.characters.length)
+      l('sync.summary.sent', {
+        conversations: sent.conversations,
+        characters: sent.characters.length
+      })
     );
   if (parts.length === 0) parts.push(l('sync.summary.nothing'));
-  return l('sync.summary', peer, parts.join(' '));
+  return l('sync.summary', { device: peer, details: parts.join(' ') });
 }
 
 function applyServerState(vm: ExporterVm, server: LogSyncServer): void {
@@ -123,7 +126,9 @@ export async function startSyncSession(vm: ExporterVm): Promise<void> {
   }
   const dataDir = vm.settings.logDirectory;
   if (!dataDir) {
-    vm.syncError = l('sync.error.generic', 'no log directory configured');
+    vm.syncError = l('sync.error.generic', {
+      reason: 'no log directory configured'
+    });
     return;
   }
 
@@ -164,10 +169,9 @@ export async function startSyncSession(vm: ExporterVm): Promise<void> {
   } catch (error) {
     log.error('sync.session.start.error', error);
     stopSyncSession(vm);
-    vm.syncError = l(
-      'sync.error.generic',
-      error instanceof Error ? error.message : String(error)
-    );
+    vm.syncError = l('sync.error.generic', {
+      reason: error instanceof Error ? error.message : String(error)
+    });
   }
 }
 
@@ -201,11 +205,11 @@ export function describeSyncState(vm: ExporterVm): string {
     case 'waiting':
       return l('sync.state.waiting');
     case 'paired':
-      return l('sync.state.paired', peer);
+      return l('sync.state.paired', { device: peer });
     case 'sending':
-      return l('sync.state.sending', peer);
+      return l('sync.state.sending', { device: peer });
     case 'receiving':
-      return l('sync.state.receiving', peer);
+      return l('sync.state.receiving', { device: peer });
     case 'merging':
       return l('sync.state.merging');
     default:
