@@ -15,17 +15,23 @@
  * day index alongside. Pure Node - no `core` or `@electron/remote` imports,
  * mirroring `../exporter/backup-export-cli.ts`.
  *
- * Binary formats match `electron/filesystem.ts` exactly:
- * - Log record: u32LE epoch-seconds, u8 type, u8 senderLen, sender (utf8),
- *   u16LE textLen, text (utf8), u16LE trailer (= record size - 2).
- * - Index file: u8 nameLen, name (utf8), then per day-with-messages:
- *   u16LE day number, u40LE byte offset of that day's first record.
+ * Binary log conversion and `.idx` building are delegated to `../log-backup`
+ * (`binaryLogToJson`, `jsonLogToBinary`, `buildLogIndexBuffer`, which also
+ * back the exporter and CLI); this module adds only the message-level
+ * union-merge and the sync zip's path handling.
  */
 
 import type AdmZip from 'adm-zip';
 import * as fs from 'fs';
 import * as path from 'path';
-import { buildLogIndexBuffer, isFilesystemArtifact } from '../log-backup';
+import {
+  binaryLogToJson,
+  buildLogIndexBuffer,
+  isFilesystemArtifact,
+  jsonLogToBinary,
+  readLogIndexName
+} from '../log-backup';
+import type { JsonLogMessage } from '../log-backup';
 import type { LogMergeStats } from './protocol';
 
 // Highest Conversation.Message.Type enum value (Bcast); see chat/interfaces.ts
@@ -33,71 +39,18 @@ import type { LogMergeStats } from './protocol';
 // Node and must not import chat/.
 const MAX_MESSAGE_TYPE = 6;
 
-export interface LogMessage {
-  time: number;
-  type: number;
-  sender: string;
-  text: string;
-}
-
 export interface FileMergeResult {
   added: number;
   created: boolean;
 }
 
 /**
- * Parses a binary log buffer tolerantly: like `fixLogs`, reading stops at
- * the first truncated or corrupt record (validated via the size trailer)
- * and whatever was read up to that point is returned.
- */
-export function parseBinaryLog(buffer: Buffer): LogMessage[] {
-  const messages: LogMessage[] = [];
-  let offset = 0;
-  while (offset + 10 <= buffer.length) {
-    const time = buffer.readUInt32LE(offset);
-    const type = buffer.readUInt8(offset + 4);
-    const senderLength = buffer.readUInt8(offset + 5);
-    if (offset + 8 + senderLength > buffer.length) break;
-    const sender = buffer.toString(
-      'utf8',
-      offset + 6,
-      offset + 6 + senderLength
-    );
-    const textLength = buffer.readUInt16LE(offset + 6 + senderLength);
-    const textStart = offset + 8 + senderLength;
-    if (textStart + textLength + 2 > buffer.length) break;
-    const text = buffer.toString('utf8', textStart, textStart + textLength);
-    const size = senderLength + textLength + 10;
-    if (buffer.readUInt16LE(offset + size - 2) !== size - 2) break;
-    messages.push({ time, type, sender, text });
-    offset += size;
-  }
-  return messages;
-}
-
-export function serializeLogMessage(message: LogMessage): Buffer {
-  const senderLength = Buffer.byteLength(message.sender);
-  const textLength = Buffer.byteLength(message.text);
-  const buffer = Buffer.allocUnsafe(senderLength + textLength + 10);
-  buffer.writeUInt32LE(message.time, 0);
-  buffer.writeUInt8(message.type, 4);
-  buffer.writeUInt8(senderLength, 5);
-  buffer.write(message.sender, 6);
-  let offset = 6 + senderLength;
-  buffer.writeUInt16LE(textLength, offset);
-  buffer.write(message.text, offset + 2);
-  offset += 2 + textLength;
-  buffer.writeUInt16LE(offset, offset);
-  return buffer;
-}
-
-/**
  * A message is only mergeable if it round-trips through the binary format:
  * u32 timestamp, u8 type, u8 sender length, u16 text length.
  */
-export function isValidLogMessage(value: unknown): value is LogMessage {
+export function isValidLogMessage(value: unknown): value is JsonLogMessage {
   if (value === null || typeof value !== 'object') return false;
-  const m = value as LogMessage;
+  const m = value as JsonLogMessage;
   return (
     Number.isInteger(m.time) &&
     m.time >= 0 &&
@@ -115,18 +68,13 @@ export function isValidLogMessage(value: unknown): value is LogMessage {
 /** Reads the conversation display name stored in a `.idx` file. */
 export function readIndexName(idxFile: string): string | undefined {
   try {
-    const content = fs.readFileSync(idxFile);
-    if (content.length < 1) return undefined;
-    const nameLength = content.readUInt8(0);
-    if (content.length < 1 + nameLength) return undefined;
-    const name = content.toString('utf8', 1, 1 + nameLength);
-    return name.length > 0 ? name : undefined;
+    return readLogIndexName(fs.readFileSync(idxFile));
   } catch {
     return undefined;
   }
 }
 
-function dedupeKey(message: LogMessage): string {
+function dedupeKey(message: JsonLogMessage): string {
   return `${message.time}\u0000${message.type}\u0000${message.sender}\u0000${message.text}`;
 }
 
@@ -143,17 +91,17 @@ function dedupeKey(message: LogMessage): string {
 export function mergeLogFile(
   logsDir: string,
   key: string,
-  incoming: LogMessage[],
+  incoming: JsonLogMessage[],
   fallbackName?: string
 ): FileMergeResult {
   const file = path.join(logsDir, key);
   const exists = fs.existsSync(file);
-  const existing = exists ? parseBinaryLog(fs.readFileSync(file)) : [];
+  const existing = exists ? binaryLogToJson(fs.readFileSync(file)) : [];
 
   const seen = new Set<string>();
   for (const message of existing) seen.add(dedupeKey(message));
 
-  const added: LogMessage[] = [];
+  const added: JsonLogMessage[] = [];
   for (const message of incoming) {
     const dedupe = dedupeKey(message);
     if (seen.has(dedupe)) continue;
@@ -173,7 +121,7 @@ export function mergeLogFile(
       ? fallbackName
       : key);
 
-  const logBuffer = Buffer.concat(merged.map(serializeLogMessage));
+  const logBuffer = jsonLogToBinary(merged);
   // Build the index from the finished log BEFORE swapping it in, reusing the
   // exporter/backup builder so both agree on name truncation and day-range
   // handling. Building here can no longer abort after the log is replaced, so
