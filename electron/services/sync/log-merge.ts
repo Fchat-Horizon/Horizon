@@ -241,6 +241,30 @@ export function archiveUncompressedBytes(zip: AdmZip): number {
 }
 
 /**
+ * Parses one zip entry path against the sync zip layout
+ * `characters/{character}/logs/{key}.json` (see docs/log-sync-protocol.md),
+ * returning the character folder and conversation key. Returns undefined when
+ * the entry is not a well-formed, safe log file: wrong shape, a segment that
+ * could escape the data dir, a reserved folder (`settings`/`eicons`), an index
+ * sidecar, or filesystem litter a careless sender zipped up (Thumbs.db or
+ * .DS_Store shipped as a `.json`).
+ */
+function parseLogEntryPath(
+  entryName: string
+): { character: string; key: string } | undefined {
+  const segments = entryName.replace(/\\/g, '/').split('/');
+  if (segments.length !== 4) return undefined;
+  const [top, character, kind, file] = segments;
+  if (top !== 'characters' || kind !== 'logs' || !file.endsWith('.json'))
+    return undefined;
+  const key = file.slice(0, -5);
+  if (!isSafeSegment(character) || !isSafeSegment(key)) return undefined;
+  if (character === 'settings' || character === 'eicons') return undefined;
+  if (key.endsWith('.idx') || isFilesystemArtifact(key)) return undefined;
+  return { character, key };
+}
+
+/**
  * Merges every `characters/{char}/logs/{key}.json` entry of a sync zip
  * (the logs-only export format, see docs/log-sync-protocol.md) into the
  * local log store at `dataDir`.
@@ -257,24 +281,9 @@ export function mergeLogsZip(dataDir: string, zip: AdmZip): LogMergeStats {
 
   for (const entry of zip.getEntries()) {
     if (!entry || entry.isDirectory) continue;
-    const normalized = entry.entryName.replace(/\\/g, '/');
-    const segments = normalized.split('/');
-    if (
-      segments.length !== 4 ||
-      segments[0] !== 'characters' ||
-      segments[2] !== 'logs' ||
-      !segments[3].endsWith('.json')
-    )
-      continue;
-
-    const character = segments[1];
-    const key = segments[3].slice(0, -5);
-    if (!isSafeSegment(character) || !isSafeSegment(key)) continue;
-    if (character === 'settings' || character === 'eicons') continue;
-    if (key.endsWith('.idx')) continue;
-    // A sender that did not screen its log dir can ship Thumbs.db/.DS_Store as
-    // a `.json` entry; never materialize filesystem litter as a conversation.
-    if (isFilesystemArtifact(key)) continue;
+    const parsed = parseLogEntryPath(entry.entryName);
+    if (parsed === undefined) continue;
+    const { character, key } = parsed;
 
     let incoming: unknown;
     try {
@@ -292,6 +301,8 @@ export function mergeLogsZip(dataDir: string, zip: AdmZip): LogMergeStats {
       namesByCharacter.set(character, names);
     }
 
+    // isSafeSegment already blocks separators and `..`; re-assert here that the
+    // resolved log path still stays under dataDir before writing to it.
     const logsDir = resolveInside(dataDir, character, 'logs');
     resolveInside(dataDir, character, 'logs', key);
     const result = mergeLogFile(
