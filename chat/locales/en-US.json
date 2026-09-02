@@ -401,6 +401,7 @@
   "editor.format.underline": "Underline ({modifier}+U)\n\nMakes text appear with an underline beneath it.",
   "editor.format.url": "URL ({modifier}+L)\n\nCreates a clickable link to another page of your choosing.",
   "editor.format.user": "User ({modifier}+R)\n\nLinks to a character's profile.",
+  "editor.formatting": "Formatting\n\nShows the text formatting buttons.",
   "editor.help": "Help\n\nClick this button for a quick overview of slash commands.",
   "editor.preview": "Preview ({modifier})\n\nShows a preview of the BBCode you have typed, including any formatting errors.",
   "eicon.action": "Select EIcon",
