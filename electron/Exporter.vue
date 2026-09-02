@@ -1257,6 +1257,11 @@
                   class="settings-content"
                 >
                   <h5>{{ l('sync.title') }}</h5>
+                  <div
+                    class="text-muted border-top border-warning mb-4 w-75 bg-light p-3 bg-opacity-10"
+                  >
+                    {{ l('sync.betaInfo') }}
+                  </div>
                   <p class="text-muted">{{ l('sync.description') }}</p>
                   <div
                     v-if="anyCharactersConnected"
@@ -1311,11 +1316,28 @@
                           @focus="$event.target.select()"
                         />
                         <button
-                          class="btn btn-outline-secondary"
+                          class="btn"
+                          :class="
+                            syncPayloadCopied
+                              ? 'btn-success'
+                              : 'btn-outline-secondary'
+                          "
                           type="button"
                           @click="copySyncPayload"
+                          :label="
+                            syncPayloadCopied
+                              ? l('action.copy.success')
+                              : l('sync.copyPayload')
+                          "
                         >
-                          {{ l('sync.copyPayload') }}
+                          <i
+                            class="fa-fw"
+                            :class="
+                              syncPayloadCopied
+                                ? 'fa-check fa-solid'
+                                : 'fa-regular fa-copy'
+                            "
+                          ></i>
                         </button>
                       </div>
                     </div>
@@ -1460,6 +1482,7 @@
         syncState: 'idle',
         syncQrDataUrl: undefined as string | undefined,
         syncPayloadText: undefined as string | undefined,
+        syncPayloadCopied: false,
         syncAddressText: undefined as string | undefined,
         syncPeerName: undefined as string | undefined,
         syncSummary: undefined as string | undefined,
@@ -1830,6 +1853,10 @@
       },
       copySyncPayload(): void {
         ImportExport.copySyncPayload(this);
+        this.syncPayloadCopied = true;
+        window.setTimeout(() => {
+          this.syncPayloadCopied = false;
+        }, 3500);
       },
       describeSyncState(): string {
         return ImportExport.describeSyncState(this);

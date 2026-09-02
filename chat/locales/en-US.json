@@ -1035,6 +1035,7 @@
   "statusHistory.pinned": "Pinned statuses",
   "statusHistory.title": "Status message history",
   "sync.addresses": "Listening on {addresses}",
+  "sync.betaInfo": "Log syncing is an experimental feature. Please make sure you made a backup with the export menu on the left beforehand.",
   "sync.copyPayload": "Copy code",
   "sync.description": "Sync chat logs with Solstice on your phone over your local network. Both devices end up with the complete set of logs; settings, drafts and pins are left untouched. The other device must be signed into the same account.",
   "sync.error.accountMissing": "Sign in to your account at least once before syncing.",

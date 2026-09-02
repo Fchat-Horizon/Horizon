@@ -83,6 +83,7 @@ export interface ExporterVm {
   syncState: string;
   syncQrDataUrl: string | undefined;
   syncPayloadText: string | undefined;
+  syncPayloadCopied: boolean;
   syncAddressText: string | undefined;
   syncPeerName: string | undefined;
   syncSummary: string | undefined;

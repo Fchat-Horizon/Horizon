@@ -38,6 +38,7 @@ function resetSyncViewState(vm: ExporterVm): void {
   vm.syncState = 'idle';
   vm.syncQrDataUrl = undefined;
   vm.syncPayloadText = undefined;
+  vm.syncPayloadCopied = false;
   vm.syncAddressText = undefined;
   vm.syncPeerName = undefined;
 }
