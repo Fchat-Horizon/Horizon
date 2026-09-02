@@ -207,8 +207,12 @@ const commands: { readonly [key: string]: Command | undefined } = {
           'Inf took many lives during its reign. Thankfully, you have been spared.';
         return;
       } else if (dice.toLocaleLowerCase().includes('nan')) {
-        conv.infoText =
-          '"Yes, I\'d like NaN apples, please." They have played us for absolute fools.';
+        core.connection.close();
+        core.connection.throwError(
+          new Error(
+            '"Yes, I\'d like NaN apples." They have played us for absolute fools.'
+          )
+        );
         return;
       } else if (Conversation.isChannel(conv))
         core.connection.send('RLL', { channel: conv.channel.id, dice });
