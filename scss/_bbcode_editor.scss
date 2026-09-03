@@ -34,8 +34,8 @@
         margin: 0 -1px -1px 0;
         border: 1px solid var(--bs-border-color-translucent);
         border-radius: 0 !important;
-        min-width: 40px;
-        min-height: 40px;
+        min-width: 36px;
+        min-height: 36px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -167,14 +167,20 @@
     .bbcode-editor:has(.chat-text-box) & {
       display: none;
     }
+    // reopening it would put the toolbar back over the preview
+    .bbcode-editor.previewing & {
+      display: none;
+    }
   }
 }
 
 // only mobile chat hides the formatting buttons, so only it needs the toggle
 .aa-btn {
-  display: none;
+  .bbcode-toolbar .toolbar-buttons & {
+    display: none;
+  }
   @include media-breakpoint-down(md) {
-    .bbcode-editor:has(.chat-text-box) & {
+    .bbcode-editor:has(.chat-text-box) .toolbar-buttons & {
       display: inline-flex;
       font-weight: 700;
       letter-spacing: -0.02em;
@@ -193,6 +199,27 @@
   justify-content: flex-end;
   @include media-breakpoint-down(md) {
     flex: 1 49%;
+  }
+}
+
+// it looks better to leave the toolbar showing in the chat when previewing imo,
+// but only after preventing clicking the other buttons
+@include media-breakpoint-down(md) {
+  .bbcode-editor.previewing:has(.chat-text-box) .preview-disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+}
+
+.bbcode-editor.has-toolbar .preview-exit {
+  display: none;
+}
+// dedicated preview close button for bbcode editor in status/ads/filter reply settings when
+// previewing on those screens, hide the other editor buttons so that you can actually see the preview
+@include media-breakpoint-down(md) {
+  .bbcode-editor.has-toolbar.previewing:not(:has(.chat-text-box))
+    .preview-exit {
+    display: inline-flex;
   }
 }
 

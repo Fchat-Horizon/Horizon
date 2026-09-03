@@ -1,7 +1,11 @@
 <template>
   <div
     class="bbcode-editor"
-    :class="{ 'formatting-open': showFormatting }"
+    :class="{
+      'formatting-open': showFormatting,
+      previewing: preview,
+      'has-toolbar': hasToolbar
+    }"
     style="display: flex; flex-wrap: wrap; justify-content: flex-end"
     @keydown="onKeyDownGlobal"
     tabindex="1"
@@ -79,7 +83,7 @@
 
         <div
           class="btn btn-light btn-sm aa-btn"
-          :class="{ active: showFormatting }"
+          :class="{ active: showFormatting, 'preview-disabled': preview }"
           :title="l('editor.formatting')"
           role="button"
           tabindex="0"
@@ -92,7 +96,13 @@
         <div
           class="btn btn-light btn-sm"
           v-for="button in buttons"
-          :class="[button.outerClass, { 'format-btn': isFormatButton(button) }]"
+          :class="[
+            button.outerClass,
+            {
+              'format-btn': isFormatButton(button),
+              'preview-disabled': preview
+            }
+          ]"
           :title="l(button.titleKey, { modifier: shortcutModifierKey })"
           @click.prevent.stop="apply(button)"
         >
@@ -128,16 +138,18 @@
         @click="showToolbar = false"
       ></button>
     </div>
-    <div
+    <a
       @click="previewBBCode"
-      v-if="preview && !hasToolbar"
-      class="btn btn-light btn-sm bbcode-editor-preview active"
+      v-if="preview"
+      tabindex="0"
+      role="button"
+      class="btn btn-light btn-sm bbcode-editor-preview preview-exit"
       :title="
         l('editor.closePreview', { modifier: `${shortcutModifierKey}+Shift+P` })
       "
     >
       <i class="fa fa-eye-slash"></i>
-    </div>
+    </a>
     <div
       class="bbcode-editor-text-area bg-light"
       style="order: 100; width: 100%"
@@ -745,6 +757,8 @@
             targetElement.removeChild(targetElement.firstChild);
         } else {
           this.preview = true;
+          this.showToolbar = false;
+          this.colorPopupVisible = false;
           this.parser.storeWarnings = true;
           targetElement.appendChild(this.parser.parseEverything(this.text));
           this.previewWarnings = this.parser.warnings;
