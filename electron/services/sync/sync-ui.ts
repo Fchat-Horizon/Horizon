@@ -73,6 +73,12 @@ function buildSummary(server: LogSyncServer): string {
         characters: sent.characters.length
       })
     );
+  if (received && received.conversationsSkipped > 0)
+    parts.push(
+      l('sync.summary.damaged', {
+        conversations: received.conversationsSkipped
+      })
+    );
   if (parts.length === 0) parts.push(l('sync.summary.nothing'));
   return l('sync.summary', { device: peer, details: parts.join(' ') });
 }

@@ -1057,6 +1057,7 @@
   "sync.state.waiting": "Waiting for a device to connect...",
   "sync.stop": "Stop session",
   "sync.summary": "Sync with {device} complete. {details}",
+  "sync.summary.damaged": "Skipped {conversations} damaged conversation(s). Run Fix Logs before syncing again.",
   "sync.summary.nothing": "No logs were transferred.",
   "sync.summary.received": "Received {messages} new message(s) in {conversations} conversation(s) ({created} new).",
   "sync.summary.sent": "Sent {conversations} conversation(s) across {characters} character(s).",

@@ -92,6 +92,8 @@ export interface LogMergeStats {
   conversationsUpdated: number;
   messagesAdded: number;
   charactersTouched: number;
+  /** Damaged local conversations left untouched; run Fix Logs before retrying. */
+  conversationsSkipped: number;
 }
 
 export interface SyncSessionSecrets {

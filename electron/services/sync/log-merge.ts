@@ -26,6 +26,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {
   binaryLogToJson,
+  DamagedLogError,
   buildLogIndexBuffer,
   isFilesystemArtifact,
   jsonLogToBinary,
@@ -42,6 +43,7 @@ const MAX_MESSAGE_TYPE = 6;
 export interface FileMergeResult {
   added: number;
   created: boolean;
+  skipped?: boolean;
 }
 
 /**
@@ -59,9 +61,11 @@ export function isValidLogMessage(value: unknown): value is JsonLogMessage {
     m.type >= 0 &&
     m.type <= MAX_MESSAGE_TYPE &&
     typeof m.sender === 'string' &&
+    Buffer.from(m.sender, 'utf8').toString('utf8') === m.sender &&
     Buffer.byteLength(m.sender) <= 0xff &&
     typeof m.text === 'string' &&
-    Buffer.byteLength(m.text) <= 0xffff
+    Buffer.from(m.text, 'utf8').toString('utf8') === m.text &&
+    Buffer.byteLength(m.sender) + Buffer.byteLength(m.text) + 8 <= 0xffff
   );
 }
 
@@ -75,7 +79,12 @@ export function readIndexName(idxFile: string): string | undefined {
 }
 
 function dedupeKey(message: JsonLogMessage): string {
-  return `${message.time}\u0000${message.type}\u0000${message.sender}\u0000${message.text}`;
+  return JSON.stringify([
+    message.time,
+    message.type,
+    message.sender,
+    message.text
+  ]);
 }
 
 /**
@@ -96,7 +105,18 @@ export function mergeLogFile(
 ): FileMergeResult {
   const file = path.join(logsDir, key);
   const exists = fs.existsSync(file);
-  const existing = exists ? binaryLogToJson(fs.readFileSync(file)) : [];
+  let existing: JsonLogMessage[];
+  try {
+    const original = exists ? fs.readFileSync(file) : Buffer.alloc(0);
+    existing = binaryLogToJson(original, true);
+    // Invalid UTF-8 must not silently become replacement characters either.
+    if (!jsonLogToBinary(existing).equals(original))
+      throw new DamagedLogError();
+  } catch (error) {
+    if (error instanceof DamagedLogError)
+      return { added: 0, created: false, skipped: true };
+    throw error;
+  }
 
   const seen = new Set<string>();
   for (const message of existing) seen.add(dedupeKey(message));
@@ -129,12 +149,47 @@ export function mergeLogFile(
   const indexBuffer = buildLogIndexBuffer(name, logBuffer);
 
   fs.mkdirSync(logsDir, { recursive: true });
-  const tempFile = `${file}.syncmerge`;
-  fs.writeFileSync(tempFile, logBuffer);
-  fs.renameSync(tempFile, file);
+  // Stage both files and retain the old pair until installation succeeds.
+  // Remove the old index before replacing the log: even if rollback fails,
+  // readers must never use old offsets with new log bytes.
+  const staging = fs.mkdtempSync(path.join(logsDir, '.sync-'));
+  const stagedLog = path.join(staging, 'new-log');
+  const stagedIndex = path.join(staging, 'new-index');
+  const oldLog = path.join(staging, 'old-log');
+  const oldIndex = path.join(staging, 'old-index');
   const indexFile = `${file}.idx`;
-  if (indexBuffer) fs.writeFileSync(indexFile, indexBuffer);
-  else if (fs.existsSync(indexFile)) fs.unlinkSync(indexFile);
+  let indexMoved = false;
+  let logReplaced = false;
+  let preserveRecovery = false;
+  try {
+    fs.writeFileSync(stagedLog, logBuffer, { mode: 0o600 });
+    if (indexBuffer)
+      fs.writeFileSync(stagedIndex, indexBuffer, { mode: 0o600 });
+    if (exists) fs.copyFileSync(file, oldLog);
+    if (fs.existsSync(indexFile)) {
+      fs.renameSync(indexFile, oldIndex);
+      indexMoved = true;
+    }
+    fs.renameSync(stagedLog, file);
+    logReplaced = true;
+    if (indexBuffer) fs.renameSync(stagedIndex, indexFile);
+  } catch (error) {
+    try {
+      if (logReplaced) {
+        if (exists) fs.renameSync(oldLog, file);
+        else fs.unlinkSync(file);
+      }
+      if (indexMoved) fs.renameSync(oldIndex, indexFile);
+    } catch {
+      preserveRecovery = true;
+      throw new Error(
+        `Could not restore log files; originals are in ${staging}. Run Fix Logs before syncing again.`
+      );
+    }
+    throw error;
+  } finally {
+    if (!preserveRecovery) fs.rmSync(staging, { recursive: true, force: true });
+  }
 
   return { added: added.length, created: !exists };
 }
@@ -148,7 +203,10 @@ function isSafeSegment(segment: string): boolean {
   if (segment === '.' || segment === '..') return false;
   if (segment.startsWith('.')) return false;
   if (/[/\\]/.test(segment)) return false;
-  if (segment.includes('\u0000')) return false;
+  if (/[<>:"|?*\u0000-\u001f]/.test(segment)) return false;
+  if (/[. ]$/.test(segment)) return false;
+  if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(segment))
+    return false;
   return true;
 }
 
@@ -163,7 +221,9 @@ function resolveInside(baseDir: string, ...segments: string[]): string {
 function parseNamesEntry(zip: AdmZip, character: string): Map<string, string> {
   const names = new Map<string, string>();
   const entry = zip.getEntry(`characters/${character}/logs-names.json`);
-  if (!entry) return names;
+  // AdmZip does not bound inflate output when the declared size is zero.
+  // Empty files cannot contain JSON, so never decompress them.
+  if (!entry || entry.header.size === 0) return names;
   try {
     const parsed: unknown = JSON.parse(entry.getData().toString('utf8'));
     if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed))
@@ -207,8 +267,10 @@ function parseLogEntryPath(
     return undefined;
   const key = file.slice(0, -5);
   if (!isSafeSegment(character) || !isSafeSegment(key)) return undefined;
-  if (character === 'settings' || character === 'eicons') return undefined;
-  if (key.endsWith('.idx') || isFilesystemArtifact(key)) return undefined;
+  if (['settings', 'eicons'].includes(character.toLowerCase()))
+    return undefined;
+  if (key.toLowerCase().endsWith('.idx') || isFilesystemArtifact(key))
+    return undefined;
   return { character, key };
 }
 
@@ -222,13 +284,14 @@ export function mergeLogsZip(dataDir: string, zip: AdmZip): LogMergeStats {
     conversationsCreated: 0,
     conversationsUpdated: 0,
     messagesAdded: 0,
-    charactersTouched: 0
+    charactersTouched: 0,
+    conversationsSkipped: 0
   };
   const touched = new Set<string>();
   const namesByCharacter = new Map<string, Map<string, string>>();
 
   for (const entry of zip.getEntries()) {
-    if (!entry || entry.isDirectory) continue;
+    if (!entry || entry.isDirectory || entry.header.size === 0) continue;
     const parsed = parseLogEntryPath(entry.entryName);
     if (parsed === undefined) continue;
     const { character, key } = parsed;
@@ -259,6 +322,7 @@ export function mergeLogsZip(dataDir: string, zip: AdmZip): LogMergeStats {
       messages,
       names.get(key.toLowerCase())
     );
+    if (result.skipped) stats.conversationsSkipped++;
     if (result.added > 0) {
       stats.messagesAdded += result.added;
       if (result.created) stats.conversationsCreated++;

@@ -98,9 +98,12 @@ The request body (before encryption) is a zip archive in the same format, contai
   "conversationsCreated": 3,
   "conversationsUpdated": 17,
   "messagesAdded": 2941,
-  "charactersTouched": 2
+  "charactersTouched": 2,
+  "conversationsSkipped": 0
 }
 ```
+
+`conversationsSkipped` counts damaged local conversations that were left untouched. Horizon tells the user to run Fix Logs before retrying those conversations. Other conversations can still merge.
 
 ### 4. `POST /v1/finish`
 
@@ -136,11 +139,11 @@ characters/<Character Name>/logs-names.json
   ```
 
   - `time`: unix epoch **seconds** (unsigned 32-bit).
-  - `type`: `Conversation.Message.Type` enum value (0 Message, 1 Action, 2 Ad, 3 Roll, 4 Warn, 5 Event, 6 Bcast). Must fit in one byte.
+  - `type`: `Conversation.Message.Type` enum value (0 Message, 1 Action, 2 Ad, 3 Roll, 4 Warn, 5 Event, 6 Bcast). Only values 0 through 6 are supported.
   - `sender`: character name; empty string for `Event` messages. Max 255 UTF-8 bytes.
-  - `text`: message text, max 65535 UTF-8 bytes.
+  - `text`: message text. The combined UTF-8 size of `sender` and `text` plus 8 bytes of record overhead must not exceed 65535 bytes.
 
-  Messages violating these bounds are skipped by the receiver.
+  Messages violating these bounds or containing invalid Unicode are skipped by the receiver.
 
 - `logs-names.json` maps conversation keys to display names (channels have ids as keys, so this is how the channel _title_ survives to a device that has never seen the channel):
 
@@ -157,14 +160,15 @@ Both sides apply the same merge, per conversation:
 1. Deduplicate on the exact tuple `(time, type, sender, text)`; messages already present locally are ignored.
 2. Insert the remaining messages sorted by `time` (stable: on equal timestamps, locally-stored messages come first, then incoming ones in their original order).
 3. A conversation that does not exist locally is created; its display name comes from `logs-names.json`, falling back to the conversation key.
-4. If nothing is new, the conversation's storage must not be rewritten.
+4. If a local binary log has a malformed record or trailing data, skip that conversation in its entirety and ask the user to run Fix Logs. Never rewrite a parsed prefix over a damaged log.
+5. If nothing is new, the conversation's storage must not be rewritten.
 
 The merge is idempotent: syncing twice adds nothing the second time.
 
-On Horizon, merged conversations are rewritten in the binary log format of `electron/filesystem.ts` and the `.idx` day index is rebuilt in the same pass (`electron/services/sync/log-merge.ts`).
+On Horizon, merged conversations are rewritten in the binary log format of `electron/filesystem.ts` and the `.idx` day index is rebuilt in the same pass (`electron/services/sync/log-merge.ts`). Both replacements are prepared before changing the original files. If installation fails, Horizon restores the original pair. The old index is removed before replacing the log so stale offsets cannot accompany a new log. This is not a filesystem transaction across two files: interruption by a process or machine crash can leave a missing index requiring Fix Logs; recovery copies remain in a hidden `.sync-*` directory if installation or rollback is interrupted.
 
 ## Constraints for Horizon
 
 - Device sync, ZIP import, vanilla import and manual export share an exclusive main-process lease. These operations and a connected character are mutually exclusive: a session cannot start while any character is connected, and while a session holds the lock the main process refuses every character connection until the session ends. Both checks run synchronously on the main-process thread, so there is no window in which a character could connect during a merge and race the chat renderer's append-only log writes and in-memory day index.
 - Encrypted bodies are capped at 512 MiB, in either direction (the outgoing `GET /v1/logs` archive is bounded to the same limit before it is read into memory).
-- A received archive's total uncompressed size is capped at 2 GiB, checked from the zip's central directory before any entry is decompressed, so a compressed upload cannot expand without bound in memory. Solstice must apply the same limit for the two sides to agree.
+- A received archive's total uncompressed size is capped at 2 GiB, checked from the ZIP central directory before any entry is decompressed. Entries declaring zero size are skipped without inflating them. Solstice must apply the same limit for the two sides to agree.
