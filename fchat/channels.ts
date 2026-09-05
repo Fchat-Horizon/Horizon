@@ -25,6 +25,10 @@ function sortMember(
     const other = array[i];
     if (other.character.isChatOp && !member.character.isChatOp) continue;
     if (member.character.isChatOp && !other.character.isChatOp) break;
+    if (member.character.isIgnored && !other.character.isIgnored) continue;
+    if (other.character.isIgnored && !member.character.isIgnored) break;
+    if (member.character.isHidden && !other.character.isHidden) continue;
+    if (other.character.isHidden && !member.character.isHidden) break;
     if (other.rank > member.rank) continue;
     if (member.rank > other.rank) break;
     if (!member.character.isFriend) {
