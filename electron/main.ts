@@ -77,6 +77,13 @@ let mainWindow: electron.BrowserWindow | undefined;
 remoteMain.initialize();
 
 const characters: string[] = [];
+// A main-process lease serializes Data Manager operations with character
+// connections. A token prevents a late release from ending a newer operation.
+let dataSession:
+  | { owner: number; token: number; cleanup: () => void }
+  | undefined;
+let nextDataSessionToken = 0;
+let lastSuccessfulAccount: string | undefined;
 let autoBackupScheduler:
   | import('./services/exporter/auto-backup').AutoBackupScheduler
   | undefined;
@@ -1645,8 +1652,12 @@ async function onReady(): Promise<void> {
   electron.ipcMain.on(
     'connect',
     (e: IpcMainEvent & { sender: electron.WebContents }, character: string) => {
+      if (dataSession !== undefined) {
+        e.returnValue = 'data-operation-in-progress';
+        return;
+      }
       if (characters.indexOf(character) !== -1) {
-        e.returnValue = false;
+        e.returnValue = 'already-connected';
         return;
       }
       characters.push(character);
@@ -1655,6 +1666,46 @@ async function onReady(): Promise<void> {
       if (autoBackupScheduler) autoBackupScheduler.runOnConnect();
     }
   );
+  electron.ipcMain.on('login-succeeded', (_event, account: string) => {
+    if (typeof account === 'string' && account.trim())
+      lastSuccessfulAccount = account.trim();
+  });
+  electron.ipcMain.on('get-last-successful-account', event => {
+    event.returnValue = lastSuccessfulAccount ?? '';
+  });
+
+  electron.ipcMain.on('data-session-acquire', event => {
+    if (dataSession !== undefined) {
+      event.returnValue = { error: 'in-progress' };
+      return;
+    }
+    if (characters.length > 0) {
+      event.returnValue = { error: 'connected' };
+      return;
+    }
+    const owner = event.sender.id;
+    const token = ++nextDataSessionToken;
+    const release = (): void => {
+      if (dataSession?.token !== token) return;
+      dataSession.cleanup();
+      dataSession = undefined;
+    };
+    const cleanup = (): void => {
+      event.sender.removeListener('destroyed', release);
+      event.sender.removeListener('render-process-gone', release);
+    };
+    dataSession = { owner, token, cleanup };
+    event.sender.once('destroyed', release);
+    event.sender.once('render-process-gone', release);
+    event.returnValue = { token };
+  });
+  electron.ipcMain.on('data-session-release', (event, token: number) => {
+    if (dataSession?.owner === event.sender.id && dataSession.token === token) {
+      dataSession.cleanup();
+      dataSession = undefined;
+    }
+    event.returnValue = true;
+  });
   electron.ipcMain.on(
     'dictionary-add',
     (_event: IpcMainEvent, word: string) => {

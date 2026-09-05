@@ -759,6 +759,7 @@
             this.error = data.error;
             return;
           }
+          electron.ipcRenderer.send('login-succeeded', this.settings.account);
           if (this.saveLogin) {
             electron.ipcRenderer.send(
               'save-login',
@@ -775,11 +776,18 @@
           Socket.host = this.settings.host;
 
           core.connection.onEvent('connecting', async () => {
+            const connectResult = electron.ipcRenderer.sendSync(
+              'connect',
+              core.connection.character
+            );
+            // Data Manager operations hold the main-process lease. Block
+            // connections in every environment while files are being changed.
+            if (connectResult === 'data-operation-in-progress') {
+              core.notifications.alert(l('login.dataOperationInProgress'));
+              return core.connection.close();
+            }
             if (
-              !electron.ipcRenderer.sendSync(
-                'connect',
-                core.connection.character
-              ) &&
+              connectResult !== true &&
               process.env.NODE_ENV === 'production'
             ) {
               core.notifications.alert(l('login.alreadyLoggedIn'));
@@ -839,8 +847,16 @@
         }
       },
       fixLogs(): void {
-        if (!electron.ipcRenderer.sendSync('connect', this.fixCharacter))
-          return core.notifications.alert(l('login.alreadyLoggedIn'));
+        const connectResult = electron.ipcRenderer.sendSync(
+          'connect',
+          this.fixCharacter
+        );
+        if (connectResult !== true)
+          return core.notifications.alert(
+            connectResult === 'data-operation-in-progress'
+              ? l('login.dataOperationInProgress')
+              : l('login.alreadyLoggedIn')
+          );
         try {
           fixLogs(this.fixCharacter);
           core.notifications.alert(l('fixLogs.success'));

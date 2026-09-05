@@ -22,6 +22,7 @@ export type { ExportManifest } from './exporter/manifest';
 export * from './importer/backup-import';
 export * from './log-backup';
 export * as SlimcatImporter from './importer/importer';
+export * from './sync/sync-ui';
 
 export type {
   VanillaContext,

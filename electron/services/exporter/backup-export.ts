@@ -1,3 +1,4 @@
+import { acquireDataSession } from '../data-session';
 /**
  * @license MPL-2.0
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -317,8 +318,10 @@ export async function runExport(vm: ExporterVm): Promise<void> {
   vm.exportTotal = 0;
 
   let outputPath: string | undefined;
+  let release: (() => void) | undefined;
 
   try {
+    release = acquireDataSession();
     const saveResult = await remote.dialog.showSaveDialog({
       title: 'Save Horizon Export', // TODO: localize
       defaultPath: getExportDefaultPath(),
@@ -456,6 +459,7 @@ export async function runExport(vm: ExporterVm): Promise<void> {
       } catch {}
     }
   } finally {
+    release?.();
     vm.exportInProgress = false;
     vm.exportProgress = undefined;
     vm.exportCount = undefined;

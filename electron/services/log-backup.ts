@@ -68,12 +68,22 @@ function localDay(timeSeconds: number): number {
   return Math.floor(date.getTime() / dayMs - date.getTimezoneOffset() / 1440);
 }
 
+export class DamagedLogError extends Error {
+  constructor() {
+    super('Damaged conversation log. Run Fix Logs before syncing again.');
+  }
+}
+
 /**
  * Validates trailing length markers the way fixLogs does and stops at the
  * first malformed record, so non-log files yield no messages instead of
- * garbage.
+ * garbage. Strict parsing rejects incomplete records and invalid UTF-8 so a
+ * merge cannot rewrite only the readable prefix of a damaged log.
  */
-export function binaryLogToJson(buffer: Buffer): JsonLogMessage[] {
+export function binaryLogToJson(
+  buffer: Buffer,
+  strict = false
+): JsonLogMessage[] {
   const messages: JsonLogMessage[] = [];
   let offset = 0;
   while (offset + 10 <= buffer.length) {
@@ -92,9 +102,20 @@ export function binaryLogToJson(buffer: Buffer): JsonLogMessage[] {
     if (next > buffer.length) break;
     if (buffer.readUInt16LE(next - 2) !== next - offset - 2) break;
     const text = buffer.toString('utf8', textStart, textStart + textLength);
+    if (
+      strict &&
+      (!Buffer.from(sender, 'utf8').equals(
+        buffer.subarray(offset + 6, offset + 6 + senderLength)
+      ) ||
+        !Buffer.from(text, 'utf8').equals(
+          buffer.subarray(textStart, textStart + textLength)
+        ))
+    )
+      throw new DamagedLogError();
     messages.push({ time, type, sender, text });
     offset = next;
   }
+  if (strict && offset !== buffer.length) throw new DamagedLogError();
   return messages;
 }
 
