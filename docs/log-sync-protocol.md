@@ -171,4 +171,20 @@ On Horizon, merged conversations are rewritten in the binary log format of `elec
 
 - Device sync, ZIP import, vanilla import and manual export share an exclusive main-process lease. These operations and a connected character are mutually exclusive: a session cannot start while any character is connected, and while a session holds the lock the main process refuses every character connection until the session ends. Both checks run synchronously on the main-process thread, so there is no window in which a character could connect during a merge and race the chat renderer's append-only log writes and in-memory day index.
 - Encrypted bodies are capped at 512 MiB, in either direction (the outgoing `GET /v1/logs` archive is bounded to the same limit before it is read into memory).
-- A received archive's total uncompressed size is capped at 2 GiB, checked from the ZIP central directory before any entry is decompressed. Entries declaring zero size are skipped without inflating them. Solstice must apply the same limit for the two sides to agree.
+- An archive's total uncompressed size in either direction is capped at 2 GiB. Incoming sizes are checked from the ZIP central directory before decompression; entries declaring zero size are skipped without inflating them. Outgoing JSON sizes are counted as each entry is prepared, and entries are compressed sequentially to avoid queuing the entire archive in memory. Solstice must apply the same limit for the two sides to agree.
+
+Outgoing archives use a private temporary directory and owner-only ZIP permissions. Stop cancels archive generation; a cancelled operation cannot return a terminal session to `paired`. Download state and the suspended session idle timer last until the response finishes sending. A stalled download socket is closed after 2 minutes of inactivity, while a progressing transfer can take longer.
+
+## Local verification
+
+These checks transpile TypeScript in memory and create their fixtures in temporary directories; they do not build the application or use real chat logs:
+
+```sh
+TZ=America/New_York node scripts/check-log-sync.cjs
+node scripts/check-log-sync-http.cjs
+pnpm typecheck
+pnpm i18n:check
+pnpm check
+```
+
+For the manual Electron/Solstice pass, verify that signing in with Save Login disabled permits sync after disconnecting the character; that a second Data Manager window cannot import or start another sync during the session; and that Stop, window close and interrupted phone connections cleanly allow a fresh session. Include a real transfer in both directions and check the merged history in each client.

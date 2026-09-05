@@ -28,6 +28,7 @@ const {
   mergeLogFile,
   mergeLogsZip
 } = require('../electron/services/sync/log-merge.ts');
+const { buildLogsZip } = require('../electron/services/sync/logs-zip.ts');
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'horizon-sync-check-'));
 let count = 0;
 const message = (text, time = 1700000000) => ({
@@ -285,6 +286,37 @@ const seed = (name, bytes) => {
       assert.equal(result.conversationsSkipped, 1);
       assert.equal(result.conversationsCreated, 1);
       assert.equal(fs.readFileSync(path.join(dir, 'damaged'), 'utf8'), 'bad');
+    }
+  );
+  await run(
+    'outgoing ZIP permissions, content filtering and cancellation',
+    async () => {
+      const dataDir = path.join(root, 'outgoing');
+      const dir = path.join(dataDir, 'Alice', 'logs');
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(
+        path.join(dir, 'bob'),
+        jsonLogToBinary([message('hello')])
+      );
+      fs.writeFileSync(path.join(dir, 'Thumbs.db'), 'artifact');
+      fs.writeFileSync(path.join(dir, 'bob.IDX'), 'sidecar');
+      const out = path.join(root, 'output.zip');
+      assert.equal((await buildLogsZip(dataDir, out)).conversations, 1);
+      if (process.platform !== 'win32')
+        assert.equal(fs.statSync(out).mode & 0o777, 0o600);
+      const zip = new AdmZip(out);
+      assert.deepEqual(
+        JSON.parse(zip.getEntry('characters/Alice/logs/bob.json').getData()),
+        [message('hello')]
+      );
+      const controller = new AbortController();
+      const pending = buildLogsZip(
+        dataDir,
+        path.join(root, 'cancelled.zip'),
+        controller.signal
+      );
+      controller.abort();
+      await assert.rejects(pending);
     }
   );
   console.log(`${count} log-sync regression checks passed.`);

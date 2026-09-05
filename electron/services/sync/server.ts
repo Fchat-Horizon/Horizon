@@ -33,6 +33,8 @@ import {
   SYNC_ACTIVE_IDLE_TIMEOUT_MS,
   SYNC_MAX_AUTH_FAILURES,
   SYNC_MAX_BODY_BYTES,
+  SYNC_IV_LENGTH,
+  SYNC_TAG_LENGTH,
   SYNC_MAX_UNCOMPRESSED_BYTES,
   SYNC_PROTOCOL_VERSION,
   SYNC_SESSION_TIMEOUT_MS
@@ -92,6 +94,19 @@ export class LogSyncServer {
   private idleTimer: NodeJS.Timeout | undefined;
   private authFailures = 0;
   private busy = false;
+  private readonly cancellation = new AbortController();
+
+  private get ended(): boolean {
+    return (
+      this.state === 'finished' ||
+      this.state === 'error' ||
+      this.state === 'stopped'
+    );
+  }
+
+  private ensureActive(): void {
+    if (this.ended) throw syncError(410, 'session-ended');
+  }
 
   private constructor(
     options: LogSyncServerOptions,
@@ -140,6 +155,7 @@ export class LogSyncServer {
     if (this.state === 'stopped' || this.state === 'error') return;
     if (this.state !== 'finished') this.state = finalState;
     this.clearIdleTimer();
+    this.cancellation.abort();
     this.server.close();
     for (const socket of this.sockets) socket.destroy();
     this.sockets.clear();
@@ -147,9 +163,11 @@ export class LogSyncServer {
   }
 
   private fail(code: string): void {
+    if (this.ended) return;
     this.errorCode = code;
     this.clearIdleTimer();
     this.state = 'error';
+    this.cancellation.abort();
     this.server.close();
     for (const socket of this.sockets) socket.destroy();
     this.sockets.clear();
@@ -197,6 +215,7 @@ export class LogSyncServer {
   }
 
   private setState(state: SyncServerState): void {
+    if (this.ended) return;
     this.state = state;
     this.notify();
   }
@@ -318,6 +337,7 @@ export class LogSyncServer {
 
   private async readEncryptedBody(req: http.IncomingMessage): Promise<Buffer> {
     const raw = await this.readBody(req);
+    this.ensureActive();
     try {
       return decryptBody(this.secrets.key, raw);
     } catch {
@@ -336,6 +356,10 @@ export class LogSyncServer {
   ): Promise<void> {
     if (this.state !== 'waiting') throw syncError(409, 'already-paired');
     const body = await this.readEncryptedBody(req);
+    // A second slow request may have passed the initial check before the
+    // first handshake finished. Claim pairing only after the await.
+    this.ensureActive();
+    if (this.state !== 'waiting') throw syncError(409, 'already-paired');
     let handshake: SyncHandshakeRequest;
     try {
       handshake = JSON.parse(body.toString('utf8')) as SyncHandshakeRequest;
@@ -343,6 +367,8 @@ export class LogSyncServer {
       throw syncError(400, 'bad-json');
     }
     if (
+      handshake === null ||
+      typeof handshake !== 'object' ||
       typeof handshake.account !== 'string' ||
       typeof handshake.deviceName !== 'string'
     )
@@ -377,33 +403,87 @@ export class LogSyncServer {
     // A client that vanishes mid-download makes the response stream emit
     // ECONNRESET/EPIPE; swallow it so an unhandled 'error' can't crash us.
     res.on('error', () => {});
-    const zipFile = path.join(
-      this.options.tempDir,
-      `horizon-sync-out-${process.pid}-${Date.now()}.zip`
-    );
+    const transfer = new AbortController();
+    const cancel = (): void => transfer.abort();
+    const disconnected = (): void => {
+      if (!res.writableFinished) cancel();
+    };
+    this.cancellation.signal.addEventListener('abort', cancel, { once: true });
+    res.on('close', disconnected);
+    let tempDir: string | undefined;
     try {
-      const result = await buildLogsZip(this.options.dataDir, zipFile);
+      this.ensureActive();
+      fs.mkdirSync(this.options.tempDir, { recursive: true });
+      tempDir = fs.mkdtempSync(path.join(this.options.tempDir, 'session-'));
+      const zipFile = path.join(tempDir, 'logs.zip');
+      const result = await buildLogsZip(
+        this.options.dataDir,
+        zipFile,
+        transfer.signal
+      );
+      this.ensureActive();
+      transfer.signal.throwIfAborted();
       // The zip is streamed to disk; refuse to pull an oversized archive (plus
       // its encrypt copies) into memory. Bounds the outgoing side to the same
       // compressed body cap as an incoming upload.
-      if (fs.statSync(zipFile).size > SYNC_MAX_BODY_BYTES)
+      if (
+        fs.statSync(zipFile).size + SYNC_IV_LENGTH + SYNC_TAG_LENGTH >
+        SYNC_MAX_BODY_BYTES
+      )
         throw syncError(413, 'archive-too-large');
-      this.sentResult = result;
       const encrypted = encryptBody(this.secrets.key, fs.readFileSync(zipFile));
       res.writeHead(200, {
         'Content-Type': 'application/octet-stream',
         'Content-Length': encrypted.length
       });
-      res.end(encrypted);
+      await new Promise<void>((resolve, reject) => {
+        const cleanup = (): void => {
+          res.removeListener('finish', finished);
+          res.removeListener('close', closed);
+          res.removeListener('error', failed);
+          res.setTimeout(0);
+        };
+        const finished = (): void => {
+          // Node may emit finish after a destroyed response drops buffered
+          // bytes. Only an intact response counts as a completed download.
+          if (res.destroyed) {
+            failed();
+            return;
+          }
+          cleanup();
+          resolve();
+        };
+        const failed = (): void => {
+          cleanup();
+          reject(syncError(400, 'send-failed'));
+        };
+        const closed = (): void => {
+          if (!res.writableFinished) failed();
+        };
+        res.once('finish', finished);
+        res.once('close', closed);
+        res.once('error', failed);
+        // Socket inactivity, not total transfer duration: a slow but moving
+        // download can take longer than the paired-session idle window.
+        res.setTimeout(SYNC_ACTIVE_IDLE_TIMEOUT_MS, () => {
+          failed();
+          res.destroy();
+        });
+        res.end(encrypted);
+      });
+      this.ensureActive();
+      this.sentResult = result;
       this.setState('paired');
     } catch (error) {
       this.recoverToPaired();
       throw error;
     } finally {
+      this.cancellation.signal.removeEventListener('abort', cancel);
+      res.removeListener('close', disconnected);
       this.busy = false;
       this.bumpIdleTimer();
       try {
-        fs.rmSync(zipFile, { force: true });
+        if (tempDir) fs.rmSync(tempDir, { recursive: true, force: true });
       } catch {}
     }
   }
@@ -446,6 +526,7 @@ export class LogSyncServer {
   }
 
   private handleFinish(res: http.ServerResponse): void {
+    if (this.busy) throw syncError(409, 'busy');
     if (this.state !== 'paired') throw syncError(409, 'not-paired');
     this.setState('finished');
     this.respondJson(res, 200, { ok: true });
