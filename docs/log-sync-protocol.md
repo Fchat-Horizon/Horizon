@@ -13,9 +13,10 @@ The goal: a user logged into the **same F-List account** on both devices scans a
 
 When the user starts a sync session, Horizon:
 
-1. Generates a random 32-byte **session token** (hex-encoded) and a random 32-byte **AES-256-GCM key**.
-2. Starts an HTTP server on `0.0.0.0` with an ephemeral port.
-3. Displays a QR code encoding the following JSON document (also available as copyable text for manual entry):
+1. Acquires the main-process Data Manager lease, excluding other sync/import/export operations and character connections. The account comes from the most recent successful login in this application session, including logins with Save Login disabled.
+2. Generates a random 32-byte **session token** (hex-encoded) and a random 32-byte **AES-256-GCM key**.
+3. Starts an HTTP server on `0.0.0.0` with an ephemeral port.
+4. Displays a QR code encoding the following JSON document (also available as copyable text for manual entry):
 
 ```json
 {
@@ -164,6 +165,6 @@ On Horizon, merged conversations are rewritten in the binary log format of `elec
 
 ## Constraints for Horizon
 
-- Sync and a connected character are mutually exclusive, enforced by a lock in the main process: a session cannot start while any character is connected, and while a session holds the lock the main process refuses every character connection until the session ends. Both checks run synchronously on the main-process thread, so there is no window in which a character could connect during a merge and race the chat renderer's append-only log writes and in-memory day index.
+- Device sync, ZIP import, vanilla import and manual export share an exclusive main-process lease. These operations and a connected character are mutually exclusive: a session cannot start while any character is connected, and while a session holds the lock the main process refuses every character connection until the session ends. Both checks run synchronously on the main-process thread, so there is no window in which a character could connect during a merge and race the chat renderer's append-only log writes and in-memory day index.
 - Encrypted bodies are capped at 512 MiB, in either direction (the outgoing `GET /v1/logs` archive is bounded to the same limit before it is read into memory).
 - A received archive's total uncompressed size is capped at 2 GiB, checked from the zip's central directory before any entry is decompressed, so a compressed upload cannot expand without bound in memory. Solstice must apply the same limit for the two sides to agree.

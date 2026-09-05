@@ -21,17 +21,13 @@ import QRCode from 'qrcode';
 import l from '../../../chat/localize';
 import type { ExporterVm } from '../exporter-vm';
 import { LogSyncServer } from './server';
+import { acquireDataSession } from '../data-session';
 
-let activeServer: LogSyncServer | undefined;
-
-/**
- * Releases the main-process device-sync lock so characters can connect again.
- * Idempotent: releasing when the lock is not held is a no-op in the main
- * process, so it is safe to call on every session-end path.
- */
-function releaseSyncLock(): void {
-  ipcRenderer.send('sync-lock-release');
+interface ActiveSyncSession {
+  server?: LogSyncServer;
+  release: () => void;
 }
+let activeSession: ActiveSyncSession | undefined;
 
 function resetSyncViewState(vm: ExporterVm): void {
   vm.syncActive = false;
@@ -82,25 +78,25 @@ function buildSummary(server: LogSyncServer): string {
 }
 
 function applyServerState(vm: ExporterVm, server: LogSyncServer): void {
-  if (server !== activeServer) return;
+  if (server !== activeSession?.server) return;
   vm.syncState = server.state;
   vm.syncPeerName = server.peerName;
   switch (server.state) {
     case 'finished':
       vm.syncSummary = buildSummary(server);
-      activeServer = undefined;
-      releaseSyncLock();
+      activeSession.release();
+      activeSession = undefined;
       resetSyncViewState(vm);
       break;
     case 'error':
       vm.syncError = describeError(server.errorCode);
-      activeServer = undefined;
-      releaseSyncLock();
+      activeSession.release();
+      activeSession = undefined;
       resetSyncViewState(vm);
       break;
     case 'stopped':
-      activeServer = undefined;
-      releaseSyncLock();
+      activeSession.release();
+      activeSession = undefined;
       resetSyncViewState(vm);
       break;
     default:
@@ -111,16 +107,19 @@ function applyServerState(vm: ExporterVm, server: LogSyncServer): void {
 /**
  * Starts a sync session: spins up the single-use server and shows its QR
  * code. Concurrency is guarded by the authoritative main-process lock, not the
- * renderer-local `activeServer`: the lock is taken synchronously before the
+ * renderer-local session: the lock is taken synchronously before the
  * first await below, so a rapid double-click or a second Data Manager window
- * cannot open two servers. A start that finds a session already running is a
- * silent no-op.
+ * cannot open two servers. Conflicts with other windows or operations are
+ * reported to the user.
  */
 export async function startSyncSession(vm: ExporterVm): Promise<void> {
   vm.syncError = undefined;
   vm.syncSummary = undefined;
 
-  const account = (vm.settings.account ?? '').trim();
+  if (activeSession !== undefined) return;
+  const account = String(
+    ipcRenderer.sendSync('get-last-successful-account')
+  ).trim();
   if (account.length === 0) {
     vm.syncError = l('sync.error.accountMissing');
     return;
@@ -133,34 +132,32 @@ export async function startSyncSession(vm: ExporterVm): Promise<void> {
     return;
   }
 
-  // Take the main-process lock before opening the server. This is the
-  // authoritative, cross-window guard: acquired synchronously (before the first
-  // await below), it atomically refuses if a character is connected and, once
-  // held, blocks any character from connecting for the whole session so a merge
-  // can never race the chat renderer's log writes. Placed after the early
-  // returns above so the lock is never acquired and then leaked by one.
-  const lock = ipcRenderer.sendSync('sync-lock-acquire');
-  if (lock === 'in-progress') return;
-  if (lock !== 'ok') {
-    vm.syncError = l('sync.error.lockedWhileConnected');
-    return;
-  }
-
+  let session: ActiveSyncSession | undefined;
   try {
+    session = { release: acquireDataSession() };
+    activeSession = session;
+    vm.syncActive = true;
+    vm.syncState = 'waiting';
     const server = await LogSyncServer.start({
       dataDir,
       account,
       tempDir: path.join(remote.app.getPath('temp'), 'horizon-sync'),
       onStateChange: changed => applyServerState(vm, changed)
     });
-    activeServer = server;
+    if (activeSession !== session) {
+      server.stop();
+      return;
+    }
+    session.server = server;
 
     const payloadText = JSON.stringify(server.payload);
-    vm.syncQrDataUrl = await QRCode.toDataURL(payloadText, {
+    const qrDataUrl = await QRCode.toDataURL(payloadText, {
       errorCorrectionLevel: 'M',
       margin: 1,
       width: 280
     });
+    if (activeSession !== session) return;
+    vm.syncQrDataUrl = qrDataUrl;
     vm.syncPayloadText = payloadText;
     vm.syncAddressText = server.payload.addrs
       .map(address => `${address}:${server.payload.port}`)
@@ -169,6 +166,7 @@ export async function startSyncSession(vm: ExporterVm): Promise<void> {
     vm.syncState = server.state;
   } catch (error) {
     log.error('sync.session.start.error', error);
+    if (session !== undefined && activeSession !== session) return;
     stopSyncSession(vm);
     vm.syncError = l('sync.error.generic', {
       reason: error instanceof Error ? error.message : String(error)
@@ -178,10 +176,10 @@ export async function startSyncSession(vm: ExporterVm): Promise<void> {
 
 /** Stops the running session, if any, and clears the QR from the screen. */
 export function stopSyncSession(vm: ExporterVm): void {
-  const server = activeServer;
-  activeServer = undefined;
-  if (server !== undefined) server.stop();
-  releaseSyncLock();
+  const session = activeSession;
+  activeSession = undefined;
+  session?.server?.stop();
+  session?.release();
   resetSyncViewState(vm);
 }
 
@@ -190,7 +188,7 @@ export function stopSyncSession(vm: ExporterVm): void {
  * while logs are being appended to would corrupt them.
  */
 export function abortSyncForConnectedCharacter(vm: ExporterVm): void {
-  if (activeServer === undefined) return;
+  if (activeSession === undefined) return;
   stopSyncSession(vm);
   vm.syncError = l('sync.error.lockedWhileConnected');
 }

@@ -77,12 +77,13 @@ let mainWindow: electron.BrowserWindow | undefined;
 remoteMain.initialize();
 
 const characters: string[] = [];
-// webContents.id of the exporter window holding the device-sync lock, or
-// undefined when no sync session is active. While a session holds the lock,
-// character connections are refused; while any character is connected, the
-// lock cannot be acquired. Both are enforced synchronously on this thread, so
-// the two are mutually exclusive with no time-of-check/time-of-use window.
-let syncSessionOwner: number | undefined;
+// A main-process lease serializes Data Manager operations with character
+// connections. A token prevents a late release from ending a newer operation.
+let dataSession:
+  | { owner: number; token: number; cleanup: () => void }
+  | undefined;
+let nextDataSessionToken = 0;
+let lastSuccessfulAccount: string | undefined;
 let autoBackupScheduler:
   | import('./services/exporter/auto-backup').AutoBackupScheduler
   | undefined;
@@ -1651,8 +1652,8 @@ async function onReady(): Promise<void> {
   electron.ipcMain.on(
     'connect',
     (e: IpcMainEvent & { sender: electron.WebContents }, character: string) => {
-      if (syncSessionOwner !== undefined) {
-        e.returnValue = 'sync-in-progress';
+      if (dataSession !== undefined) {
+        e.returnValue = 'data-operation-in-progress';
         return;
       }
       if (characters.indexOf(character) !== -1) {
@@ -1665,41 +1666,46 @@ async function onReady(): Promise<void> {
       if (autoBackupScheduler) autoBackupScheduler.runOnConnect();
     }
   );
-  // Device-sync lock. The exporter renderer acquires this before starting a
-  // sync session and releases it when the session ends. Acquiring is refused if
-  // any character is connected, which (together with the connect gate above)
-  // keeps a sync merge and the chat renderer's log appends from ever racing.
-  electron.ipcMain.on(
-    'sync-lock-acquire',
-    (e: IpcMainEvent & { sender: electron.WebContents }) => {
-      // Authoritative, cross-window guard. Returns a reason so the renderer can
-      // tell a redundant start (a session is already running, in this or another
-      // Data Manager window) apart from a genuine connected-character refusal:
-      // the former is a silent no-op, the latter surfaces an error.
-      if (syncSessionOwner !== undefined) {
-        e.returnValue = 'in-progress';
-        return;
-      }
-      if (characters.length > 0) {
-        e.returnValue = 'connected';
-        return;
-      }
-      syncSessionOwner = e.sender.id;
-      // Safety net: free the lock if the exporter window is destroyed without
-      // releasing (crash, force close), so connections are not blocked forever.
-      e.sender.once('destroyed', () => {
-        if (syncSessionOwner === e.sender.id) syncSessionOwner = undefined;
-      });
-      e.returnValue = 'ok';
+  electron.ipcMain.on('login-succeeded', (_event, account: string) => {
+    if (typeof account === 'string' && account.trim())
+      lastSuccessfulAccount = account.trim();
+  });
+  electron.ipcMain.on('get-last-successful-account', event => {
+    event.returnValue = lastSuccessfulAccount ?? '';
+  });
+
+  electron.ipcMain.on('data-session-acquire', event => {
+    if (dataSession !== undefined) {
+      event.returnValue = { error: 'in-progress' };
+      return;
     }
-  );
-  electron.ipcMain.on(
-    'sync-lock-release',
-    (e: IpcMainEvent & { sender: electron.WebContents }) => {
-      if (syncSessionOwner === e.sender.id) syncSessionOwner = undefined;
-      e.returnValue = true;
+    if (characters.length > 0) {
+      event.returnValue = { error: 'connected' };
+      return;
     }
-  );
+    const owner = event.sender.id;
+    const token = ++nextDataSessionToken;
+    const release = (): void => {
+      if (dataSession?.token !== token) return;
+      dataSession.cleanup();
+      dataSession = undefined;
+    };
+    const cleanup = (): void => {
+      event.sender.removeListener('destroyed', release);
+      event.sender.removeListener('render-process-gone', release);
+    };
+    dataSession = { owner, token, cleanup };
+    event.sender.once('destroyed', release);
+    event.sender.once('render-process-gone', release);
+    event.returnValue = { token };
+  });
+  electron.ipcMain.on('data-session-release', (event, token: number) => {
+    if (dataSession?.owner === event.sender.id && dataSession.token === token) {
+      dataSession.cleanup();
+      dataSession = undefined;
+    }
+    event.returnValue = true;
+  });
   electron.ipcMain.on(
     'dictionary-add',
     (_event: IpcMainEvent, word: string) => {

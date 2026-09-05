@@ -759,6 +759,7 @@
             this.error = data.error;
             return;
           }
+          electron.ipcRenderer.send('login-succeeded', this.settings.account);
           if (this.saveLogin) {
             electron.ipcRenderer.send(
               'save-login',
@@ -779,10 +780,10 @@
               'connect',
               core.connection.character
             );
-            // A device sync holds the main-process lock; block the connection
-            // in every environment so a merge can never race log appends.
-            if (connectResult === 'sync-in-progress') {
-              core.notifications.alert(l('login.syncInProgress'));
+            // Data Manager operations hold the main-process lease. Block
+            // connections in every environment while files are being changed.
+            if (connectResult === 'data-operation-in-progress') {
+              core.notifications.alert(l('login.dataOperationInProgress'));
               return core.connection.close();
             }
             if (
@@ -852,8 +853,8 @@
         );
         if (connectResult !== true)
           return core.notifications.alert(
-            connectResult === 'sync-in-progress'
-              ? l('login.syncInProgress')
+            connectResult === 'data-operation-in-progress'
+              ? l('login.dataOperationInProgress')
               : l('login.alreadyLoggedIn')
           );
         try {

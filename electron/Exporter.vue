@@ -1324,7 +1324,7 @@
                           "
                           type="button"
                           @click="copySyncPayload"
-                          :label="
+                          :aria-label="
                             syncPayloadCopied
                               ? l('action.copy.success')
                               : l('sync.copyPayload')
@@ -1689,9 +1689,15 @@
       }
 
       window.addEventListener('beforeunload', e => {
-        if (this.exportInProgress || this.importInProgress) {
+        if (
+          this.exportInProgress ||
+          this.importInProgress ||
+          this.vanillaImportInProgress
+        ) {
           e.preventDefault();
+          return;
         }
+        ImportExport.stopSyncSession(this);
       });
 
       window.addEventListener('keyup', e => {
@@ -1935,7 +1941,11 @@
         ];
       },
       close(): void {
-        if (this.exportInProgress || this.importInProgress) {
+        if (
+          this.exportInProgress ||
+          this.importInProgress ||
+          this.vanillaImportInProgress
+        ) {
           const choice = remote.dialog.showMessageBoxSync(browserWindow, {
             type: 'warning',
             buttons: [
