@@ -39,7 +39,6 @@
         classes="form-control"
         id="description"
         v-model="description"
-        style="position: relative"
         :maxlength="50000"
       >
         <div class="bbcode-editor-controls">
