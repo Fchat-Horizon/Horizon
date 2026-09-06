@@ -283,7 +283,7 @@
         <user
           :character="character"
           :showStatus="false"
-          :bookmark="true"
+          :bookmark="false"
           :isMarkerShown="shouldShowMarker"
           :loadColor="false"
         ></user>
@@ -304,7 +304,7 @@
         <user
           :character="character"
           :showStatus="false"
-          :bookmark="true"
+          :bookmark="false"
           :isMarkerShown="shouldShowMarker"
           :loadColor="false"
         ></user>

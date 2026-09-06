@@ -13,31 +13,6 @@
         :class="{ fa: true, 'fa-plus': isMinimized, 'fa-minus': !isMinimized }"
       ></i
     ></a>
-    <div class="alert alert-info" role="alert">
-      <h4 class="alert-heading">Feedback requested.</h4>
-      <p>
-        This reworked version of the analyser— now visible on your profile, is
-        intended to give you a better idea of how the matcher sees your
-        character. Are the results inaccurate, or do you otherwise feel there's
-        improvements for the matcher?
-        <br />
-
-        We know there are a lot of issues with that feature as is, but can't
-        seem to get a proper consensus on where it's failing people. If you can,
-        please
-        <a
-          href="https://horizn.moe/contact.html"
-          style="text-decoration: underline"
-          >reach out to us
-          <i class="fa-solid fa-arrow-up-right-from-square"></i>.
-        </a>
-      </p>
-      <hr />
-      <p>
-        For now, if this thing gets in the way, you can click the
-        <i class="fa fa-minus"></i> button on the top right to close it.
-      </p>
-    </div>
     <div v-if="!analyzing && !recommendations.length">
       <h3>Looking good!</h3>
       <p>

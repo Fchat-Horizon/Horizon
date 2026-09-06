@@ -241,7 +241,11 @@
     },
     methods: {
       getAvatarUrl(): string {
-        if (this.onlineCharacter && this.onlineCharacter.overrides.avatarUrl) {
+        if (
+          this.onlineCharacter &&
+          this.onlineCharacter.overrides.avatarUrl &&
+          core.state.settings.risingShowHighQualityPortraits
+        ) {
           return this.onlineCharacter.overrides.avatarUrl;
         }
 
