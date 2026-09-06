@@ -14,6 +14,7 @@ import { app, DownloadItem, IpcMainEvent } from 'electron';
 import { getSafeLanguages, updateSupportedLanguages } from './language';
 import { BlockerIntegration } from './blocker/blocker';
 import l from '../chat/localize';
+import { registerAboutDiagnostics } from './about/diagnostics-ipc';
 
 /**
  * @constant
@@ -1059,7 +1060,10 @@ export function createAboutWindow(
     return { action: 'deny' };
   });
 
-  about.loadFile(path.join(__dirname, 'about.html'), {
+  const aboutFile = path.join(__dirname, 'about.html');
+  registerAboutDiagnostics(about.webContents, aboutFile);
+
+  about.loadFile(aboutFile, {
     query: {
       settings: JSON.stringify(settings),
       commit: appCommit,
