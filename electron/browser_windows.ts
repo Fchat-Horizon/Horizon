@@ -15,6 +15,7 @@ import { getSafeLanguages, updateSupportedLanguages } from './language';
 import { BlockerIntegration } from './blocker/blocker';
 import l from '../chat/localize';
 import { registerAboutDiagnostics } from './about/diagnostics-ipc';
+import { isAboutLink, registerAboutWindowApi } from './about/window-ipc';
 
 /**
  * @constant
@@ -1034,14 +1035,15 @@ export function createAboutWindow(
     useContentSize: true,
     autoHideMenuBar: true,
     webPreferences: {
-      webviewTag: true,
-      nodeIntegration: true,
-      nodeIntegrationInWorker: true,
+      webviewTag: false,
+      nodeIntegration: false,
+      nodeIntegrationInWorker: false,
       spellcheck: true,
-      enableRemoteModule: true,
-      contextIsolation: false,
+      contextIsolation: true,
+      sandbox: true,
+      preload: path.join(__dirname, 'about-preload.js'),
       partition: 'persist:fchat'
-    } as any
+    }
   };
 
   if (process.platform === 'darwin') {
@@ -1052,29 +1054,25 @@ export function createAboutWindow(
 
   const about = new electron.BrowserWindow(aboutWindowProperties);
 
-  remoteMain.enable(about.webContents);
-
   // Handle external links
   about.webContents.setWindowOpenHandler(({ url }) => {
-    openURLExternally(url);
+    if (isAboutLink(url)) openURLExternally(url);
     return { action: 'deny' };
   });
 
   const aboutFile = path.join(__dirname, 'about.html');
   registerAboutDiagnostics(about.webContents, aboutFile);
 
-  about.loadFile(aboutFile, {
-    query: {
-      settings: JSON.stringify(settings),
-      commit: appCommit,
-      version: appVersion
-    }
-  });
-
-  about.once('ready-to-show', () => {
-    about.center();
-    about.show();
-  });
+  registerAboutWindowApi(
+    about,
+    aboutFile,
+    settings,
+    appVersion,
+    appCommit,
+    openURLExternally
+  );
+  about.webContents.on('will-navigate', event => event.preventDefault());
+  about.loadFile(aboutFile);
 
   return about;
 }
