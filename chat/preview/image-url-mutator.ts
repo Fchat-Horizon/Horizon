@@ -51,14 +51,6 @@ export class ImageUrlMutator {
     );
 
     this.add(
-      /^http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?[\w\?=]*)?/,
-      async (_url: string, match: RegExpMatchArray): Promise<string> => {
-        const videoId = match[1];
-        return `https://i3.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
-      }
-    );
-
-    this.add(
       /^https?:\/\/(?:.*twitter.com|x.com|fixupx.com|fixvx.com|girlcockx.com)\/(\w*\/status\/\d*)(?:\/(photo)\/(\d*))?/,
       async (url: string, match: RegExpMatchArray): Promise<string> => {
         const path = match[1];
@@ -220,121 +212,6 @@ export class ImageUrlMutator {
         }
       }
     );
-
-    //The Imgur URL mutation stuff has been (temporarily?) disabled, because their API has changed to such a degree,
-    //that it would require us to deal with refresh tokens, for which we do not have the infrastructure in place to synchronize between clients.
-    //Having an embed of the actual page like this is an acceptable alternative.
-    /*
-    this.add(
-      /^https?:\/\/((m|www).)?imgur.(com|io)\/gallery\/([a-zA-Z0-9]+)/,
-      async (url: string, match: RegExpMatchArray): Promise<string> => {
-        // Imgur Gallery
-        const galleryId = match[4];
-
-        try {
-          const result = await Axios.get(
-            `https://api.imgur.com/3/gallery/${galleryId}/images`,
-            {
-              headers: {
-                Authorization: `Client-ID ${ImageUrlMutator.IMGUR_CLIENT_ID}`
-              }
-            }
-          );
-
-          const imageUrl = _.get(result, 'data.data.0.link', null);
-
-          if (!imageUrl) {
-            return url;
-          }
-
-          const imageCount = _.get(result, 'data.data.length', 1);
-
-          if (this.debug)
-            console.log('Imgur gallery', url, imageUrl, imageCount);
-
-          return this.getOptimizedImgurUrlFromUrl(
-            `${imageUrl}?flist_gallery_image_count=${imageCount}`
-          );
-        } catch (err) {
-          console.error('Imgur Gallery Failure', url, err);
-          return url;
-        }
-      }
-    );
-
-    this.add(
-      /^https?:\/\/((m|www).)?imgur.(com|io)\/a\/([a-zA-Z0-9]+)/,
-      async (url: string, match: RegExpMatchArray): Promise<string> => {
-        // Imgur Album
-        const albumId = match[4];
-
-        try {
-          const result = await Axios.get(
-            `https://api.imgur.com/3/album/${albumId}/images`,
-            {
-              headers: {
-                Authorization: `Client-ID ${ImageUrlMutator.IMGUR_CLIENT_ID}`
-              }
-            }
-          );
-
-          const imageUrl = _.get(result, 'data.data.0.link', null);
-
-          if (!imageUrl) {
-            return url;
-          }
-
-          const imageCount = _.get(result, 'data.data.length', 1);
-
-          if (this.debug) console.log('Imgur album', url, imageUrl, imageCount);
-
-          return this.getOptimizedImgurUrlFromUrl(
-            `${imageUrl}?flist_gallery_image_count=${imageCount}`
-          );
-        } catch (err) {
-          console.error('Imgur Album Failure', url, err);
-          return url;
-        }
-      }
-    );
-
-    // must be AFTER gallery & album test
-    this.add(
-      /^https?:\/\/((m|www).)?imgur.(com|io)\/([a-zA-Z0-9]+)/,
-      async (url: string, match: RegExpMatchArray): Promise<string> => {
-        // Single Imgur Image
-        const imageId = match[4];
-
-        try {
-          const result = await Axios.get(
-            `https://api.imgur.com/3/image/${imageId}`,
-            {
-              headers: {
-                Authorization: `Client-ID ${ImageUrlMutator.IMGUR_CLIENT_ID}`
-              }
-            }
-          );
-
-          const imageUrl = _.get(result, 'data.data.link', url);
-
-          if (this.debug) console.log('Imgur image', url, imageUrl);
-
-          return this.getOptimizedImgurUrlFromUrl(imageUrl as string);
-        } catch (err) {
-          console.error('Imgur Image Failure', url, err);
-          return url;
-        }
-      }
-    );
-
-    */
-
-    // Load large thumbnail instead of the full size picture when possible
-    /*this.add(
-      ImageUrlMutator.IMGUR_IMAGE_URL_REGEX,
-      async (_url: string, match: RegExpMatchArray) =>
-        this.getOptimizedImgUrlFromMatch(match)
-    );*/
   }
 
   private async getRedgifsToken(forceRefresh = false): Promise<string> {

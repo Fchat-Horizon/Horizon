@@ -246,13 +246,6 @@ const mainConfig = {
         patterns: [
           {
             from: path
-              .resolve(__dirname, '..', 'chat', 'preview', 'assets', '**', '*')
-              .replace(/\\/g, '/'),
-            to: path.join('preview', 'assets'),
-            context: path.resolve(__dirname, '..', 'chat', 'preview', 'assets')
-          },
-          {
-            from: path
               .resolve(__dirname, '..', 'assets', '**', '*')
               .replace(/\\/g, '/'),
             to: path.join('assets'),
