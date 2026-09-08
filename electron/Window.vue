@@ -139,6 +139,7 @@
           display: flex;
           justify-content: flex-end;
           -webkit-app-region: drag;
+          margin-right: 130px;
         "
         id="windowButtons"
         class="btn-group"
@@ -149,19 +150,6 @@
           class="d-none d-md-flex btn btn-light"
         >
           <i class="fa fa-cog"> </i>
-        </span>
-
-        <span class="btn btn-light" @click.stop="minimize()">
-          <i class="far fa-window-minimize"></i>
-        </span>
-        <span class="btn btn-light" @click="maximize()">
-          <i
-            class="far"
-            :class="'fa-window-' + (isMaximized ? 'restore' : 'maximize')"
-          ></i>
-        </span>
-        <span class="btn btn-light" @click.stop="close()">
-          <i class="fa fa-times fa-lg"></i>
         </span>
       </div>
     </div>
@@ -277,6 +265,13 @@
         hideSingleTab: true
       };
     },
+    watch: {
+      styling(): void {
+        this.$nextTick(() => {
+          this.updateWindowOverlayColors();
+        });
+      }
+    },
     computed: {
       styling(): string {
         try {
@@ -310,6 +305,8 @@
       updateSupportedLanguages(
         browserWindow.webContents.session.availableSpellCheckerLanguages
       );
+
+      this.updateWindowOverlayColors();
 
       log.debug('init.window.languages.supported');
       // console.log('MOUNT DICTIONARIES', getSafeLanguages(this.settings.spellcheckLang), this.settings.spellcheckLang);
@@ -841,6 +838,15 @@
             ['platform-' + this.platform]: true
           };
         }
+      },
+      updateWindowOverlayColors(): void {
+        let color = getComputedStyle(document.body).color;
+        log.debug('window.titlebar.color', color);
+        browserWindow.setTitleBarOverlay({
+          color: '#ff000000',
+          symbolColor: color || 'white',
+          height: 32
+        });
       },
       shouldShowNotificationBadge(tab: Tab): boolean {
         return (
