@@ -172,7 +172,7 @@ export enum Kink {
   ExtremeMusk = 335,
   Farting = 549,
   Filth = 707,
-  Messy = 89,
+  Messy = 87,
   Slob = 570,
   Smegma = 708,
   SwallowingVomit = 560,
