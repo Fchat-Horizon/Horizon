@@ -243,7 +243,40 @@ export enum Kink {
   GrowthMacro = 384,
   ShrinkingMicro = 387,
 
-  Taurs = 68
+  Taurs = 68,
+
+  AnalSexGiving = 137,
+  AnalSexReceiving = 157,
+  RimmingGiving = 163,
+  RimmingReceiving = 16,
+  VaginalSexGiving = 229,
+  VaginalSexReceiving = 340,
+  CunnilingusGiving = 513,
+  CunnilingusReceiving = 515,
+  OralSexGiving = 141,
+  OralSexReceiving = 158,
+  FellatioPerforming = 512,
+  FellatioReceiving = 514,
+
+  Amputees = 585,
+  BodyHair = 588,
+  CanonCharacters = 589,
+  Chubby = 458,
+  Disabilities = 605,
+  FacialHairBeards = 590,
+  Femboys = 531,
+  Femininity = 592,
+  ShorterCharacters = 600,
+  SkinnyCharacters = 601,
+  SlimeGooCharacters = 584,
+  SuperheroesVillains = 616,
+  TallerCharacters = 603,
+  Tomboys = 532,
+  Toons = 720,
+  Twinks = 354,
+  VeryFatCharacters = 183,
+  VeryLitheCharacters = 85,
+  VeryMuscularCharacters = 84
 }
 
 export enum FurryPreference {
@@ -2041,48 +2074,53 @@ export const kinkMatchScoreMap = {
 };
 
 export const kinkComparisonExclusions = {
-  585: true, // amputees
-  587: true, // anthro characters
-  588: true, // body hair
-  589: true, // canon characters
-  458: true, // chubby
-  605: true, // disabilities
-  590: true, // facial hair / beards
-  531: true, // femboys
-  592: true, // femininity
-  109: true, // older characters
-  600: true, // shorter characters
-  601: true, // skinny characters
-  584: true, // slime / goo characters
-  616: true, // superheroes / villains
-  603: true, // taller characters
-  532: true, // tomboys
-  720: true, // toons
-  354: true, // twinks
-  183: true, // very fat characters
-  85: true, // very lithe characters
-  84: true, // very muscular characters
-  197: true // younger characters
+  [Kink.Amputees]: true,
+  [Kink.AnthroCharacters]: true,
+  [Kink.BodyHair]: true,
+  [Kink.CanonCharacters]: true,
+  [Kink.Chubby]: true,
+  [Kink.Disabilities]: true,
+  [Kink.FacialHairBeards]: true,
+  [Kink.Femboys]: true,
+  [Kink.Femininity]: true,
+  [Kink.OlderCharacters]: true,
+  [Kink.ShorterCharacters]: true,
+  [Kink.SkinnyCharacters]: true,
+  [Kink.SlimeGooCharacters]: true,
+  [Kink.SuperheroesVillains]: true,
+  [Kink.TallerCharacters]: true,
+  [Kink.Tomboys]: true,
+  [Kink.Toons]: true,
+  [Kink.Twinks]: true,
+  [Kink.VeryFatCharacters]: true,
+  [Kink.VeryLitheCharacters]: true,
+  [Kink.VeryMuscularCharacters]: true,
+  [Kink.YoungerCharacters]: true
 };
 
+export enum KinkGroupId {
+  GenderPreferences = 29,
+  SpeciesPreferences = 30
+}
+
 export const kinkComparisonExclusionGroups = {
-  29: true, // gender preferences
-  30: true // species preferences
+  [KinkGroupId.GenderPreferences]: true,
+  [KinkGroupId.SpeciesPreferences]: true
 };
 
 export const kinkComparisonSwaps: Record<any, number> = {
-  137: 157, // anal sex giving -> receiving
-  157: 137, // anal sex receiving -> giving
-  163: 16, // rimming giving -> receiving
-  16: 163, // rimming receiving -> giving
-  229: 340, // vaginal sex giving -> receiving
-  340: 229, // vaginal sex receiving -> giving
-  513: 515, // cunnilingus giving -> receiving
-  515: 513, // cunnilingus receiving -> giving
-  141: 158, // oral sex giving -> receiving
-  158: 141, // oral sex receiving -> giving
-  512: 514, // fellatio performing -> fellatio receiving
-  514: 512, // fellatio receiving -> fellatio performing
+  [Kink.AnalSexGiving]: Kink.AnalSexReceiving, // anal sex giving -> receiving
+  [Kink.AnalSexReceiving]: Kink.AnalSexGiving, // anal sex receiving -> giving
+  [Kink.RimmingGiving]: Kink.RimmingReceiving, // rimming giving -> receiving
+  [Kink.RimmingReceiving]: Kink.RimmingGiving, // rimming receiving -> giving
+  [Kink.VaginalSexGiving]: Kink.VaginalSexReceiving, // vaginal sex giving -> receiving
+  [Kink.VaginalSexReceiving]: Kink.VaginalSexGiving, // vaginal sex receiving -> giving
+  [Kink.CunnilingusGiving]: Kink.CunnilingusReceiving, // cunnilingus giving -> receiving
+  [Kink.CunnilingusReceiving]: Kink.CunnilingusGiving, // cunnilingus receiving -> giving
+  [Kink.OralSexGiving]: Kink.OralSexReceiving, // oral sex giving -> receiving
+  [Kink.OralSexReceiving]: Kink.OralSexGiving, // oral sex receiving -> giving
+  [Kink.FellatioPerforming]: Kink.FellatioReceiving, // fellatio performing -> fellatio receiving
+  [Kink.FellatioReceiving]: Kink.FellatioPerforming, // fellatio receiving -> fellatio performing
   [Kink.VoreBeingPredator]: Kink.VoreBeingPrey, // vore predator -> prey
   [Kink.VoreBeingPrey]: Kink.VoreBeingPredator // vore prey -> predator
 };
