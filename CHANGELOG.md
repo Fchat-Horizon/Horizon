@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed since last pre-release
+
+<!--
+Hi. If you're finalizing the *stable* release, please check that you don't leave this section in. It's only for beta.2
+If you're publishing the pre-release, remove this comment. The Discord bot parses it and keeps it in the message it posts when pinging users.
+-->
+
+- Sufficiently large conversation files can now be imported and merged correctly while syncing with Solstice. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/455733015f730bee0989073885847435a9cf2a9e)
+
+### Security
+
+- Tightened security for popups and Node in the image/ URL previewer. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3d57c40855927ae413b282a8cdceb794a436006c)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/942 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/947 by @freenutsxd
+
+Non-PR'd changes by @CodingWithAnxiety
+
 ## [2.4.0-beta.1] - 2026-09-06
 
 ### Added
