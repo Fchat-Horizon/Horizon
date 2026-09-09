@@ -7,7 +7,7 @@
     <div class="image-preview-toolbar" v-show="sticky || debug">
       <a
         @click="toggleDevMode()"
-        :class="{ toggled: debug }"
+        :class="{ toggled: debug, disabled: !debug && !canDebug }"
         :title="l('imagePreview.debug')"
         ><i class="fa fa-terminal"></i
       ></a>
@@ -108,6 +108,7 @@
         state: 'hidden',
         shouldShowSpinner: false,
         shouldShowError: true,
+        canDebug: false,
         interval: null as TimerHandle | null,
         exitInterval: null as TimerHandle | null,
         exitUrl: null as string | null,
@@ -441,9 +442,11 @@
         this.previewManager.setDebug(this.debug);
 
         if (this.debug) {
-          const webview = this.getWebview();
+          const helper = this.previewManager.getVisiblePreview();
 
-          webview.openDevTools();
+          if (helper && helper.usesWebView()) {
+            this.getWebview().openDevTools();
+          }
         }
       },
       debugLog(...args: any[]): void {
@@ -514,6 +517,7 @@
         this.state = state;
         this.shouldShowSpinner = this.testSpinner();
         this.shouldShowError = this.testError();
+        this.canDebug = this.testDebug();
       },
       testSpinner(): boolean {
         return this.visibleSince > 0
@@ -528,6 +532,11 @@
         }
 
         return this.state === 'error';
+      },
+      testDebug(): boolean {
+        const helper = this.previewManager.getVisiblePreview();
+
+        return !!helper && helper.usesWebView();
       }
     }
   });
@@ -632,6 +641,11 @@
       .toggled {
         background-color: rgba(255, 255, 255, 0.2);
         box-shadow: 0 0 1px 0px rgba(255, 255, 255, 0.6);
+      }
+
+      .disabled {
+        opacity: 0.35;
+        pointer-events: none;
       }
     }
 
