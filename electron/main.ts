@@ -1270,7 +1270,17 @@ async function onReady(): Promise<void> {
     submenu: [
       { role: 'reload' },
       { role: 'forceReload' },
-      { role: 'toggleDevTools' },
+      {
+        // electron 42 changed the way that dev tools targeted objects, so we'd get about:blank
+        // instead of the actual object. this points it to the right view
+        label: 'Toggle Developer Tools',
+        accelerator:
+          process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
+        click: (_menu, window) => {
+          if (window instanceof electron.BrowserWindow)
+            window.webContents.toggleDevTools();
+        }
+      },
       { type: 'separator' },
       {
         label: 'Show update notice',
