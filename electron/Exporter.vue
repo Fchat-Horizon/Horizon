@@ -1888,7 +1888,7 @@
         }
       },
       async openAutoBackupDir(): Promise<void> {
-        ipcRenderer.send('open-dir', this.settings.logDirectory);
+        ipcRenderer.send('open-dir', this.settings.autoBackupDirectory);
       },
       async refreshAutoBackups(): Promise<void> {
         try {
