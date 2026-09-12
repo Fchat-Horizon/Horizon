@@ -356,7 +356,7 @@
       "
       :hasToolbar="settings.bbCodeBar"
       ref="textBox"
-      style="position: relative; margin-top: 5px"
+      style="margin-top: 5px"
       :maxlength="
         isChannel(conversation) || isPrivate(conversation)
           ? conversation.maxMessageLength
@@ -406,6 +406,7 @@
       </div>
       <div class="bbcode-editor-controls">
         <div
+          class="char-count"
           v-if="isChannel(conversation) || isPrivate(conversation)"
           style="margin-right: 5px"
         >
