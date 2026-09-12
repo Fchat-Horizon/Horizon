@@ -245,38 +245,17 @@ export class CacheManager {
    *
    * But under what scenarios do we actually need to process without fetching?
    * @param character Character name to fetch, or a character object to finish
-   * @param fromDiskOnly If true, only attempt to load from disk cache; do not fetch from server
-   * @param deleteAfterFetch If true, delete the profile from cache immediately after fetching
    * Comment imported from Frolic; may be inaccurate if significant changes occured.
+
+   * trimmed significantly with the userlist viertualization changes. fromDiskOnly
+   * caused every profile to reregister no matter what, introducing extra work.
+   * applyOverridesFromStore does the same job without reregistering. 
    */
-  async addProfile(
-    character: string | ComplexCharacter,
-    fromDiskOnly: boolean = false,
-    deleteAfterFetch: boolean = false
-  ): Promise<void> {
+  async addProfile(character: string | ComplexCharacter): Promise<void> {
     if (typeof character === 'string') {
       // console.log('Learn discover', character);
 
-      if (fromDiskOnly) {
-        const diskChar = await this.profileCache.get(character);
-        if (deleteAfterFetch && diskChar) {
-          this.profileCache.delete(character);
-        }
-        return;
-      }
       await this.queueForFetching(character);
-      if (deleteAfterFetch) {
-        // Wait until fetched, then delete
-        const checkAndDelete = async () => {
-          const p = await this.profileCache.get(character);
-          if (p) {
-            this.profileCache.delete(character);
-          } else {
-            setTimeout(checkAndDelete, 1000);
-          }
-        };
-        await checkAndDelete();
-      }
       return;
     }
 

@@ -81,24 +81,37 @@
       v-if="channel && tab !== '0'"
       style="padding-left: 5px; flex: 1; display: flex; flex-direction: column"
     >
-      <div class="users hidden-scrollbar" style="flex: 1; padding-left: 5px">
+      <div style="padding-left: 5px; flex-shrink: 0">
         <h4>
           <span style="display: inline-block">{{ memberCountText }}</span>
         </h4>
-        <div
-          v-for="member in filteredMembers"
-          :key="member.character.name"
-          class="userlist-item"
-          :class="{ dimmed: member.character.isIgnored }"
-        >
-          <user
-            :character="member.character"
-            :channel="channel"
-            :showStatus="true"
-            :isMarkerShown="shouldShowMarker"
-          ></user>
-        </div>
       </div>
+      <!-- virtualized members list, because channels with thousands of members shouldn't try to render 
+       every custom-colored name at once. the trade-off is that custom colors can sometimes take a bit to 
+       load for the rendered area if you scroll really fast, but the pros outweigh the cons imo. -->
+      <virtual-list
+        ref="memberList"
+        class="hidden-scrollbar"
+        style="overflow: auto; flex: 1 1 auto; padding-left: 5px"
+        :items="filteredMembers"
+        :itemHeight="rowHeight"
+        :overscan="overscan"
+        :keyFunc="memberKey"
+      >
+        <template slot-scope="{ item: member }">
+          <div
+            class="userlist-item"
+            :class="{ dimmed: member.character.isIgnored }"
+          >
+            <user
+              :character="member.character"
+              :channel="channel"
+              :showStatus="true"
+              :isMarkerShown="shouldShowMarker"
+            ></user>
+          </div>
+        </template>
+      </virtual-list>
 
       <!--<span class="input-group-text">
           <span class="fas fa-search"></span>
@@ -357,6 +370,7 @@
   } from './memberFilters';
   import { computeGenderPreferenceBuckets } from './memberFilters';
   import Dropdown from '../components/Dropdown.vue';
+  import VirtualList from '../components/VirtualList.vue';
 
   const availableSorts = ['normal', 'status', 'gender'] as const;
 
@@ -366,13 +380,17 @@
       user: UserView,
       sidebar: Sidebar,
       tabs: Tabs,
-      dropdown: Dropdown
+      dropdown: Dropdown,
+      'virtual-list': VirtualList
     },
     data() {
       return {
         tab: '0',
         expanded: window.innerWidth >= 992,
         filter: '',
+        rowHeight: 22,
+        rowHeightMeasured: false,
+        overscan: 8,
         genderFilters: (core &&
         core.state &&
         (core.state.settings as any) &&
@@ -559,6 +577,15 @@
         const members = this.getFilteredMembers();
         return sortMembers(members, this.sortType);
       },
+      memberResetKey(): string {
+        return [
+          this.channel?.id,
+          this.filter,
+          this.sortType,
+          this.genderFilters.join(','),
+          this.selectedStatuses.join(',')
+        ].join('|');
+      },
       memberCountText(): string {
         const total = this.channel ? this.channel.sortedMembers.length : 0;
         const shown = this.filteredMembers ? this.filteredMembers.length : 0;
@@ -632,6 +659,30 @@
           } as any;
         }
       });
+
+      // only the scroll position is stale when the list is rebuilt. the measured
+      // row heights are keyed by character and stay valid, so don't use resetKey
+      this.$watch('memberResetKey', () => {
+        const list = this.$refs['memberList'] as
+          | { resetScroll(): void }
+          | undefined;
+        if (list) list.resetScroll();
+      });
+
+      // font size is applied via injected css, so it never re-renders. re-measure on
+      // nextTick, after ChatView's watcher has actually applied the new size
+      this.$watch(
+        () => core.state.settings.fontSize,
+        () => {
+          this.rowHeightMeasured = false;
+          this.$nextTick(() => this.syncRowHeight());
+        }
+      );
+
+      this.$nextTick(() => this.syncRowHeight());
+    },
+    updated(): void {
+      if (!this.rowHeightMeasured) this.syncRowHeight();
     },
     methods: {
       applyOrientationAutoFilter(): void {
@@ -668,6 +719,24 @@
             horizonAutoGenderFilter: false
           } as any;
         }
+      },
+
+      memberKey(member: Channel.Member): string {
+        return member.character.name;
+      },
+
+      // rows are always the same height for a user, so we can measure it once and
+      // call it a day. the font size watcher in mounted() re-arms this if it changes
+      syncRowHeight(): void {
+        const list = this.$refs['memberList'] as Vue | undefined;
+        const row = list?.$el.querySelector('.virtual-list-row');
+        if (!row) return;
+
+        const height = row.getBoundingClientRect().height;
+        if (height <= 0) return;
+
+        this.rowHeight = height;
+        this.rowHeightMeasured = true;
       },
 
       getFilteredMembers() {
