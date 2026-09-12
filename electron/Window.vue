@@ -139,8 +139,8 @@
           display: flex;
           justify-content: flex-end;
           -webkit-app-region: drag;
-          margin-right: 130px;
         "
+        :style="{ marginRight: windowControlsOverlayMargin }"
         id="windowButtons"
         class="btn-group"
         v-if="!hideWindowControls"
@@ -262,7 +262,8 @@
           : 'title.dev') as string,
         isClosing: false,
         hideWindowControls: false,
-        hideSingleTab: true
+        hideSingleTab: true,
+        windowControlsOverlayMargin: '130px'
       };
     },
     watch: {
@@ -290,6 +291,12 @@
     },
     async mounted(): Promise<void> {
       log.debug('init.window.mounting');
+      this.updateWindowControlsOverlayMargin();
+      const windowControlsOverlay = (navigator as any).windowControlsOverlay;
+      windowControlsOverlay?.addEventListener(
+        'geometrychange',
+        this.updateWindowControlsOverlayMargin
+      );
       // top bar devtools
       // browserWindow.webContents.openDevTools({ mode: 'detach' });
 
@@ -572,7 +579,33 @@
 
       log.debug('init.window.mounted');
     },
+    beforeDestroy(): void {
+      //Yes, this is a to any cast. Too bad.
+      //This is not a property that gets exposed through the navigator type, but it exists in Electron's runtime as of 2026-09-12. (We are using v42.4.1 as of writing)
+      //If this ever breaks, now you know why. You'll have to find a different way to get the margin areas.
+      const windowControlsOverlay = (navigator as any).windowControlsOverlay;
+      windowControlsOverlay?.removeEventListener(
+        'geometrychange',
+        this.updateWindowControlsOverlayMargin
+      );
+    },
     methods: {
+      //Same comment as the beforeDestroy method. This is not a property that gets exposed through the navigator type, but it exists in Electron's runtime as of 2026-09-12. Blah blah blah...
+      //On Windows we can kind of guess the size this takes. Have fun doing the same shit on Linux.
+      updateWindowControlsOverlayMargin(): void {
+        const windowControlsOverlay = (navigator as any).windowControlsOverlay;
+        const titlebarArea = windowControlsOverlay?.getTitlebarAreaRect();
+
+        if (!titlebarArea) {
+          this.windowControlsOverlayMargin = '130px';
+          return;
+        }
+
+        this.windowControlsOverlayMargin = `${Math.max(
+          0,
+          window.innerWidth - titlebarArea.right
+        )}px`;
+      },
       getSyncedTheme() {
         if (!this.settings.themeSync) return this.settings.theme;
         return this.osIsDark
