@@ -9,15 +9,7 @@
     <tabs
       style="flex-shrink: 0"
       :fullWidth="true"
-      :tabs="
-        //We label the 'all' tab as 2 so that it doesnt pop up when going
-        //from a channel to the console. It's very annoying behaviour
-        channel
-          ? { 0: l('users.friends'), 1: l('users.members') }
-          : !isConsoleTab
-            ? { 0: l('users.friends'), 1: l('user.profile') }
-            : { 0: l('users.friends'), 2: l('users.friends.all') }
-      "
+      :tabs="tabs"
       v-model="tab"
     ></tabs>
     <div
@@ -412,6 +404,26 @@
       };
     },
     computed: {
+      tabs(): Array<{ id: string; label: string }> {
+        if (this.channel) {
+          return [
+            { id: '0', label: l('users.friends') },
+            { id: '1', label: l('users.members') }
+          ];
+        }
+
+        if (!this.isConsoleTab) {
+          return [
+            { id: '0', label: l('users.friends') },
+            { id: '1', label: l('user.profile') }
+          ];
+        }
+
+        return [
+          { id: '0', label: l('users.friends') },
+          { id: '2', label: l('users.friends.all') }
+        ];
+      },
       //Making these settings a getter performs better with larger lists
       showPerCharacterFriends(): boolean {
         return core.state.settings.showPerCharacterFriends;

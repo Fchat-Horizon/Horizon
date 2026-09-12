@@ -46,7 +46,7 @@
                 @click="hideWithCheck"
                 v-if="showCancel"
               >
-                {{ l('action.cancel') }}
+                {{ cancelButtonText }}
               </button>
               <button
                 type="button"
@@ -109,6 +109,7 @@
       buttonClass: { default: () => ({ 'btn-primary': true }) },
       disabled: {},
       showCancel: { default: true },
+      cancelText: { default: '' },
       buttonText: {},
       iconClass: {}
     },
@@ -124,6 +125,9 @@
     computed: {
       submitText(): string {
         return this.buttonText !== undefined ? this.buttonText : this.action;
+      },
+      cancelButtonText(): string {
+        return this.cancelText !== '' ? this.cancelText : l('action.cancel');
       }
     },
     beforeDestroy(): void {
@@ -159,6 +163,7 @@
         if (dialogStack.length === 0) isShowing = false;
       },
       hideWithCheck(): void {
+        this.$emit('cancel');
         if (this.keepOpen) return;
         this.hide();
       },
