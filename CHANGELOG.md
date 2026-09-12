@@ -16,12 +16,15 @@ Hi. If you're finalizing the *stable* release, please check that you don't leave
 If you're publishing the pre-release, remove this comment. The Discord bot parses it and keeps it in the message it posts when pinging users.
 -->
 
-- Sufficiently large conversation files can now be imported and merged correctly while syncing with Solstice. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/455733015f730bee0989073885847435a9cf2a9e)
+- Sufficiently large conversation files can now be imported and merged correctly while syncing with Solstice. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/cbff1f6dfdfcabdf90da2c456c6e8b9162467d48)
 - Fixed the 'Open backup directory' button in the exporter tool taking you to your log directory instead. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/639a2b318eb65babac474a08838aaac64075cc52)
 
 ### Security
 
 - Tightened security for popups and Node in the image/ URL previewer. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3d57c40855927ae413b282a8cdceb794a436006c)
+
+### Development
+
 - Fixed issues with Dev tools not opening properly for the window and image preview web instance. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/455733015f730bee0989073885847435a9cf2a9e)
 - Switched to using an API key for CI/CD Mac notarization. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/13fcd7d515638462418b854b5a466ba8cc2991c4)
 
