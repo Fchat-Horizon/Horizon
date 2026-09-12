@@ -342,6 +342,7 @@ export namespace Character {
     readonly isCharacterFriend: boolean;
     readonly isChatOp: boolean;
     readonly isIgnored: boolean;
+    readonly isHidden: boolean;
     readonly overrides: CharacterOverrides;
     hasStatusTextChanged(): boolean;
   }

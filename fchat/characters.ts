@@ -16,6 +16,7 @@ class Character implements Interfaces.Character {
   isCharacterFriend = false;
   isChatOp = false;
   isIgnored = false;
+  isHidden = false;
   overrides: CharacterOverrides = {};
   previousStatusText = '';
 
@@ -83,6 +84,7 @@ class State implements Interfaces.State {
       char.isBookmarked = this.bookmarkList.some(b => b.toLowerCase() === key);
       char.isChatOp = this.opList.indexOf(name) !== -1;
       char.isIgnored = this.ignoreList.indexOf(key) !== -1;
+      char.isHidden = core.isHidden(name);
       this.characters[key] = char;
     }
     return char;
@@ -206,6 +208,7 @@ export default function (this: void, connection: Connection): Interfaces.State {
     for (const key in state.characters) {
       const char = state.characters[key]!;
       char.isIgnored = state.ignoreList.indexOf(key) !== -1;
+      char.isHidden = core.isHidden(char.name);
       char.isChatOp = state.opList.indexOf(char.name) !== -1;
     }
   });

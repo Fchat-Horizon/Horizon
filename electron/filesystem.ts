@@ -201,6 +201,7 @@ export function fixLogs(character: string): void {
           isCharacterFriend: false,
           isChatOp: false,
           isIgnored: false,
+          isHidden: false,
           name,
           overrides: {},
           hasStatusTextChanged: () => false
