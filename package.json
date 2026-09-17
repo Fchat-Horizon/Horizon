@@ -72,6 +72,7 @@
     "@ghostery/adblocker-electron": "^2.18.2",
     "@ghostery/adblocker-electron-preload": "^2.18.2",
     "@ghostery/adblocker-extended-selectors": "^2.18.2",
+    "@zip.js/zip.js": "^2.15.0",
     "adm-zip": "^0.5.17",
     "archiver": "^7.0.1",
     "node-fetch": "^2.7.0",
