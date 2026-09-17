@@ -107,6 +107,11 @@
           default = horizon-electron;
         };
 
+        apps.nix-update = {
+          type = "app";
+          program = "${pkgs.nix-update}/bin/nix-update";
+        };
+
         #The dev stuff, it's full of voodoo hoodoo and things I've not even tried. For my friends on the other side.
         devShells.default = pkgs.mkShell {
           name = "fchat-horizon-dev";

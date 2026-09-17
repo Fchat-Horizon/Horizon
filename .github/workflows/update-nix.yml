@@ -12,7 +12,6 @@ on:
       - 'patches/**'
       - 'flake.nix'
       - 'flake.lock'
-      - 'scripts/update-nix-pnpm-hash.mjs'
       - '.github/workflows/update-nix.yml'
   workflow_dispatch:
 
@@ -37,14 +36,12 @@ jobs:
         with:
           ref: development
 
-      - uses: actions/setup-node@v6
-        with:
-          node-version-file: '.nvmrc'
-
       - uses: cachix/install-nix-action@v31
 
       - name: Refresh and verify pnpm dependency hash
-        run: node scripts/update-nix-pnpm-hash.mjs
+        run: |
+          nix run --no-update-lock-file .#nix-update -- horizon-electron --flake --version=skip
+          nix build --no-link --no-update-lock-file .#horizon-electron.pnpmDeps
 
       - name: Check for changes
         id: changes

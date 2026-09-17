@@ -69,10 +69,10 @@ patch_sass_embed
 ```
 
 Before testing a Nix build after changing dependencies, refresh `pnpmDeps.hash`
-in `flake.nix`. With Nix and Node installed, fetch and verify the dependencies:
+in `flake.nix`. With Nix installed, run:
 
 ```bash
-node scripts/update-nix-pnpm-hash.mjs
+nix run --no-update-lock-file .#nix-update -- horizon-electron --flake --version=skip
 ```
 
 ### Building
