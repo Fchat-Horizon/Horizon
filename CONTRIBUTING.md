@@ -68,6 +68,13 @@ pnpm install
 patch_sass_embed
 ```
 
+Before testing a Nix build after changing dependencies, refresh `pnpmDeps.hash`
+in `flake.nix`. With Nix and Node installed, fetch and verify the dependencies:
+
+```bash
+node scripts/update-nix-pnpm-hash.mjs
+```
+
 ### Building
 
 #### Electron

@@ -1,0 +1,87 @@
+name: Update Nix dependency hash
+
+on:
+  push:
+    branches: [development]
+    paths:
+      - '**/package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '**/.npmrc'
+      - '**/.pnpmfile.cjs'
+      - 'patches/**'
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'scripts/update-nix-pnpm-hash.mjs'
+      - '.github/workflows/update-nix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: update-nix-development
+  cancel-in-progress: false
+
+jobs:
+  update:
+    # Keep automatic and manual runs on the same trusted integration branch.
+    if: github.ref == 'refs/heads/development'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: development
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Refresh and verify pnpm dependency hash
+        run: node scripts/update-nix-pnpm-hash.mjs
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet -- flake.nix; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build updated flake
+        if: steps.changes.outputs.changed == 'true'
+        run: nix build --no-link --no-update-lock-file --print-build-logs
+
+      - name: Create or update pull request
+        id: pr
+        uses: peter-evans/create-pull-request@v8
+        with:
+          add-paths: flake.nix
+          branch: automation/nix-pnpm-hash
+          base: development
+          delete-branch: true
+          author: 'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'
+          commit-message: 'chore(nix): refresh pnpm dependency hash'
+          title: 'chore(nix): refresh dependency hash'
+          body: |
+            Update `pnpmDeps.hash` in `flake.nix` to fix the dependency hash mismatch.
+
+            See the [build log](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for the successful dependency fetch and Horizon build on x86_64 Linux.
+
+      - name: Summarize result
+        env:
+          PR_URL: ${{ steps.pr.outputs.pull-request-url }}
+          CHANGED: ${{ steps.changes.outputs.changed }}
+        run: |
+          if [ "$CHANGED" = 'true' ]; then
+            echo "Verified the updated flake and proposed the hash change: $PR_URL" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'The Nix pnpm dependency hash is already current.' >> "$GITHUB_STEP_SUMMARY"
+          fi
