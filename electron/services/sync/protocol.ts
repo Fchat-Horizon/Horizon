@@ -43,6 +43,31 @@ export const SYNC_MAX_BODY_BYTES = 512 * 1024 * 1024;
  */
 export const SYNC_MAX_UNCOMPRESSED_BYTES = 2 * 1024 * 1024 * 1024;
 
+/**
+ * Uncompressed JSON one version 2 batch aims for. Counted on the serialized
+ * JSON rather than the binary log because JSON escaping is what the receiver
+ * has to allocate. A batch is cut after the record that crosses this, so it
+ * overshoots by at most one record rather than splitting one.
+ */
+export const SYNC_BATCH_TARGET_BYTES = 16 * 1024 * 1024;
+
+/** Records one batch may carry, so tiny messages cannot swamp the receiver. */
+export const SYNC_BATCH_MAX_RECORDS = 150000;
+
+/**
+ * Root entry naming a batch's place in the sequence. Receivers that predate
+ * version 2 skip it: both sides ignore any entry that is not a four-segment
+ * `characters/{char}/logs/{key}.json` path.
+ */
+export const SYNC_BATCH_ENTRY = 'sync-batch.json';
+
+export interface SyncBatchInfo {
+  /** Zero-based position of this batch in the sequence. */
+  index: number;
+  /** True when no further batch follows in this direction. */
+  done: boolean;
+}
+
 /** A session that has not completed a handshake expires after this long. */
 export const SYNC_SESSION_TIMEOUT_MS = 10 * 60 * 1000;
 
