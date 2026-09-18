@@ -273,6 +273,7 @@ export async function buildLogsBatchZip(
   batchIndex: number,
   budget: number,
   maxRecords: number,
+  nextCursor: string,
   signal?: AbortSignal
 ): Promise<LogsBatchResult> {
   signal?.throwIfAborted();
@@ -349,7 +350,12 @@ export async function buildLogsBatchZip(
     },
     slices.length + names.size
   );
-  const batch: SyncBatchInfo = { index: batchIndex, done: next === undefined };
+  // The server mints the token before the batch is built, because it owns the
+  // map from token to position; the archive only carries it to the peer.
+  const batch: SyncBatchInfo =
+    next === undefined
+      ? { index: batchIndex, done: true }
+      : { index: batchIndex, done: false, cursor: nextCursor };
 
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
   const bytes = await writeZipFile(outFile, async zip => {

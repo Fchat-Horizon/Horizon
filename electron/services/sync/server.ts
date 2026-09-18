@@ -14,6 +14,7 @@
  * See docs/log-sync-protocol.md for the protocol.
  */
 
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as http from 'http';
 import type { AddressInfo } from 'net';
@@ -21,8 +22,9 @@ import type { Socket } from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import { runArchiveJob } from './archive-job';
+import type { ArchiveBatchRequest } from './archive-job';
 import type { LogMergeReport } from './log-merge';
-import type { LogsZipResult } from './logs-zip';
+import type { LogsZipPosition, LogsZipResult } from './logs-zip';
 import {
   buildSessionPayload,
   decryptBody,
@@ -30,7 +32,11 @@ import {
   generateSessionSecrets,
   tokensMatch,
   SYNC_ACTIVE_IDLE_TIMEOUT_MS,
+  SYNC_BATCH_MAX_RECORDS,
+  SYNC_BATCH_TARGET_BYTES,
+  SYNC_CURSOR_START,
   SYNC_MAX_AUTH_FAILURES,
+  SYNC_MAX_BATCHES,
   SYNC_MAX_BODY_BYTES,
   SYNC_PROTOCOL_VERSION,
   SYNC_SESSION_TIMEOUT_MS
@@ -71,6 +77,12 @@ function syncError(status: number, code: string): SyncError {
   return { status, code };
 }
 
+/** A batch the server is about to build, plus the bookkeeping it keeps locally. */
+interface PendingBatch extends ArchiveBatchRequest {
+  /** Cursor the peer asked with, unless it asked for the first batch. */
+  previous?: string;
+}
+
 export class LogSyncServer {
   readonly payload: SyncSessionPayload;
 
@@ -101,6 +113,22 @@ export class LogSyncServer {
   private mergedMessages = 0;
   private readonly sentConversations = new Set<string>();
   private readonly sentCharacters = new Set<string>();
+  /**
+   * Live send cursors, token to position. At most two are kept: the one that
+   * produced the batch just sent, so a peer whose download died can ask for it
+   * again, and the one naming the batch after it.
+   */
+  private sendCursors = new Map<
+    string,
+    { position: LogsZipPosition; index: number }
+  >();
+  /**
+   * Set once a merge has rewritten local logs. Send cursors are byte offsets
+   * into those files, so anything outstanding now points into moved data; a
+   * peer that interleaves downloads with uploads must start over rather than
+   * silently skip messages.
+   */
+  private sendCursorsStale = false;
 
   /** Resolves after pending file jobs and temporary-file cleanup have finished. */
   async whenIdle(): Promise<void> {
@@ -134,6 +162,31 @@ export class LogSyncServer {
     };
     this.mergeStats = stats;
     return stats;
+  }
+
+  /**
+   * Retires the cursor map after a batch. The cursor that produced this batch
+   * stays valid so a peer whose download failed can repeat it; the freshly
+   * minted one names whatever follows. Everything older is dropped.
+   */
+  private advanceSendCursor(
+    batch: PendingBatch,
+    next: LogsZipPosition | undefined
+  ): void {
+    const retained = new Map<
+      string,
+      { position: LogsZipPosition; index: number }
+    >();
+    if (batch.previous !== undefined) {
+      const self = this.sendCursors.get(batch.previous);
+      if (self !== undefined) retained.set(batch.previous, self);
+    }
+    if (next !== undefined)
+      retained.set(batch.nextCursor, {
+        position: next,
+        index: batch.index + 1
+      });
+    this.sendCursors = retained;
   }
 
   /** Same idea for the outgoing direction, so a conversation split across
@@ -368,7 +421,7 @@ export class LogSyncServer {
 
       const route = `${req.method} ${(req.url ?? '').split('?')[0]}`;
       if (route === 'POST /v1/handshake') await this.handleHandshake(req, res);
-      else if (route === 'GET /v1/logs') await this.handleGetLogs(res);
+      else if (route === 'GET /v1/logs') await this.handleGetLogs(req, res);
       else if (route === 'POST /v1/logs') await this.handlePostLogs(req, res);
       else if (route === 'POST /v1/finish') this.handleFinish(res);
       else throw syncError(404, 'not-found');
@@ -450,9 +503,50 @@ export class LogSyncServer {
     });
   }
 
-  private async handleGetLogs(res: http.ServerResponse): Promise<void> {
+  /**
+   * Resolves the `cursor` query parameter into the batch to build. Absent means
+   * the peer wants the whole archive, which is what every client built before
+   * batching existed asks for, so that stays the default.
+   */
+  private resolveBatchRequest(
+    url: string | undefined
+  ): PendingBatch | undefined {
+    const cursor = new URL(url ?? '/', 'http://localhost').searchParams.get(
+      'cursor'
+    );
+    if (cursor === null) return undefined;
+    if (this.sendCursorsStale) throw syncError(409, 'cursor-stale');
+    let start: LogsZipPosition;
+    let index: number;
+    if (cursor === SYNC_CURSOR_START) {
+      start = { offset: 0 };
+      index = 0;
+    } else {
+      const known = this.sendCursors.get(cursor);
+      if (known === undefined) throw syncError(409, 'unknown-cursor');
+      start = known.position;
+      index = known.index;
+    }
+    if (index >= SYNC_MAX_BATCHES) throw syncError(409, 'too-many-batches');
+    return {
+      start,
+      index,
+      budget: SYNC_BATCH_TARGET_BYTES,
+      maxRecords: SYNC_BATCH_MAX_RECORDS,
+      // The token is opaque on purpose: the query string is not encrypted, so a
+      // position naming characters and conversation keys would leak them.
+      nextCursor: crypto.randomBytes(16).toString('hex'),
+      previous: cursor === SYNC_CURSOR_START ? undefined : cursor
+    };
+  }
+
+  private async handleGetLogs(
+    req: http.IncomingMessage,
+    res: http.ServerResponse
+  ): Promise<void> {
     if (this.busy) throw syncError(409, 'busy');
     if (this.state !== 'paired') throw syncError(409, 'not-paired');
+    const batch = this.resolveBatchRequest(req.url);
     this.busy = true;
     // Suspend the idle timeout for the duration of the transfer; a large log
     // set may legitimately take longer than the paired-session idle window.
@@ -479,7 +573,17 @@ export class LogSyncServer {
           kind: 'export',
           dataDir: this.options.dataDir,
           outFile: zipFile,
-          key: this.secrets.key
+          key: this.secrets.key,
+          batch:
+            batch === undefined
+              ? undefined
+              : {
+                  start: batch.start,
+                  index: batch.index,
+                  budget: batch.budget,
+                  maxRecords: batch.maxRecords,
+                  nextCursor: batch.nextCursor
+                }
         },
         transfer.signal
       );
@@ -530,6 +634,7 @@ export class LogSyncServer {
       });
       this.ensureActive();
       this.recordSend(result);
+      if (batch !== undefined) this.advanceSendCursor(batch, completed.next);
       this.setState('paired');
     } catch (error) {
       this.recoverToPaired();
@@ -576,6 +681,9 @@ export class LogSyncServer {
       this.ensureActive();
       if (completed.kind !== 'merge')
         throw new Error('Unexpected sync worker result');
+      // Local logs have just moved, so any outstanding send cursor now points
+      // into rewritten files.
+      this.sendCursorsStale = true;
       // Report the session running total, so a batching peer can show
       // progress and a version 1 peer (one POST) sees exactly what it used to.
       this.respondJson(res, 200, {

@@ -1,13 +1,34 @@
 import * as path from 'path';
 import { Worker } from 'worker_threads';
 import type { LogMergeReport } from './log-merge';
-import type { LogsZipResult } from './logs-zip';
+import type { LogsZipPosition, LogsZipResult } from './logs-zip';
+
+/** Set when an export should produce one batch rather than the whole archive. */
+export interface ArchiveBatchRequest {
+  start: LogsZipPosition;
+  index: number;
+  budget: number;
+  maxRecords: number;
+  nextCursor: string;
+}
 
 export type ArchiveJob =
-  | { kind: 'export'; dataDir: string; outFile: string; key: Uint8Array }
+  | {
+      kind: 'export';
+      dataDir: string;
+      outFile: string;
+      key: Uint8Array;
+      batch?: ArchiveBatchRequest;
+    }
   | { kind: 'merge'; dataDir: string; encrypted: ArrayBuffer; key: Uint8Array };
 export type ArchiveJobResult =
-  | { kind: 'export'; result: LogsZipResult; encrypted: ArrayBuffer }
+  | {
+      kind: 'export';
+      result: LogsZipResult;
+      encrypted: ArrayBuffer;
+      /** Where the next batch resumes; absent when the log set is finished. */
+      next?: LogsZipPosition;
+    }
   | { kind: 'merge'; report: LogMergeReport };
 
 let nextJobId = 0;

@@ -55,6 +55,16 @@ export const SYNC_BATCH_TARGET_BYTES = 16 * 1024 * 1024;
 export const SYNC_BATCH_MAX_RECORDS = 150000;
 
 /**
+ * Cursor value a peer sends to ask for the first batch. Any other value is an
+ * opaque token minted by the server; the parameter being present at all is the
+ * capability signal, so a peer that never sends one keeps the whole archive.
+ */
+export const SYNC_CURSOR_START = 'start';
+
+/** Batches one direction may take, so a cursor bug cannot loop forever. */
+export const SYNC_MAX_BATCHES = 1024;
+
+/**
  * Root entry naming a batch's place in the sequence. Receivers that predate
  * version 2 skip it: both sides ignore any entry that is not a four-segment
  * `characters/{char}/logs/{key}.json` path.
@@ -66,6 +76,8 @@ export interface SyncBatchInfo {
   index: number;
   /** True when no further batch follows in this direction. */
   done: boolean;
+  /** Token to request the next batch with. Absent once `done`. */
+  cursor?: string;
 }
 
 /** A session that has not completed a handshake expires after this long. */
@@ -76,8 +88,12 @@ export const SYNC_SESSION_TIMEOUT_MS = 10 * 60 * 1000;
  * long without a request, so a peer that disappears mid-session cannot leave
  * the server running indefinitely. Suspended while a transfer is actually in
  * flight, which may legitimately take longer than this.
+ *
+ * It is re-armed between batches, so it also bounds how long the peer may
+ * spend merging one batch before asking for the next. A phone merging a large
+ * conversation needs more than the two minutes a single transfer allowed.
  */
-export const SYNC_ACTIVE_IDLE_TIMEOUT_MS = 2 * 60 * 1000;
+export const SYNC_ACTIVE_IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 
 /** The session aborts after this many failed authorization attempts. */
 export const SYNC_MAX_AUTH_FAILURES = 5;
