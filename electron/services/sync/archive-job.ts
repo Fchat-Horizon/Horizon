@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { Worker } from 'worker_threads';
-import type { LogMergeStats } from './protocol';
+import type { LogMergeReport } from './log-merge';
 import type { LogsZipResult } from './logs-zip';
 
 export type ArchiveJob =
@@ -8,7 +8,7 @@ export type ArchiveJob =
   | { kind: 'merge'; dataDir: string; encrypted: ArrayBuffer; key: Uint8Array };
 export type ArchiveJobResult =
   | { kind: 'export'; result: LogsZipResult; encrypted: ArrayBuffer }
-  | { kind: 'merge'; stats: LogMergeStats };
+  | { kind: 'merge'; report: LogMergeReport };
 
 let nextJobId = 0;
 

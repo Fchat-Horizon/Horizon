@@ -33,6 +33,12 @@ export interface LogsZipResult {
   characters: string[];
   /** Number of conversation log files included. */
   conversations: number;
+  /**
+   * `{character}/{file}` for every conversation in this archive. A batched
+   * session unions these, so a conversation spanning several batches counts
+   * once rather than once per batch.
+   */
+  conversationKeys: string[];
 }
 
 function listCharacters(dataDir: string): string[] {
@@ -78,6 +84,7 @@ export async function buildLogsZip(
   signal?.throwIfAborted();
   const characters = listCharacters(dataDir);
   const included: string[] = [];
+  const conversationKeys: string[] = [];
   let conversations = 0;
 
   type CharacterLogs = { character: string; files: string[]; logsDir: string };
@@ -88,6 +95,7 @@ export async function buildLogsZip(
     if (files.length === 0) continue;
     plan.push({ character, files, logsDir });
     included.push(character);
+    for (const file of files) conversationKeys.push(`${character}/${file}`);
     conversations += files.length;
   }
 
@@ -217,5 +225,5 @@ export async function buildLogsZip(
   } finally {
     signal?.removeEventListener('abort', abort);
   }
-  return { characters: included, conversations };
+  return { characters: included, conversations, conversationKeys };
 }

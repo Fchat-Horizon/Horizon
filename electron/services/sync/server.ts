@@ -21,6 +21,7 @@ import type { Socket } from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import { runArchiveJob } from './archive-job';
+import type { LogMergeReport } from './log-merge';
 import type { LogsZipResult } from './logs-zip';
 import {
   buildSessionPayload,
@@ -91,10 +92,60 @@ export class LogSyncServer {
   private busy = false;
   private readonly cancellation = new AbortController();
   private readonly requests = new Set<Promise<void>>();
+  // Session totals. A version 2 session makes many transfers, so every
+  // per-transfer outcome is folded into these rather than replacing the last.
+  private readonly mergedCreated = new Set<string>();
+  private readonly mergedUpdated = new Set<string>();
+  private readonly mergedSkipped = new Set<string>();
+  private readonly mergedCharacters = new Set<string>();
+  private mergedMessages = 0;
+  private readonly sentConversations = new Set<string>();
+  private readonly sentCharacters = new Set<string>();
 
   /** Resolves after pending file jobs and temporary-file cleanup have finished. */
   async whenIdle(): Promise<void> {
     await Promise.allSettled(Array.from(this.requests));
+  }
+
+  /**
+   * Folds one batch's merge outcome into the session totals. Conversations are
+   * unioned by identity because only messagesAdded is genuinely additive: a
+   * conversation created by one batch and extended by the next stays a single
+   * creation, a character touched by thirty batches counts once, and a damaged
+   * conversation refused by every batch is reported once rather than thirty
+   * times (that count is what tells the user to run Fix Logs).
+   */
+  private recordMerge(report: LogMergeReport): LogMergeStats {
+    for (const id of report.identities.created) this.mergedCreated.add(id);
+    for (const id of report.identities.updated) this.mergedUpdated.add(id);
+    for (const id of report.identities.skipped) this.mergedSkipped.add(id);
+    for (const name of report.identities.characters)
+      this.mergedCharacters.add(name);
+    this.mergedMessages += report.stats.messagesAdded;
+    let updated = 0;
+    for (const id of this.mergedUpdated)
+      if (!this.mergedCreated.has(id)) updated++;
+    const stats: LogMergeStats = {
+      conversationsCreated: this.mergedCreated.size,
+      conversationsUpdated: updated,
+      messagesAdded: this.mergedMessages,
+      charactersTouched: this.mergedCharacters.size,
+      conversationsSkipped: this.mergedSkipped.size
+    };
+    this.mergeStats = stats;
+    return stats;
+  }
+
+  /** Same idea for the outgoing direction, so a conversation split across
+   * batches is reported once in the session summary. */
+  private recordSend(result: LogsZipResult): void {
+    for (const name of result.characters) this.sentCharacters.add(name);
+    for (const key of result.conversationKeys) this.sentConversations.add(key);
+    this.sentResult = {
+      characters: Array.from(this.sentCharacters),
+      conversations: this.sentConversations.size,
+      conversationKeys: Array.from(this.sentConversations)
+    };
   }
 
   private get ended(): boolean {
@@ -478,7 +529,7 @@ export class LogSyncServer {
         res.end(encrypted);
       });
       this.ensureActive();
-      this.sentResult = result;
+      this.recordSend(result);
       this.setState('paired');
     } catch (error) {
       this.recoverToPaired();
@@ -525,8 +576,12 @@ export class LogSyncServer {
       this.ensureActive();
       if (completed.kind !== 'merge')
         throw new Error('Unexpected sync worker result');
-      this.mergeStats = completed.stats;
-      this.respondJson(res, 200, { ok: true, ...this.mergeStats });
+      // Report the session running total, so a batching peer can show
+      // progress and a version 1 peer (one POST) sees exactly what it used to.
+      this.respondJson(res, 200, {
+        ok: true,
+        ...this.recordMerge(completed.report)
+      });
       this.setState('paired');
     } catch (error) {
       if ((error as SyncError)?.code === 'bad-encryption') {

@@ -51,6 +51,24 @@ function archiveTooLargeError(message: string): Error {
   });
 }
 
+/**
+ * Which conversations one merge touched, keyed `{character}/{key}`. A batched
+ * session unions these across batches: counts cannot simply be summed, because
+ * a conversation created by one batch and extended by the next would otherwise
+ * be reported as both a creation and an update.
+ */
+export interface LogMergeIdentities {
+  created: string[];
+  updated: string[];
+  skipped: string[];
+  characters: string[];
+}
+
+export interface LogMergeReport {
+  stats: LogMergeStats;
+  identities: LogMergeIdentities;
+}
+
 export interface FileMergeResult {
   added: number;
   created: boolean;
@@ -321,7 +339,7 @@ export function mergeLogsZip(
   dataDir: string,
   zip: AdmZip,
   checkCancelled: () => void = neverCancelled
-): LogMergeStats {
+): LogMergeReport {
   validateSyncArchive(zip, checkCancelled);
   const stats: LogMergeStats = {
     conversationsCreated: 0,
@@ -329,6 +347,12 @@ export function mergeLogsZip(
     messagesAdded: 0,
     charactersTouched: 0,
     conversationsSkipped: 0
+  };
+  const identities: LogMergeIdentities = {
+    created: [],
+    updated: [],
+    skipped: [],
+    characters: []
   };
   const touched = new Set<string>();
   const namesByCharacter = new Map<string, Map<string, string>>();
@@ -368,15 +392,25 @@ export function mergeLogsZip(
       names.get(key.toLowerCase()),
       checkCancelled
     );
-    if (result.skipped) stats.conversationsSkipped++;
+    const id = `${character}/${key}`;
+    if (result.skipped) {
+      stats.conversationsSkipped++;
+      identities.skipped.push(id);
+    }
     if (result.added > 0) {
       stats.messagesAdded += result.added;
-      if (result.created) stats.conversationsCreated++;
-      else stats.conversationsUpdated++;
+      if (result.created) {
+        stats.conversationsCreated++;
+        identities.created.push(id);
+      } else {
+        stats.conversationsUpdated++;
+        identities.updated.push(id);
+      }
       touched.add(character);
     }
   }
 
   stats.charactersTouched = touched.size;
-  return stats;
+  identities.characters = Array.from(touched);
+  return { stats, identities };
 }
