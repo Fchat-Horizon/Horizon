@@ -258,6 +258,34 @@ function buildIndexTail(
 }
 
 /**
+ * Debug assertion for the append path, enabled with HORIZON_SYNC_VERIFY. The
+ * whole correctness argument for extending an index in place reduces to this:
+ * the result must equal a rebuild from the finished log. A mismatch is a
+ * duplicate or out-of-order day entry, which hides messages from the log viewer
+ * without changing any message count, so it would otherwise surface weeks later
+ * as "some of my history is missing" rather than as a failure here.
+ */
+function verifyIndexMatchesLog(file: string): void {
+  const indexFile = `${file}.idx`;
+  const log = fs.readFileSync(file);
+  const actual = fs.existsSync(indexFile)
+    ? fs.readFileSync(indexFile)
+    : undefined;
+  const expected = buildLogIndexBuffer(
+    actual !== undefined ? (readLogIndexName(actual) ?? '') : '',
+    log
+  );
+  const agrees =
+    expected === undefined
+      ? actual === undefined
+      : actual !== undefined && expected.equals(actual);
+  if (!agrees)
+    throw new Error(
+      `Sync append left ${indexFile} out of step with its log. This is a bug in the append fast path.`
+    );
+}
+
+/**
  * Extends a conversation in place rather than rewriting it. Returns undefined
  * when any precondition fails, which means the caller must take the full path.
  *
@@ -299,6 +327,7 @@ function appendToLog(
     }
     carry.lastDay = tail.lastDay;
     carry.size += appended.length;
+    if (process.env.HORIZON_SYNC_VERIFY) verifyIndexMatchesLog(file);
     return true;
   } catch (error) {
     if (grew) {

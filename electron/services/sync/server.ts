@@ -32,8 +32,8 @@ import {
   generateSessionSecrets,
   tokensMatch,
   SYNC_ACTIVE_IDLE_TIMEOUT_MS,
+  batchTargetBytes,
   SYNC_BATCH_MAX_RECORDS,
-  SYNC_BATCH_TARGET_BYTES,
   SYNC_CURSOR_START,
   SYNC_MAX_AUTH_FAILURES,
   SYNC_MAX_BATCHES,
@@ -538,7 +538,7 @@ export class LogSyncServer {
     return {
       start,
       index,
-      budget: SYNC_BATCH_TARGET_BYTES,
+      budget: batchTargetBytes(),
       maxRecords: SYNC_BATCH_MAX_RECORDS,
       // The token is opaque on purpose: the query string is not encrypted, so a
       // position naming characters and conversation keys would leak them.

@@ -55,6 +55,22 @@ export const SYNC_BATCH_TARGET_BYTES = 16 * 1024 * 1024;
 export const SYNC_BATCH_MAX_RECORDS = 150000;
 
 /**
+ * Batch budget to actually use, honouring HORIZON_SYNC_BATCH_BYTES when it is
+ * set to something sane. Testing the split path otherwise needs a conversation
+ * larger than the real budget; a small override turns a few megabytes of logs
+ * into dozens of batches, which exercises slicing, cursor chaining and the
+ * in-place extension without a multi-gigabyte fixture.
+ */
+export function batchTargetBytes(): number {
+  const override = Number(process.env.HORIZON_SYNC_BATCH_BYTES);
+  return Number.isSafeInteger(override) &&
+    override > 0 &&
+    override <= SYNC_MAX_BODY_BYTES
+    ? override
+    : SYNC_BATCH_TARGET_BYTES;
+}
+
+/**
  * Cursor value a peer sends to ask for the first batch. Any other value is an
  * opaque token minted by the server; the parameter being present at all is the
  * capability signal, so a peer that never sends one keeps the whole archive.
