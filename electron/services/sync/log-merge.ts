@@ -19,6 +19,15 @@
  * (`binaryLogToJson`, `jsonLogToBinary`, `buildLogIndexBuffer`, which also
  * back the exporter and CLI); this module adds only the message-level
  * union-merge and the sync zip's path handling.
+ *
+ * The merge never holds a whole conversation. A batch bounds what arrives, not
+ * what is already stored, so a large stored conversation would otherwise set
+ * the memory ceiling on its own. Instead a bounded scan walks the stored log in
+ * windows reading only record framing, and everything after it works one day at
+ * a time, which the `.idx` already partitions the conversation by. A
+ * conversation that only grows at the end skips the rebuild entirely and is
+ * extended in place. Peak memory is set by the largest single day plus the
+ * incoming batch.
  */
 
 import type AdmZip from 'adm-zip';
