@@ -1050,6 +1050,7 @@
   "sync.qrAlt": "Sync session QR code",
   "sync.scanHint": "Scan this QR code with Solstice to sync your chat logs.",
   "sync.start": "Start sync session",
+  "sync.state.batching": "Syncing with {device}... {batches} transfer(s) done.",
   "sync.state.merging": "Merging received logs...",
   "sync.state.paired": "Connected to {device}.",
   "sync.state.receiving": "Receiving logs from {device}...",

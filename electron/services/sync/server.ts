@@ -94,6 +94,10 @@ export class LogSyncServer {
   mergeStats: LogMergeStats | undefined = undefined;
   /** Set when the session ends abnormally. */
   errorCode: string | undefined = undefined;
+  /** Transfers completed in each direction, so the UI can show progress
+   * rather than flapping back to "connected" between batches. */
+  sentBatches = 0;
+  receivedBatches = 0;
 
   private readonly secrets: SyncSessionSecrets;
   private readonly server: http.Server;
@@ -637,6 +641,7 @@ export class LogSyncServer {
       });
       this.ensureActive();
       this.recordSend(result);
+      this.sentBatches++;
       if (batch !== undefined) this.advanceSendCursor(batch, completed.next);
       this.setState('paired');
     } catch (error) {
@@ -686,6 +691,7 @@ export class LogSyncServer {
       if (completed.kind !== 'merge')
         throw new Error('Unexpected sync worker result');
       this.mergeCarries = completed.report.carries;
+      this.receivedBatches++;
       // Local logs have just moved, so any outstanding send cursor now points
       // into rewritten files.
       this.sendCursorsStale = true;
