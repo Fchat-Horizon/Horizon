@@ -219,6 +219,30 @@ function readLogTail(
 }
 
 /**
+ * End offset of the record starting at `offset`, or -1 when `buffer` does not
+ * hold all of it or its trailing length marker disagrees with its framing.
+ *
+ * Reads framing only: the u8 sender length and the u16 text length, never the
+ * sender or text bytes themselves. That is what lets every walk over a stored
+ * log stay cheap no matter how large the log is.
+ *
+ * `recordEnd` in ../log-stream is the same idea but deliberately omits the
+ * trailer check, because a slice tolerates damage by returning the valid
+ * prefix. Keep the two separate; sharing one would change that tolerance.
+ */
+function nextRecord(buffer: Buffer, offset: number): number {
+  if (offset + 10 > buffer.length) return -1;
+  const senderLength = buffer.readUInt8(offset + 5);
+  const textStart = offset + 6 + senderLength + 2;
+  if (textStart > buffer.length) return -1;
+  const textLength = buffer.readUInt16LE(textStart - 2);
+  const end = textStart + textLength + 2;
+  if (end > buffer.length) return -1;
+  if (buffer.readUInt16LE(end - 2) !== end - offset - 2) return -1;
+  return end;
+}
+
+/**
  * Index entries for records appended at `from`, continuing the day sequence
  * after `lastDay`. Mirrors buildLogIndexBuffer's rule exactly, including the
  * strictly-greater day guard: a duplicate day key would make loadIndex
@@ -233,28 +257,27 @@ function buildIndexTail(
   const chunks: Buffer[] = [];
   let offset = 0;
   let day = lastDay;
-  while (offset + 10 <= appended.length) {
-    const senderLength = appended.readUInt8(offset + 5);
-    const textStart = offset + 6 + senderLength + 2;
-    if (textStart > appended.length) return undefined;
-    const textLength = appended.readUInt16LE(textStart - 2);
-    const next = textStart + textLength + 2;
-    if (next > appended.length) return undefined;
-    if (appended.readUInt16LE(next - 2) !== next - offset - 2) return undefined;
+  while (offset < appended.length) {
+    const next = nextRecord(appended, offset);
+    if (next < 0) return undefined;
     const recordDay = localDay(appended.readUInt32LE(offset));
     if (recordDay >= 0 && recordDay > day && recordDay <= 0xffff) {
       const absolute = from + offset;
       if (absolute > MAX_INDEX_OFFSET) return undefined;
-      const entry = Buffer.allocUnsafe(7);
-      entry.writeUInt16LE(recordDay, 0);
-      entry.writeUIntLE(absolute, 2, 5);
-      chunks.push(entry);
+      chunks.push(indexEntry(recordDay, absolute));
       day = recordDay;
     }
     offset = next;
   }
-  if (offset !== appended.length) return undefined;
   return { entries: Buffer.concat(chunks), lastDay: day };
+}
+
+/** One `.idx` body entry: u16 day key, u40 byte offset into the log. */
+function indexEntry(day: number, offset: number): Buffer {
+  const entry = Buffer.allocUnsafe(7);
+  entry.writeUInt16LE(day, 0);
+  entry.writeUIntLE(offset, 2, 5);
+  return entry;
 }
 
 /**
@@ -265,7 +288,7 @@ function buildIndexTail(
  * without changing any message count, so it would otherwise surface weeks later
  * as "some of my history is missing" rather than as a failure here.
  */
-function verifyIndexMatchesLog(file: string): void {
+function verifyIndexMatchesLog(file: string, what: 'append' | 'rebuild'): void {
   const indexFile = `${file}.idx`;
   const log = fs.readFileSync(file);
   const actual = fs.existsSync(indexFile)
@@ -281,7 +304,7 @@ function verifyIndexMatchesLog(file: string): void {
       : actual !== undefined && expected.equals(actual);
   if (!agrees)
     throw new Error(
-      `Sync append left ${indexFile} out of step with its log. This is a bug in the append fast path.`
+      `Sync ${what} left ${indexFile} out of step with its log. This is a bug in the ${what === 'append' ? 'append fast path' : 'day-at-a-time rebuild'}.`
     );
 }
 
@@ -327,7 +350,7 @@ function appendToLog(
     }
     carry.lastDay = tail.lastDay;
     carry.size += appended.length;
-    if (process.env.HORIZON_SYNC_VERIFY) verifyIndexMatchesLog(file);
+    if (process.env.HORIZON_SYNC_VERIFY) verifyIndexMatchesLog(file, 'append');
     return true;
   } catch (error) {
     if (grew) {
@@ -353,6 +376,58 @@ function appendToLog(
           fs.closeSync(handle);
         } catch {}
   }
+}
+
+/**
+ * Extends a conversation using what an earlier pass already established about
+ * it, when every precondition holds. Undefined means the caller must take the
+ * full path; it is never an error, only "not cheap this time".
+ *
+ * Deduplicating an ascending batch against just the trailing run is equivalent
+ * to deduplicating against the whole file, because every incoming message is
+ * then at or after the tail time and a sorted file holds every record at that
+ * time in its trailing run.
+ */
+function tryAppendCarry(
+  file: string,
+  carry: ConversationCarry,
+  incoming: JsonLogMessage[],
+  checkCancelled: () => void
+): FileMergeResult | undefined {
+  if (!carry.sorted || !carry.indexCanonical || carry.tailTime < 0)
+    return undefined;
+  const seenTail = new Set(carry.tailKeys);
+  const fresh: JsonLogMessage[] = [];
+  let previous = carry.tailTime;
+  for (const message of incoming) {
+    if (message.time < previous) return undefined;
+    previous = message.time;
+    const dedupe = dedupeKey(message);
+    if (seenTail.has(dedupe)) continue;
+    seenTail.add(dedupe);
+    fresh.push(message);
+  }
+  if (fresh.length === 0) return { added: 0, created: false };
+  let size: number;
+  try {
+    size = fs.statSync(file).size;
+  } catch {
+    size = -1;
+  }
+  if (size !== carry.size) return undefined;
+  checkCancelled();
+  if (!appendToLog(file, carry, fresh)) return undefined;
+  const last = fresh[fresh.length - 1].time;
+  const run = fresh.filter(message => message.time === last).map(dedupeKey);
+  if (last === carry.tailTime) carry.tailKeys.push(...run);
+  else {
+    carry.tailTime = last;
+    carry.tailKeys = run;
+  }
+  // A conversation whose trailing run outgrows the cap stops being cheap to
+  // dedupe against; retire the carry rather than let it grow.
+  if (carry.tailKeys.length > TAIL_RUN_LIMIT) carry.sorted = false;
+  return { added: fresh.length, created: false };
 }
 
 /**
@@ -386,54 +461,9 @@ export function mergeLogFile(
       : undefined;
   if (carry !== undefined && carry.damaged)
     return { added: 0, created: false, skipped: true };
-  if (
-    carry !== undefined &&
-    carry.sorted &&
-    carry.indexCanonical &&
-    carry.tailTime >= 0
-  ) {
-    const seenTail = new Set(carry.tailKeys);
-    const fresh: JsonLogMessage[] = [];
-    let ascending = true;
-    let previous = carry.tailTime;
-    for (const message of incoming) {
-      if (message.time < previous) {
-        ascending = false;
-        break;
-      }
-      previous = message.time;
-      const dedupe = dedupeKey(message);
-      if (seenTail.has(dedupe)) continue;
-      seenTail.add(dedupe);
-      fresh.push(message);
-    }
-    if (ascending) {
-      if (fresh.length === 0) return { added: 0, created: false };
-      let size: number;
-      try {
-        size = fs.statSync(file).size;
-      } catch {
-        size = -1;
-      }
-      if (size === carry.size) {
-        checkCancelled();
-        if (appendToLog(file, carry, fresh)) {
-          const last = fresh[fresh.length - 1].time;
-          const run = fresh
-            .filter(message => message.time === last)
-            .map(dedupeKey);
-          if (last === carry.tailTime) carry.tailKeys.push(...run);
-          else {
-            carry.tailTime = last;
-            carry.tailKeys = run;
-          }
-          // A conversation whose trailing run outgrows the cap stops being
-          // cheap to dedupe against; retire the carry rather than let it grow.
-          if (carry.tailKeys.length > TAIL_RUN_LIMIT) carry.sorted = false;
-          return { added: fresh.length, created: false };
-        }
-      }
-    }
+  if (carry !== undefined) {
+    const appended = tryAppendCarry(file, carry, incoming, checkCancelled);
+    if (appended !== undefined) return appended;
   }
 
   const exists = fs.existsSync(file);
