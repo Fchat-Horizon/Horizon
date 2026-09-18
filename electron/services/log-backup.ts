@@ -69,7 +69,12 @@ function decodeJsonText(raw: Buffer | string): string {
   return typeof raw === 'string' ? raw : utf8Decoder.decode(raw);
 }
 
-function localDay(timeSeconds: number): number {
+/**
+ * Local day number for a record timestamp, the key .idx entries are ordered by.
+ * Exported so the sync merge continues an index with exactly the day maths
+ * that built it; a second copy of this is how the two quietly drift apart.
+ */
+export function localDay(timeSeconds: number): number {
   const date = new Date(timeSeconds * 1000);
   return Math.floor(date.getTime() / dayMs - date.getTimezoneOffset() / 1440);
 }

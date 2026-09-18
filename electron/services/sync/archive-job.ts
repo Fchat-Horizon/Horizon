@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { Worker } from 'worker_threads';
-import type { LogMergeReport } from './log-merge';
+import type { ConversationCarries, LogMergeReport } from './log-merge';
 import type { LogsZipPosition, LogsZipResult } from './logs-zip';
 
 /** Set when an export should produce one batch rather than the whole archive. */
@@ -20,7 +20,14 @@ export type ArchiveJob =
       key: Uint8Array;
       batch?: ArchiveBatchRequest;
     }
-  | { kind: 'merge'; dataDir: string; encrypted: ArrayBuffer; key: Uint8Array };
+  | {
+      kind: 'merge';
+      dataDir: string;
+      encrypted: ArrayBuffer;
+      key: Uint8Array;
+      /** What the previous batch of this session learned, if any. */
+      carries?: ConversationCarries;
+    };
 export type ArchiveJobResult =
   | {
       kind: 'export';

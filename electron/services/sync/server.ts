@@ -23,7 +23,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { runArchiveJob } from './archive-job';
 import type { ArchiveBatchRequest } from './archive-job';
-import type { LogMergeReport } from './log-merge';
+import type { ConversationCarries, LogMergeReport } from './log-merge';
 import type { LogsZipPosition, LogsZipResult } from './logs-zip';
 import {
   buildSessionPayload,
@@ -129,6 +129,9 @@ export class LogSyncServer {
    * silently skip messages.
    */
   private sendCursorsStale = false;
+  /** Passed to each merge so a conversation split across batches is extended
+   * rather than read and rewritten once per batch. */
+  private mergeCarries: ConversationCarries = {};
 
   /** Resolves after pending file jobs and temporary-file cleanup have finished. */
   async whenIdle(): Promise<void> {
@@ -674,13 +677,15 @@ export class LogSyncServer {
           kind: 'merge',
           dataDir: this.options.dataDir,
           encrypted,
-          key: this.secrets.key
+          key: this.secrets.key,
+          carries: this.mergeCarries
         },
         this.cancellation.signal
       );
       this.ensureActive();
       if (completed.kind !== 'merge')
         throw new Error('Unexpected sync worker result');
+      this.mergeCarries = completed.report.carries;
       // Local logs have just moved, so any outstanding send cursor now points
       // into rewritten files.
       this.sendCursorsStale = true;

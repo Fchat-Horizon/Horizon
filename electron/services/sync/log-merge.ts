@@ -31,6 +31,7 @@ import {
   buildLogIndexBuffer,
   isFilesystemArtifact,
   jsonLogToBinary,
+  localDay,
   readLogIndexName
 } from '../log-backup';
 import type { JsonLogMessage } from '../log-backup';
@@ -67,6 +68,8 @@ export interface LogMergeIdentities {
 export interface LogMergeReport {
   stats: LogMergeStats;
   identities: LogMergeIdentities;
+  /** What the next batch of this session should carry forward. */
+  carries: ConversationCarries;
 }
 
 export interface FileMergeResult {
@@ -117,6 +120,213 @@ function dedupeKey(message: JsonLogMessage): string {
 }
 
 /**
+ * What a previous batch learned about one conversation, so a later batch
+ * carrying more of the same conversation can extend it instead of reading and
+ * rewriting the whole thing. Purely an optimisation: an absent or rejected
+ * carry just means the full read-modify-write path runs, which is always
+ * correct. Kept small and bounded, because only the conversation a batch ends
+ * on can continue into the next one.
+ */
+export interface ConversationCarry {
+  /** Verdict of the one full parse this conversation got. */
+  damaged: boolean;
+  /** Local record times were non-decreasing at that parse. */
+  sorted: boolean;
+  /** The .idx on disk was byte-identical to a rebuild from the log. */
+  indexCanonical: boolean;
+  /** Log size after the last merge, so a file changed underneath is noticed. */
+  size: number;
+  /** Time of the last record, or -1 for an empty log. */
+  tailTime: number;
+  /** Dedupe keys of every trailing record sharing tailTime. */
+  tailKeys: string[];
+  /** Day of the last .idx entry, or -1 when the index has none. */
+  lastDay: number;
+  /** Display name held in the index header. */
+  name: string;
+}
+
+/** Conversations whose carry is retained. Only the one a batch ends on can
+ * continue into the next, so a handful covers every real sender. */
+const CARRY_LIMIT = 8;
+/** Trailing records sharing one timestamp that the tail walk will collect. */
+const TAIL_RUN_LIMIT = 4096;
+/** Largest byte offset a 5-byte .idx entry can address. */
+const MAX_INDEX_OFFSET = 0xffffffffff;
+
+export type ConversationCarries = { [id: string]: ConversationCarry };
+
+/** Drops the oldest entries so a long session cannot grow the carry without
+ * bound as it crosses the IPC boundary each batch. */
+function trimCarries(carries: ConversationCarries): ConversationCarries {
+  const ids = Object.keys(carries);
+  if (ids.length <= CARRY_LIMIT) return carries;
+  const kept: ConversationCarries = {};
+  for (const id of ids.slice(ids.length - CARRY_LIMIT)) kept[id] = carries[id];
+  return kept;
+}
+
+/**
+ * Walks back from the end of a log collecting the trailing records that share
+ * the last record's timestamp, using the length each record stores in its own
+ * last two bytes. Deduplicating an ascending batch against just that run is
+ * equivalent to deduplicating against the whole file, because every incoming
+ * message is at or after the tail time and a sorted file holds every record at
+ * that time in its trailing run.
+ *
+ * Undefined when the walk cannot be trusted: a torn record, a run longer than
+ * the cap, or anything that fails a strict parse.
+ */
+function readLogTail(
+  file: string,
+  size: number
+): { time: number; keys: string[] } | undefined {
+  if (size === 0) return { time: -1, keys: [] };
+  let handle: number | undefined;
+  try {
+    handle = fs.openSync(file, 'r');
+    const trailer = Buffer.allocUnsafe(2);
+    const keys: string[] = [];
+    let position = size;
+    let time = -1;
+    while (position > 0) {
+      if (fs.readSync(handle, trailer, 0, 2, position - 2) !== 2)
+        return undefined;
+      const start = position - trailer.readUInt16LE(0) - 2;
+      if (start < 0 || start >= position) return undefined;
+      const record = Buffer.allocUnsafe(position - start);
+      if (
+        fs.readSync(handle, record, 0, record.length, start) !== record.length
+      )
+        return undefined;
+      const [message] = binaryLogToJson(record, true);
+      if (message === undefined) return undefined;
+      if (time === -1) time = message.time;
+      else if (message.time !== time) break;
+      keys.push(dedupeKey(message));
+      if (keys.length > TAIL_RUN_LIMIT) return undefined;
+      position = start;
+    }
+    return { time, keys };
+  } catch {
+    return undefined;
+  } finally {
+    if (handle !== undefined)
+      try {
+        fs.closeSync(handle);
+      } catch {}
+  }
+}
+
+/**
+ * Index entries for records appended at `from`, continuing the day sequence
+ * after `lastDay`. Mirrors buildLogIndexBuffer's rule exactly, including the
+ * strictly-greater day guard: a duplicate day key would make loadIndex
+ * overwrite the earlier entry while both offsets stayed in the array, which
+ * silently hides every message of that day before the second offset.
+ */
+function buildIndexTail(
+  appended: Buffer,
+  from: number,
+  lastDay: number
+): { entries: Buffer; lastDay: number } | undefined {
+  const chunks: Buffer[] = [];
+  let offset = 0;
+  let day = lastDay;
+  while (offset + 10 <= appended.length) {
+    const senderLength = appended.readUInt8(offset + 5);
+    const textStart = offset + 6 + senderLength + 2;
+    if (textStart > appended.length) return undefined;
+    const textLength = appended.readUInt16LE(textStart - 2);
+    const next = textStart + textLength + 2;
+    if (next > appended.length) return undefined;
+    if (appended.readUInt16LE(next - 2) !== next - offset - 2) return undefined;
+    const recordDay = localDay(appended.readUInt32LE(offset));
+    if (recordDay >= 0 && recordDay > day && recordDay <= 0xffff) {
+      const absolute = from + offset;
+      if (absolute > MAX_INDEX_OFFSET) return undefined;
+      const entry = Buffer.allocUnsafe(7);
+      entry.writeUInt16LE(recordDay, 0);
+      entry.writeUIntLE(absolute, 2, 5);
+      chunks.push(entry);
+      day = recordDay;
+    }
+    offset = next;
+  }
+  if (offset !== appended.length) return undefined;
+  return { entries: Buffer.concat(chunks), lastDay: day };
+}
+
+/**
+ * Extends a conversation in place rather than rewriting it. Returns undefined
+ * when any precondition fails, which means the caller must take the full path.
+ *
+ * The log grows first and is flushed before the index does. That is the
+ * opposite order to the rewrite path, deliberately: for an extension, a crash
+ * leaving the log grown and the index short only costs a day marker until Fix
+ * Logs runs, whereas an index entry pointing past the end of a short log makes
+ * getLogs read uninitialised memory and render it as messages.
+ */
+function appendToLog(
+  file: string,
+  carry: ConversationCarry,
+  added: JsonLogMessage[]
+): boolean {
+  const appended = jsonLogToBinary(added);
+  if (carry.size + appended.length > MAX_INDEX_OFFSET) return false;
+  const indexFile = `${file}.idx`;
+  if (!fs.existsSync(indexFile)) return false;
+  const tail = buildIndexTail(appended, carry.size, carry.lastDay);
+  if (tail === undefined) return false;
+
+  let log: number | undefined;
+  let index: number | undefined;
+  let indexSize = 0;
+  let grew = false;
+  try {
+    log = fs.openSync(file, 'r+');
+    if (fs.fstatSync(log).size !== carry.size) return false;
+    if (tail.entries.length > 0) {
+      index = fs.openSync(indexFile, 'r+');
+      indexSize = fs.fstatSync(index).size;
+    }
+    fs.writeSync(log, appended, 0, appended.length, carry.size);
+    fs.fsyncSync(log);
+    grew = true;
+    if (index !== undefined) {
+      fs.writeSync(index, tail.entries, 0, tail.entries.length, indexSize);
+      fs.fsyncSync(index);
+    }
+    carry.lastDay = tail.lastDay;
+    carry.size += appended.length;
+    return true;
+  } catch (error) {
+    if (grew) {
+      // Undo the index first: an entry pointing past the end of a shortened
+      // log is the one state that makes getLogs render uninitialised bytes.
+      if (index !== undefined)
+        try {
+          fs.ftruncateSync(index, indexSize);
+          fs.fsyncSync(index);
+        } catch {}
+      if (log !== undefined)
+        try {
+          fs.ftruncateSync(log, carry.size);
+          fs.fsyncSync(log);
+        } catch {}
+      throw error;
+    }
+    return false;
+  } finally {
+    for (const handle of [index, log])
+      if (handle !== undefined)
+        try {
+          fs.closeSync(handle);
+        } catch {}
+  }
+}
+
+/**
  * Merges incoming messages into the log file for one conversation and
  * rewrites its `.idx`. Returns how many messages were actually new; when
  * nothing is new the file is left untouched.
@@ -131,10 +341,72 @@ export function mergeLogFile(
   key: string,
   incoming: JsonLogMessage[],
   fallbackName?: string,
-  checkCancelled: () => void = neverCancelled
+  checkCancelled: () => void = neverCancelled,
+  carries?: ConversationCarries,
+  carryId?: string
 ): FileMergeResult {
   checkCancelled();
   const file = path.join(logsDir, key);
+
+  // A conversation an earlier batch already parsed in full can often just be
+  // extended. Everything below falls through to the original path unchanged
+  // when it cannot, so the carry can only make this faster, never different.
+  const carry =
+    carries !== undefined && carryId !== undefined
+      ? carries[carryId]
+      : undefined;
+  if (carry !== undefined && carry.damaged)
+    return { added: 0, created: false, skipped: true };
+  if (
+    carry !== undefined &&
+    carry.sorted &&
+    carry.indexCanonical &&
+    carry.tailTime >= 0
+  ) {
+    const seenTail = new Set(carry.tailKeys);
+    const fresh: JsonLogMessage[] = [];
+    let ascending = true;
+    let previous = carry.tailTime;
+    for (const message of incoming) {
+      if (message.time < previous) {
+        ascending = false;
+        break;
+      }
+      previous = message.time;
+      const dedupe = dedupeKey(message);
+      if (seenTail.has(dedupe)) continue;
+      seenTail.add(dedupe);
+      fresh.push(message);
+    }
+    if (ascending) {
+      if (fresh.length === 0) return { added: 0, created: false };
+      let size: number;
+      try {
+        size = fs.statSync(file).size;
+      } catch {
+        size = -1;
+      }
+      if (size === carry.size) {
+        checkCancelled();
+        if (appendToLog(file, carry, fresh)) {
+          const last = fresh[fresh.length - 1].time;
+          const run = fresh
+            .filter(message => message.time === last)
+            .map(dedupeKey);
+          if (last === carry.tailTime) carry.tailKeys.push(...run);
+          else {
+            carry.tailTime = last;
+            carry.tailKeys = run;
+          }
+          // A conversation whose trailing run outgrows the cap stops being
+          // cheap to dedupe against; retire the carry rather than let it grow.
+          if (carry.tailKeys.length > TAIL_RUN_LIMIT) carry.sorted = false;
+          return { added: fresh.length, created: false };
+        }
+      }
+    }
+  }
+
   const exists = fs.existsSync(file);
   let existing: JsonLogMessage[];
   try {
@@ -145,10 +417,28 @@ export function mergeLogFile(
     if (!jsonLogToBinary(existing).equals(original))
       throw new DamagedLogError();
   } catch (error) {
-    if (error instanceof DamagedLogError)
+    if (error instanceof DamagedLogError) {
+      if (carries !== undefined && carryId !== undefined)
+        carries[carryId] = {
+          damaged: true,
+          sorted: false,
+          indexCanonical: false,
+          size: 0,
+          tailTime: -1,
+          tailKeys: [],
+          lastDay: -1,
+          name: ''
+        };
       return { added: 0, created: false, skipped: true };
+    }
     throw error;
   }
+  let ascendingLocal = true;
+  for (let i = 1; i < existing.length; i++)
+    if (existing[i].time < existing[i - 1].time) {
+      ascendingLocal = false;
+      break;
+    }
 
   const seen = new Set<string>();
   for (const message of existing) seen.add(dedupeKey(message));
@@ -222,6 +512,39 @@ export function mergeLogFile(
     throw error;
   } finally {
     if (!preserveRecovery) fs.rmSync(staging, { recursive: true, force: true });
+  }
+
+  if (carries !== undefined && carryId !== undefined) {
+    // Record what this full parse learned, so the next batch carrying more of
+    // the same conversation can extend it. The index was just written from the
+    // finished log, so it is canonical by construction.
+    const tail = readLogTail(file, logBuffer.length);
+    const lastDay =
+      indexBuffer !== undefined && indexBuffer.length >= 7
+        ? indexBuffer.readUInt16LE(indexBuffer.length - 7)
+        : -1;
+    carries[carryId] =
+      tail === undefined || indexBuffer === undefined
+        ? {
+            damaged: false,
+            sorted: false,
+            indexCanonical: false,
+            size: logBuffer.length,
+            tailTime: -1,
+            tailKeys: [],
+            lastDay: -1,
+            name
+          }
+        : {
+            damaged: false,
+            sorted: ascendingLocal,
+            indexCanonical: true,
+            size: logBuffer.length,
+            tailTime: tail.time,
+            tailKeys: tail.keys,
+            lastDay,
+            name
+          };
   }
 
   return { added: added.length, created: !exists };
@@ -338,7 +661,8 @@ function parseLogEntryPath(
 export function mergeLogsZip(
   dataDir: string,
   zip: AdmZip,
-  checkCancelled: () => void = neverCancelled
+  checkCancelled: () => void = neverCancelled,
+  carries: ConversationCarries = {}
 ): LogMergeReport {
   validateSyncArchive(zip, checkCancelled);
   const stats: LogMergeStats = {
@@ -385,14 +709,16 @@ export function mergeLogsZip(
     // resolved log path still stays under dataDir before writing to it.
     const logsDir = resolveInside(dataDir, character, 'logs');
     resolveInside(dataDir, character, 'logs', key);
+    const id = `${character}/${key}`;
     const result = mergeLogFile(
       logsDir,
       key,
       messages,
       names.get(key.toLowerCase()),
-      checkCancelled
+      checkCancelled,
+      carries,
+      id
     );
-    const id = `${character}/${key}`;
     if (result.skipped) {
       stats.conversationsSkipped++;
       identities.skipped.push(id);
@@ -412,5 +738,5 @@ export function mergeLogsZip(
 
   stats.charactersTouched = touched.size;
   identities.characters = Array.from(touched);
-  return { stats, identities };
+  return { stats, identities, carries: trimCarries(carries) };
 }

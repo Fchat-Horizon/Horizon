@@ -69,7 +69,7 @@ async function run(): Promise<ArchiveJobResult> {
   } catch {
     throw { status: 400, code: 'bad-zip' };
   }
-  const report = mergeLogsZip(job.dataDir, zip, checkCancelled);
+  const report = mergeLogsZip(job.dataDir, zip, checkCancelled, job.carries);
   return { kind: 'merge', report };
 }
 
