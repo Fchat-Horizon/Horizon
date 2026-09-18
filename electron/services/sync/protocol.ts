@@ -51,8 +51,18 @@ export const SYNC_MAX_UNCOMPRESSED_BYTES = 2 * 1024 * 1024 * 1024;
  */
 export const SYNC_BATCH_TARGET_BYTES = 16 * 1024 * 1024;
 
-/** Records one batch may carry, so tiny messages cannot swamp the receiver. */
-export const SYNC_BATCH_MAX_RECORDS = 150000;
+/**
+ * Records one batch may carry, so tiny messages cannot swamp the receiver.
+ * A backstop on allocation, not the limit a batch is meant to stop on: the
+ * byte budget above is. A record's JSON is at least 52 bytes (39 of fixed
+ * punctuation, a ten digit timestamp, one digit of type, a one character
+ * sender, and the array separator), so anything below 16777216 / 52 binds
+ * first whenever messages are short, and the batch then ships a fraction of
+ * what it was allowed while the batch count inflates by the same factor.
+ * Above that crossover the byte budget always takes over, so raising this
+ * further changes nothing.
+ */
+export const SYNC_BATCH_MAX_RECORDS = 350000;
 
 /**
  * Batch budget to actually use, honouring HORIZON_SYNC_BATCH_BYTES when it is
