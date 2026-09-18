@@ -944,6 +944,15 @@ export function mergeLogFile(
     storedIndex !== undefined && indexMatchesScan(storedIndex, scan)
   );
 
+  // The scan established everything a carry needs, so the first batch to touch
+  // a pre-existing conversation can take the append path too, instead of
+  // paying for one rewrite before any later batch can be cheap.
+  const appended = tryAppendCarry(file, scanCarry, incoming, checkCancelled);
+  if (appended !== undefined) {
+    storeCarry(carries, carryId, scanCarry);
+    return appended;
+  }
+
   const { newByDay, added } = selectNewByDay(
     file,
     scan,
