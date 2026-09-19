@@ -57,6 +57,7 @@ import l, { setLanguage } from '../chat/localize';
 // import {setupRaven} from '../chat/vue-raven';
 import Socket from '../chat/WebSocket';
 import Connection from '../fchat/connection';
+import core from '../chat/core';
 import { Keys } from '../keys';
 import { GeneralSettings /*, nativeRequire*/ } from './common';
 import { Logs, SettingsStore } from './filesystem';
@@ -390,6 +391,17 @@ const connection = new Connection(
   Socket
 );
 initCore(connection, settings, Logs, SettingsStore, Notifications);
+
+electron.ipcRenderer.on('reload-settings', () => {
+  void core
+    .reloadSettings()
+    .then(() => {
+      EventBus.$emit('configuration-update', core.state.settings);
+    })
+    .catch(err => {
+      log.error('settings.reload.error', err);
+    });
+});
 
 log.debug('init.chat.vue');
 
