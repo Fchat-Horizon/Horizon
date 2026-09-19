@@ -362,9 +362,7 @@
       core.connection.onMessage('FKS', async data => {
         const results = data.characters
           .map(x => ({ character: core.characters.get(x), profile: null }))
-          .filter(
-            x => !core.isHidden(x.character.name) && !x.character.isIgnored
-          )
+          .filter(x => !x.character.isHidden && !x.character.isIgnored)
           .filter(
             x =>
               this.isSpeciesMatch(x) &&
