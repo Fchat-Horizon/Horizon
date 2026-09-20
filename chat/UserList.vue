@@ -20,63 +20,32 @@
       "
       v-model="tab"
     ></tabs>
-    <div
-      class="users hidden-scrollbar"
-      style="padding-left: 10px"
+    <virtual-list
+      ref="friendList"
+      class="hidden-scrollbar"
+      style="overflow: auto; flex: 1 1 auto; padding-left: 10px"
       v-if="tab === '0'"
+      :items="friendRows"
+      :itemHeight="rowHeight"
+      :overscan="overscan"
+      :keyFunc="rowKey"
     >
-      <h4 v-if="showPerCharacterFriends && characterFriends.length > 0">
-        {{ l('users.characterFriends') }}
-      </h4>
-      <div
-        v-if="showPerCharacterFriends"
-        v-for="character in characterFriends"
-        :key="'char-' + character.name"
-        class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-      >
-        <user
-          :character="character"
-          :showStatus="true"
-          :bookmark="false"
-          :isMarkerShown="shouldShowMarker"
-        ></user>
-      </div>
-      <h4 v-if="friends.length > 0">
-        {{
-          l(
-            `users.${showPerCharacterFriends && characterFriends.length > 0 ? 'friends.nonCharacter' : 'friends'}`
-          )
-        }}
-      </h4>
-      <div
-        v-for="character in friends"
-        :key="'friend-' + character.name"
-        class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-      >
-        <user
-          :character="character"
-          :showStatus="true"
-          :bookmark="false"
-          :isMarkerShown="shouldShowMarker"
-        ></user>
-      </div>
-      <h4 v-if="bookmarks.length > 0">{{ l('users.bookmarks') }}</h4>
-      <div
-        v-for="character in bookmarks"
-        :key="'bookmark-' + character.name"
-        class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-      >
-        <user
-          :character="character"
-          :showStatus="true"
-          :bookmark="false"
-          :isMarkerShown="shouldShowMarker"
-        ></user>
-      </div>
-    </div>
+      <template slot-scope="{ item: row }">
+        <h4 v-if="row.kind === 'header'">{{ row.label }}</h4>
+        <div
+          v-else
+          class="userlist-item"
+          :class="{ dimmed: row.character.isIgnored }"
+        >
+          <user
+            :character="row.character"
+            :showStatus="true"
+            :bookmark="row.bookmark"
+            :isMarkerShown="row.isMarkerShown"
+          ></user>
+        </div>
+      </template>
+    </virtual-list>
     <div
       v-if="channel && tab !== '0'"
       style="padding-left: 5px; flex: 1; display: flex; flex-direction: column"
@@ -286,68 +255,33 @@
         ref="characterPage"
       ></character-page>
     </div>
-    <div
+    <virtual-list
+      ref="allList"
+      class="hidden-scrollbar"
+      style="overflow: auto; flex: 1 1 auto; padding-left: 10px"
       v-if="isConsoleTab && tab === '2'"
-      class="users hidden-scrollbar"
-      style="padding-left: 10px"
+      :items="allFriendRows"
+      :itemHeight="rowHeight"
+      :overscan="overscan"
+      :keyFunc="rowKey"
     >
-      <h4 v-if="showPerCharacterFriends && allCharacterFriends.length > 0">
-        {{ l('users.characterFriends.all') }}
-      </h4>
-      <div
-        v-if="showPerCharacterFriends"
-        v-for="character in allCharacterFriends"
-        :key="'char-friends-all-' + character.name"
-        class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-      >
-        <user
-          :character="character"
-          :showStatus="false"
-          :bookmark="false"
-          :isMarkerShown="shouldShowMarker"
-          :loadColor="false"
-        ></user>
-      </div>
-      <h4 v-if="allFriends.length > 0">
-        {{
-          l(
-            `users.${showPerCharacterFriends && allCharacterFriends.length > 0 ? 'friends.nonCharacter.all' : 'friends'}`
-          )
-        }}
-      </h4>
-      <div
-        v-for="character in allFriends"
-        :key="'friend-all' + character.name"
-        class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-      >
-        <user
-          :character="character"
-          :showStatus="false"
-          :bookmark="false"
-          :isMarkerShown="shouldShowMarker"
-          :loadColor="false"
-        ></user>
-      </div>
-
-      <h4>{{ l('users.bookmarks.all') }}</h4>
-
-      <div
-        v-for="character in allBookmarks"
-        :key="'bookmarks-all' + character.name"
-        class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-      >
-        <user
-          :character="character"
-          :showStatus="false"
-          :bookmark="true"
-          :isMarkerShown="false"
-          :loadColor="false"
-        ></user>
-      </div>
-    </div>
+      <template slot-scope="{ item: row }">
+        <h4 v-if="row.kind === 'header'">{{ row.label }}</h4>
+        <div
+          v-else
+          class="userlist-item"
+          :class="{ dimmed: row.character.isIgnored }"
+        >
+          <user
+            :character="row.character"
+            :showStatus="false"
+            :bookmark="row.bookmark"
+            :isMarkerShown="row.isMarkerShown"
+            :loadColor="false"
+          ></user>
+        </div>
+      </template>
+    </virtual-list>
   </sidebar>
 </template>
 
@@ -371,6 +305,25 @@
   import { computeGenderPreferenceBuckets } from './memberFilters';
   import Dropdown from '../components/Dropdown.vue';
   import VirtualList from '../components/VirtualList.vue';
+
+  // the friends and "all" views are three sections with headers between them,
+  // and VirtualList takes one flat array, so headers become rows of their own
+  interface CharacterListRow {
+    kind: 'header' | 'user';
+    key: string;
+    label?: string;
+    character?: Character;
+    bookmark?: boolean;
+    isMarkerShown?: boolean;
+  }
+
+  interface CharacterListSection {
+    key: string;
+    label: string | null;
+    characters: Character[];
+    bookmark: boolean;
+    isMarkerShown: boolean;
+  }
 
   const availableSorts = ['normal', 'status', 'gender'] as const;
 
@@ -522,6 +475,79 @@
           characters.push(core.characters.get(name));
         });
         return characters.sort(this.sorter);
+      },
+      friendRows(): CharacterListRow[] {
+        const showChars =
+          this.showPerCharacterFriends && this.characterFriends.length > 0;
+
+        return this.buildCharacterRows([
+          {
+            key: 'char',
+            label: showChars ? this.l('users.characterFriends') : null,
+            characters: this.showPerCharacterFriends
+              ? this.characterFriends
+              : [],
+            bookmark: false,
+            isMarkerShown: this.shouldShowMarker
+          },
+          {
+            key: 'friend',
+            label:
+              this.friends.length > 0
+                ? this.l(
+                    showChars ? 'users.friends.nonCharacter' : 'users.friends'
+                  )
+                : null,
+            characters: this.friends,
+            bookmark: false,
+            isMarkerShown: this.shouldShowMarker
+          },
+          {
+            key: 'bookmark',
+            label: this.bookmarks.length > 0 ? this.l('users.bookmarks') : null,
+            characters: this.bookmarks,
+            bookmark: false,
+            isMarkerShown: this.shouldShowMarker
+          }
+        ]);
+      },
+      allFriendRows(): CharacterListRow[] {
+        const showChars =
+          this.showPerCharacterFriends && this.allCharacterFriends.length > 0;
+
+        return this.buildCharacterRows([
+          {
+            key: 'char-friends-all',
+            label: showChars ? this.l('users.characterFriends.all') : null,
+            characters: this.showPerCharacterFriends
+              ? this.allCharacterFriends
+              : [],
+            bookmark: false,
+            isMarkerShown: this.shouldShowMarker
+          },
+          {
+            key: 'friend-all',
+            label:
+              this.allFriends.length > 0
+                ? this.l(
+                    showChars
+                      ? 'users.friends.nonCharacter.all'
+                      : 'users.friends'
+                  )
+                : null,
+            characters: this.allFriends,
+            bookmark: false,
+            isMarkerShown: this.shouldShowMarker
+          },
+          {
+            key: 'bookmarks-all',
+            // this header shows even when the list is empty
+            label: this.l('users.bookmarks.all'),
+            characters: this.allBookmarks,
+            bookmark: true,
+            isMarkerShown: false
+          }
+        ]);
       },
       bookmarks(): Character[] {
         let friendNames =
@@ -721,6 +747,36 @@
         }
       },
 
+      buildCharacterRows(sections: CharacterListSection[]): CharacterListRow[] {
+        const rows: CharacterListRow[] = [];
+
+        for (const section of sections) {
+          if (section.label !== null) {
+            rows.push({
+              kind: 'header',
+              key: section.key + '-header',
+              label: section.label
+            });
+          }
+
+          for (const character of section.characters) {
+            rows.push({
+              kind: 'user',
+              key: section.key + '-' + character.name,
+              character,
+              bookmark: section.bookmark,
+              isMarkerShown: section.isMarkerShown
+            });
+          }
+        }
+
+        return rows;
+      },
+
+      rowKey(row: CharacterListRow): string {
+        return row.key;
+      },
+
       memberKey(member: Channel.Member): string {
         return member.character.name;
       },
@@ -728,8 +784,16 @@
       // rows are always the same height for a user, so we can measure it once and
       // call it a day. the font size watcher in mounted() re-arms this if it changes
       syncRowHeight(): void {
-        const list = this.$refs['memberList'] as Vue | undefined;
-        const row = list?.$el.querySelector('.virtual-list-row');
+        let row: Element | null = null;
+
+        for (const name of ['memberList', 'friendList', 'allList']) {
+          const list = this.$refs[name] as Vue | undefined;
+          // .userlist-item so a section header is never what we measure
+          row =
+            list?.$el.querySelector('.virtual-list-row .userlist-item') ?? null;
+          if (row) break;
+        }
+
         if (!row) return;
 
         const height = row.getBoundingClientRect().height;
