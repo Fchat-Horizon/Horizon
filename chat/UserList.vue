@@ -305,6 +305,8 @@
   import { computeGenderPreferenceBuckets } from './memberFilters';
   import Dropdown from '../components/Dropdown.vue';
   import VirtualList from '../components/VirtualList.vue';
+  import { isFilteredByChatGender } from '../learn/filter/smart-filter';
+  import { EventBus } from './preview/event-bus';
 
   // the friends and "all" views are three sections with headers between them,
   // and VirtualList takes one flat array, so headers become rows of their own
@@ -344,6 +346,10 @@
         rowHeight: 22,
         rowHeightMeasured: false,
         overscan: 8,
+        filteredNames: {} as Record<string, boolean>,
+        filterScanToken: 0,
+        filterScanning: false,
+        scoreListener: (() => {}) as (e: any) => void,
         genderFilters: (core &&
         core.state &&
         (core.state.settings as any) &&
@@ -662,6 +668,7 @@
 
       this.$watch('tab', (val: any) => {
         if (val === '1' && this.channel) this.applyOrientationAutoFilter();
+        void this.scanSmartFilterHiding();
       });
 
       this.$watch(
@@ -705,10 +712,54 @@
         }
       );
 
+      // verdicts are per character, so they outlive a channel switch. only an
+      // in-flight scan is stale. changing the filters invalidates all of them
+      this.$watch(
+        () => this.channel?.id,
+        () => {
+          this.filterScanToken++;
+          void this.scanSmartFilterHiding();
+        }
+      );
+
+      this.$watch(
+        () => this.channel?.sortedMembers.length,
+        () => void this.scanSmartFilterHiding()
+      );
+
+      this.$watch(
+        () => core.state.settings.risingFilter,
+        () => {
+          this.filteredNames = {};
+          this.filterScanToken++;
+          void this.scanSmartFilterHiding();
+        },
+        { deep: true }
+      );
+
+      // a profile arriving from the fetch queue is the only other way we learn a
+      // verdict. without this the list only catches up when someone joins or leaves
+      this.scoreListener = (e: any) => {
+        const name = e?.character?.character?.name;
+
+        if (!name || !core.state.settings.risingFilter.hideChannelMembers)
+          return;
+        if (this.filteredNames[name] === e.isFiltered) return;
+
+        this.filteredNames = { ...this.filteredNames, [name]: e.isFiltered };
+      };
+
+      EventBus.$on('character-score', this.scoreListener);
+
+      void this.scanSmartFilterHiding();
+
       this.$nextTick(() => this.syncRowHeight());
     },
     updated(): void {
       if (!this.rowHeightMeasured) this.syncRowHeight();
+    },
+    beforeDestroy(): void {
+      EventBus.$off('character-score', this.scoreListener);
     },
     methods: {
       applyOrientationAutoFilter(): void {
@@ -803,14 +854,61 @@
         this.rowHeightMeasured = true;
       },
 
+      // hideChannelMembers needs a verdict for every member, but only rendered rows
+      // load profiles now, so anyone you never scrolled past was never hidden. walk
+      // the roster in the background instead and remember the answers. members we
+      // still know nothing about stay visible
+      async scanSmartFilterHiding(): Promise<void> {
+        if (this.filterScanning || this.tab === '0' || !this.channel) return;
+        if (!core.state.settings.risingFilter.hideChannelMembers) return;
+
+        const token = this.filterScanToken;
+        const pending: string[] = [];
+
+        for (const member of this.channel.sortedMembers) {
+          const name = member.character.name;
+          if (!(name in this.filteredNames)) pending.push(name);
+        }
+
+        if (pending.length === 0) return;
+
+        this.filterScanning = true;
+
+        try {
+          for (let i = 0; i < pending.length; i += 50) {
+            const batch: Record<string, boolean> = {};
+
+            for (const name of pending.slice(i, i + 50)) {
+              const verdict =
+                await core.cache.profileCache.isFilteredFromStore(name);
+
+              if (verdict !== null) batch[name] = verdict;
+            }
+
+            if (token !== this.filterScanToken) return;
+
+            if (Object.keys(batch).length > 0) {
+              this.filteredNames = { ...this.filteredNames, ...batch };
+            }
+
+            await new Promise(resolve => setTimeout(resolve));
+          }
+        } finally {
+          this.filterScanning = false;
+        }
+      },
+
       getFilteredMembers() {
         let visible = filterByName(this.channel.sortedMembers, this.filter);
 
-        if (core.state.settings.risingFilter.hideChannelMembers) {
-          visible = visible.filter(m => {
-            const p = core.cache.profileCache.getSync(m.character.name);
-            return !p || !p.match.isFiltered;
-          });
+        const filters = core.state.settings.risingFilter;
+
+        if (filters.hideChannelMembers) {
+          visible = visible.filter(
+            m =>
+              this.filteredNames[m.character.name] !== true &&
+              !isFilteredByChatGender(m.character, filters)
+          );
         }
 
         visible = filterByGender(visible, this.genderFilters);

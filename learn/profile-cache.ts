@@ -286,6 +286,35 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
     }
   }
 
+  /**
+   * Tests a stored profile against the smart filters without scoring it.
+   *
+   * Same reasoning as applyOverridesFromStore. matchesSmartFilters is cheap, but
+   * register is not, so don't go through it just to get a verdict. Reads the cache
+   * directly instead of via getSync so a bulk scan doesn't reorder the LRU
+   *
+   * @param name Character to test
+   * @returns whether they're filtered, or null if there's no profile to judge
+   */
+  async isFilteredFromStore(name: string): Promise<boolean | null> {
+    const cached = this.cache[AsyncCache.nameKey(name)];
+
+    if (cached) {
+      return cached.match.isFiltered;
+    }
+
+    const profile = (await this.store?.getProfile(name))?.profileData;
+
+    if (!profile) {
+      return null;
+    }
+
+    return matchesSmartFilters(
+      profile.character,
+      core.state.settings.risingFilter
+    );
+  }
+
   delete(name: string): void {
     const key = AsyncCache.nameKey(name);
 
