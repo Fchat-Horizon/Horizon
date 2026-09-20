@@ -72,6 +72,7 @@
     isHorizonSupporter
   } from './profile_api';
   import { CharacterColor } from './../fchat/characters';
+  import { isFilteredByChatGender } from '../learn/filter/smart-filter';
 
   export function getStatusIcon(status: Character.Status): string {
     switch (status) {
@@ -265,7 +266,8 @@
 
       if (
         core.state.settings.risingFilter.showFilterIcon &&
-        cache?.match.isFiltered
+        (cache?.match.isFiltered ||
+          isFilteredByChatGender(character, core.state.settings.risingFilter))
       ) {
         smartFilterIcon = 'user-filter fas fa-filter';
       }
