@@ -3,6 +3,7 @@
     class="virtual-list"
     ref="scroller"
     @scroll="onScroll"
+    @wheel.passive="onWheel"
     @mousedown="onMouseDown"
   >
     <div class="virtual-list-spacer" :style="{ height: totalHeight + 'px' }">
@@ -117,6 +118,17 @@
       if (this.resizeObserver) this.resizeObserver.disconnect();
     },
     methods: {
+      setScrollTop(target: number): void {
+        const el = this.scroller;
+        if (!el) return;
+        const max = Math.max(0, el.scrollHeight - el.clientHeight);
+        const clamped = Math.max(0, Math.min(target, max));
+        // ^ A no-op set fires no scroll event and would strand the flag
+        if (Math.abs(el.scrollTop - clamped) < 1) return;
+        this.programmaticScroll = true;
+        el.scrollTop = clamped;
+      },
+
       getItemHeight(index: number): number {
         const key = this.getItemKey(this.items[index], index);
         return (
@@ -183,8 +195,7 @@
         this.scrollLockedToBottom = false;
         this.syncSpacerHeight();
         this.scrollTop = 0;
-        this.programmaticScroll = true;
-        el.scrollTop = 0;
+        this.setScrollTop(0);
         this.isScrolling = false;
         this.updateVisibleRange();
       },
@@ -213,6 +224,16 @@
         this.settleTimer = setTimeout(() => {
           this.isScrolling = false;
         }, 150);
+        const el = this.scroller;
+        if (el && el.scrollTop < this.containerHeight * 0.5) {
+          this.$emit('near-top');
+        }
+      },
+
+      onWheel(e: WheelEvent): void {
+        // ^ No scroll events fire when wheeling up at scrollTop 0
+        const el = this.scroller;
+        if (el && e.deltaY < 0 && el.scrollTop < 1) this.$emit('near-top');
       },
 
       onScroll(): void {
@@ -272,10 +293,7 @@
           );
           this.scrollTop = targetScrollTop;
           const el = this.scroller;
-          if (el) {
-            this.programmaticScroll = true;
-            el.scrollTop = el.scrollHeight - el.clientHeight;
-          }
+          if (el) this.setScrollTop(el.scrollHeight - el.clientHeight);
         }
 
         const listLength = this.items.length;
@@ -353,8 +371,7 @@
           if (heightDiff !== 0 && !this.scrollLockedToBottom) {
             this.syncSpacerHeight();
             this.scrollTop += heightDiff;
-            this.programmaticScroll = true;
-            el.scrollTop += heightDiff;
+            this.setScrollTop(el.scrollTop + heightDiff);
           }
           this.updateVisibleRange();
           this.$nextTick(() => {
@@ -388,8 +405,7 @@
           );
         }
         this.scrollTop = top;
-        this.programmaticScroll = true;
-        el.scrollTop = top;
+        this.setScrollTop(top);
         this.updateVisibleRange();
       },
 
@@ -402,8 +418,7 @@
           added += this.getItemHeight(i);
         }
         this.scrollTop += added;
-        this.programmaticScroll = true;
-        el.scrollTop += added;
+        this.setScrollTop(el.scrollTop + added);
         this.updateVisibleRange();
       },
 

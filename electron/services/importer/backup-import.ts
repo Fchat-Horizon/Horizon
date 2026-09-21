@@ -1,3 +1,4 @@
+import { acquireDataSession } from '../data-session';
 /**
  * @license MPL-2.0
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -515,17 +516,6 @@ function checkDirectoryAccess(dir: string): string | undefined {
   return undefined;
 }
 
-async function checkConnectedCharacters(): Promise<boolean> {
-  try {
-    const connected: string[] = await ipcRenderer.invoke(
-      'get-connected-characters'
-    );
-    return connected?.length > 0;
-  } catch {
-    return false;
-  }
-}
-
 function importGeneralSettings(
   vm: ExporterVm,
   zip: AdmZip,
@@ -744,9 +734,6 @@ function finalizeImport(vm: ExporterVm, stats: ImportStats): void {
 export async function runZipImport(vm: ExporterVm): Promise<void> {
   if (!vm.canRunZipImport) return;
 
-  const hasConnected = await checkConnectedCharacters();
-  if (hasConnected) return;
-
   const zip = vm.importZipArchive as AdmZip;
   if (!zip) return;
 
@@ -754,7 +741,9 @@ export async function runZipImport(vm: ExporterVm): Promise<void> {
   vm.importSummary = undefined;
   vm.importError = undefined;
 
+  let release: (() => void) | undefined;
   try {
+    release = acquireDataSession();
     let dataDir: string;
     if (vm.importUseCustomLogLocation && vm.importCustomLogDirectory) {
       const accessError = checkDirectoryAccess(vm.importCustomLogDirectory);
@@ -801,6 +790,7 @@ export async function runZipImport(vm: ExporterVm): Promise<void> {
     const reason = error instanceof Error ? error.message : String(error);
     vm.importError = `Import failed: ${reason}`;
   } finally {
+    release?.();
     vm.importInProgress = false;
   }
 }

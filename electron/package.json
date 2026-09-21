@@ -1,6 +1,6 @@
 {
   "name": "horizon-electron",
-  "version": "2.3.3",
+  "version": "2.4.0-beta.2",
   "author": "The F-List Team and Horizon Contributors",
   "description": "Horizon",
   "homepage": "https://horizn.moe",
@@ -14,14 +14,19 @@
       "app": "app",
       "output": "dist"
     },
-    "nativeRebuilder": "parallel",
+    "nativeModules": {
+      "rebuildMode": "parallel"
+    },
     "files": [
       "**/*"
     ],
-    "asarUnpack": [
-      "themes/**/*",
-      "sound-themes/**/*"
-    ],
+    "asar": {
+      "unpack": [
+        "sync-worker.js",
+        "themes/**/*",
+        "sound-themes/**/*"
+      ]
+    },
     "win": {
       "icon": "build/icon.ico"
     },
@@ -37,8 +42,10 @@
     "mac": {
       "icon": "build/icon.icon",
       "category": "public.app-category.social-networking",
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false
+      "sign": {
+        "hardenedRuntime": true,
+        "gatekeeperAssess": false
+      }
     },
     "dmg": {
       "icon": "build/disk.icns",
@@ -108,7 +115,7 @@
   "devDependencies": {
     "commander": "^14.0.0",
     "electron": "42.4.1",
-    "electron-builder": "^26.8.1"
+    "electron-builder": "27.0.0-alpha.8"
   },
   "dependencies": {
     "@ghostery/adblocker-electron-preload": "^2.14.1",

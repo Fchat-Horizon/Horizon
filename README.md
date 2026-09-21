@@ -203,7 +203,6 @@ Horizon is available as a Nix Flake input based on the GitHub repo. See [this](h
 ```nix
     horizon = {
       url = "github:Fchat-Horizon/Horizon?ref=main";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 ```
 

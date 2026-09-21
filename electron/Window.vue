@@ -15,11 +15,7 @@
       class="border-bottom"
       id="window-tabs"
     >
-      <h4
-        style="padding: 2px 0"
-        class="d-md-block d-none"
-        v-if="!hideWindowControls"
-      >
+      <h4 class="window-title" v-if="!hideWindowControls">
         {{ l(windowTitleKey) }}
       </h4>
       <div
@@ -857,6 +853,23 @@
 </script>
 
 <style lang="scss">
+  .window-title {
+    width: 0;
+    max-width: 0;
+    overflow: hidden;
+    padding: 2px 0;
+    margin: 0;
+    white-space: nowrap;
+    visibility: hidden;
+  }
+
+  @media (min-width: 768px) {
+    .window-title {
+      width: auto;
+      max-width: none;
+      visibility: visible;
+    }
+  }
   #window-tabs {
     user-select: none;
 

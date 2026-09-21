@@ -244,7 +244,7 @@
 
 <script lang="ts">
   import * as remote from '@electron/remote';
-  import { clipboard, shell } from 'electron';
+  import { clipboard, ipcRenderer, shell } from 'electron';
   import Vue from 'vue';
   import l, { setLanguage } from '../chat/localize';
   import LocalizedText from '../components/localized_text';
@@ -507,7 +507,7 @@
           url = `${base}?template=bug.yml`;
         }
         try {
-          void shell.openExternal(url);
+          ipcRenderer.send('open-url-externally', url);
         } catch (e) {
           console.warn('Failed to open issue page', e);
         }
