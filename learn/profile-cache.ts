@@ -266,6 +266,55 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
     return cacheRecord;
   }
 
+  /**
+   * Applies a profile's character overrides (HQ portrait, custom name color).
+   *
+   * Skips register on purpose. Registering runs the matcher, which costs performance
+   * per profile, and the member list calls this once per member. Nothing here needs
+   * a match score, so don't add one.
+   *
+   * Does nothing if the profile isn't on disk
+   * @param name Character to apply overrides for
+   */
+  async applyOverridesFromStore(name: string): Promise<void> {
+    const profile =
+      this.getSync(name)?.character ??
+      (await this.store?.getProfile(name))?.profileData;
+
+    if (profile) {
+      this.updateOverrides(profile);
+    }
+  }
+
+  /**
+   * Tests a stored profile against the smart filters without scoring it.
+   *
+   * Same reasoning as applyOverridesFromStore. matchesSmartFilters is cheap, but
+   * register is not, so don't go through it just to get a verdict. Reads the cache
+   * directly instead of via getSync so a bulk scan doesn't reorder the LRU
+   *
+   * @param name Character to test
+   * @returns whether they're filtered, or null if there's no profile to judge
+   */
+  async isFilteredFromStore(name: string): Promise<boolean | null> {
+    const cached = this.cache[AsyncCache.nameKey(name)];
+
+    if (cached) {
+      return cached.match.isFiltered;
+    }
+
+    const profile = (await this.store?.getProfile(name))?.profileData;
+
+    if (!profile) {
+      return null;
+    }
+
+    return matchesSmartFilters(
+      profile.character,
+      core.state.settings.risingFilter
+    );
+  }
+
   delete(name: string): void {
     const key = AsyncCache.nameKey(name);
 

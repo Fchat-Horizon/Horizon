@@ -20,85 +20,67 @@
       "
       v-model="tab"
     ></tabs>
-    <div
-      class="users hidden-scrollbar"
-      style="padding-left: 10px"
+    <virtual-list
+      ref="friendList"
+      class="hidden-scrollbar"
+      style="overflow: auto; flex: 1 1 auto; padding-left: 10px"
       v-if="tab === '0'"
+      :items="friendRows"
+      :itemHeight="rowHeight"
+      :overscan="overscan"
+      :keyFunc="rowKey"
     >
-      <h4 v-if="showPerCharacterFriends && characterFriends.length > 0">
-        {{ l('users.characterFriends') }}
-      </h4>
-      <div
-        v-if="showPerCharacterFriends"
-        v-for="character in characterFriends"
-        :key="'char-' + character.name"
-        class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-      >
-        <user
-          :character="character"
-          :showStatus="true"
-          :bookmark="false"
-          :isMarkerShown="shouldShowMarker"
-        ></user>
-      </div>
-      <h4 v-if="friends.length > 0">
-        {{
-          l(
-            `users.${showPerCharacterFriends && characterFriends.length > 0 ? 'friends.nonCharacter' : 'friends'}`
-          )
-        }}
-      </h4>
-      <div
-        v-for="character in friends"
-        :key="'friend-' + character.name"
-        class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-      >
-        <user
-          :character="character"
-          :showStatus="true"
-          :bookmark="false"
-          :isMarkerShown="shouldShowMarker"
-        ></user>
-      </div>
-      <h4 v-if="bookmarks.length > 0">{{ l('users.bookmarks') }}</h4>
-      <div
-        v-for="character in bookmarks"
-        :key="'bookmark-' + character.name"
-        class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-      >
-        <user
-          :character="character"
-          :showStatus="true"
-          :bookmark="false"
-          :isMarkerShown="shouldShowMarker"
-        ></user>
-      </div>
-    </div>
+      <template slot-scope="{ item: row }">
+        <h4 v-if="row.kind === 'header'">{{ row.label }}</h4>
+        <div
+          v-else
+          class="userlist-item"
+          :class="{ dimmed: row.character.isIgnored }"
+        >
+          <user
+            :character="row.character"
+            :showStatus="true"
+            :bookmark="row.bookmark"
+            :isMarkerShown="row.isMarkerShown"
+          ></user>
+        </div>
+      </template>
+    </virtual-list>
     <div
       v-if="channel && tab !== '0'"
       style="padding-left: 5px; flex: 1; display: flex; flex-direction: column"
     >
-      <div class="users hidden-scrollbar" style="flex: 1; padding-left: 5px">
+      <div style="padding-left: 5px; flex-shrink: 0">
         <h4>
           <span style="display: inline-block">{{ memberCountText }}</span>
         </h4>
-        <div
-          v-for="member in filteredMembers"
-          :key="member.character.name"
-          class="userlist-item"
-          :class="{ dimmed: member.character.isIgnored }"
-        >
-          <user
-            :character="member.character"
-            :channel="channel"
-            :showStatus="true"
-            :isMarkerShown="shouldShowMarker"
-          ></user>
-        </div>
       </div>
+      <!-- virtualized members list, because channels with thousands of members shouldn't try to render 
+       every custom-colored name at once. the trade-off is that custom colors can sometimes take a bit to 
+       load for the rendered area if you scroll really fast, but the pros outweigh the cons imo. -->
+      <virtual-list
+        ref="memberList"
+        class="hidden-scrollbar"
+        style="overflow: auto; flex: 1 1 auto; padding-left: 5px"
+        :items="filteredMembers"
+        :itemHeight="rowHeight"
+        :overscan="overscan"
+        :keyFunc="memberKey"
+      >
+        <template slot-scope="{ item: member }">
+          <div
+            class="userlist-item"
+            :class="{ dimmed: member.character.isIgnored }"
+          >
+            <user
+              :character="member.character"
+              :channel="channel"
+              :showStatus="true"
+              :isMarkerShown="shouldShowMarker"
+            ></user>
+          </div>
+        </template>
+      </virtual-list>
 
       <!--<span class="input-group-text">
           <span class="fas fa-search"></span>
@@ -273,68 +255,33 @@
         ref="characterPage"
       ></character-page>
     </div>
-    <div
+    <virtual-list
+      ref="allList"
+      class="hidden-scrollbar"
+      style="overflow: auto; flex: 1 1 auto; padding-left: 10px"
       v-if="isConsoleTab && tab === '2'"
-      class="users hidden-scrollbar"
-      style="padding-left: 10px"
+      :items="allFriendRows"
+      :itemHeight="rowHeight"
+      :overscan="overscan"
+      :keyFunc="rowKey"
     >
-      <h4 v-if="showPerCharacterFriends && allCharacterFriends.length > 0">
-        {{ l('users.characterFriends.all') }}
-      </h4>
-      <div
-        v-if="showPerCharacterFriends"
-        v-for="character in allCharacterFriends"
-        :key="'char-friends-all-' + character.name"
-        class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-      >
-        <user
-          :character="character"
-          :showStatus="false"
-          :bookmark="false"
-          :isMarkerShown="shouldShowMarker"
-          :loadColor="false"
-        ></user>
-      </div>
-      <h4 v-if="allFriends.length > 0">
-        {{
-          l(
-            `users.${showPerCharacterFriends && allCharacterFriends.length > 0 ? 'friends.nonCharacter.all' : 'friends'}`
-          )
-        }}
-      </h4>
-      <div
-        v-for="character in allFriends"
-        :key="'friend-all' + character.name"
-        class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-      >
-        <user
-          :character="character"
-          :showStatus="false"
-          :bookmark="false"
-          :isMarkerShown="shouldShowMarker"
-          :loadColor="false"
-        ></user>
-      </div>
-
-      <h4>{{ l('users.bookmarks.all') }}</h4>
-
-      <div
-        v-for="character in allBookmarks"
-        :key="'bookmarks-all' + character.name"
-        class="userlist-item"
-        :class="{ dimmed: character.isIgnored }"
-      >
-        <user
-          :character="character"
-          :showStatus="false"
-          :bookmark="true"
-          :isMarkerShown="false"
-          :loadColor="false"
-        ></user>
-      </div>
-    </div>
+      <template slot-scope="{ item: row }">
+        <h4 v-if="row.kind === 'header'">{{ row.label }}</h4>
+        <div
+          v-else
+          class="userlist-item"
+          :class="{ dimmed: row.character.isIgnored }"
+        >
+          <user
+            :character="row.character"
+            :showStatus="false"
+            :bookmark="row.bookmark"
+            :isMarkerShown="row.isMarkerShown"
+            :loadColor="false"
+          ></user>
+        </div>
+      </template>
+    </virtual-list>
   </sidebar>
 </template>
 
@@ -357,6 +304,28 @@
   } from './memberFilters';
   import { computeGenderPreferenceBuckets } from './memberFilters';
   import Dropdown from '../components/Dropdown.vue';
+  import VirtualList from '../components/VirtualList.vue';
+  import { isFilteredByChatGender } from '../learn/filter/smart-filter';
+  import { EventBus } from './preview/event-bus';
+
+  // the friends and "all" views are three sections with headers between them,
+  // and VirtualList takes one flat array, so headers become rows of their own
+  interface CharacterListRow {
+    kind: 'header' | 'user';
+    key: string;
+    label?: string;
+    character?: Character;
+    bookmark?: boolean;
+    isMarkerShown?: boolean;
+  }
+
+  interface CharacterListSection {
+    key: string;
+    label: string | null;
+    characters: Character[];
+    bookmark: boolean;
+    isMarkerShown: boolean;
+  }
 
   const availableSorts = ['normal', 'status', 'gender'] as const;
 
@@ -366,13 +335,21 @@
       user: UserView,
       sidebar: Sidebar,
       tabs: Tabs,
-      dropdown: Dropdown
+      dropdown: Dropdown,
+      'virtual-list': VirtualList
     },
     data() {
       return {
         tab: '0',
         expanded: window.innerWidth >= 992,
         filter: '',
+        rowHeight: 22,
+        rowHeightMeasured: false,
+        overscan: 8,
+        filteredNames: {} as Record<string, boolean>,
+        filterScanToken: 0,
+        filterScanning: false,
+        scoreListener: (() => {}) as (e: any) => void,
         genderFilters: (core &&
         core.state &&
         (core.state.settings as any) &&
@@ -505,6 +482,79 @@
         });
         return characters.sort(this.sorter);
       },
+      friendRows(): CharacterListRow[] {
+        const showChars =
+          this.showPerCharacterFriends && this.characterFriends.length > 0;
+
+        return this.buildCharacterRows([
+          {
+            key: 'char',
+            label: showChars ? this.l('users.characterFriends') : null,
+            characters: this.showPerCharacterFriends
+              ? this.characterFriends
+              : [],
+            bookmark: false,
+            isMarkerShown: this.shouldShowMarker
+          },
+          {
+            key: 'friend',
+            label:
+              this.friends.length > 0
+                ? this.l(
+                    showChars ? 'users.friends.nonCharacter' : 'users.friends'
+                  )
+                : null,
+            characters: this.friends,
+            bookmark: false,
+            isMarkerShown: this.shouldShowMarker
+          },
+          {
+            key: 'bookmark',
+            label: this.bookmarks.length > 0 ? this.l('users.bookmarks') : null,
+            characters: this.bookmarks,
+            bookmark: false,
+            isMarkerShown: this.shouldShowMarker
+          }
+        ]);
+      },
+      allFriendRows(): CharacterListRow[] {
+        const showChars =
+          this.showPerCharacterFriends && this.allCharacterFriends.length > 0;
+
+        return this.buildCharacterRows([
+          {
+            key: 'char-friends-all',
+            label: showChars ? this.l('users.characterFriends.all') : null,
+            characters: this.showPerCharacterFriends
+              ? this.allCharacterFriends
+              : [],
+            bookmark: false,
+            isMarkerShown: this.shouldShowMarker
+          },
+          {
+            key: 'friend-all',
+            label:
+              this.allFriends.length > 0
+                ? this.l(
+                    showChars
+                      ? 'users.friends.nonCharacter.all'
+                      : 'users.friends'
+                  )
+                : null,
+            characters: this.allFriends,
+            bookmark: false,
+            isMarkerShown: this.shouldShowMarker
+          },
+          {
+            key: 'bookmarks-all',
+            // this header shows even when the list is empty
+            label: this.l('users.bookmarks.all'),
+            characters: this.allBookmarks,
+            bookmark: true,
+            isMarkerShown: false
+          }
+        ]);
+      },
       bookmarks(): Character[] {
         let friendNames =
           this.showPerCharacterFriends &&
@@ -559,6 +609,15 @@
         const members = this.getFilteredMembers();
         return sortMembers(members, this.sortType);
       },
+      memberResetKey(): string {
+        return [
+          this.channel?.id,
+          this.filter,
+          this.sortType,
+          this.genderFilters.join(','),
+          this.selectedStatuses.join(',')
+        ].join('|');
+      },
       memberCountText(): string {
         const total = this.channel ? this.channel.sortedMembers.length : 0;
         const shown = this.filteredMembers ? this.filteredMembers.length : 0;
@@ -609,6 +668,7 @@
 
       this.$watch('tab', (val: any) => {
         if (val === '1' && this.channel) this.applyOrientationAutoFilter();
+        void this.scanSmartFilterHiding();
       });
 
       this.$watch(
@@ -632,6 +692,74 @@
           } as any;
         }
       });
+
+      // only the scroll position is stale when the list is rebuilt. the measured
+      // row heights are keyed by character and stay valid, so don't use resetKey
+      this.$watch('memberResetKey', () => {
+        const list = this.$refs['memberList'] as
+          | { resetScroll(): void }
+          | undefined;
+        if (list) list.resetScroll();
+      });
+
+      // font size is applied via injected css, so it never re-renders. re-measure on
+      // nextTick, after ChatView's watcher has actually applied the new size
+      this.$watch(
+        () => core.state.settings.fontSize,
+        () => {
+          this.rowHeightMeasured = false;
+          this.$nextTick(() => this.syncRowHeight());
+        }
+      );
+
+      // verdicts are per character, so they outlive a channel switch. only an
+      // in-flight scan is stale. changing the filters invalidates all of them
+      this.$watch(
+        () => this.channel?.id,
+        () => {
+          this.filterScanToken++;
+          void this.scanSmartFilterHiding();
+        }
+      );
+
+      this.$watch(
+        () => this.channel?.sortedMembers.length,
+        () => void this.scanSmartFilterHiding()
+      );
+
+      this.$watch(
+        () => core.state.settings.risingFilter,
+        () => {
+          this.filteredNames = {};
+          this.filterScanToken++;
+          void this.scanSmartFilterHiding();
+        },
+        { deep: true }
+      );
+
+      // a profile arriving from the fetch queue is the only other way we learn a
+      // verdict. without this the list only catches up when someone joins or leaves
+      this.scoreListener = (e: any) => {
+        const name = e?.character?.character?.name;
+
+        if (!name || !core.state.settings.risingFilter.hideChannelMembers)
+          return;
+        if (this.filteredNames[name] === e.isFiltered) return;
+
+        this.filteredNames = { ...this.filteredNames, [name]: e.isFiltered };
+      };
+
+      EventBus.$on('character-score', this.scoreListener);
+
+      void this.scanSmartFilterHiding();
+
+      this.$nextTick(() => this.syncRowHeight());
+    },
+    updated(): void {
+      if (!this.rowHeightMeasured) this.syncRowHeight();
+    },
+    beforeDestroy(): void {
+      EventBus.$off('character-score', this.scoreListener);
     },
     methods: {
       applyOrientationAutoFilter(): void {
@@ -670,14 +798,117 @@
         }
       },
 
+      buildCharacterRows(sections: CharacterListSection[]): CharacterListRow[] {
+        const rows: CharacterListRow[] = [];
+
+        for (const section of sections) {
+          if (section.label !== null) {
+            rows.push({
+              kind: 'header',
+              key: section.key + '-header',
+              label: section.label
+            });
+          }
+
+          for (const character of section.characters) {
+            rows.push({
+              kind: 'user',
+              key: section.key + '-' + character.name,
+              character,
+              bookmark: section.bookmark,
+              isMarkerShown: section.isMarkerShown
+            });
+          }
+        }
+
+        return rows;
+      },
+
+      rowKey(row: CharacterListRow): string {
+        return row.key;
+      },
+
+      memberKey(member: Channel.Member): string {
+        return member.character.name;
+      },
+
+      // rows are always the same height for a user, so we can measure it once and
+      // call it a day. the font size watcher in mounted() re-arms this if it changes
+      syncRowHeight(): void {
+        let row: Element | null = null;
+
+        for (const name of ['memberList', 'friendList', 'allList']) {
+          const list = this.$refs[name] as Vue | undefined;
+          // .userlist-item so a section header is never what we measure
+          row =
+            list?.$el.querySelector('.virtual-list-row .userlist-item') ?? null;
+          if (row) break;
+        }
+
+        if (!row) return;
+
+        const height = row.getBoundingClientRect().height;
+        if (height <= 0) return;
+
+        this.rowHeight = height;
+        this.rowHeightMeasured = true;
+      },
+
+      // hideChannelMembers needs a verdict for every member, but only rendered rows
+      // load profiles now, so anyone you never scrolled past was never hidden. walk
+      // the roster in the background instead and remember the answers. members we
+      // still know nothing about stay visible
+      async scanSmartFilterHiding(): Promise<void> {
+        if (this.filterScanning || this.tab === '0' || !this.channel) return;
+        if (!core.state.settings.risingFilter.hideChannelMembers) return;
+
+        const token = this.filterScanToken;
+        const pending: string[] = [];
+
+        for (const member of this.channel.sortedMembers) {
+          const name = member.character.name;
+          if (!(name in this.filteredNames)) pending.push(name);
+        }
+
+        if (pending.length === 0) return;
+
+        this.filterScanning = true;
+
+        try {
+          for (let i = 0; i < pending.length; i += 50) {
+            const batch: Record<string, boolean> = {};
+
+            for (const name of pending.slice(i, i + 50)) {
+              const verdict =
+                await core.cache.profileCache.isFilteredFromStore(name);
+
+              if (verdict !== null) batch[name] = verdict;
+            }
+
+            if (token !== this.filterScanToken) return;
+
+            if (Object.keys(batch).length > 0) {
+              this.filteredNames = { ...this.filteredNames, ...batch };
+            }
+
+            await new Promise(resolve => setTimeout(resolve));
+          }
+        } finally {
+          this.filterScanning = false;
+        }
+      },
+
       getFilteredMembers() {
         let visible = filterByName(this.channel.sortedMembers, this.filter);
 
-        if (core.state.settings.risingFilter.hideChannelMembers) {
-          visible = visible.filter(m => {
-            const p = core.cache.profileCache.getSync(m.character.name);
-            return !p || !p.match.isFiltered;
-          });
+        const filters = core.state.settings.risingFilter;
+
+        if (filters.hideChannelMembers) {
+          visible = visible.filter(
+            m =>
+              this.filteredNames[m.character.name] !== true &&
+              !isFilteredByChatGender(m.character, filters)
+          );
         }
 
         visible = filterByGender(visible, this.genderFilters);

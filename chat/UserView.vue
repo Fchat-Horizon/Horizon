@@ -72,6 +72,7 @@
     isHorizonSupporter
   } from './profile_api';
   import { CharacterColor } from './../fchat/characters';
+  import { isFilteredByChatGender } from '../learn/filter/smart-filter';
 
   export function getStatusIcon(status: Character.Status): string {
     switch (status) {
@@ -241,7 +242,7 @@
       ) {
         //Don't bother checking again if we don't get a result.
         core.characters.setOverride(character.name, 'characterColor', null);
-        core.cache.addProfile(character.name, true, true);
+        void core.cache.profileCache.applyOverridesFromStore(character.name);
       }
       if (
         cache === null &&
@@ -265,7 +266,8 @@
 
       if (
         core.state.settings.risingFilter.showFilterIcon &&
-        cache?.match.isFiltered
+        (cache?.match.isFiltered ||
+          isFilteredByChatGender(character, core.state.settings.risingFilter))
       ) {
         smartFilterIcon = 'user-filter fas fa-filter';
       }
