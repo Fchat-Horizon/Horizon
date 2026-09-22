@@ -61,13 +61,13 @@ jobs:
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         run: |
           # ! Execute macOS build script
           chmod +x electron/release-scripts/macos.sh
-          electron/release-scripts/macos.sh "$RELEASE_VERSION" "$GITHUB_WORKSPACE/release_artifacts/macos/$RELEASE_VERSION"
+          bash .github/scripts/with-macos-notarization.sh electron/release-scripts/macos.sh "$RELEASE_VERSION" "$GITHUB_WORKSPACE/release_artifacts/macos/$RELEASE_VERSION"
 
       - name: Run Build Script (Windows)
         if: matrix.os == 'windows-latest'

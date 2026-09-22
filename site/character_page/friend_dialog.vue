@@ -173,7 +173,7 @@
               target: (this as any).character.character,
               createdAt: Date.now() / 1000
             });
-          else this.existing.push(newRequest);
+          else this.pending.push(newRequest);
         } catch (e) {
           if (Utils.isJSONError(e)) this.error = <string>e.response.data.error;
           Utils.ajaxError(e, 'Unable to send friend request');

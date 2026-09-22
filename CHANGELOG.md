@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Large backup .zip exports now stream to disk, to fix memory overconsumption during the export process. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5a807cb2fff283e603e9dd6c7d85f80c56663369)
+- Sending a friend request from the profile viewer no longer incorrectly shows you as that person's friend, instead of showing your request as "Pending". [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ae009dc8155ddb5346be4cfcc6a26bdc7788b53f)
+
+### Development
+
+- The Nix flake now automatically fixes its dependency hash based on PNPM updates. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/50d7ed33e569f47af72a4b1f4b5030d68d3033d9)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/959 by @CodingWithAnxiety
+
+## [2.4.0-beta.2] - 2026-09-12
+
+### Fixed since last pre-release
+
+<!--
+Hi. If you're finalizing the *stable* release, please check that you don't leave this section in. It's only for beta.2
+If you're publishing the pre-release, remove this comment. The Discord bot parses it and keeps it in the message it posts when pinging users.
+-->
+
+- Sufficiently large conversation files can now be imported and merged correctly while syncing with Solstice. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/cbff1f6dfdfcabdf90da2c456c6e8b9162467d48)
+- Fixed the 'Open backup directory' button in the exporter tool taking you to your log directory instead. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/639a2b318eb65babac474a08838aaac64075cc52)
+
+### Security
+
+- Tightened security for popups and Node in the image/ URL previewer. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3d57c40855927ae413b282a8cdceb794a436006c)
+
+### Development
+
+- Fixed issues with Dev tools not opening properly for the window and image preview web instance. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/455733015f730bee0989073885847435a9cf2a9e)
+- Switched to using an API key for CI/CD Mac notarization. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/13fcd7d515638462418b854b5a466ba8cc2991c4)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/942 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/947 by @freenutsxd
+
+Non-PR'd changes by @CodingWithAnxiety
+
 ## [2.4.0-beta.1] - 2026-09-06
 
 ### Added
@@ -1640,7 +1681,8 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - IOS build removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814)]
 - Webchat removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/b894a180b9be31f68d1458aaa3c59f9c4470da89)]
 
-[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.0-beta.1...development
+[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.0-beta.2...development
+[2.4.0-beta.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.0-beta.1...v2.4.0-beta.2
 [2.4.0-beta.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.0-beta.0...v2.4.0-beta.1
 [2.4.0-beta.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.3.3...v2.4.0-beta.0
 [2.3.3]: https://github.com/Fchat-Horizon/Horizon/compare/v2.3.2...v2.3.3

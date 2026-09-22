@@ -23,7 +23,7 @@
 
             pnpmDeps = pkgs.fetchPnpmDeps {
               inherit pname version src;
-              hash = "sha256-Nf7CtEB5hCfDIba3jTU5KI2UffHwtYQhLQTJ3MVRNwI=";
+              hash = "sha256-RCBYQW/+stREqGY/ENN0NbL0r/sfwq32h1jhBG+CicI=";
               pnpm = pkgs.pnpm_11;
               fetcherVersion = 4;
             };
@@ -105,6 +105,11 @@
             '';
           };
           default = horizon-electron;
+        };
+
+        apps.nix-update = {
+          type = "app";
+          program = "${pkgs.nix-update}/bin/nix-update";
         };
 
         #The dev stuff, it's full of voodoo hoodoo and things I've not even tried. For my friends on the other side.

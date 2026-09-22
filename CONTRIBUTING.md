@@ -68,6 +68,13 @@ pnpm install
 patch_sass_embed
 ```
 
+Before testing a Nix build after changing dependencies, refresh `pnpmDeps.hash`
+in `flake.nix`. With Nix installed, run:
+
+```bash
+nix run --no-update-lock-file .#nix-update -- horizon-electron --flake --version=skip
+```
+
 ### Building
 
 #### Electron

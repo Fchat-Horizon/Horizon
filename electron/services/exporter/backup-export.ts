@@ -15,53 +15,20 @@ import fs from 'fs';
 import path from 'path';
 import log from 'electron-log';
 import l, { lp } from '../../../chat/localize';
-import archiver from 'archiver';
-import AdmZip from 'adm-zip';
-import {
-  createManifest,
-  isValidManifest,
-  shouldIncludeSettingsFile
-} from './manifest';
+import { writeExportZip } from './export-zip';
+import type { ExportEntry } from './export-zip';
+import { createManifest, shouldIncludeSettingsFile } from './manifest';
 import type { ExportManifest, SettingsSelection } from './manifest';
 import type { ExporterVm } from '../exporter-vm';
 import {
-  binaryLogToJson,
   conversationNamesFile,
   isFilesystemArtifact,
   readLogIndexName
 } from '../log-backup';
 
-/**
- * Directory holding the general (app-wide) settings file. This is fixed at
- * `{userData}/data` regardless of the user's custom `logDirectory`, since the
- * main process always reads/writes general settings there.
- */
+// General settings stay under userData even with a custom log directory.
 const generalSettingsDir = path.join(remote.app.getPath('userData'), 'data');
 
-async function yieldToUi(vm?: ExporterVm): Promise<void> {
-  try {
-    if (vm && typeof vm.$nextTick === 'function') {
-      await vm.$nextTick();
-    }
-    const raf = (
-      globalThis as { requestAnimationFrame?: (cb: () => void) => void }
-    ).requestAnimationFrame;
-    if (typeof raf === 'function') {
-      await new Promise<void>(resolve => raf(() => resolve()));
-    } else {
-      await new Promise<void>(resolve => setTimeout(resolve, 16));
-    }
-  } catch {
-    // best-effort
-  }
-}
-
-/**
- * Refreshes the list of available characters for export from the data directory.
- * Skips special folders like 'settings', 'eicons', and hidden directories.
- *
- * @param vm - Vue component instance containing settings and exportCharacters array
- */
 export function refreshExportCharacters(vm: ExporterVm): void {
   const characters: Array<{ name: string; selected: boolean }> = [];
   try {
@@ -84,35 +51,17 @@ export function refreshExportCharacters(vm: ExporterVm): void {
   }
 }
 
-/**
- * Sets the selection state for all export characters.
- *
- * @param vm - Vue component instance containing exportCharacters array
- * @param selected - Whether to select (true) or deselect (false) all characters
- */
 export function setExportCharacters(vm: ExporterVm, selected: boolean): void {
   vm.exportCharacters.forEach(character => {
     character.selected = selected;
   });
 }
 
-/**
- * Gets an array of character names that are currently selected for export.
- *
- * @param vm - Vue component instance containing exportCharacters array
- * @returns Array of character names where selected is true
- */
 export function getSelectedExportCharacters(vm: ExporterVm): string[] {
   return vm.exportCharacters.filter(c => c.selected).map(c => c.name);
 }
 
-/**
- * Generates the default export file path with timestamp.
- * Filename format: `horizon-export-YYYY-MM-DDTHH-MM-SS.zip` in the user's local
- * time (colons replaced with hyphens for Windows).
- *
- * @returns Absolute path to a timestamped ZIP file in the user's Downloads folder
- */
+// Use local time and avoid colons for Windows filenames.
 export function getExportDefaultPath(): string {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -130,35 +79,28 @@ function listFilesRecursive(rootDir: string): string[] {
   const stack: string[] = [rootDir];
   while (stack.length > 0) {
     const dir = stack.pop()!;
-    let entries: string[] = [];
-    try {
-      entries = fs.readdirSync(dir).map(n => path.join(dir, n));
-    } catch {
-      continue;
-    }
+    const entries = fs.readdirSync(dir).map(n => path.join(dir, n));
     for (const abs of entries) {
-      try {
-        const stat = fs.statSync(abs);
-        if (stat.isDirectory()) stack.push(abs);
-        else if (stat.isFile()) results.push(abs);
-      } catch {}
+      const stat = fs.statSync(abs);
+      if (stat.isDirectory()) stack.push(abs);
+      else if (stat.isFile()) results.push(abs);
     }
   }
   return results;
 }
 
-type ExportEntry = {
-  zip: string;
-  abs?: string;
-  isLog?: boolean;
-  data?: string;
-};
-
-// ^ The .idx name is the only copy of ad-hoc names and capitalization; it
-//   must travel with the export (#886).
+// The index holds the only copy of ad-hoc names and capitalization (#886).
 function readLogName(logPath: string): string | undefined {
   try {
-    return readLogIndexName(fs.readFileSync(`${logPath}.idx`));
+    const fd = fs.openSync(`${logPath}.idx`, 'r');
+    try {
+      // Names occupy at most 256 bytes, regardless of index size.
+      const header = Buffer.alloc(256);
+      const bytes = fs.readSync(fd, header, 0, header.length, 0);
+      return readLogIndexName(header.subarray(0, bytes));
+    } finally {
+      fs.closeSync(fd);
+    }
   } catch {
     return undefined;
   }
@@ -172,7 +114,6 @@ function buildExportEntries(
   const entries: ExportEntry[] = [];
 
   if (vm.exportIncludeGeneralSettings) {
-    // General settings always live at the fixed location, not under logDirectory.
     const generalSettingsFile = path.join(generalSettingsDir, 'settings');
     if (fs.existsSync(generalSettingsFile))
       entries.push({ abs: generalSettingsFile, zip: 'settings' });
@@ -248,12 +189,6 @@ function exportSettingsSelection(vm: ExporterVm): SettingsSelection {
   };
 }
 
-/**
- * Executes the full export process with user-selected output location and progress tracking.
- *
- * @param vm - Vue component instance with export state and settings
- * @returns A promise that resolves when export completes or is cancelled
- */
 function buildManifestIncludes(vm: ExporterVm): ExportManifest['includes'] {
   return {
     generalSettings: !!vm.exportIncludeGeneralSettings,
@@ -268,46 +203,6 @@ function buildManifestIncludes(vm: ExporterVm): ExportManifest['includes'] {
   };
 }
 
-function verifyExportZip(
-  filePath: string,
-  manifest: ExportManifest
-): string | undefined {
-  try {
-    const zip = new AdmZip(filePath);
-    const manifestEntry = zip.getEntry('manifest.json');
-    if (!manifestEntry)
-      return 'Verification failed: manifest.json missing from ZIP.';
-
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(manifestEntry.getData().toString('utf8'));
-    } catch {
-      return 'Verification failed: manifest.json is not valid JSON.';
-    }
-
-    if (!isValidManifest(parsed))
-      return 'Verification failed: manifest.json has invalid format.';
-
-    const entries = zip.getEntries().filter(e => !e.isDirectory);
-    const expected = manifest.expectedFiles + 1; // +1 for manifest itself
-    if (Math.abs(entries.length - expected) > 1)
-      return `Verification failed: expected ~${expected} files but ZIP contains ${entries.length}.`;
-
-    const zipPaths = new Set(entries.map(e => e.entryName.replace(/\\/g, '/')));
-    for (const char of manifest.characters) {
-      const hasEntry = Array.from(zipPaths).some(p =>
-        p.startsWith(`characters/${char}/`)
-      );
-      if (!hasEntry)
-        return `Verification failed: no files found for character "${char}".`;
-    }
-
-    return undefined;
-  } catch (err) {
-    return `Verification failed: ${err instanceof Error ? err.message : String(err)}`;
-  }
-}
-
 export async function runExport(vm: ExporterVm): Promise<void> {
   if (!vm.canRunExport) return;
   vm.exportInProgress = true;
@@ -317,7 +212,6 @@ export async function runExport(vm: ExporterVm): Promise<void> {
   vm.exportCount = 0;
   vm.exportTotal = 0;
 
-  let outputPath: string | undefined;
   let release: (() => void) | undefined;
 
   try {
@@ -334,7 +228,7 @@ export async function runExport(vm: ExporterVm): Promise<void> {
       return;
     }
 
-    outputPath = saveResult.filePath;
+    const outputPath = saveResult.filePath;
 
     const dataDir = vm.settings.logDirectory;
     if (!dataDir || !fs.existsSync(dataDir))
@@ -345,119 +239,35 @@ export async function runExport(vm: ExporterVm): Promise<void> {
     const charactersWithData = selectedCharacters.filter(char =>
       entries.some(e => e.zip.startsWith(`characters/${char}/`))
     );
-    const total = entries.length || 1;
     vm.exportTotal = entries.length;
     vm.exportCount = 0;
 
-    const archive = archiver('zip', {
-      zlib: { level: 6 }
-    });
-
-    const output = fs.createWriteStream(outputPath);
-    let streamErrored = false;
-
-    output.on('error', () => {
-      streamErrored = true;
-    });
-
-    archive.pipe(output);
-
-    // Write manifest as first entry
     const manifest = createManifest(
       charactersWithData,
       buildManifestIncludes(vm),
       entries.length,
       vm.settings?.logDirectory
     );
-    archive.append(JSON.stringify(manifest, null, 2), {
-      name: 'manifest.json'
-    });
-
-    archive.on('progress', progressData => {
-      const processed = progressData.entries.processed || 0;
-      vm.exportCount = Math.max(0, processed - 1); // -1 for manifest
-      vm.exportProgress = Math.max(0, Math.min(0.98, processed / (total + 1)));
-    });
-
-    let count = 0;
-    const failedFiles: string[] = [];
-    for (const e of entries) {
-      try {
-        if (e.data !== undefined) {
-          archive.append(e.data, { name: e.zip });
-          count++;
-        } else if (e.abs !== undefined && fs.existsSync(e.abs)) {
-          if (e.isLog) {
-            const buf = fs.readFileSync(e.abs);
-            // ! Bare arrays only: released clients write other shapes verbatim.
-            archive.append(JSON.stringify(binaryLogToJson(buf)), {
-              name: e.zip
-            });
-          } else {
-            archive.file(e.abs, { name: e.zip });
-          }
-          count++;
-        } else {
-          continue;
-        }
-        if (count % 10 === 0) {
-          await yieldToUi(vm);
-        }
-      } catch (err) {
-        failedFiles.push(e.zip);
-        log.warn('export.file.error', e.zip, err);
+    const bytes = await writeExportZip(
+      outputPath,
+      manifest,
+      entries,
+      (processed, total) => {
+        vm.exportCount = processed;
+        vm.exportProgress = 0.98 * (processed / total);
       }
-    }
+    );
+    vm.exportProgress = 1;
+    log.info('export.complete', outputPath, `${bytes} bytes`);
 
-    if (streamErrored) {
-      throw new Error('Output stream error during export.');
-    }
-
-    vm.exportProgress = 0.99;
-    await archive.finalize();
-
-    await new Promise<void>((resolve, reject) => {
-      output.on('close', () => {
-        vm.exportProgress = 1;
-        const bytes = archive.pointer();
-        log.info('export.complete', outputPath, `${bytes} bytes`);
-        resolve();
-      });
-      output.on('error', reject);
-      archive.on('error', reject);
-    });
-
-    if (archive.pointer() === 0) {
-      throw new Error('Export produced an empty ZIP file.');
-    }
-
-    // Verify the written ZIP
-    const verifyError = verifyExportZip(outputPath, manifest);
-    if (verifyError) {
-      log.error('export.verify.failed', verifyError);
-      vm.exportError = verifyError;
-      return;
-    }
-
-    let summary = l('settings.export.summary', {
-      files: lp('settings.summary.files', count),
+    vm.exportSummary = l('settings.export.summary', {
+      files: lp('settings.summary.files', entries.length),
       characters: lp('settings.summary.characters', selectedCharacters.length),
       file: outputPath
     });
-    if (failedFiles.length > 0) {
-      summary += ` ${lp('settings.export.summarySkipped', failedFiles.length)}`;
-    }
-    vm.exportSummary = summary;
   } catch (error) {
     log.error('settings.export.error', error);
     vm.exportError = `Export failed: ${error instanceof Error ? error.message : 'Please check the logs for details.'}`;
-
-    // Clean up partial ZIP on failure
-    if (outputPath) {
-      try {
-        if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
-      } catch {}
-    }
   } finally {
     release?.();
     vm.exportInProgress = false;
