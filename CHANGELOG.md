@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Large backup .zip exports now stream to disk, to fix memory overconsumption during the export process. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5a807cb2fff283e603e9dd6c7d85f80c56663369)
+- Sending a friend request from the profile viewer no longer incorrectly shows you as that person's friend, instead of showing your request as "Pending". [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ae009dc8155ddb5346be4cfcc6a26bdc7788b53f)
+
+### Development
+
+- The Nix flake now automatically fixes its dependency hash based on PNPM updates. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/50d7ed33e569f47af72a4b1f4b5030d68d3033d9)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/959 by @CodingWithAnxiety
+
 ## [2.4.0-beta.2] - 2026-09-12
 
 ### Fixed since last pre-release
