@@ -355,6 +355,11 @@ export function createMainWindow(
     windowProperties.titleBarStyle = 'hiddenInset';
   } else {
     windowProperties.frame = settings.forceNativeWindowControls;
+    windowProperties.titleBarStyle = settings.forceNativeWindowControls
+      ? 'default'
+      : 'hidden';
+    //we'll set the actual colors in Window.vue, but passing 'true' just enables overlay controls with default controls
+    windowProperties.titleBarOverlay = true;
   }
 
   const window = new electron.BrowserWindow(windowProperties);
