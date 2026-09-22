@@ -1202,6 +1202,10 @@
     user-select: none;
   }
 
+  .platform-darwin #conversations {
+    padding-right: 8px;
+  }
+
   .bbcode,
   .message,
   .profile-viewer {
