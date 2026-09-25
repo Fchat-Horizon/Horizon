@@ -149,21 +149,21 @@ const badges: electron.NativeImage[] = [
 ];
 
 /**
- * Handles the 'has-new' IPC event.
+ * Handles the 'new-message-count' IPC event.
  * This event is triggered when there are new messages in an appplication window's tab(s).
  * It updates the dock badge on macOS and applies an overlay icon to all windows on Windows and Linux.
  * @event
  * @param {IpcMainEvent} e Event reference.
- * @param {number} hasNew The amount of new messages for the window that called it. If hasNew =< 0, the user has no new messages
+ * @param {number} newCount The amount of new messages for the window that called it. If newCount =< 0, the user has no new messages
  * @param {boolean} numberedBadges Whether to show the number of new messages in the badge or just a dot indicating that there are new messages. This is used on Windows and Linux, as macOS does not support numbered badges.
  */
 electron.ipcMain.on(
-  'has-new',
-  (e: IpcMainEvent, hasNew: number, numberedBadges: boolean) => {
-    log.debug('app.hasNew', { hasNew, numberedBadges });
+  'new-message-count',
+  (e: IpcMainEvent, newCount: number, numberedBadges: boolean) => {
+    log.debug('app.newCount', { newCount, numberedBadges });
     const window = electron.BrowserWindow.fromWebContents(e.sender);
     if (window !== undefined && window !== null) {
-      newMessagesMap[window.id] = hasNew;
+      newMessagesMap[window.id] = newCount;
     }
     updateNotificationBadges(numberedBadges);
   }

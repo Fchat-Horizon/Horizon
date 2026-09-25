@@ -92,7 +92,7 @@
               class="nav-link tab"
               :class="{
                 active: tab === activeTab,
-                hasNew: tab.hasNew > 0 && tab !== activeTab
+                hasNew: tab.newCount > 0 && tab !== activeTab
               }"
             >
               <img
@@ -106,7 +106,7 @@
                 class="badge rounded-pill text-bg-danger ms-1"
                 v-if="shouldShowNotificationBadge(tab)"
               >
-                {{ tab.hasNew }}</span
+                {{ tab.newCount }}</span
               >
               <a
                 href="#"
@@ -243,7 +243,7 @@
   interface Tab {
     user: string | undefined;
     view: Electron.BrowserView;
-    hasNew: number;
+    newCount: number;
     avatarUrl?: string;
     insertedCssKey?: string;
     title: string;
@@ -454,12 +454,12 @@
         'disconnect',
         (_e: Electron.IpcRendererEvent, id: number) => {
           const tab = this.tabMap[id];
-          if (tab.hasNew > 0) {
-            tab.hasNew = 0;
+          if (tab.newCount > 0) {
+            tab.newCount = 0;
             electron.ipcRenderer.send(
-              'has-new',
+              'new-message-count',
 
-              this.tabs.reduce((cur, t) => cur + t.hasNew, 0),
+              this.tabs.reduce((cur, t) => cur + t.newCount, 0),
               this.settings.horizonShowNotificationBadge
             );
           }
@@ -470,13 +470,13 @@
         }
       );
       electron.ipcRenderer.on(
-        'has-new',
-        (_e: Electron.IpcRendererEvent, id: number, hasNew: number) => {
+        'new-message-count',
+        (_e: Electron.IpcRendererEvent, id: number, newCount: number) => {
           const tab = this.tabMap[id];
-          tab.hasNew = hasNew;
+          tab.newCount = newCount;
           electron.ipcRenderer.send(
-            'has-new',
-            this.tabs.reduce((cur, t) => cur + t.hasNew, 0),
+            'new-message-count',
+            this.tabs.reduce((cur, t) => cur + t.newCount, 0),
             this.settings.horizonShowNotificationBadge
           );
         }
@@ -668,7 +668,7 @@
         const tab: Tab = {
           user: undefined,
           view,
-          hasNew: 0,
+          newCount: 0,
           title: l('title')
         };
         this.tabs.push(tab);
@@ -739,8 +739,8 @@
           return;
         this.tabs.splice(this.tabs.indexOf(tab), 1);
         electron.ipcRenderer.send(
-          'has-new',
-          this.tabs.reduce((cur, t) => cur + t.hasNew, 0),
+          'new-message-count',
+          this.tabs.reduce((cur, t) => cur + t.newCount, 0),
           this.settings.horizonShowNotificationBadge
         );
         delete this.tabMap[tab.view.webContents.id];
@@ -845,7 +845,7 @@
       shouldShowNotificationBadge(tab: Tab): boolean {
         return (
           this.settings.horizonShowWindowAndChatNotificationBadge !== false &&
-          tab.hasNew > 0
+          tab.newCount > 0
         );
       }
     }
