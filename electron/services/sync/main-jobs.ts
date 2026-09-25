@@ -60,10 +60,9 @@ const isCount = (value: unknown, limit: number): boolean =>
 
 /** The renderer is not trusted with these, so bound them here as well. */
 function validateBatch(value: unknown): void {
-  const bad = (): never =>
-    (() => {
-      throw jobError('Invalid sync archive batch', 400, 'invalid-job');
-    })();
+  const bad = (): never => {
+    throw jobError('Invalid sync archive batch', 400, 'invalid-job');
+  };
   if (!value || typeof value !== 'object') bad();
   const batch = value as Record<string, unknown>;
   if (!isCount(batch.index, SYNC_MAX_BATCHES)) bad();
