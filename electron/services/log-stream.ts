@@ -57,6 +57,8 @@ export interface JsonLogSlice {
   nextOffset: number;
   /** How many records `json` holds. */
   count: number;
+  /** UTF-8 length of `json`. */
+  jsonBytes: number;
   /** True when no further readable record follows this slice. */
   atEof: boolean;
 }
@@ -81,7 +83,13 @@ export async function sliceJsonLog(
 ): Promise<JsonLogSlice> {
   const size = (await fs.promises.stat(filePath)).size;
   if (startOffset >= size)
-    return { json: '[]', nextOffset: size, count: 0, atEof: true };
+    return {
+      json: '[]',
+      nextOffset: size,
+      count: 0,
+      jsonBytes: 2,
+      atEof: true
+    };
 
   const input = fs.createReadStream(filePath, {
     start: startOffset,
@@ -102,14 +110,13 @@ export async function sliceJsonLog(
       for (;;) {
         const end = recordEnd(buffer, offset);
         if (end < 0) break;
-        let record: string;
-        try {
-          const [message] = binaryLogToJson(buffer.subarray(offset, end), true);
-          record = JSON.stringify(message);
-        } catch {
+        // ! Lenient like buildLogsZip; strict drops everything after bad UTF-8
+        const [message] = binaryLogToJson(buffer.subarray(offset, end));
+        if (message === undefined) {
           damaged = true;
           break walk;
         }
+        const record = JSON.stringify(message);
         jsonBytes += Buffer.byteLength(record) + (records.length ? 1 : 0);
         records.push(record);
         consumed += end - offset;
@@ -132,6 +139,7 @@ export async function sliceJsonLog(
     json: `[${records.join(',')}]`,
     nextOffset,
     count: records.length,
+    jsonBytes,
     atEof: damaged || nextOffset >= size
   };
 }

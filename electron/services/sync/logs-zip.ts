@@ -322,7 +322,7 @@ export async function buildLogsBatchZip(
           }
           map.set(file, name);
         }
-        remaining -= Buffer.byteLength(slice.json);
+        remaining -= slice.jsonBytes;
         records -= slice.count;
       }
       // Stopping mid-conversation means the budget ran out inside it. Stopping
