@@ -3,6 +3,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { runArchiveJob } from './archive-job';
 import type { ArchiveJob, ArchiveJobResult } from './archive-job';
+import {
+  SYNC_BATCH_MAX_RECORDS,
+  SYNC_MAX_BATCHES,
+  SYNC_MAX_BODY_BYTES
+} from './protocol';
 
 interface SerializedJobError {
   message: string;
@@ -47,6 +52,33 @@ function isByteArray(value: unknown): value is Uint8Array {
   return value instanceof Uint8Array && value.byteLength === 32;
 }
 
+const isCount = (value: unknown, limit: number): boolean =>
+  typeof value === 'number' &&
+  Number.isSafeInteger(value) &&
+  value >= 0 &&
+  value <= limit;
+
+/** The renderer is not trusted with these, so bound them here as well. */
+function validateBatch(value: unknown): void {
+  const bad = (): never => {
+    throw jobError('Invalid sync archive batch', 400, 'invalid-job');
+  };
+  if (!value || typeof value !== 'object') bad();
+  const batch = value as Record<string, unknown>;
+  if (!isCount(batch.index, SYNC_MAX_BATCHES)) bad();
+  if (!isCount(batch.budget, SYNC_MAX_BODY_BYTES) || batch.budget === 0) bad();
+  if (!isCount(batch.maxRecords, SYNC_BATCH_MAX_RECORDS)) bad();
+  if (typeof batch.nextCursor !== 'string' || batch.nextCursor.length === 0)
+    bad();
+  const start = batch.start;
+  if (!start || typeof start !== 'object') bad();
+  const position = start as Record<string, unknown>;
+  if (!isCount(position.offset, Number.MAX_SAFE_INTEGER)) bad();
+  for (const field of ['character', 'file'])
+    if (position[field] !== undefined && typeof position[field] !== 'string')
+      bad();
+}
+
 function validateJob(value: unknown): ArchiveJob {
   if (!value || typeof value !== 'object')
     throw jobError('Invalid sync archive job', 400, 'invalid-job');
@@ -56,6 +88,7 @@ function validateJob(value: unknown): ArchiveJob {
   if (!isByteArray(job.key))
     throw jobError('Invalid sync archive encryption key', 400, 'invalid-job');
   if (job.kind === 'export' && typeof job.outFile === 'string') {
+    if (job.batch !== undefined) validateBatch(job.batch);
     return job as ArchiveJob;
   }
   if (job.kind === 'merge' && job.encrypted instanceof ArrayBuffer) {

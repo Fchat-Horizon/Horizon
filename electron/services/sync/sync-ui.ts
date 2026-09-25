@@ -40,6 +40,7 @@ function resetSyncViewState(vm: ExporterVm): void {
   vm.syncPayloadCopied = false;
   vm.syncAddressText = undefined;
   vm.syncPeerName = undefined;
+  vm.syncBatches = 0;
 }
 
 function describeError(code: string | undefined): string {
@@ -90,6 +91,9 @@ function applyServerState(vm: ExporterVm, server: LogSyncServer): void {
   if (server !== activeSession?.server) return;
   vm.syncState = server.state;
   vm.syncPeerName = server.peerName;
+  vm.syncBatches = server.batching
+    ? server.sentBatches + server.receivedBatches
+    : 0;
   switch (server.state) {
     case 'finished':
       vm.syncSummary = buildSummary(server);
@@ -233,7 +237,11 @@ export function describeSyncState(vm: ExporterVm): string {
     case 'waiting':
       return l('sync.state.waiting');
     case 'paired':
-      return l('sync.state.paired', { device: peer });
+      // A batching peer returns the session to paired between every transfer.
+      // Saying "connected" each time would flap once per batch.
+      return vm.syncBatches > 0
+        ? l('sync.state.batching', { device: peer, batches: vm.syncBatches })
+        : l('sync.state.paired', { device: peer });
     case 'sending':
       return l('sync.state.sending', { device: peer });
     case 'receiving':

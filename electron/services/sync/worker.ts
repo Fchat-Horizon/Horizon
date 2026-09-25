@@ -3,7 +3,8 @@ import * as fs from 'fs';
 import { parentPort, workerData } from 'worker_threads';
 import type { ArchiveJob, ArchiveJobResult } from './archive-job';
 import { mergeLogsZip } from './log-merge';
-import { buildLogsZip } from './logs-zip';
+import { buildLogsBatchZip, buildLogsZip } from './logs-zip';
+import type { LogsZipPosition, LogsZipResult } from './logs-zip';
 import { decryptBody, encryptBody } from './protocol';
 
 const { job } = workerData as { job: ArchiveJob };
@@ -24,17 +25,31 @@ async function run(): Promise<ArchiveJobResult> {
   checkCancelled();
   const key = Buffer.from(job.key);
   if (job.kind === 'export') {
-    const result = await buildLogsZip(
-      job.dataDir,
-      job.outFile,
-      controller.signal
-    );
+    let result: LogsZipResult;
+    let next: LogsZipPosition | undefined;
+    if (job.batch !== undefined) {
+      const built = await buildLogsBatchZip(
+        job.dataDir,
+        job.outFile,
+        job.batch.start,
+        job.batch.index,
+        job.batch.budget,
+        job.batch.maxRecords,
+        job.batch.nextCursor,
+        controller.signal
+      );
+      result = built.result;
+      next = built.next;
+    } else {
+      result = await buildLogsZip(job.dataDir, job.outFile, controller.signal);
+    }
     checkCancelled();
     const encrypted = encryptBody(key, fs.readFileSync(job.outFile));
     checkCancelled();
     return {
       kind: 'export',
       result,
+      next,
       encrypted: encrypted.buffer.slice(
         encrypted.byteOffset,
         encrypted.byteOffset + encrypted.byteLength
@@ -54,8 +69,8 @@ async function run(): Promise<ArchiveJobResult> {
   } catch {
     throw { status: 400, code: 'bad-zip' };
   }
-  const stats = mergeLogsZip(job.dataDir, zip, checkCancelled);
-  return { kind: 'merge', stats };
+  const report = mergeLogsZip(job.dataDir, zip, checkCancelled, job.carries);
+  return { kind: 'merge', report };
 }
 
 void ready

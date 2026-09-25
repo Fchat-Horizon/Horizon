@@ -43,6 +43,69 @@ export const SYNC_MAX_BODY_BYTES = 512 * 1024 * 1024;
  */
 export const SYNC_MAX_UNCOMPRESSED_BYTES = 2 * 1024 * 1024 * 1024;
 
+/**
+ * Uncompressed JSON one version 2 batch aims for. Counted on the serialized
+ * JSON rather than the binary log because JSON escaping is what the receiver
+ * has to allocate. A batch is cut after the record that crosses this, so it
+ * overshoots by at most one record rather than splitting one.
+ */
+export const SYNC_BATCH_TARGET_BYTES = 16 * 1024 * 1024;
+
+/**
+ * Records one batch may carry, so tiny messages cannot swamp the receiver.
+ * A backstop on allocation, not the limit a batch is meant to stop on: the
+ * byte budget above is. A record's JSON is at least 52 bytes (39 of fixed
+ * punctuation, a ten digit timestamp, one digit of type, a one character
+ * sender, and the array separator), so anything below 16777216 / 52 binds
+ * first whenever messages are short, and the batch then ships a fraction of
+ * what it was allowed while the batch count inflates by the same factor.
+ * Above that crossover the byte budget always takes over, so raising this
+ * further changes nothing.
+ */
+export const SYNC_BATCH_MAX_RECORDS = 350000;
+
+/**
+ * Batch budget to actually use, honouring HORIZON_SYNC_BATCH_BYTES when it is
+ * set to something sane. Testing the split path otherwise needs a conversation
+ * larger than the real budget; a small override turns a few megabytes of logs
+ * into dozens of batches, which exercises slicing, cursor chaining and the
+ * in-place extension without a multi-gigabyte fixture.
+ */
+export function batchTargetBytes(): number {
+  const override = Number(process.env.HORIZON_SYNC_BATCH_BYTES);
+  return Number.isSafeInteger(override) &&
+    override > 0 &&
+    override <= SYNC_MAX_BODY_BYTES
+    ? override
+    : SYNC_BATCH_TARGET_BYTES;
+}
+
+/**
+ * Cursor value a peer sends to ask for the first batch. Any other value is an
+ * opaque token minted by the server; the parameter being present at all is the
+ * capability signal, so a peer that never sends one keeps the whole archive.
+ */
+export const SYNC_CURSOR_START = 'start';
+
+/** Batches one direction may take, so a cursor bug cannot loop forever. */
+export const SYNC_MAX_BATCHES = 1024;
+
+/**
+ * Root entry naming a batch's place in the sequence. Receivers that predate
+ * version 2 skip it: both sides ignore any entry that is not a four-segment
+ * `characters/{char}/logs/{key}.json` path.
+ */
+export const SYNC_BATCH_ENTRY = 'sync-batch.json';
+
+export interface SyncBatchInfo {
+  /** Zero-based position of this batch in the sequence. */
+  index: number;
+  /** True when no further batch follows in this direction. */
+  done: boolean;
+  /** Token to request the next batch with. Absent once `done`. */
+  cursor?: string;
+}
+
 /** A session that has not completed a handshake expires after this long. */
 export const SYNC_SESSION_TIMEOUT_MS = 10 * 60 * 1000;
 
@@ -51,8 +114,12 @@ export const SYNC_SESSION_TIMEOUT_MS = 10 * 60 * 1000;
  * long without a request, so a peer that disappears mid-session cannot leave
  * the server running indefinitely. Suspended while a transfer is actually in
  * flight, which may legitimately take longer than this.
+ *
+ * It is re-armed between batches, so it also bounds how long the peer may
+ * spend merging one batch before asking for the next. A phone merging a large
+ * conversation needs more than the two minutes a single transfer allowed.
  */
-export const SYNC_ACTIVE_IDLE_TIMEOUT_MS = 2 * 60 * 1000;
+export const SYNC_ACTIVE_IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 
 /** The session aborts after this many failed authorization attempts. */
 export const SYNC_MAX_AUTH_FAILURES = 5;
