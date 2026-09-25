@@ -127,7 +127,7 @@ export class LogSyncServer {
     { position: LogsZipPosition; index: number }
   >();
   /**
-   * Set once a merge has rewritten local logs. Send cursors are byte offsets
+   * Set once a merge starts, even one that fails. Send cursors are byte offsets
    * into those files, so anything outstanding now points into moved data; a
    * peer that interleaves downloads with uploads must start over rather than
    * silently skip messages.
@@ -677,6 +677,7 @@ export class LogSyncServer {
         raw.byteOffset,
         raw.byteOffset + raw.byteLength
       ) as ArrayBuffer;
+      this.sendCursorsStale = true;
       const completed = await runArchiveJob(
         {
           kind: 'merge',
@@ -692,9 +693,6 @@ export class LogSyncServer {
         throw new Error('Unexpected sync worker result');
       this.mergeCarries = completed.report.carries;
       this.receivedBatches++;
-      // Local logs have just moved, so any outstanding send cursor now points
-      // into rewritten files.
-      this.sendCursorsStale = true;
       // Report the session running total, so a batching peer can show
       // progress and a version 1 peer (one POST) sees exactly what it used to.
       this.respondJson(res, 200, {
