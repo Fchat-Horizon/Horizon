@@ -813,8 +813,9 @@
           });
           core.connection.onEvent('connected', () => {
             core.watch(
-              () => core.conversations.hasNew,
-              newValue => parent.send('has-new', webContents.id, newValue)
+              () => core.conversations.newCount,
+              newValue =>
+                parent.send('new-message-count', webContents.id, newValue)
             );
 
             EventBus.$on('word-definition', (data: any) => {

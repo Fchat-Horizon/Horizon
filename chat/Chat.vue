@@ -460,10 +460,10 @@
         core.siteSession.onConnectionEstablished();
       });
       core.watch(
-        () => core.conversations.hasNew,
-        hasNew => {
+        () => core.conversations.newCount,
+        newCount => {
           document.title =
-            (hasNew ? '💬 ' : '') +
+            (newCount ? '💬 ' : '') +
             l(core.connection.isOpen ? 'title.connected' : 'title', {
               character: core.connection.character
             });
