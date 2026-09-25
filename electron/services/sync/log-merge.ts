@@ -151,8 +151,18 @@ export interface ConversationCarry {
   tailKeys: string[];
   /** Day of the last .idx entry, or -1 when the index has none. */
   lastDay: number;
-  /** Display name held in the index header. */
-  name: string;
+}
+
+function rejectedCarry(size: number, damaged = false): ConversationCarry {
+  return {
+    damaged,
+    sorted: false,
+    indexCanonical: false,
+    size,
+    tailTime: -1,
+    tailKeys: [],
+    lastDay: -1
+  };
 }
 
 /** Conversations whose carry is retained. Only the one a batch ends on can
@@ -287,6 +297,27 @@ function indexEntry(day: number, offset: number): Buffer {
   entry.writeUInt16LE(day, 0);
   entry.writeUIntLE(offset, 2, 5);
   return entry;
+}
+
+// ! fs.writeSync can write less than asked, e.g. on a nearly full disk
+function writeFully(
+  handle: number,
+  buffer: Buffer,
+  length: number,
+  position: number
+): void {
+  let done = 0;
+  while (done < length) {
+    const wrote = fs.writeSync(
+      handle,
+      buffer,
+      done,
+      length - done,
+      position + done
+    );
+    if (wrote <= 0) throw new Error('Could not write the merged log.');
+    done += wrote;
+  }
 }
 
 /**
@@ -634,7 +665,7 @@ function writeMergedLog(
           const want = Math.min(SCAN_WINDOW, span.end - position);
           const read = fs.readSync(input, window, 0, want, position);
           if (read === 0) throw new DamagedLogError();
-          fs.writeSync(out, window, 0, read, written);
+          writeFully(out, window, read, written);
           written += read;
           position += read;
         }
@@ -655,7 +686,7 @@ function writeMergedLog(
         merged.sort((a, b) => a.time - b.time);
         if (merged.length === 0) continue;
         const buffer = jsonLogToBinary(merged);
-        fs.writeSync(out, buffer, 0, buffer.length, written);
+        writeFully(out, buffer, buffer.length, written);
         written += buffer.length;
         if (previousTime >= 0 && merged[0].time < previousTime)
           ascending = false;
@@ -704,21 +735,10 @@ function buildIndexBody(name: string, entries: Buffer[]): Buffer {
 function carryFromScan(
   file: string,
   scan: LogScan,
-  name: string,
   indexCanonical: boolean
 ): ConversationCarry {
   const tail = readLogTail(file, scan.size);
-  if (tail === undefined || !indexCanonical)
-    return {
-      damaged: false,
-      sorted: false,
-      indexCanonical: false,
-      size: scan.size,
-      tailTime: -1,
-      tailKeys: [],
-      lastDay: -1,
-      name
-    };
+  if (tail === undefined || !indexCanonical) return rejectedCarry(scan.size);
   return {
     damaged: false,
     sorted: scan.ascending,
@@ -726,8 +746,7 @@ function carryFromScan(
     size: scan.size,
     tailTime: tail.time,
     tailKeys: tail.keys,
-    lastDay: scan.lastDay,
-    name
+    lastDay: scan.lastDay
   };
 }
 
@@ -760,8 +779,8 @@ function verifyIndexMatchesLog(file: string, what: 'append' | 'rebuild'): void {
 }
 
 /**
- * Extends a conversation in place rather than rewriting it. Returns undefined
- * when any precondition fails, which means the caller must take the full path.
+ * Extends a conversation in place rather than rewriting it. Returns false when
+ * any precondition fails, which means the caller must take the full path.
  *
  * The log grows first and is flushed before the index does. That is the
  * opposite order to the rewrite path, deliberately: for an extension, a crash
@@ -792,16 +811,17 @@ function appendToLog(
       index = fs.openSync(indexFile, 'r+');
       indexSize = fs.fstatSync(index).size;
     }
-    fs.writeSync(log, appended, 0, appended.length, carry.size);
-    fs.fsyncSync(log);
+    // ! A write that fails partway may still have grown the log
     grew = true;
+    writeFully(log, appended, appended.length, carry.size);
+    fs.fsyncSync(log);
     if (index !== undefined) {
-      fs.writeSync(index, tail.entries, 0, tail.entries.length, indexSize);
+      writeFully(index, tail.entries, tail.entries.length, indexSize);
       fs.fsyncSync(index);
     }
+    if (process.env.HORIZON_SYNC_VERIFY) verifyIndexMatchesLog(file, 'append');
     carry.lastDay = tail.lastDay;
     carry.size += appended.length;
-    if (process.env.HORIZON_SYNC_VERIFY) verifyIndexMatchesLog(file, 'append');
     return true;
   } catch (error) {
     if (grew) {
@@ -924,17 +944,7 @@ export function mergeLogFile(
     scan = scanLog(file, checkCancelled);
   } catch (error) {
     if (error instanceof DamagedLogError) {
-      if (carries !== undefined && carryId !== undefined)
-        carries[carryId] = {
-          damaged: true,
-          sorted: false,
-          indexCanonical: false,
-          size: 0,
-          tailTime: -1,
-          tailKeys: [],
-          lastDay: -1,
-          name: ''
-        };
+      storeCarry(carries, carryId, rejectedCarry(0, true));
       return { added: 0, created: false, skipped: true };
     }
     throw error;
@@ -949,7 +959,6 @@ export function mergeLogFile(
   const scanCarry = carryFromScan(
     file,
     scan,
-    name,
     storedIndex !== undefined && indexMatchesScan(storedIndex, scan)
   );
 
@@ -1040,16 +1049,7 @@ export function mergeLogFile(
     const tail = readLogTail(file, built.size);
     carries[carryId] =
       tail === undefined || built.index === undefined
-        ? {
-            damaged: false,
-            sorted: false,
-            indexCanonical: false,
-            size: built.size,
-            tailTime: -1,
-            tailKeys: [],
-            lastDay: -1,
-            name
-          }
+        ? rejectedCarry(built.size)
         : {
             damaged: false,
             sorted: built.ascending,
@@ -1057,8 +1057,7 @@ export function mergeLogFile(
             size: built.size,
             tailTime: tail.time,
             tailKeys: tail.keys,
-            lastDay: built.lastDay,
-            name
+            lastDay: built.lastDay
           };
   }
 
