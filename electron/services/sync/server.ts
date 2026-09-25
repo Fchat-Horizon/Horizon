@@ -98,6 +98,7 @@ export class LogSyncServer {
    * rather than flapping back to "connected" between batches. */
   sentBatches = 0;
   receivedBatches = 0;
+  batching = false;
 
   private readonly secrets: SyncSessionSecrets;
   private readonly server: http.Server;
@@ -554,6 +555,7 @@ export class LogSyncServer {
     if (this.busy) throw syncError(409, 'busy');
     if (this.state !== 'paired') throw syncError(409, 'not-paired');
     const batch = this.resolveBatchRequest(req.url);
+    if (batch !== undefined) this.batching = true;
     this.busy = true;
     // Suspend the idle timeout for the duration of the transfer; a large log
     // set may legitimately take longer than the paired-session idle window.

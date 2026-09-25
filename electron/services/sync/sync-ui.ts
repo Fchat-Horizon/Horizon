@@ -91,7 +91,9 @@ function applyServerState(vm: ExporterVm, server: LogSyncServer): void {
   if (server !== activeSession?.server) return;
   vm.syncState = server.state;
   vm.syncPeerName = server.peerName;
-  vm.syncBatches = server.sentBatches + server.receivedBatches;
+  vm.syncBatches = server.batching
+    ? server.sentBatches + server.receivedBatches
+    : 0;
   switch (server.state) {
     case 'finished':
       vm.syncSummary = buildSummary(server);
