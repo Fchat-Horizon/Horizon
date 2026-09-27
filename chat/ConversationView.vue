@@ -620,9 +620,21 @@
       messages(): ReadonlyArray<
         Conversation.Message | Conversation.SFCMessage
       > {
-        if (this.search === '') return this.conversation.messages;
+        let messages: ReadonlyArray<
+          Conversation.Message | Conversation.SFCMessage
+        > = this.conversation.messages;
+        if (
+          core.state.hiddenUsers.length > 0 &&
+          this.isChannel(this.conversation)
+        )
+          messages = messages.filter(
+            x =>
+              x.type !== Conversation.Message.Type.Ad ||
+              !core.isHidden(x.sender.name)
+          );
+        if (this.search === '') return messages;
         const filter = new RegExp(this.search.replace(/[^\w]/gi, '\\$&'), 'i');
-        return this.conversation.messages.filter(
+        return messages.filter(
           x =>
             filter.test(x.text) ||
             filter.test(_.get(x, 'sender.name', '') as string)
