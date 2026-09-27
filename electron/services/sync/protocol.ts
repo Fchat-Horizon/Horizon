@@ -44,7 +44,7 @@ export const SYNC_MAX_BODY_BYTES = 512 * 1024 * 1024;
 export const SYNC_MAX_UNCOMPRESSED_BYTES = 2 * 1024 * 1024 * 1024;
 
 /**
- * Uncompressed JSON one version 2 batch aims for. Counted on the serialized
+ * Uncompressed JSON one batch aims for. Counted on the serialized
  * JSON rather than the binary log because JSON escaping is what the receiver
  * has to allocate. A batch is cut after the record that crosses this, so it
  * overshoots by at most one record rather than splitting one.
@@ -92,7 +92,7 @@ export const SYNC_MAX_BATCHES = 1024;
 
 /**
  * Root entry naming a batch's place in the sequence. Receivers that predate
- * version 2 skip it: both sides ignore any entry that is not a four-segment
+ * batching skip it: both sides ignore any entry that is not a four-segment
  * `characters/{char}/logs/{key}.json` path.
  */
 export const SYNC_BATCH_ENTRY = 'sync-batch.json';

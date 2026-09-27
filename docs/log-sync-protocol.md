@@ -109,7 +109,7 @@ A conversation larger than one batch is split across consecutive batches, each c
 
 Tokens are opaque and meaningful only within the session. Horizon keeps the cursor that produced the batch just sent valid alongside the one naming the next, so a client whose download failed can request the same batch again. Requesting an unknown cursor answers `409 {"error": "unknown-cursor"}`, and requesting more than 1024 download batches answers `409 {"error": "too-many-batches"}`. Horizon does not limit how many uploads a session makes; a client should bound its own upload loop.
 
-**All downloads must finish before the first upload.** A cursor is a position within Horizon's log files, and merging an upload rewrites those files. Horizon invalidates every outstanding cursor as soon as it starts merging an upload, even one that then fails, and answers `409 {"error": "cursor-stale"}`, rather than letting a client interleave the two directions and silently skip messages.
+**All downloads must finish before the first upload.** A cursor is a position within Horizon's log files, and merging an upload rewrites those files. Horizon invalidates every outstanding cursor as soon as it starts merging an upload, even one that then fails, and answers `409 {"error": "cursor-stale"}` to every later cursor request, `cursor=start` included, rather than letting a client interleave the two directions and silently skip messages.
 
 ### 3. `POST /v1/logs`
 

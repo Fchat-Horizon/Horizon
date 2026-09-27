@@ -109,7 +109,7 @@ export class LogSyncServer {
   private busy = false;
   private readonly cancellation = new AbortController();
   private readonly requests = new Set<Promise<void>>();
-  // Session totals. A version 2 session makes many transfers, so every
+  // Session totals. A batched session makes many transfers, so every
   // per-transfer outcome is folded into these rather than replacing the last.
   private readonly mergedCreated = new Set<string>();
   private readonly mergedUpdated = new Set<string>();
@@ -129,9 +129,9 @@ export class LogSyncServer {
   >();
   /**
    * Set once a merge starts, even one that fails. Send cursors are byte offsets
-   * into those files, so anything outstanding now points into moved data; a
-   * peer that interleaves downloads with uploads must start over rather than
-   * silently skip messages.
+   * into those files, so anything outstanding now points into moved data. Every
+   * later cursor request, `start` included, is refused rather than letting a
+   * peer that interleaves downloads with uploads silently skip messages.
    */
   private sendCursorsStale = false;
   /** Passed to each merge so a conversation split across batches is extended
@@ -696,7 +696,7 @@ export class LogSyncServer {
       this.mergeCarries = completed.report.carries;
       this.receivedBatches++;
       // Report the session running total, so a batching peer can show
-      // progress and a version 1 peer (one POST) sees exactly what it used to.
+      // progress and a peer that uploads once sees exactly what it used to.
       this.respondJson(res, 200, {
         ok: true,
         ...this.recordMerge(completed.report)
