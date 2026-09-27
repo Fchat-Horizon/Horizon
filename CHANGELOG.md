@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed since last pre-release
+
+<!--
+Hi. If you're finalizing the *stable* release, please check that you don't leave this section in. It's only for beta.3
+If you're publishing the pre-release, remove this comment. The Discord bot parses it and keeps it in the message it posts when pinging users.
+-->
+
+- Log sync now happens in bounded batches, which should help tremendously when trying to synchronize large log collections. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4ec51bad2a923b0ce3db829a06ba0b82894a30d4)
+
 ### Fixed
 
 - Large backup .zip exports now stream to disk, to fix memory overconsumption during the export process. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5a807cb2fff283e603e9dd6c7d85f80c56663369)
@@ -19,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Merged Pull Requests
 
 - https://github.com/Fchat-Horizon/Horizon/pull/959 by @CodingWithAnxiety
+- https://github.com/Fchat-Horizon/Horizon/pull/961 by @Kannamoris and @CodingWithAnxiety
 
 ## [2.4.0-beta.2] - 2026-09-12
 
