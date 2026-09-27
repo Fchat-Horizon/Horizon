@@ -86,6 +86,8 @@ export interface ExporterVm {
   syncPayloadCopied: boolean;
   syncAddressText: string | undefined;
   syncPeerName: string | undefined;
+  /** Transfers completed so far this session, in both directions. */
+  syncBatches: number;
   syncSummary: string | undefined;
   syncError: string | undefined;
 
