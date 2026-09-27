@@ -18,7 +18,7 @@ import { clipboard, ipcRenderer } from 'electron';
 import log from 'electron-log';
 import * as path from 'path';
 import QRCode from 'qrcode';
-import l from '../../../chat/localize';
+import l, { lp } from '../../../chat/localize';
 import type { ExporterVm } from '../exporter-vm';
 import { LogSyncServer } from './server';
 import { acquireDataSession } from '../data-session';
@@ -240,7 +240,7 @@ export function describeSyncState(vm: ExporterVm): string {
       // A batching peer returns the session to paired between every transfer.
       // Saying "connected" each time would flap once per batch.
       return vm.syncBatches > 0
-        ? l('sync.state.batching', { device: peer, batches: vm.syncBatches })
+        ? lp('sync.state.batching', vm.syncBatches, { device: peer })
         : l('sync.state.paired', { device: peer });
     case 'sending':
       return l('sync.state.sending', { device: peer });
