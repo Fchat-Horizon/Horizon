@@ -52,6 +52,8 @@ Because the token travels in a plaintext header, a LAN sniffer can replay it, bu
 
 Error responses to _authorized_ requests are encrypted JSON of the form `{"error": "<code>"}`.
 
+Every endpoint lives under `/v1/`. An authorized request for any other version prefix answers `404 {"error": "unsupported-version"}`, so a client built for a later version can fall back to `/v1/` paths.
+
 ## Endpoints
 
 All bodies described below are the **plaintext** content, i.e. what you get after decryption / what you encrypt before sending. JSON is UTF-8.

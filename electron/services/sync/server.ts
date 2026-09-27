@@ -138,6 +138,17 @@ export class LogSyncServer {
    * rather than read and rewritten once per batch. */
   private mergeCarries: ConversationCarries = {};
 
+  /** Endpoints under `/v{SYNC_PROTOCOL_VERSION}/`, keyed `{method} {name}`. */
+  private readonly routes = new Map<
+    string,
+    (req: http.IncomingMessage, res: http.ServerResponse) => unknown
+  >([
+    ['POST handshake', (req, res) => this.handleHandshake(req, res)],
+    ['GET logs', (req, res) => this.handleGetLogs(req, res)],
+    ['POST logs', (req, res) => this.handlePostLogs(req, res)],
+    ['POST finish', (_req, res) => this.handleFinish(res)]
+  ]);
+
   /** Resolves after pending file jobs and temporary-file cleanup have finished. */
   async whenIdle(): Promise<void> {
     await Promise.allSettled(Array.from(this.requests));
@@ -427,12 +438,14 @@ export class LogSyncServer {
         throw syncError(410, 'session-ended');
       if (!this.authorize(req)) throw syncError(401, 'unauthorized');
 
-      const route = `${req.method} ${(req.url ?? '').split('?')[0]}`;
-      if (route === 'POST /v1/handshake') await this.handleHandshake(req, res);
-      else if (route === 'GET /v1/logs') await this.handleGetLogs(req, res);
-      else if (route === 'POST /v1/logs') await this.handlePostLogs(req, res);
-      else if (route === 'POST /v1/finish') this.handleFinish(res);
-      else throw syncError(404, 'not-found');
+      const match = /^\/v(\d+)\/([^/]+)$/.exec((req.url ?? '').split('?')[0]);
+      if (match === null) throw syncError(404, 'not-found');
+      // ^ Still a 404, so a newer client probing /v2/... can fall back to v1
+      if (match[1] !== String(SYNC_PROTOCOL_VERSION))
+        throw syncError(404, 'unsupported-version');
+      const handler = this.routes.get(`${req.method} ${match[2]}`);
+      if (handler === undefined) throw syncError(404, 'not-found');
+      await handler(req, res);
     } catch (error) {
       const known =
         error !== null &&
