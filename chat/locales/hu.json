@@ -1050,6 +1050,8 @@
   "sync.qrAlt": "Összehangolási folyamat QR kód",
   "sync.scanHint": "Szkenneld be ezt a QR kódot Solstice-vel hogy összehangold csevegési naplóidat.",
   "sync.start": "Összehangolási folyamat indítása",
+  "sync.state.batching_one": "Szinkronizálás a(z) {device} eszközzel... {count} átvitel befejezve.",
+  "sync.state.batching_other": "Szinkronizálás a(z) {device} eszközzel... {count} átvitel befejezve.",
   "sync.state.merging": "Elfogadott naplók egyesítése...",
   "sync.state.paired": "Csatlakozva {device} készülékhez.",
   "sync.state.receiving": "Naplók fogadása a következő készülékről: {device}...",
