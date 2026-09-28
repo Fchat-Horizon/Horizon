@@ -27,7 +27,7 @@
 
     <webview
       src="about:blank"
-      webpreferences="contextIsolation,sandbox,disableDialogs,webSecurity,javascript=no"
+      webpreferences="contextIsolation,sandbox,disableDialogs,webSecurity"
       enableremotemodule="false"
       partition="persist:adblocked"
       id="image-preview-ext"
@@ -57,6 +57,7 @@
 </template>
 
 <script lang="ts">
+  import log from 'electron-log'; //tslint:disable-line:match-default-export-name
   import * as _ from 'lodash';
   import Vue from 'vue';
   import core from '../core';
@@ -84,6 +85,7 @@
   interface DidFailLoadEvent extends Event {
     errorCode: number;
     errorDescription: string;
+    isMainFrame: boolean;
   }
 
   export default Vue.extend({
@@ -121,7 +123,7 @@
       };
     },
     async mounted(): Promise<void> {
-      console.info('Mounted ImagePreview');
+      log.info('imagePreview.mounted');
 
       EventBus.$on('imagepreview-dismiss', (eventData: EventBusEvent) => {
         this.dismiss(this.negotiateUrl((eventData.url as string) || ''));
@@ -171,7 +173,7 @@
       webview.addEventListener('did-fail-load', (event: Event) => {
         const e = event as DidFailLoadEvent;
 
-        if (e.errorCode !== -3) {
+        if (e.isMainFrame && e.errorCode !== -3 && this.state !== 'loaded') {
           this.setState('error');
         }
       });
@@ -190,7 +192,7 @@
           !this.exitInterval &&
           !this.interval
         ) {
-          this.debugLog('ImagePreview: call hide from interval');
+          this.debugLog('imagePreview.hide.interval');
 
           this.hide();
         }
@@ -276,7 +278,7 @@
 
         if (width && height) {
           this.debugLog(
-            'ImagePreview: updatePreviewSize',
+            'imagePreview.size.update',
             width,
             height,
             width / height
@@ -308,7 +310,7 @@
       dismiss(initialUrl: string): void {
         const url = initialUrl;
 
-        this.debugLog('ImagePreview: dismiss', url);
+        this.debugLog('imagePreview.dismiss', url);
 
         if (this.url !== url) return; // simply ignore
 
@@ -330,7 +332,7 @@
         this.shouldDismiss = true;
 
         this.debugLog(
-          'ImagePreview: dismiss.exec',
+          'imagePreview.dismiss.execute',
           due,
           this.previewManager.getVisibilityStatus(),
           url
@@ -346,7 +348,7 @@
         const url = initialUrl;
 
         this.debugLog(
-          'ImagePreview: show',
+          'imagePreview.show',
           this.previewManager.getVisibilityStatus(),
           this.visible,
           this.hasMouseMovedSince(),
@@ -356,21 +358,21 @@
         );
 
         if (this.visible && !this.exitInterval && !this.hasMouseMovedSince()) {
-          this.debugLog('ImagePreview: show cancel: visible & not moved');
+          this.debugLog('imagePreview.show.cancel.visible', 'pointer unmoved');
           return;
         }
 
         if (this.url === url && (this.visible || this.interval)) {
-          this.debugLog('ImagePreview: same url', url, this.url);
+          this.debugLog('imagePreview.show.cancel.sameUrl', url, this.url);
           return;
         }
 
         if (this.url && this.sticky && this.visible) {
-          this.debugLog('ImagePreview: sticky visible');
+          this.debugLog('imagePreview.show.cancel.sticky', url);
           return;
         }
 
-        this.debugLog('ImagePreview: show.exec', url);
+        this.debugLog('imagePreview.show.execute', url);
 
         const due = url === this.exitUrl && this.exitInterval ? 0 : 200;
 
@@ -384,7 +386,7 @@
         // -- you actually have to pause on it
         // tslint:disable-next-line no-unnecessary-type-assertion
         this.interval = setTimeout(() => {
-          this.debugLog('ImagePreview: show.timeout', this.url);
+          this.debugLog('imagePreview.show.timeout', this.url);
 
           const helper = this.previewManager.show(
             this.url || undefined,
@@ -451,7 +453,7 @@
       },
       debugLog(...args: any[]): void {
         if (this.debug) {
-          console.log(...args);
+          log.debug(...args);
         }
       },
       toggleStickyMode(): void {
@@ -507,7 +509,7 @@
       },
       setState(state: string): void {
         this.debugLog(
-          'ImagePreview set-state',
+          'imagePreview.state.update',
           state,
           this.visibleSince > 0
             ? `${(Date.now() - this.visibleSince) / 1000}s`

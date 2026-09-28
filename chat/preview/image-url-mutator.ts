@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
 import Axios from 'axios';
+import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 import { domain } from '../../bbcode/core';
 
 export type UrlSolverCallback = (
@@ -83,16 +84,18 @@ export class ImageUrlMutator {
               return url;
             }
 
-            if (this.debug) console.log('Twitter', url, videoUrl);
+            if (this.debug)
+              log.debug('imagePreview.url.twitter.video', url, videoUrl);
 
             return videoUrl;
           }
 
-          if (this.debug) console.log('Twitter', url, imageUrl);
+          if (this.debug)
+            log.debug('imagePreview.url.twitter.image', url, imageUrl);
 
           return imageUrl;
         } catch (err) {
-          console.error('Twitter Failure', url, err);
+          log.error('imagePreview.url.twitter.failed', url, err);
           return url;
         }
       }
@@ -163,7 +166,7 @@ export class ImageUrlMutator {
           } catch (err) {
             // attempt token refresh, then fallback to iframe if API fails
             if (refresh && this.debug)
-              console.error('RedGifs API Failure', redgifId, err);
+              log.error('imagePreview.url.redgifs.apiFailed', redgifId, err);
           }
         }
         return fallback;
@@ -207,7 +210,7 @@ export class ImageUrlMutator {
 
           return imageUrl || url;
         } catch (err) {
-          console.error('E621 API Failure', url, err);
+          log.error('imagePreview.url.e621.apiFailed', url, err);
           return url;
         }
       }
@@ -224,14 +227,14 @@ export class ImageUrlMutator {
         'https://api.redgifs.com/v2/auth/temporary'
       );
       const token = _.get(response, 'data.token');
-      console.log('Fetching redgifs API token');
+      log.info('imagePreview.url.redgifs.token.fetch');
 
       if (token) {
         ImageUrlMutator.redgifsToken = token;
         return token;
       }
     } catch (err) {
-      if (this.debug) console.error('Failed to get RedGifs token', err);
+      if (this.debug) log.error('imagePreview.url.redgifs.token.failed', err);
     }
 
     return '';
