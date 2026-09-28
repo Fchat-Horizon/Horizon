@@ -1889,7 +1889,10 @@
         }
       },
       async openAutoBackupDir(): Promise<void> {
-        ipcRenderer.send('open-dir', this.settings.autoBackupDirectory);
+        ipcRenderer.send(
+          'open-dir',
+          this.settings.autoBackupDirectory || this.defaultBackupDir
+        );
       },
       async refreshAutoBackups(): Promise<void> {
         try {
