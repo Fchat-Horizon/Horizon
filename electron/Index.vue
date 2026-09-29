@@ -39,7 +39,7 @@
     >
       <div class="card bg-light" style="width: 400px">
         <h3 class="card-header" style="margin-top: 0; display: flex">
-          {{ l('title') }}
+          {{ l(titleKey) }}
 
           <a
             href="#"
@@ -417,6 +417,9 @@
     },
     data() {
       return {
+        titleKey: (process.env.NODE_ENV === 'production'
+          ? 'title'
+          : 'title.dev') as 'title' | 'title.dev',
         showAdvanced: false,
         saveLogin: false,
         autoLogin: false,

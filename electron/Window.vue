@@ -271,7 +271,7 @@
         hasCompletedUpgrades: false,
         windowTitleKey: (process.env.NODE_ENV === 'production'
           ? 'title'
-          : 'title.dev') as string,
+          : 'title.dev') as 'title' | 'title.dev',
         isClosing: false,
         hideWindowControls: false,
         hideSingleTab: true
