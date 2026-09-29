@@ -155,9 +155,15 @@ export interface SyncHandshakeResponse {
 
 /** Result of merging a received log set into the local store. */
 export interface LogMergeStats {
+  /** Number of new conversations created. */
   conversationsCreated: number;
+  /** Number of existing conversations updated. */
   conversationsUpdated: number;
+  /** Number of new messages added to existing conversations. */
   messagesAdded: number;
+  /** Number of messages that were already present and skipped. */
+  messagesSkipped: number;
+  /** Number of characters modified. */
   charactersTouched: number;
   /** Damaged local conversations left untouched; run Fix Logs before retrying. */
   conversationsSkipped: number;

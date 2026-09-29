@@ -64,22 +64,30 @@ function buildSummary(server: LogSyncServer): string {
   if (received !== undefined)
     parts.push(
       l('sync.summary.received', {
-        messages: received.messagesAdded,
-        conversations:
-          received.conversationsUpdated + received.conversationsCreated,
-        created: received.conversationsCreated
+        messages: lp('sync.summary.received.messages', received.messagesAdded),
+        conversations: lp(
+          'sync.summary.received.conversations',
+          received.conversationsUpdated + received.conversationsCreated
+        ),
+        created: lp(
+          'sync.summary.received.created',
+          received.conversationsCreated
+        )
       })
     );
   if (sent !== undefined)
     parts.push(
       l('sync.summary.sent', {
-        conversations: sent.conversations,
-        characters: sent.characters.length
+        conversations: lp(
+          'sync.summary.sent.conversations',
+          sent.conversations
+        ),
+        characters: lp('sync.summary.sent.characters', sent.characters.length)
       })
     );
   if (received && received.conversationsSkipped > 0)
     parts.push(
-      l('sync.summary.damaged', {
+      lp('sync.summary.damaged', received.conversationsSkipped, {
         conversations: received.conversationsSkipped
       })
     );
