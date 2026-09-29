@@ -10,46 +10,66 @@
     iconClass="fa-solid fa-clock-rotate-left"
   >
     <div v-if="entries.length > 0" class="status-picker">
-      <div
-        v-for="(entry, index) in entries"
-        :key="entry.text"
-        class="status-row"
-        :class="{
-          selected: isSelected(entry),
-          'group-break': index > 0 && index === firstUnpinnedIndex
-        }"
-        @click="select(entry)"
-        @dblclick="submit"
+      <template v-for="(entry, index) in entries">
+        <p
+          v-if="index === 0 && entry.pinned"
+          key="pinned-header"
+          class="status-section"
+        >
+          {{ l('statusHistory.pinned') }}
+        </p>
+        <p
+          v-if="index === firstUnpinnedIndex"
+          key="history-header"
+          class="status-section"
+          :class="{ 'group-break': index > 0 }"
+        >
+          {{ historyCountLabel }}
+        </p>
+        <div
+          :key="'status-' + entry.text"
+          class="status-row"
+          :class="{ selected: isSelected(entry) }"
+          @click="select(entry)"
+          @dblclick="submit"
+        >
+          <span class="status-check">
+            <i class="fas" :class="{ 'fa-check-circle': isSelected(entry) }" />
+          </span>
+
+          <span class="status-text">
+            <bbcode :text="entry.text"></bbcode>
+          </span>
+
+          <button
+            type="button"
+            class="status-action"
+            :class="{ pinned: entry.pinned }"
+            :title="pinTitle(entry)"
+            :aria-label="pinTitle(entry)"
+            @click.stop="togglePin(entry)"
+          >
+            <i class="fas fa-thumbtack" />
+          </button>
+
+          <button
+            type="button"
+            class="status-action"
+            :title="l('statusHistory.action.remove')"
+            :aria-label="l('statusHistory.action.remove')"
+            @click.stop="removeEntry(entry)"
+          >
+            <i class="fas fa-times-circle" />
+          </button>
+        </div>
+      </template>
+      <p
+        v-if="firstUnpinnedIndex < 0"
+        key="history-header"
+        class="status-section group-break"
       >
-        <span class="status-check">
-          <i class="fas" :class="{ 'fa-check-circle': isSelected(entry) }" />
-        </span>
-
-        <span class="status-text">
-          <bbcode :text="entry.text"></bbcode>
-        </span>
-
-        <button
-          type="button"
-          class="status-action"
-          :class="{ pinned: entry.pinned }"
-          :title="pinTitle(entry)"
-          :aria-label="pinTitle(entry)"
-          @click.stop="togglePin(entry)"
-        >
-          <i class="fas fa-thumbtack" />
-        </button>
-
-        <button
-          type="button"
-          class="status-action"
-          :title="l('statusHistory.action.remove')"
-          :aria-label="l('statusHistory.action.remove')"
-          @click.stop="removeEntry(entry)"
-        >
-          <i class="fas fa-times-circle" />
-        </button>
-      </div>
+        {{ historyCountLabel }}
+      </p>
     </div>
     <div v-else class="status-picker-empty">
       <i>{{ l('statusHistory.empty') }}</i>
@@ -65,6 +85,8 @@
   import { Dialog } from '../helpers/dialog';
   import l from './localize';
 
+  export const MAX_STATUS_COUNT: number = 15;
+
   interface StatusEntry {
     text: string;
     pinned: boolean;
@@ -72,8 +94,21 @@
 
   // updateHistory dedupes history but never pins, so the two stores can hold
   // the same message in different cases. compare loosely or it renders twice
-  function normalize(status: string): string {
+  export function normalize(status: string): string {
     return status.toString().trim().toLowerCase();
+  }
+
+  // pinned statuses stay in history so unpinning restores them in place, but
+  // they don't count toward the cap
+  export function capHistory(history: string[], pins: string[]): string[] {
+    const pinnedKeys = pins.map(normalize);
+    let unpinned = 0;
+
+    return history.filter(
+      text =>
+        pinnedKeys.indexOf(normalize(text)) >= 0 ||
+        ++unpinned <= MAX_STATUS_COUNT
+    );
   }
 
   export default CustomDialog.extend({
@@ -113,6 +148,12 @@
       },
       firstUnpinnedIndex(): number {
         return this.entries.findIndex(entry => !entry.pinned);
+      },
+      historyCountLabel(): string {
+        return l('statusHistory.count', {
+          index: this.entries.filter(entry => !entry.pinned).length,
+          total: MAX_STATUS_COUNT
+        });
       }
     },
     methods: {
@@ -160,16 +201,28 @@
         await core.settingsStore.set('statusPins', this.pinned);
       },
       async unpin(entry: StatusEntry): Promise<void> {
-        // confirmation bc unpinning a status that's not in history removes it entirely
-        if (!Dialog.confirmDialog(l('statusHistory.confirmRemove.pinned')))
-          return;
-
         const key = normalize(entry.text);
         const index = this.pinned.findIndex(text => normalize(text) === key);
         if (index < 0) return;
 
-        this.pinned.splice(index, 1);
+        const pins = this.pinned.filter((_, i) => i !== index);
+        const history = capHistory(this.history, pins);
+
+        // confirmation bc unpinning a status that's not in history removes it entirely
+        if (
+          !history.some(text => normalize(text) === key) &&
+          !Dialog.confirmDialog(l('statusHistory.confirmRemove.pinned'))
+        )
+          return;
+
+        this.pinned = pins;
         await core.settingsStore.set('statusPins', this.pinned);
+
+        if (history.length !== this.history.length) {
+          this.history = history;
+          await core.settingsStore.set('statusHistory', this.history);
+        }
+
         this.clearSelectionIfGone();
       },
       async removeEntry(entry: StatusEntry): Promise<void> {
@@ -206,6 +259,19 @@
     max-height: min(55vh, 420px);
     overflow-y: auto;
 
+    .status-section {
+      margin: 0 0 0.2rem;
+      padding: 0 0.5rem;
+      font-size: 0.85em;
+      color: var(--bs-secondary-color);
+
+      &.group-break {
+        margin-top: 0.4rem;
+        border-top: 1px solid var(--bs-border-color);
+        padding-top: 0.6rem;
+      }
+    }
+
     .status-row {
       display: flex;
       align-items: center;
@@ -214,12 +280,6 @@
       border-radius: 4px;
       border-left: 3px solid transparent;
       cursor: pointer;
-
-      &.group-break {
-        margin-top: 0.4rem;
-        border-top: 1px solid var(--bs-border-color);
-        padding-top: 0.6rem;
-      }
 
       &:hover {
         background: color-mix(in srgb, var(--bs-body-color) 8%, transparent);
