@@ -504,15 +504,36 @@ async function imagesGet(id: number): Promise<CharacterImage[]> {
   ).images;
 }
 
-async function guestbookGet(id: number, offset: number): Promise<Guestbook> {
-  const data = await core.connection.queryApi<{
+// if anybody has more than 100 *pages* of guestbook posts (1500+ posts), i'll be stunned
+const GUESTBOOK_MAX_COUNT_PAGES = 100;
+
+async function guestbookPageFetch(id: number, page: number) {
+  return core.connection.queryApi<{
     nextPage: boolean;
     posts: GuestbookPost[];
-  }>('character-guestbook.php', {
-    id,
-    page: offset / 10
-  });
+  }>('character-guestbook.php', { id, page });
+}
+
+async function guestbookGet(id: number, offset: number): Promise<Guestbook> {
+  const data = await guestbookPageFetch(id, offset / 10);
   return { posts: data.posts, total: data.nextPage ? offset + 100 : offset };
+}
+
+// character-guestbook.php never reports a total, only whether another page
+// follows, so the only way to get an exact post count is to check every page.
+async function guestbookCountedGet(id: number): Promise<Guestbook> {
+  const first = await guestbookPageFetch(id, 0);
+
+  let postCount = first.posts.length;
+  let hasNextPage = first.nextPage;
+
+  for (let page = 1; hasNextPage && page < GUESTBOOK_MAX_COUNT_PAGES; page++) {
+    const data = await guestbookPageFetch(id, page);
+    postCount += data.posts.length;
+    hasNextPage = data.nextPage;
+  }
+
+  return { posts: first.posts, total: first.nextPage ? 100 : 0, postCount };
 }
 
 async function kinksGet(id: number): Promise<CharacterKink[]> {
@@ -555,6 +576,7 @@ export function init(settings: Settings, characters: SimpleCharacter[]): void {
   registerMethod('kinksGet', kinksGet);
   registerMethod('imagesGet', imagesGet);
   registerMethod('guestbookPageGet', guestbookGet);
+  registerMethod('guestbookCountedGet', guestbookCountedGet);
   registerMethod('imageUrl', (image: CharacterImageOld) => image.url);
   registerMethod('memoUpdate', async (id: number, memo: string) => {
     await core.connection.queryApi('character-memo-save.php', {

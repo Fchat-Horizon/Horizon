@@ -91,12 +91,8 @@
         <div style="flex: 1">
           <span
             class="fa-fw"
-            :class="
-              conversation.channel.id.substr(0, 4) !== 'adh-'
-                ? 'fa fa-star'
-                : 'fas fa-hashtag'
-            "
-            :title="l('channel.official')"
+            :class="isOfficialChannel ? 'fa fa-star' : 'fas fa-hashtag'"
+            :title="l(`channel.${isOfficialChannel ? 'official' : 'private'}`)"
             style="vertical-align: sub"
           ></span>
           <h5 style="margin: 0; display: inline; vertical-align: middle">
@@ -646,6 +642,11 @@
         const conv = <Conversation.ChannelConversation>this.conversation;
         const member = conv.channel.members[core.connection.character];
         return member !== undefined && member.rank > Channel.Rank.Member;
+      },
+      isOfficialChannel(): boolean {
+        if (!this.isChannel(this.conversation)) return false;
+        const conv = <Conversation.ChannelConversation>this.conversation;
+        return conv.channel.id.substr(0, 4) !== 'adh-';
       },
       viewModeIconClass(): string {
         const baseClasses = ['fas'];
