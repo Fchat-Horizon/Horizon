@@ -242,7 +242,7 @@
 <script lang="ts">
   import * as _ from 'lodash';
 
-  import anyAscii from 'any-ascii';
+  import { safeAnyAscii } from './safe-ascii';
   import Vue from 'vue';
   import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 
@@ -345,8 +345,11 @@
 
         // Guestbook tab - key '3'
         if ((this as any).character?.settings?.guestbook) {
+          // falls back to the first page's length rather than showing nothing if postCount doesn't exist
           const guestbookCount =
-            this.guestbook !== null ? ` (${this.guestbook.posts.length})` : '';
+            this.guestbook !== null
+              ? ` (${this.guestbook.postCount ?? this.guestbook.posts.length})`
+              : '';
           labels['3'] = this.l('profile.tab.guestbook') + guestbookCount;
         }
 
@@ -459,9 +462,8 @@
             return;
           }
 
-          const result = await methods.guestbookPageGet(
-            this.character.character.id,
-            1
+          const result = await methods.guestbookCountedGet(
+            this.character.character.id
           );
 
           if (this.name !== expectedName) return;
@@ -687,12 +689,12 @@
           core.state.generalSettings &&
           core.state.generalSettings.horizonForceAsciiProfiles
         ) {
-          character.character.description = anyAscii(
+          character.character.description = safeAnyAscii(
             character.character.description
           );
 
           if (character.character.title) {
-            character.character.title = anyAscii(character.character.title);
+            character.character.title = safeAnyAscii(character.character.title);
           }
 
           // We don't do customs and infotags here, so that they are at least sorted before parsing.
