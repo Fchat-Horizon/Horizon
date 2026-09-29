@@ -161,8 +161,6 @@ export interface LogMergeStats {
   conversationsUpdated: number;
   /** Number of new messages added to existing conversations. */
   messagesAdded: number;
-  /** Number of messages that were already present and skipped. */
-  messagesSkipped: number;
   /** Number of characters modified. */
   charactersTouched: number;
   /** Damaged local conversations left untouched; run Fix Logs before retrying. */
