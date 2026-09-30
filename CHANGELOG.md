@@ -7,61 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.4.0-beta.3] - 2026-09-27
-
-### Fixed since last pre-release
-
-<!--
-Hi. If you're finalizing the *stable* release, please check that you don't leave this section in. It's only for beta.3
-If you're publishing the pre-release, remove this comment. The Discord bot parses it and keeps it in the message it posts when pinging users.
--->
-
-- Log sync now happens in bounded batches, which should help tremendously when trying to synchronize large log collections. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4ec51bad2a923b0ce3db829a06ba0b82894a30d4)
-
-### Fixed
-
-- Large backup .zip exports now stream to disk, to fix memory overconsumption during the export process. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5a807cb2fff283e603e9dd6c7d85f80c56663369)
-- Sending a friend request from the profile viewer no longer incorrectly shows you as that person's friend, instead of showing your request as "Pending". [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ae009dc8155ddb5346be4cfcc6a26bdc7788b53f)
-
-### Development
-
-- The Nix flake now automatically fixes its dependency hash based on PNPM updates. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/50d7ed33e569f47af72a4b1f4b5030d68d3033d9)
-
-### Merged Pull Requests
-
-- https://github.com/Fchat-Horizon/Horizon/pull/959 by @CodingWithAnxiety
-- https://github.com/Fchat-Horizon/Horizon/pull/961 by @Kannamoris and @CodingWithAnxiety
-
-## [2.4.0-beta.2] - 2026-09-12
-
-### Fixed since last pre-release
-
-<!--
-Hi. If you're finalizing the *stable* release, please check that you don't leave this section in. It's only for beta.2
-If you're publishing the pre-release, remove this comment. The Discord bot parses it and keeps it in the message it posts when pinging users.
--->
-
-- Sufficiently large conversation files can now be imported and merged correctly while syncing with Solstice. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/cbff1f6dfdfcabdf90da2c456c6e8b9162467d48)
-- Fixed the 'Open backup directory' button in the exporter tool taking you to your log directory instead. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/639a2b318eb65babac474a08838aaac64075cc52)
-
-### Security
-
-- Tightened security for popups and Node in the image/ URL previewer. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3d57c40855927ae413b282a8cdceb794a436006c)
-
-### Development
-
-- Fixed issues with Dev tools not opening properly for the window and image preview web instance. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/455733015f730bee0989073885847435a9cf2a9e)
-- Switched to using an API key for CI/CD Mac notarization. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/13fcd7d515638462418b854b5a466ba8cc2991c4)
-
-### Merged Pull Requests
-
-- https://github.com/Fchat-Horizon/Horizon/pull/942 by @freenutsxd
-- https://github.com/Fchat-Horizon/Horizon/pull/947 by @freenutsxd
-
-Non-PR'd changes by @CodingWithAnxiety
-
-## [2.4.0-beta.1] - 2026-09-06
-
 ### Added
 
 - Log syncing with Solstice! Simply go to the app menu, and click "Manage Data" to find the "Sync with Solstice" option. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c16f331d47cad189f891f1b1eabbb6347d4856a8)
@@ -81,8 +26,8 @@ Non-PR'd changes by @CodingWithAnxiety
 
 ### Fixed
 
-- The grouped channel pruning now has a more sensible grace period. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/312e4a7b95f52688dbb3daaacb6347e9533ca5e3)
-  - This should fix issues where your channels would be ungrouped (with a console message too!) even though you managed to join them correctly 10 seconds after connecting.
+- Grouped channel pruning now has a more sensible grace period. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/312e4a7b95f52688dbb3daaacb6347e9533ca5e3)
+  - This should fix issues where your channels would be ungrouped (with a console message too!) even though you managed to join them correctly after 10 seconds.
 - Fixed various F-Chat Rising bugs with ads and smart filters not firing correctly: [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/421eef66fad3fb65b6589fe167b77359b7ef4f43)
   - Smart filters should now work, even if you disable 'Colorize ads'
   - Having too many ads in the queue no longer lets some of them slip by without getting matched/ filtered. First in, first out.
@@ -90,15 +35,21 @@ Non-PR'd changes by @CodingWithAnxiety
 - Fixed various bad colors in colorblind mode. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6b10c5ae7eefb50343ec6529c25fc0e920dd3d0e)
 - Fixed various buttons not using proper 4.7:1 contrast ratios for their text. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5291c3fb5da76bb24fda2eb737ce6900870f7ec3)
 - Guestbooks with more than 15 posts now show an accurate number. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/13d97021e5f914a376119e006913da1e8376a268)
-- Switching between disabling/ enabling HQ profile pictures from being visible now works without restarting. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/29d9ab752442ba250319651a9ed2378cb2defc59)
+- Toggling the HQ Profile Pics setting now works without needing to restart. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/29d9ab752442ba250319651a9ed2378cb2defc59)
 - Having 'Standardize profile fonts' no longer fucks up BBCode parsing if a profile uses characters that are parsed into `[` or `]`. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a8776a12d983904476f6e1cc4ad2447b1ae67438)
-  - This also makes it so that emoji are now properly visible (even if they aren't ASCII characters).
-- Scrolling up in the log viewer while searching now loads older messages better, without you needing to scroll upward more than once. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/425dfa03350cf33606bbf03b364d24cc609b522f)
+  - This also makes it so that emoji are now properly visible (even if they aren't technically ASCII characters).
+- Scrolling upwards in the log viewer while searching now loads older messages better, without you needing to scroll upward more than once. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/425dfa03350cf33606bbf03b364d24cc609b522f)
 - The tab line no longer slightly overlaps with the window content if you resize the window and then switch tabs. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ba681aa34d10bd0dfcb38a2321817f6897457b49)
+- Large backup .zip exports now stream to disk, to fix memory overconsumption during the export process. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5a807cb2fff283e603e9dd6c7d85f80c56663369)
+- Sending a friend request from the profile viewer no longer incorrectly shows you as that person's friend, instead of showing your request as "Pending". [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ae009dc8155ddb5346be4cfcc6a26bdc7788b53f)
 - The mobile quick switcher on top now respects channel group orders. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/23c4beb648f692758d4207bca05ee52c41c91b75)
 - Names in the "All Friends" tab to the right are no longer all green if you have "Color friends/ bookmarks in a different color" enabled. Obviously, those are your friends and bookmarks. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b3036a275e5629c2418b9e305e56226bafd45153)
 - Fixed screen reader and tooltip labels for the public and private channels always claiming a channel is official. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/93b48b418d55d2abb2841fe51da9cc24ecdb53ef)
-- Did not fix using `/roll` commands with `NaN` values :^) [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/48a809125f130f0240bf0086a9412b673dc76f09)
+- Did **not** fix using `/roll` commands with `NaN` values :^) [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/48a809125f130f0240bf0086a9412b673dc76f09)
+
+### Security
+
+- Tightened security for popups and Node in the image/ URL previewer. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3d57c40855927ae413b282a8cdceb794a436006c)
 
 ### Development
 
@@ -112,6 +63,9 @@ Non-PR'd changes by @CodingWithAnxiety
 - The dev-only "Test Language" is now a readable pseudo-locale: accented characters and length padding make untranslated strings and too-tight layouts easy to spot. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/15e2e530c0ff0b89fd98e414a20da56a14122079)
 - Locale codes are now valid BCP47 (`en-US`, `en-x-uwu`, `en-x-pseudo`); previously saved display language settings are migrated automatically. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a3c2d2ec54d379aa6a262e8654d9123a3f133113)
 - Removed locale keys that were no longer referenced anywhere. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9033b8422904ae53e387fd82583558eb6f642d8f)
+- The Nix flake now automatically fixes its dependency hash based on PNPM updates. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/50d7ed33e569f47af72a4b1f4b5030d68d3033d9)
+- Fixed issues with Dev tools not opening properly for the window and image preview web instance. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/455733015f730bee0989073885847435a9cf2a9e)
+- Switched to using an API key for CI/CD Mac notarization. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/13fcd7d515638462418b854b5a466ba8cc2991c4)
 
 ### Documentation
 
@@ -136,6 +90,10 @@ Non-PR'd changes by @CodingWithAnxiety
 - https://github.com/Fchat-Horizon/Horizon/pull/916 by @MoonBurst
 - https://github.com/Fchat-Horizon/Horizon/pull/938 by @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/871 by @Kannamoris and @CodingWithAnxiety
+- https://github.com/Fchat-Horizon/Horizon/pull/942 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/947 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/959 by @CodingWithAnxiety
+- https://github.com/Fchat-Horizon/Horizon/pull/961 by @Kannamoris and @CodingWithAnxiety
 
 Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 
