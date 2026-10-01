@@ -44,6 +44,8 @@ export class CharacterProfiler {
 
     if (c.isBookmarked) return 0.5;
 
+    if (c.isHidden) return -0.5;
+
     if (c.isIgnored) return -1;
 
     return 0;

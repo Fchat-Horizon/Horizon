@@ -89,7 +89,9 @@
           v-for="member in filteredMembers"
           :key="member.character.name"
           class="userlist-item"
-          :class="{ dimmed: member.character.isIgnored }"
+          :class="{
+            dimmed: member.character.isIgnored || member.character.isHidden
+          }"
         >
           <user
             :character="member.character"
