@@ -10,7 +10,10 @@
     <div style="display: flex; flex-direction: column">
       <tabs
         style="flex-shrink: 0"
-        :tabs="[l('channelList.public'), l('channelList.private')]"
+        :tabs="[
+          { id: '0', label: l('channelList.public') },
+          { id: '1', label: l('channelList.private') }
+        ]"
         :fullWidth="true"
         v-model="tab"
         @input="focusChannelFilter()"
