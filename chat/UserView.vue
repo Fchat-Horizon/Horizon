@@ -73,6 +73,7 @@
   } from './profile_api';
   import { CharacterColor } from './../fchat/characters';
   import { isFilteredByChatGender } from '../learn/filter/smart-filter';
+  import { hasActiveSmartFilters } from '../learn/filter/types';
 
   export function getStatusIcon(status: Character.Status): string {
     switch (status) {
@@ -226,9 +227,11 @@
       statusClass = `fa-fw ${getStatusIcon(character.status)}`;
 
     if (core.connection.character) {
+      const showFilterIcon =
+        core.state.settings.risingFilter.showFilterIcon &&
+        hasActiveSmartFilters(core.state.settings.risingFilter);
       const cache =
-        (showMatch && core.state.settings.risingAdScore) ||
-        core.state.settings.risingFilter.showFilterIcon
+        (showMatch && core.state.settings.risingAdScore) || showFilterIcon
           ? core.cache.profileCache.getSync(character.name)
           : undefined;
 
@@ -244,10 +247,7 @@
         core.characters.setOverride(character.name, 'characterColor', null);
         void core.cache.profileCache.applyOverridesFromStore(character.name);
       }
-      if (
-        cache === null &&
-        (showMatch || core.state.settings.risingFilter.showFilterIcon)
-      ) {
+      if (cache === null && (showMatch || showFilterIcon)) {
         void core.cache.addProfile(character.name);
       }
 
@@ -265,7 +265,7 @@
       }
 
       if (
-        core.state.settings.risingFilter.showFilterIcon &&
+        showFilterIcon &&
         (cache?.match.isFiltered ||
           isFilteredByChatGender(character, core.state.settings.risingFilter))
       ) {
