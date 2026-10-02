@@ -265,6 +265,10 @@ export default class Connection implements Interfaces.Connection {
     this.errorHandlers.push(handler);
   }
 
+  throwError(error: Error): void {
+    this.invokeErrorHandlers(error, false);
+  }
+
   onEvent(type: Interfaces.EventType, handler: Interfaces.EventHandler): void {
     let handlers = this.connectionHandlers[type];
     if (handlers === undefined) handlers = this.connectionHandlers[type] = [];

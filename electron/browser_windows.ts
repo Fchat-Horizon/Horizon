@@ -231,31 +231,19 @@ const windows: electron.BrowserWindow[] = [];
  */
 let tabCount = 0;
 
-/**
- * Handles the 'connect' IPC event.
- * This event is triggered when tab connects to F-Chat.
- * It adds the tab's web contents to the `tabMap` and updates the tray context menu.
- * @event
- * @param {IpcMainEvent & { sender: electron.WebContents }} e
- * The IPC main event that contains the sender's web contents.
- * @param {string} character
- * The character name associated with the tab.
- */
-electron.ipcMain.on(
-  'connect',
-  (e: IpcMainEvent & { sender: electron.WebContents }, character: string) => {
-    if (e.sender) {
-      //browserWindows.tabAddHandler(webContents, settings);
-      tabMap[character] = e.sender;
-      if (tray) {
-        tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
-      }
-      if (app.dock) {
-        app.dock.setMenu(electron.Menu.buildFromTemplate(createDockMenu()));
-      }
-    }
+/** Adds an authorized character connection to the tray and dock menus. */
+export function registerConnectedTab(
+  sender: electron.WebContents,
+  character: string
+): void {
+  tabMap[character] = sender;
+  if (tray) {
+    tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
   }
-);
+  if (app.dock) {
+    app.dock.setMenu(electron.Menu.buildFromTemplate(createDockMenu()));
+  }
+}
 /**
  * Handles the 'disconnect' IPC event.
  * This event is triggered when a tab disconnects from F-Chat.
@@ -1067,7 +1055,7 @@ export function createAboutWindow(
 
   // Handle external links
   about.webContents.setWindowOpenHandler(({ url }) => {
-    electron.shell.openExternal(url);
+    openURLExternally(url);
     return { action: 'deny' };
   });
 

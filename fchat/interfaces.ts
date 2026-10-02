@@ -280,6 +280,7 @@ export namespace Connection {
     onEvent(type: EventType, handler: EventHandler): void;
     offEvent(type: EventType, handler: EventHandler): void;
     onError(handler: (error: Error) => void): void;
+    throwError(error: Error): void;
     send(type: 'CHA' | 'FRL' | 'ORS' | 'PCR' | 'PIN' | 'UPT'): void;
     send<K extends keyof ClientCommands>(
       type: K,
