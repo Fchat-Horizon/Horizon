@@ -248,7 +248,7 @@
         void core.cache.profileCache.applyOverridesFromStore(character.name);
       }
       if (cache === null && (showMatch || showFilterIcon)) {
-        void core.cache.addProfile(character.name);
+        void core.cache.addProfile(character.name, channel?.id);
       }
 
       if (core.state.settings.risingAdScore && showMatch && cache) {

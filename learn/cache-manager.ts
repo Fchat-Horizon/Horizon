@@ -143,8 +143,17 @@ export class CacheManager {
 
     const key = ProfileCache.nameKey(name);
 
-    if (!!_.find(this.queue, (q: ProfileCacheQueueEntry) => q.key === key))
+    const existing = _.find(
+      this.queue,
+      (q: ProfileCacheQueueEntry) => q.key === key
+    );
+
+    // retag to the newest channel so a channel switch doesn't drop someone the
+    // new channel just asked for. untagged entries stay untagged
+    if (existing) {
+      if (existing.channelId) existing.channelId = channelId;
       return;
+    }
 
     const entry: ProfileCacheQueueEntry = {
       name,
@@ -251,11 +260,14 @@ export class CacheManager {
    * caused every profile to reregister no matter what, introducing extra work.
    * applyOverridesFromStore does the same job without reregistering. 
    */
-  async addProfile(character: string | ComplexCharacter): Promise<void> {
+  async addProfile(
+    character: string | ComplexCharacter,
+    channelId?: string
+  ): Promise<void> {
     if (typeof character === 'string') {
       // console.log('Learn discover', character);
 
-      await this.queueForFetching(character);
+      await this.queueForFetching(character, false, channelId);
       return;
     }
 
