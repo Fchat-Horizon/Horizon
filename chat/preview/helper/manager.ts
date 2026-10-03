@@ -51,7 +51,7 @@ export class PreviewManager {
       h.renderStyle = h.helper.renderStyle();
 
       this.debugLog(
-        'ImagePreview: pm.renderStyles()',
+        'imagePreview.manager.renderStyles',
         h.helper.constructor.name,
         JSON.parse(JSON.stringify(h.renderStyle))
       );
@@ -80,7 +80,7 @@ export class PreviewManager {
     );
 
     if (!matchedHelper) {
-      this.debugLog('ImagePreview: pm.show()', 'Unmatched helper', url, domain);
+      this.debugLog('imagePreview.manager.show.unmatched', url, domain);
       return undefined;
     }
 
@@ -91,7 +91,7 @@ export class PreviewManager {
   hide(): void {
     _.each(this.helpers, h => {
       this.debugLog(
-        'ImagePreview: pm.hide()',
+        'imagePreview.manager.hide',
         h.helper.constructor.name,
         h.helper.isVisible()
       );
