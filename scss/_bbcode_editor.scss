@@ -11,6 +11,7 @@
 .bbcode-toolbar {
   align-items: flex-start;
   flex-wrap: nowrap;
+  flex: 1 51%;
   @include media-breakpoint-down(md) {
     background: $text-background-color;
     padding: 10px;
@@ -19,15 +20,81 @@
     left: 0px;
     border-radius: var(--bs-border-radius);
     width: 100%;
-    height: 100%;
+    height: auto;
+    max-height: 75%;
     z-index: 20;
     display: none;
     .toolbar-buttons {
       width: 100%;
+      border: 1px solid var(--bs-border-color-translucent);
+      border-radius: var(--bs-border-radius);
+      overflow: hidden;
+
+      .btn {
+        margin: 0 -1px -1px 0;
+        border: 1px solid var(--bs-border-color-translucent);
+        border-radius: 0 !important;
+        min-width: 36px;
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
     }
-    .btn {
-      margin: 3px;
-      border-radius: $btn-border-radius !important;
+
+    .toolbar-row-break {
+      display: none;
+    }
+
+    .bbcode-editor:has(.chat-text-box) & {
+      display: flex;
+      position: static;
+      max-height: none;
+      flex: 1 0 100%;
+      padding: 0;
+      background: none;
+      z-index: auto;
+
+      .btn-close {
+        display: none;
+      }
+
+      .format-btn {
+        order: 1;
+        display: none;
+      }
+      .toolbar-row-break {
+        order: 2;
+        width: 100%;
+        height: 0;
+        margin: 0;
+        border: 0;
+      }
+
+      .character-btn,
+      .btn:not(.format-btn) {
+        order: 3;
+      }
+
+      .character-btn {
+        width: 40px;
+        height: auto;
+        min-height: 40px;
+        margin: 0 -1px -1px 0;
+        border: 1px solid var(--bs-border-color-translucent);
+
+        img {
+          object-fit: cover;
+        }
+      }
+    }
+    .bbcode-editor.formatting-open:has(.chat-text-box) & {
+      .format-btn {
+        display: inline-flex;
+      }
+      .toolbar-row-break {
+        display: block;
+      }
     }
   }
   @include media-breakpoint-up(md) {
@@ -96,6 +163,32 @@
   @include media-breakpoint-up(md) {
     display: none;
   }
+  @include media-breakpoint-down(md) {
+    .bbcode-editor:has(.chat-text-box) & {
+      display: none;
+    }
+    // reopening it would put the toolbar back over the preview
+    .bbcode-editor.previewing & {
+      display: none;
+    }
+  }
+}
+
+// only mobile chat hides the formatting buttons, so only it needs the toggle
+.aa-btn {
+  .bbcode-toolbar .toolbar-buttons & {
+    display: none;
+  }
+  @include media-breakpoint-down(md) {
+    .bbcode-editor:has(.chat-text-box) .toolbar-buttons & {
+      display: inline-flex;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+  }
+  &.active {
+    background-color: var(--bs-secondary) !important;
+  }
 }
 
 .bbcode-editor-controls {
@@ -106,5 +199,38 @@
   justify-content: flex-end;
   @include media-breakpoint-down(md) {
     flex: 1 49%;
+  }
+}
+
+// it looks better to leave the toolbar showing in the chat when previewing imo,
+// but only after preventing clicking the other buttons
+@include media-breakpoint-down(md) {
+  .bbcode-editor.previewing:has(.chat-text-box) .preview-disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+}
+
+.bbcode-editor.has-toolbar .preview-exit {
+  display: none;
+}
+// dedicated preview close button for bbcode editor in status/ads/filter reply settings when
+// previewing on those screens, hide the other editor buttons so that you can actually see the preview
+@include media-breakpoint-down(md) {
+  .bbcode-editor.has-toolbar.previewing:not(:has(.chat-text-box))
+    .preview-exit {
+    display: inline-flex;
+  }
+}
+
+// if i'm being honest, i don't know who in their right mind would type 50000 characters
+// on their phone for a smut roleplay. if you write that much with a tiny screen and
+// a touchscreen keyboard, then props to you. *however*, the overwhelming majority of
+// mobile players will likely never get close to the limit, so let's hide it for them.
+// i also couldn't find a good place to put the text counter, so this saves it from
+// looking ugly somewhere
+@include media-breakpoint-down(md) {
+  .bbcode-editor:has(.chat-text-box) .char-count {
+    display: none;
   }
 }

@@ -20,134 +20,118 @@
         ></div>
       </div>
       <div v-else>
-        <div>
-          <div class="search-bar">
-            <input
-              type="text"
-              class="form-control search"
-              id="search"
-              v-model="search"
-              ref="search"
-              :placeholder="l('eicon.searchPlaceholder')"
-              @input="searchUpdateDebounce()"
+        <div class="search-bar">
+          <input
+            type="text"
+            class="form-control search"
+            id="search"
+            v-model="search"
+            ref="search"
+            :placeholder="l('eicon.searchPlaceholder')"
+            @input="searchUpdateDebounce()"
+            tabindex="0"
+            @click.prevent.stop="setFocus()"
+            @mousedown.prevent.stop
+            @mouseup.prevent.stop
+          />
+          <div class="btn-group search-buttons">
+            <div
+              class="btn btn-light favorites"
+              @click.prevent.stop="searchWithString('category:favorites')"
+              :class="{ active: search === 'category:favorites' }"
+              :title="l('eicon.category.favorites')"
+              role="button"
               tabindex="0"
-              @click.prevent.stop="setFocus()"
-              @mousedown.prevent.stop
-              @mouseup.prevent.stop
-            />
-            <div class="btn-group search-buttons">
-              <div
-                class="btn btn-light favorites"
-                @click.prevent.stop="searchWithString('category:favorites')"
-                :class="{ active: search === 'category:favorites' }"
-                :title="l('eicon.category.favorites')"
-                role="button"
-                tabindex="0"
-              >
-                <i class="fas fa-thumbtack"></i>
-              </div>
-
-              <div
-                class="btn btn-light recent"
-                @click.prevent.stop="searchWithString('category:recent')"
-                :class="{ active: search === 'category:recent' }"
-                :title="l('eicon.category.recent')"
-                role="button"
-                tabindex="0"
-              >
-                <i class="fas fa-history"></i>
-              </div>
-
-              <div
-                class="btn btn-light expressions"
-                @click.prevent.stop="searchWithString('category:expressions')"
-                :class="{ active: search === 'category:expressions' }"
-                :title="l('eicon.category.expressions')"
-                role="button"
-                tabindex="0"
-              >
-                <i class="fas fa-theater-masks"></i>
-              </div>
-
-              <div
-                class="btn btn-light sexual"
-                @click.prevent.stop="searchWithString('category:sexual')"
-                :class="{ active: search === 'category:sexual' }"
-                :title="l('eicon.category.sexual')"
-                role="button"
-                tabindex="0"
-              >
-                <i class="fas fa-heart"></i>
-              </div>
-
-              <div
-                class="btn btn-light bubbles"
-                @click.prevent.stop="searchWithString('category:bubbles')"
-                :class="{ active: search === 'category:bubbles' }"
-                :title="l('eicon.category.bubbles')"
-                role="button"
-                tabindex="0"
-              >
-                <i class="fas fa-comment"></i>
-              </div>
-
-              <div
-                class="btn btn-light actions"
-                @click.prevent.stop="searchWithString('category:symbols')"
-                :class="{ active: search === 'category:symbols' }"
-                :title="l('eicon.category.symbols')"
-                role="button"
-                tabindex="0"
-              >
-                <i class="fas fa-icons"></i>
-              </div>
-
-              <div
-                class="btn btn-light memes"
-                @click.prevent.stop="searchWithString('category:memes')"
-                :class="{ active: search === 'category:memes' }"
-                :title="l('eicon.category.memes')"
-                role="button"
-                tabindex="0"
-              >
-                <i class="fas fa-poo"></i>
-              </div>
-
-              <div
-                class="btn btn-light random"
-                @click.prevent.stop="searchWithString('category:random')"
-                :class="{ active: search === 'category:random' }"
-                :title="l('eicon.category.random')"
-                role="button"
-                tabindex="0"
-              >
-                <i class="fas fa-random"></i>
-              </div>
-
-              <div
-                class="btn btn-light refresh"
-                @click.prevent.stop="refreshIcons()"
-                :title="l('eicon.refresh')"
-                role="button"
-                tabindex="0"
-              >
-                <i class="fas fa-sync"></i>
-              </div>
+            >
+              <i class="fas fa-thumbtack"></i>
             </div>
-          </div>
 
-          <div class="courtesy">
-            <localized-text k="eicon.credit">
-              <template #xariah>
-                <a href="https://xariah.net/eicons">xariah.net</a>
-              </template>
-            </localized-text>
-          </div>
+            <div
+              class="btn btn-light recent"
+              @click.prevent.stop="searchWithString('category:recent')"
+              :class="{ active: search === 'category:recent' }"
+              :title="l('eicon.category.recent')"
+              role="button"
+              tabindex="0"
+            >
+              <i class="fas fa-history"></i>
+            </div>
 
-          <div class="upload">
-            <a href="https://www.f-list.net/icons.php">{{
-              l('eicon.upload')
-            }}</a>
+            <div
+              class="btn btn-light expressions"
+              @click.prevent.stop="searchWithString('category:expressions')"
+              :class="{ active: search === 'category:expressions' }"
+              :title="l('eicon.category.expressions')"
+              role="button"
+              tabindex="0"
+            >
+              <i class="fas fa-theater-masks"></i>
+            </div>
+
+            <div
+              class="btn btn-light sexual"
+              @click.prevent.stop="searchWithString('category:sexual')"
+              :class="{ active: search === 'category:sexual' }"
+              :title="l('eicon.category.sexual')"
+              role="button"
+              tabindex="0"
+            >
+              <i class="fas fa-heart"></i>
+            </div>
+
+            <div
+              class="btn btn-light bubbles"
+              @click.prevent.stop="searchWithString('category:bubbles')"
+              :class="{ active: search === 'category:bubbles' }"
+              :title="l('eicon.category.bubbles')"
+              role="button"
+              tabindex="0"
+            >
+              <i class="fas fa-comment"></i>
+            </div>
+
+            <div
+              class="btn btn-light actions"
+              @click.prevent.stop="searchWithString('category:symbols')"
+              :class="{ active: search === 'category:symbols' }"
+              :title="l('eicon.category.symbols')"
+              role="button"
+              tabindex="0"
+            >
+              <i class="fas fa-icons"></i>
+            </div>
+
+            <div
+              class="btn btn-light memes"
+              @click.prevent.stop="searchWithString('category:memes')"
+              :class="{ active: search === 'category:memes' }"
+              :title="l('eicon.category.memes')"
+              role="button"
+              tabindex="0"
+            >
+              <i class="fas fa-poo"></i>
+            </div>
+
+            <div
+              class="btn btn-light random"
+              @click.prevent.stop="searchWithString('category:random')"
+              :class="{ active: search === 'category:random' }"
+              :title="l('eicon.category.random')"
+              role="button"
+              tabindex="0"
+            >
+              <i class="fas fa-random"></i>
+            </div>
+
+            <div
+              class="btn btn-light refresh"
+              @click.prevent.stop="refreshIcons()"
+              :title="l('eicon.refresh')"
+              role="button"
+              tabindex="0"
+            >
+              <i class="fas fa-sync"></i>
+            </div>
           </div>
         </div>
 
@@ -246,6 +230,22 @@
                 <i class="fas fa-thumbtack"></i>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div class="eicon-footer">
+          <div class="upload">
+            <a href="https://www.f-list.net/icons.php">{{
+              l('eicon.upload')
+            }}</a>
+          </div>
+
+          <div class="courtesy">
+            <localized-text k="eicon.credit">
+              <template #xariah>
+                <a href="https://xariah.net/eicons">xariah.net</a>
+              </template>
+            </localized-text>
           </div>
         </div>
       </div>
@@ -908,13 +908,28 @@
     line-height: 1;
     z-index: 1000;
 
-    &.big {
-      min-height: 530px;
+    .modal-body {
+      overflow-y: hidden;
+      display: flex;
+      min-height: 0;
     }
 
     .eicon-selector-ui {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+
+      > div:not(.loading) {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+      }
+
       .search-bar {
         display: flex;
+        flex-shrink: 0;
 
         .search {
           flex: 1;
@@ -941,19 +956,17 @@
         }
       }
 
-      .courtesy {
-        position: absolute;
-        bottom: 7px;
+      .eicon-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
         font-size: 9px;
-        right: 1rem;
-        opacity: 50%;
-      }
+        padding-top: 6px;
 
-      .upload {
-        position: absolute;
-        bottom: 7px;
-        font-size: 9px;
-        left: 1rem;
+        .courtesy {
+          opacity: 50%;
+        }
       }
 
       .results {
@@ -1050,15 +1063,16 @@
     }
 
     &.big {
-      min-height: 530px;
       width: 590px;
       max-width: 590px;
 
       .eicon-selector-ui {
         .carousel.results {
-          max-height: unset;
-          height: 535px;
-          margin-bottom: 0.75rem;
+          // no fixed height so that it can shrink with the window.
+          // max-height keeps the usual size on a tall one.
+          flex: 1 1 auto;
+          min-height: 0;
+          max-height: 535px;
 
           .carousel-inner {
             overflow-x: hidden;
