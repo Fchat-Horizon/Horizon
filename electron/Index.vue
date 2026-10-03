@@ -310,14 +310,12 @@
 </template>
 
 <script lang="ts">
-  import Axios from 'axios';
   import * as electron from 'electron';
   import * as remote from '@electron/remote';
   import settings from 'electron-settings';
   import log from 'electron-log'; //tslint:disable-line:match-default-export-name
   import * as fs from 'fs';
   import * as path from 'path';
-  import * as qs from 'querystring';
   import Vue from 'vue';
   import Chat from '../chat/Chat.vue';
   import { characterImage, Settings } from '../chat/common';
@@ -336,6 +334,7 @@
   } from '../learn/dictionary/WordDefinition.vue';
   import ProfileAnalysis from '../learn/recommend/ProfileAnalysis.vue';
   import { defaultHost, GeneralSettings } from './common';
+  import { requestApiTicket, sharedTicketProvider } from './api-ticket';
   import { fixLogs } from './filesystem';
   import { SlimcatImporter } from './services';
   import _ from 'lodash';
@@ -739,25 +738,10 @@
 
           core.siteSession.setCredentials(this.settings.account, this.password);
 
-          const data = <
-            {
-              ticket?: string;
-              error: string;
-              characters: { [key: string]: number };
-              default_character: number;
-            }
-          >(
-            await Axios.post(
-              'https://www.f-list.net/json/getApiTicket.php',
-              qs.stringify({
-                account: this.settings.account,
-                password: this.password,
-                no_friends: true,
-                no_bookmarks: true,
-                new_character_list: true
-              })
-            )
-          ).data;
+          const data = await requestApiTicket(
+            this.settings.account,
+            this.password
+          );
           if (data.error !== '') {
             this.error = data.error;
             return;
@@ -836,7 +820,10 @@
             this.character = undefined;
             parent.send('disconnect', webContents.id);
           });
-          core.connection.setCredentials(this.settings.account, this.password);
+          core.connection.setCredentials(
+            this.settings.account,
+            sharedTicketProvider(this.settings.account, this.password)
+          );
           this.characters = Object.keys(data.characters)
             .map(name => ({ name, id: data.characters[name], deleted: false }))
             .sort((x, y) => x.name.localeCompare(y.name));

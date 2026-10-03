@@ -10,10 +10,8 @@ const fatalErrors = [2, 3, 4, 9, 30, 31, 33, 39, 40, 62, -4];
 const dieErrors = [9, 30, 31, 39, 40];
 
 let lastFetch = Date.now();
-let lastApiTicketFetch = Date.now();
 
 const queryApiThroat = throat(2);
-const queryTicketThroat = throat(1);
 
 async function queryApi(
   this: void,
@@ -49,6 +47,7 @@ export default class Connection implements Interfaces.Connection {
   private ticketProvider?: Interfaces.TicketProvider;
   private reconnectDelay = 0;
   private isReconnect = false;
+  private invalidTicket?: string;
   private pinTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(
@@ -59,13 +58,10 @@ export default class Connection implements Interfaces.Connection {
 
   setCredentials(
     account: string,
-    ticketProvider: Interfaces.TicketProvider | string
+    ticketProvider: Interfaces.TicketProvider
   ): void {
     this.account = account;
-    this.ticketProvider =
-      typeof ticketProvider === 'string'
-        ? async () => this.getTicket(ticketProvider)
-        : ticketProvider;
+    this.ticketProvider = ticketProvider;
   }
 
   async connect(character: string): Promise<void> {
@@ -74,7 +70,8 @@ export default class Connection implements Interfaces.Connection {
     if (this.character !== character) this.isReconnect = false;
     this.character = character;
     try {
-      this.ticket = await this.ticketProvider();
+      this.ticket = await this.ticketProvider(this.invalidTicket);
+      this.invalidTicket = undefined;
     } catch (e) {
       if (this.reconnectTimer !== undefined)
         if ((<AxiosError>e).request !== undefined) this.reconnect();
@@ -189,7 +186,7 @@ export default class Connection implements Interfaces.Connection {
       throw new Error('No credentials set!');
     }
 
-    this.ticket = await queryTicketThroat(async () => this.ticketProvider!());
+    this.ticket = await this.ticketProvider(oldTicket);
 
     log.debug('api.ticket.renew.resolve.refresh', {
       character: core.characters.ownCharacter?.name
@@ -208,8 +205,7 @@ export default class Connection implements Interfaces.Connection {
       endpoint,
       data,
       character: core.characters.ownCharacter?.name,
-      deltaToLastApiCall: Date.now() - lastFetch,
-      deltaToLastApiTicket: Date.now() - lastApiTicketFetch
+      deltaToLastApiCall: Date.now() - lastFetch
     });
 
     if (data === undefined) data = {};
@@ -227,8 +223,7 @@ export default class Connection implements Interfaces.Connection {
       log.debug('api.ticket.loss', {
         error: res.error,
         character: core.characters.ownCharacter?.name,
-        deltaToLastApiCall: Date.now() - lastFetch,
-        deltaToLastApiTicket: Date.now() - lastApiTicketFetch
+        deltaToLastApiCall: Date.now() - lastFetch
       });
 
       data.ticket = await this.refreshTicket(data.ticket);
@@ -241,8 +236,7 @@ export default class Connection implements Interfaces.Connection {
         endpoint,
         data,
         character: core.characters.ownCharacter?.name,
-        deltaToLastApiCall: Date.now() - lastFetch,
-        deltaToLastApiTicket: Date.now() - lastApiTicketFetch
+        deltaToLastApiCall: Date.now() - lastFetch
       });
 
       const error = new Error(res.error);
@@ -254,8 +248,7 @@ export default class Connection implements Interfaces.Connection {
       endpoint,
       data,
       character: core.characters.ownCharacter?.name,
-      deltaToLastApiCall: Date.now() - lastFetch,
-      deltaToLastApiTicket: Date.now() - lastApiTicketFetch
+      deltaToLastApiCall: Date.now() - lastFetch
     });
 
     return res;
@@ -341,6 +334,8 @@ export default class Connection implements Interfaces.Connection {
         this.resetPinTimeout();
         break;
       case 'ERR':
+        // don't reuse the failed ticket, since it's invalid
+        if (data.number === 4) this.invalidTicket = this.ticket;
         if (fatalErrors.indexOf(data.number) !== -1) {
           this.invokeErrorHandlers(new Error(data.message), true);
           if (dieErrors.indexOf(data.number) !== -1) {
@@ -359,53 +354,6 @@ export default class Connection implements Interfaces.Connection {
   }
 
   //tslint:enable
-
-  private async getTicket(password: string): Promise<string> {
-    console.log('Acquiring new API ticket');
-    const oldLastApiTicketFetch = lastApiTicketFetch;
-
-    log.debug('api.getTicket.start', {
-      character: core.characters.ownCharacter?.name,
-      deltaToLastApiCall: Date.now() - lastFetch,
-      deltaToLastApiTicket: Date.now() - oldLastApiTicketFetch
-    });
-
-    lastApiTicketFetch = Date.now();
-
-    const data = <{ ticket?: string; error: string }>(
-      await Axios.post(
-        'https://www.f-list.net/json/getApiTicket.php',
-        qs.stringify({
-          account: this.account,
-          password,
-          no_friends: true,
-          no_bookmarks: true,
-          no_characters: true
-        })
-      )
-    ).data;
-
-    if (data.ticket !== undefined) {
-      log.debug('api.getTicket.success', {
-        character: core.characters.ownCharacter?.name,
-        deltaToLastApiCall: Date.now() - lastFetch,
-        deltaToLastApiTicket: Date.now() - oldLastApiTicketFetch
-      });
-
-      return data.ticket;
-    }
-
-    console.error('API Ticket Error', data.error);
-
-    log.error('error.api.getTicket', {
-      character: core.characters.ownCharacter.name,
-      error: data.error,
-      deltaToLastApiCall: Date.now() - lastFetch,
-      deltaToLastApiTicket: Date.now() - oldLastApiTicketFetch
-    });
-
-    throw new Error(data.error);
-  }
 
   private async invokeHandlers(
     type: Interfaces.EventType,
