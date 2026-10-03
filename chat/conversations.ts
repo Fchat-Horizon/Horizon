@@ -1350,6 +1350,8 @@ export default function (this: any): Interfaces.State {
   connection.onEvent('closed', () => {
     state.pinnedCleanupArmed = false;
     clearTimeout(state.pinnedCleanupTimer);
+    state.navigationHistory = [];
+    state.navigationHistoryIndex = 0;
   });
   core.channels.onEvent(async (type, channel, member) => {
     if (type === 'join')
