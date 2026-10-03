@@ -55,7 +55,7 @@ import { IpcMainEvent, session } from 'electron';
 import * as browserWindows from './browser_windows';
 import * as remoteMain from '@electron/remote/main';
 import { Event } from 'electron/main';
-import { autoUpdater } from 'electron-updater';
+import { autoUpdater, UpdateCheckResult } from 'electron-updater';
 import Axios from 'axios';
 import { ProfileViewerGalleryType } from '../site/utils';
 import {
@@ -483,9 +483,9 @@ async function checkForGitRelease(
   semVer: string,
   releaseUrl: string,
   updateMode: 'auto' | 'manual'
-): Promise<void> {
+): Promise<boolean> {
   if (!settings.updateCheck) {
-    return;
+    return false;
   }
   try {
     let releases: ReleaseInfo[] = (
@@ -507,11 +507,11 @@ async function checkForGitRelease(
           `Update skipped: ${release.tag_name}`
         );
         setUpdateNotice(false);
-        return;
+        return false;
       }
       if (release.tag_name == semVer) {
         log.info('updateCheck.state.upToDate', `Horizon up to date: ${semVer}`);
-        return;
+        return false;
       }
       log.info(
         'updateCheck.state.new',
@@ -520,20 +520,23 @@ async function checkForGitRelease(
 
       setUpdateNotice(true, release.tag_name);
       maybeShowUpdatePrompt(release.tag_name, updateMode);
-      return;
+      return true;
     }
   } catch (e) {
     log.error(`Error checking for update: ${e}`);
+    return false;
   }
+  return false;
 }
 
-async function runAutoUpdateCheck(): Promise<void> {
-  if (!settings.updateCheck) return;
+async function runAutoUpdateCheck(): Promise<UpdateCheckResult | null> {
+  if (!settings.updateCheck) return null;
   try {
     autoUpdater.allowPrerelease = settings.beta;
-    await autoUpdater.checkForUpdates();
+    return await autoUpdater.checkForUpdates();
   } catch (e) {
     log.error('autoUpdater.check.failed', e);
+    return null;
   }
 }
 async function requestUpdateDownload(expectedTag?: string): Promise<void> {
@@ -1396,15 +1399,37 @@ async function onReady(): Promise<void> {
           },
           {
             label: l('action.checkForUpdates'),
-            click: (_m: electron.MenuItem, _w: electron.BrowserWindow) => {
+            click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
               if (supportsAutoUpdates()) {
-                void runAutoUpdateCheck();
+                runAutoUpdateCheck().then(result => {
+                  if (result) {
+                    log.info('autoUpdater.manualCheck.success', result);
+                  } else {
+                    log.info('autoUpdater.manualCheck.noUpdate');
+                    electron.dialog.showMessageBoxSync(w, {
+                      type: 'info',
+                      title: l('title'),
+                      message: l('update.noUpdateAvailable')
+                    });
+                  }
+                });
               } else {
                 void checkForGitRelease(
                   `v${app.getVersion()}`,
                   releasesUrl,
                   'manual'
-                );
+                ).then(result => {
+                  if (result) {
+                    log.info('gitRelease.manualCheck.success', result);
+                  } else {
+                    log.info('gitRelease.manualCheck.noUpdate');
+                    electron.dialog.showMessageBoxSync(w, {
+                      type: 'info',
+                      title: l('title'),
+                      message: l('update.noUpdateAvailable')
+                    });
+                  }
+                });
               }
             },
             disabled: process.env.NODE_ENV !== 'production',
