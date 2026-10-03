@@ -817,7 +817,7 @@ class State implements Interfaces.State {
   navigationHistoryIndex: number = -1;
   private isNavigatingHistory: boolean = false;
 
-  get hasNew(): number {
+  get newCount(): number {
     return (
       this.privateConversations.reduce(
         (sum, item) => sum + item.unreadCount,
