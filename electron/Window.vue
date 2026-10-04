@@ -492,11 +492,13 @@
         this.isMaximized = true;
         if (this.activeTab !== undefined)
           this.activeTab.view.setBounds(getWindowBounds());
+        this.updateWindowControlsOverlayMargin();
       });
       browserWindow.on('unmaximize', () => {
         this.isMaximized = false;
         if (this.activeTab !== undefined)
           this.activeTab.view.setBounds(getWindowBounds());
+        this.updateWindowControlsOverlayMargin();
       });
       electron.ipcRenderer.on('switch-tab', (_e: Electron.IpcRendererEvent) => {
         const index = this.tabs.indexOf(this.activeTab!);
