@@ -65,7 +65,6 @@ import {
   registerSyncJobHandlers
 } from './services/sync/main-jobs';
 
-
 const configuredSessions = new WeakSet<electron.Session>();
 
 const resolvePartition = (
