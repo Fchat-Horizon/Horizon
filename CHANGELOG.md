@@ -13,7 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed issues where the filter icon (for Smart Filters) would cause UserView components to render slowly, even if you didn't have smart filters enabled at all. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b6a967c8bd7ad7fae2a6738dc930c3260f80974f)
   - Channel members and the 'All friends/ bookmark' tabs are now virtualized. [[Channels]](https://github.com/Fchat-Horizon/Horizon/commit/4412e32785c6a9e1294de728c95126e19a41ae75) [[Friends]](https://github.com/Fchat-Horizon/Horizon/commit/b7db4ba9bd629f4ce84782c143432f0295c2480f)
     - This should solve noticable hitches when opening the members list of large channels.
-  - The 'filter' icon for smart filters is no longer constantly checked for when rendering UserView elements, even if smart filters were not running. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b6a967c8bd7ad7fae2a6738dc930c3260f80974f)
   - Switching between channels now purges a character from the profile fetch queue, if it's no longer needed. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/595a2f5b89126a14095b19a473bee44bc7b9f8b9)
   - Overall, things like switching between channels and tabs in the right sidebar should feel a lot snappier-- Even snappier than before!
 - Various emoji and other phrases are now used to check if certain age-related preferences or smart filter options are triggered. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/255f92408e7266448ae5c5adaeba395105be44f8)
