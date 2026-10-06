@@ -64,6 +64,7 @@ import {
   hasSyncJobs,
   registerSyncJobHandlers
 } from './services/sync/main-jobs';
+import { registerApiTicketProvider } from './api-ticket';
 
 const configuredSessions = new WeakSet<electron.Session>();
 
@@ -1657,6 +1658,8 @@ async function onReady(): Promise<void> {
       );
     }
   );
+
+  registerApiTicketProvider();
 
   electron.ipcMain.on(
     'save-login',
