@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Changed
+
+- A whole bunch of performance improvements related to user lists, the profile cache, and smart filters. _This includes the problem(s) with 2.4.0 where switching channels would cause a noticeable delay before scrolling down._
+  - Fixed issues where the filter icon (for Smart Filters) would cause UserView components to render slowly, even if you didn't have smart filters enabled at all. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b6a967c8bd7ad7fae2a6738dc930c3260f80974f)
+  - Channel members and the 'All friends/ bookmark' tabs are now virtualized. [[Channels]](https://github.com/Fchat-Horizon/Horizon/commit/4412e32785c6a9e1294de728c95126e19a41ae75) [[Friends]](https://github.com/Fchat-Horizon/Horizon/commit/b7db4ba9bd629f4ce84782c143432f0295c2480f)
+    - This should solve noticable hitches when opening the members list of large channels.
+  - The 'filter' icon for smart filters is no longer constantly checked for when rendering UserView elements, even if smart filters were not running. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b6a967c8bd7ad7fae2a6738dc930c3260f80974f)
+  - Switching between channels now purges a character from the profile fetch queue, if it's no longer needed. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/595a2f5b89126a14095b19a473bee44bc7b9f8b9)
+  - Overall, things like switching between channels and tabs in the right sidebar should feel a lot snappier-- Even snappier than before!
+- Various emoji and other phrases are now used to check if certain age-related preferences or smart filter options are triggered. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/255f92408e7266448ae5c5adaeba395105be44f8)
+- Added some tips to the Solstice sync tool, with common network issues that might provide problems. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4e35b838f3026032ec12c855d69c726e47a74737)
+- Updated localization files. [[Spanish]](https://github.com/Fchat-Horizon/Horizon/commit/e42f989b2a9d392e96f656671bd83bf43a6b28ec) [[French]](https://github.com/Fchat-Horizon/Horizon/commit/a8b89c59751ccee470435fdf1f1a7eb752d888e6) [[Italian]](https://github.com/Fchat-Horizon/Horizon/commit/67616e20024a66388f7001e22045beff84783f14) [[Hungarian]](https://github.com/Fchat-Horizon/Horizon/commit/7240f24b85611578b0508f47422e6400cc5444d3)
+
+## Fixed
+
+- The F-List API ticket is now shared between your Horizon tabs, instead of each tab having its own. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e99fb640d0ef379839cd66a7d8c367cd215aa2b0)
+  - This should solve almost every case where you'd get an "Invalid ticket" error when connecting in a second or third tab. Except for when you're also connected on a different device. That's an issue with F-List that we cannot do anything about.
+- Disconnecting no longer keeps channels you have left stuck in your navigation history. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/540a9872c52e76894d036be396f60c9b16ce846b)
+  - This should solve issues where rapidly disconnecting after a reconnect would keep "ghost" channels in your history when using the mouse forward/ backward buttons to navigate.
+- Selecting different languages for the spell checker no longer requires a full restart. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1d3c1d441aae397199d813cfec203dbaf59181f5)
+
+## Development
+
+- Renamed instances of `hasNew` (the unread message counters for conversations and tabs) to `newCount`. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/00012d0e4fcc5200b786b85d5eb1afcea26bafa1)
+
+## Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/921 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/924 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/967 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/979 by @freenutsxd
+
 ## [2.4.0] - 2026-10-02
 
 ### Added
