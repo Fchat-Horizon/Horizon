@@ -817,7 +817,7 @@ class State implements Interfaces.State {
   navigationHistoryIndex: number = -1;
   private isNavigatingHistory: boolean = false;
 
-  get hasNew(): number {
+  get newCount(): number {
     return (
       this.privateConversations.reduce(
         (sum, item) => sum + item.unreadCount,
@@ -1350,6 +1350,8 @@ export default function (this: any): Interfaces.State {
   connection.onEvent('closed', () => {
     state.pinnedCleanupArmed = false;
     clearTimeout(state.pinnedCleanupTimer);
+    state.navigationHistory = [];
+    state.navigationHistoryIndex = 0;
   });
   core.channels.onEvent(async (type, channel, member) => {
     if (type === 'join')

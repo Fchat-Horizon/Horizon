@@ -58,6 +58,7 @@ import { Event } from 'electron/main';
 import { autoUpdater } from 'electron-updater';
 import Axios from 'axios';
 import { ProfileViewerGalleryType } from '../site/utils';
+import { getSafeLanguages } from './language';
 import {
   cancelSyncJobs,
   hasSyncJobs,
@@ -1878,6 +1879,10 @@ async function onReady(): Promise<void> {
         let badgeChange =
           settings.horizonShowNotificationBadge !==
           _options.horizonShowNotificationBadge;
+        let spellcheckChange = !_.isEqual(
+          getSafeLanguages(settings.spellcheckLang),
+          getSafeLanguages(_options.spellcheckLang)
+        );
         Object.assign(settings, _options);
         //Now we save it to a file
         setGeneralSettings(_options);
@@ -1897,6 +1902,12 @@ async function onReady(): Promise<void> {
         if (badgeChange) {
           browserWindows.updateNotificationBadges(
             settings.horizonShowNotificationBadge
+          );
+        }
+
+        if (spellcheckChange) {
+          updateSpellCheckerLanguages(
+            getSafeLanguages(settings.spellcheckLang)
           );
         }
       }
