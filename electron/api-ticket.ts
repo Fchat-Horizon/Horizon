@@ -156,8 +156,13 @@ export async function getApiTicket(
     cached.ticket !== options.invalidTicket &&
     Date.now() - cached.issuedAt < ticketLifetime
   ) {
-    if (!options.fresh || (await refreshCharacters(account, cached)))
-      return cached;
+    if (!options.fresh) return cached;
+
+    const refreshed = await refreshCharacters(account, cached);
+    // the ticket may have been replaced while the list refreshed
+    if (cache.get(key) !== cached || inFlight.has(key))
+      return getApiTicket(account, password);
+    if (refreshed) return cached;
   }
 
   const request = fetchTicket(key, account, password);
