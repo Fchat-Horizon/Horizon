@@ -34,7 +34,7 @@
     "css-loader": "^5.2.7",
     "css-minimizer-webpack-plugin": "^7.0.0",
     "date-fns": "2.30.0",
-    "electron": "42.4.1",
+    "electron": "43.7.6",
     "electron-builder": "27.0.0-alpha.8",
     "electron-log": "^4.4.8",
     "electron-settings": "~4.0.4",
