@@ -3,6 +3,7 @@ import { Matcher } from '../matcher';
 import {
   BodyType,
   Build,
+  fchatGenderMap,
   FurryPreference,
   Gender,
   Kink,
@@ -44,6 +45,10 @@ function getBaseLog(base: number, x: number): number {
 
 export class SmartFilter {
   constructor(private opts: SmartFilterOpts) {}
+
+  get genders(): Gender[] | undefined {
+    return this.opts.genders;
+  }
 
   test(c: Character): SmartFilterTestResult {
     const builds = this.testBuilds(c);
@@ -416,6 +421,49 @@ export const smartFilters: SmartFilterCollection = {
     kinks: [Kink.Zoophilia, Kink.AnimalsFerals, Kink.Quadrupeds]
   })
 };
+
+// gender is the one thing the chat protocol already tells us about everyone, so
+// the gender filters can be done without a profile read. i have no idea why
+// we weren't doing this already
+const genderFilterKeys = new Map<Gender, (keyof SmartFilterSelection)[]>();
+
+for (const [key, filter] of Object.entries(smartFilters)) {
+  for (const gender of filter.genders || []) {
+    const keys = genderFilterKeys.get(gender) || [];
+    keys.push(key as keyof SmartFilterSelection);
+    genderFilterKeys.set(gender, keys);
+  }
+}
+
+export interface ChatMember {
+  readonly name: string;
+  readonly gender?: string;
+  readonly isChatOp?: boolean;
+  readonly isBookmarked?: boolean;
+  readonly isFriend?: boolean;
+}
+
+/**
+ * Whether the gender smart filters alone hide someone, using only their chat
+ * gender. isFiltered is an OR, so a match here is decisive and needs no profile read.
+ * a false only means the gender filters don't hide them, not that nothing else will.
+ *
+ * Mirrors the exemptions in {@link testSmartFilters | `testSmartFilters`}.
+ */
+export function isFilteredByChatGender(
+  member: ChatMember,
+  opts: SmartFilterSettings
+): boolean {
+  if (!member.gender) return false;
+  if (member.name === core.characters.ownCharacter.name) return false;
+  if (member.isChatOp || member.isBookmarked || member.isFriend) return false;
+  if (opts.exceptionNames.includes(member.name)) return false;
+
+  const gender = fchatGenderMap[member.gender];
+  const keys = gender === undefined ? undefined : genderFilterKeys.get(gender);
+
+  return !!keys && keys.some(key => opts.smartFilters[key]);
+}
 
 export function testSmartFilters(
   c: Character,
