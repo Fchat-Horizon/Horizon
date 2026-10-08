@@ -1337,6 +1337,8 @@ export default function (this: any): Interfaces.State {
     await state.reloadSettings();
   });
   connection.onEvent('connected', isReconnect => {
+    state.navigationHistory = [state.selectedConversation];
+    state.navigationHistoryIndex = 0;
     if (isReconnect) return;
     for (const item of state.pinned.private)
       state.getPrivate(core.characters.get(item));
