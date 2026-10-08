@@ -928,10 +928,10 @@
       },
       getThemeClass(): Record<string, boolean> {
         // console.log('getThemeClassIndex', core.state.generalSettings?.risingDisableWindowsHighContrast);
-
+        let platform = process.platform;
         try {
           // Hack!
-          if (process.platform === 'win32') {
+          if (platform === 'win32') {
             if (core.state.generalSettings?.risingDisableWindowsHighContrast) {
               document
                 .querySelector('html')
@@ -946,6 +946,7 @@
           return {
             [`theme-${core.state.settings?.risingCharacterTheme || this.getSyncedTheme()}`]: true,
             [`${this.getSyncedTheme()}`]: true,
+            [`platform-${platform}`]: true,
             colorblindMode: core.state.settings?.risingColorblindMode || false,
             vanillaTextColors: this.settings.horizonVanillaTextColors,
             vanillaGenderColors: this.settings.horizonVanillaGenderColors,
@@ -956,6 +957,7 @@
           };
         } catch (err) {
           return {
+            [`platform-${platform}`]: true,
             [`theme-${this.getSyncedTheme()}`]: true,
 
             ['force-reduced-motion']: this.settings.reducedMotion || false,
