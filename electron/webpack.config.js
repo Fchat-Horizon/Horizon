@@ -116,11 +116,6 @@ const mainConfig = {
         path.join(__dirname, 'exporter.ts'),
         path.join(__dirname, 'exporter.html'),
         path.join(__dirname, 'build', 'tray@2x.png')
-      ],
-      about: [
-        path.join(__dirname, 'about.ts'),
-        path.join(__dirname, 'about.html'),
-        path.join(__dirname, 'build', 'tray@2x.png')
       ]
     },
     output: {
@@ -289,6 +284,48 @@ const mainConfig = {
     }
   };
 
+// About is the first isolated window. Its bundle cannot externalize Node modules
+// or depend on the legacy renderer's common chunk.
+const aboutConfig = {
+  context: __dirname,
+  target: 'web',
+  entry: {
+    about: [
+      path.join(__dirname, 'about.ts'),
+      path.join(__dirname, 'about.html')
+    ]
+  },
+  output: {
+    path: __dirname + '/app',
+    publicPath: './',
+    filename: '[name].js',
+    uniqueName: 'horizon-about'
+  },
+  module: _.cloneDeep(rendererConfig.module),
+  resolve: { extensions: ['.ts', '.js', '.vue', '.css'] },
+  plugins: [
+    new DefinePlugin({
+      'process.env.APP_VERSION': JSON.stringify(APP_VERSION),
+      'process.env.APP_COMMIT': JSON.stringify(APP_COMMIT)
+    }),
+    new VueLoaderPlugin(),
+    new MiniCssExtractPlugin({ filename: 'about-[name].css' })
+  ],
+  optimization: { splitChunks: false, runtimeChunk: false }
+};
+
+// Sandboxed preloads need a self-contained bundle; Electron supplies require
+// for its built-in electron module, but cannot load arbitrary external modules.
+const aboutPreloadConfig = {
+  context: __dirname,
+  target: 'electron-preload',
+  entry: { 'about-preload': path.join(__dirname, 'about/preload.ts') },
+  output: { path: __dirname + '/app', filename: '[name].js' },
+  module: { rules: [_.cloneDeep(mainConfig.module.rules[0])] },
+  resolve: { extensions: ['.ts', '.js'] },
+  optimization: { splitChunks: false, runtimeChunk: false }
+};
+
 const storeWorkerEndpointConfig = _.assign(_.cloneDeep(mainConfig), {
   entry: [
     path.join(
@@ -381,7 +418,13 @@ module.exports = function (mode) {
     ignored: ['**/node_modules/**', '**/.git/**'],
     aggregateTimeout: 300
   };
-  for (const cfg of [mainConfig, rendererConfig, storeWorkerEndpointConfig]) {
+  for (const cfg of [
+    mainConfig,
+    rendererConfig,
+    storeWorkerEndpointConfig,
+    aboutConfig,
+    aboutPreloadConfig
+  ]) {
     Object.assign(cfg, sharedConfig);
     cfg.watchOptions = watchOptions;
   }
@@ -422,15 +465,39 @@ module.exports = function (mode) {
     }
   };
 
+  for (const [name, cfg] of [
+    ['about', aboutConfig],
+    ['about-preload', aboutPreloadConfig]
+  ]) {
+    cfg.cache = {
+      type: 'filesystem',
+      name: `${name}-${mode}`,
+      version: cacheVersion,
+      buildDependencies: {
+        config: [
+          ...sharedBuildDeps,
+          path.join(__dirname, 'tsconfig-renderer.json')
+        ]
+      }
+    };
+  }
+
   if (mode === 'production') {
     process.env.NODE_ENV = 'production';
 
     mainConfig.devtool = false;
     rendererConfig.devtool = false;
     storeWorkerEndpointConfig.devtool = false;
+    aboutConfig.devtool = false;
+    aboutPreloadConfig.devtool = false;
 
     const esbuildMinifier = new EsbuildPlugin({ target: 'es2022' });
     mainConfig.optimization.minimizer = [esbuildMinifier];
+    aboutConfig.optimization.minimizer = [
+      esbuildMinifier,
+      new CssMinimizerPlugin()
+    ];
+    aboutPreloadConfig.optimization.minimizer = [esbuildMinifier];
     storeWorkerEndpointConfig.optimization.minimizer = [esbuildMinifier];
     rendererConfig.optimization.minimizer = [
       esbuildMinifier,
@@ -440,11 +507,19 @@ module.exports = function (mode) {
     mainConfig.devtool = 'eval-source-map';
     rendererConfig.devtool = 'eval-source-map';
     storeWorkerEndpointConfig.devtool = 'eval-source-map';
+    aboutConfig.devtool = 'eval-source-map';
+    aboutPreloadConfig.devtool = 'source-map';
 
     mainConfig.output.pathinfo = false;
     rendererConfig.output.pathinfo = false;
     storeWorkerEndpointConfig.output.pathinfo = false;
   }
 
-  return [storeWorkerEndpointConfig, mainConfig, rendererConfig];
+  return [
+    storeWorkerEndpointConfig,
+    mainConfig,
+    rendererConfig,
+    aboutConfig,
+    aboutPreloadConfig
+  ];
 };
