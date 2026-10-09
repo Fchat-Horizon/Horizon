@@ -2,7 +2,7 @@
   <span v-show="!hasFinishedHiding">
     <div
       class="modal"
-      @mousedown.self="hideWithCheck()"
+      @mousedown.self="cancel"
       style="display: flex; justify-content: center"
     >
       <div
@@ -43,10 +43,10 @@
               <button
                 type="button"
                 class="btn btn-secondary"
-                @click="hideWithCheck"
+                @click="cancel"
                 v-if="showCancel"
               >
-                {{ l('action.cancel') }}
+                {{ cancelButtonText }}
               </button>
               <button
                 type="button"
@@ -109,6 +109,7 @@
       buttonClass: { default: () => ({ 'btn-primary': true }) },
       disabled: {},
       showCancel: { default: true },
+      cancelText: { default: '' },
       buttonText: {},
       iconClass: {}
     },
@@ -124,6 +125,9 @@
     computed: {
       submitText(): string {
         return this.buttonText !== undefined ? this.buttonText : this.action;
+      },
+      cancelButtonText(): string {
+        return this.cancelText !== '' ? this.cancelText : l('action.cancel');
       }
     },
     beforeDestroy(): void {
@@ -138,6 +142,10 @@
       },
       submit(e: Event): void {
         this.$emit('submit', e);
+        if (!e.defaultPrevented) this.hideWithCheck();
+      },
+      cancel(e: Event): void {
+        this.$emit('cancel', e);
         if (!e.defaultPrevented) this.hideWithCheck();
       },
       show(keepOpen: boolean = false): void {
