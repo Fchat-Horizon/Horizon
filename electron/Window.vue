@@ -92,7 +92,7 @@
               class="nav-link tab"
               :class="{
                 active: tab === activeTab,
-                hasNew: tab.hasNew > 0 && tab !== activeTab
+                hasNew: tab.newCount > 0 && tab !== activeTab
               }"
             >
               <img
@@ -106,7 +106,7 @@
                 class="badge rounded-pill text-bg-danger ms-1"
                 v-if="shouldShowNotificationBadge(tab)"
               >
-                {{ tab.hasNew }}</span
+                {{ tab.newCount }}</span
               >
               <a
                 href="#"
@@ -140,6 +140,7 @@
           justify-content: flex-end;
           -webkit-app-region: drag;
         "
+        :style="{ marginRight: windowControlsOverlayMargin }"
         id="windowButtons"
         class="btn-group"
         v-if="!hideWindowControls"
@@ -149,19 +150,6 @@
           class="d-none d-md-flex btn btn-light"
         >
           <i class="fa fa-cog"> </i>
-        </span>
-
-        <span class="btn btn-light" @click.stop="minimize()">
-          <i class="far fa-window-minimize"></i>
-        </span>
-        <span class="btn btn-light" @click="maximize()">
-          <i
-            class="far"
-            :class="'fa-window-' + (isMaximized ? 'restore' : 'maximize')"
-          ></i>
-        </span>
-        <span class="btn btn-light" @click.stop="close()">
-          <i class="fa fa-times fa-lg"></i>
         </span>
       </div>
     </div>
@@ -243,7 +231,7 @@
   interface Tab {
     user: string | undefined;
     view: Electron.BrowserView;
-    hasNew: number;
+    newCount: number;
     avatarUrl?: string;
     insertedCssKey?: string;
     title: string;
@@ -271,11 +259,19 @@
         hasCompletedUpgrades: false,
         windowTitleKey: (process.env.NODE_ENV === 'production'
           ? 'title'
-          : 'title.dev') as string,
+          : 'title.dev') as 'title' | 'title.dev',
         isClosing: false,
         hideWindowControls: false,
-        hideSingleTab: true
+        hideSingleTab: true,
+        windowControlsOverlayMargin: '130px'
       };
+    },
+    watch: {
+      styling(): void {
+        this.$nextTick(() => {
+          this.updateWindowOverlayColors();
+        });
+      }
     },
     computed: {
       styling(): string {
@@ -295,6 +291,12 @@
     },
     async mounted(): Promise<void> {
       log.debug('init.window.mounting');
+      this.updateWindowControlsOverlayMargin();
+      const windowControlsOverlay = (navigator as any).windowControlsOverlay;
+      windowControlsOverlay?.addEventListener(
+        'geometrychange',
+        this.updateWindowControlsOverlayMargin
+      );
       // top bar devtools
       // browserWindow.webContents.openDevTools({ mode: 'detach' });
 
@@ -310,6 +312,8 @@
       updateSupportedLanguages(
         browserWindow.webContents.session.availableSpellCheckerLanguages
       );
+
+      this.updateWindowOverlayColors();
 
       log.debug('init.window.languages.supported');
       // console.log('MOUNT DICTIONARIES', getSafeLanguages(this.settings.spellcheckLang), this.settings.spellcheckLang);
@@ -457,12 +461,12 @@
         'disconnect',
         (_e: Electron.IpcRendererEvent, id: number) => {
           const tab = this.tabMap[id];
-          if (tab.hasNew > 0) {
-            tab.hasNew = 0;
+          if (tab.newCount > 0) {
+            tab.newCount = 0;
             electron.ipcRenderer.send(
-              'has-new',
+              'new-message-count',
 
-              this.tabs.reduce((cur, t) => cur + t.hasNew, 0),
+              this.tabs.reduce((cur, t) => cur + t.newCount, 0),
               this.settings.horizonShowNotificationBadge
             );
           }
@@ -473,13 +477,13 @@
         }
       );
       electron.ipcRenderer.on(
-        'has-new',
-        (_e: Electron.IpcRendererEvent, id: number, hasNew: number) => {
+        'new-message-count',
+        (_e: Electron.IpcRendererEvent, id: number, newCount: number) => {
           const tab = this.tabMap[id];
-          tab.hasNew = hasNew;
+          tab.newCount = newCount;
           electron.ipcRenderer.send(
-            'has-new',
-            this.tabs.reduce((cur, t) => cur + t.hasNew, 0),
+            'new-message-count',
+            this.tabs.reduce((cur, t) => cur + t.newCount, 0),
             this.settings.horizonShowNotificationBadge
           );
         }
@@ -491,11 +495,13 @@
         this.isMaximized = true;
         if (this.activeTab !== undefined)
           this.activeTab.view.setBounds(getWindowBounds());
+        this.updateWindowControlsOverlayMargin();
       });
       browserWindow.on('unmaximize', () => {
         this.isMaximized = false;
         if (this.activeTab !== undefined)
           this.activeTab.view.setBounds(getWindowBounds());
+        this.updateWindowControlsOverlayMargin();
       });
       electron.ipcRenderer.on('switch-tab', (_e: Electron.IpcRendererEvent) => {
         const index = this.tabs.indexOf(this.activeTab!);
@@ -578,7 +584,33 @@
 
       log.debug('init.window.mounted');
     },
+    beforeDestroy(): void {
+      //Yes, this is a to any cast. Too bad.
+      //This is not a property that gets exposed through the navigator type, but it exists in Electron's runtime as of 2026-09-12. (We are using v42.4.1 as of writing)
+      //If this ever breaks, now you know why. You'll have to find a different way to get the margin areas.
+      const windowControlsOverlay = (navigator as any).windowControlsOverlay;
+      windowControlsOverlay?.removeEventListener(
+        'geometrychange',
+        this.updateWindowControlsOverlayMargin
+      );
+    },
     methods: {
+      //Same comment as the beforeDestroy method. This is not a property that gets exposed through the navigator type, but it exists in Electron's runtime as of 2026-09-12. Blah blah blah...
+      //On Windows we can kind of guess the size this takes. Have fun doing the same shit on Linux.
+      updateWindowControlsOverlayMargin(): void {
+        const windowControlsOverlay = (navigator as any).windowControlsOverlay;
+        const titlebarArea = windowControlsOverlay?.getTitlebarAreaRect();
+
+        if (!titlebarArea) {
+          this.windowControlsOverlayMargin = '130px';
+          return;
+        }
+
+        this.windowControlsOverlayMargin = `${Math.max(
+          0,
+          window.innerWidth - titlebarArea.right
+        )}px`;
+      },
       getSyncedTheme() {
         if (!this.settings.themeSync) return this.settings.theme;
         return this.osIsDark
@@ -671,7 +703,7 @@
         const tab: Tab = {
           user: undefined,
           view,
-          hasNew: 0,
+          newCount: 0,
           title: l('title')
         };
         this.tabs.push(tab);
@@ -742,8 +774,8 @@
           return;
         this.tabs.splice(this.tabs.indexOf(tab), 1);
         electron.ipcRenderer.send(
-          'has-new',
-          this.tabs.reduce((cur, t) => cur + t.hasNew, 0),
+          'new-message-count',
+          this.tabs.reduce((cur, t) => cur + t.newCount, 0),
           this.settings.horizonShowNotificationBadge
         );
         delete this.tabMap[tab.view.webContents.id];
@@ -844,10 +876,19 @@
           };
         }
       },
+      updateWindowOverlayColors(): void {
+        let color = getComputedStyle(document.body).color;
+        log.debug('window.titlebar.color', color);
+        browserWindow.setTitleBarOverlay({
+          color: '#ff000000',
+          symbolColor: color || 'white',
+          height: 32
+        });
+      },
       shouldShowNotificationBadge(tab: Tab): boolean {
         return (
           this.settings.horizonShowWindowAndChatNotificationBadge !== false &&
-          tab.hasNew > 0
+          tab.newCount > 0
         );
       }
     }

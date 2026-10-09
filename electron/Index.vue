@@ -39,7 +39,7 @@
     >
       <div class="card bg-light" style="width: 400px">
         <h3 class="card-header" style="margin-top: 0; display: flex">
-          {{ l('title') }}
+          {{ l(titleKey) }}
 
           <a
             href="#"
@@ -311,14 +311,12 @@
 </template>
 
 <script lang="ts">
-  import Axios from 'axios';
   import * as electron from 'electron';
   import * as remote from '@electron/remote';
   import settings from 'electron-settings';
   import log from 'electron-log'; //tslint:disable-line:match-default-export-name
   import * as fs from 'fs';
   import * as path from 'path';
-  import * as qs from 'querystring';
   import Vue from 'vue';
   import Chat from '../chat/Chat.vue';
   import { characterImage, Settings } from '../chat/common';
@@ -338,6 +336,7 @@
   } from '../learn/dictionary/WordDefinition.vue';
   import ProfileAnalysis from '../learn/recommend/ProfileAnalysis.vue';
   import { defaultHost, GeneralSettings } from './common';
+  import { requestApiTicket, sharedTicketProvider } from './api-ticket';
   import { fixLogs } from './filesystem';
   import { SlimcatImporter } from './services';
   import _ from 'lodash';
@@ -420,6 +419,9 @@
     },
     data() {
       return {
+        titleKey: (process.env.NODE_ENV === 'production'
+          ? 'title'
+          : 'title.dev') as 'title' | 'title.dev',
         showAdvanced: false,
         saveLogin: false,
         autoLogin: false,
@@ -745,29 +747,15 @@
 
           core.siteSession.setCredentials(this.settings.account, this.password);
 
-          const data = <
-            {
-              ticket?: string;
-              error: string;
-              characters: { [key: string]: number };
-              default_character: number;
-            }
-          >(
-            await Axios.post(
-              'https://www.f-list.net/json/getApiTicket.php',
-              qs.stringify({
-                account: this.settings.account,
-                password: this.password,
-                no_friends: true,
-                no_bookmarks: true,
-                new_character_list: true
-              })
-            )
-          ).data;
+          const data = await requestApiTicket(
+            this.settings.account,
+            this.password
+          );
           if (data.error !== '') {
             this.error = data.error;
             return;
           }
+          electron.ipcRenderer.send('login-succeeded', this.settings.account);
           if (this.saveLogin) {
             electron.ipcRenderer.send(
               'save-login',
@@ -784,11 +772,18 @@
           Socket.host = this.settings.host;
 
           core.connection.onEvent('connecting', async () => {
+            const connectResult = electron.ipcRenderer.sendSync(
+              'connect',
+              core.connection.character
+            );
+            // Data Manager operations hold the main-process lease. Block
+            // connections in every environment while files are being changed.
+            if (connectResult === 'data-operation-in-progress') {
+              core.notifications.alert(l('login.dataOperationInProgress'));
+              return core.connection.close();
+            }
             if (
-              !electron.ipcRenderer.sendSync(
-                'connect',
-                core.connection.character
-              ) &&
+              connectResult !== true &&
               process.env.NODE_ENV === 'production'
             ) {
               core.notifications.alert(l('login.alreadyLoggedIn'));
@@ -814,8 +809,9 @@
           });
           core.connection.onEvent('connected', () => {
             core.watch(
-              () => core.conversations.hasNew,
-              newValue => parent.send('has-new', webContents.id, newValue)
+              () => core.conversations.newCount,
+              newValue =>
+                parent.send('new-message-count', webContents.id, newValue)
             );
 
             EventBus.$on('word-definition', (data: any) => {
@@ -834,7 +830,10 @@
             this.character = undefined;
             parent.send('disconnect', webContents.id);
           });
-          core.connection.setCredentials(this.settings.account, this.password);
+          core.connection.setCredentials(
+            this.settings.account,
+            sharedTicketProvider(this.settings.account, this.password)
+          );
           this.characters = Object.keys(data.characters)
             .map(name => ({ name, id: data.characters[name], deleted: false }))
             .sort((x, y) => x.name.localeCompare(y.name));
@@ -848,8 +847,16 @@
         }
       },
       fixLogs(): void {
-        if (!electron.ipcRenderer.sendSync('connect', this.fixCharacter))
-          return core.notifications.alert(l('login.alreadyLoggedIn'));
+        const connectResult = electron.ipcRenderer.sendSync(
+          'connect',
+          this.fixCharacter
+        );
+        if (connectResult !== true)
+          return core.notifications.alert(
+            connectResult === 'data-operation-in-progress'
+              ? l('login.dataOperationInProgress')
+              : l('login.alreadyLoggedIn')
+          );
         try {
           fixLogs(this.fixCharacter);
           core.notifications.alert(l('fixLogs.success'));

@@ -66,6 +66,15 @@
                   <i class="fas fa-fw fa-file-arrow-down me-2"></i
                   >{{ l('settings.dataManager.section.vanilla') }}
                 </a>
+                <a
+                  class="nav-link"
+                  :class="{ active: selectedSection === 'device-sync' }"
+                  href="#"
+                  @click.prevent="selectedSection = 'device-sync'"
+                >
+                  <i class="fas fa-fw fa-qrcode me-2"></i
+                  >{{ l('settings.dataManager.section.deviceSync') }}
+                </a>
               </div>
               <div class="data-manager-content hidden-scrollbar">
                 <div
@@ -1245,6 +1254,124 @@
                     {{ l('settings.import.vanilla.notFound') }}
                   </div>
                 </div>
+                <div
+                  v-show="selectedSection === 'device-sync'"
+                  class="settings-content"
+                >
+                  <h5>{{ l('sync.title') }}</h5>
+                  <div
+                    class="text-muted border-top border-warning mb-4 w-75 bg-light p-3 bg-opacity-10"
+                  >
+                    {{ l('sync.betaInfo') }}
+                  </div>
+                  <p class="text-muted" v-if="!syncActive">
+                    {{ l('sync.description') }}
+                  </p>
+
+                  <div
+                    v-if="anyCharactersConnected"
+                    class="alert alert-warning"
+                  >
+                    {{ l('sync.error.lockedWhileConnected') }}
+                    <span v-if="connectedCharacters.length">
+                      ({{ connectedCharacters.join(', ') }})
+                    </span>
+                  </div>
+                  <div v-if="!syncActive" class="mb-3">
+                    <button
+                      class="btn btn-primary"
+                      type="button"
+                      :disabled="anyCharactersConnected"
+                      @click="startSyncSession"
+                    >
+                      <i class="fas fa-fw fa-qrcode me-1"></i>
+                      {{ l('sync.start') }}
+                    </button>
+                  </div>
+                  <div v-else class="mb-3">
+                    <p>{{ l('sync.scanHint') }}</p>
+                    <div class="mb-3">
+                      <img
+                        v-if="syncQrDataUrl"
+                        :src="syncQrDataUrl"
+                        class="sync-qr"
+                        :alt="l('sync.qrAlt')"
+                      />
+                    </div>
+                    <p class="mb-1">
+                      <span
+                        class="spinner-border spinner-border-sm me-2"
+                        role="status"
+                      ></span>
+                      {{ describeSyncState() }}
+                    </p>
+                    <p v-if="syncAddressText" class="text-muted small mb-3">
+                      {{ l('sync.addresses', { addresses: syncAddressText }) }}
+                    </p>
+                    <div class="mb-3">
+                      <label class="form-label label-full">
+                        {{ l('sync.manualHint') }}
+                      </label>
+                      <div class="input-group">
+                        <input
+                          class="form-control"
+                          type="text"
+                          readonly
+                          :value="syncPayloadText"
+                          @focus="$event.target.select()"
+                        />
+                        <button
+                          class="btn"
+                          :class="
+                            syncPayloadCopied
+                              ? 'btn-success'
+                              : 'btn-outline-secondary'
+                          "
+                          type="button"
+                          @click="copySyncPayload"
+                          :aria-label="
+                            syncPayloadCopied
+                              ? l('action.copy.success')
+                              : l('sync.copyPayload')
+                          "
+                        >
+                          <i
+                            class="fa-fw"
+                            :class="
+                              syncPayloadCopied
+                                ? 'fa-check fa-solid'
+                                : 'fa-regular fa-copy'
+                            "
+                          ></i>
+                        </button>
+                      </div>
+                      <div v-if="syncState === 'waiting'">
+                        <p class="text-muted">
+                          {{ l('sync.connectionHelp') }}
+                        </p>
+                        <ul>
+                          <li>{{ l('sync.connectionHelp.firewall') }}</li>
+                          <li>{{ l('sync.connectionHelp.network') }}</li>
+                          <li>{{ l('sync.connectionHelp.ipAddress') }}</li>
+                          <li>{{ l('sync.connectionHelp.vpn') }}</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <button
+                      class="btn btn-secondary"
+                      type="button"
+                      @click="stopSyncSession"
+                    >
+                      {{ l('sync.stop') }}
+                    </button>
+                  </div>
+                  <div v-if="syncSummary" class="alert alert-success">
+                    {{ syncSummary }}
+                  </div>
+                  <div v-if="syncError" class="alert alert-danger">
+                    {{ syncError }}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1298,7 +1425,8 @@
           | 'auto-backup'
           | 'export'
           | 'import'
-          | 'vanilla',
+          | 'vanilla'
+          | 'device-sync',
         isMac: process.platform === 'darwin',
         platform: process.platform,
 
@@ -1365,6 +1493,19 @@
         importCustomLogDirectory: undefined as string | undefined,
         importUseCustomLogLocation: false,
         importCustomLogLocationError: undefined as string | undefined,
+
+        syncActive: false,
+        syncState: 'idle',
+        syncQrDataUrl: undefined as string | undefined,
+        syncPayloadText: undefined as string | undefined,
+        syncPayloadCopied: false,
+        syncAddressText: undefined as string | undefined,
+        syncPeerName: undefined as string | undefined,
+        syncBatches: 0,
+        syncSummary: undefined as string | undefined,
+        syncError: undefined as string | undefined,
+        closePending: false,
+        closeApproved: false,
 
         connectedCharacters: [] as string[],
         autoBackups: [] as {
@@ -1567,8 +1708,22 @@
       }
 
       window.addEventListener('beforeunload', e => {
-        if (this.exportInProgress || this.importInProgress) {
+        if (this.closeApproved) {
+          this.closeApproved = false;
+          return;
+        }
+        if (this.syncActive) {
           e.preventDefault();
+          void this.close();
+          return;
+        }
+        if (
+          this.exportInProgress ||
+          this.importInProgress ||
+          this.vanillaImportInProgress
+        ) {
+          e.preventDefault();
+          return;
         }
       });
 
@@ -1659,6 +1814,13 @@
       ipcRenderer.on('connected-characters-updated', (_e, list: string[]) => {
         this.connectedCharacters = Array.isArray(list) ? list : [];
       });
+
+      this.$watch(
+        () => this.anyCharactersConnected,
+        connected => {
+          if (connected) ImportExport.abortSyncForConnectedCharacter(this);
+        }
+      );
     },
     methods: {
       getSyncedTheme() {
@@ -1716,6 +1878,22 @@
       runZipImport(): Promise<void> {
         return ImportExport.runZipImport(this);
       },
+      startSyncSession(): Promise<void> {
+        return ImportExport.startSyncSession(this);
+      },
+      stopSyncSession(): Promise<void> {
+        return ImportExport.stopSyncSession(this);
+      },
+      copySyncPayload(): void {
+        ImportExport.copySyncPayload(this);
+        this.syncPayloadCopied = true;
+        window.setTimeout(() => {
+          this.syncPayloadCopied = false;
+        }, 3500);
+      },
+      describeSyncState(): string {
+        return ImportExport.describeSyncState(this);
+      },
       async chooseAutoBackupDir(): Promise<void> {
         const result = await remote.dialog.showOpenDialog(browserWindow, {
           properties: ['openDirectory'],
@@ -1727,7 +1905,10 @@
         }
       },
       async openAutoBackupDir(): Promise<void> {
-        ipcRenderer.send('open-dir', this.settings.logDirectory);
+        ipcRenderer.send(
+          'open-dir',
+          this.settings.autoBackupDirectory || this.defaultBackupDir
+        );
       },
       async refreshAutoBackups(): Promise<void> {
         try {
@@ -1789,8 +1970,13 @@
           '02:00'
         ];
       },
-      close(): void {
-        if (this.exportInProgress || this.importInProgress) {
+      async close(): Promise<void> {
+        if (this.closePending) return;
+        if (
+          this.exportInProgress ||
+          this.importInProgress ||
+          this.vanillaImportInProgress
+        ) {
           const choice = remote.dialog.showMessageBoxSync(browserWindow, {
             type: 'warning',
             buttons: [
@@ -1804,7 +1990,14 @@
           });
           if (choice === 0) return;
         }
-        browserWindow.close();
+        this.closePending = true;
+        try {
+          await ImportExport.stopSyncSession(this);
+          this.closeApproved = true;
+          browserWindow.close();
+        } finally {
+          this.closePending = false;
+        }
       },
       toggleVanillaCharacters(): void {
         this.setVanillaCharacters(!this.allVanillaCharactersSelected);
@@ -1831,9 +2024,6 @@
           this.exportAnimationTimer = undefined;
         }
         this.exportAnimatedDots = '';
-      },
-      close(): void {
-        browserWindow.close();
       },
       getThemeClass() {
         try {
@@ -1924,6 +2114,17 @@
 
   .label-full {
     width: 100%;
+  }
+
+  .sync-qr {
+    width: 280px;
+    max-width: 100%;
+    image-rendering: pixelated;
+    border-radius: 0.5rem;
+    // The QR must stay scannable on dark themes, so it keeps its own quiet
+    // zone instead of blending into the page background.
+    background: #fff;
+    padding: 0.5rem;
   }
 
   .card-full {

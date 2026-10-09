@@ -149,21 +149,21 @@ const badges: electron.NativeImage[] = [
 ];
 
 /**
- * Handles the 'has-new' IPC event.
+ * Handles the 'new-message-count' IPC event.
  * This event is triggered when there are new messages in an appplication window's tab(s).
  * It updates the dock badge on macOS and applies an overlay icon to all windows on Windows and Linux.
  * @event
  * @param {IpcMainEvent} e Event reference.
- * @param {number} hasNew The amount of new messages for the window that called it. If hasNew =< 0, the user has no new messages
+ * @param {number} newCount The amount of new messages for the window that called it. If newCount =< 0, the user has no new messages
  * @param {boolean} numberedBadges Whether to show the number of new messages in the badge or just a dot indicating that there are new messages. This is used on Windows and Linux, as macOS does not support numbered badges.
  */
 electron.ipcMain.on(
-  'has-new',
-  (e: IpcMainEvent, hasNew: number, numberedBadges: boolean) => {
-    log.debug('app.hasNew', { hasNew, numberedBadges });
+  'new-message-count',
+  (e: IpcMainEvent, newCount: number, numberedBadges: boolean) => {
+    log.debug('app.newCount', { newCount, numberedBadges });
     const window = electron.BrowserWindow.fromWebContents(e.sender);
     if (window !== undefined && window !== null) {
-      newMessagesMap[window.id] = hasNew;
+      newMessagesMap[window.id] = newCount;
     }
     updateNotificationBadges(numberedBadges);
   }
@@ -231,31 +231,19 @@ const windows: electron.BrowserWindow[] = [];
  */
 let tabCount = 0;
 
-/**
- * Handles the 'connect' IPC event.
- * This event is triggered when tab connects to F-Chat.
- * It adds the tab's web contents to the `tabMap` and updates the tray context menu.
- * @event
- * @param {IpcMainEvent & { sender: electron.WebContents }} e
- * The IPC main event that contains the sender's web contents.
- * @param {string} character
- * The character name associated with the tab.
- */
-electron.ipcMain.on(
-  'connect',
-  (e: IpcMainEvent & { sender: electron.WebContents }, character: string) => {
-    if (e.sender) {
-      //browserWindows.tabAddHandler(webContents, settings);
-      tabMap[character] = e.sender;
-      if (tray) {
-        tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
-      }
-      if (app.dock) {
-        app.dock.setMenu(electron.Menu.buildFromTemplate(createDockMenu()));
-      }
-    }
+/** Adds an authorized character connection to the tray and dock menus. */
+export function registerConnectedTab(
+  sender: electron.WebContents,
+  character: string
+): void {
+  tabMap[character] = sender;
+  if (tray) {
+    tray.setContextMenu(electron.Menu.buildFromTemplate(createTrayMenu()));
   }
-);
+  if (app.dock) {
+    app.dock.setMenu(electron.Menu.buildFromTemplate(createDockMenu()));
+  }
+}
 /**
  * Handles the 'disconnect' IPC event.
  * This event is triggered when a tab disconnects from F-Chat.
@@ -367,6 +355,11 @@ export function createMainWindow(
     windowProperties.titleBarStyle = 'hiddenInset';
   } else {
     windowProperties.frame = settings.forceNativeWindowControls;
+    windowProperties.titleBarStyle = settings.forceNativeWindowControls
+      ? 'default'
+      : 'hidden';
+    //we'll set the actual colors in Window.vue, but passing 'true' just enables overlay controls with default controls
+    windowProperties.titleBarOverlay = true;
   }
 
   const window = new electron.BrowserWindow(windowProperties);

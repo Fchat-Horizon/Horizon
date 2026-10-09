@@ -202,6 +202,19 @@ export class CharacterAnalysis {
  * to get the full picture
  */
 export class Matcher {
+  static readonly ageplayAgeStrings = [
+    'shota',
+    'loli',
+    'lolli',
+    'pup',
+    'brat',
+    '🚨',
+    '🔞',
+    '👮',
+    '🚼',
+    '👶',
+    '🍼'
+  ];
   readonly you: Character;
   readonly them: Character;
 
@@ -1570,13 +1583,10 @@ export class Matcher {
 
     const ageStr = rawAge.string.toLowerCase().replace(/[,.]/g, '').trim();
 
-    if (
-      ageStr.indexOf('shota') >= 0 ||
-      ageStr.indexOf('loli') >= 0 ||
-      ageStr.indexOf('lolli') >= 0 ||
-      ageStr.indexOf('pup') >= 0
-    ) {
-      return 10;
+    for (const ageKeyword of this.ageplayAgeStrings) {
+      if (ageStr.indexOf(ageKeyword) >= 0) {
+        return 10;
+      }
     }
 
     let age: number | null = null;
@@ -1628,13 +1638,10 @@ export class Matcher {
       return { min: Math.min(v1, v2), max: Math.max(v1, v2) };
     }
 
-    if (
-      ageStr.indexOf('shota') >= 0 ||
-      ageStr.indexOf('loli') >= 0 ||
-      ageStr.indexOf('lolli') >= 0 ||
-      ageStr.indexOf('pup') >= 0
-    ) {
-      return { min: 10, max: 10 };
+    for (const ageKeyword of this.ageplayAgeStrings) {
+      if (ageStr.indexOf(ageKeyword) >= 0) {
+        return { min: 10, max: 10 };
+      }
     }
 
     return null;

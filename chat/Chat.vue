@@ -20,7 +20,7 @@
         class="card-header"
         style="margin-top: 0; display: flex; align-items: center"
       >
-        {{ l('title') }}
+        {{ l(titleKey) }}
         <div
           style="
             margin-left: auto;
@@ -320,7 +320,10 @@
         connected: false,
         l: l,
         copyPlain: false,
-        filterText: ''
+        filterText: '',
+        titleKey: (process.env.NODE_ENV === 'production'
+          ? 'title'
+          : 'title.dev') as 'title' | 'title.dev'
       };
     },
     computed: {
@@ -494,10 +497,10 @@
         core.siteSession.onConnectionEstablished();
       });
       core.watch(
-        () => core.conversations.hasNew,
-        hasNew => {
+        () => core.conversations.newCount,
+        newCount => {
           document.title =
-            (hasNew ? '💬 ' : '') +
+            (newCount ? '💬 ' : '') +
             l(core.connection.isOpen ? 'title.connected' : 'title', {
               character: core.connection.character
             });
