@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Redesigned the status history menu to fix some jank and inconsistencies: [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3ff0e70ba6983227c7d0e26cdb87694cddf7062f)
+  - Statuses that are pinned are no longer also shown in the history list
+  - Pinning a status no longer selects it as well, bc that's kinda dumb. Also, tooltips were added for those toggles
+  - You can't click "Select" with nothing selected anymore
+  - It just looks prettier :)
+- The window control buttons on Windows and Linux now use your system's native look and features. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4dcab575a42ed3faa2108b272548d8efae37bbe4)
+
+### Fixed
+
+- Fixes the first conversation you open in a session (the console) not being considered part of the navigation history when using your mouse's forward and backward buttons. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/daa853efeca66888d378e7391fa52d97ca5467f4)
+
+### Development
+
+- Upgraded to Electron 43 (`v43.7.6`) from `42.4.1`. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/fb0cf59b5bd2ea5ff4beeab930fbfefc016ae1b7)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/922 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/944 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/971 by @FatCatClient
+
 ## [2.4.1] - 2026-10-06
 
 ### Changed
