@@ -2,7 +2,7 @@
   "fill": {
     "linear-gradient": [
       "display-p3:0.95294,0.74369,0.57953,1.00000",
-      "display-p3:0.38403,0.28804,0.32936,1.00000"
+      "display-p3:0.38403,0.11481,0.31974,1.00000"
     ]
   },
   "groups": [
@@ -41,7 +41,10 @@
             {
               "appearance": "dark",
               "value": {
-                "automatic-gradient": "display-p3:0.89893,0.62793,0.50586,1.00000"
+                "linear-gradient": [
+                  "display-p3:0.96036,0.73272,0.63018,1.00000",
+                  "display-p3:0.89893,0.41239,0.40128,1.00000"
+                ]
               }
             },
             {
@@ -131,6 +134,55 @@
       "hidden": false,
       "layers": [
         {
+          "blend-mode": "hard-light",
+          "fill": {
+            "linear-gradient": [
+              "display-p3:1.00000,0.62569,0.53757,0.44271",
+              "display-p3:0.35562,0.09344,0.23442,0.68666"
+            ]
+          },
+          "glass": false,
+          "hidden-specializations": [
+            {
+              "value": true
+            },
+            {
+              "idiom": "macOS",
+              "value": false
+            }
+          ],
+          "image-name": "square.svg",
+          "name": "square",
+          "opacity-specializations": [
+            {
+              "value": 1
+            },
+            {
+              "appearance": "dark",
+              "value": 0
+            },
+            {
+              "appearance": "tinted",
+              "value": 0
+            }
+          ],
+          "position-specializations": [
+            {
+              "value": {
+                "scale": 1,
+                "translation-in-points": [-368.3984375, -278.84375]
+              }
+            },
+            {
+              "idiom": "macOS",
+              "value": {
+                "scale": 3,
+                "translation-in-points": [0, 0]
+              }
+            }
+          ]
+        },
+        {
           "fill-specializations": [
             {
               "value": {
@@ -175,6 +227,12 @@
           }
         },
         {
+          "blend-mode-specializations": [
+            {
+              "appearance": "tinted",
+              "value": "plus-darker"
+            }
+          ],
           "fill-specializations": [
             {
               "value": {
@@ -219,6 +277,12 @@
           }
         },
         {
+          "blend-mode-specializations": [
+            {
+              "appearance": "tinted",
+              "value": "normal"
+            }
+          ],
           "fill-specializations": [
             {
               "value": {
@@ -267,6 +331,12 @@
           }
         },
         {
+          "blend-mode-specializations": [
+            {
+              "appearance": "tinted",
+              "value": "plus-darker"
+            }
+          ],
           "fill-specializations": [
             {
               "value": {
@@ -378,6 +448,7 @@
     }
   ],
   "supported-platforms": {
+    "circles": ["watchOS"],
     "squares": ["macOS"]
   }
 }
