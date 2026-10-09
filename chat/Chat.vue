@@ -184,7 +184,7 @@
       "
       ref="settingsMigration"
       @submit="migrateSettings(true)"
-      :keepOpen="false"
+      :keepOpen="true"
       :showCancel="true"
       :cancelText="l('settings.migration.startFresh')"
       :iconClass="'fas fa-exclamation-triangle'"

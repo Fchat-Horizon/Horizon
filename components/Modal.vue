@@ -2,7 +2,7 @@
   <span v-show="!hasFinishedHiding">
     <div
       class="modal"
-      @mousedown.self="hideWithCheck()"
+      @mousedown.self="cancel"
       style="display: flex; justify-content: center"
     >
       <div
@@ -43,7 +43,7 @@
               <button
                 type="button"
                 class="btn btn-secondary"
-                @click="hideWithCheck"
+                @click="cancel"
                 v-if="showCancel"
               >
                 {{ cancelButtonText }}
@@ -144,6 +144,10 @@
         this.$emit('submit', e);
         if (!e.defaultPrevented) this.hideWithCheck();
       },
+      cancel(e: Event): void {
+        this.$emit('cancel', e);
+        if (!e.defaultPrevented) this.hideWithCheck();
+      },
       show(keepOpen: boolean = false): void {
         this.keepOpen = keepOpen;
         if (this.isShown) {
@@ -163,7 +167,6 @@
         if (dialogStack.length === 0) isShowing = false;
       },
       hideWithCheck(): void {
-        this.$emit('cancel');
         if (this.keepOpen) return;
         this.hide();
       },
