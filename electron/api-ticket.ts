@@ -12,6 +12,11 @@ export interface ApiTicketResponse {
   request?: boolean;
 }
 
+export interface ApiTicketOptions {
+  invalidTicket?: string;
+  fresh?: boolean;
+}
+
 interface CachedTicket extends ApiTicketResponse {
   issuedAt: number;
 }
@@ -24,6 +29,12 @@ const ticketLifetime = 25 * 60 * 1000;
 
 const cache = new Map<string, CachedTicket>();
 const inFlight = new Map<string, Promise<ApiTicketResponse>>();
+
+async function post<T>(path: string, data: object): Promise<T> {
+  return (
+    await Axios.post(`https://www.f-list.net/json/${path}`, qs.stringify(data))
+  ).data;
+}
 
 // keyed on the credentials so that a wrong/changed password fails correctly
 function credentialKey(account: string, password: string): string {
@@ -42,18 +53,16 @@ async function fetchTicket(
   log.debug('api.ticket.fetch', { account });
 
   try {
-    const data = <Partial<ApiTicketResponse> & { error: string }>(
-      await Axios.post(
-        'https://www.f-list.net/json/getApiTicket.php',
-        qs.stringify({
-          account,
-          password,
-          no_friends: true,
-          no_bookmarks: true,
-          new_character_list: true
-        })
-      )
-    ).data;
+    const data = await post<Partial<ApiTicketResponse> & { error: string }>(
+      'getApiTicket.php',
+      {
+        account,
+        password,
+        no_friends: true,
+        no_bookmarks: true,
+        new_character_list: true
+      }
+    );
 
     if (data.ticket === undefined) {
       log.error('error.api.getTicket', { error: data.error });
@@ -76,14 +85,65 @@ async function fetchTicket(
   }
 }
 
+async function lookupId(
+  account: string,
+  ticket: string,
+  name: string
+): Promise<number | undefined> {
+  const data = await post<{ id?: number; error: string }>(
+    'api/character-data.php',
+    { account, ticket, name }
+  );
+  if (data.error === '' && typeof data.id === 'number') return data.id;
+
+  log.error('error.api.characterData', { error: data.error });
+  return undefined;
+}
+
+/**
+ * Refreshes the cached character list without issuing a new ticket.
+ * @returns false if anything failed and a new ticket is needed
+ */
+async function refreshCharacters(
+  account: string,
+  cached: CachedTicket
+): Promise<boolean> {
+  const { ticket } = cached;
+
+  try {
+    const list = await post<{ characters?: string[]; error: string }>(
+      'api/character-list.php',
+      { account, ticket }
+    );
+    if (list.error !== '' || !Array.isArray(list.characters)) {
+      log.error('error.api.characterList', { error: list.error });
+      return false;
+    }
+
+    const characters: { [key: string]: number } = {};
+    for (const name of list.characters) {
+      // character-list.php only returns names, look up ids for new or renamed characters
+      const id =
+        cached.characters[name] ?? (await lookupId(account, ticket, name));
+      if (id === undefined) return false;
+      characters[name] = id;
+    }
+
+    cached.characters = characters;
+    return true;
+  } catch (e) {
+    log.error('error.api.characterList', { error: (<Error>e).message });
+    return false;
+  }
+}
+
 /**
  * Returns the account's shared API ticket, fetching a new one only if there isn't a usable one cached.
- * @param invalidTicket A ticket the caller just saw rejected. Forces a refetch if it's still the cached one.
  */
 export async function getApiTicket(
   account: string,
   password: string,
-  invalidTicket?: string
+  options: ApiTicketOptions = {}
 ): Promise<ApiTicketResponse> {
   const key = credentialKey(account, password);
 
@@ -93,10 +153,17 @@ export async function getApiTicket(
   const cached = cache.get(key);
   if (
     cached !== undefined &&
-    cached.ticket !== invalidTicket &&
+    cached.ticket !== options.invalidTicket &&
     Date.now() - cached.issuedAt < ticketLifetime
-  )
-    return cached;
+  ) {
+    if (!options.fresh) return cached;
+
+    const refreshed = await refreshCharacters(account, cached);
+    // the ticket may have been replaced while the list refreshed
+    if (cache.get(key) !== cached || inFlight.has(key))
+      return getApiTicket(account, password);
+    if (refreshed) return cached;
+  }
 
   const request = fetchTicket(key, account, password);
   inFlight.set(key, request);
@@ -116,8 +183,8 @@ export function registerApiTicketProvider(): void {
       _e: electron.IpcMainInvokeEvent,
       account: string,
       password: string,
-      invalidTicket?: string
-    ) => getApiTicket(account, password, invalidTicket)
+      options?: ApiTicketOptions
+    ) => getApiTicket(account, password, options)
   );
 }
 
@@ -127,14 +194,14 @@ export function registerApiTicketProvider(): void {
 export async function requestApiTicket(
   account: string,
   password: string,
-  invalidTicket?: string
+  options?: ApiTicketOptions
 ): Promise<ApiTicketResponse> {
   const res = <ApiTicketResponse>(
     await electron.ipcRenderer.invoke(
       'get-api-ticket',
       account,
       password,
-      invalidTicket
+      options
     )
   );
 
@@ -153,7 +220,7 @@ export function sharedTicketProvider(
   password: string
 ): (invalidTicket?: string) => Promise<string> {
   return async invalidTicket => {
-    const res = await requestApiTicket(account, password, invalidTicket);
+    const res = await requestApiTicket(account, password, { invalidTicket });
     if (res.error !== '') throw new Error(res.error);
     return res.ticket;
   };

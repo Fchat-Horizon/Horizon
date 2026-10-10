@@ -740,7 +740,8 @@
 
           const data = await requestApiTicket(
             this.settings.account,
-            this.password
+            this.password,
+            { fresh: true }
           );
           if (data.error !== '') {
             this.error = data.error;
