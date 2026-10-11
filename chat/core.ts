@@ -34,6 +34,30 @@ import { SiteSession } from '../site/site-session';
 import _ from 'lodash';
 import { preloadTeamData } from './profile_api';
 
+/**
+ * Helper function that converts old (pre horizon 2.5/ vanilla) character settings to a partial settings object.
+ * @param characterSettings The character-specific settings.
+ * @param globalSettings The global settings.
+ * @returns A partial settings object where only the properties that differ from the global settings are included.
+ */
+function convertToPartialSettings(
+  characterSettings: Settings,
+  globalSettings: Settings
+): PartialSettings {
+  const partialSettings = {} as {
+    -readonly [K in keyof Settings]?: Settings[K];
+  };
+
+  for (const key of Object.keys(globalSettings) as Array<keyof Settings>) {
+    if (!_.isEqual(characterSettings[key], globalSettings[key])) {
+      Object.assign(partialSettings, { [key]: characterSettings[key] });
+    }
+  }
+
+  partialSettings.version = 1;
+  return partialSettings;
+}
+
 function createBBCodeParser(): BBCodeParser {
   const parser = new BBCodeParser();
   for (const tag of state.settings.disallowedTags) parser.removeTag(tag);
@@ -217,8 +241,17 @@ const data = {
 
     // Load character-specific overrides
     const characterRaw = await core.settingsStore.get('settings');
-    const characterSettings: PartialSettings =
-      characterRaw !== undefined ? (characterRaw as PartialSettings) : {};
+    let characterSettings: PartialSettings = {};
+    if (characterRaw !== undefined) {
+      characterSettings = characterRaw as PartialSettings;
+      if (!needsMigration) {
+        characterSettings = convertToPartialSettings(
+          characterSettings as Settings,
+          globalSettings
+        );
+        await core.settingsStore.set('settings', characterSettings);
+      }
+    }
     state._characterSettings = characterSettings;
 
     // Create merged settings proxy
@@ -271,8 +304,11 @@ const data = {
       );
       state._globalSettings = currentSettings;
       // Clear character overrides since they're now global
-      state._characterSettings = {};
-      await core.settingsStore.set('settings', {});
+      state._characterSettings = convertToPartialSettings(
+        currentSettings,
+        currentSettings
+      );
+      await core.settingsStore.set('settings', state._characterSettings);
     } else {
       const defaults = new SettingsImpl();
       await core.settingsStore.set(
@@ -281,9 +317,13 @@ const data = {
         GLOBAL_SETTINGS_CHARACTER
       );
       state._globalSettings = defaults;
-      // Keep current character settings as overrides (they're already loaded)
+      state._characterSettings = convertToPartialSettings(
+        state._settings!,
+        defaults
+      );
+      await core.settingsStore.set('settings', state._characterSettings);
     }
-    // Mark migration as complete
+
     state.needsSettingsMigration = false;
     // Recreate merged proxy
     state._settings = createMergedSettingsProxy(
