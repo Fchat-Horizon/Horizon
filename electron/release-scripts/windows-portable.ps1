@@ -14,6 +14,10 @@ The electron-builder output directory containing win*-unpacked folders.
 .PARAMETER ReleasePath
 The directory where the zips are written.
 
+.PARAMETER NoArchive
+Copy the portable folders instead of zipping them, for CI artifacts that GitHub
+already zips.
+
 .EXAMPLE
 .\windows-portable.ps1 -DistPath "C:\Horizon\electron\dist" -ReleasePath "C:\release"
 #>
@@ -23,7 +27,9 @@ Param(
     [string]$DistPath,
 
     [Parameter(Mandatory = $true)]
-    [string]$ReleasePath
+    [string]$ReleasePath,
+
+    [switch]$NoArchive
 )
 
 Set-StrictMode -Version Latest
@@ -42,6 +48,10 @@ foreach ($Unpacked in Get-ChildItem $DistPath -Directory -Filter "win*-unpacked"
     New-Item -ItemType Directory -Path $DataPath -Force | Out-Null
     Copy-Item "$ElectronPath\build\portable-readme.txt" -Destination "$DataPath\README.txt"
 
-    $ZipPath = Join-Path $ReleasePath "F-Chat.Horizon-$Version-win-$Arch-portable.zip"
-    Compress-Archive -Path "$($Unpacked.FullName)\*" -DestinationPath $ZipPath -Force
+    $OutPath = Join-Path $ReleasePath "F-Chat.Horizon-$Version-win-$Arch-portable"
+    if ($NoArchive) {
+        Copy-Item $Unpacked.FullName -Destination $OutPath -Recurse
+    } else {
+        Compress-Archive -Path "$($Unpacked.FullName)\*" -DestinationPath "$OutPath.zip" -Force
+    }
 }
