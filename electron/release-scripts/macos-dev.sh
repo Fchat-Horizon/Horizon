@@ -39,15 +39,13 @@ cd electron
 rm -rf app dist
 # Create dist directory for logging before build
 mkdir -p "$DIST_PATH"
-if [ -n "$ARCH" ]; then
-  pnpm run webpack:dev
-  node build/build.mjs --os macos --format zip --arch "$ARCH"
-else
-  pnpm build:dev:mac
-fi
+pnpm run webpack:dev
+node build/build.mjs --os macos --format dmg --arch "${ARCH:-universal}"
 
 # & Prepare release directory
 mkdir -p "$RELEASE_PATH"
 
-# & Copy artifacts (both dmg and zip files)
-cp "$DIST_PATH"/*.zip "$RELEASE_PATH"/ 2>/dev/null || true
+# & Copy artifacts
+# ^ A dmg rather than a zip: the CI artifact is already a zip, and the .app
+#   can't go in bare because artifacts drop its symlinks and exec bits.
+cp "$DIST_PATH"/*.dmg "$RELEASE_PATH"/ 2>/dev/null || true
