@@ -1554,7 +1554,10 @@
           properties: ['openDirectory']
         });
         if (dir !== undefined) {
-          if (dir[0].startsWith(path.dirname(remote.app.getPath('exe'))))
+          if (
+            dir[0].startsWith(path.dirname(remote.app.getPath('exe'))) &&
+            !dir[0].startsWith(remote.app.getPath('userData'))
+          )
             return remote.dialog.showErrorBox(
               l('settings.logDir'),
               l('settings.logDir.inAppDir')
