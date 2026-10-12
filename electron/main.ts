@@ -1402,7 +1402,7 @@ async function onReady(): Promise<void> {
             click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
               if (supportsAutoUpdates()) {
                 runAutoUpdateCheck().then(result => {
-                  if (result) {
+                  if (result && result.isUpdateAvailable) {
                     log.info('autoUpdater.manualCheck.success', result);
                   } else {
                     log.info('autoUpdater.manualCheck.noUpdate');
