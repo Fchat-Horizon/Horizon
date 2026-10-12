@@ -1138,6 +1138,7 @@
   "unit.years": "Years",
   "update.autoInstall": "Automatically download and install updates in the future",
   "update.installOnQuit.note": "The update installs automatically the next time you restart the app.",
+  "update.noUpdateAvailable": "No update is available. You are running the latest version of Horizon.",
   "update.restart.confirm": "Version {version} has been downloaded. \nWould you like to restart and install the update now?",
   "update.restart.confirm.connected": "Version {version} has been downloaded, but you are still connected to chat. \nAre you sure you want to restart and install the update right now?",
   "update.splash.updating": "Updating Horizon...",
