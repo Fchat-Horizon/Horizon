@@ -263,7 +263,8 @@
         isClosing: false,
         hideWindowControls: false,
         hideSingleTab: true,
-        windowControlsOverlayMargin: '130px'
+        windowControlsOverlayMargin:
+          process.platform === 'darwin' ? '0px' : '130px'
       };
     },
     watch: {
@@ -595,6 +596,7 @@
       //Same comment as the beforeDestroy method. This is not a property that gets exposed through the navigator type, but it exists in Electron's runtime as of 2026-09-12. Blah blah blah...
       //On Windows we can kind of guess the size this takes. Have fun doing the same shit on Linux.
       updateWindowControlsOverlayMargin(): void {
+        if (process.platform === 'darwin') return;
         const windowControlsOverlay = (navigator as any).windowControlsOverlay;
         const titlebarArea = windowControlsOverlay?.getTitlebarAreaRect();
 
@@ -875,8 +877,10 @@
         }
       },
       updateWindowOverlayColors(): void {
+        if (process.platform === 'darwin') return;
         let color = getComputedStyle(document.body).color;
         log.debug('window.titlebar.color', color);
+
         browserWindow.setTitleBarOverlay({
           color: '#ff000000',
           symbolColor: color || 'white',
