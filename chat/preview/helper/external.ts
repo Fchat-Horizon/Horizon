@@ -149,7 +149,10 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
           webview.stop();
 
           try {
-            await webview.loadURL(mediaUrl);
+            // * Some image hosts (gelbooru etc.) redirect hotlinks without a same-site referer
+            await webview.loadURL(mediaUrl, {
+              httpReferrer: new URL(mediaUrl).origin
+            });
           } catch (err) {
             const previewLoaded = this.parent.state === 'loaded';
 
