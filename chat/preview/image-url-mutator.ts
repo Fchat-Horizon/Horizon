@@ -223,6 +223,50 @@ export class ImageUrlMutator {
         }
       }
     );
+
+    this.add(
+      /^https?:\/\/(?:(?:m|www)\.)?imgur\.(?:com|io)\/a\/(?:[\w-]+-)?([a-zA-Z0-9]+)/,
+      async (url: string, match: RegExpMatchArray): Promise<string> =>
+        this.resolveImgur(url, `album/${match[1]}`, 'data.data.images.0')
+    );
+
+    this.add(
+      /^https?:\/\/(?:(?:m|www)\.)?imgur\.(?:com|io)\/gallery\/(?:[\w-]+-)?([a-zA-Z0-9]+)/,
+      async (url: string, match: RegExpMatchArray): Promise<string> =>
+        this.resolveImgur(url, `gallery/${match[1]}/images`, 'data.data.0')
+    );
+
+    // must be AFTER gallery & album test
+    this.add(
+      /^https?:\/\/(?:(?:m|www)\.)?imgur\.(?:com|io)\/([a-zA-Z0-9]+)\/?(?:[?#].*)?$/,
+      async (url: string, match: RegExpMatchArray): Promise<string> =>
+        this.resolveImgur(url, `image/${match[1]}`, 'data.data')
+    );
+  }
+
+  private async resolveImgur(
+    url: string,
+    apiPath: string,
+    imagePath: string
+  ): Promise<string> {
+    try {
+      const result = await Axios.get(`https://api.imgur.com/3/${apiPath}`, {
+        headers: {
+          Authorization: `Client-ID ${ImageUrlMutator.IMGUR_CLIENT_ID}`
+        }
+      });
+      const image = _.get(result, imagePath);
+      const mediaUrl: string | undefined = image?.mp4 || image?.link;
+
+      if (!mediaUrl) return url;
+
+      if (this.debug) log.debug('imagePreview.url.imgur', url, mediaUrl);
+
+      return mediaUrl;
+    } catch (err) {
+      log.error('imagePreview.url.imgur.apiFailed', url, err);
+      return url;
+    }
   }
 
   private async getRedgifsToken(forceRefresh = false): Promise<string> {
