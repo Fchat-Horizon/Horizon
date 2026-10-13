@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed since last pre-release
+
+- Fixed the window not mounting (thus breaking the entire app) on MacOS. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dc43e46fe317f9e13c80f64797c6d47da260ac10)
+
 ## [2.4.2-beta.0] - 2026-10-13
 
 ### Added
