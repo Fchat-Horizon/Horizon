@@ -2,7 +2,7 @@
   <div
     class="btn-group"
     role="group input-group"
-    aria-label="Basic radio toggle button group"
+    :aria-label="l('settings.checkbox')"
   >
     <input
       type="radio"
