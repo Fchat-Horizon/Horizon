@@ -52,6 +52,14 @@ export class ImageUrlMutator {
     );
 
     this.add(
+      /^http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?[\w\?=]*)?/,
+      async (_url: string, match: RegExpMatchArray): Promise<string> => {
+        const videoId = match[1];
+        return `https://i3.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+      }
+    );
+
+    this.add(
       /^https?:\/\/(?:.*twitter.com|x.com|fixupx.com|fixvx.com|girlcockx.com)\/(\w*\/status\/\d*)(?:\/(photo)\/(\d*))?/,
       async (url: string, match: RegExpMatchArray): Promise<string> => {
         const path = match[1];
