@@ -38,6 +38,12 @@
  * @see {@link https://github.com/f-list/exported|GitHub repo}
  */
 
+// ! Keep first: other modules read userData at import time
+import {
+  isPortable,
+  resolveLogDirectory,
+  toStoredLogDirectory
+} from './portable';
 import * as electron from 'electron';
 
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
@@ -318,7 +324,8 @@ const updateNoticeState: {
 let pendingUpdatePromptTag: string | undefined;
 
 if (!fs.existsSync(settingsFile)) {
-  shouldImportSettings = true;
+  // ^ Don't pull the host machine's chat data into a fresh portable copy
+  shouldImportSettings = !isPortable;
 } else {
   try {
     Object.assign(
@@ -328,6 +335,7 @@ if (!fs.existsSync(settingsFile)) {
   } catch (e) {
     log.error(`Error loading settings: ${e}`);
   }
+  settings.logDirectory = resolveLogDirectory(settings.logDirectory);
 }
 
 // ^ pre-2.4 builds persisted snake_case ids; keep in sync with legacyCodes in chat/localize.ts
@@ -360,7 +368,13 @@ export function updateSpellCheckerLanguages(langs: string[]): void {
 
 function setGeneralSettings(value: GeneralSettings): void {
   log.debug('settings.save', value);
-  fs.writeFileSync(path.join(settingsDir, 'settings'), JSON.stringify(value));
+  fs.writeFileSync(
+    path.join(settingsDir, 'settings'),
+    JSON.stringify({
+      ...value,
+      logDirectory: toStoredLogDirectory(value.logDirectory)
+    })
+  );
   for (const w of electron.webContents.getAllWebContents())
     w.send('settings', settings);
 
@@ -379,7 +393,7 @@ function supportsAutoUpdates(): boolean {
   if (process.platform === 'linux') {
     return Boolean(process.env.APPIMAGE);
   }
-  return true;
+  return !isPortable;
 }
 
 function isProductionMode(): boolean {

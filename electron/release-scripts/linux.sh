@@ -48,3 +48,4 @@ cp "$DIST_PATH"/*.rpm "$RELEASE_PATH"/ 2>/dev/null || true
 cp "$DIST_PATH"/*.AppImage "$RELEASE_PATH"/ 2>/dev/null || true
 cp "$DIST_PATH"/latest*.yml "$RELEASE_PATH"/ 2>/dev/null || true
 cp "$DIST_PATH"/*.blockmap "$RELEASE_PATH"/ 2>/dev/null || true
+bash "$REPO_ROOT/electron/release-scripts/linux-portable.sh" "$DIST_PATH" "$RELEASE_PATH"
