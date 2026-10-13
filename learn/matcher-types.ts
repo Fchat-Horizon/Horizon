@@ -125,6 +125,8 @@ export enum Kink {
   UnderageCharacters = 207,
 
   RoleReversal = 408,
+  StorytellingNarrator = 577,
+  StorytellingPlayer = 578,
 
   AnthroCharacters = 587,
   Humans = 609,
@@ -2082,7 +2084,11 @@ export const kinkComparisonSwaps: Record<any, number> = {
   141: 158, // oral sex giving -> receiving
   158: 141, // oral sex receiving -> giving
   512: 514, // fellatio performing -> fellatio receiving
-  514: 512 // fellatio receiving -> fellatio performing
+  514: 512, // fellatio receiving -> fellatio performing
+  [Kink.VoreBeingPredator]: Kink.VoreBeingPrey, // vore predator -> prey
+  [Kink.VoreBeingPrey]: Kink.VoreBeingPredator, // vore prey -> predator
+  [Kink.StorytellingNarrator]: Kink.StorytellingPlayer, // storytelling narrator -> player
+  [Kink.StorytellingPlayer]: Kink.StorytellingNarrator // storytelling player -> narrator
 };
 
 export interface KinkBucketScore {
