@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Windows and Linux versions of Horizon now come with a proper, standalone portable release that does not require installation and keeps its data in a nearby folder. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/83618090439212d164ff695a18e8e70f51eb65b2)
+
 ### Changed
 
 - Redesigned the status history menu to fix some jank and inconsistencies: [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3ff0e70ba6983227c7d0e26cdb87694cddf7062f)
@@ -15,20 +19,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - You can't click "Select" with nothing selected anymore
   - It just looks prettier :)
 - The window control buttons on Windows and Linux now use your system's native look and features. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4dcab575a42ed3faa2108b272548d8efae37bbe4)
+- Clicking the 'Check for updates' option in the app menu now tells you if there is no new update, instead of leaving you sad and alone with no answer. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0a8b9f82299e7f485d1801edad9dc09c91b3b825)
+- Some receiving/ giving kinks-- like Storytelling (Player)/ Storyteller (Narrator), now properly count their opposite versions as a match instead of trying to match two players together. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/25b84147b1be60ca14ff324ec4b29d376fd793ea)
 
 ### Fixed
 
 - Fixes the first conversation you open in a session (the console) not being considered part of the navigation history when using your mouse's forward and backward buttons. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/daa853efeca66888d378e7391fa52d97ca5467f4)
+- Fixed issues where opening a new tab right after deleting a character on the website keeping that character in your list. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d27b234adb957c62f276013c91b1617bcbec176d)
 
 ### Development
 
 - Upgraded to Electron 43 (`v43.7.6`) from `42.4.1`. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/fb0cf59b5bd2ea5ff4beeab930fbfefc016ae1b7)
+- MacOS CI builds now ship a .dmg instead of a double .zip file. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c0bdde3a9f58edbac0d46281f425afcfa40a77e0)
+- Various kink and matcher values now use their enum values instead of equivalent magic number values. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ec822e98c7b8fc11f0feb7bb6c6a8814c98bc2f0)
 
 ### Merged Pull Requests
 
+- https://github.com/Fchat-Horizon/Horizon/pull/915 by @snowsune
 - https://github.com/Fchat-Horizon/Horizon/pull/922 by @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/944 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/949 by @snowsune
 - https://github.com/Fchat-Horizon/Horizon/pull/971 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/977 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/985 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/989 by @CodingWithAnxiety
 
 ## [2.4.1] - 2026-10-06
 
