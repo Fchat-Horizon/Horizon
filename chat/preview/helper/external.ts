@@ -13,11 +13,11 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
   ): string | undefined {
     const document = new DOMParser().parseFromString(html, 'text/html');
     const selectors = [
-      'meta[property="og:image"]',
-      'meta[name="twitter:image"]',
       'meta[property="og:video:secure_url"]',
       'meta[property="og:video:url"]',
-      'meta[property="og:video"]'
+      'meta[property="og:video"]',
+      'meta[property="og:image"]',
+      'meta[name="twitter:image"]'
     ];
 
     for (const selector of selectors) {
@@ -37,6 +37,33 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
     }
 
     return undefined;
+  }
+
+  private static readonly RESOLVED_CACHE_LIMIT = 200;
+
+  private resolvedMediaUrls = new Map<string, string>();
+
+  protected async resolveMediaUrl(url: string): Promise<string> {
+    const cached = this.resolvedMediaUrls.get(url);
+
+    if (cached !== undefined) return cached;
+
+    const mediaUrl = await this.resolvePreviewMediaUrl(
+      await this.urlMutator.resolve(url)
+    );
+
+    if (
+      this.resolvedMediaUrls.size >=
+      ExternalImagePreviewHelper.RESOLVED_CACHE_LIMIT
+    ) {
+      const oldest = this.resolvedMediaUrls.keys().next().value;
+
+      if (oldest !== undefined) this.resolvedMediaUrls.delete(oldest);
+    }
+
+    this.resolvedMediaUrls.set(url, mediaUrl);
+
+    return mediaUrl;
   }
 
   protected async resolvePreviewMediaUrl(url: string): Promise<string> {
@@ -119,23 +146,8 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
 
       // Broken promise chain on purpose
       // tslint:disable-next-line:no-floating-promises
-      void this.urlMutator
-        .resolve(url)
-        .then(async (finalUrl: string) => {
-          let mediaUrl: string;
-
-          try {
-            mediaUrl = await this.resolvePreviewMediaUrl(finalUrl);
-          } catch (err) {
-            log.warn('imagePreview.url.resolveFailed', err);
-
-            if (this.url === url && this.visible) {
-              this.parent.setState('error');
-            }
-
-            return;
-          }
-
+      void this.resolveMediaUrl(url)
+        .then(async (mediaUrl: string) => {
           if (this.url !== url || !this.visible) return;
 
           if (this.debug)
@@ -172,7 +184,7 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
           webview.setAudioMuted(true);
         })
         .catch((err: any) => {
-          log.warn('imagePreview.url.mutatorFailed', err);
+          log.warn('imagePreview.url.resolveFailed', err);
 
           if (this.url === url && this.visible) {
             this.parent.setState('error');
