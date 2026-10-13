@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
 import Axios from 'axios';
+import { ipcRenderer } from 'electron';
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 import { domain } from '../../bbcode/core';
 
@@ -219,6 +220,31 @@ export class ImageUrlMutator {
           return imageUrl || url;
         } catch (err) {
           log.error('imagePreview.url.e621.apiFailed', url, err);
+          return url;
+        }
+      }
+    );
+
+    this.add(
+      /^https?:\/\/(?:www\.)?pixiv\.net\/(?:[a-z]{2}\/)?artworks\/(\d+)/,
+      async (url: string, match: RegExpMatchArray): Promise<string> => {
+        const illustId = match[1];
+
+        try {
+          // ^ Fetched from the main process: pixiv's ajax API sends no CORS headers
+          const result = await ipcRenderer.invoke(
+            'preview-fetch-json',
+            `https://www.pixiv.net/ajax/illust/${illustId}`
+          );
+          const imageUrl = _.get(result, 'body.urls.regular');
+
+          if (!imageUrl) return url;
+
+          if (this.debug) log.debug('imagePreview.url.pixiv', url, imageUrl);
+
+          return imageUrl;
+        } catch (err) {
+          log.error('imagePreview.url.pixiv.apiFailed', url, err);
           return url;
         }
       }
