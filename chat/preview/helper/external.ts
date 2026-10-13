@@ -12,10 +12,19 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
     sourceUrl: string
   ): string | undefined {
     const document = new DOMParser().parseFromString(html, 'text/html');
+    const videoType = document
+      .querySelector('meta[property="og:video:type"]')
+      ?.getAttribute('content');
+    // * YouTube and others publish an embed page as og:video (type text/html)
+    const videoIsMedia = !videoType || videoType.startsWith('video/');
     const selectors = [
-      'meta[property="og:video:secure_url"]',
-      'meta[property="og:video:url"]',
-      'meta[property="og:video"]',
+      ...(videoIsMedia
+        ? [
+            'meta[property="og:video:secure_url"]',
+            'meta[property="og:video:url"]',
+            'meta[property="og:video"]'
+          ]
+        : []),
       'meta[property="og:image"]',
       'meta[name="twitter:image"]'
     ];
