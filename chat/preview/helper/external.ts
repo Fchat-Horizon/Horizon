@@ -1,7 +1,7 @@
 import { ImageUrlMutator } from '../image-url-mutator';
 import { ImagePreviewHelper } from './helper';
 import * as _ from 'lodash';
-import Axios from 'axios';
+import { ipcRenderer } from 'electron';
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 
 export class ExternalImagePreviewHelper extends ImagePreviewHelper {
@@ -42,11 +42,8 @@ export class ExternalImagePreviewHelper extends ImagePreviewHelper {
   protected async resolvePreviewMediaUrl(url: string): Promise<string> {
     if (this.parent.isMediaUrl(url)) return url;
 
-    const response = await Axios.get<string>(url, {
-      responseType: 'text',
-      transformResponse: [(data: string) => data]
-    });
-    const mediaUrl = this.getOpenGraphMediaUrl(response.data, url);
+    const html: string = await ipcRenderer.invoke('preview-fetch-page', url);
+    const mediaUrl = this.getOpenGraphMediaUrl(html, url);
 
     if (!mediaUrl) {
       throw new Error('No OpenGraph media found');

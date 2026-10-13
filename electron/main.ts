@@ -57,6 +57,7 @@ import * as remoteMain from '@electron/remote/main';
 import { Event } from 'electron/main';
 import { autoUpdater } from 'electron-updater';
 import Axios from 'axios';
+import { registerPreviewPageFetch } from './preview-page-fetch';
 import { ProfileViewerGalleryType } from '../site/utils';
 import {
   cancelSyncJobs,
@@ -1765,6 +1766,8 @@ async function onReady(): Promise<void> {
       setGeneralSettings(settings);
     }
   );
+
+  registerPreviewPageFetch();
 
   electron.ipcMain.handle('get-connected-characters', () => {
     return characters.slice();
