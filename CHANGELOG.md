@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.2-beta.1] - 2026-10-13
+
 ### Fixed since last pre-release
 
 - Fixed the window not mounting (thus breaking the entire app) on MacOS. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dc43e46fe317f9e13c80f64797c6d47da260ac10)
@@ -1730,7 +1732,8 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - IOS build removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814)]
 - Webchat removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/b894a180b9be31f68d1458aaa3c59f9c4470da89)]
 
-[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.2-beta.0...development
+[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.2-beta.1...development
+[2.4.2-beta.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.2-beta.0...v2.4.2-beta.1
 [2.4.2-beta.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.1...v2.4.2-beta.0
 [2.4.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.0-beta.3...v2.4.0
