@@ -32,8 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixes the first conversation you open in a session (the console) not being considered part of the navigation history when using your mouse's forward and backward buttons. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/daa853efeca66888d378e7391fa52d97ca5467f4)
-- Fixed issues where opening a new tab right after deleting a character on the website keeping that character in your list. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d27b234adb957c62f276013c91b1617bcbec176d)
+- Fixed a regression where network-related disconnects would no longer attempt to automatically reconnect you. [[Commit]](https://github.com/Fchat-Horizon/Horizon/pull/985/changes/99f23494b24e88d45d6048423d3ed20b38190ac7)
+- Fixed the first conversation you open in a session (the console) not being considered part of the navigation history when using your mouse's forward and backward buttons. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/daa853efeca66888d378e7391fa52d97ca5467f4)
+- Fixed issues where opening a new tab right after deleting a character on the website would keep that character in your list. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d27b234adb957c62f276013c91b1617bcbec176d)
 
 ### Development
 
