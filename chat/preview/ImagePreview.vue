@@ -11,12 +11,6 @@
         :title="l('imagePreview.debug')"
         ><i class="fa fa-terminal"></i
       ></a>
-      <a
-        @click="toggleJsMode()"
-        :class="{ toggled: runJs }"
-        :title="l('imagePreview.expand')"
-        ><i class="fa fa-magic"></i
-      ></a>
       <a @click="reloadUrl()" :title="l('imagePreview.reload')"
         ><i class="fa fa-redo-alt"></i
       ></a>
@@ -31,12 +25,9 @@
       ></a>
     </div>
 
-    <!-- note: preload requires a webpack config CopyPlugin configuration
-     also: don't add allowpopups here in any form. see https://www.electronjs.org/docs/latest/api/webview-tag#allowpopups -->
     <webview
-      preload="./preview/assets/browser.pre.js"
       src="about:blank"
-      webpreferences="autoplayPolicy=no-user-gesture-required,contextIsolation,sandbox,disableDialogs,disableHtmlFullScreenWindowResize,webSecurity,enableWebSQL=no,nodeIntegration=no,nativeWindowOpen=no,nodeIntegrationInWorker=no,nodeIntegrationInSubFrames=no,webviewTag=no"
+      webpreferences="contextIsolation,sandbox,disableDialogs,webSecurity"
       enableremotemodule="false"
       partition="persist:adblocked"
       id="image-preview-ext"
@@ -66,13 +57,13 @@
 </template>
 
 <script lang="ts">
+  import log from 'electron-log'; //tslint:disable-line:match-default-export-name
   import * as _ from 'lodash';
   import Vue from 'vue';
   import core from '../core';
   import { normalizeCharacterName } from '../common';
   import { EventBus, EventBusEvent } from './event-bus';
   import { domain } from '../../bbcode/core';
-  import { ImageDomMutator } from './image-dom-mutator';
 
   import {
     ExternalImagePreviewHelper,
@@ -82,7 +73,6 @@
     RenderStyle
   } from './helper';
 
-  import IpcMessageEvent = Electron.IpcMessageEvent;
   import CharacterPreview from './CharacterPreview.vue';
   import l from '../localize';
 
@@ -95,11 +85,7 @@
   interface DidFailLoadEvent extends Event {
     errorCode: number;
     errorDescription: string;
-  }
-
-  interface DidNavigateEvent extends Event {
-    httpResponseCode: number;
-    httpStatusText: string;
+    isMainFrame: boolean;
   }
 
   export default Vue.extend({
@@ -120,9 +106,7 @@
         url: null as string | null,
         domain: undefined as string | undefined,
         sticky: false,
-        runJs: true,
         debug: false,
-        jsMutator: new ImageDomMutator(false),
         state: 'hidden',
         shouldShowSpinner: false,
         shouldShowError: true,
@@ -139,10 +123,7 @@
       };
     },
     async mounted(): Promise<void> {
-      console.info('Mounted ImagePreview');
-
-      // tslint:disable-next-line:no-floating-promises
-      this.jsMutator.init();
+      log.info('imagePreview.mounted');
 
       EventBus.$on('imagepreview-dismiss', (eventData: EventBusEvent) => {
         this.dismiss(this.negotiateUrl((eventData.url as string) || ''));
@@ -170,9 +151,7 @@
             return;
           }
 
-          const eventUrl = this.jsMutator.mutateUrl(
-            this.negotiateUrl((eventData.url as string) || '')
-          );
+          const eventUrl = this.negotiateUrl((eventData.url as string) || '');
 
           if (
             (eventData.force === true || this.url === eventUrl) &&
@@ -189,271 +168,15 @@
 
       const webview = this.getWebview();
 
-      // clear preview cache, particularly cookies
-      // setInterval(
-      //     () => remote.webContents.fromId(webview.getWebContentsId()).session.clearStorageData({storages: ['cookies', 'indexdb']}),
-      //     5000
-      // );
-
-      webview.addEventListener(
-        'update-target-url', // 'did-navigate', // 'dom-ready',
-        (event: EventBusEvent) => {
-          const url = webview.getURL();
-          const js = this.jsMutator.getMutatorJsForSite(
-            url,
-            'update-target-url'
-          );
-
-          // tslint:disable-next-line
-          this.executeJavaScript(js, 'update-target-url', event);
-        }
-      );
-
-      webview.addEventListener(
-        'dom-ready', // 'did-navigate', // 'dom-ready',
-        (event: EventBusEvent) => {
-          const url = webview.getURL();
-          const js = this.jsMutator.getMutatorJsForSite(url, 'dom-ready');
-
-          // tslint:disable-next-line
-          this.executeJavaScript(js, 'dom-ready', event);
-
-          this.setState('loaded');
-        }
-      );
+      webview.addEventListener('dom-ready', () => this.setState('loaded'));
 
       webview.addEventListener('did-fail-load', (event: Event) => {
         const e = event as DidFailLoadEvent;
 
-        if (e.errorCode !== -3) {
-          this.setState('error'); // -3 is a weird error code, not sure why it occurs
-        }
-
-        if (e.errorCode < 0) {
-          const url = webview.getURL();
-
-          if (url.match(/^https?:\/\/(www.)?pornhub.com/)) {
-            const qjs =
-              this.jsMutator.getMutatorJsForSite(url, 'update-target-url') ||
-              this.jsMutator.getMutatorJsForSite(url, 'dom-ready');
-
-            // tslint:disable-next-line
-            this.executeJavaScript(
-              qjs,
-              'did-fail-load-but-still-loading',
-              event
-            );
-            return;
-          }
-
-          return;
-        }
-
-        const js = this.jsMutator.getErrorMutator(
-          e.errorCode,
-          e.errorDescription
-        );
-
-        // tslint:disable-next-line
-        this.executeJavaScript(js, 'did-fail-load', event);
-      });
-
-      webview.addEventListener('did-navigate', (event: Event) => {
-        const e = event as DidNavigateEvent;
-
-        if (e.httpResponseCode >= 400) {
-          const js = this.jsMutator.getErrorMutator(
-            e.httpResponseCode,
-            e.httpStatusText
-          );
-
-          // tslint:disable-next-line
-          this.executeJavaScript(js, 'did-navigate', event);
+        if (e.isMainFrame && e.errorCode !== -3 && this.state !== 'loaded') {
+          this.setState('error');
         }
       });
-
-      // webview.getWebContents().on(
-      webview.addEventListener('did-finish-load', (event: Event) => {
-        this.debugLog('ImagePreview did-finish-load', event);
-      });
-
-      webview.addEventListener('ipc-message', (event: IpcMessageEvent) => {
-        this.debugLog('ImagePreview ipc-message', event);
-
-        if (event.channel === 'webview.img') {
-          // tslint:disable-next-line:no-unsafe-any
-          this.updatePreviewSize(
-            parseInt(event.args[0], 10),
-            parseInt(event.args[1], 10)
-          );
-        }
-      });
-
-      //Block external navigation to prevent other apps from opening
-      webview.addEventListener('new-window', (event: any) => {
-        this.debugLog('ImagePreview blocked new-window', event.url);
-        event.preventDefault();
-      });
-
-      webview.addEventListener('will-navigate', (event: any) => {
-        const url = event.url;
-        this.debugLog('ImagePreview will-navigate', url);
-
-        //Block Discord invites and other external protocols - this catches redirects!
-        if (this.isBlockedUrl(url)) {
-          this.debugLog(
-            'ImagePreview blocked external protocol navigation (including redirects)',
-            url
-          );
-          event.preventDefault();
-          //Also hide the preview if we detect a redirect to blocked content
-          this.hide();
-          return;
-        }
-
-        //Allow navigation only to the original URL or image/video content
-        const currentUrl = webview.src;
-        if (url !== currentUrl && !this.isMediaUrl(url)) {
-          this.debugLog(
-            'ImagePreview blocked non-media navigation',
-            url,
-            'from',
-            currentUrl
-          );
-          event.preventDefault();
-        }
-      });
-
-      //Block external protocol handling - this is critical for redirect protection
-      webview.addEventListener('will-redirect', (event: any) => {
-        const url = event.url;
-        this.debugLog('ImagePreview will-redirect', url);
-
-        if (this.isBlockedUrl(url)) {
-          this.debugLog('ImagePreview blocked external protocol redirect', url);
-          event.preventDefault();
-          //Hide the preview when we detect redirect to blocked content
-          this.hide();
-          return;
-        }
-      });
-
-      //Additional protection: monitor any navigation attempts
-      webview.addEventListener('did-start-navigation', (event: any) => {
-        const url = event.url;
-        this.debugLog('ImagePreview did-start-navigation', url);
-
-        if (this.isBlockedUrl(url)) {
-          this.debugLog(
-            'ImagePreview blocked navigation start to external protocol',
-            url
-          );
-          //Stop the webview and hide preview
-          webview.stop();
-          this.hide();
-          return;
-        }
-      });
-
-      //Monitor for completed navigation to check final URL
-      webview.addEventListener('did-navigate', (event: any) => {
-        const url = webview.getURL();
-        this.debugLog('ImagePreview did-navigate to', url, event);
-
-        if (this.isBlockedUrl(url)) {
-          this.debugLog(
-            'ImagePreview detected blocked URL after navigation',
-            url
-          );
-          webview.stop();
-          this.hide();
-          return;
-        }
-      });
-
-      //Monitor page title changes for external app indicators
-      webview.addEventListener('page-title-updated', (event: any) => {
-        const title = event.title;
-        const currentUrl = webview.getURL();
-
-        //Common patterns in pages that redirect to external apps
-        const suspiciousTitlePatterns = [
-          'Discord',
-          'Join',
-          'Invite',
-          'Steam',
-          'Zoom',
-          'Teams',
-          'Slack',
-          'WhatsApp',
-          'Telegram',
-          'Skype',
-          'FaceTime',
-          'Opening',
-          'Redirecting',
-          'Download',
-          'Install',
-          'App Store',
-          'Microsoft Store'
-        ];
-
-        if (
-          title &&
-          suspiciousTitlePatterns.some(pattern => title.includes(pattern))
-        ) {
-          if (this.isBlockedUrl(currentUrl)) {
-            this.debugLog(
-              'ImagePreview detected suspicious title, blocking',
-              title,
-              currentUrl
-            );
-            webview.stop();
-            this.hide();
-          }
-        }
-      });
-
-      //Safety mechanism: periodically check the current URL for delayed redirects
-      setInterval(() => {
-        if (this.visible && webview) {
-          const currentUrl = webview.getURL();
-          if (currentUrl && this.isBlockedUrl(currentUrl)) {
-            this.debugLog(
-              'ImagePreview safety check detected blocked URL',
-              currentUrl
-            );
-            webview.stop();
-            this.hide();
-          }
-        }
-      }, 500); // Check every 500ms
-
-      // const webContentsId = webview.getWebContentsId();
-      //
-      // remote.webContents.fromId(webContentsId).session.on(
-      //     'will-download',
-      //     (e: Event) => {
-      //         e.preventDefault();
-      //     }
-      // );
-
-      _.each(
-        [
-          'did-start-loading',
-          'load-commit',
-          'dom-ready',
-          'will-navigate',
-          'did-navigate',
-          'did-navigate-in-page',
-          'update-target-url',
-          'ipc-message'
-        ],
-        (en: string) => {
-          webview.addEventListener(en, (event: Event) => {
-            this.debugLog(`ImagePreview ${en} ${Date.now()}`, event);
-          });
-        }
-      );
 
       setInterval(() => {
         if (
@@ -469,7 +192,7 @@
           !this.exitInterval &&
           !this.interval
         ) {
-          this.debugLog('ImagePreview: call hide from interval');
+          this.debugLog('imagePreview.hide.interval');
 
           this.hide();
         }
@@ -546,99 +269,6 @@
           cleanUrl.includes('data:video')
         );
       },
-      isBlockedUrl(url: string): boolean {
-        const blockedProtocols = [
-          'discord://',
-          'steam://',
-          'skype:',
-          'mailto:',
-          'tel:',
-          'sms:',
-          'facetime:',
-          'facetime-audio:',
-          'zoom:',
-          'teams:',
-          'slack:',
-          'whatsapp:',
-          'telegram:',
-          'spotify:',
-          'itunes:',
-          'itunesmusic:',
-          'app:',
-          'x-apple:',
-          'com.apple.',
-          'com.microsoft.',
-          'com.spotify.',
-          'vscode:',
-          'vscode-insiders:',
-          'github-desktop:',
-          'unity:',
-          'blender:',
-          'obsidian:',
-          'notion:'
-        ];
-
-        const blockedDomains = [
-          'discord.gg/',
-          'discord.com/invite/',
-          'discordapp.com/invite/',
-          'steamcommunity.com/groups/',
-          'steamcommunity.com/chat/',
-          'web.whatsapp.com',
-          'web.telegram.org',
-          'teams.microsoft.com/l/chat',
-          'zoom.us/j/',
-          'meet.google.com/',
-          'whereby.com/'
-        ];
-
-        const lowerUrl = url.toLowerCase();
-
-        if (blockedProtocols.some(protocol => lowerUrl.startsWith(protocol))) {
-          return true;
-        }
-
-        if (blockedDomains.some(domain => lowerUrl.includes(domain))) {
-          return true;
-        }
-
-        const urlShorteners = [
-          'bit.ly',
-          'tinyurl.com',
-          'short.link',
-          'ow.ly',
-          'is.gd',
-          'buff.ly',
-          'adf.ly',
-          'goo.gl',
-          'shor.by',
-          'cutt.ly',
-          'rebrandly.com',
-          'tiny.cc',
-          'link.ly',
-          'shortened.link',
-          'shorturl.at',
-          'clck.ru',
-          'v.gd',
-          'po.st'
-        ];
-
-        return urlShorteners.some(shortener => lowerUrl.includes(shortener));
-      },
-      isSuspiciousRedirect(url: string): boolean {
-        const lowerUrl = url.toLowerCase();
-
-        const redirectParams = [
-          'redirect',
-          'url',
-          'goto',
-          'target',
-          'destination',
-          'forward',
-          'next'
-        ];
-        return redirectParams.some(param => lowerUrl.includes(param + '='));
-      },
       updatePreviewSize(width: number, height: number): void {
         const helper = this.previewManager.getVisiblePreview();
 
@@ -648,7 +278,7 @@
 
         if (width && height) {
           this.debugLog(
-            'ImagePreview: updatePreviewSize',
+            'imagePreview.size.update',
             width,
             height,
             width / height
@@ -678,9 +308,9 @@
         this.reRenderStyles();
       },
       dismiss(initialUrl: string): void {
-        const url = this.jsMutator.mutateUrl(initialUrl);
+        const url = initialUrl;
 
-        this.debugLog('ImagePreview: dismiss', url);
+        this.debugLog('imagePreview.dismiss', url);
 
         if (this.url !== url) return; // simply ignore
 
@@ -702,7 +332,7 @@
         this.shouldDismiss = true;
 
         this.debugLog(
-          'ImagePreview: dismiss.exec',
+          'imagePreview.dismiss.execute',
           due,
           this.previewManager.getVisibilityStatus(),
           url
@@ -715,25 +345,10 @@
         this.exitInterval = setTimeout(() => this.hide(), due) as TimerHandle;
       },
       show(initialUrl: string): void {
-        const url = this.jsMutator.mutateUrl(initialUrl);
-
-        // Block URLs that could trigger external applications
-        if (this.isBlockedUrl(url)) {
-          this.debugLog('ImagePreview: show blocked external URL', url);
-          return;
-        }
-
-        // Block suspicious URLs that might redirect to external applications
-        if (this.isSuspiciousRedirect(url)) {
-          this.debugLog(
-            'ImagePreview: show blocked suspicious redirect URL',
-            url
-          );
-          return;
-        }
+        const url = initialUrl;
 
         this.debugLog(
-          'ImagePreview: show',
+          'imagePreview.show',
           this.previewManager.getVisibilityStatus(),
           this.visible,
           this.hasMouseMovedSince(),
@@ -743,21 +358,21 @@
         );
 
         if (this.visible && !this.exitInterval && !this.hasMouseMovedSince()) {
-          this.debugLog('ImagePreview: show cancel: visible & not moved');
+          this.debugLog('imagePreview.show.cancel.visible', 'pointer unmoved');
           return;
         }
 
         if (this.url === url && (this.visible || this.interval)) {
-          this.debugLog('ImagePreview: same url', url, this.url);
+          this.debugLog('imagePreview.show.cancel.sameUrl', url, this.url);
           return;
         }
 
         if (this.url && this.sticky && this.visible) {
-          this.debugLog('ImagePreview: sticky visible');
+          this.debugLog('imagePreview.show.cancel.sticky', url);
           return;
         }
 
-        this.debugLog('ImagePreview: show.exec', url);
+        this.debugLog('imagePreview.show.execute', url);
 
         const due = url === this.exitUrl && this.exitInterval ? 0 : 200;
 
@@ -771,7 +386,7 @@
         // -- you actually have to pause on it
         // tslint:disable-next-line no-unnecessary-type-assertion
         this.interval = setTimeout(() => {
-          this.debugLog('ImagePreview: show.timeout', this.url);
+          this.debugLog('imagePreview.show.timeout', this.url);
 
           const helper = this.previewManager.show(
             this.url || undefined,
@@ -826,7 +441,6 @@
       toggleDevMode(): void {
         this.debug = !this.debug;
 
-        this.jsMutator.setDebug(this.debug);
         this.previewManager.setDebug(this.debug);
 
         if (this.debug) {
@@ -837,49 +451,15 @@
           }
         }
       },
-      async executeJavaScript(
-        js: string | undefined,
-        context: string = 'unknown',
-        logDetails?: any
-      ): Promise<any> {
-        if (!this.runJs) return;
-
-        const webview = this.getWebview();
-
-        if (!js) {
-          this.debugLog(
-            `ImagePreview ${context}: No JavaScript to execute`,
-            logDetails
-          );
-          return;
-        }
-
-        this.debugLog(`ImagePreview execute-${context}`, js, logDetails);
-
-        try {
-          const result = await (webview.executeJavaScript(
-            js
-          ) as unknown as Promise<any>);
-
-          this.debugLog(`ImagePreview result-${context}`, result);
-
-          return result;
-        } catch (err) {
-          this.debugLog(`ImagePreview error-${context}`, err);
-        }
-      },
       debugLog(...args: any[]): void {
         if (this.debug) {
-          console.log(...args);
+          log.debug(...args);
         }
       },
       toggleStickyMode(): void {
         this.sticky = !this.sticky;
 
         if (!this.sticky) this.hide();
-      },
-      toggleJsMode(): void {
-        this.runJs = !this.runJs;
       },
       reloadUrl(): void {
         const helper = this.previewManager.getVisiblePreview();
@@ -909,10 +489,7 @@
         this.domain = undefined;
 
         this.sticky = false;
-        this.runJs = true;
         this.debug = false;
-
-        this.jsMutator = new ImageDomMutator(this.debug);
 
         this.cancelExitTimer();
         this.cancelTimer();
@@ -932,7 +509,7 @@
       },
       setState(state: string): void {
         this.debugLog(
-          'ImagePreview set-state',
+          'imagePreview.state.update',
           state,
           this.visibleSince > 0
             ? `${(Date.now() - this.visibleSince) / 1000}s`
