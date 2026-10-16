@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed since last pre-release
+
+- Both the main app and renderer context now use Electron 43.7.6 (instead of somehow using both 42 and 43 respectively). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e312fa67cb375fb41a8bd59d04094459b572ed36)
+  - This should solve issues on Windows where opening the app for the first time would start the first window as hidden.
+- Window title bar width (in respect to the new native window controls) is now calculated with Electron's `env()` CSS functions, instead of through Javascript. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/7667808a1157cc94b17858a47f10468e43970942)
+  - This should solve issues on Windows where snapping a window, or moving it to fullscreen (F11) would scramble the title bar's layout.
+  - This should also solve issues on Linux where having your window controls on the left side of a window would overlay them on top of the app title.
+
 ## [2.4.2-beta.1] - 2026-10-13
 
 ### Fixed since last pre-release
