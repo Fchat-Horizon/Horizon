@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.2-beta.2] - 2026-10-16
+
 ### Fixed since last pre-release
 
 - Both the main app and renderer context now use Electron 43.7.6 (instead of somehow using both 42 and 43 respectively). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e312fa67cb375fb41a8bd59d04094459b572ed36)
@@ -1741,7 +1743,8 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - IOS build removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814)]
 - Webchat removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/b894a180b9be31f68d1458aaa3c59f9c4470da89)]
 
-[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.2-beta.1...development
+[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.2-beta.2...development
+[2.4.2-beta.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.2-beta.1...v2.4.2-beta.2
 [2.4.2-beta.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.2-beta.0...v2.4.2-beta.1
 [2.4.2-beta.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.1...v2.4.2-beta.0
 [2.4.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.0...v2.4.1
