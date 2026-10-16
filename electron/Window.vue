@@ -2,6 +2,7 @@
   <div
     style="display: flex; flex-direction: column; height: 100%"
     :class="getThemeClass()"
+    class="border-bottom"
     @auxclick.prevent
   >
     <div v-html="styling"></div>
@@ -12,7 +13,6 @@
         border-bottom-width: 1px;
         min-height: 31px;
       `"
-      class="border-bottom"
       id="window-tabs"
     >
       <h4 class="window-title" v-if="!hideWindowControls">
@@ -140,7 +140,6 @@
           justify-content: flex-end;
           -webkit-app-region: drag;
         "
-        :style="{ marginRight: windowControlsOverlayMargin }"
         id="windowButtons"
         class="btn-group"
         v-if="!hideWindowControls"
@@ -262,9 +261,7 @@
           : 'title.dev') as 'title' | 'title.dev',
         isClosing: false,
         hideWindowControls: false,
-        hideSingleTab: true,
-        windowControlsOverlayMargin:
-          process.platform === 'darwin' ? '0px' : '130px'
+        hideSingleTab: true
       };
     },
     watch: {
@@ -292,12 +289,7 @@
     },
     async mounted(): Promise<void> {
       log.debug('init.window.mounting');
-      this.updateWindowControlsOverlayMargin();
-      const windowControlsOverlay = (navigator as any).windowControlsOverlay;
-      windowControlsOverlay?.addEventListener(
-        'geometrychange',
-        this.updateWindowControlsOverlayMargin
-      );
+
       // top bar devtools
       // browserWindow.webContents.openDevTools({ mode: 'detach' });
 
@@ -493,13 +485,11 @@
         this.isMaximized = true;
         if (this.activeTab !== undefined)
           this.activeTab.view.setBounds(getWindowBounds());
-        this.updateWindowControlsOverlayMargin();
       });
       browserWindow.on('unmaximize', () => {
         this.isMaximized = false;
         if (this.activeTab !== undefined)
           this.activeTab.view.setBounds(getWindowBounds());
-        this.updateWindowControlsOverlayMargin();
       });
       electron.ipcRenderer.on('switch-tab', (_e: Electron.IpcRendererEvent) => {
         const index = this.tabs.indexOf(this.activeTab!);
@@ -582,34 +572,8 @@
 
       log.debug('init.window.mounted');
     },
-    beforeDestroy(): void {
-      //Yes, this is a to any cast. Too bad.
-      //This is not a property that gets exposed through the navigator type, but it exists in Electron's runtime as of 2026-09-12. (We are using v42.4.1 as of writing)
-      //If this ever breaks, now you know why. You'll have to find a different way to get the margin areas.
-      const windowControlsOverlay = (navigator as any).windowControlsOverlay;
-      windowControlsOverlay?.removeEventListener(
-        'geometrychange',
-        this.updateWindowControlsOverlayMargin
-      );
-    },
+    beforeDestroy(): void {},
     methods: {
-      //Same comment as the beforeDestroy method. This is not a property that gets exposed through the navigator type, but it exists in Electron's runtime as of 2026-09-12. Blah blah blah...
-      //On Windows we can kind of guess the size this takes. Have fun doing the same shit on Linux.
-      updateWindowControlsOverlayMargin(): void {
-        if (process.platform === 'darwin') return;
-        const windowControlsOverlay = (navigator as any).windowControlsOverlay;
-        const titlebarArea = windowControlsOverlay?.getTitlebarAreaRect();
-
-        if (!titlebarArea) {
-          this.windowControlsOverlayMargin = '130px';
-          return;
-        }
-
-        this.windowControlsOverlayMargin = `${Math.max(
-          0,
-          window.innerWidth - titlebarArea.right
-        )}px`;
-      },
       getSyncedTheme() {
         if (!this.settings.themeSync) return this.settings.theme;
         return this.osIsDark
@@ -917,6 +881,8 @@
   }
   #window-tabs {
     user-select: none;
+    margin-left: env(titlebar-area-x, 0px);
+    width: env(titlebar-area-width, 100%);
 
     .btn {
       border: 0;
