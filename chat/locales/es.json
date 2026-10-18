@@ -772,7 +772,7 @@
   "settings.export.summary": "Exportados {files} de {characters} en {file}.",
   "settings.export.summarySkipped_many": "({count} archivos saltados debido a errores)",
   "settings.export.summarySkipped_one": "({count} archivo saltado debido a errores)",
-  "settings.export.summarySkipped_other": "",
+  "settings.export.summarySkipped_other": "({count} archivos saltados debido a errores)",
   "settings.export.title": "Exportar datos de Horizon",
   "settings.export.zipping": "Finalizando exportación",
   "settings.filter.hideAds": "Ocultar [b]ads[/b] de personajes compatibles",
