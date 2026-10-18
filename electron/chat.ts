@@ -390,28 +390,34 @@ const connection = new Connection(
   remote.app.getVersion(),
   Socket
 );
-initCore(connection, settings, Logs, SettingsStore, Notifications);
+async function startChat(): Promise<void> {
+  await initCore(connection, settings, Logs, SettingsStore, Notifications);
 
-electron.ipcRenderer.on('reload-settings', () => {
-  void core
-    .reloadSettings()
-    .then(() => {
-      EventBus.$emit('configuration-update', core.state.settings);
-    })
-    .catch(err => {
-      log.error('settings.reload.error', err);
-    });
+  electron.ipcRenderer.on('reload-settings', () => {
+    void core
+      .reloadSettings()
+      .then(() => {
+        EventBus.$emit('configuration-update', core.state.settings);
+      })
+      .catch(err => {
+        log.error('settings.reload.error', err);
+      });
+  });
+
+  log.debug('init.chat.vue');
+
+  //tslint:disable-next-line:no-unused-expression
+  new Index({
+    el: '#app',
+    data: {
+      settings,
+      hasCompletedUpgrades: JSON.parse(params['hasCompletedUpgrades']!)
+    }
+  });
+
+  log.debug('init.chat.vue.done');
+}
+
+void startChat().catch(err => {
+  log.error('core.init.error', err);
 });
-
-log.debug('init.chat.vue');
-
-//tslint:disable-next-line:no-unused-expression
-new Index({
-  el: '#app',
-  data: {
-    settings,
-    hasCompletedUpgrades: JSON.parse(params['hasCompletedUpgrades']!)
-  }
-});
-
-log.debug('init.chat.vue.done');

@@ -219,15 +219,13 @@ const data = {
   ): void {
     vue.$watch(getter, callback);
   },
-  async reloadSettings(): Promise<void> {
-    // Load global settings from '_' character
+  async loadGlobalSettings(): Promise<boolean> {
     const globalRaw = await core.settingsStore.get(
       'settings',
       GLOBAL_SETTINGS_CHARACTER
     );
 
     const needsMigration = globalRaw === undefined;
-
     const globalSettings = _.mergeWith(
       new SettingsImpl(),
       globalRaw,
@@ -237,7 +235,17 @@ const data = {
         }
       }
     );
+
     state._globalSettings = globalSettings;
+    state._characterSettings = {};
+    state._settings = createMergedSettingsProxy(globalSettings, {});
+
+    return needsMigration;
+  },
+  async reloadSettings(): Promise<void> {
+    // Load global settings from '_' character
+    const needsMigration = await data.loadGlobalSettings();
+    const globalSettings = state._globalSettings!;
 
     // Load character-specific overrides
     const characterRaw = await core.settingsStore.get('settings');
@@ -333,14 +341,14 @@ const data = {
   }
 };
 
-export function init(
+export async function init(
   this: any,
   connection: Connection,
   settings: GeneralSettings,
   logsClass: new () => Logs,
   settingsClass: new () => Settings.Store,
   notificationsClass: new () => Notifications
-): void {
+): Promise<void> {
   data.connection = connection;
   data.logs = new logsClass();
   data.settingsStore = new settingsClass();
@@ -355,6 +363,9 @@ export function init(
   data.register('characters', Characters(connection));
   data.register('channels', Channels(connection, core.characters));
   data.register('conversations', Conversations());
+
+  await data.loadGlobalSettings();
+  data.bbCodeParser = createBBCodeParser();
 
   // ^ Debounced: rapid toggles (or bulk imports of large lists) used to kick off
   // a full JSON.stringify + fs.writeFileSync per mutation, which freezes the UI
