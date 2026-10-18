@@ -392,7 +392,7 @@
   "editor.closePreview": "Cwose Pweview ({modifier})\n\nDismisses the BBCowde pweview.",
   "editor.format.bold": "Bold ({modifier}+B)\n\nMakes text appeaw wiff a bowd weight.",
   "editor.format.color": "Cowow ({modifier}+D)\n\nStywes text wiff a cowor. Vawid cowows awe: wed, owange, yewwow, gween, cyan, bwue, puwpwe, pink, bwack, bwown, white, and gway.",
-  "editor.format.eicon": "Eicon ({modifier]+E)\n\nCwick to open da eicon pickew. The showtcut insewts the tags diwectly, for when you awweady know the name.\n\nIf the icon is a gif, it wiww be shown as animated unwess a usew has turned this off.",
+  "editor.format.eicon": "Eicon ({modifier}+E)\n\nCwick to open da eicon pickew. The showtcut insewts the tags diwectly, for when you awweady know the name.\n\nIf the icon is a gif, it wiww be shown as animated unwess a usew has turned this off.",
   "editor.format.icon": "Icon ({modifier}+O)\n\nShows a chawactew's pwofiwe image, winking to theiw pwofiwe.",
   "editor.preview": "Pweview ({modifier})\n\nShows a pweview of the BBCowde you typed, incwuding any fowmatting fucky-wuckies.",
   "eicon.action": "Sewect EIcon",
