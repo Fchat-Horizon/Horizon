@@ -1513,7 +1513,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.hideAds"
-                  v-model="settings.risingFilter.hideAds"
+                  v-model="activeRisingFilter.hideAds"
                 />
                 <label class="form-check-label" for="risingFilter.hideAds">
                   <bbcode :text="l('settings.filter.hideAds')"></bbcode>
@@ -1525,7 +1525,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.hideSearchResults"
-                  v-model="settings.risingFilter.hideSearchResults"
+                  v-model="activeRisingFilter.hideSearchResults"
                 />
                 <label
                   class="form-check-label"
@@ -1542,7 +1542,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.hideChannelMembers"
-                  v-model="settings.risingFilter.hideChannelMembers"
+                  v-model="activeRisingFilter.hideChannelMembers"
                 />
                 <label
                   class="form-check-label"
@@ -1559,7 +1559,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.hidePublicChannelMessages"
-                  v-model="settings.risingFilter.hidePublicChannelMessages"
+                  v-model="activeRisingFilter.hidePublicChannelMessages"
                 />
                 <label
                   class="form-check-label"
@@ -1576,7 +1576,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.hidePrivateChannelMessages"
-                  v-model="settings.risingFilter.hidePrivateChannelMessages"
+                  v-model="activeRisingFilter.hidePrivateChannelMessages"
                 />
                 <label
                   class="form-check-label"
@@ -1593,7 +1593,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.hidePrivateMessages"
-                  v-model="settings.risingFilter.hidePrivateMessages"
+                  v-model="activeRisingFilter.hidePrivateMessages"
                 />
                 <label
                   class="form-check-label"
@@ -1610,7 +1610,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.showFilterIcon"
-                  v-model="settings.risingFilter.showFilterIcon"
+                  v-model="activeRisingFilter.showFilterIcon"
                 />
                 <label
                   class="form-check-label"
@@ -1627,7 +1627,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.penalizeMatches"
-                  v-model="settings.risingFilter.penalizeMatches"
+                  v-model="activeRisingFilter.penalizeMatches"
                 />
                 <label
                   class="form-check-label"
@@ -1642,7 +1642,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.rewardNonMatches"
-                  v-model="settings.risingFilter.rewardNonMatches"
+                  v-model="activeRisingFilter.rewardNonMatches"
                 />
                 <label
                   class="form-check-label"
@@ -1666,7 +1666,7 @@
                 id="risingFilter.minAge"
                 type="number"
                 class="form-control"
-                v-model="settings.risingFilter.minAge"
+                v-model="activeRisingFilter.minAge"
                 :placeholder="l('settings.enterAge')"
               />
 
@@ -1677,7 +1677,7 @@
                 id="risingFilter.maxAge"
                 type="number"
                 class="form-control"
-                v-model="settings.risingFilter.maxAge"
+                v-model="activeRisingFilter.maxAge"
                 :placeholder="l('settings.enterAge')"
               />
             </div>
@@ -1707,7 +1707,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.autoReply"
-                  v-model="settings.risingFilter.autoReply"
+                  v-model="activeRisingFilter.autoReply"
                 />
                 <label class="form-check-label" for="risingFilter.autoReply">
                   {{ l('settings.autoReply') }}
@@ -1719,8 +1719,8 @@
                   class="form-check-input"
                   type="checkbox"
                   id="risingFilter.autoReplyCustom"
-                  v-model="settings.risingFilter.autoReplyCustom"
-                  :disabled="!settings.risingFilter.autoReply"
+                  v-model="activeRisingFilter.autoReplyCustom"
+                  :disabled="!activeRisingFilter.autoReply"
                 />
                 <label
                   class="form-check-label"
@@ -1731,13 +1731,13 @@
               </div>
 
               <editor
-                v-model="settings.risingFilter.autoReplyCustomMessage"
+                v-model="activeRisingFilter.autoReplyCustomMessage"
                 :hasToolbar="true"
                 :classes="'form-control'"
                 rows="5"
                 :disabled="
-                  !settings.risingFilter.autoReplyCustom ||
-                  !settings.risingFilter.autoReply
+                  !activeRisingFilter.autoReplyCustom ||
+                  !activeRisingFilter.autoReply
                 "
                 :placeholder="l('settings.autoReplyPlaceholder')"
                 maxlength="10000"
@@ -1872,6 +1872,13 @@
       currentCharacter(): string {
         return core.connection.character;
       },
+      activeRisingFilter(): SmartFilterSettings {
+        return (
+          this.settingsMode === '0'
+            ? this.settings.risingFilter
+            : this.characterOverrides.risingFilter || this.settings.risingFilter
+        ) as SmartFilterSettings;
+      },
       hidden(): string[] {
         return core.state.hiddenUsers;
       },
@@ -1889,6 +1896,17 @@
       },
       ignored(): readonly string[] {
         return core.characters.ignoreList;
+      }
+    },
+    watch: {
+      settingsMode(value: string): void {
+        if (value === '1' && !this.characterOverrides.risingFilter) {
+          this.$set(
+            this.characterOverrides,
+            'risingFilter',
+            _.cloneDeep(this.settings.risingFilter)
+          );
+        }
       }
     },
     methods: {
@@ -2025,14 +2043,25 @@
         notifySettingsReload();
       },
       async submitCharacterOverrides(): Promise<void> {
-        const oldRisingFilter = JSON.parse(
-          JSON.stringify(core.state.characterSettings.risingFilter)
+        const oldRisingFilter = _.cloneDeep(
+          core.state.characterSettings.risingFilter
         );
+        const newCharacterOverrides = { ...this.characterOverrides };
 
-        core.state.characterSettings = this.characterOverrides;
+        if (
+          _.isEqual(
+            newCharacterOverrides.risingFilter,
+            this.settings.risingFilter
+          )
+        ) {
+          delete newCharacterOverrides.risingFilter;
+        }
 
-        const newRisingFilter = JSON.parse(
-          JSON.stringify(core.state.characterSettings.risingFilter)
+        core.state.characterSettings = newCharacterOverrides;
+        this.characterOverrides = newCharacterOverrides;
+
+        const newRisingFilter = _.cloneDeep(
+          core.state.characterSettings.risingFilter
         );
 
         if (!_.isEqual(oldRisingFilter, newRisingFilter)) {
@@ -2073,18 +2102,19 @@
         return !Number.isNaN(n) && Number.isFinite(n) ? n : null;
       },
       getExceptionList(): string {
-        return _.join(this.risingFilter.exceptionNames, '\n');
+        return _.join(this.activeRisingFilter.exceptionNames, '\n');
       },
       setExceptionList(v: any): void {
-        this.risingFilter.exceptionNames = _.map(_.split(v.target.value), v =>
-          _.trim(v)
+        this.activeRisingFilter.exceptionNames = _.map(
+          _.split(v.target.value),
+          v => _.trim(v)
         );
       },
       getSmartFilter(key: keyof SmartFilterSelection): boolean {
-        return !!this.risingFilter.smartFilters?.[key];
+        return !!this.activeRisingFilter.smartFilters?.[key];
       },
       setSmartFilter(key: keyof SmartFilterSelection, value: any): void {
-        this.risingFilter.smartFilters[key] = value.target.checked;
+        this.activeRisingFilter.smartFilters[key] = value.target.checked;
       },
       getCharacter(name: string): Character {
         return core.characters.get(name);
