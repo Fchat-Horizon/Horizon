@@ -773,21 +773,26 @@
                   name: l('settings.chatLayoutMode')
                 })
               }}</label>
-              <!--TODO
-              Do this for global settings too. Maybe with a parent component or something.
-              -->
-              <select
+              <settings-select-override
                 id="chatLayoutMode"
-                class="form-select"
-                v-model="characterOverrides.chatLayoutMode"
-              >
-                <option value="classic">
-                  {{ l('settings.chatLayoutMode.classic') }}
-                </option>
-                <option value="modern">
-                  {{ l('settings.chatLayoutMode.modern') }}
-                </option>
-              </select>
+                name="chatLayoutMode"
+                :globalValue="settings.chatLayoutMode"
+                :overrideValue="characterOverrides.chatLayoutMode"
+                :usingGlobal="isUsingGlobal()"
+                :options="[
+                  {
+                    value: 'classic',
+                    label: l('settings.chatLayoutMode.classic')
+                  },
+                  {
+                    value: 'modern',
+                    label: l('settings.chatLayoutMode.modern')
+                  }
+                ]"
+                :fallbackLabel="l('settings.override.useGlobal')"
+                @update:globalValue="setGlobalChatLayoutMode($event)"
+                @update:overrideValue="setCharacterChatLayoutMode($event)"
+              />
               <small class="form-text text-muted">{{
                 l('settings.chatLayoutMode.modernDescription')
               }}</small>
@@ -1811,6 +1816,7 @@
   import SettingsOverride from '../components/SettingsOverride.vue';
   import SettingsInput from '../components/SettingsInput.vue';
   import SettingsArray from '../components/SettingsArray.vue';
+  import SettingsSelectOverride from '../components/SettingsSelectOverride.vue';
   import { UserInterfaceBBCodeParser } from '../bbcode/user-interface';
   import { Settings as DefaultSettings } from './common';
   import core from './core';
@@ -1848,7 +1854,8 @@
       'virtual-list': VirtualList,
       'settings-override': SettingsOverride,
       'settings-input': SettingsInput,
-      'settings-array': SettingsArray
+      'settings-array': SettingsArray,
+      'settings-select-override': SettingsSelectOverride
     },
     data() {
       const defaultSettings = new DefaultSettings();
@@ -1912,6 +1919,25 @@
     methods: {
       isUsingGlobal(): boolean {
         return this.settingsMode === '0';
+      },
+      // See also components/SettingsSelectOverride.vue for the actual component
+      // This solution is not ideal, but between these 3 options, I went for the 2nd one since I assumed that while we would add more <select> based settings
+      // in the future, they wouldn't be so many that we'd need a handler that isn't type-safe:
+
+      // 1. Generic string-based handler, with no type-safety. (Better if we have a lot of <select> based settings)
+      // 2. Specific handlers for each setting, with type-safety. (You are here)
+      // 3. Handle all of them in SettingsView directly, which would lead to a ton of code duplication per setting.
+      setGlobalChatLayoutMode(value: string): void {
+        if (value === 'classic' || value === 'modern') {
+          this.settings.chatLayoutMode = value;
+        }
+      },
+      setCharacterChatLayoutMode(value: string | undefined): void {
+        if (value === undefined) {
+          this.$delete(this.characterOverrides, 'chatLayoutMode');
+        } else if (value === 'classic' || value === 'modern') {
+          this.$set(this.characterOverrides, 'chatLayoutMode', value);
+        }
       },
       async load(): Promise<void> {
         const globalSettings = core.state.globalSettings as any;
