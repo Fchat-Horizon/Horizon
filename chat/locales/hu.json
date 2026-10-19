@@ -1138,6 +1138,7 @@
   "unit.years": "Év",
   "update.autoInstall": "Jövőbeli frissítések automatikus letöltése és telepítése",
   "update.installOnQuit.note": "A frissítések automatikusan települnek az app legközelebbi újraindításakor.",
+  "update.noUpdateAvailable": "Nincs elérhető frissítés. A Horizon legújabb verzióját futtatod.",
   "update.restart.confirm": "{version} Verzió letöltésre került.\nÚjra akarod indítani a programot most hogy telepítsd a frissítést?",
   "update.restart.confirm.connected": "A {version} Verzió letöltésre került, de még csatlakozva vagy a csevegéshez.\nBiztos vagy benne hogy újraindítod a programot, és telepíted a frissítést most?",
   "update.splash.updating": "Horizon Frissítése...",
