@@ -384,6 +384,71 @@ function setGeneralSettings(value: GeneralSettings): void {
   log.transports.console.level = settings.risingSystemLogLevel;
 }
 
+const globalHiddenUsersFile = path.join(settingsDir, 'hiddenUsers');
+
+function readHiddenUsersFile(file: string): string[] {
+  if (!fs.existsSync(file)) return [];
+
+  try {
+    const value: unknown = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (!Array.isArray(value)) {
+      log.warn('hiddenUsers.invalid', { file, reason: 'not an array' });
+      return [];
+    }
+    return value.filter((name): name is string => typeof name === 'string');
+  } catch (error) {
+    log.warn('hiddenUsers.read.failed', { file, error });
+    return [];
+  }
+}
+
+function deduplicateHiddenUsers(
+  lists: ReadonlyArray<ReadonlyArray<string>>
+): string[] {
+  const seen = new Set<string>();
+  const merged: string[] = [];
+
+  for (const list of lists) {
+    for (const name of list) {
+      const key = name.toLocaleLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push(name);
+    }
+  }
+
+  return merged;
+}
+
+function writeGlobalHiddenUsers(users: string[]): void {
+  fs.writeFileSync(globalHiddenUsersFile, JSON.stringify(users));
+}
+
+function mergeGlobalHiddenUsers(logDirectory: string): string[] {
+  const lists: string[][] = [readHiddenUsersFile(globalHiddenUsersFile)];
+  fs.mkdirSync(logDirectory, { recursive: true });
+
+  for (const entry of fs.readdirSync(logDirectory, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    lists.push(
+      readHiddenUsersFile(
+        path.join(logDirectory, entry.name, 'settings', 'hiddenUsers')
+      )
+    );
+  }
+
+  const merged = deduplicateHiddenUsers(lists);
+  writeGlobalHiddenUsers(merged);
+  return merged;
+}
+
+function broadcastGlobalHiddenUsers(users: string[]): void {
+  for (const contents of electron.webContents.getAllWebContents()) {
+    if (!contents.isDestroyed())
+      contents.send('global-hidden-users-updated', users);
+  }
+}
+
 function normalizeVersionToTag(version?: string): string | undefined {
   if (!version) return undefined;
   return version.startsWith('v') ? version : `v${version}`;
@@ -1008,6 +1073,39 @@ async function onReady(): Promise<void> {
   log.transports.file.maxSize = 5 * 1024 * 1024;
 
   log.info('Starting application.');
+
+  electron.ipcMain.handle('global-hidden-users-get', () =>
+    readHiddenUsersFile(globalHiddenUsersFile)
+  );
+  electron.ipcMain.on(
+    'global-hidden-users-toggle',
+    (_event: IpcMainEvent, name: string) => {
+      if (!settings.horizonUseGlobalHiddenUsers || typeof name !== 'string')
+        return;
+
+      const users = readHiddenUsersFile(globalHiddenUsersFile);
+      const key = name.toLocaleLowerCase();
+      const index = users.findIndex(
+        hiddenName => hiddenName.toLocaleLowerCase() === key
+      );
+      if (index === -1) users.push(name);
+      else users.splice(index, 1);
+
+      writeGlobalHiddenUsers(users);
+      broadcastGlobalHiddenUsers(users);
+    }
+  );
+
+  if (
+    settings.horizonUseGlobalHiddenUsers &&
+    !fs.existsSync(globalHiddenUsersFile)
+  ) {
+    try {
+      mergeGlobalHiddenUsers(settings.logDirectory);
+    } catch (error) {
+      log.error('hiddenUsers.startupMerge.failed', error);
+    }
+  }
 
   app.setAppUserModelId('net.flist.fchat');
   app.on('open-file', () => {
@@ -1911,6 +2009,9 @@ async function onReady(): Promise<void> {
     (_e, _options: GeneralSettings) => {
       log.info('main.settings.update.message', _options);
       if (_options) {
+        const enableGlobalHiddenUsers =
+          !settings.horizonUseGlobalHiddenUsers &&
+          _options.horizonUseGlobalHiddenUsers;
         let newCss =
           settings.horizonCustomCssEnabled !==
             _options.horizonCustomCssEnabled ||
@@ -1922,9 +2023,21 @@ async function onReady(): Promise<void> {
           getSafeLanguages(settings.spellcheckLang),
           getSafeLanguages(_options.spellcheckLang)
         );
+        let mergedHiddenUsers: string[] | undefined;
+        if (enableGlobalHiddenUsers) {
+          try {
+            mergedHiddenUsers = mergeGlobalHiddenUsers(_options.logDirectory);
+          } catch (error) {
+            log.error('hiddenUsers.merge.failed', error);
+            electron.dialog.showErrorBox(l('fs.error'), (<Error>error).message);
+            return;
+          }
+        }
         Object.assign(settings, _options);
         //Now we save it to a file
         setGeneralSettings(_options);
+        if (mergedHiddenUsers !== undefined)
+          broadcastGlobalHiddenUsers(mergedHiddenUsers);
         //No need to bother with an expensive operation if we don't change anything related to CSS settings
         if (newCss) {
           browserWindows.updateCustomCssAllWindows(

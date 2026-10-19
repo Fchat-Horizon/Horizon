@@ -88,6 +88,11 @@ function rebuildHiddenUsersSet(): void {
   for (const name of state.hiddenUsers) hiddenUsersSet.add(name);
 }
 
+function replaceHiddenUsers(users: string[]): void {
+  state.hiddenUsers = users;
+  rebuildHiddenUsersSet();
+}
+
 const data = {
   connection: <Connection | undefined>undefined,
   logs: <Logs | undefined>undefined,
@@ -107,6 +112,11 @@ const data = {
     return hiddenUsersSet.has(name);
   },
   toggleHidden(name: string): void {
+    if (state.generalSettings?.horizonUseGlobalHiddenUsers) {
+      data.settingsStore?.toggleGlobalHiddenUser(name);
+      return;
+    }
+
     if (hiddenUsersSet.has(name)) {
       hiddenUsersSet.delete(name);
       const i = state.hiddenUsers.indexOf(name);
@@ -139,9 +149,7 @@ const data = {
       }
     });
 
-    const hiddenUsers = await core.settingsStore.get('hiddenUsers');
-    state.hiddenUsers = hiddenUsers !== undefined ? hiddenUsers : [];
-    rebuildHiddenUsersSet();
+    await reloadHiddenUsers();
 
     const favoriteEIcons = await core.settingsStore.get('favoriteEIcons');
     state.favoriteEIcons = toMap(favoriteEIcons);
@@ -150,6 +158,20 @@ const data = {
     state.recentEIcons = recentEIcons !== undefined ? recentEIcons : [];
   }
 };
+
+async function reloadHiddenUsers(): Promise<void> {
+  if (data.settingsStore === undefined) return;
+
+  const useGlobal = !!state.generalSettings?.horizonUseGlobalHiddenUsers;
+  const hiddenUsers = useGlobal
+    ? await data.settingsStore.getGlobalHiddenUsers()
+    : await data.settingsStore.get('hiddenUsers');
+
+  // The global option may have changed while the file was being read.
+  if (!!state.generalSettings?.horizonUseGlobalHiddenUsers !== useGlobal)
+    return;
+  replaceHiddenUsers(hiddenUsers !== undefined ? hiddenUsers : []);
+}
 
 export function init(
   this: any,
@@ -170,6 +192,11 @@ export function init(
 
   (data.state as any).generalSettings = settings;
 
+  data.settingsStore.onGlobalHiddenUsersChanged(users => {
+    if (state.generalSettings?.horizonUseGlobalHiddenUsers)
+      replaceHiddenUsers(users);
+  });
+
   data.register('characters', Characters(connection));
   data.register('channels', Channels(connection, core.characters));
   data.register('conversations', Conversations());
@@ -178,7 +205,10 @@ export function init(
   // a full JSON.stringify + fs.writeFileSync per mutation, which freezes the UI
   // when the list is tens of thousands of entries long.
   const saveHiddenUsers = _.debounce((newValue: string[]) => {
-    if (data.settingsStore !== undefined) {
+    if (
+      data.settingsStore !== undefined &&
+      !state.generalSettings?.horizonUseGlobalHiddenUsers
+    ) {
       // tslint:disable-next-line no-floating-promises
       data.settingsStore.set('hiddenUsers', newValue);
     }
@@ -186,6 +216,13 @@ export function init(
   data.watch(
     () => state.hiddenUsers,
     newValue => saveHiddenUsers(newValue.slice())
+  );
+  data.watch(
+    () => !!state.generalSettings?.horizonUseGlobalHiddenUsers,
+    () => {
+      // tslint:disable-next-line:no-floating-promises
+      reloadHiddenUsers();
+    }
   );
 
   connection.onEvent('connecting', async () => {
