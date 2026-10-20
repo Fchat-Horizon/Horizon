@@ -114,7 +114,7 @@
   },
   "devDependencies": {
     "commander": "^14.0.0",
-    "electron": "43.7.6",
+    "electron": "43.8.1",
     "electron-builder": "27.0.0-alpha.8"
   },
   "dependencies": {
