@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- 'Dullahan' profiles are properly categorized as fae now, instead of being considered equine. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b8644abf89e9e72868e08c054a701b1c9cb9f0ec)
+
+### Development
+
+- Upgraded to Electron 43.8.1 to solve an upstream security issue in Chromium. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/58287f7410b422da3e5a2809fe1158d5ea255e40)
+  - Read more [here](https://emudhra.we-have-a-problem.com/).
+
 ## [2.4.2] - 2026-10-18
 
 ### Added
