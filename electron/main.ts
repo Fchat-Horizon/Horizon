@@ -674,6 +674,8 @@ function confirmUpdate(updateVersion: string): boolean {
 
 // Schemes safe to hand to a spawned browser; anything else goes to the OS.
 const EXTERNAL_BROWSER_SCHEMES = ['http:', 'https:'];
+// ! Any other scheme reaches whatever app the OS registered for it (ms-msdt:)
+const OS_SCHEMES = ['mailto:', 'irc:'];
 
 function resolveCustomBrowser(): string | null {
   const browserPath = settings.browserPath;
@@ -691,9 +693,9 @@ function resolveCustomBrowser(): string | null {
   return browserPath;
 }
 
-function isWebUrl(linkUrl: string): boolean {
+function hasScheme(linkUrl: string, schemes: string[]): boolean {
   try {
-    return EXTERNAL_BROWSER_SCHEMES.includes(new URL(linkUrl).protocol);
+    return schemes.includes(new URL(linkUrl).protocol);
   } catch {
     return false;
   }
@@ -934,13 +936,18 @@ export function openURLExternally(
   linkUrl: string,
   mode: ExternalOpenMode = 'auto'
 ): void {
+  if (!hasScheme(linkUrl, [...EXTERNAL_BROWSER_SCHEMES, ...OS_SCHEMES])) {
+    log.warn('openURLExternally.blockedScheme', linkUrl.split(':', 1)[0]);
+    return;
+  }
+
   const wantsIncognito =
     mode === 'incognito' ||
     (mode === 'auto' && settings.horizonAlwaysOpenIncognito);
 
   // A private-window flag is meaningless for mailto: and friends, and macOS has
   // no incognito path -- both fall through to the normal open below.
-  if (wantsIncognito && isWebUrl(linkUrl)) {
+  if (wantsIncognito && hasScheme(linkUrl, EXTERNAL_BROWSER_SCHEMES)) {
     if (process.platform === 'win32') {
       openIncognitoWindows(linkUrl);
       return;
@@ -954,7 +961,7 @@ export function openURLExternally(
   const browserPath = resolveCustomBrowser();
 
   // No custom browser, or not a web link: let the OS handle it.
-  if (browserPath === null || !isWebUrl(linkUrl)) {
+  if (browserPath === null || !hasScheme(linkUrl, EXTERNAL_BROWSER_SCHEMES)) {
     electron.shell.openExternal(linkUrl);
     return;
   }
