@@ -841,7 +841,11 @@
         }
       },
       updateWindowOverlayColors(): void {
-        if (process.platform === 'darwin') return;
+        if (
+          process.platform === 'darwin' ||
+          this.settings.forceNativeWindowControls
+        )
+          return;
         let color = getComputedStyle(document.body).color;
         log.debug('window.titlebar.color', color);
 
