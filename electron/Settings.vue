@@ -764,6 +764,22 @@
                     </a>
                   </div>
                 </div>
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="horizonUseGlobalHiddenUsers"
+                      v-model="settings.horizonUseGlobalHiddenUsers"
+                    />
+                    <label
+                      class="form-check-label"
+                      for="horizonUseGlobalHiddenUsers"
+                    >
+                      {{ l('settings.horizonUseGlobalHiddenUsers') }}
+                    </label>
+                  </div>
+                </div>
                 <h5>{{ l('settings.behavior.window') }}</h5>
                 <div class="mb-3">
                   <div class="form-check">

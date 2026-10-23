@@ -1,4 +1,5 @@
 import * as remote from '@electron/remote';
+import { ipcRenderer } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
@@ -439,6 +440,21 @@ export class SettingsStore implements Settings.Store {
     value: Settings.Keys[K]
   ): Promise<void> {
     writeFile(path.join(getSettingsDir(), key), JSON.stringify(value));
+  }
+
+  async getGlobalHiddenUsers(): Promise<string[]> {
+    return ipcRenderer.invoke('global-hidden-users-get');
+  }
+
+  toggleGlobalHiddenUser(name: string): void {
+    ipcRenderer.send('global-hidden-users-toggle', name);
+  }
+
+  onGlobalHiddenUsersChanged(callback: (users: string[]) => void): void {
+    ipcRenderer.on(
+      'global-hidden-users-updated',
+      (_event: Electron.IpcRendererEvent, users: string[]) => callback(users)
+    );
   }
 }
 
