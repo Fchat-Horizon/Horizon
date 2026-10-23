@@ -796,9 +796,11 @@
     transform: translate(-50%, -50%);
     background-image: linear-gradient(
       -2deg,
-      #1b0f30 5%,
-      #a0487e 19%,
-      #ffa978 79%
+      #9e3054 5%,
+      #b63f53 19%,
+      #d45c53 50%,
+      #ed9660 75%,
+      #eebe6e 100%
     );
     z-index: 0;
     filter: blur(20px);
