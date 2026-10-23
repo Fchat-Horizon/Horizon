@@ -5,7 +5,6 @@
     :class="getThemeClass()"
     @auxclick.prevent
   >
-    <div v-html="styling"></div>
     <div class="window-modal modal" :class="getThemeClass()" tabindex="-1">
       <div class="modal-dialog about-dialog" style="height: 100vh">
         <div class="modal-content" style="height: 100vh">
@@ -243,18 +242,12 @@
 </template>
 
 <script lang="ts">
-  import * as remote from '@electron/remote';
-  import { clipboard, ipcRenderer, shell } from 'electron';
-  import Vue from 'vue';
-  import l, { setLanguage } from '../chat/localize';
+  import Vue, { PropType } from 'vue';
+  import l from '../chat/localize';
   import LocalizedText from '../components/localized_text';
-  import { GeneralSettings, defaultHost } from './common';
-  import os from 'os';
-  import fs from 'fs';
-  import path from 'path';
-  import log from 'electron-log'; //tslint:disable-line:match-default-export-name
+  import type { AboutState, AboutAppearance } from './about/api';
+  import { collectAboutDiagnostics } from './about/diagnostics-client';
 
-  const browserWindow = remote.getCurrentWindow();
   // tslint:disable-next-line:no-require-imports
   const logoSrc = require('./build/icon.png').default;
   // tslint:disable-next-line:no-require-imports
@@ -265,72 +258,6 @@
     darwin: 'macOS',
     linux: 'Linux'
   };
-
-  function readLinuxDistro(): string {
-    if (process.platform !== 'linux') return '';
-    for (const file of ['/etc/os-release', '/usr/lib/os-release']) {
-      try {
-        const data: Record<string, string> = {};
-        for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed.startsWith('#')) continue;
-          const eq = trimmed.indexOf('=');
-          if (eq === -1) continue;
-          const key = trimmed.slice(0, eq).trim();
-          let value = trimmed.slice(eq + 1).trim();
-          if (
-            value.length >= 2 &&
-            (value[0] === '"' || value[0] === "'") &&
-            value[value.length - 1] === value[0]
-          ) {
-            value = value.slice(1, -1);
-          }
-          data[key] = value;
-        }
-        if (data.PRETTY_NAME) return data.PRETTY_NAME;
-        const name = data.NAME || data.ID;
-        const version = data.VERSION || data.VERSION_ID;
-        if (name) return version ? `${name} ${version}` : name;
-      } catch (e) {}
-    }
-    return '';
-  }
-
-  const LINUX_ENV_KEYS = [
-    'XDG_SESSION_TYPE',
-    'XDG_CURRENT_DESKTOP',
-    'XDG_SESSION_DESKTOP',
-    'DESKTOP_SESSION',
-    'GDMSESSION',
-    'XDG_SESSION_CLASS',
-    'WAYLAND_DISPLAY',
-    'DISPLAY',
-    'GDK_BACKEND',
-    'QT_QPA_PLATFORM',
-    'OZONE_PLATFORM',
-    'ELECTRON_OZONE_PLATFORM_HINT',
-    'GTK_THEME',
-    'LANG',
-    'LC_ALL',
-    'LANGUAGE'
-  ];
-
-  function detectLinuxPackaging(): string {
-    const exists = (p: string): boolean => {
-      try {
-        return fs.existsSync(p);
-      } catch (e) {
-        return false;
-      }
-    };
-    if (process.env.FLATPAK_ID || exists('/.flatpak-info'))
-      return `Flatpak${process.env.FLATPAK_ID ? ` (${process.env.FLATPAK_ID})` : ''}`;
-    if (process.env.SNAP || process.env.SNAP_NAME)
-      return `Snap${process.env.SNAP_NAME ? ` (${process.env.SNAP_NAME})` : ''}`;
-    if (process.env.APPIMAGE) return 'AppImage';
-    if (process.env.container) return `Container (${process.env.container})`;
-    return 'Native';
-  }
 
   // ^ Read from WebGL in-process: getGPUInfo's GL strings are often empty on
   //   Linux under Wayland/EGL/ANGLE.
@@ -368,38 +295,38 @@
 
   export default Vue.extend({
     components: { 'localized-text': LocalizedText },
+    props: {
+      initialState: { type: Object as PropType<AboutState>, required: true }
+    },
     data() {
       return {
-        settings: undefined as any as GeneralSettings,
-        appCommit: '',
-        appVersion: '',
-        osIsDark: remote.nativeTheme.shouldUseDarkColors,
+        settings: this.initialState.settings,
+        appCommit: this.initialState.appCommit,
+        appVersion: this.initialState.appVersion,
+        appearance: this.initialState.appearance,
         l,
-        platform: process.platform,
-        isMac: process.platform === 'darwin',
+        platform: this.initialState.platform,
+        isMac: this.initialState.platform === 'darwin',
         logoSrc,
         aboutIconSrc,
-        electronVersion: process.versions.electron || 'N/A',
-        chromiumVersion: process.versions.chrome || 'N/A',
-        nodeVersion: process.versions.node || 'N/A',
-        copySuccess: false
+        electronVersion: this.initialState.versions.electron,
+        chromiumVersion: this.initialState.versions.chrome,
+        nodeVersion: this.initialState.versions.node,
+        copySuccess: false,
+        copySuccessTimeout: undefined as number | undefined,
+        unsubscribeAppearance: undefined as (() => void) | undefined
       };
     },
-    computed: {
-      styling(): string {
-        try {
-          return `<style>${fs.readFileSync(path.join(__dirname, `themes/${this.getSyncedTheme()}.css`), 'utf8').toString()}</style>`;
-        } catch (e) {
-          if (
-            (<Error & { code: string }>e).code === 'ENOENT' &&
-            this.settings.theme !== 'default'
-          ) {
-            this.settings.theme = 'default';
-            return this.styling;
-          }
-          throw e;
+    watch: {
+      'appearance.css': {
+        immediate: true,
+        handler(css: string): void {
+          const style = document.getElementById('about-theme');
+          if (style) style.textContent = css;
         }
-      },
+      }
+    },
+    computed: {
       displayCommit(): string {
         return this.appCommit && this.appCommit !== 'unknown'
           ? this.appCommit
@@ -410,9 +337,9 @@
         return `https://github.com/Fchat-Horizon/Horizon/commit/${this.appCommit}`;
       },
       platformDetails(): string {
-        const platformName = PLATFORM_NAMES[os.platform()] || os.platform();
+        const platformName = PLATFORM_NAMES[this.platform] || this.platform;
         const archLabel = (() => {
-          switch (os.arch()) {
+          switch (this.initialState.arch) {
             case 'x64':
               return '64-bit';
             case 'ia32':
@@ -420,10 +347,10 @@
             case 'arm64':
               return 'ARM64';
             default:
-              return os.arch();
+              return this.initialState.arch;
           }
         })();
-        const release = os.release();
+        const release = this.initialState.release;
         return `${platformName} ${archLabel}${release ? ` (${release})` : ''}`;
       },
       aboutIconStyle(): Record<string, string> {
@@ -434,80 +361,59 @@
       }
     },
     async mounted(): Promise<void> {
-      remote.nativeTheme.on('updated', () => {
-        this.osIsDark = remote.nativeTheme.shouldUseDarkColors;
-      });
+      this.unsubscribeAppearance = window.horizonAbout.onAppearanceChanged(
+        this.applyAppearance
+      );
+      window.addEventListener('keyup', this.onKeyUp);
+      window.addEventListener('keydown', this.onKeyDown);
+      // Subscribe first, then refresh so startup cannot miss a theme change.
       try {
-        setLanguage(this.settings.displayLanguage);
-      } catch (e) {
-        console.warn('Failed to set display language', e);
-      }
-      window.addEventListener('keyup', e => {
-        if (e.key === 'Escape') {
-          this.close();
-        }
-      });
-      if (process.platform === 'darwin') {
-        window.addEventListener('keydown', e => {
-          if (e.metaKey && e.key == 'w') {
-            this.close();
-          }
-        });
+        this.applyAppearance(await window.horizonAbout.getAppearance());
+      } catch (error) {
+        console.warn('Failed to refresh About theme', error);
       }
     },
+    beforeDestroy(): void {
+      this.unsubscribeAppearance?.();
+      window.removeEventListener('keyup', this.onKeyUp);
+      window.removeEventListener('keydown', this.onKeyDown);
+      window.clearTimeout(this.copySuccessTimeout);
+    },
     methods: {
-      getSyncedTheme() {
-        if (!this.settings.themeSync) return this.settings.theme;
-        return this.osIsDark
-          ? this.settings.themeSyncDark
-          : this.settings.themeSyncLight;
+      applyAppearance(appearance: AboutAppearance): void {
+        // Async theme reads can finish out of order.
+        if (appearance.revision >= this.appearance.revision) {
+          this.appearance = appearance;
+        }
+      },
+      onKeyUp(event: KeyboardEvent): void {
+        if (event.key === 'Escape') this.close();
+      },
+      onKeyDown(event: KeyboardEvent): void {
+        if (this.isMac && event.metaKey && event.key === 'w') {
+          event.preventDefault();
+          this.close();
+        }
       },
       close(): void {
-        browserWindow.close();
+        window.horizonAbout.close();
       },
-      resolveLogFile(): string {
+      async openLogs(): Promise<void> {
         try {
-          return log.transports.file.getFile().path;
-        } catch (e) {
-          return '';
-        }
-      },
-      openLogs(): void {
-        const file = this.resolveLogFile();
-        if (file) {
-          try {
-            shell.showItemInFolder(file);
-            return;
-          } catch (e) {
-            console.warn('Failed to reveal log file', e);
-          }
-        }
-        try {
-          void shell.openPath(remote.app.getPath('logs'));
-        } catch (e) {
-          console.warn('Failed to open logs folder', e);
+          await window.horizonAbout.revealLogs();
+        } catch (error) {
+          console.warn('Failed to open logs', error);
         }
       },
       async reportBug(): Promise<void> {
-        const base = 'https://github.com/Fchat-Horizon/Horizon/issues/new';
         let info = '';
         try {
           info = await this.buildDebugInfo();
         } catch (e) {
           console.warn('Failed to build debug info', e);
         }
-        const params = new URLSearchParams({ template: 'bug.yml' });
-        if (info) params.set('version-info', info);
-        let url = `${base}?${params.toString()}`;
-        // ! Browsers/GitHub reject very long URLs; if the prefilled form would
-        // ! overflow, copy the report to the clipboard and open a blank form so
-        // ! the user can paste into the field (its placeholder says to).
-        if (info && url.length > 6000) {
-          clipboard.writeText(info);
-          url = `${base}?template=bug.yml`;
-        }
         try {
-          ipcRenderer.send('open-url-externally', url);
+          await window.horizonAbout.reportBug(info);
         } catch (e) {
           console.warn('Failed to open issue page', e);
         }
@@ -520,24 +426,24 @@
           console.warn('Failed to build debug info', e);
           text = `Version: ${this.appVersion || 'N/A'}\nCommit: ${this.displayCommit}`;
         }
-        clipboard.writeText(text);
-        this.copySuccess = true;
-        window.setTimeout(() => {
-          this.copySuccess = false;
-        }, 1500);
+        try {
+          await window.horizonAbout.copyText(text);
+          this.copySuccess = true;
+          window.clearTimeout(this.copySuccessTimeout);
+          this.copySuccessTimeout = window.setTimeout(() => {
+            this.copySuccess = false;
+          }, 1500);
+        } catch (error) {
+          console.warn('Failed to copy debug info', error);
+        }
       },
       async buildDebugInfo(): Promise<string> {
-        const safe = <T,>(fn: () => T, fallback: T): T => {
-          try {
-            return fn();
-          } catch (e) {
-            return fallback;
-          }
-        };
+        const webgl = readWebglInfo();
+        const diagnostics = await collectAboutDiagnostics();
 
         // ! Scrub the home dir for privacy; deliberately not the bare username,
         // ! which collides with real values (e.g. theme "wilted-rose").
-        const home = safe(() => os.homedir(), '');
+        const home = diagnostics.homedir;
         const scrub = (value: string): string =>
           home ? String(value).split(home).join('~') : String(value);
 
@@ -561,7 +467,7 @@
           ['Electron', this.electronVersion],
           ['Chromium', this.chromiumVersion],
           ['Node.js', this.nodeVersion],
-          ['V8', process.versions.v8 || 'N/A']
+          ['V8', diagnostics.v8 || 'N/A']
         ];
 
         // ! Allow-listed: account, proxy value and on-disk paths are excluded
@@ -586,26 +492,19 @@
             ['Custom CSS', s.horizonCustomCssEnabled ? 'enabled' : 'disabled'],
             ['Sound theme', s.soundTheme],
             ['Log level', String(s.risingSystemLogLevel)],
-            ['Proxy', s.proxy ? 'configured' : 'none']
+            ['Proxy', s.proxyConfigured ? 'configured' : 'none']
           );
-          if (s.host && s.host !== defaultHost) config.push(['Host', s.host]);
+          if (s.customHost) config.push(['Host', s.customHost]);
         }
 
-        const cpus = safe(() => os.cpus(), []);
-        const cpuModel = cpus.length ? cpus[0].model.trim() : '';
-        const totalMemGb = safe(
-          () => `${(os.totalmem() / 1024 ** 3).toFixed(1)} GB`,
-          ''
-        );
-        const locale = safe(
-          () => remote.app.getLocale(),
-          process.env.LANG || ''
-        );
-        const kernel = os.release();
-        const osVersion = safe(
-          () => (process as any).getSystemVersion?.() || '',
-          ''
-        );
+        const cpuModel = diagnostics.cpuModel;
+        const totalMemGb =
+          diagnostics.totalMem === null
+            ? ''
+            : `${(diagnostics.totalMem / 1024 ** 3).toFixed(1)} GB`;
+        const locale = diagnostics.locale;
+        const kernel = diagnostics.kernel;
+        const osVersion = diagnostics.osVersion;
         // getSystemVersion means different things per OS: the kernel on Linux,
         // the build on Windows, the product version on macOS (where os.release
         // is separately the Darwin kernel). Label each so none reads as "Kernel"
@@ -623,78 +522,52 @@
         const system: [string, string][] = [
           ['OS', PLATFORM_NAMES[this.platform] || this.platform],
           ...versionRows,
-          ['Arch', safe(() => os.arch(), '')],
-          ['Distro', readLinuxDistro()],
-          ['CPU', cpuModel ? `${cpuModel} (${cpus.length} threads)` : ''],
+          ['Arch', diagnostics.arch],
+          ['Distro', diagnostics.distro],
+          [
+            'CPU',
+            cpuModel ? `${cpuModel} (${diagnostics.cpuThreads} threads)` : ''
+          ],
           ['Memory', totalMemGb],
           ['Locale', locale],
-          [
-            'Color scheme',
-            remote.nativeTheme.shouldUseDarkColors ? 'dark' : 'light'
-          ],
+          ['Color scheme', diagnostics.isDark ? 'dark' : 'light'],
           ['Chat logs folder', s ? s.logDirectory : '']
         ];
 
         const linux: [string, string][] = [];
         if (this.platform === 'linux') {
-          for (const key of LINUX_ENV_KEYS) {
-            const value = process.env[key];
-            if (value) linux.push([key, value]);
-          }
-          linux.push(['Packaging', detectLinuxPackaging()]);
+          linux.push(...diagnostics.linuxEnv);
+          linux.push(['Packaging', diagnostics.packaging]);
         }
 
         const gpu: [string, string][] = [];
-        const webgl = readWebglInfo();
-        if (webgl.vendor) gpu.push(['Vendor', webgl.vendor]);
-        if (webgl.renderer) gpu.push(['Renderer', webgl.renderer]);
-        if (webgl.version) gpu.push(['GL Version', webgl.version]);
-        try {
-          const info: any = await remote.app.getGPUInfo('complete');
-          const aux = info?.auxAttributes || {};
-          if (!webgl.vendor && aux.glVendor) gpu.push(['Vendor', aux.glVendor]);
-          if (!webgl.renderer && aux.glRenderer)
-            gpu.push(['Renderer', aux.glRenderer]);
-          if (!webgl.version && aux.glVersion)
-            gpu.push(['GL Version', aux.glVersion]);
-          const devices: any[] = Array.isArray(info?.gpuDevice)
-            ? info.gpuDevice
-            : [];
-          devices.forEach((d, i) => {
-            const vendorId =
-              typeof d?.vendorId === 'number' ? d.vendorId : null;
-            const deviceId =
-              typeof d?.deviceId === 'number' ? d.deviceId : null;
-            if (vendorId == null && deviceId == null) return;
-            const parts = [
-              vendorId != null && `vendor 0x${vendorId.toString(16)}`,
-              deviceId != null && `device 0x${deviceId.toString(16)}`,
-              d?.active && 'active'
-            ].filter(Boolean);
-            gpu.push([
-              devices.length > 1 ? `Device ${i + 1}` : 'Device',
-              parts.join(', ')
-            ]);
-          });
-        } catch (e) {}
-        try {
-          const status = remote.app.getGPUFeatureStatus();
-          for (const [k, v] of Object.entries(status)) {
-            gpu.push([k, String(v)]);
-          }
-        } catch (e) {}
+        const vendor = webgl.vendor || diagnostics.gpu.glVendor;
+        const renderer = webgl.renderer || diagnostics.gpu.glRenderer;
+        const glVersion = webgl.version || diagnostics.gpu.glVersion;
+        if (vendor) gpu.push(['Vendor', vendor]);
+        if (renderer) gpu.push(['Renderer', renderer]);
+        if (glVersion) gpu.push(['GL Version', glVersion]);
+        const devices = diagnostics.gpu.devices;
+        devices.forEach((d, i) => {
+          if (d.vendorId == null && d.deviceId == null) return;
+          const parts = [
+            d.vendorId != null && `vendor 0x${d.vendorId.toString(16)}`,
+            d.deviceId != null && `device 0x${d.deviceId.toString(16)}`,
+            d.active && 'active'
+          ].filter(Boolean);
+          gpu.push([
+            devices.length > 1 ? `Device ${i + 1}` : 'Device',
+            parts.join(', ')
+          ]);
+        });
+        for (const [k, v] of Object.entries(diagnostics.gpuFeatureStatus)) {
+          gpu.push([k, String(v)]);
+        }
 
-        const displays: [string, string][] = [];
-        try {
-          const primaryId = remote.screen.getPrimaryDisplay().id;
-          remote.screen.getAllDisplays().forEach((d, i) => {
-            const tag = d.id === primaryId ? ' (primary)' : '';
-            displays.push([
-              `Display ${i + 1}${tag}`,
-              `${d.size.width}x${d.size.height} @ ${d.scaleFactor}x, ${d.colorDepth}-bit`
-            ]);
-          });
-        } catch (e) {}
+        const displays: [string, string][] = diagnostics.displays.map(d => [
+          `Display ${d.index + 1}${d.primary ? ' (primary)' : ''}`,
+          `${d.width}x${d.height} @ ${d.scaleFactor}x, ${d.colorDepth}-bit`
+        ]);
 
         return [
           section('Horizon', versions),
@@ -709,7 +582,7 @@
       },
       getThemeClass() {
         try {
-          if (process.platform === 'win32') {
+          if (this.platform === 'win32') {
             if (this.settings?.risingDisableWindowsHighContrast) {
               document
                 .querySelector('html')
