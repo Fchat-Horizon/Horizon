@@ -23,6 +23,7 @@ import {
   Conversation,
   Logs,
   Notifications,
+  PartialSettings,
   Settings,
   State as StateInterface
 } from './interfaces';
@@ -33,15 +34,68 @@ import { SiteSession } from '../site/site-session';
 import _ from 'lodash';
 import { preloadTeamData } from './profile_api';
 
+/**
+ * Helper function that converts old (pre horizon 2.5/ vanilla) character settings to a partial settings object.
+ * @param characterSettings The character-specific settings.
+ * @param globalSettings The global settings.
+ * @returns A partial settings object where only the properties that differ from the global settings are included.
+ */
+function convertToPartialSettings(
+  characterSettings: Settings,
+  globalSettings: Settings
+): PartialSettings {
+  const partialSettings = {} as {
+    -readonly [K in keyof Settings]?: Settings[K];
+  };
+
+  for (const key of Object.keys(globalSettings) as Array<keyof Settings>) {
+    if (!_.isEqual(characterSettings[key], globalSettings[key])) {
+      Object.assign(partialSettings, { [key]: characterSettings[key] });
+    }
+  }
+
+  partialSettings.version = 1;
+  return partialSettings;
+}
+
 function createBBCodeParser(): BBCodeParser {
   const parser = new BBCodeParser();
   for (const tag of state.settings.disallowedTags) parser.removeTag(tag);
   return parser;
 }
 
+/**
+ * Creates a Proxy that merges global settings with character overrides.
+ * Character settings take precedence; undefined values fall back to global.
+ * @param global The global settings object (from '_' character).
+ * @param character The character-specific overrides (partial settings).
+ * @returns A Proxy object that provides merged access to settings.
+ */
+function createMergedSettingsProxy(
+  global: Settings,
+  character: PartialSettings
+): Settings {
+  return new Proxy(global, {
+    get(target, prop: keyof Settings) {
+      if (prop in character && character[prop] !== undefined) {
+        return character[prop];
+      }
+      return target[prop];
+    },
+    set(_target, prop: keyof Settings, value) {
+      // Setting a property updates the character overrides
+      (character as any)[prop] = value;
+      return true;
+    }
+  }) as Settings;
+}
+
 class State implements StateInterface {
   generalSettings?: GeneralSettings | undefined;
   _settings: Settings | undefined = undefined;
+  _globalSettings: Settings | undefined = undefined;
+  _characterSettings: PartialSettings = {};
+  needsSettingsMigration: boolean = false;
   hiddenUsers: string[] = [];
   favoriteEIcons: Record<string, boolean> = emptyMap();
   recentEIcons: string[] = [];
@@ -52,7 +106,42 @@ class State implements StateInterface {
   }
 
   set settings(value: Settings) {
+    //For backward compatibility, setting settings updates the merged proxy and saves character settings
     this._settings = value;
+    //tslint:disable-next-line:no-floating-promises
+    if (data.settingsStore !== undefined)
+      data.settingsStore.set('settings', this._characterSettings);
+    //Why do we need to this again?
+    //It was in the original version, but I'm afraid of removing it in any of the copy-paste setters.
+    data.bbCodeParser = createBBCodeParser();
+  }
+
+  get globalSettings(): Settings {
+    if (this._globalSettings === undefined)
+      throw new Error('Global settings load failed.');
+    return this._globalSettings;
+  }
+
+  set globalSettings(value: Settings) {
+    this._globalSettings = value;
+
+    this._settings = createMergedSettingsProxy(value, this._characterSettings);
+    //tslint:disable-next-line:no-floating-promises
+    if (data.settingsStore !== undefined)
+      data.settingsStore.set('settings', value, GLOBAL_SETTINGS_CHARACTER);
+    data.bbCodeParser = createBBCodeParser();
+  }
+
+  get characterSettings(): PartialSettings {
+    return this._characterSettings;
+  }
+
+  set characterSettings(value: PartialSettings) {
+    this._characterSettings = value;
+
+    if (this._globalSettings !== undefined) {
+      this._settings = createMergedSettingsProxy(this._globalSettings, value);
+    }
     //tslint:disable-next-line:no-floating-promises
     if (data.settingsStore !== undefined)
       data.settingsStore.set('settings', value);
@@ -130,14 +219,54 @@ const data = {
   ): void {
     vue.$watch(getter, callback);
   },
-  async reloadSettings(): Promise<void> {
-    const s = await core.settingsStore.get('settings');
+  async loadGlobalSettings(): Promise<boolean> {
+    const globalRaw = await core.settingsStore.get(
+      'settings',
+      GLOBAL_SETTINGS_CHARACTER
+    );
 
-    state._settings = _.mergeWith(new SettingsImpl(), s, (oVal, sVal) => {
-      if (_.isArray(oVal) && _.isArray(sVal)) {
-        return sVal;
+    const needsMigration = globalRaw === undefined;
+    const globalSettings = _.mergeWith(
+      new SettingsImpl(),
+      globalRaw,
+      (oVal, sVal) => {
+        if (_.isArray(oVal) && _.isArray(sVal)) {
+          return sVal;
+        }
       }
-    });
+    );
+
+    state._globalSettings = globalSettings;
+    state._characterSettings = {};
+    state._settings = createMergedSettingsProxy(globalSettings, {});
+
+    return needsMigration;
+  },
+  async reloadSettings(): Promise<void> {
+    // Load global settings from '_' character
+    const needsMigration = await data.loadGlobalSettings();
+    const globalSettings = state._globalSettings!;
+
+    // Load character-specific overrides
+    const characterRaw = await core.settingsStore.get('settings');
+    let characterSettings: PartialSettings = {};
+    if (characterRaw !== undefined) {
+      characterSettings = characterRaw as PartialSettings;
+      if (!needsMigration) {
+        characterSettings = convertToPartialSettings(
+          characterSettings as Settings,
+          globalSettings
+        );
+        await core.settingsStore.set('settings', characterSettings);
+      }
+    }
+    state._characterSettings = characterSettings;
+
+    // Create merged settings proxy
+    state._settings = createMergedSettingsProxy(
+      globalSettings,
+      characterSettings
+    );
 
     const hiddenUsers = await core.settingsStore.get('hiddenUsers');
     state.hiddenUsers = hiddenUsers !== undefined ? hiddenUsers : [];
@@ -148,17 +277,78 @@ const data = {
 
     const recentEIcons = await core.settingsStore.get('recentEIcons');
     state.recentEIcons = recentEIcons !== undefined ? recentEIcons : [];
+
+    //If migration needed, check for existing character settings to migrate
+    if (needsMigration && characterRaw !== undefined) {
+      //Existing character has settings but no global exists...
+      //set flag for UI to prompt user for migration choice
+      state.needsSettingsMigration = true;
+    } else if (needsMigration) {
+      //No existing settings at all, just use defaults as global
+      await core.settingsStore.set(
+        'settings',
+        globalSettings,
+        GLOBAL_SETTINGS_CHARACTER
+      );
+      state.needsSettingsMigration = false;
+    } else {
+      state.needsSettingsMigration = false;
+    }
+  },
+
+  /**
+   * Migrate character settings to global settings.
+   * @param useCurrentAsGlobal If true, current character settings become global defaults.
+   *                          If false, start fresh with default settings.
+   */
+  async migrateToGlobalSettings(useCurrentAsGlobal: boolean): Promise<void> {
+    if (useCurrentAsGlobal) {
+      // Use current character's settings as the global settings
+      const currentSettings = state._settings!;
+      await core.settingsStore.set(
+        'settings',
+        currentSettings,
+        GLOBAL_SETTINGS_CHARACTER
+      );
+      state._globalSettings = currentSettings;
+      // Clear character overrides since they're now global
+      state._characterSettings = convertToPartialSettings(
+        currentSettings,
+        currentSettings
+      );
+      await core.settingsStore.set('settings', state._characterSettings);
+    } else {
+      const defaults = new SettingsImpl();
+      await core.settingsStore.set(
+        'settings',
+        defaults,
+        GLOBAL_SETTINGS_CHARACTER
+      );
+      state._globalSettings = defaults;
+      state._characterSettings = convertToPartialSettings(
+        state._settings!,
+        defaults
+      );
+      await core.settingsStore.set('settings', state._characterSettings);
+    }
+
+    state.needsSettingsMigration = false;
+    // Recreate merged proxy
+    state._settings = createMergedSettingsProxy(
+      state._globalSettings!,
+      state._characterSettings
+    );
   }
 };
 
-export function init(
+export async function init(
   this: any,
   connection: Connection,
   settings: GeneralSettings,
   logsClass: new () => Logs,
   settingsClass: new () => Settings.Store,
   notificationsClass: new () => Notifications
-): void {
+): Promise<void> {
   data.connection = connection;
   data.logs = new logsClass();
   data.settingsStore = new settingsClass();
@@ -173,6 +363,9 @@ export function init(
   data.register('characters', Characters(connection));
   data.register('channels', Channels(connection, core.characters));
   data.register('conversations', Conversations());
+
+  await data.loadGlobalSettings();
+  data.bbCodeParser = createBBCodeParser();
 
   // ^ Debounced: rapid toggles (or bulk imports of large lists) used to kick off
   // a full JSON.stringify + fs.writeFileSync per mutation, which freezes the UI
@@ -214,8 +407,16 @@ export interface Core {
   toggleHidden(name: string): void;
 
   watch<T>(getter: (this: VueState) => T, callback: WatchHandler<T>): void;
+  reloadSettings(): Promise<void>;
+  migrateToGlobalSettings(useCurrentAsGlobal: boolean): Promise<void>;
 }
 
 const core = <Core>(<any>data); /*tslint:disable-line:no-any*/ //hack
+
+/**
+ * The "character" name used to store global settings in the settings store.
+ * Since F-List does not allow a character named "_", we can safely use this as a reserved name for global settings.
+ */
+export const GLOBAL_SETTINGS_CHARACTER = '_';
 
 export default core;

@@ -57,6 +57,7 @@ import l, { setLanguage } from '../chat/localize';
 // import {setupRaven} from '../chat/vue-raven';
 import Socket from '../chat/WebSocket';
 import Connection from '../fchat/connection';
+import core from '../chat/core';
 import { Keys } from '../keys';
 import { GeneralSettings /*, nativeRequire*/ } from './common';
 import { Logs, SettingsStore } from './filesystem';
@@ -389,17 +390,34 @@ const connection = new Connection(
   remote.app.getVersion(),
   Socket
 );
-initCore(connection, settings, Logs, SettingsStore, Notifications);
+async function startChat(): Promise<void> {
+  await initCore(connection, settings, Logs, SettingsStore, Notifications);
 
-log.debug('init.chat.vue');
+  electron.ipcRenderer.on('reload-settings', () => {
+    void core
+      .reloadSettings()
+      .then(() => {
+        EventBus.$emit('configuration-update', core.state.settings);
+      })
+      .catch(err => {
+        log.error('settings.reload.error', err);
+      });
+  });
 
-//tslint:disable-next-line:no-unused-expression
-new Index({
-  el: '#app',
-  data: {
-    settings,
-    hasCompletedUpgrades: JSON.parse(params['hasCompletedUpgrades']!)
-  }
+  log.debug('init.chat.vue');
+
+  //tslint:disable-next-line:no-unused-expression
+  new Index({
+    el: '#app',
+    data: {
+      settings,
+      hasCompletedUpgrades: JSON.parse(params['hasCompletedUpgrades']!)
+    }
+  });
+
+  log.debug('init.chat.vue.done');
+}
+
+void startChat().catch(err => {
+  log.error('core.init.error', err);
 });
-
-log.debug('init.chat.vue.done');
