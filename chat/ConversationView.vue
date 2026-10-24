@@ -534,6 +534,7 @@
   } from './interfaces';
   import l from './localize';
   import Logs from './Logs.vue';
+  import { focusProfileKinkFilter } from '../site/character_page/kink-search-focus';
   import ManageChannel from './ManageChannel.vue';
   import MessageView from './message_view';
   import ReportDialog from './ReportDialog.vue';
@@ -716,6 +717,11 @@
             !e.shiftKey &&
             !e.altKey
           ) {
+            if (focusProfileKinkFilter()) {
+              e.preventDefault();
+              e.stopImmediatePropagation();
+              return;
+            }
             this.showSearch = true;
             this.$nextTick(() =>
               (<HTMLElement>this.$refs['searchField']).focus()
