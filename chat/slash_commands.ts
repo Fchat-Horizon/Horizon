@@ -28,6 +28,22 @@ export function isCommand(this: void, text: string): boolean {
   return text.charAt(0) === '/' && !isAction(text) && !isWarn(text);
 }
 
+// leading spaces followed by a command e.g. ' /me waves'
+// does not handle newlines before commands, since that's probably intended by the user
+const indentedCommand = /^[^\S\r\n]+\/([a-z]+)\b/i;
+
+// names the command the text was probably meant to be, so send() can warn about it
+// only matches real commands, since ' /shrug' is not one and is meant to be sent as-is
+export function indentedCommandName(
+  this: void,
+  text: string
+): string | undefined {
+  const match = indentedCommand.exec(text);
+  if (match === null) return undefined;
+  const name = match[1].toLowerCase();
+  return commands[name] !== undefined ? name : undefined;
+}
+
 export function parse(
   this: void | never,
   input: string,
@@ -205,6 +221,14 @@ const commands: { readonly [key: string]: Command | undefined } = {
       if (dice.toLocaleLowerCase().includes('inf')) {
         conv.infoText =
           'Inf took many lives during its reign. Thankfully, you have been spared.';
+        return;
+      } else if (dice.toLocaleLowerCase().includes('nan')) {
+        core.connection.close();
+        core.connection.throwError(
+          new Error(
+            '"Yes, I\'d like NaN apples." They have played us for absolute fools.'
+          )
+        );
         return;
       } else if (Conversation.isChannel(conv))
         core.connection.send('RLL', { channel: conv.channel.id, dice });

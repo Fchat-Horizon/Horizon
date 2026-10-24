@@ -50,3 +50,11 @@ export interface SmartFilterSettings {
 
   exceptionNames: string[];
 }
+
+export function hasActiveSmartFilters(opts: SmartFilterSettings): boolean {
+  return (
+    opts.minAge !== null ||
+    opts.maxAge !== null ||
+    Object.values(opts.smartFilters).some(enabled => enabled)
+  );
+}

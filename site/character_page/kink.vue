@@ -60,7 +60,7 @@
     onMounted,
     PropType
   } from 'vue';
-  import anyAscii from 'any-ascii';
+  import { safeAnyAscii } from './safe-ascii';
   import core from '../../chat/core';
   import { DisplayKink } from './interfaces';
   import { kinkComparisonSwaps } from '../../learn/matcher-types';
@@ -109,8 +109,8 @@
           core.state.generalSettings &&
           core.state.generalSettings.horizonForceAsciiProfiles
         ) {
-          props.kink.description = anyAscii(props.kink.description);
-          props.kink.name = anyAscii(props.kink.name);
+          props.kink.description = safeAnyAscii(props.kink.description);
+          props.kink.name = safeAnyAscii(props.kink.name);
         }
       });
 

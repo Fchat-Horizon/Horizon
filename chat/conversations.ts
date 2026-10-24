@@ -17,7 +17,8 @@ import {
   isAction,
   isCommand,
   isWarn,
-  parse as parseCommand
+  parse as parseCommand,
+  indentedCommandName
 } from './slash_commands';
 import MessageType = Interfaces.Message.Type;
 import { EventBus } from './preview/event-bus';
@@ -86,6 +87,9 @@ abstract class Conversation implements Interfaces.Conversation {
   protected allMessages: Interfaces.Message[] = [];
   readonly reportMessages: Interfaces.Message[] = [];
   private lastSent = '';
+  // text of the last send() that was blocked for having spaces before a command,
+  // so the next Enter on that exact text goes through untouched
+  private spacedCommandWarning = '';
   adManager: AdManager;
   cacheActive = false;
   protected cacheInterval: ReturnType<typeof setInterval> | undefined;
@@ -147,6 +151,18 @@ abstract class Conversation implements Interfaces.Conversation {
 
   async send(): Promise<void> {
     if (this.enteredText.length === 0) return;
+
+    const spaced = indentedCommandName(this.enteredText);
+    if (spaced !== undefined) {
+      if (this.spacedCommandWarning !== this.enteredText) {
+        this.spacedCommandWarning = this.enteredText;
+        this.errorText = l('commands.spacedCommand', { command: spaced });
+        return;
+      }
+      // warning acknowledged, send it as the literal message it is
+      this.spacedCommandWarning = '';
+      this.errorText = '';
+    }
 
     if (isCommand(this.enteredText)) {
       const parsed = parseCommand(this.enteredText, this.context);
@@ -817,7 +833,7 @@ class State implements Interfaces.State {
   navigationHistoryIndex: number = -1;
   private isNavigatingHistory: boolean = false;
 
-  get hasNew(): number {
+  get newCount(): number {
     return (
       this.privateConversations.reduce(
         (sum, item) => sum + item.unreadCount,
@@ -1337,6 +1353,8 @@ export default function (this: any): Interfaces.State {
     await state.reloadSettings();
   });
   connection.onEvent('connected', isReconnect => {
+    state.navigationHistory = [state.selectedConversation];
+    state.navigationHistoryIndex = 0;
     if (isReconnect) return;
     for (const item of state.pinned.private)
       state.getPrivate(core.characters.get(item));
@@ -1350,6 +1368,8 @@ export default function (this: any): Interfaces.State {
   connection.onEvent('closed', () => {
     state.pinnedCleanupArmed = false;
     clearTimeout(state.pinnedCleanupTimer);
+    state.navigationHistory = [];
+    state.navigationHistoryIndex = 0;
   });
   core.channels.onEvent(async (type, channel, member) => {
     if (type === 'join')

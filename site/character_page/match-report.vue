@@ -93,15 +93,6 @@
   });
 
   const getAvatarUrl = (name: string) => {
-    const c = core.characters.get(name);
-
-    if (
-      c.overrides.avatarUrl &&
-      core.state.settings.risingShowHighQualityPortraits
-    ) {
-      return c.overrides.avatarUrl;
-    }
-
     return Utils.avatarURL(name);
   };
 

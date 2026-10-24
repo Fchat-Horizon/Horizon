@@ -57,13 +57,8 @@
   import { Character, userStatuses } from './interfaces';
   import l from './localize';
   import { getStatusIcon } from './UserView.vue';
-  import StatusPicker from './StatusPicker.vue';
+  import StatusPicker, { capHistory, normalize } from './StatusPicker.vue';
   import * as _ from 'lodash';
-
-  //Yes, you also need to update this in StatusPicker.vue, because I really cannot
-  //be assed to write a system for shared constants right now.
-  //That component only uses it to display the string that shows how many statuses you have saved though.
-  const MAX_STATUS_COUNT: number = 15;
 
   export default CustomDialog.extend({
     components: {
@@ -131,18 +126,16 @@
 
         const curHistory: string[] =
           (await core.settingsStore.get('statusHistory')) || [];
-        const statusMessageClean = statusMessage
-          .toString()
-          .trim()
-          .toLowerCase();
+        const pins: string[] =
+          (await core.settingsStore.get('statusPins')) || [];
+        const statusMessageClean = normalize(statusMessage);
         const filteredHistory: string[] = _.reject(
           curHistory,
-          (c: string) =>
-            c.toString().trim().toLowerCase() === statusMessageClean
+          (c: string) => normalize(c) === statusMessageClean
         );
-        const newHistory: string[] = _.take(
+        const newHistory: string[] = capHistory(
           _.concat([statusMessage], filteredHistory),
-          MAX_STATUS_COUNT
+          pins
         );
 
         await core.settingsStore.set('statusHistory', newHistory);

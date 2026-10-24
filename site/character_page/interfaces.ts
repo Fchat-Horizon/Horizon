@@ -70,6 +70,7 @@ export interface StoreMethods {
     limit?: number,
     unapproved_only?: boolean
   ): Promise<Guestbook>;
+  guestbookCountedGet(character: number): Promise<Guestbook>;
   guestbookPostApprove(
     character: number,
     id: number,
@@ -186,6 +187,7 @@ export interface GuestbookPost {
 export interface Guestbook {
   readonly posts: GuestbookPost[];
   readonly total: number;
+  readonly postCount?: number;
 }
 
 export interface CharacterReportData {

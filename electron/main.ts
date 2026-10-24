@@ -38,12 +38,18 @@
  * @see {@link https://github.com/f-list/exported|GitHub repo}
  */
 
+// ! Keep first: other modules read userData at import time
+import {
+  isPortable,
+  resolveLogDirectory,
+  toStoredLogDirectory
+} from './portable';
 import * as electron from 'electron';
 
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 import * as fs from 'fs';
 import * as path from 'path';
-import { execFile } from 'child_process';
+import { execFile, execFileSync, execSync, spawn } from 'child_process';
 // import * as url from 'url';
 import l from '../chat/localize';
 import { defaultHost, GeneralSettings } from './common';
@@ -55,9 +61,16 @@ import { IpcMainEvent, session } from 'electron';
 import * as browserWindows from './browser_windows';
 import * as remoteMain from '@electron/remote/main';
 import { Event } from 'electron/main';
-import { autoUpdater } from 'electron-updater';
+import { autoUpdater, UpdateCheckResult } from 'electron-updater';
 import Axios from 'axios';
 import { ProfileViewerGalleryType } from '../site/utils';
+import { getSafeLanguages } from './language';
+import {
+  cancelSyncJobs,
+  hasSyncJobs,
+  registerSyncJobHandlers
+} from './services/sync/main-jobs';
+import { registerApiTicketProvider } from './api-ticket';
 
 const configuredSessions = new WeakSet<electron.Session>();
 
@@ -77,9 +90,18 @@ let mainWindow: electron.BrowserWindow | undefined;
 remoteMain.initialize();
 
 const characters: string[] = [];
+// A main-process lease serializes Data Manager operations with character
+// connections. A token prevents a late release from ending a newer operation.
+let dataSession:
+  | { owner: number; token: number; cleanup: () => void }
+  | undefined;
+let nextDataSessionToken = 0;
+let lastSuccessfulAccount: string | undefined;
 let autoBackupScheduler:
   | import('./services/exporter/auto-backup').AutoBackupScheduler
   | undefined;
+
+registerSyncJobHandlers(owner => dataSession?.owner === owner);
 
 async function tryHandleCli(): Promise<boolean> {
   const argv = process.argv.slice(1);
@@ -302,7 +324,8 @@ const updateNoticeState: {
 let pendingUpdatePromptTag: string | undefined;
 
 if (!fs.existsSync(settingsFile)) {
-  shouldImportSettings = true;
+  // ^ Don't pull the host machine's chat data into a fresh portable copy
+  shouldImportSettings = !isPortable;
 } else {
   try {
     Object.assign(
@@ -312,6 +335,7 @@ if (!fs.existsSync(settingsFile)) {
   } catch (e) {
     log.error(`Error loading settings: ${e}`);
   }
+  settings.logDirectory = resolveLogDirectory(settings.logDirectory);
 }
 
 // ^ pre-2.4 builds persisted snake_case ids; keep in sync with legacyCodes in chat/localize.ts
@@ -344,7 +368,13 @@ export function updateSpellCheckerLanguages(langs: string[]): void {
 
 function setGeneralSettings(value: GeneralSettings): void {
   log.debug('settings.save', value);
-  fs.writeFileSync(path.join(settingsDir, 'settings'), JSON.stringify(value));
+  fs.writeFileSync(
+    path.join(settingsDir, 'settings'),
+    JSON.stringify({
+      ...value,
+      logDirectory: toStoredLogDirectory(value.logDirectory)
+    })
+  );
   for (const w of electron.webContents.getAllWebContents())
     w.send('settings', settings);
 
@@ -363,7 +393,7 @@ function supportsAutoUpdates(): boolean {
   if (process.platform === 'linux') {
     return Boolean(process.env.APPIMAGE);
   }
-  return true;
+  return !isPortable;
 }
 
 function isProductionMode(): boolean {
@@ -469,9 +499,9 @@ async function checkForGitRelease(
   semVer: string,
   releaseUrl: string,
   updateMode: 'auto' | 'manual'
-): Promise<void> {
+): Promise<boolean> {
   if (!settings.updateCheck) {
-    return;
+    return false;
   }
   try {
     let releases: ReleaseInfo[] = (
@@ -493,11 +523,11 @@ async function checkForGitRelease(
           `Update skipped: ${release.tag_name}`
         );
         setUpdateNotice(false);
-        return;
+        return false;
       }
       if (release.tag_name == semVer) {
         log.info('updateCheck.state.upToDate', `Horizon up to date: ${semVer}`);
-        return;
+        return false;
       }
       log.info(
         'updateCheck.state.new',
@@ -506,20 +536,23 @@ async function checkForGitRelease(
 
       setUpdateNotice(true, release.tag_name);
       maybeShowUpdatePrompt(release.tag_name, updateMode);
-      return;
+      return true;
     }
   } catch (e) {
     log.error(`Error checking for update: ${e}`);
+    return false;
   }
+  return false;
 }
 
-async function runAutoUpdateCheck(): Promise<void> {
-  if (!settings.updateCheck) return;
+async function runAutoUpdateCheck(): Promise<UpdateCheckResult | null> {
+  if (!settings.updateCheck) return null;
   try {
     autoUpdater.allowPrerelease = settings.beta;
-    await autoUpdater.checkForUpdates();
+    return await autoUpdater.checkForUpdates();
   } catch (e) {
     log.error('autoUpdater.check.failed', e);
+    return null;
   }
 }
 async function requestUpdateDownload(expectedTag?: string): Promise<void> {
@@ -641,6 +674,8 @@ function confirmUpdate(updateVersion: string): boolean {
 
 // Schemes safe to hand to a spawned browser; anything else goes to the OS.
 const EXTERNAL_BROWSER_SCHEMES = ['http:', 'https:'];
+// ! Any other scheme reaches whatever app the OS registered for it (ms-msdt:)
+const OS_SCHEMES = ['mailto:', 'irc:'];
 
 function resolveCustomBrowser(): string | null {
   const browserPath = settings.browserPath;
@@ -658,9 +693,9 @@ function resolveCustomBrowser(): string | null {
   return browserPath;
 }
 
-function isWebUrl(linkUrl: string): boolean {
+function hasScheme(linkUrl: string, schemes: string[]): boolean {
   try {
-    return EXTERNAL_BROWSER_SCHEMES.includes(new URL(linkUrl).protocol);
+    return schemes.includes(new URL(linkUrl).protocol);
   } catch {
     return false;
   }
@@ -671,11 +706,262 @@ function normalizeUrl(linkUrl: string): string {
   return encodeURI(linkUrl).replace(/%25([0-9a-f]{2})/gi, '%$1');
 }
 
-export function openURLExternally(linkUrl: string): void {
+let browser: string | undefined;
+let executablePath: string | undefined;
+
+function openIncognitoWindows(url: string): void {
+  if (settings.browserPath && settings.browserPath.length > 0) {
+    executablePath = settings.browserPath;
+    log.debug('incognito.open.customPath', executablePath);
+  } else if (executablePath === undefined) {
+    //Default to Edge path
+    executablePath =
+      'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe';
+    if (browser === undefined)
+      try {
+        //tslint:disable-next-line:max-line-length
+        browser = execSync(
+          `FOR /F "skip=2 tokens=3" %A IN ('REG QUERY HKCU\\Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice /v ProgId') DO @(echo %A)`
+        )
+          .toString()
+          .trim();
+      } catch (e) {
+        console.error(e);
+      }
+
+    log.debug('incognito.open.win32.ProgId', browser);
+
+    try {
+      let ftypeAssocmd = execSync(`ftype ${browser}`).toString().trim();
+      log.verbose('incognito.open.win32.ftype', ftypeAssocmd);
+      let match = ftypeAssocmd.match(/"([^"]+\.exe)"/);
+      if (match?.[1]) executablePath = match?.[1];
+    } catch (e) {
+      log.error('incognito.open.win32.ftype.error', e);
+
+      // Fallback: Query registry directly for modern ProgIds (like Vivaldi)
+      try {
+        const regQuery = execSync(
+          `REG QUERY "HKEY_CLASSES_ROOT\\${browser}\\shell\\open\\command" /ve`,
+          { encoding: 'utf8' }
+        ).toString();
+        const regMatch = regQuery.match(/"([^"]+\.exe)"/);
+        if (regMatch?.[1]) {
+          executablePath = regMatch[1];
+          log.debug('incognito.open.win32.registry.fallback', executablePath);
+        }
+      } catch (regError) {
+        log.error('incognito.open.win32.registry.error', regError);
+      }
+    }
+
+    log.debug('incognito.open.exePath', executablePath);
+  }
+  //"Everything is chrome in the future!" -🧽
+  let incognitoArg: string = '-incognito';
+
+  switch (path.basename(executablePath).toLowerCase()) {
+    case 'chrome.exe':
+    case 'chromeapp.exe':
+    case 'brave.exe':
+    case 'vivaldi.exe':
+      incognitoArg = '-incognito';
+      break;
+    case 'msedge.exe':
+      incognitoArg = '-inprivate';
+      break;
+    case 'firefox.exe':
+    case 'floorp.exe':
+    case 'librewolf.exe':
+    case 'waterfox.exe':
+    case 'palemoon.exe':
+    case 'zen.exe':
+      incognitoArg = '-private-window';
+      break;
+    case 'opera.exe':
+      incognitoArg = '-private';
+      break;
+  }
+
+  spawn(executablePath, [incognitoArg, url]);
+}
+
+// --- Linux incognito helpers ------------------------------------------------
+// Resolve an executable to an absolute path using PATH; Otherwise, return the
+// original command.
+function resolveExecutable(cmd: string): string {
+  if (path.isAbsolute(cmd)) return cmd;
+  try {
+    const resolved = execFileSync('which', [cmd], { encoding: 'utf8' })
+      .trim()
+      .split('\n')[0];
+    if (resolved) return resolved;
+  } catch {
+    // Ignore: we'll try spawn with the raw token. Oh god.
+  }
+  return cmd;
+}
+
+const LINUX_INCOGNITO_FLAGS: Record<string, string> = {
+  // Chromium family
+  chrome: '--incognito',
+  'google-chrome': '--incognito',
+  'google-chrome-stable': '--incognito',
+  'google-chrome-beta': '--incognito',
+  'google-chrome-unstable': '--incognito',
+  chromium: '--incognito',
+  'chromium-browser': '--incognito',
+  brave: '--incognito',
+  'brave-browser': '--incognito',
+  vivaldi: '--incognito',
+  'vivaldi-stable': '--incognito',
+  'vivaldi-snapshot': '--incognito',
+
+  // why is edge on linux lol
+  'microsoft-edge': '--inprivate',
+  'microsoft-edge-stable': '--inprivate',
+  'microsoft-edge-beta': '--inprivate',
+  'microsoft-edge-dev': '--inprivate',
+
+  // Firefox family (default behaviour, kept explicit)
+  firefox: '-private-window',
+  'firefox-bin': '-private-window',
+  'firefox-esr': '-private-window',
+  librewolf: '-private-window',
+  waterfox: '-private-window',
+  palemoon: '-private-window',
+  zen: '-private-window',
+  icecat: '-private-window',
+  floorp: '-private-window',
+
+  // Opera
+  opera: '--private',
+  'opera-beta': '--private',
+  'opera-developer': '--private'
+};
+
+function extractExecCommand(desktopFilePath: string): string | undefined {
+  try {
+    const desktopFile = fs.readFileSync(desktopFilePath, { encoding: 'utf8' });
+    const match = desktopFile.match(/^\s*Exec\s*=\s*(.+)$/m);
+    if (!match) return undefined;
+
+    // Remove desktop entry field codes (%u, %U, etc.) per spec.
+    const execValue = match[1].replace(/%[a-zA-Z]/g, '').trim();
+    const tokens = execValue.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) ?? [];
+
+    return tokens.find(
+      token =>
+        token !== 'env' &&
+        !/^[A-Za-z_][A-Za-z0-9_]*=/.test(token) &&
+        token.length > 0
+    );
+  } catch (err) {
+    log.error('incognito.open.linux.exec.read.error', desktopFilePath, err);
+    return undefined;
+  }
+}
+
+function openIncognitoLinux(url: string): void {
+  let desktopId: string | undefined;
+  try {
+    desktopId = execFileSync('xdg-settings', ['get', 'default-web-browser'], {
+      encoding: 'utf8'
+    }).trim();
+  } catch (err) {
+    log.error('incognito.open.linux.desktopId.error', err);
+  }
+
+  // & oh my god.
+  const candidatePaths =
+    desktopId === undefined
+      ? []
+      : [
+          // user locations because these files take priority in freedesktop spec
+          path.join(
+            electron.app.getPath('home'),
+            '.local/share/applications',
+            desktopId
+          ),
+          path.join(
+            electron.app.getPath('home'),
+            '.local/share/flatpak/exports/share/applications',
+            desktopId
+          ),
+          // system locations
+          path.join('/usr/local/share/applications', desktopId),
+          path.join('/usr/share/applications', desktopId),
+
+          // flatpak and snap system locations (???)
+          path.join(
+            '/usr/local/share/flatpak/exports/share/applications',
+            desktopId
+          ),
+          path.join('/var/lib/flatpak/exports/share/applications', desktopId),
+          // ? does snap live here or am i fucking pedantic
+          path.join('/var/lib/snapd/desktop/applications', desktopId)
+        ];
+  // okay we're out of hell.
+  const desktopFilePath = candidatePaths.find(p => fs.existsSync(p));
+  let browserCommand = desktopFilePath
+    ? extractExecCommand(desktopFilePath)
+    : undefined;
+
+  if (!browserCommand) {
+    log.warn(
+      'incognito.open.linux.fallback',
+      desktopId,
+      desktopFilePath ?? 'no desktop file found'
+    );
+
+    // ! Last resort:
+    // ! We are in hell. Hope that god has given us Firefox.
+    browserCommand = 'firefox';
+  }
+
+  const resolvedCommand = resolveExecutable(browserCommand);
+
+  log.debug('incognito.open.linux.browserCommand', resolvedCommand);
+
+  const incognitoArg =
+    LINUX_INCOGNITO_FLAGS[path.basename(browserCommand).toLowerCase()] ??
+    '-private-window'; // again, we pray to god we have firefox. :)
+
+  spawn(resolvedCommand, [incognitoArg, url]);
+}
+
+export type ExternalOpenMode = 'auto' | 'normal' | 'incognito';
+
+export function openURLExternally(
+  linkUrl: string,
+  mode: ExternalOpenMode = 'auto'
+): void {
+  if (!hasScheme(linkUrl, [...EXTERNAL_BROWSER_SCHEMES, ...OS_SCHEMES])) {
+    log.warn('openURLExternally.blockedScheme', linkUrl.split(':', 1)[0]);
+    return;
+  }
+
+  const wantsIncognito =
+    mode === 'incognito' ||
+    (mode === 'auto' && settings.horizonAlwaysOpenIncognito);
+
+  // A private-window flag is meaningless for mailto: and friends, and macOS has
+  // no incognito path -- both fall through to the normal open below.
+  if (wantsIncognito && hasScheme(linkUrl, EXTERNAL_BROWSER_SCHEMES)) {
+    if (process.platform === 'win32') {
+      openIncognitoWindows(linkUrl);
+      return;
+    }
+    if (process.platform === 'linux') {
+      openIncognitoLinux(linkUrl);
+      return;
+    }
+  }
+
   const browserPath = resolveCustomBrowser();
 
   // No custom browser, or not a web link: let the OS handle it.
-  if (browserPath === null || !isWebUrl(linkUrl)) {
+  if (browserPath === null || !hasScheme(linkUrl, EXTERNAL_BROWSER_SCHEMES)) {
     electron.shell.openExternal(linkUrl);
     return;
   }
@@ -1010,7 +1296,17 @@ async function onReady(): Promise<void> {
     submenu: [
       { role: 'reload' },
       { role: 'forceReload' },
-      { role: 'toggleDevTools' },
+      {
+        // electron 42 changed the way that dev tools targeted objects, so we'd get about:blank
+        // instead of the actual object. this points it to the right view
+        label: 'Toggle Developer Tools',
+        accelerator:
+          process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
+        click: (_menu, window) => {
+          if (window instanceof electron.BrowserWindow)
+            window.webContents.toggleDevTools();
+        }
+      },
       { type: 'separator' },
       {
         label: 'Show update notice',
@@ -1126,15 +1422,37 @@ async function onReady(): Promise<void> {
           },
           {
             label: l('action.checkForUpdates'),
-            click: (_m: electron.MenuItem, _w: electron.BrowserWindow) => {
+            click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
               if (supportsAutoUpdates()) {
-                void runAutoUpdateCheck();
+                runAutoUpdateCheck().then(result => {
+                  if (result && result.isUpdateAvailable) {
+                    log.info('autoUpdater.manualCheck.success', result);
+                  } else {
+                    log.info('autoUpdater.manualCheck.noUpdate');
+                    electron.dialog.showMessageBoxSync(w, {
+                      type: 'info',
+                      title: l('title'),
+                      message: l('update.noUpdateAvailable')
+                    });
+                  }
+                });
               } else {
                 void checkForGitRelease(
                   `v${app.getVersion()}`,
                   releasesUrl,
                   'manual'
-                );
+                ).then(result => {
+                  if (result) {
+                    log.info('gitRelease.manualCheck.success', result);
+                  } else {
+                    log.info('gitRelease.manualCheck.noUpdate');
+                    electron.dialog.showMessageBoxSync(w, {
+                      type: 'info',
+                      title: l('title'),
+                      message: l('update.noUpdateAvailable')
+                    });
+                  }
+                });
               }
             },
             disabled: process.env.NODE_ENV !== 'production',
@@ -1387,6 +1705,8 @@ async function onReady(): Promise<void> {
     }
   );
 
+  registerApiTicketProvider();
+
   electron.ipcMain.on(
     'save-login',
     (_event: IpcMainEvent, account: string, host: string, proxy: string) => {
@@ -1399,16 +1719,70 @@ async function onReady(): Promise<void> {
   electron.ipcMain.on(
     'connect',
     (e: IpcMainEvent & { sender: electron.WebContents }, character: string) => {
+      if (dataSession !== undefined) {
+        e.returnValue = 'data-operation-in-progress';
+        return;
+      }
       if (characters.indexOf(character) !== -1) {
-        e.returnValue = false;
+        e.returnValue = 'already-connected';
         return;
       }
       characters.push(character);
+      browserWindows.registerConnectedTab(e.sender, character);
       e.returnValue = true;
       broadcastConnectedCharacters();
       if (autoBackupScheduler) autoBackupScheduler.runOnConnect();
     }
   );
+  electron.ipcMain.on('login-succeeded', (_event, account: string) => {
+    if (typeof account === 'string' && account.trim())
+      lastSuccessfulAccount = account.trim();
+  });
+  electron.ipcMain.on('get-last-successful-account', event => {
+    event.returnValue = lastSuccessfulAccount ?? '';
+  });
+
+  electron.ipcMain.on('data-session-acquire', event => {
+    if (dataSession !== undefined) {
+      event.returnValue = { error: 'in-progress' };
+      return;
+    }
+    if (characters.length > 0) {
+      event.returnValue = { error: 'connected' };
+      return;
+    }
+    const owner = event.sender.id;
+    const token = ++nextDataSessionToken;
+    const release = (): void => {
+      if (dataSession?.token !== token) return;
+      void cancelSyncJobs(owner)
+        .catch(error => log.error('sync.archive.cleanup.error', error))
+        .finally(() => {
+          if (dataSession?.token !== token) return;
+          dataSession.cleanup();
+          dataSession = undefined;
+        });
+    };
+    const cleanup = (): void => {
+      event.sender.removeListener('destroyed', release);
+      event.sender.removeListener('render-process-gone', release);
+    };
+    dataSession = { owner, token, cleanup };
+    event.sender.once('destroyed', release);
+    event.sender.once('render-process-gone', release);
+    event.returnValue = { token };
+  });
+  electron.ipcMain.on('data-session-release', (event, token: number) => {
+    if (dataSession?.owner === event.sender.id && dataSession.token === token) {
+      if (hasSyncJobs(event.sender.id)) {
+        event.returnValue = { error: 'job-in-progress' };
+        return;
+      }
+      dataSession.cleanup();
+      dataSession = undefined;
+    }
+    event.returnValue = true;
+  });
   electron.ipcMain.on(
     'dictionary-add',
     (_event: IpcMainEvent, word: string) => {
@@ -1551,6 +1925,10 @@ async function onReady(): Promise<void> {
         let badgeChange =
           settings.horizonShowNotificationBadge !==
           _options.horizonShowNotificationBadge;
+        let spellcheckChange = !_.isEqual(
+          getSafeLanguages(settings.spellcheckLang),
+          getSafeLanguages(_options.spellcheckLang)
+        );
         Object.assign(settings, _options);
         //Now we save it to a file
         setGeneralSettings(_options);
@@ -1572,13 +1950,22 @@ async function onReady(): Promise<void> {
             settings.horizonShowNotificationBadge
           );
         }
+
+        if (spellcheckChange) {
+          updateSpellCheckerLanguages(
+            getSafeLanguages(settings.spellcheckLang)
+          );
+        }
       }
     }
   );
 
-  electron.ipcMain.on('open-url-externally', (_e, _url: string) => {
-    openURLExternally(_url);
-  });
+  electron.ipcMain.on(
+    'open-url-externally',
+    (_e, _url: string, mode: ExternalOpenMode = 'auto') => {
+      openURLExternally(_url, mode);
+    }
+  );
 
   setMainWindow(
     browserWindows.createMainWindow(

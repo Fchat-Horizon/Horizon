@@ -35,13 +35,16 @@ const sharedConfig = {
 };
 
 const mainConfig = {
-    entry: [
-      path.join(__dirname, 'main.ts'),
-      path.join(__dirname, 'package.json')
-    ],
+    entry: {
+      main: [
+        path.join(__dirname, 'main.ts'),
+        path.join(__dirname, 'package.json')
+      ],
+      'sync-worker': path.join(__dirname, 'services/sync/worker.ts')
+    },
     output: {
       path: __dirname + '/app',
-      filename: 'main.js'
+      filename: '[name].js'
     },
     context: __dirname,
     target: 'electron-main',

@@ -62,5 +62,6 @@ New-Item -ItemType Directory -Path $ReleasePath -Force | Out-Null
 Copy-Item "$DistPath\*.exe" -Destination "$ReleasePath\" -ErrorAction SilentlyContinue
 Copy-Item "$DistPath\latest*.yml" -Destination "$ReleasePath\" -ErrorAction SilentlyContinue
 Copy-Item "$DistPath\*.blockmap" -Destination "$ReleasePath\" -ErrorAction SilentlyContinue
+& "$PSScriptRoot\windows-portable.ps1" -DistPath $DistPath -ReleasePath $ReleasePath
 
 # TODO: Allow specifying the branch to build from

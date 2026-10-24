@@ -243,7 +243,7 @@ export namespace Connection {
     data: ServerCommands[T],
     date: Date
   ) => Promise<void> | void;
-  export type TicketProvider = () => Promise<string>;
+  export type TicketProvider = (invalidTicket?: string) => Promise<string>;
   export type EventType = 'connecting' | 'connected' | 'closed';
   export type EventHandler = (isReconnect: boolean) => Promise<void> | void;
 
@@ -263,10 +263,7 @@ export namespace Connection {
     readonly character: string;
     readonly vars: Readonly<Vars>;
     readonly isOpen: boolean;
-    setCredentials(
-      account: string,
-      ticketProvider: TicketProvider | string
-    ): void;
+    setCredentials(account: string, ticketProvider: TicketProvider): void;
     connect(character: string): void;
     close(keepState?: boolean): void;
     onMessage<K extends keyof ServerCommands>(
@@ -280,6 +277,7 @@ export namespace Connection {
     onEvent(type: EventType, handler: EventHandler): void;
     offEvent(type: EventType, handler: EventHandler): void;
     onError(handler: (error: Error) => void): void;
+    throwError(error: Error): void;
     send(type: 'CHA' | 'FRL' | 'ORS' | 'PCR' | 'PIN' | 'UPT'): void;
     send<K extends keyof ClientCommands>(
       type: K,

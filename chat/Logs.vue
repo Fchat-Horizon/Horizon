@@ -274,6 +274,23 @@
     return format(date, 'yyyy-MM-dd');
   }
 
+  const SEARCH_BATCH_SIZE = 25;
+
+  function buildMessageFilter(pattern: string): RegExp {
+    return new RegExp(pattern.replace(/[^\w]/gi, '\\$&'), 'i');
+  }
+
+  function messageMatches(
+    filter: RegExp,
+    message: Conversation.Message
+  ): boolean {
+    return (
+      filter.test(message.text) ||
+      (message.type !== Conversation.Message.Type.Event &&
+        filter.test(message.sender.name))
+    );
+  }
+
   function getLogs(
     messages: ReadonlyArray<Conversation.Message>,
     html: boolean
@@ -387,16 +404,8 @@
       },
       filteredMessages(): ReadonlyArray<Conversation.Message> {
         if (this.pendingFilter.length === 0) return this.messages;
-        const filter = new RegExp(
-          this.pendingFilter.replace(/[^\w]/gi, '\\$&'),
-          'i'
-        );
-        return this.messages.filter(
-          x =>
-            filter.test(x.text) ||
-            (x.type !== Conversation.Message.Type.Event &&
-              filter.test(x.sender.name))
-        );
+        const filter = buildMessageFilter(this.pendingFilter);
+        return this.messages.filter(x => messageMatches(filter, x));
       }
     },
     watch: {
@@ -892,21 +901,44 @@
       },
 
       async loadNextDate(): Promise<void> {
-        if (this.loadingDates) return;
+        if (this.loadingDates || this.selectedConversation === undefined)
+          return;
         this.loadingDates = true;
-        const oldLen = this.filteredMessages.length;
-        const msgs = await this.fetchDate();
-        if (msgs.length > 0) {
+        const snapshot = this.pendingFilter;
+        const conversation = this.selectedConversation;
+        const filter =
+          snapshot.length > 0 ? buildMessageFilter(snapshot) : undefined;
+        const minAdded = filter === undefined ? 1 : SEARCH_BATCH_SIZE;
+        if (filter !== undefined) this.searching = true;
+        let added = 0;
+        while (
+          added < minAdded &&
+          this.dateOffset < this.dates.length &&
+          this.pendingFilter === snapshot
+        ) {
+          const msgs = await this.fetchDate();
+          if (this.selectedConversation !== conversation) break;
+          if (msgs.length === 0) continue;
           this.messages = (msgs as Conversation.Message[]).concat(
             this.messages
           );
+          added +=
+            filter === undefined
+              ? msgs.length
+              : msgs.filter(m => messageMatches(filter, m)).length;
+        }
+        if (
+          added > 0 &&
+          this.pendingFilter === snapshot &&
+          this.selectedConversation === conversation
+        ) {
           await this.$nextTick();
-          const added = this.filteredMessages.length - oldLen;
           const vl = this.$refs['messages'] as InstanceType<
             typeof VirtualList
           > | void;
-          if (vl && added > 0) vl.adjustScrollForPrepend(added);
+          if (vl) vl.adjustScrollForPrepend(added);
         }
+        if (filter !== undefined) this.searching = false;
         this.loadingDates = false;
       },
 
