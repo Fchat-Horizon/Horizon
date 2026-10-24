@@ -150,18 +150,418 @@
           <div
             v-show="
               selectedTab === 'app.general' ||
-              selectedTab === 'app.look' ||
               selectedTab === 'app.notifications' ||
-              selectedTab === 'app.behavior' ||
-              selectedTab === 'app.accessibility' ||
               selectedTab === 'app.advanced'
             "
           >
             <div class="mb-3 alert alert-warning">
               <h5>{{ l('warning.info') }}</h5>
               <div>
-                Placeholder for global app settings. These are still in the
-                bespoke window for now.
+                Placeholder for general app settings. The stuff inside this tab
+                is still in the bespoke window for now.
+              </div>
+            </div>
+          </div>
+          <div v-show="selectedTab === 'app.look'">
+            <h5>
+              {{ l('settings.theme') }}
+            </h5>
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  id="themeSystemSync"
+                  class="form-check-input"
+                  v-model="generalSettings.themeSync"
+                />
+                <label class="form-check-label" for="themeSystemSync">
+                  {{ l('settings.theme.sync') }}
+                </label>
+              </div>
+            </div>
+            <div class="mb-3" v-if="!generalSettings.themeSync">
+              <label class="control-label" for="theme" style="width: 24ch">
+                {{ l('settings.theme.app') }}
+                <filterable-select
+                  v-model="generalSettings.theme"
+                  :options="availableThemes"
+                  :placeholder="l('filter')"
+                  :title="l('settings.theme')"
+                >
+                  <template v-slot="s">
+                    {{ capitalizeThemeName(s.option) }}
+                  </template>
+                </filterable-select>
+              </label>
+            </div>
+            <div class="mb-3" v-else>
+              <label
+                class="control-label"
+                for="themeSyncLight"
+                style="width: 24ch"
+              >
+                {{ l('settings.theme.app.light') }}
+                <filterable-select
+                  v-model="generalSettings.themeSyncLight"
+                  :options="availableThemes"
+                  :placeholder="l('filter')"
+                  :title="l('settings.theme')"
+                >
+                  <template v-slot="s">
+                    {{ capitalizeThemeName(s.option) }}
+                  </template>
+                </filterable-select>
+              </label>
+
+              <label
+                class="control-label"
+                for="themeSyncDark"
+                style="width: 24ch"
+              >
+                {{ l('settings.theme.app.dark') }}
+                <filterable-select
+                  v-model="generalSettings.themeSyncDark"
+                  :options="availableThemes"
+                  :placeholder="l('filter')"
+                  :title="l('settings.theme')"
+                >
+                  <template v-slot="s">
+                    {{ capitalizeThemeName(s.option) }}
+                  </template>
+                </filterable-select>
+              </label>
+            </div>
+
+            <h5>
+              {{ l('settings.theme.textColors') }}
+            </h5>
+
+            <div class="mb-3">
+              <label class="control-label" for="themeVanillaBbcode">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    v-model="settings.horizonVanillaTextColors"
+                    type="checkbox"
+                    id="themeVanillaBbcode"
+                    aria-describedby="vanillaBbcodeLegibilityNote"
+                  />
+                  <label class="form-check-label" for="themeVanillaBbcode">
+                    {{ l('settings.theme.vanillaBbcode') }}
+                  </label>
+                </div>
+                <div
+                  id="vanillaBbcodeLegibilityNote"
+                  class="form-text text-muted"
+                >
+                  {{ l('settings.theme.vanillaBbcode.legibilityNote') }}
+                </div>
+              </label>
+            </div>
+
+            <div class="mb-3">
+              <label class="control-label" for="themeVanillaGenders">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    v-model="settings.horizonVanillaGenderColors"
+                    type="checkbox"
+                    id="themeVanillaGenders"
+                    aria-describedby="vanillaGendersNote"
+                  />
+                  <label class="form-check-label" for="themeVanillaGenders">
+                    {{ l('settings.theme.vanillaGenders') }}
+                  </label>
+                </div>
+                <div id="vanillaGendersNote" class="form-text text-muted">
+                  {{ l('settings.theme.vanillaGenders.note') }}
+                </div>
+              </label>
+            </div>
+
+            <div class="mb-3">
+              <label class="control-label" for="themeBbcodeGlow">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    v-model="settings.horizonBbcodeGlow"
+                    type="checkbox"
+                    id="themeBbcodeGlow"
+                    aria-describedby="bbcodeGlowNote"
+                  />
+                  <label class="form-check-label" for="themeBbcodeGlow">
+                    {{ l('settings.theme.bbcodeGlow') }}
+                  </label>
+                </div>
+                <div id="bbcodeGlowNote" class="form-text text-muted">
+                  {{ l('settings.theme.bbcodeGlow.note') }}
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div v-show="selectedTab === 'app.behavior'">
+            <h5>{{ l('user.profile') }}</h5>
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="profileViewer"
+                  v-model="generalSettings.profileViewer"
+                />
+                <label class="form-check-label" for="profileViewer">
+                  {{ l('settings.profileViewer') }}
+                </label>
+              </div>
+            </div>
+            <div class="mb-3" v-if="generalSettings.profileViewer">
+              <label class="control-label" for="profileViewerGalleryType">
+                {{ l('settings.profileViewerGalleryType') }}
+                <select
+                  id="profileViewerGalleryType"
+                  class="form-select"
+                  style="flex: 1; margin-right: 10px"
+                  v-model="generalSettings.profileViewerGalleryType"
+                >
+                  <option value="thumbnail">
+                    {{ l('settings.profileViewerGalleryType.thumbnail') }}
+                  </option>
+                  <option value="hover">
+                    {{ l('settings.profileViewerGalleryType.hover') }}
+                  </option>
+                  <option value="full">
+                    {{ l('settings.profileViewerGalleryType.full') }}
+                  </option>
+                </select>
+              </label>
+              <div
+                id="profileViewerGalleryTypeNote"
+                class="form-text text-muted"
+                v-if="generalSettings.profileViewer"
+              >
+                {{
+                  l(
+                    `settings.profileViewerGalleryType.note.${generalSettings.profileViewerGalleryType}`
+                  )
+                }}
+              </div>
+            </div>
+
+            <div
+              class="mb-3"
+              v-if="
+                generalSettings.profileViewer &&
+                (generalSettings.profileViewerGalleryType === 'thumbnail' ||
+                  generalSettings.profileViewerGalleryType === 'hover')
+              "
+            >
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="profileViewerThumbAnimate"
+                  v-model="generalSettings.profileViewerThumbAnimate"
+                />
+                <label class="form-check-label" for="profileViewerThumbAnimate">
+                  {{ l('settings.profileViewerThumbAnimate') }}
+                </label>
+              </div>
+            </div>
+
+            <div class="mb-3" v-if="generalSettings.profileViewer">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="profileViewerSmallerDefaultAvatars"
+                  v-model="generalSettings.profileViewerSmallerDefaultAvatars"
+                />
+                <label
+                  class="form-check-label"
+                  for="profileViewerSmallerDefaultAvatars"
+                >
+                  {{ l('settings.profileViewer.smallerDefaultAvatars') }}
+                </label>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="horizonForceAsciiProfiles"
+                  :disabled="!generalSettings.profileViewer"
+                  v-model="generalSettings.horizonForceAsciiProfiles"
+                  aria-describedby="forceAsciiNote"
+                />
+                <label class="form-check-label" for="horizonForceAsciiProfiles">
+                  {{ l('settings.horizonForceAsciiProfiles') }}
+                </label>
+                <div id="forceAsciiNote" class="form-text text-muted">
+                  {{ l('settings.horizonForceAsciiProfiles.note') }}
+                </div>
+              </div>
+            </div>
+
+            <h5>{{ l('settings.behavior.chat') }}</h5>
+            <div class="mb-3">
+              <label class="control-label label-full" for="logDir">
+                {{ l('settings.logDir') }}
+
+                <div class="input-group">
+                  <input
+                    class="form-control"
+                    id="logDir"
+                    disabled
+                    @click="browseForLogDir()"
+                    v-model="generalSettings.logDirectory"
+                  />
+                  <button
+                    class="btn btn-outline-secondary"
+                    @click="browseForLogDir()"
+                    :title="l('settings.logDir.select')"
+                  >
+                    <span class="fas fa-fw fa-folder-plus"></span></button
+                  ><button
+                    class="btn btn-outline-secondary"
+                    @click="openLogDir()"
+                    :title="
+                      l('platform.open', {
+                        name: l(`platform.fileExplorer.${platform}`)
+                      })
+                    "
+                  >
+                    <span class="far fa-fw fa-folder-open"></span>
+                  </button></div
+              ></label>
+              <div
+                id="logDirNoteOnedrive"
+                class="form-text text-muted"
+                v-if="platform === 'win32'"
+              >
+                <span>{{ `${l('settings.logDir.note.onedrive')} ` }}</span>
+              </div>
+              <div id="logDirNote" class="form-text text-muted">
+                <a
+                  href="#"
+                  @click="
+                    externalUrlHandler(
+                      `https://horizn.moe/docs/guides/backup.html`
+                    )
+                  "
+                  ><localized-text k="settings.logDir.guide">
+                    <template #icon>
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </template>
+                  </localized-text>
+                </a>
+              </div>
+            </div>
+            <h5>{{ l('settings.behavior.window') }}</h5>
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="closeToTray"
+                  v-model="generalSettings.closeToTray"
+                />
+                <label class="form-check-label" for="closeToTray">
+                  {{ l('settings.closeToTray') }}
+                </label>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="windowTitleCharacter"
+                  v-model="generalSettings.horizonWindowTitleCharacter"
+                />
+                <label class="form-check-label" for="windowTitleCharacter">
+                  {{ l('settings.windowTitleCharacter') }}
+                </label>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="forceNativeWindowControls"
+                  v-model="generalSettings.forceNativeWindowControls"
+                />
+                <label class="form-check-label" for="forceNativeWindowControls">
+                  {{
+                    l('settings.experimental', {
+                      name: l('settings.forceNativeWindowControls')
+                    })
+                  }}
+                </label>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="nativeWindowShowSingleTab"
+                  v-model="generalSettings.nativeWindowShowSingleTab"
+                  :disabled="!generalSettings.forceNativeWindowControls"
+                />
+                <label class="form-check-label" for="nativeWindowShowSingleTab">
+                  {{ l('settings.nativeWindowShowSingleTab') }}
+                </label>
+                <div
+                  id="nativeWindowShowSingleTabNote"
+                  class="form-text text-muted"
+                >
+                  {{ l('settings.nativeWindowShowSingleTab.note') }}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-show="selectedTab === 'app.accessibility'">
+            <div>
+              <div class="mb-3" v-if="!true">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="risingDisableWindowsHighContrast"
+                    v-model="generalSettings.risingDisableWindowsHighContrast"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="risingDisableWindowsHighContrast"
+                  >
+                    {{ l('settings.risingDisableWindowsHighContrast') }}
+                  </label>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="reducedMotion"
+                    v-model="generalSettings.reducedMotion"
+                  />
+                  <label class="form-check-label" for="reducedMotion">
+                    {{ l('settings.reducedMotion') }}
+                  </label>
+                </div>
+
+                <small class="form-text text-muted">{{
+                  l('settings.reducedMotion.description')
+                }}</small>
               </div>
             </div>
           </div>
@@ -685,7 +1085,7 @@
                     {{ l('settings.useDefaultTheme') }}
                   </option>
                   <option disabled>---</option>
-                  <option v-for="theme in risingAvailableThemes" :value="theme">
+                  <option v-for="theme in availableThemes" :value="theme">
                     {{ theme }}
                   </option>
                 </select>
@@ -1803,7 +2203,7 @@
 
 <script lang="ts">
   // I'm so, so sorry Joycon
-  // We'll get rid of this for 2.5 when we'll write a unified event system.
+  // We'll get rid of this for 2.6 when we'll write a unified event system.
   import * as electron from 'electron';
   import * as fs from 'fs';
   import * as path from 'path';
@@ -1812,6 +2212,7 @@
   import { Editor } from './bbcode';
   import Tabs from '../components/tabs';
   import { BBCodeView } from '../bbcode/view';
+  import FilterableSelect from '../components/FilterableSelect.vue';
   import SettingsTriState from '../components/SettingsTriState.vue';
   import SettingsOverride from '../components/SettingsOverride.vue';
   import SettingsInput from '../components/SettingsInput.vue';
@@ -1825,6 +2226,7 @@
     Character,
     PartialSettings
   } from './interfaces';
+  import { GeneralSettings } from '../electron/common';
   import l from './localize';
   import {
     SmartFilterSettings,
@@ -1850,12 +2252,21 @@
       tabs: Tabs,
       bbcode: BBCodeView(bbcodeParser),
       'settings-tristate': SettingsTriState,
+      'filterable-select': FilterableSelect,
       'user-view': UserView,
       'virtual-list': VirtualList,
       'settings-override': SettingsOverride,
       'settings-input': SettingsInput,
       'settings-array': SettingsArray,
       'settings-select-override': SettingsSelectOverride
+    },
+    async mounted(): Promise<void> {
+      this.availableThemes = fs
+        .readdirSync(path.join(__dirname, 'themes'))
+        .filter(x => x.substr(-4) === '.css')
+        .map(x => x.slice(0, -4));
+
+      this.platform = process.platform;
     },
     data() {
       const defaultSettings = new DefaultSettings();
@@ -1867,12 +2278,14 @@
         settingsMode: '0',
         importCharacter: '',
         characterOverrides: {} as PartialSettings,
+        generalSettings: {} as GeneralSettings,
 
-        risingAvailableThemes: [] as ReadonlyArray<string>,
+        availableThemes: [] as ReadonlyArray<string>,
         smartFilterTypes: smartFilterTypesOrigin,
         settings: { ...defaultSettings } as DefaultSettings,
         risingFilter: {} as any as SmartFilterSettings,
-        hiddenFilter: ''
+        hiddenFilter: '',
+        platform: 'win32' || 'darwin' || 'linux'
       };
     },
     computed: {
@@ -1943,19 +2356,21 @@
         const globalSettings = core.state.globalSettings as any;
         const defaultSettings = new DefaultSettings();
 
+        //I think we can safely assume that these settings are loaded by the time a user can open this dialog. If not... lol
+        this.generalSettings = {
+          ...core.state.generalSettings
+        } as GeneralSettings;
+
         for (const [key, value] of Object.entries(defaultSettings)) {
           if (globalSettings[key] === undefined) globalSettings[key] = value;
         }
+
+        console.log(this.availableThemes);
 
         this.settings = { ...globalSettings };
         this.availableImports = (
           await core.settingsStore.getAvailableCharacters()
         ).filter(x => x !== core.connection.character);
-
-        this.risingAvailableThemes = fs
-          .readdirSync(path.join(__dirname, 'themes'))
-          .filter(x => x.substr(-4) === '.css')
-          .map(x => x.slice(0, -4));
 
         this.characterOverrides = { ...core.state.characterSettings };
       },
@@ -1992,12 +2407,20 @@
         core.toggleHidden(name);
       },
       async submit(): Promise<void> {
+        await this.submitGeneralSettings();
         if (this.settingsMode === '0') {
           await this.submitGlobalSettings();
           return;
         }
 
         await this.submitCharacterOverrides();
+      },
+      async submitGeneralSettings(): Promise<void> {
+        //TODO reimplement this to work through the settings interface, with an electron-specific implementation
+        electron.ipcRenderer.send(
+          'general-settings-update',
+          this.generalSettings
+        );
       },
       async submitGlobalSettings(): Promise<void> {
         const oldRisingFilter = JSON.parse(
@@ -2096,6 +2519,14 @@
 
         EventBus.$emit('configuration-update', core.state.settings);
         notifySettingsReload();
+      },
+      capitalizeThemeName(themeName: string): string {
+        return themeName
+          .split(/[\s-_]+/) // Split on spaces, hyphens, or underscores
+          .map(
+            word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+          )
+          .join(' ');
       },
       rebuildFilters() {
         core.cache.profileCache.onEachInMemory(c => {
