@@ -55,6 +55,12 @@
       background: none;
       z-index: auto;
 
+      .toolbar-buttons {
+        border-bottom: 0;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+
       .toolbar-buttons,
       .toolbar-buttons .btn,
       .character-btn {
@@ -92,13 +98,6 @@
         img {
           object-fit: cover;
         }
-      }
-    }
-    .bbcode-editor:has(.chat-text-box):not(:has(.send-ads-switcher)) & {
-      .toolbar-buttons {
-        border-bottom: 0;
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
       }
     }
     .bbcode-editor.formatting-open:has(.chat-text-box) & {
@@ -219,10 +218,8 @@
 
 // the toolbar spans the full width above the text box in mobile chat
 @include media-breakpoint-down(md) {
-  .bbcode-editor.has-toolbar:not(:has(.send-ads-switcher)) .chat-text-box {
-    border-top-right-radius: 0;
-  }
   .bbcode-editor.has-toolbar .chat-text-box {
+    border-top-right-radius: 0;
     &:focus {
       box-shadow: inset 0 0 0 ($input-btn-focus-width / 2)
         $input-btn-focus-color;
@@ -238,6 +235,16 @@
   justify-content: flex-end;
   @include media-breakpoint-down(md) {
     flex: 1 49%;
+
+    // own row above the toolbar so the toolbar stays attached to the text box
+    .bbcode-editor:has(.chat-text-box) & {
+      order: 0;
+      flex: 1 0 100%;
+    }
+    .bbcode-editor:has(.chat-text-box) & .send-ads-switcher {
+      margin-right: 0 !important;
+      margin-bottom: 4px;
+    }
   }
 }
 
