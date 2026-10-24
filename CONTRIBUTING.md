@@ -100,7 +100,7 @@ pnpm --filter horizon-electron start
 > [!NOTE]
 > While you can choose to build for other OSes, it **will** fail if you attempt to build for an OS that's different from your own.
 >
-> Please read the [electron-builder](https://www.electron.build/multi-platform-build.html) wiki for more info. If you're a kickass electron dev, please make a pull request to fix this.
+> Please read the [electron-builder](https://www.electron.build/docs/features/multi-platform-build) wiki for more info. If you're a kickass electron dev, please make a pull request to fix this.
 
 Read [the electron README.md](./electron/README.md) for more info.
 
