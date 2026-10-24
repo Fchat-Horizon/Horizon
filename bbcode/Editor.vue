@@ -91,6 +91,7 @@
           @click.prevent.stop="showFormatting = !showFormatting"
         >
           Aa
+          <i class="fas fa-angle-up aa-indicator" aria-hidden="true"></i>
         </div>
 
         <div

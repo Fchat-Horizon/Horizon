@@ -1185,7 +1185,7 @@
       }
     }
 
-    .btn-toolbar {
+    .btn-toolbar:not(.bbcode-toolbar) {
       .btn-group {
         margin-right: 0.3rem;
 

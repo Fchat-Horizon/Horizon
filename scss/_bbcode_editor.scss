@@ -55,6 +55,12 @@
       background: none;
       z-index: auto;
 
+      .toolbar-buttons,
+      .toolbar-buttons .btn,
+      .character-btn {
+        border-color: $input-border-color;
+      }
+
       .btn-close {
         display: none;
       }
@@ -86,6 +92,13 @@
         img {
           object-fit: cover;
         }
+      }
+    }
+    .bbcode-editor:has(.chat-text-box):not(:has(.send-ads-switcher)) & {
+      .toolbar-buttons {
+        border-bottom: 0;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
       }
     }
     .bbcode-editor.formatting-open:has(.chat-text-box) & {
@@ -184,10 +197,36 @@
       display: inline-flex;
       font-weight: 700;
       letter-spacing: -0.02em;
+      position: relative;
     }
   }
   &.active {
     background-color: var(--bs-secondary) !important;
+  }
+
+  .aa-indicator {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    font-size: 0.55em;
+    opacity: 0.6;
+    transition: transform 0.15s ease;
+  }
+  &.active .aa-indicator {
+    transform: rotate(180deg);
+  }
+}
+
+// the toolbar spans the full width above the text box in mobile chat
+@include media-breakpoint-down(md) {
+  .bbcode-editor.has-toolbar:not(:has(.send-ads-switcher)) .chat-text-box {
+    border-top-right-radius: 0;
+  }
+  .bbcode-editor.has-toolbar .chat-text-box {
+    &:focus {
+      box-shadow: inset 0 0 0 ($input-btn-focus-width / 2)
+        $input-btn-focus-color;
+    }
   }
 }
 

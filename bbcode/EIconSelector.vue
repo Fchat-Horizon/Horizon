@@ -909,9 +909,13 @@
     z-index: 1000;
 
     .modal-body {
-      overflow-y: hidden;
       display: flex;
       min-height: 0;
+
+      &,
+      &:hover {
+        overflow-y: hidden;
+      }
     }
 
     .eicon-selector-ui {
@@ -1078,10 +1082,22 @@
             overflow-x: hidden;
             overflow-y: scroll;
             height: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(77px, 1fr));
+            // auto rows shrink to fit the height because of the global min-height: 0
+            grid-auto-rows: max-content;
+            align-content: start;
+
+            &::after {
+              display: none;
+            }
           }
 
           .carousel-item {
-            display: inline-block;
+            display: block;
+            width: auto;
+            margin: 0;
+            justify-self: center;
           }
         }
       }
