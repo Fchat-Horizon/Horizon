@@ -123,7 +123,8 @@
           ></tabs>
 
           <!--
-              Having an exception for the smartFilter tab isn't clean, but we also don't fill this menu dynamically yet so this will have to do for now.
+              Having an exception for the smartFilter tab isn't clean, 
+              but we also don't fill this menu dynamically yet so this will have to do for now.
           -->
           <template v-if="selectedTab !== 'profiles.smartFilters'">
             <div class="warning" v-if="settingsMode === '0'">
@@ -148,20 +149,203 @@
 
         <div class="overflow-auto h-100">
           <div
-            v-show="
-              selectedTab === 'app.general' ||
-              selectedTab === 'app.notifications' ||
-              selectedTab === 'app.advanced'
-            "
+            v-show="selectedTab === 'app.general'"
+            class="card-body settings-content"
+            style="height: 100%; width: 100%"
           >
-            <div class="mb-3 alert alert-warning">
-              <h5>{{ l('warning.info') }}</h5>
-              <div>
-                Placeholder for general app settings. The stuff inside this tab
-                is still in the bespoke window for now.
+            <h5>
+              {{ l('settings.tabs.general') }}
+            </h5>
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  id="autoLogin"
+                  v-model="generalSettings.horizonAutoLogin"
+                  class="form-check-input"
+                />
+                <label class="form-check-label" for="autoLogin">
+                  {{ l('login.auto') }}
+                </label>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  id="showTips"
+                  v-model="generalSettings.horizonShowTips"
+                  class="form-check-input"
+                />
+                <label class="form-check-label" for="showTips">
+                  {{ l('settings.showTips') }}
+                </label>
+              </div>
+            </div>
+
+            <h5>
+              {{ l('settings.spellcheck.language') }}
+            </h5>
+
+            <div class="mb-3">
+              <label class="control-label" for="displayLanguage">
+                {{ l('settings.displayLanguage') }}
+                <select
+                  id="displayLanguage"
+                  class="form-select"
+                  style="flex: 1; margin-right: 10px"
+                  v-model="generalSettings.displayLanguage"
+                >
+                  <option
+                    v-for="lang in availableDisplayLanguages"
+                    :key="lang.code"
+                    :value="lang.code"
+                  >
+                    {{ lang.name }}
+                  </option>
+                </select>
+              </label>
+              <div class="form-text text-muted">
+                {{ l('settings.displayLanguage.note') }}
+              </div>
+            </div>
+
+            <!--On MacOS, Electron uses the OS' native spell checker as of version 35.2.0 -->
+            <div class="mb-3" v-if="!isMac">
+              <label
+                class="control-label"
+                for="spellCheckLang"
+                style="width: 24ch"
+              >
+                {{ l('settings.spellcheck') }}
+                <filterable-select
+                  v-model="selectedLang"
+                  :options="sortedLangs"
+                  :filterFunc="filterLanguage"
+                  :placeholder="l('filter')"
+                  :multiple="true"
+                  :title="l('settings.spellcheck.language')"
+                >
+                  <template v-slot="s">
+                    {{
+                      //s.option ||
+                      formatLanguage(s.option) ||
+                      l('settings.spellcheck.language')
+                    }}
+                  </template>
+                </filterable-select>
+              </label>
+            </div>
+
+            <h5>
+              {{ l('settings.timeFormat') }}
+            </h5>
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  v-model="generalSettings.use12HourTime"
+                  type="checkbox"
+                  id="use12HourTime"
+                />
+                <label class="form-check-label" for="use12HourTime">
+                  {{ l('settings.timeFormat.12hour') }}
+                </label>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  v-model="generalSettings.showSeconds"
+                  type="checkbox"
+                  id="showSeconds"
+                />
+                <label class="form-check-label" for="showSeconds">
+                  {{ l('settings.timeFormat.showSeconds') }}
+                </label>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  v-model="generalSettings.fuzzyDates"
+                  type="checkbox"
+                  id="fuzzyDates"
+                />
+                <label class="form-check-label" for="fuzzyDates">
+                  {{ l('settings.timeFormat.fuzzyDates') }}
+                </label>
+              </div>
+            </div>
+
+            <h5>
+              {{ l('settings.updates') }}
+            </h5>
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  id="updateCheck"
+                  v-model="generalSettings.updateCheck"
+                  class="form-check-input"
+                />
+                <label class="form-check-label" for="updateCheck">
+                  {{ l('settings.updateCheck') }}
+                </label>
+              </div>
+            </div>
+            <div class="mb-3" v-if="generalSettings.updateCheck">
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  id="beta"
+                  v-model="generalSettings.beta"
+                  class="form-check-input"
+                />
+                <label class="form-check-label" for="beta">
+                  {{ l('settings.beta') }}
+                </label>
+              </div>
+            </div>
+            <div class="mb-3" v-if="generalSettings.updateCheck">
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  id="hideAutoUpdater"
+                  v-model="generalSettings.horizonHideAutoUpdater"
+                  class="form-check-input"
+                />
+                <label class="form-check-label" for="hideAutoUpdater">
+                  {{ l('settings.updateHideAutoUpdater') }}
+                </label>
+              </div>
+              <div class="form-text text-muted">
+                {{ l('settings.updateHideAutoUpdater.note') }}
+              </div>
+            </div>
+            <div v-if="generalSettings.updateCheck">
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  id="autoDownloadUpdates"
+                  v-model="generalSettings.horizonAutoDownloadUpdates"
+                  class="form-check-input"
+                />
+                <label class="form-check-label" for="autoDownloadUpdates">
+                  {{ l('settings.autoDownloadUpdates') }}
+                </label>
+              </div>
+              <div class="form-text text-muted">
+                {{ l('settings.autoDownloadUpdates.note') }}
               </div>
             </div>
           </div>
+
           <div v-show="selectedTab === 'app.look'">
             <h5>
               {{ l('settings.theme') }}
@@ -297,6 +481,200 @@
                   {{ l('settings.theme.bbcodeGlow.note') }}
                 </div>
               </label>
+            </div>
+          </div>
+          <div
+            v-show="selectedTab === 'app.notifications'"
+            class="card-body settings-content"
+            style="height: 100%; width: 100%"
+          >
+            <h5>{{ l('settings.sounds') }}</h5>
+            <div class="form-group">
+              <label class="control-label" for="soundTheme" style="width: 24ch">
+                {{ l('settings.soundTheme') }}
+                <filterable-select
+                  v-model="settings.soundTheme"
+                  :options="availableSoundThemes"
+                  style="flex: 1; margin-right: 10px"
+                  :title="l('settings.soundTheme')"
+                  :placeholder="l('filter')"
+                >
+                  <template v-slot="s">
+                    {{ capitalizeThemeName(s.option) }}
+                  </template>
+                </filterable-select>
+              </label>
+            </div>
+
+            <div class="sound-theme-details">
+              <div
+                class="d-flex"
+                style="justify-content: space-between; align-items: center"
+              >
+                <div>
+                  <h5 style="margin: 0">
+                    {{ capitalizeThemeName(settings.soundTheme) }}
+                  </h5>
+                  <div class="text-muted" v-if="currentSoundThemeDetails">
+                    <div>{{ currentSoundThemeDetails.description }}</div>
+                    <div v-if="currentSoundThemeDetails.author">
+                      {{
+                        l('settings.soundTheme.by', {
+                          name: currentSoundThemeDetails.author
+                        })
+                      }}
+                    </div>
+                    <div class="small">
+                      {{
+                        l('settings.soundTheme.version', {
+                          version: currentSoundThemeDetails.version
+                        })
+                      }}
+                    </div>
+                  </div>
+                  <div v-else class="text-muted small">
+                    {{ l('settings.soundTheme.noMetadata') }}
+                  </div>
+                </div>
+                <div>
+                  <div style="display: flex; gap: 8px; align-items: center">
+                    <button
+                      class="btn btn-outline-primary"
+                      @click.prevent.stop="
+                        soundListCollapsed = !soundListCollapsed
+                      "
+                      :title="l('settings.soundTheme.toggleList')"
+                    >
+                      {{
+                        l(
+                          soundListCollapsed
+                            ? 'settings.soundTheme.show'
+                            : 'settings.soundTheme.hide'
+                        )
+                      }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div
+                v-if="
+                  currentSoundThemeDetails && currentSoundThemeDetails.sounds
+                "
+                class="mt-3"
+              >
+                <div v-if="!soundListCollapsed" class="mt-2">
+                  <div
+                    v-for="sound in Object.keys(
+                      currentSoundThemeDetails.sounds
+                    )"
+                    :key="sound"
+                    class="sound-row d-flex flex-row mb-3 align-items-center"
+                  >
+                    <div
+                      style="width: 14ch; text-transform: capitalize"
+                      class="p-2"
+                    >
+                      {{ sound }}
+                    </div>
+                    <input
+                      type="range"
+                      class="form-range p-2 flex-grow-1"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      v-model.number="liveVolumeMap[sound]"
+                      @input="onVolumeChange(sound)"
+                      style="width: unset"
+                    />
+                    <div class="input-group p-2" style="width: unset">
+                      <input
+                        type="number"
+                        class="form-control"
+                        min="0"
+                        max="100"
+                        step="1"
+                        style="text-align: right"
+                        :value="Math.round((liveVolumeMap[sound] ?? 1) * 100)"
+                        @input="handlePercentInput($event, sound)"
+                      />
+                      <button
+                        class="btn btn-sm btn-outline-primary p-2"
+                        @click.prevent.stop="previewSound(sound)"
+                        :title="l('settings.soundTheme.preview')"
+                      >
+                        {{ l('settings.soundTheme.preview') }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="mt-2 text-muted small">
+                {{ l('settings.soundTheme.noSounds') }}
+              </div>
+            </div>
+            <h5>
+              {{ l('settings.notifications.badges') }}
+            </h5>
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="horizonShowNotificationBadge"
+                  v-model="settings.horizonShowNotificationBadge"
+                />
+                <label
+                  class="form-check-label"
+                  for="horizonShowNotificationBadge"
+                >
+                  {{ l('settings.notifications.badges.shouldShow') }}
+                </label>
+              </div>
+              <div
+                id="horizonShowNotificationBadgeNote"
+                class="form-text text-muted"
+                v-if="!isWindows && !isMac"
+              >
+                {{ l('settings.notifications.badges.shouldShow.linuxNote') }}
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="horizonShowWindowAndChatNotificationBadge"
+                  v-model="settings.horizonShowWindowAndChatNotificationBadge"
+                />
+                <label
+                  class="form-check-label"
+                  for="horizonShowWindowAndChatNotificationBadge"
+                >
+                  {{
+                    l('settings.notifications.badges.shouldShow.windowAndChat')
+                  }}
+                </label>
+              </div>
+            </div>
+            <div class="mb-3" v-if="!isMac">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="flashWindow"
+                  v-model="settings.flashWindow"
+                />
+                <label class="form-check-label" for="flashWindow">
+                  {{ l('settings.flashWindow') }}
+                </label>
+              </div>
+              <div
+                id="flashWindowNote"
+                class="form-text text-muted"
+                v-if="!isWindows"
+              >
+                {{ l('settings.flashWindow.note') }}
+              </div>
             </div>
           </div>
 
@@ -565,6 +943,265 @@
               </div>
             </div>
           </div>
+
+          <div
+            v-show="selectedTab === 'app.advanced'"
+            class="card-body settings-content"
+            style="height: 100%; width: 100%"
+          >
+            <h5>
+              {{ l('settings.system') }}
+            </h5>
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="hwAcceleration"
+                  v-model="generalSettings.hwAcceleration"
+                />
+                <label class="form-check-label" for="hwAcceleration">
+                  {{ l('settings.hwAcceleration') }}
+                </label>
+              </div>
+            </div>
+            <div class="mb-3">
+              <!--We do this one slightly differently because we
+                cannot and will not make ElectronLogger.LogType reactive -->
+              <label class="control-label" for="systemLogLevel">
+                {{ l('settings.systemLogLevel') }}
+                <div class="input-group">
+                  <select
+                    id="systemLogLevel"
+                    class="form-select form-select"
+                    style="flex: 1; margin-right: 10px"
+                    v-model="generalSettings.risingSystemLogLevel"
+                  >
+                    <option value="error">
+                      {{ l('settings.systemLogLevel.error') }}
+                    </option>
+                    <option value="warn">
+                      {{ l('settings.systemLogLevel.warn') }}
+                    </option>
+                    <option value="info">
+                      {{ l('settings.systemLogLevel.info') }}
+                    </option>
+                    <option value="verbose">
+                      {{ l('settings.systemLogLevel.verbose') }}
+                    </option>
+                    <option value="debug">
+                      {{ l('settings.systemLogLevel.debug') }}
+                    </option>
+                    <option value="silly">
+                      {{ l('settings.systemLogLevel.silly') }}
+                    </option>
+                  </select>
+                </div>
+              </label>
+            </div>
+
+            <h5>
+              {{ l('settings.cache') }}
+            </h5>
+
+            <div class="mb-3">
+              <label class="control-label" for="cacheExpiryDays">
+                {{ l('settings.cache.expiryDays') }}</label
+              >
+              <div class="input-group">
+                <input
+                  class="form-control"
+                  id="cacheExpiryDays"
+                  type="number"
+                  min="0"
+                  max="1000"
+                  v-model="generalSettings.risingCacheExpiryDays"
+                />
+                <span class="input-group-text" id="basic-addon3">{{
+                  l('unit.days')
+                }}</span>
+              </div>
+              <small class="form-text text-muted">{{
+                l('settings.cache.expiryDays.description')
+              }}</small>
+            </div>
+            <div class="mb-3">
+              <label class="control-label" for="cacheMemoryCount">
+                {{ l('settings.cache.memoryCount') }}
+              </label>
+              <div class="input-group">
+                <input
+                  class="form-control"
+                  id="cacheMemoryCount"
+                  type="number"
+                  min="350"
+                  max="1000"
+                  v-model="generalSettings.horizonCacheMemoryCount"
+                />
+              </div>
+              <small class="form-text text-muted">{{
+                l('settings.cache.memoryCount.description')
+              }}</small>
+            </div>
+
+            <h5>
+              {{ l('settings.browserOptionTitle') }}
+            </h5>
+            <div class="warning" v-if="isMac">
+              <h5>{{ l('settings.dangerZone') }}</h5>
+
+              <hr />
+              <p>{{ l('settings.macLinkBug1') }}</p>
+              <p>{{ l('settings.macLinkBug2') }}</p>
+              <p>{{ l('settings.macLinkBug3') }}</p>
+            </div>
+
+            <label class="control-label label-full" for="browserPath">
+              {{ l('settings.browserOptionPath') }}
+
+              <div class="input-group">
+                <input
+                  class="form-control"
+                  id="browserPath"
+                  v-model="generalSettings.browserPath"
+                />
+                <button
+                  class="btn btn-outline-secondary"
+                  @click.prevent.stop="browseForPath()"
+                >
+                  <span class="far fa-fw fa-folder-open"></span>
+                </button>
+                <button
+                  class="btn btn-outline-danger"
+                  @click.prevent.stop="browserReset()"
+                >
+                  <span class="fa-solid fa-fw fa-arrow-rotate-right"></span>
+                </button></div
+            ></label>
+
+            <label class="control-label label-full" for="browserArgs">
+              {{ l('settings.browserOptionArguments') }}
+              <div class="input-group">
+                <input
+                  class="form-control"
+                  id="browserArgs"
+                  v-model="generalSettings.browserArgs"
+                />
+              </div>
+              <small class="form-text text-muted" v-if="!isMac">{{
+                l('settings.browserOptionArgumentsHelp')
+              }}</small>
+              <small class="form-text text-muted" v-else>
+                <span>{{ l('settings.browserOptionArgumentsHelp.mac') }} </span>
+
+                <a
+                  class="fa-solid fa-arrow-up-right-from-square"
+                  href="#"
+                  @click="
+                    externalUrlHandler(
+                      'https://support.apple.com/guide/terminal/execute-commands-and-run-tools-apdb66b5242-0d18-49fc-9c47-a2498b7c91d5/mac'
+                    )
+                  "
+                ></a>
+                <p>
+                  <span>
+                    {{ l('settings.browserOptionArgumentsHelp.format') }}
+                  </span>
+                  <kbd>
+                    {{
+                      `open -a ${generalSettings.browserPath} ${generalSettings.browserArgs}`
+                    }}
+                  </kbd>
+                </p>
+
+                <p>
+                  {{ l('settings.browserOptionArgumentsHelp.mac.ignoreMe') }}
+                </p>
+              </small>
+            </label>
+
+            <div class="mb-3" v-if="!isMac">
+              <label class="control-label" for="alwaysOpenIncognito">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="alwaysOpenIncognito"
+                    v-model="generalSettings.horizonAlwaysOpenIncognito"
+                  />
+                  <label class="form-check-label" for="alwaysOpenIncognito">
+                    {{ l('settings.alwaysOpenIncognito') }}
+                  </label>
+                </div>
+                <small class="form-text text-muted">{{
+                  l('settings.alwaysOpenIncognito.help')
+                }}</small>
+              </label>
+            </div>
+            <h5>
+              {{
+                l('settings.experimental', {
+                  name: l('settings.customCss')
+                })
+              }}
+            </h5>
+
+            <div class="mb-3">
+              <label class="control-label" for="customCssEnabled">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="customCss"
+                    v-model="generalSettings.horizonCustomCssEnabled"
+                  />
+                  <label class="form-check-label" for="customCss">
+                    {{ l('settings.customCss.enabled') }}
+                  </label>
+                </div>
+              </label>
+            </div>
+            <div class="mb-3">
+              <label class="control-label" for="windowTransparency">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    v-model="generalSettings.allowWindowTransparency"
+                    type="checkbox"
+                    :disabled="!generalSettings.horizonCustomCssEnabled"
+                    id="windowTransparency"
+                    aria-describedby="windowTransparencyNote"
+                  />
+                  <label class="form-check-label" for="windowTransparency">
+                    {{
+                      l('settings.experimental', {
+                        name: l('settings.customCss.transparency')
+                      })
+                    }}
+                  </label>
+                </div>
+                <div id="windowTransparencyNote" class="form-text text-muted">
+                  {{ l('settings.customCss.transparency.note') }}
+                </div>
+              </label>
+
+              <label for="customCss" class="control-label label-full"
+                >{{ l('settings.customCss.css') }}
+                <textarea
+                  class="form-control textarea-code"
+                  id="customCss"
+                  v-model="generalSettings.horizonCustomCss"
+                  :disabled="!generalSettings.horizonCustomCssEnabled"
+                  :rows="countLines(generalSettings.horizonCustomCss || 0) + 3"
+                  @keydown.tab.prevent="handleTab"
+                ></textarea>
+                <small class="form-text text-warning">{{
+                  l('settings.customCss.warning')
+                }}</small>
+              </label>
+            </div>
+          </div>
+
           <div v-show="selectedTab === 'chat.bbcode'">
             <h5>{{ l('settings.chat.bbcode') }}</h5>
 
@@ -2528,6 +3165,27 @@
           )
           .join(' ');
       },
+      countLines(text: string): number {
+        let pointer = 0;
+        for (let i = 0; i < text.length; i += 1) {
+          switch (text[i]) {
+            case '\r':
+              pointer += 1;
+              if (text[i + 1] === '\n') {
+                i += 1;
+              }
+              break;
+            case '\n':
+              pointer += 1;
+              if (text[i + 1] === '\r') {
+                i += 1;
+              }
+              break;
+          }
+        }
+        return pointer;
+      },
+
       rebuildFilters() {
         core.cache.profileCache.onEachInMemory(c => {
           const oldFiltered = c.match.isFiltered;
