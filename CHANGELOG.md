@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Messing up a slash-command by prefixing whitespace now warns you before sending it. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c15f8446ef570c977d9d8b501fecdd75405b1685)
+  - You can press Enter again to allow it through regardless.
+- Reworked the bbcode editor/ chatbox and Eicon selector dialog to work better in mobile-sized viewports. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f37e73959ea03b7652d1f73aeed393ef7a52faff)
+- Replaced the quick switcher's button icon with something more appropriate. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5093d25eb39359dbd93bfb816d4d31597c68adb3)
+
+### Fixed
+
+- Fixed an issue where native window controls fucked with the native window title bar setting, causing a window's content to never spawn. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/46d8c266ff6de432dbe4aeac89157a1de026063c)
+- `openUrlExternally` only allows known URL schemes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c5ebb2214287d8f8081771ff6c785b6e24c55023)
+- Fixed proportions for non-1:1 HQ profile pics in the profile viewer's match report. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/cd90acb8744a278109a9028504d28ce477f136be)
+
+### Development
+
+- Added a CI job for typechecking. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/345836edda9ed756ad81aba9817ad685dcf08336)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/920 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/936 by @freenutsxd
+
+Non PR'd changes by @CodingWithAnxiety and @FatCatClient
+
 ## [2.4.3] - 2026-10-20
 
 ### Fixed
