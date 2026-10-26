@@ -405,6 +405,7 @@
   "editor.format.underline": "Sottolinea ({modifier}+U)\n\nFa apparire il testo con una linea al disotto.",
   "editor.format.url": "URL ({modifier}+L)\n\nCrea un link cliccabile da aggiungere ad una pagina di tua scelta.",
   "editor.format.user": "Utente ({modifier}+R)\n\nCollega al profilo di un personaggio.",
+  "editor.formatting": "Formattazione\n\nMostra i pulsanti per il formato di testo.",
   "editor.help": "Aiuto\n\nClicca questo pulsante per una vista rapida dei comandi con la barra.",
   "editor.preview": "Anteprima ({modifier})\n\nMostra un'anteprima del BBCode scritto, includendo qualsiasi errore di formattazione.",
   "eicon.action": "Scegli Eicon",
