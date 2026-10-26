@@ -405,6 +405,7 @@
   "editor.format.underline": "Subrayado ({modifier}+U)\n\nHace que el texto aparezca con una línea debajo.",
   "editor.format.url": "URL ({modifier}+L\n\nCrea un enlace clicable a otra página de tu elección.",
   "editor.format.user": "Usuario ({modifier}+R)\n\nEnlaza a un perfil de personaje.",
+  "editor.formatting": "Formato\n\nMuestra los botones de formateo de texto.",
   "editor.help": "Ayuda\n\nClic en este botón para ver un resumen rápido de los comandos.",
   "editor.preview": "Vista Previa ({modifier})\n\nMuestra una vista previa del BBCode que has escrito, incluyendo cualquier error de formato.",
   "eicon.action": "Seleccionar Eicon",
