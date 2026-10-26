@@ -1074,7 +1074,7 @@
         .carousel.results {
           // no fixed height so that it can shrink with the window.
           // max-height keeps the usual size on a tall one.
-          flex: 1 1 auto;
+          flex: 0 1 535px;
           min-height: 0;
           max-height: 535px;
 
