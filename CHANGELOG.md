@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.4] - 2026-10-26
+
 ### Changed
 
 - Messing up a slash-command by prefixing whitespace now warns you before sending it. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c15f8446ef570c977d9d8b501fecdd75405b1685)
@@ -1762,7 +1764,8 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - IOS build removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814)]
 - Webchat removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/b894a180b9be31f68d1458aaa3c59f9c4470da89)]
 
-[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.3...development
+[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.4...development
+[2.4.4]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.3...v2.4.4
 [2.4.3]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.2...v2.4.3
 [2.4.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.2-beta.2...v2.4.2
 [2.4.2-beta.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.2-beta.1...v2.4.2-beta.2
