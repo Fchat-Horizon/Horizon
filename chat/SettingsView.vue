@@ -212,7 +212,7 @@
             </div>
 
             <!--On MacOS, Electron uses the OS' native spell checker as of version 35.2.0 -->
-            <div class="mb-3" v-if="!isMac">
+            <div class="mb-3" v-if="spellcheckLanguages.length > 0">
               <label
                 class="control-label"
                 for="spellCheckLang"
@@ -2861,7 +2861,9 @@
     PartialSettings
   } from './interfaces';
   import { GeneralSettings } from './general-settings';
-  import l from './localize';
+  import l, { availableDisplayLanguages, setLanguage } from './localize';
+  import { formatLanguage } from './languages';
+  import { SpellcheckLanguage } from './platform';
   import {
     SmartFilterSettings,
     SmartFilterSelection
@@ -2909,6 +2911,9 @@
         importCharacter: '',
         characterOverrides: {} as PartialSettings,
         generalSettings: {} as GeneralSettings,
+        availableDisplayLanguages,
+        spellcheckLanguages: [] as ReadonlyArray<SpellcheckLanguage>,
+        selectedLang: [] as string[],
 
         availableThemes: [] as ReadonlyArray<string>,
         smartFilterTypes: smartFilterTypesOrigin,
@@ -2946,6 +2951,9 @@
       },
       ignored(): readonly string[] {
         return core.characters.ignoreList;
+      },
+      sortedLangs(): string[] {
+        return this.spellcheckLanguages.map(language => language.code);
       }
     },
     watch: {
@@ -2957,6 +2965,9 @@
             _.cloneDeep(this.settings.risingFilter)
           );
         }
+      },
+      'generalSettings.displayLanguage'(value: string): void {
+        setLanguage(value);
       }
     },
     methods: {
@@ -2990,6 +3001,12 @@
         this.generalSettings = {
           ...core.state.generalSettings
         } as GeneralSettings;
+
+        this.spellcheckLanguages = await core.platform.getSpellcheckLanguages();
+        this.selectedLang = this.getSafeSpellcheckLanguages(
+          this.generalSettings.spellcheckLang
+        );
+        setLanguage(this.generalSettings.displayLanguage);
 
         for (const [key, value] of Object.entries(defaultSettings)) {
           if (globalSettings[key] === undefined) globalSettings[key] = value;
@@ -3046,7 +3063,32 @@
         await this.submitCharacterOverrides();
       },
       async submitGeneralSettings(): Promise<void> {
+        if (this.spellcheckLanguages.length > 0) {
+          this.generalSettings.spellcheckLang = this.selectedLang;
+        }
         await core.platform.saveGeneralSettings(this.generalSettings);
+      },
+      formatLanguage(code: string): string {
+        return formatLanguage(code);
+      },
+      filterLanguage(filter: RegExp, language: string): boolean {
+        return filter.test(formatLanguage(language));
+      },
+      getSafeSpellcheckLanguages(
+        languages: string | string[] | undefined
+      ): string[] {
+        const selected =
+          typeof languages === 'string'
+            ? [languages]
+            : languages === undefined
+              ? []
+              : languages;
+        const supported = new Set(this.sortedLangs);
+        const safe = selected
+          .map(language => language.replace('_', '-'))
+          .filter(language => supported.has(language));
+
+        return selected.length > 0 && safe.length === 0 ? ['en-GB'] : safe;
       },
       async browseForLogDir(): Promise<void> {
         const directory = await core.platform.selectDirectory({

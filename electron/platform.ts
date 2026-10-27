@@ -4,8 +4,10 @@ import { GeneralSettings } from '../chat/general-settings';
 import {
   DirectoryPickerOptions,
   FilePickerOptions,
-  PlatformServices
+  PlatformServices,
+  SpellcheckLanguage
 } from '../chat/platform';
+import { formatLanguage } from '../chat/languages';
 
 export default class ElectronPlatformService implements PlatformServices {
   async saveGeneralSettings(settings: GeneralSettings): Promise<void> {
@@ -36,5 +38,15 @@ export default class ElectronPlatformService implements PlatformServices {
 
   async openDirectory(directory: string): Promise<void> {
     electron.ipcRenderer.send('open-dir', directory);
+  }
+
+  async getSpellcheckLanguages(): Promise<ReadonlyArray<SpellcheckLanguage>> {
+    const languages =
+      remote.getCurrentWindow().webContents.session
+        .availableSpellCheckerLanguages;
+
+    return languages
+      .map(code => ({ code, name: formatLanguage(code) }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 }
