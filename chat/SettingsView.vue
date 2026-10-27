@@ -425,7 +425,7 @@
                 <div class="form-check">
                   <input
                     class="form-check-input"
-                    v-model="settings.horizonVanillaTextColors"
+                    v-model="generalSettings.horizonVanillaTextColors"
                     type="checkbox"
                     id="themeVanillaBbcode"
                     aria-describedby="vanillaBbcodeLegibilityNote"
@@ -448,7 +448,7 @@
                 <div class="form-check">
                   <input
                     class="form-check-input"
-                    v-model="settings.horizonVanillaGenderColors"
+                    v-model="generalSettings.horizonVanillaGenderColors"
                     type="checkbox"
                     id="themeVanillaGenders"
                     aria-describedby="vanillaGendersNote"
@@ -468,7 +468,7 @@
                 <div class="form-check">
                   <input
                     class="form-check-input"
-                    v-model="settings.horizonBbcodeGlow"
+                    v-model="generalSettings.horizonBbcodeGlow"
                     type="checkbox"
                     id="themeBbcodeGlow"
                     aria-describedby="bbcodeGlowNote"
@@ -493,7 +493,7 @@
               <label class="control-label" for="soundTheme" style="width: 24ch">
                 {{ l('settings.soundTheme') }}
                 <filterable-select
-                  v-model="settings.soundTheme"
+                  v-model="generalSettings.soundTheme"
                   :options="availableSoundThemes"
                   style="flex: 1; margin-right: 10px"
                   :title="l('settings.soundTheme')"
@@ -513,7 +513,10 @@
               >
                 <div>
                   <h5 style="margin: 0">
-                    {{ capitalizeThemeName(settings.soundTheme) }}
+                    {{
+                      // capitalizeThemeName(generalSettings.soundTheme)
+                      generalSettings.soundTheme
+                    }}
                   </h5>
                   <div class="text-muted" v-if="currentSoundThemeDetails">
                     <div>{{ currentSoundThemeDetails.description }}</div>
@@ -602,7 +605,7 @@
                         @click.prevent.stop="previewSound(sound)"
                         :title="l('settings.soundTheme.preview')"
                       >
-                        {{ l('settings.soundTheme.preview') }}
+                        <span class="fas fa-play"></span>
                       </button>
                     </div>
                   </div>
@@ -621,7 +624,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="horizonShowNotificationBadge"
-                  v-model="settings.horizonShowNotificationBadge"
+                  v-model="generalSettings.horizonShowNotificationBadge"
                 />
                 <label
                   class="form-check-label"
@@ -644,7 +647,9 @@
                   class="form-check-input"
                   type="checkbox"
                   id="horizonShowWindowAndChatNotificationBadge"
-                  v-model="settings.horizonShowWindowAndChatNotificationBadge"
+                  v-model="
+                    generalSettings.horizonShowWindowAndChatNotificationBadge
+                  "
                 />
                 <label
                   class="form-check-label"
@@ -662,7 +667,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="flashWindow"
-                  v-model="settings.flashWindow"
+                  v-model="generalSettings.flashWindow"
                 />
                 <label class="form-check-label" for="flashWindow">
                   {{ l('settings.flashWindow') }}
@@ -2898,6 +2903,14 @@
         .filter(x => x.substr(-4) === '.css')
         .map(x => x.slice(0, -4));
 
+      this.loadAvailableSoundThemes();
+      this.$watch(
+        () => this.generalSettings.soundTheme,
+        async () => {
+          await this.loadSelectedSoundThemeDetails();
+        }
+      );
+
       this.platform = process.platform;
     },
     data() {
@@ -2920,7 +2933,12 @@
         settings: { ...defaultSettings } as DefaultSettings,
         risingFilter: {} as any as SmartFilterSettings,
         hiddenFilter: '',
-        platform: 'win32' || 'darwin' || 'linux'
+        platform: 'win32' || 'darwin' || 'linux',
+        availableSoundThemes: [] as ReadonlyArray<string>,
+        currentSoundThemeDetails: null as any | null,
+        liveVolumeMap: {} as { [sound: string]: number },
+        soundListCollapsed: true as boolean,
+        soundPreviewAudio: null as HTMLAudioElement | null
       };
     },
     computed: {
@@ -3015,6 +3033,7 @@
         console.log(this.availableThemes);
 
         this.settings = { ...globalSettings };
+        await this.loadSelectedSoundThemeDetails();
         this.availableImports = (
           await core.settingsStore.getAvailableCharacters()
         ).filter(x => x !== core.connection.character);
@@ -3229,6 +3248,129 @@
             word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
           )
           .join(' ');
+      },
+      loadAvailableSoundThemes(): void {
+        try {
+          const soundThemesPath = path.join(__dirname, 'sound-themes');
+          this.availableSoundThemes = fs
+            .readdirSync(soundThemesPath, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name)
+            .filter(name =>
+              fs.existsSync(path.join(soundThemesPath, name, 'sound.json'))
+            );
+        } catch (error) {
+          console.error('Error loading sound themes:', error);
+          this.availableSoundThemes = ['default'];
+        }
+      },
+      async loadSelectedSoundThemeDetails(): Promise<void> {
+        const theme = this.generalSettings.soundTheme || 'default';
+
+        try {
+          const themeJsonPath = path.join(
+            __dirname,
+            'sound-themes',
+            theme,
+            'sound.json'
+          );
+          this.currentSoundThemeDetails = JSON.parse(
+            fs.readFileSync(themeJsonPath, 'utf8')
+          );
+        } catch (error) {
+          this.currentSoundThemeDetails = null;
+        }
+
+        const perTheme = (this.settings as any).soundThemeSoundVolumes || {};
+        const saved = perTheme[theme] || {};
+        const newMap: { [sound: string]: number } = {};
+
+        if (this.currentSoundThemeDetails?.sounds) {
+          for (const sound of Object.keys(
+            this.currentSoundThemeDetails.sounds
+          )) {
+            const value = saved[sound];
+            newMap[sound] =
+              typeof value === 'number' ? Math.max(0, Math.min(1, value)) : 1;
+          }
+        }
+
+        this.liveVolumeMap = newMap;
+      },
+      onVolumeChange(sound: string): void {
+        const volume = Math.max(
+          0,
+          Math.min(1, Number(this.liveVolumeMap[sound] ?? 1))
+        );
+        const volumes = this.generalSettings.soundThemeSoundVolumes || {};
+        if (!volumes[this.generalSettings.soundTheme]) {
+          volumes[this.generalSettings.soundTheme] = {};
+        }
+        volumes[this.generalSettings.soundTheme][sound] = volume;
+        this.generalSettings.soundThemeSoundVolumes = volumes;
+      },
+      handlePercentInput(event: Event, sound: string): void {
+        const target = event.target as HTMLInputElement;
+        let percent = parseInt(target.value || '0', 10);
+        if (Number.isNaN(percent)) percent = 0;
+        percent = Math.max(0, Math.min(100, percent));
+        this.$set(this.liveVolumeMap, sound, percent / 100);
+        this.onVolumeChange(sound);
+      },
+      previewSound(sound: string): void {
+        if (this.soundPreviewAudio) {
+          this.soundPreviewAudio.pause();
+          this.soundPreviewAudio.remove();
+          this.soundPreviewAudio = null;
+        }
+
+        const audio = document.createElement('audio');
+        audio.preload = 'auto';
+        audio.volume = this.liveVolumeMap[sound] ?? 1;
+
+        const theme = this.currentSoundThemeDetails;
+        if (theme?.sounds?.[sound]) {
+          const formats = [
+            theme.formats?.preferred,
+            ...(theme.formats?.fallback || [])
+          ];
+          const extensions: { [format: string]: string } = {
+            ogg: 'ogg',
+            mpeg: 'mp3',
+            wav: 'wav'
+          };
+
+          for (const format of formats) {
+            if (!extensions[format]) continue;
+            const source = document.createElement('source');
+            source.type = `audio/${format}`;
+            source.src = `./sound-themes/${this.generalSettings.soundTheme}/${theme.sounds[sound]}.${extensions[format]}`;
+            audio.appendChild(source);
+          }
+        } else {
+          const extensions = ['ogg', 'mp3', 'wav'];
+          for (const extension of extensions) {
+            try {
+              const source = document.createElement('source');
+              source.type = `audio/${extension === 'mp3' ? 'mpeg' : extension}`;
+              source.src = require(`./assets/${sound}.${extension}`).default;
+              audio.appendChild(source);
+            } catch (error) {
+              console.warn(
+                `Failed to load fallback sound: ${sound}.${extension}`,
+                error
+              );
+            }
+          }
+        }
+
+        audio.addEventListener('ended', () => {
+          audio.remove();
+          if (this.soundPreviewAudio === audio) this.soundPreviewAudio = null;
+        });
+        document.body.appendChild(audio);
+        this.soundPreviewAudio = audio;
+        audio.play().catch(error => console.warn('Preview play failed', error));
       },
       countLines(text: string): number {
         let pointer = 0;
