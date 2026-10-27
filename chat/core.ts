@@ -29,7 +29,8 @@ import {
 } from './interfaces';
 import { AdCoordinatorGuest } from './ads/ad-coordinator-guest';
 import { AdCenter } from './ads/ad-center';
-import { GeneralSettings } from '../electron/common';
+import { GeneralSettings } from './general-settings';
+import { PlatformServices } from './platform';
 import { SiteSession } from '../site/site-session';
 import _ from 'lodash';
 import { preloadTeamData } from './profile_api';
@@ -178,6 +179,7 @@ function rebuildHiddenUsersSet(): void {
 }
 
 const data = {
+  platform: <PlatformServices | undefined>undefined,
   connection: <Connection | undefined>undefined,
   logs: <Logs | undefined>undefined,
   settingsStore: <Settings.Store | undefined>undefined,
@@ -347,8 +349,10 @@ export async function init(
   settings: GeneralSettings,
   logsClass: new () => Logs,
   settingsClass: new () => Settings.Store,
-  notificationsClass: new () => Notifications
+  notificationsClass: new () => Notifications,
+  platform: PlatformServices
 ): Promise<void> {
+  data.platform = platform;
   data.connection = connection;
   data.logs = new logsClass();
   data.settingsStore = new settingsClass();
@@ -389,6 +393,7 @@ export async function init(
 }
 
 export interface Core {
+  readonly platform: PlatformServices;
   readonly connection: Connection;
   readonly logs: Logs;
   readonly state: StateInterface;

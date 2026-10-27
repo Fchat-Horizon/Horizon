@@ -2839,9 +2839,6 @@
 </template>
 
 <script lang="ts">
-  // I'm so, so sorry Joycon
-  // We'll get rid of this for 2.6 when we'll write a unified event system.
-  import * as electron from 'electron';
   import * as fs from 'fs';
   import * as path from 'path';
   import CustomDialog from '../components/custom_dialog';
@@ -2863,7 +2860,7 @@
     Character,
     PartialSettings
   } from './interfaces';
-  import { GeneralSettings } from '../electron/common';
+  import { GeneralSettings } from './general-settings';
   import l from './localize';
   import {
     SmartFilterSettings,
@@ -2877,10 +2874,6 @@
   import VirtualList from '../components/VirtualList.vue';
 
   const bbcodeParser = new UserInterfaceBBCodeParser();
-
-  function notifySettingsReload(): void {
-    electron.ipcRenderer.send('request-reload-settings');
-  }
 
   export default CustomDialog.extend({
     components: {
@@ -3053,11 +3046,41 @@
         await this.submitCharacterOverrides();
       },
       async submitGeneralSettings(): Promise<void> {
-        //TODO reimplement this to work through the settings interface, with an electron-specific implementation
-        electron.ipcRenderer.send(
-          'general-settings-update',
-          this.generalSettings
-        );
+        await core.platform.saveGeneralSettings(this.generalSettings);
+      },
+      async browseForLogDir(): Promise<void> {
+        const directory = await core.platform.selectDirectory({
+          defaultPath: this.generalSettings.logDirectory
+        });
+
+        if (directory === undefined) return;
+
+        if (
+          !confirm(
+            l('settings.logDir.confirm', {
+              newDir: directory,
+              currentDir: this.generalSettings.logDirectory
+            })
+          )
+        ) {
+          return;
+        }
+
+        this.generalSettings.logDirectory = directory;
+      },
+      async browseForPath(): Promise<void> {
+        const file = await core.platform.selectFile({
+          defaultPath: this.generalSettings.browserPath
+        });
+
+        if (file !== undefined) this.generalSettings.browserPath = file;
+      },
+      async openLogDir(): Promise<void> {
+        await core.platform.openDirectory(this.generalSettings.logDirectory);
+      },
+      browserReset(): void {
+        this.generalSettings.browserPath = '';
+        this.generalSettings.browserArgs = '%s';
       },
       async submitGlobalSettings(): Promise<void> {
         const oldRisingFilter = JSON.parse(
@@ -3126,7 +3149,7 @@
           await core.notifications.requestPermission();
 
         EventBus.$emit('configuration-update', core.state.settings);
-        notifySettingsReload();
+        await core.platform.reloadSettings();
       },
       async submitCharacterOverrides(): Promise<void> {
         const oldRisingFilter = _.cloneDeep(
@@ -3155,7 +3178,7 @@
         }
 
         EventBus.$emit('configuration-update', core.state.settings);
-        notifySettingsReload();
+        await core.platform.reloadSettings();
       },
       capitalizeThemeName(themeName: string): string {
         return themeName

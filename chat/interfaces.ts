@@ -4,6 +4,7 @@ import { Connection } from '../fchat';
 import { Channel, Character } from '../fchat/interfaces';
 import { AdManager } from './ads/ad-manager';
 import { SmartFilterSettings } from '../learn/filter/types';
+import { GeneralSettings } from './general-settings';
 export { type Connection, Channel, type Character } from '../fchat/interfaces';
 export const userStatuses: ReadonlyArray<Character.Status> = [
   'online',
@@ -390,6 +391,7 @@ export interface Notifications {
 }
 
 export interface State {
+  generalSettings?: GeneralSettings;
   /** Merged settings (global + character overrides). Use this for reading settings in logic. */
   settings: Settings;
   /** Global settings shared across all characters. Stored under character '_'. */

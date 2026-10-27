@@ -11,14 +11,7 @@ import {
   Settings
 } from '../chat/interfaces';
 import l from '../chat/localize';
-import { GeneralSettings } from './common';
 import { isFilesystemArtifact } from './services/log-backup';
-
-declare module '../chat/interfaces' {
-  interface State {
-    generalSettings?: GeneralSettings;
-  }
-}
 
 const dayMs = 86400000;
 const read = promisify(fs.read);

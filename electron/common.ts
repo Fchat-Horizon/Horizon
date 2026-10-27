@@ -1,6 +1,7 @@
 import * as electron from 'electron';
 import * as path from 'path';
 import { ProfileViewerGalleryType } from '../site/utils';
+import { GeneralSettings as GeneralSettingsInterface } from '../chat/general-settings';
 
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 
@@ -23,7 +24,7 @@ function getDefaultLanguage(): string {
   }
 }
 
-export class GeneralSettings {
+export class GeneralSettings implements GeneralSettingsInterface {
   account = '';
   closeToTray = true;
   profileViewer = true;
