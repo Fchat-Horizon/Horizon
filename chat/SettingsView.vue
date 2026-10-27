@@ -94,6 +94,7 @@
       ></tabs>
       <div
         class="settings-tab-content flex-grow-1 ms-3 h-100 d-flex flex-column"
+        v-if="generalSettings"
       >
         <div
           class="mb-3"
@@ -513,10 +514,7 @@
               >
                 <div>
                   <h5 style="margin: 0">
-                    {{
-                      // capitalizeThemeName(generalSettings.soundTheme)
-                      generalSettings.soundTheme
-                    }}
+                    {{ capitalizeThemeName(generalSettings.soundTheme) }}
                   </h5>
                   <div class="text-muted" v-if="currentSoundThemeDetails">
                     <div>{{ currentSoundThemeDetails.description }}</div>
@@ -636,7 +634,7 @@
               <div
                 id="horizonShowNotificationBadgeNote"
                 class="form-text text-muted"
-                v-if="!isWindows && !isMac"
+                v-if="platform !== 'win32' && platform !== 'darwin'"
               >
                 {{ l('settings.notifications.badges.shouldShow.linuxNote') }}
               </div>
@@ -661,7 +659,7 @@
                 </label>
               </div>
             </div>
-            <div class="mb-3" v-if="!isMac">
+            <div class="mb-3" v-if="platform !== 'darwin'">
               <div class="form-check">
                 <input
                   class="form-check-input"
@@ -676,7 +674,7 @@
               <div
                 id="flashWindowNote"
                 class="form-text text-muted"
-                v-if="!isWindows"
+                v-if="platform !== 'win32'"
               >
                 {{ l('settings.flashWindow.note') }}
               </div>
@@ -1052,7 +1050,7 @@
             <h5>
               {{ l('settings.browserOptionTitle') }}
             </h5>
-            <div class="warning" v-if="isMac">
+            <div class="warning" v-if="platform === 'darwin'">
               <h5>{{ l('settings.dangerZone') }}</h5>
 
               <hr />
@@ -1093,9 +1091,11 @@
                   v-model="generalSettings.browserArgs"
                 />
               </div>
-              <small class="form-text text-muted" v-if="!isMac">{{
-                l('settings.browserOptionArgumentsHelp')
-              }}</small>
+              <small
+                class="form-text text-muted"
+                v-if="platform !== 'darwin'"
+                >{{ l('settings.browserOptionArgumentsHelp') }}</small
+              >
               <small class="form-text text-muted" v-else>
                 <span>{{ l('settings.browserOptionArgumentsHelp.mac') }} </span>
 
@@ -1125,7 +1125,7 @@
               </small>
             </label>
 
-            <div class="mb-3" v-if="!isMac">
+            <div class="mb-3" v-if="platform !== 'darwin'">
               <label class="control-label" for="alwaysOpenIncognito">
                 <div class="form-check">
                   <input
@@ -2857,6 +2857,7 @@
   import SettingsInput from '../components/SettingsInput.vue';
   import SettingsArray from '../components/SettingsArray.vue';
   import SettingsSelectOverride from '../components/SettingsSelectOverride.vue';
+  import LocalizedText from '../components/localized_text';
   import { UserInterfaceBBCodeParser } from '../bbcode/user-interface';
   import { Settings as DefaultSettings } from './common';
   import core from './core';
@@ -2888,6 +2889,7 @@
       editor: Editor,
       tabs: Tabs,
       bbcode: BBCodeView(bbcodeParser),
+      'localized-text': LocalizedText,
       'settings-tristate': SettingsTriState,
       'filterable-select': FilterableSelect,
       'user-view': UserView,
@@ -2905,9 +2907,11 @@
 
       this.loadAvailableSoundThemes();
       this.$watch(
-        () => this.generalSettings.soundTheme,
+        () => this.generalSettings && this.generalSettings.soundTheme,
         async () => {
-          await this.loadSelectedSoundThemeDetails();
+          if (this.generalSettings) {
+            await this.loadSelectedSoundThemeDetails();
+          }
         }
       );
 
@@ -2923,7 +2927,7 @@
         settingsMode: '0',
         importCharacter: '',
         characterOverrides: {} as PartialSettings,
-        generalSettings: {} as GeneralSettings,
+        generalSettings: null as GeneralSettings | null,
         availableDisplayLanguages,
         spellcheckLanguages: [] as ReadonlyArray<SpellcheckLanguage>,
         selectedLang: [] as string[],
@@ -3020,11 +3024,13 @@
           ...core.state.generalSettings
         } as GeneralSettings;
 
+        const generalSettings = this.generalSettings;
+
         this.spellcheckLanguages = await core.platform.getSpellcheckLanguages();
         this.selectedLang = this.getSafeSpellcheckLanguages(
-          this.generalSettings.spellcheckLang
+          generalSettings.spellcheckLang
         );
-        setLanguage(this.generalSettings.displayLanguage);
+        setLanguage(generalSettings.displayLanguage);
 
         for (const [key, value] of Object.entries(defaultSettings)) {
           if (globalSettings[key] === undefined) globalSettings[key] = value;
@@ -3082,10 +3088,13 @@
         await this.submitCharacterOverrides();
       },
       async submitGeneralSettings(): Promise<void> {
+        const generalSettings = this.generalSettings;
+        if (!generalSettings) return;
+
         if (this.spellcheckLanguages.length > 0) {
-          this.generalSettings.spellcheckLang = this.selectedLang;
+          generalSettings.spellcheckLang = this.selectedLang;
         }
-        await core.platform.saveGeneralSettings(this.generalSettings);
+        await core.platform.saveGeneralSettings(generalSettings);
       },
       formatLanguage(code: string): string {
         return formatLanguage(code);
@@ -3110,8 +3119,11 @@
         return selected.length > 0 && safe.length === 0 ? ['en-GB'] : safe;
       },
       async browseForLogDir(): Promise<void> {
+        const generalSettings = this.generalSettings;
+        if (!generalSettings) return;
+
         const directory = await core.platform.selectDirectory({
-          defaultPath: this.generalSettings.logDirectory
+          defaultPath: generalSettings.logDirectory
         });
 
         if (directory === undefined) return;
@@ -3120,26 +3132,31 @@
           !confirm(
             l('settings.logDir.confirm', {
               newDir: directory,
-              currentDir: this.generalSettings.logDirectory
+              currentDir: generalSettings.logDirectory
             })
           )
         ) {
           return;
         }
 
-        this.generalSettings.logDirectory = directory;
+        generalSettings.logDirectory = directory;
       },
       async browseForPath(): Promise<void> {
+        const generalSettings = this.generalSettings;
+        if (!generalSettings) return;
+
         const file = await core.platform.selectFile({
-          defaultPath: this.generalSettings.browserPath
+          defaultPath: generalSettings.browserPath
         });
 
-        if (file !== undefined) this.generalSettings.browserPath = file;
+        if (file !== undefined) generalSettings.browserPath = file;
       },
       async openLogDir(): Promise<void> {
+        if (!this.generalSettings) return;
         await core.platform.openDirectory(this.generalSettings.logDirectory);
       },
       browserReset(): void {
+        if (!this.generalSettings) return;
         this.generalSettings.browserPath = '';
         this.generalSettings.browserArgs = '%s';
       },
@@ -3265,7 +3282,10 @@
         }
       },
       async loadSelectedSoundThemeDetails(): Promise<void> {
-        const theme = this.generalSettings.soundTheme || 'default';
+        const generalSettings = this.generalSettings;
+        if (!generalSettings) return;
+
+        const theme = generalSettings.soundTheme || 'default';
 
         try {
           const themeJsonPath = path.join(
@@ -3298,16 +3318,19 @@
         this.liveVolumeMap = newMap;
       },
       onVolumeChange(sound: string): void {
+        const generalSettings = this.generalSettings;
+        if (!generalSettings) return;
+
         const volume = Math.max(
           0,
           Math.min(1, Number(this.liveVolumeMap[sound] ?? 1))
         );
-        const volumes = this.generalSettings.soundThemeSoundVolumes || {};
-        if (!volumes[this.generalSettings.soundTheme]) {
-          volumes[this.generalSettings.soundTheme] = {};
+        const volumes = generalSettings.soundThemeSoundVolumes || {};
+        if (!volumes[generalSettings.soundTheme]) {
+          volumes[generalSettings.soundTheme] = {};
         }
-        volumes[this.generalSettings.soundTheme][sound] = volume;
-        this.generalSettings.soundThemeSoundVolumes = volumes;
+        volumes[generalSettings.soundTheme][sound] = volume;
+        generalSettings.soundThemeSoundVolumes = volumes;
       },
       handlePercentInput(event: Event, sound: string): void {
         const target = event.target as HTMLInputElement;
@@ -3318,6 +3341,9 @@
         this.onVolumeChange(sound);
       },
       previewSound(sound: string): void {
+        const generalSettings = this.generalSettings;
+        if (!generalSettings) return;
+
         if (this.soundPreviewAudio) {
           this.soundPreviewAudio.pause();
           this.soundPreviewAudio.remove();
@@ -3344,7 +3370,7 @@
             if (!extensions[format]) continue;
             const source = document.createElement('source');
             source.type = `audio/${format}`;
-            source.src = `./sound-themes/${this.generalSettings.soundTheme}/${theme.sounds[sound]}.${extensions[format]}`;
+            source.src = `./sound-themes/${generalSettings.soundTheme}/${theme.sounds[sound]}.${extensions[format]}`;
             audio.appendChild(source);
           }
         } else {
