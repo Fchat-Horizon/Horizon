@@ -3535,4 +3535,25 @@
   #settings .form-group.filters.age input {
     margin-left: 5px;
   }
+
+  .label-full {
+    width: 100%;
+  }
+
+  .custom-select {
+    width: 24ch;
+  }
+
+  textarea.textarea-code {
+    font-family: monospace;
+    resize: none;
+  }
+
+  .vue-input-tag-wrapper.form-control {
+    display: flex;
+
+    .new-tag {
+      flex-grow: 1;
+    }
+  }
 </style>
