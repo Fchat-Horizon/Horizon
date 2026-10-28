@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.5] - 2026-10-28
+
 ### Fixed
 
 - Clicking 'Hide ads' now retroactively hides that user's ads, instead of only hiding future ads sent by them. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/977f6b748a045b87425b1d0119b188c5f3df53c1)
@@ -1783,7 +1785,8 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - IOS build removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814)]
 - Webchat removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/b894a180b9be31f68d1458aaa3c59f9c4470da89)]
 
-[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.4...development
+[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.5...development
+[2.4.5]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.4...v2.4.5
 [2.4.4]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.3...v2.4.4
 [2.4.3]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.2...v2.4.3
 [2.4.2]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.2-beta.2...v2.4.2
