@@ -267,6 +267,7 @@ export class Logs implements Logging {
   constructor() {
     core.connection.onEvent('connecting', () => {
       this.index = loadIndex(core.connection.character);
+      this.loadedCharacter = undefined;
     });
   }
 
@@ -300,10 +301,10 @@ export class Logs implements Logging {
   }
 
   private getIndex(name: string): Index {
+    if (name === core.connection.character) return this.index;
     if (this.loadedCharacter === name) return this.loadedIndex!;
     this.loadedCharacter = name;
-    return (this.loadedIndex =
-      name === core.connection.character ? this.index : loadIndex(name));
+    return (this.loadedIndex = loadIndex(name));
   }
 
   async getLogDates(
