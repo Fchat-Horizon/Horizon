@@ -7,7 +7,7 @@
   "license": "MPL-2.0",
   "main": "main.js",
   "engines": {
-    "node": ">=24.14.0"
+    "node": ">=24.22.1"
   },
   "devDependencies": {
     "@electron/remote": "^2.1.3",
