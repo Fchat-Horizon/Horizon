@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Clicking 'Hide ads' now retroactively hides that user's ads, instead of only hiding future ads sent by them. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/977f6b748a045b87425b1d0119b188c5f3df53c1)
+- Fixed the log viewer not showing new conversations (or new dates for existing conversations) until you reconnect. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2c682d12c76211b168dc0f451eab8f8e1cb9b14d)
+- The Eicon picker dialog no longer shrinks to a very narrow size if a search result doesn't have a lot of entries. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c1c8eb2c8e6e0f26d539e8f16b8bff4fe85b58fa)
+
+### Development
+
+- Upgraded Electron to 43.8.4 (was 43.8.1) to resolve some potential security issues with NodeJS. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/115fe705028fe7fbd60ea9bdde7059b261e605e3)
+- Upgraded the project build tools version of NodeJS to 24.22.1. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b1df0acf565f15a02094a9c55ad7fda276b98e2a)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/953 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/968 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/1000 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/1005 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/1006 by @github-actions
+
 ## [2.4.4] - 2026-10-26
 
 ### Changed
