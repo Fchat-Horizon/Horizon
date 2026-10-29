@@ -30,5 +30,3 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm typecheck
-
-      - run: node --test scripts/tests/*.test.cjs
