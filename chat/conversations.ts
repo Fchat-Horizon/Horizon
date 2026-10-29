@@ -725,18 +725,19 @@ class ChannelConversation
     );
   }
 
-  async sendAd(text: string): Promise<void> {
-    if (text.length < 1) return;
+  async sendAd(text: string, signal?: AbortSignal): Promise<void> {
+    if (text.length < 1 || signal?.aborted) return;
 
     const initTime = Date.now();
 
     await Conversation.conversationThroat(async () => {
+      if (signal?.aborted) return;
       const throatTime = Date.now();
 
-      await Promise.all([
-        await Conversation.testPostDelay(),
-        await core.adCoordinator.requestTurnToPostAd()
-      ]);
+      await Conversation.testPostDelay();
+      if (signal?.aborted) return;
+      await core.adCoordinator.requestTurnToPostAd(signal);
+      if (signal?.aborted) return;
 
       const delayTime = Date.now();
 
