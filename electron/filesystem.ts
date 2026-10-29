@@ -164,7 +164,8 @@ function deserializeMessage(
 export function fixLogs(character: string): void {
   const dir = getLogDir(character);
   const files = fs.readdirSync(dir);
-  const buffer = Buffer.allocUnsafe(50100);
+  // The u16 trailer stores the record size excluding the trailer itself.
+  const buffer = Buffer.allocUnsafe(0xffff + 2);
   for (const file of files) {
     if (isFilesystemArtifact(file)) continue;
     const full = path.join(dir, file);
@@ -191,7 +192,8 @@ export function fixLogs(character: string): void {
     try {
       while (pos < size) {
         buffer.fill(-1);
-        fs.readSync(fd, buffer, 0, 50100, pos);
+        const bytesRead = fs.readSync(fd, buffer, 0, buffer.length, pos);
+        if (bytesRead < 10) throw new Error('Incomplete log record');
         const deserialized = deserializeMessage(buffer, 0, name => ({
           gender: 'None',
           status: 'online',
@@ -205,6 +207,11 @@ export function fixLogs(character: string): void {
           overrides: {},
           hasStatusTextChanged: () => false
         }));
+        if (
+          deserialized.size > bytesRead ||
+          buffer.readUInt16LE(deserialized.size - 2) !== deserialized.size - 2
+        )
+          throw new Error('Invalid log record');
         const time = deserialized.message.time;
         const day = Math.floor(
           time.getTime() / dayMs - time.getTimezoneOffset() / 1440
@@ -215,11 +222,6 @@ export function fixLogs(character: string): void {
           fs.writeSync(indexFd, buffer, 0, 7);
           lastDay = day;
         }
-        if (
-          buffer.readUInt16LE(deserialized.size - 2) !==
-          deserialized.size - 2
-        )
-          throw new Error();
         pos += deserialized.size;
       }
     } catch {
