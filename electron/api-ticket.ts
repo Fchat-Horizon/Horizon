@@ -1,4 +1,3 @@
-import Axios from 'axios';
 import { createHash } from 'crypto';
 import * as electron from 'electron';
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
@@ -31,9 +30,17 @@ const cache = new Map<string, CachedTicket>();
 const inFlight = new Map<string, Promise<ApiTicketResponse>>();
 
 async function post<T>(path: string, data: object): Promise<T> {
-  return (
-    await Axios.post(`https://www.f-list.net/json/${path}`, qs.stringify(data))
-  ).data;
+  // Login configures this session's proxy; Node HTTP clients bypass it.
+  const response = await electron.session
+    .fromPartition('persist:fchat')
+    .fetch(`https://www.f-list.net/json/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: qs.stringify(data)
+    });
+  if (!response.ok)
+    throw new Error(`API request failed: HTTP ${response.status}`);
+  return response.json() as Promise<T>;
 }
 
 // keyed on the credentials so that a wrong/changed password fails correctly
