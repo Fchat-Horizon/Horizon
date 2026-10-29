@@ -158,30 +158,30 @@
               {{ l('settings.tabs.general') }}
             </h5>
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  type="checkbox"
-                  id="autoLogin"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="autoLogin">
+                    {{ l('login.auto') }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.horizonAutoLogin"
-                  class="form-check-input"
-                />
-                <label class="form-check-label" for="autoLogin">
-                  {{ l('login.auto') }}
-                </label>
+                  name="autoLogin"
+                ></settings-checkbox>
               </div>
             </div>
 
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  type="checkbox"
-                  id="showTips"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="showTips">
+                    {{ l('settings.showTips') }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.horizonShowTips"
-                  class="form-check-input"
-                />
-                <label class="form-check-label" for="showTips">
-                  {{ l('settings.showTips') }}
-                </label>
+                  name="showTips"
+                ></settings-checkbox>
               </div>
             </div>
 
@@ -243,44 +243,44 @@
               {{ l('settings.timeFormat') }}
             </h5>
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="use12HourTime">
+                    {{ l('settings.timeFormat.12hour') }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.use12HourTime"
-                  type="checkbox"
-                  id="use12HourTime"
-                />
-                <label class="form-check-label" for="use12HourTime">
-                  {{ l('settings.timeFormat.12hour') }}
-                </label>
+                  name="use12HourTime"
+                ></settings-checkbox>
               </div>
             </div>
 
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="showSeconds">
+                    {{ l('settings.timeFormat.showSeconds') }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.showSeconds"
-                  type="checkbox"
-                  id="showSeconds"
-                />
-                <label class="form-check-label" for="showSeconds">
-                  {{ l('settings.timeFormat.showSeconds') }}
-                </label>
+                  name="showSeconds"
+                ></settings-checkbox>
               </div>
             </div>
 
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="fuzzyDates">
+                    {{ l('settings.timeFormat.fuzzyDates') }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.fuzzyDates"
-                  type="checkbox"
-                  id="fuzzyDates"
-                />
-                <label class="form-check-label" for="fuzzyDates">
-                  {{ l('settings.timeFormat.fuzzyDates') }}
-                </label>
+                  name="fuzzyDates"
+                ></settings-checkbox>
               </div>
             </div>
 
@@ -288,61 +288,61 @@
               {{ l('settings.updates') }}
             </h5>
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  type="checkbox"
-                  id="updateCheck"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="updateCheck">
+                    {{ l('settings.updateCheck') }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.updateCheck"
-                  class="form-check-input"
-                />
-                <label class="form-check-label" for="updateCheck">
-                  {{ l('settings.updateCheck') }}
-                </label>
+                  name="updateCheck"
+                ></settings-checkbox>
               </div>
             </div>
             <div class="mb-3" v-if="generalSettings.updateCheck">
-              <div class="form-check">
-                <input
-                  type="checkbox"
-                  id="beta"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="beta">
+                    {{ l('settings.beta') }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.beta"
-                  class="form-check-input"
-                />
-                <label class="form-check-label" for="beta">
-                  {{ l('settings.beta') }}
-                </label>
+                  name="beta"
+                ></settings-checkbox>
               </div>
             </div>
             <div class="mb-3" v-if="generalSettings.updateCheck">
-              <div class="form-check">
-                <input
-                  type="checkbox"
-                  id="hideAutoUpdater"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="hideAutoUpdater">
+                    {{ l('settings.updateHideAutoUpdater') }}
+                  </label>
+                  <div class="form-text text-muted">
+                    {{ l('settings.updateHideAutoUpdater.note') }}
+                  </div>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.horizonHideAutoUpdater"
-                  class="form-check-input"
-                />
-                <label class="form-check-label" for="hideAutoUpdater">
-                  {{ l('settings.updateHideAutoUpdater') }}
-                </label>
-              </div>
-              <div class="form-text text-muted">
-                {{ l('settings.updateHideAutoUpdater.note') }}
+                  name="hideAutoUpdater"
+                ></settings-checkbox>
               </div>
             </div>
             <div v-if="generalSettings.updateCheck">
-              <div class="form-check">
-                <input
-                  type="checkbox"
-                  id="autoDownloadUpdates"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="autoDownloadUpdates">
+                    {{ l('settings.autoDownloadUpdates') }}
+                  </label>
+                  <div class="form-text text-muted">
+                    {{ l('settings.autoDownloadUpdates.note') }}
+                  </div>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.horizonAutoDownloadUpdates"
-                  class="form-check-input"
-                />
-                <label class="form-check-label" for="autoDownloadUpdates">
-                  {{ l('settings.autoDownloadUpdates') }}
-                </label>
-              </div>
-              <div class="form-text text-muted">
-                {{ l('settings.autoDownloadUpdates.note') }}
+                  name="autoDownloadUpdates"
+                ></settings-checkbox>
               </div>
             </div>
           </div>
@@ -352,16 +352,16 @@
               {{ l('settings.theme') }}
             </h5>
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  type="checkbox"
-                  id="themeSystemSync"
-                  class="form-check-input"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="themeSystemSync">
+                    {{ l('settings.theme.sync') }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.themeSync"
-                />
-                <label class="form-check-label" for="themeSystemSync">
-                  {{ l('settings.theme.sync') }}
-                </label>
+                  name="themeSystemSync"
+                ></settings-checkbox>
               </div>
             </div>
             <div class="mb-3" v-if="!generalSettings.themeSync">
@@ -422,66 +422,57 @@
             </h5>
 
             <div class="mb-3">
-              <label class="control-label" for="themeVanillaBbcode">
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    v-model="generalSettings.horizonVanillaTextColors"
-                    type="checkbox"
-                    id="themeVanillaBbcode"
-                    aria-describedby="vanillaBbcodeLegibilityNote"
-                  />
-                  <label class="form-check-label" for="themeVanillaBbcode">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="themeVanillaBbcode">
                     {{ l('settings.theme.vanillaBbcode') }}
                   </label>
+                  <div
+                    id="vanillaBbcodeLegibilityNote"
+                    class="form-text text-muted"
+                  >
+                    {{ l('settings.theme.vanillaBbcode.legibilityNote') }}
+                  </div>
                 </div>
-                <div
-                  id="vanillaBbcodeLegibilityNote"
-                  class="form-text text-muted"
-                >
-                  {{ l('settings.theme.vanillaBbcode.legibilityNote') }}
-                </div>
-              </label>
+                <settings-checkbox
+                  v-model="generalSettings.horizonVanillaTextColors"
+                  name="themeVanillaBbcode"
+                ></settings-checkbox>
+              </div>
             </div>
 
             <div class="mb-3">
-              <label class="control-label" for="themeVanillaGenders">
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    v-model="generalSettings.horizonVanillaGenderColors"
-                    type="checkbox"
-                    id="themeVanillaGenders"
-                    aria-describedby="vanillaGendersNote"
-                  />
-                  <label class="form-check-label" for="themeVanillaGenders">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="themeVanillaGenders">
                     {{ l('settings.theme.vanillaGenders') }}
                   </label>
+                  <div id="vanillaGendersNote" class="form-text text-muted">
+                    {{ l('settings.theme.vanillaGenders.note') }}
+                  </div>
                 </div>
-                <div id="vanillaGendersNote" class="form-text text-muted">
-                  {{ l('settings.theme.vanillaGenders.note') }}
-                </div>
-              </label>
+                <settings-checkbox
+                  v-model="generalSettings.horizonVanillaGenderColors"
+                  name="themeVanillaGenders"
+                ></settings-checkbox>
+              </div>
             </div>
 
             <div class="mb-3">
-              <label class="control-label" for="themeBbcodeGlow">
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    v-model="generalSettings.horizonBbcodeGlow"
-                    type="checkbox"
-                    id="themeBbcodeGlow"
-                    aria-describedby="bbcodeGlowNote"
-                  />
-                  <label class="form-check-label" for="themeBbcodeGlow">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="themeBbcodeGlow">
                     {{ l('settings.theme.bbcodeGlow') }}
                   </label>
+                  <div id="bbcodeGlowNote" class="form-text text-muted">
+                    {{ l('settings.theme.bbcodeGlow.note') }}
+                  </div>
                 </div>
-                <div id="bbcodeGlowNote" class="form-text text-muted">
-                  {{ l('settings.theme.bbcodeGlow.note') }}
-                </div>
-              </label>
+                <settings-checkbox
+                  v-model="generalSettings.horizonBbcodeGlow"
+                  name="themeBbcodeGlow"
+                ></settings-checkbox>
+              </div>
             </div>
           </div>
           <div
@@ -617,66 +608,70 @@
               {{ l('settings.notifications.badges') }}
             </h5>
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="horizonShowNotificationBadge"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="horizonShowNotificationBadge"
+                  >
+                    {{ l('settings.notifications.badges.shouldShow') }}
+                  </label>
+                  <div
+                    id="horizonShowNotificationBadgeNote"
+                    class="form-text text-muted"
+                    v-if="platform !== 'win32' && platform !== 'darwin'"
+                  >
+                    {{
+                      l('settings.notifications.badges.shouldShow.linuxNote')
+                    }}
+                  </div>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.horizonShowNotificationBadge"
-                />
-                <label
-                  class="form-check-label"
-                  for="horizonShowNotificationBadge"
-                >
-                  {{ l('settings.notifications.badges.shouldShow') }}
-                </label>
-              </div>
-              <div
-                id="horizonShowNotificationBadgeNote"
-                class="form-text text-muted"
-                v-if="platform !== 'win32' && platform !== 'darwin'"
-              >
-                {{ l('settings.notifications.badges.shouldShow.linuxNote') }}
+                  name="horizonShowNotificationBadge"
+                ></settings-checkbox>
               </div>
             </div>
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="horizonShowWindowAndChatNotificationBadge"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="horizonShowWindowAndChatNotificationBadge"
+                  >
+                    {{
+                      l(
+                        'settings.notifications.badges.shouldShow.windowAndChat'
+                      )
+                    }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="
                     generalSettings.horizonShowWindowAndChatNotificationBadge
                   "
-                />
-                <label
-                  class="form-check-label"
-                  for="horizonShowWindowAndChatNotificationBadge"
-                >
-                  {{
-                    l('settings.notifications.badges.shouldShow.windowAndChat')
-                  }}
-                </label>
+                  name="horizonShowWindowAndChatNotificationBadge"
+                ></settings-checkbox>
               </div>
             </div>
             <div class="mb-3" v-if="platform !== 'darwin'">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="flashWindow"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="flashWindow">
+                    {{ l('settings.flashWindow') }}
+                  </label>
+                  <div
+                    id="flashWindowNote"
+                    class="form-text text-muted"
+                    v-if="platform !== 'win32'"
+                  >
+                    {{ l('settings.flashWindow.note') }}
+                  </div>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.flashWindow"
-                />
-                <label class="form-check-label" for="flashWindow">
-                  {{ l('settings.flashWindow') }}
-                </label>
-              </div>
-              <div
-                id="flashWindowNote"
-                class="form-text text-muted"
-                v-if="platform !== 'win32'"
-              >
-                {{ l('settings.flashWindow.note') }}
+                  name="flashWindow"
+                ></settings-checkbox>
               </div>
             </div>
           </div>
@@ -684,16 +679,16 @@
           <div v-show="selectedTab === 'app.behavior'">
             <h5>{{ l('user.profile') }}</h5>
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="profileViewer"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="profileViewer">
+                    {{ l('settings.profileViewer') }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.profileViewer"
-                />
-                <label class="form-check-label" for="profileViewer">
-                  {{ l('settings.profileViewer') }}
-                </label>
+                  name="profileViewer"
+                ></settings-checkbox>
               </div>
             </div>
             <div class="mb-3" v-if="generalSettings.profileViewer">
@@ -737,52 +732,51 @@
                   generalSettings.profileViewerGalleryType === 'hover')
               "
             >
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="profileViewerThumbAnimate"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="profileViewerThumbAnimate">
+                    {{ l('settings.profileViewerThumbAnimate') }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.profileViewerThumbAnimate"
-                />
-                <label class="form-check-label" for="profileViewerThumbAnimate">
-                  {{ l('settings.profileViewerThumbAnimate') }}
-                </label>
+                  name="profileViewerThumbAnimate"
+                ></settings-checkbox>
               </div>
             </div>
 
             <div class="mb-3" v-if="generalSettings.profileViewer">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="profileViewerSmallerDefaultAvatars"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="profileViewerSmallerDefaultAvatars"
+                  >
+                    {{ l('settings.profileViewer.smallerDefaultAvatars') }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.profileViewerSmallerDefaultAvatars"
-                />
-                <label
-                  class="form-check-label"
-                  for="profileViewerSmallerDefaultAvatars"
-                >
-                  {{ l('settings.profileViewer.smallerDefaultAvatars') }}
-                </label>
+                  name="profileViewerSmallerDefaultAvatars"
+                ></settings-checkbox>
               </div>
             </div>
 
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="horizonForceAsciiProfiles"
-                  :disabled="!generalSettings.profileViewer"
-                  v-model="generalSettings.horizonForceAsciiProfiles"
-                  aria-describedby="forceAsciiNote"
-                />
-                <label class="form-check-label" for="horizonForceAsciiProfiles">
-                  {{ l('settings.horizonForceAsciiProfiles') }}
-                </label>
-                <div id="forceAsciiNote" class="form-text text-muted">
-                  {{ l('settings.horizonForceAsciiProfiles.note') }}
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="horizonForceAsciiProfiles">
+                    {{ l('settings.horizonForceAsciiProfiles') }}
+                  </label>
+                  <div id="forceAsciiNote" class="form-text text-muted">
+                    {{ l('settings.horizonForceAsciiProfiles.note') }}
+                  </div>
                 </div>
+                <settings-checkbox
+                  v-model="generalSettings.horizonForceAsciiProfiles"
+                  :disabled="!generalSettings.profileViewer"
+                  name="horizonForceAsciiProfiles"
+                ></settings-checkbox>
               </div>
             </div>
 
@@ -842,107 +836,110 @@
             </div>
             <h5>{{ l('settings.behavior.window') }}</h5>
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="closeToTray"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="closeToTray">
+                    {{ l('settings.closeToTray') }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.closeToTray"
-                />
-                <label class="form-check-label" for="closeToTray">
-                  {{ l('settings.closeToTray') }}
-                </label>
+                  name="closeToTray"
+                ></settings-checkbox>
               </div>
             </div>
 
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="windowTitleCharacter"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="windowTitleCharacter">
+                    {{ l('settings.windowTitleCharacter') }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.horizonWindowTitleCharacter"
-                />
-                <label class="form-check-label" for="windowTitleCharacter">
-                  {{ l('settings.windowTitleCharacter') }}
-                </label>
+                  name="windowTitleCharacter"
+                ></settings-checkbox>
               </div>
             </div>
 
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="forceNativeWindowControls"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="forceNativeWindowControls">
+                    {{
+                      l('settings.experimental', {
+                        name: l('settings.forceNativeWindowControls')
+                      })
+                    }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.forceNativeWindowControls"
-                />
-                <label class="form-check-label" for="forceNativeWindowControls">
-                  {{
-                    l('settings.experimental', {
-                      name: l('settings.forceNativeWindowControls')
-                    })
-                  }}
-                </label>
+                  name="forceNativeWindowControls"
+                ></settings-checkbox>
               </div>
             </div>
 
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="nativeWindowShowSingleTab"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="nativeWindowShowSingleTab">
+                    {{ l('settings.nativeWindowShowSingleTab') }}
+                  </label>
+                  <div
+                    id="nativeWindowShowSingleTabNote"
+                    class="form-text text-muted"
+                  >
+                    {{ l('settings.nativeWindowShowSingleTab.note') }}
+                  </div>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.nativeWindowShowSingleTab"
                   :disabled="!generalSettings.forceNativeWindowControls"
-                />
-                <label class="form-check-label" for="nativeWindowShowSingleTab">
-                  {{ l('settings.nativeWindowShowSingleTab') }}
-                </label>
-                <div
-                  id="nativeWindowShowSingleTabNote"
-                  class="form-text text-muted"
-                >
-                  {{ l('settings.nativeWindowShowSingleTab.note') }}
-                </div>
+                  name="nativeWindowShowSingleTab"
+                ></settings-checkbox>
               </div>
             </div>
           </div>
           <div v-show="selectedTab === 'app.accessibility'">
             <div>
               <div class="mb-3" v-if="!true">
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="risingDisableWindowsHighContrast"
+                <div
+                  class="d-flex p-2 justify-content-between align-items-start"
+                >
+                  <div class="w-50">
+                    <label
+                      class="control-label"
+                      for="risingDisableWindowsHighContrast"
+                    >
+                      {{ l('settings.risingDisableWindowsHighContrast') }}
+                    </label>
+                  </div>
+                  <settings-checkbox
                     v-model="generalSettings.risingDisableWindowsHighContrast"
-                  />
-                  <label
-                    class="form-check-label"
-                    for="risingDisableWindowsHighContrast"
-                  >
-                    {{ l('settings.risingDisableWindowsHighContrast') }}
-                  </label>
+                    name="risingDisableWindowsHighContrast"
+                  ></settings-checkbox>
                 </div>
               </div>
 
               <div class="mb-3">
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="reducedMotion"
+                <div
+                  class="d-flex p-2 justify-content-between align-items-start"
+                >
+                  <div class="w-50">
+                    <label class="control-label" for="reducedMotion">
+                      {{ l('settings.reducedMotion') }}
+                    </label>
+                    <div class="form-text text-muted">
+                      {{ l('settings.reducedMotion.description') }}
+                    </div>
+                  </div>
+                  <settings-checkbox
                     v-model="generalSettings.reducedMotion"
-                  />
-                  <label class="form-check-label" for="reducedMotion">
-                    {{ l('settings.reducedMotion') }}
-                  </label>
+                    name="reducedMotion"
+                  ></settings-checkbox>
                 </div>
-
-                <small class="form-text text-muted">{{
-                  l('settings.reducedMotion.description')
-                }}</small>
               </div>
             </div>
           </div>
@@ -956,16 +953,16 @@
               {{ l('settings.system') }}
             </h5>
             <div class="mb-3">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="hwAcceleration"
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="hwAcceleration">
+                    {{ l('settings.hwAcceleration') }}
+                  </label>
+                </div>
+                <settings-checkbox
                   v-model="generalSettings.hwAcceleration"
-                />
-                <label class="form-check-label" for="hwAcceleration">
-                  {{ l('settings.hwAcceleration') }}
-                </label>
+                  name="hwAcceleration"
+                ></settings-checkbox>
               </div>
             </div>
             <div class="mb-3">
@@ -1126,22 +1123,20 @@
             </label>
 
             <div class="mb-3" v-if="platform !== 'darwin'">
-              <label class="control-label" for="alwaysOpenIncognito">
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="alwaysOpenIncognito"
-                    v-model="generalSettings.horizonAlwaysOpenIncognito"
-                  />
-                  <label class="form-check-label" for="alwaysOpenIncognito">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="alwaysOpenIncognito">
                     {{ l('settings.alwaysOpenIncognito') }}
                   </label>
+                  <small class="form-text text-muted">{{
+                    l('settings.alwaysOpenIncognito.help')
+                  }}</small>
                 </div>
-                <small class="form-text text-muted">{{
-                  l('settings.alwaysOpenIncognito.help')
-                }}</small>
-              </label>
+                <settings-checkbox
+                  v-model="generalSettings.horizonAlwaysOpenIncognito"
+                  name="alwaysOpenIncognito"
+                ></settings-checkbox>
+              </div>
             </div>
             <h5>
               {{
@@ -1152,43 +1147,38 @@
             </h5>
 
             <div class="mb-3">
-              <label class="control-label" for="customCssEnabled">
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="customCss"
-                    v-model="generalSettings.horizonCustomCssEnabled"
-                  />
-                  <label class="form-check-label" for="customCss">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="customCssEnabled">
                     {{ l('settings.customCss.enabled') }}
                   </label>
                 </div>
-              </label>
+                <settings-checkbox
+                  v-model="generalSettings.horizonCustomCssEnabled"
+                  name="customCssEnabled"
+                ></settings-checkbox>
+              </div>
             </div>
             <div class="mb-3">
-              <label class="control-label" for="windowTransparency">
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    v-model="generalSettings.allowWindowTransparency"
-                    type="checkbox"
-                    :disabled="!generalSettings.horizonCustomCssEnabled"
-                    id="windowTransparency"
-                    aria-describedby="windowTransparencyNote"
-                  />
-                  <label class="form-check-label" for="windowTransparency">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="windowTransparency">
                     {{
                       l('settings.experimental', {
                         name: l('settings.customCss.transparency')
                       })
                     }}
                   </label>
+                  <div id="windowTransparencyNote" class="form-text text-muted">
+                    {{ l('settings.customCss.transparency.note') }}
+                  </div>
                 </div>
-                <div id="windowTransparencyNote" class="form-text text-muted">
-                  {{ l('settings.customCss.transparency.note') }}
-                </div>
-              </label>
+                <settings-checkbox
+                  v-model="generalSettings.allowWindowTransparency"
+                  :disabled="!generalSettings.horizonCustomCssEnabled"
+                  name="windowTransparency"
+                ></settings-checkbox>
+              </div>
 
               <label for="customCss" class="control-label label-full"
                 >{{ l('settings.customCss.css') }}
@@ -2856,6 +2846,7 @@
   import SettingsOverride from '../components/SettingsOverride.vue';
   import SettingsInput from '../components/SettingsInput.vue';
   import SettingsArray from '../components/SettingsArray.vue';
+  import SettingsCheckbox from '../components/SettingsCheckbox.vue';
   import SettingsSelectOverride from '../components/SettingsSelectOverride.vue';
   import LocalizedText from '../components/localized_text';
   import { UserInterfaceBBCodeParser } from '../bbcode/user-interface';
@@ -2897,6 +2888,7 @@
       'settings-override': SettingsOverride,
       'settings-input': SettingsInput,
       'settings-array': SettingsArray,
+      'settings-checkbox': SettingsCheckbox,
       'settings-select-override': SettingsSelectOverride
     },
     async mounted(): Promise<void> {
