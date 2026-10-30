@@ -60,7 +60,7 @@ electron/
 
 ### Prerequisites
 
-- Node.js 22+
+- Node.js 24.22.1+
 - pnpm
 - Xcode 26+ (required for macOS builds)
 - Platform-specific dependencies (see CI workflows)

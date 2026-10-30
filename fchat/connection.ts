@@ -81,7 +81,13 @@ export default class Connection implements Interfaces.Connection {
     try {
       await this.invokeHandlers('connecting', this.isReconnect);
     } catch (e) {
-      await this.invokeHandlers('closed', false);
+      // keep retrying to reconnectafter a network failure
+      if (
+        this.reconnectTimer !== undefined &&
+        (<AxiosError>e).request !== undefined
+      )
+        this.reconnect();
+      else await this.invokeHandlers('closed', false);
       return this.invokeErrorHandlers(<Error>e);
     }
     if (this.cleanClose) {

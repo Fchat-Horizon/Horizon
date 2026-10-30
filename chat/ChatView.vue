@@ -141,7 +141,7 @@
             @click.prevent="showQuickJump()"
             :title="l('quickJump.action')"
             class="btn btn-link"
-            ><span class="fas fa-fw fa-shuffle"></span
+            ><span class="fas fa-fw fa-up-down"></span
           ></a>
         </div>
         <div class="list-group conversation-nav" ref="privateConversations">

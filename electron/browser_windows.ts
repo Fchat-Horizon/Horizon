@@ -359,7 +359,7 @@ export function createMainWindow(
       ? 'default'
       : 'hidden';
     //we'll set the actual colors in Window.vue, but passing 'true' just enables overlay controls with default controls
-    windowProperties.titleBarOverlay = true;
+    windowProperties.titleBarOverlay = !settings.forceNativeWindowControls;
   }
 
   const window = new electron.BrowserWindow(windowProperties);

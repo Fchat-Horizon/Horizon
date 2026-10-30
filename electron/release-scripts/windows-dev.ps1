@@ -3,7 +3,7 @@
 <#
 .SYNOPSIS
 Windows dev/PR build script for F-Chat Horizon.
-Builds portable EXE only (no installer, no signtool/elevate).
+Builds the portable app folder only (no installer, no signtool/elevate).
 
 .PARAMETER ReleaseVersion
 The version string for the release.
@@ -46,15 +46,11 @@ pnpm install --frozen-lockfile
 # Build the project
 Set-Location electron
 Remove-Item -Recurse -Force app, dist -ErrorAction SilentlyContinue
+pnpm run webpack:dev
 if ($Arch) {
-    pnpm run webpack:dev
-    node build/build.mjs --os windows --format portable --arch $Arch
+    node build/build.mjs --os windows --format dir --arch $Arch
 } else {
-    pnpm build:dev:win
+    node build/build.mjs --os windows --format dir
 }
 
-# Prepare release directory
-New-Item -ItemType Directory -Path $ReleasePath -Force | Out-Null
-
-# Copy portable exe artifact
-Copy-Item "$DistPath\*.exe" -Destination "$ReleasePath\" -ErrorAction SilentlyContinue
+& "$PSScriptRoot\windows-portable.ps1" -DistPath $DistPath -ReleasePath $ReleasePath -NoArchive

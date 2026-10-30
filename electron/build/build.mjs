@@ -51,7 +51,7 @@ const OS_CONFIGS = {
   },
   windows: {
     aliases: ['win', 'win32', 'win64'],
-    formats: ['exe', 'msi', 'nsis', 'portable'],
+    formats: ['exe', 'msi', 'nsis', 'portable', 'dir'],
     arches: ['x64', 'ia32', 'arm64']
   }
 };
@@ -80,7 +80,7 @@ Examples:
 Supported formats by OS:
   macOS:   dmg, zip, dir
   Linux:   deb, rpm, tar.gz, AppImage
-  Windows: exe, msi, nsis, portable
+  Windows: exe, msi, nsis, portable, dir
 
 Supported architectures by OS:
   macOS:   x64, arm64, universal

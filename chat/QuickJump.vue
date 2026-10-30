@@ -3,7 +3,7 @@
     <div class="quick-jump-overlay" @click="hide">
       <div class="quick-jump-container bg-light" @click.stop>
         <div class="quick-jump-header">
-          <span class="fas fa-shuffle"></span>
+          <span class="fas fa-up-down"></span>
           <span>{{ l('quickJump.title') }}</span>
         </div>
         <input

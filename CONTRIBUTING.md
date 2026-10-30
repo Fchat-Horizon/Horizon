@@ -39,7 +39,7 @@ You wish to add a new feature to Horizon, or fix that one bug that's been pissin
 
 Horizon is written primarily in _Vue_, _TypeScript_, and _JavaScript._ You'll need **[Node.js](https://nodejs.org/en/download)**, **[PNPM](https://pnpm.io/installation)**, and **[NVM](https://github.com/nvm-sh/nvm)** (or a similar node version manager, such as fnm). You might also want to consider using VS Code to integrate with Prettier.
 
-You should use Node.js **v24.14.0** (see [.nvmrc](./.nvmrc)).
+You should use Node.js **v24.22.1** (see [.nvmrc](./.nvmrc)).
 
 If you intend on _packaging_ for MacOS, you need to install **Xcode 26+** or the build will fail with an error when packing into the desired format. **This includes the Xcode CLI tools**.
 
@@ -100,7 +100,7 @@ pnpm --filter horizon-electron start
 > [!NOTE]
 > While you can choose to build for other OSes, it **will** fail if you attempt to build for an OS that's different from your own.
 >
-> Please read the [electron-builder](https://www.electron.build/multi-platform-build.html) wiki for more info. If you're a kickass electron dev, please make a pull request to fix this.
+> Please read the [electron-builder](https://www.electron.build/docs/features/multi-platform-build) wiki for more info. If you're a kickass electron dev, please make a pull request to fix this.
 
 Read [the electron README.md](./electron/README.md) for more info.
 

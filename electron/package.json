@@ -1,6 +1,6 @@
 {
   "name": "horizon-electron",
-  "version": "2.4.1",
+  "version": "2.4.5",
   "author": "The F-List Team and Horizon Contributors",
   "description": "Horizon",
   "homepage": "https://horizn.moe",
@@ -114,7 +114,7 @@
   },
   "devDependencies": {
     "commander": "^14.0.0",
-    "electron": "42.4.1",
+    "electron": "43.8.4",
     "electron-builder": "27.0.0-alpha.8"
   },
   "dependencies": {

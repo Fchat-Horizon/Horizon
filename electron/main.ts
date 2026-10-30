@@ -38,6 +38,12 @@
  * @see {@link https://github.com/f-list/exported|GitHub repo}
  */
 
+// ! Keep first: other modules read userData at import time
+import {
+  isPortable,
+  resolveLogDirectory,
+  toStoredLogDirectory
+} from './portable';
 import * as electron from 'electron';
 
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
@@ -55,7 +61,7 @@ import { IpcMainEvent, session } from 'electron';
 import * as browserWindows from './browser_windows';
 import * as remoteMain from '@electron/remote/main';
 import { Event } from 'electron/main';
-import { autoUpdater } from 'electron-updater';
+import { autoUpdater, UpdateCheckResult } from 'electron-updater';
 import Axios from 'axios';
 import { ProfileViewerGalleryType } from '../site/utils';
 import { getSafeLanguages } from './language';
@@ -318,7 +324,8 @@ const updateNoticeState: {
 let pendingUpdatePromptTag: string | undefined;
 
 if (!fs.existsSync(settingsFile)) {
-  shouldImportSettings = true;
+  // ^ Don't pull the host machine's chat data into a fresh portable copy
+  shouldImportSettings = !isPortable;
 } else {
   try {
     Object.assign(
@@ -328,6 +335,7 @@ if (!fs.existsSync(settingsFile)) {
   } catch (e) {
     log.error(`Error loading settings: ${e}`);
   }
+  settings.logDirectory = resolveLogDirectory(settings.logDirectory);
 }
 
 // ^ pre-2.4 builds persisted snake_case ids; keep in sync with legacyCodes in chat/localize.ts
@@ -360,7 +368,13 @@ export function updateSpellCheckerLanguages(langs: string[]): void {
 
 function setGeneralSettings(value: GeneralSettings): void {
   log.debug('settings.save', value);
-  fs.writeFileSync(path.join(settingsDir, 'settings'), JSON.stringify(value));
+  fs.writeFileSync(
+    path.join(settingsDir, 'settings'),
+    JSON.stringify({
+      ...value,
+      logDirectory: toStoredLogDirectory(value.logDirectory)
+    })
+  );
   for (const w of electron.webContents.getAllWebContents())
     w.send('settings', settings);
 
@@ -379,7 +393,7 @@ function supportsAutoUpdates(): boolean {
   if (process.platform === 'linux') {
     return Boolean(process.env.APPIMAGE);
   }
-  return true;
+  return !isPortable;
 }
 
 function isProductionMode(): boolean {
@@ -485,9 +499,9 @@ async function checkForGitRelease(
   semVer: string,
   releaseUrl: string,
   updateMode: 'auto' | 'manual'
-): Promise<void> {
+): Promise<boolean> {
   if (!settings.updateCheck) {
-    return;
+    return false;
   }
   try {
     let releases: ReleaseInfo[] = (
@@ -509,11 +523,11 @@ async function checkForGitRelease(
           `Update skipped: ${release.tag_name}`
         );
         setUpdateNotice(false);
-        return;
+        return false;
       }
       if (release.tag_name == semVer) {
         log.info('updateCheck.state.upToDate', `Horizon up to date: ${semVer}`);
-        return;
+        return false;
       }
       log.info(
         'updateCheck.state.new',
@@ -522,20 +536,23 @@ async function checkForGitRelease(
 
       setUpdateNotice(true, release.tag_name);
       maybeShowUpdatePrompt(release.tag_name, updateMode);
-      return;
+      return true;
     }
   } catch (e) {
     log.error(`Error checking for update: ${e}`);
+    return false;
   }
+  return false;
 }
 
-async function runAutoUpdateCheck(): Promise<void> {
-  if (!settings.updateCheck) return;
+async function runAutoUpdateCheck(): Promise<UpdateCheckResult | null> {
+  if (!settings.updateCheck) return null;
   try {
     autoUpdater.allowPrerelease = settings.beta;
-    await autoUpdater.checkForUpdates();
+    return await autoUpdater.checkForUpdates();
   } catch (e) {
     log.error('autoUpdater.check.failed', e);
+    return null;
   }
 }
 async function requestUpdateDownload(expectedTag?: string): Promise<void> {
@@ -657,6 +674,8 @@ function confirmUpdate(updateVersion: string): boolean {
 
 // Schemes safe to hand to a spawned browser; anything else goes to the OS.
 const EXTERNAL_BROWSER_SCHEMES = ['http:', 'https:'];
+// ! Any other scheme reaches whatever app the OS registered for it (ms-msdt:)
+const OS_SCHEMES = ['mailto:', 'irc:'];
 
 function resolveCustomBrowser(): string | null {
   const browserPath = settings.browserPath;
@@ -674,9 +693,9 @@ function resolveCustomBrowser(): string | null {
   return browserPath;
 }
 
-function isWebUrl(linkUrl: string): boolean {
+function hasScheme(linkUrl: string, schemes: string[]): boolean {
   try {
-    return EXTERNAL_BROWSER_SCHEMES.includes(new URL(linkUrl).protocol);
+    return schemes.includes(new URL(linkUrl).protocol);
   } catch {
     return false;
   }
@@ -917,13 +936,18 @@ export function openURLExternally(
   linkUrl: string,
   mode: ExternalOpenMode = 'auto'
 ): void {
+  if (!hasScheme(linkUrl, [...EXTERNAL_BROWSER_SCHEMES, ...OS_SCHEMES])) {
+    log.warn('openURLExternally.blockedScheme', linkUrl.split(':', 1)[0]);
+    return;
+  }
+
   const wantsIncognito =
     mode === 'incognito' ||
     (mode === 'auto' && settings.horizonAlwaysOpenIncognito);
 
   // A private-window flag is meaningless for mailto: and friends, and macOS has
   // no incognito path -- both fall through to the normal open below.
-  if (wantsIncognito && isWebUrl(linkUrl)) {
+  if (wantsIncognito && hasScheme(linkUrl, EXTERNAL_BROWSER_SCHEMES)) {
     if (process.platform === 'win32') {
       openIncognitoWindows(linkUrl);
       return;
@@ -937,7 +961,7 @@ export function openURLExternally(
   const browserPath = resolveCustomBrowser();
 
   // No custom browser, or not a web link: let the OS handle it.
-  if (browserPath === null || !isWebUrl(linkUrl)) {
+  if (browserPath === null || !hasScheme(linkUrl, EXTERNAL_BROWSER_SCHEMES)) {
     electron.shell.openExternal(linkUrl);
     return;
   }
@@ -1398,15 +1422,37 @@ async function onReady(): Promise<void> {
           },
           {
             label: l('action.checkForUpdates'),
-            click: (_m: electron.MenuItem, _w: electron.BrowserWindow) => {
+            click: (_m: electron.MenuItem, w: electron.BrowserWindow) => {
               if (supportsAutoUpdates()) {
-                void runAutoUpdateCheck();
+                runAutoUpdateCheck().then(result => {
+                  if (result && result.isUpdateAvailable) {
+                    log.info('autoUpdater.manualCheck.success', result);
+                  } else {
+                    log.info('autoUpdater.manualCheck.noUpdate');
+                    electron.dialog.showMessageBoxSync(w, {
+                      type: 'info',
+                      title: l('title'),
+                      message: l('update.noUpdateAvailable')
+                    });
+                  }
+                });
               } else {
                 void checkForGitRelease(
                   `v${app.getVersion()}`,
                   releasesUrl,
                   'manual'
-                );
+                ).then(result => {
+                  if (result) {
+                    log.info('gitRelease.manualCheck.success', result);
+                  } else {
+                    log.info('gitRelease.manualCheck.noUpdate');
+                    electron.dialog.showMessageBoxSync(w, {
+                      type: 'info',
+                      title: l('title'),
+                      message: l('update.noUpdateAvailable')
+                    });
+                  }
+                });
               }
             },
             disabled: process.env.NODE_ENV !== 'production',
