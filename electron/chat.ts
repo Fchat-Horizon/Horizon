@@ -67,6 +67,7 @@ import Index from './Index.vue';
 import log from 'electron-log'; // tslint:disable-line: match-default-export-name
 import { WordPosSearch } from '../learn/dictionary/word-pos-search';
 import { MenuItemConstructorOptions } from 'electron/main';
+import ElectronPlatformService from './platform';
 
 log.debug('init.chat');
 
@@ -390,8 +391,16 @@ const connection = new Connection(
   remote.app.getVersion(),
   Socket
 );
+const platform = new ElectronPlatformService();
 async function startChat(): Promise<void> {
-  await initCore(connection, settings, Logs, SettingsStore, Notifications);
+  await initCore(
+    connection,
+    settings,
+    Logs,
+    SettingsStore,
+    Notifications,
+    platform
+  );
 
   electron.ipcRenderer.on('reload-settings', () => {
     void core
