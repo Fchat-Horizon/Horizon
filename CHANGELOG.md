@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Development
+
+- Added a new member to `core` for platform-related functionality, to help decouple some Electron-specific code from the chat module. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8090bccd8f4fd0f91ccdb900d990cd73ae829505)
+- Spellcheck language settings are now decoupled from Electron, and are automatically hidden from the UI if the platform does not expose any available languages.. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/16834353e94bad55405850bb11669ce1dfc4d004)
+
 ## [2.4.5] - 2026-10-28
 
 ### Fixed

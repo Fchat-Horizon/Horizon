@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
 import { Message as MessageImpl } from '../chat/common';
-import core from '../chat/core';
+import core, { GLOBAL_SETTINGS_CHARACTER } from '../chat/core';
 import {
   Character,
   Conversation,
@@ -11,14 +11,7 @@ import {
   Settings
 } from '../chat/interfaces';
 import l from '../chat/localize';
-import { GeneralSettings } from './common';
 import { isFilesystemArtifact } from './services/log-backup';
-
-declare module '../chat/interfaces' {
-  interface State {
-    generalSettings?: GeneralSettings;
-  }
-}
 
 const dayMs = 86400000;
 const read = promisify(fs.read);
@@ -394,7 +387,7 @@ export class Logs implements Logging {
     fs.mkdirSync(baseDir, { recursive: true });
     return fs
       .readdirSync(baseDir)
-      .filter(x => fs.statSync(path.join(baseDir, x)).isDirectory());
+      .filter(x => isValidCharacterDirectory(baseDir, x));
   }
 }
 
@@ -431,16 +424,27 @@ export class SettingsStore implements Settings.Store {
     const baseDir = core.state.generalSettings!.logDirectory;
     return fs
       .readdirSync(baseDir)
-      .filter(x => fs.statSync(path.join(baseDir, x)).isDirectory());
+      .filter(x => isValidCharacterDirectory(baseDir, x));
   }
 
   //tslint:disable-next-line:no-async-without-await
   async set<K extends keyof Settings.Keys>(
     key: K,
-    value: Settings.Keys[K]
+    value: Settings.Keys[K],
+    character?: string
   ): Promise<void> {
-    writeFile(path.join(getSettingsDir(), key), JSON.stringify(value));
+    writeFile(path.join(getSettingsDir(character), key), JSON.stringify(value));
   }
+}
+
+function isValidCharacterDirectory(
+  baseDir: string,
+  character: string
+): boolean {
+  return (
+    character !== GLOBAL_SETTINGS_CHARACTER &&
+    fs.statSync(path.join(baseDir, character)).isDirectory()
+  );
 }
 
 /**

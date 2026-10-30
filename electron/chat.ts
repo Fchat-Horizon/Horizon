@@ -57,6 +57,7 @@ import l, { setLanguage } from '../chat/localize';
 // import {setupRaven} from '../chat/vue-raven';
 import Socket from '../chat/WebSocket';
 import Connection from '../fchat/connection';
+import core from '../chat/core';
 import { Keys } from '../keys';
 import { GeneralSettings /*, nativeRequire*/ } from './common';
 import { Logs, SettingsStore } from './filesystem';
@@ -66,6 +67,7 @@ import Index from './Index.vue';
 import log from 'electron-log'; // tslint:disable-line: match-default-export-name
 import { WordPosSearch } from '../learn/dictionary/word-pos-search';
 import { MenuItemConstructorOptions } from 'electron/main';
+import ElectronPlatformService from './platform';
 
 log.debug('init.chat');
 
@@ -389,17 +391,42 @@ const connection = new Connection(
   remote.app.getVersion(),
   Socket
 );
-initCore(connection, settings, Logs, SettingsStore, Notifications);
-
-log.debug('init.chat.vue');
-
-//tslint:disable-next-line:no-unused-expression
-new Index({
-  el: '#app',
-  data: {
+const platform = new ElectronPlatformService();
+async function startChat(): Promise<void> {
+  await initCore(
+    connection,
     settings,
-    hasCompletedUpgrades: JSON.parse(params['hasCompletedUpgrades']!)
-  }
-});
+    Logs,
+    SettingsStore,
+    Notifications,
+    platform
+  );
 
-log.debug('init.chat.vue.done');
+  electron.ipcRenderer.on('reload-settings', () => {
+    void core
+      .reloadSettings()
+      .then(() => {
+        EventBus.$emit('configuration-update', core.state.settings);
+      })
+      .catch(err => {
+        log.error('settings.reload.error', err);
+      });
+  });
+
+  log.debug('init.chat.vue');
+
+  //tslint:disable-next-line:no-unused-expression
+  new Index({
+    el: '#app',
+    data: {
+      settings,
+      hasCompletedUpgrades: JSON.parse(params['hasCompletedUpgrades']!)
+    }
+  });
+
+  log.debug('init.chat.vue.done');
+}
+
+void startChat().catch(err => {
+  log.error('core.init.error', err);
+});
