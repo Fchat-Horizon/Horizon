@@ -135,7 +135,7 @@ $selection-color: color-contrast($primary);
   }
 }
 
-body::not(.platform-darwin) * {
+div#page:not(.platform-darwin) * {
   &::-webkit-scrollbar-track {
     --horizon-scrollbar-track-box-shadow: inset 0 0 8px var(--bs-border-color);
     --horizon-scrollbar-track-border-radius: 10px;
@@ -149,48 +149,60 @@ body::not(.platform-darwin) * {
 
   &::-webkit-scrollbar {
     --horizon-scrollbar-thickness: 8px;
-    width: --horizon-scrollbar-thickness;
-    height: --horizon-scrollbar-thickness;
+    width: var(--horizon-scrollbar-thickness);
+    height: var(--horizon-scrollbar-thickness);
   }
 
   &::-webkit-scrollbar-thumb {
-    --horizon-scrollbar-thumb-bg: $gray-300;
+    --horizon-scrollbar-thumb-bg: #{$gray-300};
     --horizon-scrollbar-thumb-border-radius: 10px;
     --horizon-scrollbar-thumb-box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.8);
+    --horizon-scrollbar-thumb-display: initial;
     border-radius: var(--horizon-scrollbar-thumb-border-radius);
     box-shadow: var(--horizon-scrollbar-thumb-box-shadow);
-    background-color: --horizon-scrollbar-thumb-bg;
+    background-color: var(--horizon-scrollbar-thumb-bg);
+    display: var(--horizon-scrollbar-thumb-display);
     &:hover {
-      --horizon-scrollbar-thumb-bg: $gray-500;
+      --horizon-scrollbar-thumb-bg: #{$gray-500};
     }
 
     &:active {
-      background-color: $gray-700;
+      --horizon-scrollbar-thumb-bg: #{$gray-700};
     }
   }
-  &.hidden-scrollbar {
-    overflow-y: scroll;
-    &::-webkit-scrollbar-thumb {
-      display: none;
-    }
 
-    &::-webkit-scrollbar-track {
-      box-shadow: none;
-    }
-    &::-webkit-scrollbar {
-      width: 8px;
-    }
+  .badge-warning {
+    color: black;
   }
 }
 
-/*
-.hidden-scrollbar:hover {
-  //This has no purpose, but for some godawful reason the SCSS compilation breaks if we don't put an additional rule here.
-  //If we don't, for some reason this winds up only displaying the thumb once you hover over it.
-  //So I just picked a rule that has 0 impact on anything else.
+.platform-darwin {
+  .hidden-scrollbar {
+    overflow-y: scroll;
+  }
+}
+
+div#page:not(.platform-darwin) .hidden-scrollbar {
+  --horizon-scrollbar-hidden-width: 8px;
   overflow-y: scroll;
   &::-webkit-scrollbar-thumb {
-    display: block;
+    --horizon-scrollbar-thumb-display: none;
+  }
+
+  &::-webkit-scrollbar-track {
+    --horizon-scrollbar-track-box-shadow: none;
+  }
+  &::-webkit-scrollbar {
+    --horizon-scrollbar-thickness: var(--horizon-scrollbar-hidden-width);
+  }
+
+  &:hover {
+    //This has no purpose, but for some godawful reason the SCSS compilation breaks if we don't put an additional rule here.
+    //If we don't, for some reason this winds up only displaying the thumb once you hover over it.
+    //So I just picked a rule that has 0 impact on anything else.
+    overflow-y: scroll;
+    &::-webkit-scrollbar-thumb {
+      --horizon-scrollbar-thumb-display: block;
+    }
   }
 }
-*/
