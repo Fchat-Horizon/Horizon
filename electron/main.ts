@@ -1429,24 +1429,12 @@ async function onReady(): Promise<void> {
             id: 'newTab',
             accelerator: 'CmdOrCtrl+Shift+T'
           },
-          //TODO remove this once we move the actual app settings stuff to the unified SettingsView
-          {
-            label: l('action.preferences'),
-            click: (_m, window: electron.BrowserWindow) => {
-              browserWindows.createSettingsWindow(
-                settings,
-                shouldImportSettings ? 'auto' : 'none',
-                window
-              );
-            },
-            accelerator: 'CmdOrCtrl+,'
-          },
           {
             label: l('action.preferences'),
             click: (_m, window: electron.BrowserWindow) => {
               window.webContents.send('settings-menu');
-            }
-            // accelerator: 'CmdOrCtrl+,'
+            },
+            accelerator: 'CmdOrCtrl+,'
           },
           {
             label: l('fixLogs.action'),

@@ -102,11 +102,6 @@ const mainConfig = {
         path.join(__dirname, 'window.html'),
         path.join(__dirname, 'build', 'tray@2x.png')
       ],
-      settings: [
-        path.join(__dirname, 'settings.ts'),
-        path.join(__dirname, 'settings.html'),
-        path.join(__dirname, 'build', 'tray@2x.png')
-      ],
       changelog: [
         path.join(__dirname, 'changelog.ts'),
         path.join(__dirname, 'changelog.html'),
