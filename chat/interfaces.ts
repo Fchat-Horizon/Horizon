@@ -283,6 +283,9 @@ export namespace Settings {
     ): Promise<Keys[K] | undefined>;
     getAvailableCharacters(): Promise<ReadonlyArray<string>>;
     set<K extends keyof Keys>(key: K, value: Keys[K]): Promise<void>;
+    getGlobalHiddenUsers(): Promise<string[]>;
+    toggleGlobalHiddenUser(name: string): void;
+    onGlobalHiddenUsersChanged(callback: (users: string[]) => void): void;
   }
 
   export interface Settings {

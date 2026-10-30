@@ -66,6 +66,7 @@ export class GeneralSettings {
   soundTheme = 'default';
   soundThemeSoundVolumes: { [theme: string]: { [sound: string]: number } } = {};
   horizonAutoLogin: boolean = false;
+  horizonUseGlobalHiddenUsers: boolean = false;
   horizonWindowTitleCharacter: boolean = false;
   use12HourTime: boolean = false;
   showSeconds: boolean = false;
