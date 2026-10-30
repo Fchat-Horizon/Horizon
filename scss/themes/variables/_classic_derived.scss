@@ -134,35 +134,5 @@ html {
 .bbcode-toolbar .color-selector .btn.text-color.black {
   background-color: #000;
 }
-* {
-  &::-webkit-scrollbar {
-    display: none; // Hides the custom scrollbar
-  }
-
-  // Optionally, you can also reset the scrollbar track and thumb
-  &::-webkit-scrollbar-track {
-    background: none; // Resets the track to default
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: none; // Resets the thumb to default
-  }
-
-  .hidden-scrollbar {
-    &::-webkit-scrollbar {
-      display: initial; // Hides the custom scrollbar
-      width: 12px;
-    }
-
-    // Optionally, you can also reset the scrollbar track and thumb
-    &::-webkit-scrollbar-track {
-      background: initial; // Resets the track to default
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: initial; // Resets the thumb to default
-    }
-  }
-}
 
 $blue-color: #06f;
