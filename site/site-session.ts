@@ -12,8 +12,10 @@ export interface SiteSessionInterface {
   stop(): Promise<void>;
 }
 
-export interface SiteSessionInterfaceCollection
-  extends Record<string, SiteSessionInterface> {
+export interface SiteSessionInterfaceCollection extends Record<
+  string,
+  SiteSessionInterface
+> {
   notes: NoteChecker;
 }
 
