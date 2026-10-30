@@ -1713,7 +1713,7 @@
                   v-model="characterOverrides.risingCharacterTheme"
                   style="flex: 1; margin-right: 10px"
                 >
-                  <option value="undefined">
+                  <option :value="undefined">
                     {{ l('settings.useDefaultTheme') }}
                   </option>
                   <option disabled>---</option>
