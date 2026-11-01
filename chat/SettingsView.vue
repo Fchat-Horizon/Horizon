@@ -942,6 +942,22 @@
                   ></settings-checkbox>
                 </div>
               </div>
+
+              <div class="mb-3">
+                <div
+                  class="d-flex p-2 justify-content-between align-items-start"
+                >
+                  <div class="w-50">
+                    <label class="control-label" for="horizonHighContrast">
+                      {{ l('settings.horizonHighContrast') }}
+                    </label>
+                  </div>
+                  <settings-checkbox
+                    v-model="generalSettings.horizonHighContrast"
+                    name="horizonHighContrast"
+                  ></settings-checkbox>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -957,6 +957,7 @@
   "settings.profileViewerThumbAnimate": "Load animated images as thumbnails instead of static previews.",
   "settings.reducedMotion": "Force Reduced Motion mode",
   "settings.reducedMotion.description": "By default, Horizon will use your system's settings for reducing motion. Enabling this setting will prevent (most) animations from playing, regardless of your system's settings.",
+  "settings.horizonHighContrast": "High-contrast mode",
   "settings.risingDisableWindowsHighContrast": "Disable Windows high-contrast mode",
   "settings.risingShowUnreadOfflineCount": "Show unread note and offline message counts in the left sidebar",
   "settings.showAvatars": "Show character avatars",

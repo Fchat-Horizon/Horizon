@@ -50,6 +50,7 @@ export class GeneralSettings implements GeneralSettingsInterface {
   customDictionary: string[] = [];
   hwAcceleration = true;
   reducedMotion = false;
+  horizonHighContrast = false;
   risingCacheExpiryDays = 30;
   horizonCacheMemoryCount = 350;
   risingSystemLogLevel: log.LevelOption = 'info';

@@ -2041,6 +2041,7 @@
 
           return {
             ['platform-' + this.platform]: true,
+            horizonHighContrast: this.settings?.horizonHighContrast || false,
             disableWindowsHighContrast:
               this.settings?.risingDisableWindowsHighContrast || false
           };

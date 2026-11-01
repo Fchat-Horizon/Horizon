@@ -723,6 +723,7 @@
 
           return {
             ['platform-' + this.platform]: true,
+            horizonHighContrast: this.settings?.horizonHighContrast || false,
             bbcodeGlow: this.settings?.horizonBbcodeGlow || false,
             disableWindowsHighContrast:
               this.settings?.risingDisableWindowsHighContrast || false

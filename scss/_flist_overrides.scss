@@ -162,7 +162,7 @@ input:checked {
 .nav-tab-spacer {
   display: flex;
   flex: 1 0 0px;
-  border-bottom: 1px solid $gray-300;
+  border-bottom: 1px solid var(--bs-border-color);
   margin-bottom: -1px;
 }
 
@@ -170,7 +170,7 @@ input:checked {
   align-self: stretch;
   width: 1px;
   margin: 0 0.35rem;
-  border-left: 1px solid $gray-300;
+  border-left: 1px solid var(--bs-border-color);
   pointer-events: none;
 }
 
@@ -178,7 +178,7 @@ input:checked {
   width: auto;
   height: 1px;
   border-left: none;
-  border-top: 1px solid $gray-300;
+  border-top: 1px solid var(--bs-border-color);
   margin: 0.35rem 0;
 }
 .nav.flex-column .nav-item.nav-divider:first-child {

@@ -967,6 +967,7 @@
             vanillaTextColors: this.settings.horizonVanillaTextColors,
             vanillaGenderColors: this.settings.horizonVanillaGenderColors,
             ['force-reduced-motion']: this.settings.reducedMotion || false,
+            horizonHighContrast: this.settings.horizonHighContrast || false,
             bbcodeGlow: this.settings.horizonBbcodeGlow,
             disableWindowsHighContrast:
               this.settings.risingDisableWindowsHighContrast || false

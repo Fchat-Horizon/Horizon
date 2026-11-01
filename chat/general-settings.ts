@@ -26,6 +26,7 @@ export interface GeneralSettings {
   customDictionary: string[];
   hwAcceleration: boolean;
   reducedMotion: boolean;
+  horizonHighContrast: boolean;
   risingCacheExpiryDays: number;
   horizonCacheMemoryCount: number;
   risingSystemLogLevel: string | false;
