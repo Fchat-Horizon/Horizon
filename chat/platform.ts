@@ -27,6 +27,12 @@ export interface PlatformServices {
    */
   saveGeneralSettings(settings: GeneralSettings): Promise<void>;
   /**
+   * Saves the log directory and restarts the application so the new location is active.
+   * @param directory The new log directory.
+   * @returns A promise that resolves after the update has been sent to the platform.
+   */
+  updateLogDirectory(directory: string): Promise<void>;
+  /**
    * Reloads the platform-specific settings, typically by requesting the main process to refresh its configuration.
    * @returns A promise that resolves when the settings have been successfully reloaded.
    */

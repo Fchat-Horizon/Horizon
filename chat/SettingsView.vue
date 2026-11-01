@@ -3140,7 +3140,7 @@
           return;
         }
 
-        generalSettings.logDirectory = directory;
+        await core.platform.updateLogDirectory(directory);
       },
       async browseForPath(): Promise<void> {
         const generalSettings = this.generalSettings;

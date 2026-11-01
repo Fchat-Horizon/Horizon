@@ -14,6 +14,10 @@ export default class ElectronPlatformService implements PlatformServices {
     electron.ipcRenderer.send('general-settings-update', settings);
   }
 
+  async updateLogDirectory(directory: string): Promise<void> {
+    electron.ipcRenderer.send('log-path-update', directory);
+  }
+
   async reloadSettings(): Promise<void> {
     electron.ipcRenderer.send('request-reload-settings');
   }
