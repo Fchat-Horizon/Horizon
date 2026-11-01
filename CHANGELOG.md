@@ -7,10 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Settings rework! Everything is now in a single menu, and you can set chat settings globally. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/725af0eb9acca4e48c4934c8bae64d2f7d7e972b)
+- Added a high-contrast mode setting. It's under "Accessibility" in the new settings menu. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d464c6c44d410f2ac6c30aff844b5ec04c3f62e5)
+
+### Changed
+
+- New app icons: Featuring a new version of the Windows/ Linux icon, the MacOS one, and the .dmg archive. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/359493d8ee924ce929b5b911bf1d45573bebd895)
+- MacOS versions of Horizon now use unstyled, floating scrollbars instead of static, custom ones. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3493ef0ecc9db29d41e37ef58768b912aa318b7c)
+
 ### Development
 
 - Added a new member to `core` for platform-related functionality, to help decouple some Electron-specific code from the chat module. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8090bccd8f4fd0f91ccdb900d990cd73ae829505)
 - Spellcheck language settings are now decoupled from Electron, and are automatically hidden from the UI if the platform does not expose any available languages.. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/16834353e94bad55405850bb11669ce1dfc4d004)
+- Tab components now support a vertical mode, and allow you to prefix a title with icons. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d2a309af74c90e07881479e2eda33327c2a59f89)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/640 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/956 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/964 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/1001 by @FatCatClient
 
 ## [2.4.5] - 2026-10-28
 
