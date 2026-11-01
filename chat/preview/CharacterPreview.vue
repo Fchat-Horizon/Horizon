@@ -329,7 +329,7 @@
             v => v[0]
           ),
           ..._.map(
-            _.filter(_.toPairs(results.filters), v => v[1].isFiltered),
+            _.filter(_.toPairs(results.filters), v => v[1]?.isFiltered),
             (v: any) => v[0]
           )
         ];

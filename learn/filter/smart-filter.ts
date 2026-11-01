@@ -540,5 +540,5 @@ export function matchesSmartFilters(
     return true;
   }
 
-  return !_.every(match.filters, filterResult => !filterResult.isFiltered);
+  return !_.every(match.filters, filterResult => !filterResult?.isFiltered);
 }
