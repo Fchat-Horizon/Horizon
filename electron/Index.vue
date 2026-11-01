@@ -340,7 +340,7 @@
   import { fixLogs } from './filesystem';
   import { SlimcatImporter } from './services';
   import _ from 'lodash';
-  import { EventBus } from '../chat/preview/event-bus';
+  import { EventBus, OpenSettingsMenuEvent } from '../chat/preview/event-bus';
 
   import BBCodeTester from '../bbcode/Tester.vue';
   import { BBCodeView } from '../bbcode/view';
@@ -484,6 +484,7 @@
     mounted(): void {
       log.debug('init.chat.mounted');
       this.setupThemeHotReload();
+      EventBus.$on('open-settings-menu', this.openSettingsMenu);
     },
     async created(): Promise<void> {
       // Register the auto-backup toast listener as early as possible. It used to
@@ -632,9 +633,7 @@
       });
 
       electron.ipcRenderer.on('settings-menu', () => {
-        (
-          this.$refs['settingsView'] as InstanceType<typeof SettingsView>
-        ).show();
+        this.openSettingsMenu({ mode: 'global' });
       });
 
       electron.ipcRenderer.on('ui-test', () => {
@@ -684,6 +683,7 @@
     },
     beforeDestroy(): void {
       this.stopThemeWatch();
+      EventBus.$off('open-settings-menu', this.openSettingsMenu);
       if (this.autoBackupStatusListener)
         electron.ipcRenderer.removeListener(
           'auto-backup-status',
@@ -691,6 +691,12 @@
         );
     },
     methods: {
+      openSettingsMenu(data: OpenSettingsMenuEvent): void {
+        (this.$refs['settingsView'] as InstanceType<typeof SettingsView>).open(
+          data.mode
+        );
+      },
+
       async startAndUpgradeCache(): Promise<void> {
         log.debug('init.chat.cache.start');
 

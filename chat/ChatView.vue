@@ -77,7 +77,7 @@
               role="button"
               class="userInfo-button-item btn btn-outline-secondary"
               :title="l('settings.character')"
-              disabled
+              @click.prevent="openCharacterSettings()"
             >
               <i class="fa-solid fa-user-gear fa-fw"></i>
             </button>
@@ -469,6 +469,7 @@
   import CustomDialog from '../components/custom_dialog';
   import Modal from '../components/Modal.vue';
   import QuickJump from './QuickJump.vue';
+  import { EventBus } from './preview/event-bus';
   import { group, log } from 'node:console';
 
   const unreadClasses = {
@@ -731,6 +732,10 @@
       window.removeEventListener('mouseup', this.mouseButtonListener);
     },
     methods: {
+      openCharacterSettings(): void {
+        EventBus.$emit('open-settings-menu', { mode: 'character' });
+      },
+
       onMouseButton(e: MouseEvent): void {
         // Mouse button 3 = back, 4 = forward
         const navigated =

@@ -17,6 +17,7 @@ import { NoteCheckerCount } from '../../site/note-checker';
  * 'channel-ad': {message: Message, channel: Conversation, profile: ComplexCharacter | undefined}
  * 'channel-message': {message: Message, channel: Conversation}
  * 'select-conversation': { conversation: Conversation }
+ * 'open-settings-menu': { mode: 'global' | 'character' }
  * 'note-counts-update': {},
  * 'character-memo': { character: string, memo: CharacterMemo }
  */
@@ -40,6 +41,10 @@ export interface CharacterDataEvent {
 
 export interface SelectConversationEvent extends EventBusEvent {
   conversation: Conversation | null;
+}
+
+export interface OpenSettingsMenuEvent extends EventBusEvent {
+  mode: 'global' | 'character';
 }
 
 export type EventCallback = (data: any) => void | Promise<void>;

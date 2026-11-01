@@ -1,5 +1,6 @@
 <template>
   <modal
+    ref="modal"
     :action="l('settings.action')"
     :buttonText="l('action.save')"
     @submit="submit"
@@ -2915,7 +2916,7 @@
       return {
         l,
         availableImports: [] as ReadonlyArray<string>,
-        selectedTab: 'chat.bbcode',
+        selectedTab: 'app.general',
         settingsMode: '0',
         importCharacter: '',
         characterOverrides: {} as PartialSettings,
@@ -2985,6 +2986,14 @@
       }
     },
     methods: {
+      open(mode: 'global' | 'character' = 'global'): void {
+        this.settingsMode = mode === 'character' ? '1' : '0';
+        if (mode === 'character' && this.selectedTab.startsWith('app.')) {
+          this.selectedTab = 'chat.bbcode';
+        }
+        (this.$refs['modal'] as InstanceType<typeof Modal>).show();
+      },
+
       isUsingGlobal(): boolean {
         return this.settingsMode === '0';
       },
