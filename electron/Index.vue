@@ -484,7 +484,6 @@
     mounted(): void {
       log.debug('init.chat.mounted');
       this.setupThemeHotReload();
-      EventBus.$on('open-settings-menu', this.openSettingsMenu);
     },
     async created(): Promise<void> {
       // Register the auto-backup toast listener as early as possible. It used to
@@ -830,6 +829,7 @@
                 ).show();
               }
             });
+            EventBus.$on('open-settings-menu', this.openSettingsMenu);
           });
           core.connection.onEvent('closed', () => {
             if (this.character === undefined) return;
