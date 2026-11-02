@@ -36,7 +36,8 @@
       keyField: { type: String, required: false },
       keyFunc: { type: Function, required: false },
       rowClass: { type: [String, Function], required: false },
-      resetKey: { type: [String, Number], required: false }
+      resetKey: { type: [String, Number], required: false },
+      preserveAnchor: { type: Boolean, default: false }
     },
     data() {
       return {
@@ -58,7 +59,12 @@
         prefixSumsDirty: true,
         programmaticScroll: false,
         measureCooldown: false,
-        scrollLockedToBottom: false
+        scrollLockedToBottom: false,
+        anchorRows: [] as ReadonlyArray<{
+          key: string | number;
+          top: number;
+          height: number;
+        }>
       };
     },
     computed: {
@@ -72,6 +78,7 @@
     watch: {
       items(): void {
         this.prefixSumsDirty = true;
+        if (this.preserveAnchor) this.holdAnchor();
         this.$nextTick(() => {
           this.updateContainerHeight();
           this.updateVisibleRange();
@@ -104,6 +111,7 @@
     },
     updated(): void {
       this.measureRows();
+      if (this.preserveAnchor) this.recordAnchorRows();
     },
     beforeDestroy(): void {
       if (this.scrollRequestAnimFrame !== undefined) {
@@ -419,6 +427,67 @@
         }
         this.scrollTop += added;
         this.setScrollTop(el.scrollTop + added);
+        this.updateVisibleRange();
+      },
+
+      recordAnchorRows(): void {
+        this.rebuildPrefixSums();
+        const rows = [];
+        const end = Math.min(this.visibleEnd, this.items.length);
+        for (let i = this.visibleStart; i < end; i++) {
+          rows.push({
+            key: this.getItemKey(this.items[i], i),
+            top: this.getCumHeight(i),
+            height: this.getItemHeight(i)
+          });
+        }
+        this.anchorRows = Object.freeze(rows);
+      },
+
+      holdAnchor(): void {
+        const el = this.scroller;
+        const rows = this.anchorRows;
+        if (!el || this.scrollbarHeld || rows.length === 0) return;
+
+        const indexes = new Map<string | number, number>();
+        for (let i = 0; i < this.items.length; i++) {
+          indexes.set(this.getItemKey(this.items[i], i), i);
+        }
+
+        // a row with new neighbors got re-sorted, so don't follow it
+        const stayedInPlace = (at: number): boolean => {
+          const index = indexes.get(rows[at].key);
+          if (index === undefined) return false;
+          const prev = rows[at - 1];
+          const next = rows[at + 1];
+          return (
+            (!!prev && indexes.get(prev.key) === index - 1) ||
+            (!!next && indexes.get(next.key) === index + 1)
+          );
+        };
+
+        // the dom hasn't updated yet, so it still matches rows
+        const hovered = el.querySelector(
+          '.virtual-list-window > .virtual-list-row:hover'
+        );
+        const hoveredAt = hovered
+          ? Array.from(hovered.parentElement!.children).indexOf(hovered)
+          : -1;
+        const scrollTop = el.scrollTop;
+        const anchor =
+          hoveredAt !== -1 && stayedInPlace(hoveredAt)
+            ? hoveredAt
+            : rows.findIndex(
+                (row, at) =>
+                  row.top + row.height > scrollTop && stayedInPlace(at)
+              );
+        if (anchor === -1) return;
+
+        this.scrollLockedToBottom = false;
+        this.syncSpacerHeight();
+        const newTop = this.getCumHeight(indexes.get(rows[anchor].key)!);
+        this.setScrollTop(scrollTop + newTop - rows[anchor].top);
+        this.scrollTop = el.scrollTop;
         this.updateVisibleRange();
       },
 
