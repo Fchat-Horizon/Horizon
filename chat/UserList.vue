@@ -251,7 +251,7 @@
       ref="allList"
       class="hidden-scrollbar"
       style="overflow: auto; flex: 1 1 auto; padding-left: 10px"
-      v-if="isConsoleTab && tab === '2'"
+      v-if="isConsoleTab && tab === '1'"
       :items="allFriendRows"
       :itemHeight="rowHeight"
       :overscan="overscan"
@@ -398,7 +398,7 @@
 
         return [
           { id: '0', label: l('users.friends') },
-          { id: '2', label: l('users.friends.all') }
+          { id: '1', label: l('users.friends.all') }
         ];
       },
       //Making these settings a getter performs better with larger lists
