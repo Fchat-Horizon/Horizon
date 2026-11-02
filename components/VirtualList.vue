@@ -1,6 +1,7 @@
 <template>
   <div
     class="virtual-list"
+    :class="{ 'virtual-list-anchored': preserveAnchor }"
     ref="scroller"
     @scroll="onScroll"
     @wheel.passive="onWheel"
@@ -474,20 +475,23 @@
           ? Array.from(hovered.parentElement!.children).indexOf(hovered)
           : -1;
         const scrollTop = el.scrollTop;
-        const anchor =
-          hoveredAt !== -1 && stayedInPlace(hoveredAt)
-            ? hoveredAt
-            : rows.findIndex(
-                (row, at) =>
-                  row.top + row.height > scrollTop && stayedInPlace(at)
-              );
+        const isHovering = hoveredAt !== -1 && stayedInPlace(hoveredAt);
+        // mouse isn't hovered, so let new rows show up at the ends of the list
+        if (!isHovering && (scrollTop < 1 || this.scrollLockedToBottom)) return;
+
+        const anchor = isHovering
+          ? hoveredAt
+          : rows.findIndex(
+              (row, at) => row.top + row.height > scrollTop && stayedInPlace(at)
+            );
         if (anchor === -1) return;
 
-        this.scrollLockedToBottom = false;
         this.syncSpacerHeight();
         const newTop = this.getCumHeight(indexes.get(rows[anchor].key)!);
         this.setScrollTop(scrollTop + newTop - rows[anchor].top);
         this.scrollTop = el.scrollTop;
+        this.scrollLockedToBottom =
+          Math.abs(el.scrollHeight - el.scrollTop - el.clientHeight) <= 1;
         this.updateVisibleRange();
       },
 
@@ -506,6 +510,11 @@
   .virtual-list {
     position: relative;
     overflow: auto;
+  }
+
+  // chromium would correct on top of holdAnchor
+  .virtual-list-anchored {
+    overflow-anchor: none;
   }
 
   .virtual-list-spacer {
