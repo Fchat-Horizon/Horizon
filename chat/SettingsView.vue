@@ -995,13 +995,6 @@
                       </option>
                     </select>
                   </label>
-                  <div class="form-text text-muted">
-                    {{
-                      l(
-                        `settings.colorblindMode.help.${generalSettings.horizonColorblindMode}`
-                      )
-                    }}
-                  </div>
                 </div>
               </div>
             </div>
