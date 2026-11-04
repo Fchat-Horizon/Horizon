@@ -2170,7 +2170,6 @@
                   @update:overrideValue="
                     $set(characterOverrides, 'notifications', $event)
                   "
-                  :disabled="!settings.playSound"
                 />
               </div>
             </div>
@@ -2195,7 +2194,6 @@
                   @update:overrideValue="
                     $set(characterOverrides, 'highlight', $event)
                   "
-                  :disabled="!settings.playSound"
                 />
               </div>
             </div>
