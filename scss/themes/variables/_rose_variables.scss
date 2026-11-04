@@ -76,18 +76,6 @@ $scoreMismatchFg: #a8153c;
 $scoreTitleColor: $black;
 $scoreMinimizeButtonFg: rgba($black, 0.7);
 $scoreMinimizeButtonBg: rgba($white, 0.2);
-$scoreReportBg: rgba(0, 0, 0, 0.2);
-
-$scoreFadedPerfectMatchBg: color.scale($scorePerfectMatchBg, $alpha: -60%);
-$scoreFadedPerfectMatchFg: color.scale($scorePerfectMatchFg, $alpha: -60%);
-$scoreFadedMatchBg: color.scale($scoreMatchBg, $alpha: -60%);
-$scoreFadedMatchFg: color.scale($scoreMatchFg, $alpha: -60%);
-$scoreFadedWeakMatchBg: color.scale($scoreWeakMatchBg, $alpha: -60%);
-$scoreFadedWeakMatchFg: color.scale($scoreWeakMatchFg, $alpha: -60%);
-$scoreFadedWeakMismatchBg: color.scale($scoreWeakMismatchBg, $alpha: -60%);
-$scoreFadedWeakMismatchFg: color.scale($scoreWeakMismatchFg, $alpha: -60%);
-$scoreFadedMismatchBg: color.scale($scoreMismatchBg, $alpha: -60%);
-$scoreFadedMismatchFg: color.scale($scoreMismatchFg, $alpha: -60%);
 
 $scoreStandoutMatchBorderColor: color.scale($rose-green, $lightness: -30%);
 $scoreStandoutMatchBgColor: rgba($rose-green, 0.47);

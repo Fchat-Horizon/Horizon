@@ -526,21 +526,25 @@
       }
 
       .match {
+        color: var(--scoreMatchFg);
         background-color: var(--scoreMatchBg);
         border: solid 1px var(--scoreMatchFg);
       }
 
       .weak-match {
+        color: var(--scoreWeakMatchFg);
         background-color: var(--scoreWeakMatchBg);
         border: 1px solid var(--scoreWeakMatchFg);
       }
 
       .weak-mismatch {
+        color: var(--scoreWeakMismatchFg);
         background-color: var(--scoreWeakMismatchBg);
         border: 1px solid var(--scoreWeakMismatchFg);
       }
 
       .mismatch {
+        color: var(--scoreMismatchFg);
         background-color: var(--scoreMismatchBg);
         border: 1px solid var(--scoreMismatchFg);
       }

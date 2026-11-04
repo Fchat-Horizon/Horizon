@@ -963,7 +963,12 @@
             [`theme-${core.state.settings?.risingCharacterTheme || this.getSyncedTheme()}`]: true,
             [`${this.getSyncedTheme()}`]: true,
             [`platform-${platform}`]: true,
-            colorblindMode: core.state.settings?.risingColorblindMode || false,
+            colorblindMode: this.isColorblindModeActive(),
+            ...(this.isColorblindModeActive()
+              ? {
+                  [`colorblind-${core.state.generalSettings!.horizonColorblindMode}`]: true
+                }
+              : {}),
             vanillaTextColors: this.settings.horizonVanillaTextColors,
             vanillaGenderColors: this.settings.horizonVanillaGenderColors,
             ['force-reduced-motion']: this.settings.reducedMotion || false,
@@ -982,6 +987,10 @@
               this.settings.risingDisableWindowsHighContrast || false
           };
         }
+      },
+      isColorblindModeActive(): boolean {
+        const mode = core.state.generalSettings?.horizonColorblindMode;
+        return mode !== undefined && mode !== 'none';
       },
       nextProfile(): void {
         if (!this.nextProfileAvailable()) {

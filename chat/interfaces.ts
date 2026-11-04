@@ -327,7 +327,6 @@ export namespace Settings {
     readonly risingComparisonInSearch: boolean;
 
     readonly risingShowUnreadOfflineCount: boolean;
-    readonly risingColorblindMode: boolean;
     readonly risingShowPortraitNearInput: boolean;
     readonly risingShowPortraitInMessage: boolean;
     readonly risingShowHighQualityPortraits: boolean;

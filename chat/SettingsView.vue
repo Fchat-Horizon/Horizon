@@ -957,6 +957,52 @@
                     name="horizonHighContrast"
                   ></settings-checkbox>
                 </div>
+
+                <div class="mb-3">
+                  <label class="control-label" for="horizonColorblindMode">
+                    {{ l('settings.colorblindMode') }}
+                    <select
+                      id="horizonColorblindMode"
+                      class="form-select"
+                      v-model="generalSettings.horizonColorblindMode"
+                    >
+                      <option value="none">
+                        {{ l('settings.colorblindMode.none') }}
+                      </option>
+                      <option value="protanopia">
+                        {{ l('settings.colorblindMode.protanopia') }}
+                      </option>
+                      <option value="protanomaly">
+                        {{ l('settings.colorblindMode.protanomaly') }}
+                      </option>
+                      <option value="deuteranopia">
+                        {{ l('settings.colorblindMode.deuteranopia') }}
+                      </option>
+                      <option value="deuteranomaly">
+                        {{ l('settings.colorblindMode.deuteranomaly') }}
+                      </option>
+                      <option value="tritanopia">
+                        {{ l('settings.colorblindMode.tritanopia') }}
+                      </option>
+                      <option value="tritanomaly">
+                        {{ l('settings.colorblindMode.tritanomaly') }}
+                      </option>
+                      <option value="achromatopsia">
+                        {{ l('settings.colorblindMode.achromatopsia') }}
+                      </option>
+                      <option value="achromatomaly">
+                        {{ l('settings.colorblindMode.achromatomaly') }}
+                      </option>
+                    </select>
+                  </label>
+                  <div class="form-text text-muted">
+                    {{
+                      l(
+                        `settings.colorblindMode.help.${generalSettings.horizonColorblindMode}`
+                      )
+                    }}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1980,26 +2026,6 @@
                       'horizonShowCustomCharacterColors',
                       $event
                     )
-                  "
-                />
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="risingColorblindMode">
-                    {{ l('settings.colorblindMode') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.risingColorblindMode"
-                  :overrideValue="characterOverrides.risingColorblindMode"
-                  :usingGlobal="isUsingGlobal()"
-                  name="risingColorblindMode"
-                  @update:globalValue="settings.risingColorblindMode = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'risingColorblindMode', $event)
                   "
                 />
               </div>

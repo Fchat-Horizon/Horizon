@@ -1,5 +1,16 @@
 import { ProfileViewerGalleryType } from '../site/utils';
 
+export type ColorblindMode =
+  | 'none'
+  | 'protanopia'
+  | 'protanomaly'
+  | 'deuteranopia'
+  | 'deuteranomaly'
+  | 'tritanopia'
+  | 'tritanomaly'
+  | 'achromatopsia'
+  | 'achromatomaly';
+
 export interface GeneralSettings {
   account: string;
   closeToTray: boolean;
@@ -27,6 +38,7 @@ export interface GeneralSettings {
   hwAcceleration: boolean;
   reducedMotion: boolean;
   horizonHighContrast: boolean;
+  horizonColorblindMode: ColorblindMode;
   risingCacheExpiryDays: number;
   horizonCacheMemoryCount: number;
   risingSystemLogLevel: string | false;

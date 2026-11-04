@@ -1423,6 +1423,7 @@
       text-shadow: none;
 
       &.perfect {
+        color: var(--scorePerfectMatchFg);
         background-color: var(--scorePerfectMatchBg);
         border: 1px solid var(--scorePerfectMatchFg);
         box-shadow: 0 0 5px 0 rgba(255, 255, 255, 0.5);
@@ -1434,21 +1435,25 @@
       }
 
       &.match {
+        color: var(--scoreMatchFg);
         background-color: var(--scoreMatchBg);
         border: solid 1px var(--scoreMatchFg);
       }
 
       &.weak-match {
+        color: var(--scoreWeakMatchFg);
         background-color: var(--scoreWeakMatchBg);
         border: 1px solid var(--scoreWeakMatchFg);
       }
 
       &.weak-mismatch {
+        color: var(--scoreWeakMismatchFg);
         background-color: var(--scoreWeakMismatchBg);
         border: 1px solid var(--scoreWeakMismatchFg);
       }
 
       &.mismatch {
+        color: var(--scoreMismatchFg);
         background-color: var(--scoreMismatchBg);
         border: 1px solid var(--scoreMismatchFg);
       }
