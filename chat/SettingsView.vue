@@ -190,7 +190,7 @@
               {{ l('settings.spellcheck.language') }}
             </h5>
 
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               <label class="control-label" for="displayLanguage">
                 {{ l('settings.displayLanguage') }}
                 <select
@@ -214,7 +214,7 @@
             </div>
 
             <!--On MacOS, Electron uses the OS' native spell checker as of version 35.2.0 -->
-            <div class="mb-3" v-if="spellcheckLanguages.length > 0">
+            <div class="mb-3 p-2" v-if="spellcheckLanguages.length > 0">
               <label
                 class="control-label"
                 for="spellCheckLang"
@@ -365,7 +365,7 @@
                 ></settings-checkbox>
               </div>
             </div>
-            <div class="mb-3" v-if="!generalSettings.themeSync">
+            <div class="mb-3 p-2" v-if="!generalSettings.themeSync">
               <label class="control-label" for="theme" style="width: 24ch">
                 {{ l('settings.theme.app') }}
                 <filterable-select
@@ -482,7 +482,7 @@
             style="height: 100%; width: 100%"
           >
             <h5>{{ l('settings.sounds') }}</h5>
-            <div class="form-group">
+            <div class="form-group p-2">
               <label class="control-label" for="soundTheme" style="width: 24ch">
                 {{ l('settings.soundTheme') }}
                 <filterable-select
@@ -692,7 +692,7 @@
                 ></settings-checkbox>
               </div>
             </div>
-            <div class="mb-3" v-if="generalSettings.profileViewer">
+            <div class="mb-3 p-2" v-if="generalSettings.profileViewer">
               <label class="control-label" for="profileViewerGalleryType">
                 {{ l('settings.profileViewerGalleryType') }}
                 <select
@@ -782,7 +782,7 @@
             </div>
 
             <h5>{{ l('settings.behavior.chat') }}</h5>
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               <label class="control-label label-full" for="logDir">
                 {{ l('settings.logDir') }}
 
@@ -982,7 +982,7 @@
                 ></settings-checkbox>
               </div>
             </div>
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               <!--We do this one slightly differently because we
                 cannot and will not make ElectronLogger.LogType reactive -->
               <label class="control-label" for="systemLogLevel">
@@ -1021,7 +1021,7 @@
               {{ l('settings.cache') }}
             </h5>
 
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               <label class="control-label" for="cacheExpiryDays">
                 {{ l('settings.cache.expiryDays') }}</label
               >
@@ -1042,7 +1042,7 @@
                 l('settings.cache.expiryDays.description')
               }}</small>
             </div>
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               <label class="control-label" for="cacheMemoryCount">
                 {{ l('settings.cache.memoryCount') }}
               </label>
@@ -1073,7 +1073,7 @@
               <p>{{ l('settings.macLinkBug3') }}</p>
             </div>
 
-            <label class="control-label label-full" for="browserPath">
+            <label class="control-label label-full p-2" for="browserPath">
               {{ l('settings.browserOptionPath') }}
 
               <div class="input-group">
@@ -1096,7 +1096,7 @@
                 </button></div
             ></label>
 
-            <label class="control-label label-full" for="browserArgs">
+            <label class="control-label label-full p-2" for="browserArgs">
               {{ l('settings.browserOptionArguments') }}
               <div class="input-group">
                 <input
@@ -2231,9 +2231,9 @@
             </div>
 
             <h5>{{ l('settings.ageMatch') }}</h5>
-            <div class="mb-3">{{ l('settings.leaveEmptyNoLimit') }}</div>
+            <div class="mb-3 p-2">{{ l('settings.leaveEmptyNoLimit') }}</div>
 
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               <label class="control-label" for="risingFilter.minAge">{{
                 l('settings.minAge')
               }}</label>
@@ -2324,11 +2324,11 @@
               </div>
             </div>
             <h5>{{ l('settings.exceptionList') }}</h5>
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               {{ l('settings.exceptionList.help') }}
             </div>
 
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               <textarea
                 class="form-control"
                 :value="getExceptionList()"

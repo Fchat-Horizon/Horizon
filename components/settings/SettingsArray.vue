@@ -11,17 +11,25 @@
       :add-tag-on-blur="true"
       :add-tag-on-keys="[13, 188, 9]"
     />
-    <InputTag
-      v-model="overrideValue"
-      :disabled="disabled"
-      :placeholder="globalValue.toString()"
-      @input="$emit('update:overrideValue', overrideValue)"
-      class="form-control form-tag"
-      :add-tag-on-blur="true"
-      :add-tag-on-keys="[13, 188, 9]"
-      v-else
-    />
-    <label>
+    <div v-else class="settings-array-overrides form-control form-tag">
+      <InputTag
+        v-if="globalValue.length"
+        :value="globalValue"
+        :disabled="disabled"
+        class="inherited-tags"
+        :read-only="true"
+      />
+      <InputTag
+        v-model="overrideValue"
+        :disabled="disabled"
+        :placeholder="placeholder"
+        @input="$emit('update:overrideValue', overrideValue)"
+        class="override-tags"
+        :add-tag-on-blur="true"
+        :add-tag-on-keys="[13, 188, 9]"
+      />
+    </div>
+    <label class="form-text">
       {{ l('settings.arrayInstructions') }}
     </label>
   </div>
