@@ -1582,21 +1582,18 @@
             <div class="mb-3 p-2">
               <label class="control-label" for="risingCharacterTheme">
                 {{ l('settings.overrideCharacterTheme') }}
-                <select
-                  id="risingCharacterTheme"
-                  class="form-select"
-                  v-model="characterOverrides.risingCharacterTheme"
-                  style="flex: 1; margin-right: 10px"
-                >
-                  <option :value="undefined">
-                    {{ l('settings.useDefaultTheme') }}
-                  </option>
-                  <option disabled>---</option>
-                  <option v-for="theme in availableThemes" :value="theme">
-                    {{ theme }}
-                  </option>
-                </select>
               </label>
+              <settings-select-override
+                id="risingCharacterTheme"
+                name="risingCharacterTheme"
+                :globalValue="settings.risingCharacterTheme || ''"
+                :overrideValue="characterOverrides.risingCharacterTheme"
+                :usingGlobal="isUsingGlobal()"
+                :options="risingCharacterThemeOptions"
+                :fallbackLabel="l('settings.override.useGlobal')"
+                @update:globalValue="setGlobalRisingCharacterTheme($event)"
+                @update:overrideValue="setCharacterRisingCharacterTheme($event)"
+              />
             </div>
 
             <settings-override
@@ -2504,6 +2501,19 @@
       currentCharacter(): string {
         return core.connection.character;
       },
+      risingCharacterThemeOptions(): ReadonlyArray<{
+        value: string;
+        label: string;
+      }> {
+        const options = this.availableThemes.map(theme => ({
+          value: theme,
+          label: theme
+        }));
+
+        return this.isUsingGlobal()
+          ? [{ value: '', label: l('settings.useDefaultTheme') }, ...options]
+          : options;
+      },
       activeRisingFilter(): SmartFilterSettings {
         return (
           this.settingsMode === '0'
@@ -2576,6 +2586,16 @@
           this.$delete(this.characterOverrides, 'chatLayoutMode');
         } else if (value === 'classic' || value === 'modern') {
           this.$set(this.characterOverrides, 'chatLayoutMode', value);
+        }
+      },
+      setGlobalRisingCharacterTheme(value: string): void {
+        this.$set(this.settings, 'risingCharacterTheme', value || undefined);
+      },
+      setCharacterRisingCharacterTheme(value: string | undefined): void {
+        if (value === undefined) {
+          this.$delete(this.characterOverrides, 'risingCharacterTheme');
+        } else if (this.availableThemes.includes(value)) {
+          this.$set(this.characterOverrides, 'risingCharacterTheme', value);
         }
       },
       async load(): Promise<void> {
