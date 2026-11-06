@@ -747,7 +747,7 @@
   "settings.dataManager.section.vanilla": "Importer depuis Vanilla",
   "settings.defaultHighlights": "Utiliser les pings globaux",
   "settings.disallowedTags": "Tags BBCode interdits",
-  "settings.disallowedTags.placeholder": "Saisissez les balises sans crochets, c'est-à-dire {tagname}.",
+  "settings.disallowedTags.placeholder": "Saisissez les balises sans crochets, c'est-à-dire {tagName}.",
   "settings.displayLanguage": "Langage affiché",
   "settings.displayLanguage.note": "Les langues peuvent ne pas être entièrement traduites.\nNous avons un outil pour suivre l'avancement, merci de ne pas signaler les traductions manquantes.",
   "settings.enterAge": "Indiquez l'age",

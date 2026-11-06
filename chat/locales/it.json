@@ -747,7 +747,7 @@
   "settings.dataManager.section.vanilla": "Importa da vanilla",
   "settings.defaultHighlights": "Usa parole di notifica globali",
   "settings.disallowedTags": "Tipi di BBCode disattivati",
-  "settings.disallowedTags.placeholder": "Scrivi i tag senza le parentesi, come {tagname}.",
+  "settings.disallowedTags.placeholder": "Scrivi i tag senza le parentesi, come {tagName}.",
   "settings.displayLanguage": "Lingua di display",
   "settings.displayLanguage.note": "Le lingue potrebbero non essere ancora interamente tradotte.\nAbbiamo uno strumento per controllare i progressi, quindi non c'è bisogno di segnalare traduzioni mancanti.",
   "settings.enterAge": "Immetti età",

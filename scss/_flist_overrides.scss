@@ -201,6 +201,51 @@ input:checked {
   --bs-nav-tabs-link-active-color: var(--bs-body-color);
 }
 
+.form-check.form-switch .form-check-input:indeterminate {
+  background-position: center;
+  background-color: $secondary;
+  border-color: $secondary;
+}
+
+.vue-input-tag-wrapper .input-tag {
+  background-color: $primary;
+  border-radius: $border-radius;
+  border: 1px solid $primary-border-subtle;
+  color: color-contrast($primary);
+  display: inline-block;
+  font-size: 13px;
+  padding-left: 0.65em;
+  padding-right: 0.65em;
+  a.remove {
+    color: color-contrast($primary);
+  }
+}
+
+.settings-array-overrides {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+
+  .vue-input-tag-wrapper {
+    background: transparent;
+    border: 0;
+    display: contents;
+    padding: 0;
+  }
+
+  .new-tag {
+    flex: 1 1 8rem;
+    min-width: 8rem;
+  }
+
+  .inherited-tags .input-tag {
+    background-color: $secondary;
+    border-color: $secondary;
+    color: color-contrast($secondary);
+  }
+}
+
 .nav-tabs li {
   a {
     border-top-left-radius: 0.4rem;

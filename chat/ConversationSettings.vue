@@ -136,8 +136,8 @@
 
 <script lang="ts">
   import CustomDialog from '../components/custom_dialog';
-  import SettingsRadio from '../components/SettingsRadio.vue';
-  import SettingsCheckbox from '../components/SettingsCheckbox.vue';
+  import SettingsRadio from '../components/settings/SettingsRadio.vue';
+  import SettingsCheckbox from '../components/settings/SettingsCheckbox.vue';
   import Modal from '../components/Modal.vue';
   import { Conversation } from './interfaces';
   import l from './localize';

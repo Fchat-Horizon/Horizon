@@ -742,7 +742,7 @@
   "settings.dataManager.section.vanilla": "Importálás alapértelmezettből",
   "settings.defaultHighlights": "Globális kiemelt szavak használata",
   "settings.disallowedTags": "Nem megengedett BBCode címkék",
-  "settings.disallowedTags.placeholder": "A címkéket zárójel nélkül gépeld be, pl. {tagname}.",
+  "settings.disallowedTags.placeholder": "A címkéket zárójel nélkül gépeld be, pl. {tagName}.",
   "settings.displayLanguage": "Megjelenítési nyelv",
   "settings.displayLanguage.note": "Nem minden nyelv fordítása teljes.\nSaját eszközzel követjük a fordítási folyamatot, úgyhogy nem szükséges hiányzó fordítások jelentése.",
   "settings.enterAge": "Add meg a kort",

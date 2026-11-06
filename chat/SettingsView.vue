@@ -190,7 +190,7 @@
               {{ l('settings.spellcheck.language') }}
             </h5>
 
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               <label class="control-label" for="displayLanguage">
                 {{ l('settings.displayLanguage') }}
                 <select
@@ -214,7 +214,7 @@
             </div>
 
             <!--On MacOS, Electron uses the OS' native spell checker as of version 35.2.0 -->
-            <div class="mb-3" v-if="spellcheckLanguages.length > 0">
+            <div class="mb-3 p-2" v-if="spellcheckLanguages.length > 0">
               <label
                 class="control-label"
                 for="spellCheckLang"
@@ -365,7 +365,7 @@
                 ></settings-checkbox>
               </div>
             </div>
-            <div class="mb-3" v-if="!generalSettings.themeSync">
+            <div class="mb-3 p-2" v-if="!generalSettings.themeSync">
               <label class="control-label" for="theme" style="width: 24ch">
                 {{ l('settings.theme.app') }}
                 <filterable-select
@@ -482,7 +482,7 @@
             style="height: 100%; width: 100%"
           >
             <h5>{{ l('settings.sounds') }}</h5>
-            <div class="form-group">
+            <div class="form-group p-2">
               <label class="control-label" for="soundTheme" style="width: 24ch">
                 {{ l('settings.soundTheme') }}
                 <filterable-select
@@ -692,7 +692,7 @@
                 ></settings-checkbox>
               </div>
             </div>
-            <div class="mb-3" v-if="generalSettings.profileViewer">
+            <div class="mb-3 p-2" v-if="generalSettings.profileViewer">
               <label class="control-label" for="profileViewerGalleryType">
                 {{ l('settings.profileViewerGalleryType') }}
                 <select
@@ -782,7 +782,7 @@
             </div>
 
             <h5>{{ l('settings.behavior.chat') }}</h5>
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               <label class="control-label label-full" for="logDir">
                 {{ l('settings.logDir') }}
 
@@ -982,7 +982,7 @@
                 ></settings-checkbox>
               </div>
             </div>
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               <!--We do this one slightly differently because we
                 cannot and will not make ElectronLogger.LogType reactive -->
               <label class="control-label" for="systemLogLevel">
@@ -1021,7 +1021,7 @@
               {{ l('settings.cache') }}
             </h5>
 
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               <label class="control-label" for="cacheExpiryDays">
                 {{ l('settings.cache.expiryDays') }}</label
               >
@@ -1042,7 +1042,7 @@
                 l('settings.cache.expiryDays.description')
               }}</small>
             </div>
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               <label class="control-label" for="cacheMemoryCount">
                 {{ l('settings.cache.memoryCount') }}
               </label>
@@ -1073,7 +1073,7 @@
               <p>{{ l('settings.macLinkBug3') }}</p>
             </div>
 
-            <label class="control-label label-full" for="browserPath">
+            <label class="control-label label-full p-2" for="browserPath">
               {{ l('settings.browserOptionPath') }}
 
               <div class="input-group">
@@ -1096,7 +1096,7 @@
                 </button></div
             ></label>
 
-            <label class="control-label label-full" for="browserArgs">
+            <label class="control-label label-full p-2" for="browserArgs">
               {{ l('settings.browserOptionArguments') }}
               <div class="input-group">
                 <input
@@ -1235,164 +1235,99 @@
               />
             </div>
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="animatedEicons">
-                    {{ l('settings.animatedEicons') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.animatedEicons"
-                  :overrideValue="characterOverrides.animatedEicons"
-                  :usingGlobal="isUsingGlobal()"
-                  name="animatedEicons"
-                  @update:globalValue="settings.animatedEicons = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'animatedEicons', $event)
-                  "
-                />
-              </div>
-            </div>
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="smoothMosaics">
-                    {{ l('settings.smoothMosaics') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.smoothMosaics"
-                  :overrideValue="characterOverrides.smoothMosaics"
-                  :usingGlobal="isUsingGlobal()"
-                  name="smoothMosaics"
-                  @update:globalValue="settings.smoothMosaics = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'smoothMosaics', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.animatedEicons')"
+              :globalValue="settings.animatedEicons"
+              :overrideValue="characterOverrides.animatedEicons"
+              :usingGlobal="isUsingGlobal()"
+              name="animatedEicons"
+              @update:globalValue="settings.animatedEicons = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'animatedEicons', $event)
+              "
+            />
+            <settings-override
+              :label="l('settings.smoothMosaics')"
+              :globalValue="settings.smoothMosaics"
+              :overrideValue="characterOverrides.smoothMosaics"
+              :usingGlobal="isUsingGlobal()"
+              name="smoothMosaics"
+              @update:globalValue="settings.smoothMosaics = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'smoothMosaics', $event)
+              "
+            />
           </div>
 
           <div v-show="selectedTab === 'chat.textBox'">
             <h5>{{ l('settings.chat.textBox') }}</h5>
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="bbCodeBar">
-                    {{ l('settings.bbCodeBar') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.bbCodeBar"
-                  :overrideValue="characterOverrides.bbCodeBar"
-                  :usingGlobal="isUsingGlobal()"
-                  name="bbCodeBar"
-                  @update:globalValue="settings.bbCodeBar = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'bbCodeBar', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.bbCodeBar')"
+              :globalValue="settings.bbCodeBar"
+              :overrideValue="characterOverrides.bbCodeBar"
+              :usingGlobal="isUsingGlobal()"
+              name="bbCodeBar"
+              @update:globalValue="settings.bbCodeBar = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'bbCodeBar', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="enterSend">
-                    {{ l('settings.enterSend') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.enterSend"
-                  :overrideValue="characterOverrides.enterSend"
-                  :usingGlobal="isUsingGlobal()"
-                  name="enterSend"
-                  @update:globalValue="settings.enterSend = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'enterSend', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.enterSend')"
+              :globalValue="settings.enterSend"
+              :overrideValue="characterOverrides.enterSend"
+              :usingGlobal="isUsingGlobal()"
+              name="enterSend"
+              @update:globalValue="settings.enterSend = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'enterSend', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="horizonUseColorPicker">
-                    {{ l('settings.horizonUseColorPicker') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.horizonUseColorPicker"
-                  :overrideValue="characterOverrides.horizonUseColorPicker"
-                  :usingGlobal="isUsingGlobal()"
-                  name="horizonUseColorPicker"
-                  @update:globalValue="settings.horizonUseColorPicker = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'horizonUseColorPicker', $event)
-                  "
-                  :disabled="!settings.bbCodeBar"
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.horizonUseColorPicker')"
+              :globalValue="settings.horizonUseColorPicker"
+              :overrideValue="characterOverrides.horizonUseColorPicker"
+              :usingGlobal="isUsingGlobal()"
+              name="horizonUseColorPicker"
+              @update:globalValue="settings.horizonUseColorPicker = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'horizonUseColorPicker', $event)
+              "
+              :disabled="!settings.bbCodeBar"
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label
-                    class="control-label"
-                    for="risingShowPortraitNearInput"
-                  >
-                    {{ l('settings.showPortraitNearInput') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.risingShowPortraitNearInput"
-                  :overrideValue="
-                    characterOverrides.risingShowPortraitNearInput
-                  "
-                  :usingGlobal="isUsingGlobal()"
-                  name="risingShowPortraitNearInput"
-                  @update:globalValue="
-                    settings.risingShowPortraitNearInput = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'risingShowPortraitNearInput',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.showPortraitNearInput')"
+              :globalValue="settings.risingShowPortraitNearInput"
+              :overrideValue="characterOverrides.risingShowPortraitNearInput"
+              :usingGlobal="isUsingGlobal()"
+              name="risingShowPortraitNearInput"
+              @update:globalValue="
+                settings.risingShowPortraitNearInput = $event
+              "
+              @update:overrideValue="
+                $set(characterOverrides, 'risingShowPortraitNearInput', $event)
+              "
+            />
           </div>
 
           <div v-show="selectedTab === 'chat.behavior'">
             <h5>{{ l('settings.chat.behavior') }}</h5>
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="clickOpensMessage">
-                    {{ l('settings.clickOpensMessage') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.clickOpensMessage"
-                  :overrideValue="characterOverrides.clickOpensMessage"
-                  :usingGlobal="isUsingGlobal()"
-                  name="clickOpensMessage"
-                  @update:globalValue="settings.clickOpensMessage = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'clickOpensMessage', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.clickOpensMessage')"
+              :globalValue="settings.clickOpensMessage"
+              :overrideValue="characterOverrides.clickOpensMessage"
+              :usingGlobal="isUsingGlobal()"
+              name="clickOpensMessage"
+              @update:globalValue="settings.clickOpensMessage = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'clickOpensMessage', $event)
+              "
+            />
             <div class="mb-3 p-2">
               <label class="control-label" for="idleTimer">{{
                 l('settings.idleTimer')
@@ -1409,225 +1344,125 @@
                 "
               />
             </div>
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="showNeedsReply">
-                    {{ l('settings.showNeedsReply') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.showNeedsReply"
-                  :overrideValue="characterOverrides.showNeedsReply"
-                  :usingGlobal="isUsingGlobal()"
-                  name="showNeedsReply"
-                  @update:globalValue="settings.showNeedsReply = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'showNeedsReply', $event)
-                  "
-                />
-              </div>
-            </div>
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label
-                    class="control-label"
-                    for="risingShowUnreadOfflineCount"
-                  >
-                    {{ l('settings.risingShowUnreadOfflineCount') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.risingShowUnreadOfflineCount"
-                  :overrideValue="
-                    characterOverrides.risingShowUnreadOfflineCount
-                  "
-                  :usingGlobal="isUsingGlobal()"
-                  name="risingShowUnreadOfflineCount"
-                  @update:globalValue="
-                    settings.risingShowUnreadOfflineCount = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'risingShowUnreadOfflineCount',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.showNeedsReply')"
+              :globalValue="settings.showNeedsReply"
+              :overrideValue="characterOverrides.showNeedsReply"
+              :usingGlobal="isUsingGlobal()"
+              name="showNeedsReply"
+              @update:globalValue="settings.showNeedsReply = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'showNeedsReply', $event)
+              "
+            />
+            <settings-override
+              :label="l('settings.risingShowUnreadOfflineCount')"
+              :globalValue="settings.risingShowUnreadOfflineCount"
+              :overrideValue="characterOverrides.risingShowUnreadOfflineCount"
+              :usingGlobal="isUsingGlobal()"
+              name="risingShowUnreadOfflineCount"
+              @update:globalValue="
+                settings.risingShowUnreadOfflineCount = $event
+              "
+              @update:overrideValue="
+                $set(characterOverrides, 'risingShowUnreadOfflineCount', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="colorBookmarks">
-                    {{ l('settings.colorBookmarks') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.colorBookmarks"
-                  :overrideValue="characterOverrides.colorBookmarks"
-                  :usingGlobal="isUsingGlobal()"
-                  name="colorBookmarks"
-                  @update:globalValue="settings.colorBookmarks = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'colorBookmarks', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.colorBookmarks')"
+              :globalValue="settings.colorBookmarks"
+              :overrideValue="characterOverrides.colorBookmarks"
+              :usingGlobal="isUsingGlobal()"
+              name="colorBookmarks"
+              @update:globalValue="settings.colorBookmarks = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'colorBookmarks', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="showPerCharacterFriends">
-                    {{ l('settings.showPerCharacterFriends') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.showPerCharacterFriends"
-                  :overrideValue="characterOverrides.showPerCharacterFriends"
-                  :usingGlobal="isUsingGlobal()"
-                  name="showPerCharacterFriends"
-                  @update:globalValue="
-                    settings.showPerCharacterFriends = $event
-                  "
-                  @update:overrideValue="
-                    $set(characterOverrides, 'showPerCharacterFriends', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.showPerCharacterFriends')"
+              :globalValue="settings.showPerCharacterFriends"
+              :overrideValue="characterOverrides.showPerCharacterFriends"
+              :usingGlobal="isUsingGlobal()"
+              name="showPerCharacterFriends"
+              @update:globalValue="settings.showPerCharacterFriends = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'showPerCharacterFriends', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="hideNonCharacterFriends">
-                    {{ l('settings.hideNonCharacterFriends') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.hideNonCharacterFriends"
-                  :overrideValue="characterOverrides.hideNonCharacterFriends"
-                  :usingGlobal="isUsingGlobal()"
-                  name="hideNonCharacterFriends"
-                  @update:globalValue="
-                    settings.hideNonCharacterFriends = $event
-                  "
-                  @update:overrideValue="
-                    $set(characterOverrides, 'hideNonCharacterFriends', $event)
-                  "
-                />
-              </div>
-            </div>
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label
-                    class="control-label"
-                    for="horizonPersistentMemberFilters"
-                  >
-                    {{ l('settings.horizon.persistentMemberFilters') }}
-                  </label>
-                  <div class="form-text text-muted">
-                    {{ l('settings.horizon.persistentMemberFilters.help') }}
-                  </div>
-                </div>
-                <settings-override
-                  :globalValue="settings.horizonPersistentMemberFilters"
-                  :overrideValue="
-                    characterOverrides.horizonPersistentMemberFilters
-                  "
-                  :usingGlobal="isUsingGlobal()"
-                  name="horizonPersistentMemberFilters"
-                  @update:globalValue="
-                    settings.horizonPersistentMemberFilters = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'horizonPersistentMemberFilters',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.hideNonCharacterFriends')"
+              :globalValue="settings.hideNonCharacterFriends"
+              :overrideValue="characterOverrides.hideNonCharacterFriends"
+              :usingGlobal="isUsingGlobal()"
+              name="hideNonCharacterFriends"
+              @update:globalValue="settings.hideNonCharacterFriends = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'hideNonCharacterFriends', $event)
+              "
+            />
+            <settings-override
+              :label="l('settings.horizon.persistentMemberFilters')"
+              :description="l('settings.horizon.persistentMemberFilters.help')"
+              :globalValue="settings.horizonPersistentMemberFilters"
+              :overrideValue="characterOverrides.horizonPersistentMemberFilters"
+              :usingGlobal="isUsingGlobal()"
+              name="horizonPersistentMemberFilters"
+              @update:globalValue="
+                settings.horizonPersistentMemberFilters = $event
+              "
+              @update:overrideValue="
+                $set(
+                  characterOverrides,
+                  'horizonPersistentMemberFilters',
+                  $event
+                )
+              "
+            />
           </div>
 
           <div v-show="selectedTab === 'chat.logging'">
             <h5>{{ l('settings.chat.logging') }}</h5>
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="logMessages">
-                    {{ l('settings.logMessages') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.logMessages"
-                  :overrideValue="characterOverrides.logMessages"
-                  :usingGlobal="isUsingGlobal()"
-                  name="logMessages"
-                  @update:globalValue="settings.logMessages = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'logMessages', $event)
-                  "
-                />
-              </div>
-            </div>
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="logAds">
-                    {{ l('settings.logAds') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.logAds"
-                  :overrideValue="characterOverrides.logAds"
-                  :usingGlobal="isUsingGlobal()"
-                  name="logAds"
-                  @update:globalValue="settings.logAds = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'logAds', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.logMessages')"
+              :globalValue="settings.logMessages"
+              :overrideValue="characterOverrides.logMessages"
+              :usingGlobal="isUsingGlobal()"
+              name="logMessages"
+              @update:globalValue="settings.logMessages = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'logMessages', $event)
+              "
+            />
+            <settings-override
+              :label="l('settings.logAds')"
+              :globalValue="settings.logAds"
+              :overrideValue="characterOverrides.logAds"
+              :usingGlobal="isUsingGlobal()"
+              name="logAds"
+              @update:globalValue="settings.logAds = $event"
+              @update:overrideValue="$set(characterOverrides, 'logAds', $event)"
+            />
           </div>
 
           <div v-show="selectedTab === 'chat.draftMessages'">
             <h5>{{ l('settings.horizonDraftMessages') }}</h5>
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="horizonCacheDraftMessages">
-                    {{ l('settings.horizonCacheDraftMessages') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.horizonCacheDraftMessages"
-                  :overrideValue="characterOverrides.horizonCacheDraftMessages"
-                  :usingGlobal="isUsingGlobal()"
-                  name="horizonCacheDraftMessages"
-                  @update:globalValue="
-                    settings.horizonCacheDraftMessages = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'horizonCacheDraftMessages',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.horizonCacheDraftMessages')"
+              :globalValue="settings.horizonCacheDraftMessages"
+              :overrideValue="characterOverrides.horizonCacheDraftMessages"
+              :usingGlobal="isUsingGlobal()"
+              name="horizonCacheDraftMessages"
+              @update:globalValue="settings.horizonCacheDraftMessages = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'horizonCacheDraftMessages', $event)
+              "
+            />
 
             <div class="mb-3 p-2">
               <label
@@ -1661,45 +1496,29 @@
           <div v-show="selectedTab === 'chat.preview'">
             <h5>{{ l('settings.preview') }}</h5>
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="risingLinkPreview">
-                    {{ l('settings.preview.link') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.risingLinkPreview"
-                  :overrideValue="characterOverrides.risingLinkPreview"
-                  :usingGlobal="isUsingGlobal()"
-                  name="risingLinkPreview"
-                  @update:globalValue="settings.risingLinkPreview = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'risingLinkPreview', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.preview.link')"
+              :globalValue="settings.risingLinkPreview"
+              :overrideValue="characterOverrides.risingLinkPreview"
+              :usingGlobal="isUsingGlobal()"
+              name="risingLinkPreview"
+              @update:globalValue="settings.risingLinkPreview = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'risingLinkPreview', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="risingCharacterPreview">
-                    {{ l('settings.preview.character') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.risingCharacterPreview"
-                  :overrideValue="characterOverrides.risingCharacterPreview"
-                  :usingGlobal="isUsingGlobal()"
-                  name="risingCharacterPreview"
-                  @update:globalValue="settings.risingCharacterPreview = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'risingCharacterPreview', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.preview.character')"
+              :globalValue="settings.risingCharacterPreview"
+              :overrideValue="characterOverrides.risingCharacterPreview"
+              :usingGlobal="isUsingGlobal()"
+              name="risingCharacterPreview"
+              @update:globalValue="settings.risingCharacterPreview = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'risingCharacterPreview', $event)
+              "
+            />
           </div>
 
           <div v-show="selectedTab === 'appearance.layout'">
@@ -1741,76 +1560,47 @@
               </label>
             </div>
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="showAvatars">
-                    {{ l('settings.showAvatars') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.showAvatars"
-                  :overrideValue="characterOverrides.showAvatars"
-                  :usingGlobal="isUsingGlobal()"
-                  name="showAvatars"
-                  @update:globalValue="settings.showAvatars = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'showAvatars', $event)
-                  "
-                ></settings-override>
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.showAvatars')"
+              :globalValue="settings.showAvatars"
+              :overrideValue="characterOverrides.showAvatars"
+              :usingGlobal="isUsingGlobal()"
+              name="showAvatars"
+              @update:globalValue="settings.showAvatars = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'showAvatars', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label
-                    class="control-label"
-                    for="risingShowHighQualityPortraits"
-                  >
-                    {{ l('settings.showHighQualityPortraits') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.risingShowHighQualityPortraits"
-                  :overrideValue="
-                    characterOverrides.risingShowHighQualityPortraits
-                  "
-                  :usingGlobal="isUsingGlobal()"
-                  name="risingShowHighQualityPortraits"
-                  @update:globalValue="
-                    settings.risingShowHighQualityPortraits = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'risingShowHighQualityPortraits',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.showHighQualityPortraits')"
+              :globalValue="settings.risingShowHighQualityPortraits"
+              :overrideValue="characterOverrides.risingShowHighQualityPortraits"
+              :usingGlobal="isUsingGlobal()"
+              name="risingShowHighQualityPortraits"
+              @update:globalValue="
+                settings.risingShowHighQualityPortraits = $event
+              "
+              @update:overrideValue="
+                $set(
+                  characterOverrides,
+                  'risingShowHighQualityPortraits',
+                  $event
+                )
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="forceQuickConvoList">
-                    {{ l('settings.forceQuickConvoList') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.forceQuickConvoList"
-                  :overrideValue="characterOverrides.forceQuickConvoList"
-                  :usingGlobal="isUsingGlobal()"
-                  name="forceQuickConvoList"
-                  @update:globalValue="settings.forceQuickConvoList = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'forceQuickConvoList', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.forceQuickConvoList')"
+              :globalValue="settings.forceQuickConvoList"
+              :overrideValue="characterOverrides.forceQuickConvoList"
+              :usingGlobal="isUsingGlobal()"
+              name="forceQuickConvoList"
+              @update:globalValue="settings.forceQuickConvoList = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'forceQuickConvoList', $event)
+              "
+            />
           </div>
 
           <div v-show="selectedTab === 'appearance.messages'">
@@ -1846,357 +1636,205 @@
                 l('settings.chatLayoutMode.modernDescription')
               }}</small>
             </div>
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="messageGrouping">
-                    {{ l('settings.messageGrouping') }}
-                  </label>
-                  <div class="form-text text-muted">
-                    {{ l('settings.messageGrouping.description') }}
-                  </div>
-                </div>
-                <settings-override
-                  :globalValue="settings.messageGrouping"
-                  :overrideValue="characterOverrides.messageGrouping"
-                  :usingGlobal="isUsingGlobal()"
-                  name="messageGrouping"
-                  @update:globalValue="settings.messageGrouping = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'messageGrouping', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.messageGrouping')"
+              :description="l('settings.messageGrouping.description')"
+              :globalValue="settings.messageGrouping"
+              :overrideValue="characterOverrides.messageGrouping"
+              :usingGlobal="isUsingGlobal()"
+              name="messageGrouping"
+              @update:globalValue="settings.messageGrouping = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'messageGrouping', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="messageSeparators">
-                    {{ l('settings.messageSeparators') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.messageSeparators"
-                  :overrideValue="characterOverrides.messageSeparators"
-                  :usingGlobal="isUsingGlobal()"
-                  name="messageSeparators"
-                  @update:globalValue="settings.messageSeparators = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'messageSeparators', $event)
-                  "
-                />
-              </div>
-            </div>
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label
-                    class="control-label"
-                    for="risingShowPortraitInMessage"
-                  >
-                    {{ l('settings.showPortraitInMessage') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.risingShowPortraitInMessage"
-                  :overrideValue="
-                    characterOverrides.risingShowPortraitInMessage
-                  "
-                  :usingGlobal="isUsingGlobal()"
-                  name="risingShowPortraitInMessage"
-                  @update:globalValue="
-                    settings.risingShowPortraitInMessage = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'risingShowPortraitInMessage',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :label="l('settings.messageSeparators')"
+              :globalValue="settings.messageSeparators"
+              :overrideValue="characterOverrides.messageSeparators"
+              :usingGlobal="isUsingGlobal()"
+              name="messageSeparators"
+              @update:globalValue="settings.messageSeparators = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'messageSeparators', $event)
+              "
+            />
+            <settings-override
+              :globalValue="settings.risingShowPortraitInMessage"
+              :overrideValue="characterOverrides.risingShowPortraitInMessage"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.showPortraitInMessage')"
+              name="risingShowPortraitInMessage"
+              @update:globalValue="
+                settings.risingShowPortraitInMessage = $event
+              "
+              @update:overrideValue="
+                $set(characterOverrides, 'risingShowPortraitInMessage', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label
-                    class="control-label"
-                    for="horizonMessagePortraitHighQuality"
-                  >
-                    {{ l('settings.messagePortraitHighQuality') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.horizonMessagePortraitHighQuality"
-                  :overrideValue="
-                    characterOverrides.horizonMessagePortraitHighQuality
-                  "
-                  :usingGlobal="isUsingGlobal()"
-                  name="horizonMessagePortraitHighQuality"
-                  @update:globalValue="
-                    settings.horizonMessagePortraitHighQuality = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'horizonMessagePortraitHighQuality',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.horizonMessagePortraitHighQuality"
+              :overrideValue="
+                characterOverrides.horizonMessagePortraitHighQuality
+              "
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.messagePortraitHighQuality')"
+              name="horizonMessagePortraitHighQuality"
+              @update:globalValue="
+                settings.horizonMessagePortraitHighQuality = $event
+              "
+              @update:overrideValue="
+                $set(
+                  characterOverrides,
+                  'horizonMessagePortraitHighQuality',
+                  $event
+                )
+              "
+            />
           </div>
 
           <div v-show="selectedTab === 'appearance.users'">
             <h5>{{ l('settings.appearance.users') }}</h5>
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label
-                    class="control-label"
-                    for="horizonShowCustomCharacterColors"
-                  >
-                    {{ l('settings.showCustomCharacterColors') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.horizonShowCustomCharacterColors"
-                  :overrideValue="
-                    characterOverrides.horizonShowCustomCharacterColors
-                  "
-                  :usingGlobal="isUsingGlobal()"
-                  name="horizonShowCustomCharacterColors"
-                  @update:globalValue="
-                    settings.horizonShowCustomCharacterColors = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'horizonShowCustomCharacterColors',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.horizonShowCustomCharacterColors"
+              :overrideValue="
+                characterOverrides.horizonShowCustomCharacterColors
+              "
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.showCustomCharacterColors')"
+              name="horizonShowCustomCharacterColors"
+              @update:globalValue="
+                settings.horizonShowCustomCharacterColors = $event
+              "
+              @update:overrideValue="
+                $set(
+                  characterOverrides,
+                  'horizonShowCustomCharacterColors',
+                  $event
+                )
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="risingColorblindMode">
-                    {{ l('settings.colorblindMode') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.risingColorblindMode"
-                  :overrideValue="characterOverrides.risingColorblindMode"
-                  :usingGlobal="isUsingGlobal()"
-                  name="risingColorblindMode"
-                  @update:globalValue="settings.risingColorblindMode = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'risingColorblindMode', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.risingColorblindMode"
+              :overrideValue="characterOverrides.risingColorblindMode"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.colorblindMode')"
+              name="risingColorblindMode"
+              @update:globalValue="settings.risingColorblindMode = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'risingColorblindMode', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="horizonShowDeveloperBadges">
-                    {{ l('settings.showDeveloperBadges') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.horizonShowDeveloperBadges"
-                  :overrideValue="characterOverrides.horizonShowDeveloperBadges"
-                  :usingGlobal="isUsingGlobal()"
-                  name="horizonShowDeveloperBadges"
-                  @update:globalValue="
-                    settings.horizonShowDeveloperBadges = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'horizonShowDeveloperBadges',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.horizonShowDeveloperBadges"
+              :overrideValue="characterOverrides.horizonShowDeveloperBadges"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.showDeveloperBadges')"
+              name="horizonShowDeveloperBadges"
+              @update:globalValue="settings.horizonShowDeveloperBadges = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'horizonShowDeveloperBadges', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="horizonShowGenderMarker">
-                    {{ l('settings.showGenderIcon') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.horizonShowGenderMarker"
-                  :overrideValue="characterOverrides.horizonShowGenderMarker"
-                  :usingGlobal="isUsingGlobal()"
-                  name="horizonShowGenderMarker"
-                  @update:globalValue="
-                    settings.horizonShowGenderMarker = $event
-                  "
-                  @update:overrideValue="
-                    $set(characterOverrides, 'horizonShowGenderMarker', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.horizonShowGenderMarker"
+              :overrideValue="characterOverrides.horizonShowGenderMarker"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.showGenderIcon')"
+              name="horizonShowGenderMarker"
+              @update:globalValue="settings.horizonShowGenderMarker = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'horizonShowGenderMarker', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label
-                    class="control-label"
-                    for="horizonGenderMarkerOrigColor"
-                  >
-                    {{ l('settings.genderIconUseOriginalColor') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.horizonGenderMarkerOrigColor"
-                  :overrideValue="
-                    characterOverrides.horizonGenderMarkerOrigColor
-                  "
-                  :usingGlobal="isUsingGlobal()"
-                  name="horizonGenderMarkerOrigColor"
-                  @update:globalValue="
-                    settings.horizonGenderMarkerOrigColor = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'horizonGenderMarkerOrigColor',
-                      $event
-                    )
-                  "
-                  :disabled="!settings.horizonShowGenderMarker"
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.horizonGenderMarkerOrigColor"
+              :overrideValue="characterOverrides.horizonGenderMarkerOrigColor"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.genderIconUseOriginalColor')"
+              name="horizonGenderMarkerOrigColor"
+              @update:globalValue="
+                settings.horizonGenderMarkerOrigColor = $event
+              "
+              @update:overrideValue="
+                $set(characterOverrides, 'horizonGenderMarkerOrigColor', $event)
+              "
+              :disabled="!settings.horizonShowGenderMarker"
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="horizonChangeOfflineColor">
-                    {{ l('settings.changeOfflineColor') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.horizonChangeOfflineColor"
-                  :overrideValue="characterOverrides.horizonChangeOfflineColor"
-                  :usingGlobal="isUsingGlobal()"
-                  name="horizonChangeOfflineColor"
-                  @update:globalValue="
-                    settings.horizonChangeOfflineColor = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'horizonChangeOfflineColor',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.horizonChangeOfflineColor"
+              :overrideValue="characterOverrides.horizonChangeOfflineColor"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.changeOfflineColor')"
+              name="horizonChangeOfflineColor"
+              @update:globalValue="settings.horizonChangeOfflineColor = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'horizonChangeOfflineColor', $event)
+              "
+            />
           </div>
 
           <div v-show="selectedTab === 'notifications.behavior'">
             <h5>{{ l('settings.chat.behavior') }}</h5>
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="playSound">
-                    {{ l('settings.playSound') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.playSound"
-                  :overrideValue="characterOverrides.playSound"
-                  :usingGlobal="isUsingGlobal()"
-                  name="playSound"
-                  @update:globalValue="settings.playSound = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'playSound', $event)
-                  "
-                />
-              </div>
-            </div>
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="alwaysNotify">
-                    {{ l('settings.alwaysNotify') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.alwaysNotify"
-                  :overrideValue="characterOverrides.alwaysNotify"
-                  :usingGlobal="isUsingGlobal()"
-                  name="alwaysNotify"
-                  @update:globalValue="settings.alwaysNotify = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'alwaysNotify', $event)
-                  "
-                  :disabled="!settings.playSound"
-                />
-              </div>
-            </div>
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="notifications">
-                    {{ l('settings.notifications') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.notifications"
-                  :overrideValue="characterOverrides.notifications"
-                  :usingGlobal="isUsingGlobal()"
-                  name="notifications"
-                  @update:globalValue="settings.notifications = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'notifications', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.playSound"
+              :overrideValue="characterOverrides.playSound"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.playSound')"
+              name="playSound"
+              @update:globalValue="settings.playSound = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'playSound', $event)
+              "
+            />
+            <settings-override
+              :globalValue="settings.alwaysNotify"
+              :overrideValue="characterOverrides.alwaysNotify"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.alwaysNotify')"
+              name="alwaysNotify"
+              @update:globalValue="settings.alwaysNotify = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'alwaysNotify', $event)
+              "
+              :disabled="!settings.playSound"
+            />
+            <settings-override
+              :globalValue="settings.notifications"
+              :overrideValue="characterOverrides.notifications"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.notifications')"
+              name="notifications"
+              @update:globalValue="settings.notifications = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'notifications', $event)
+              "
+            />
           </div>
 
           <div v-show="selectedTab === 'notifications.pings'">
             <h5>{{ l('settings.notifications.pings') }}</h5>
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="highlight">
-                    {{ l('settings.highlight') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.highlight"
-                  :overrideValue="characterOverrides.highlight"
-                  :usingGlobal="isUsingGlobal()"
-                  name="highlight"
-                  @update:globalValue="settings.highlight = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'highlight', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.highlight"
+              :overrideValue="characterOverrides.highlight"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.highlight')"
+              name="highlight"
+              @update:globalValue="settings.highlight = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'highlight', $event)
+              "
+            />
             <div class="mb-3 p-2">
               <settings-array
                 id="highlightWords"
@@ -2226,138 +1864,80 @@
               />
             </div>
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="horizonNotifyFriendSignIn">
-                    {{ l('settings.notifyFriendSignIn') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.horizonNotifyFriendSignIn"
-                  :overrideValue="characterOverrides.horizonNotifyFriendSignIn"
-                  :usingGlobal="isUsingGlobal()"
-                  name="horizonNotifyFriendSignIn"
-                  @update:globalValue="
-                    settings.horizonNotifyFriendSignIn = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'horizonNotifyFriendSignIn',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.horizonNotifyFriendSignIn"
+              :overrideValue="characterOverrides.horizonNotifyFriendSignIn"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.notifyFriendSignIn')"
+              name="horizonNotifyFriendSignIn"
+              @update:globalValue="settings.horizonNotifyFriendSignIn = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'horizonNotifyFriendSignIn', $event)
+              "
+            />
           </div>
 
           <div v-show="selectedTab === 'notifications.console'">
             <h5>{{ l('settings.notifications.console') }}</h5>
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="eventMessages">
-                    {{ l('settings.eventMessages') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.eventMessages"
-                  :overrideValue="characterOverrides.eventMessages"
-                  :usingGlobal="isUsingGlobal()"
-                  name="eventMessages"
-                  @update:globalValue="settings.eventMessages = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'eventMessages', $event)
-                  "
-                />
-              </div>
-            </div>
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="joinMessages">
-                    {{ l('settings.joinMessages') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.joinMessages"
-                  :overrideValue="characterOverrides.joinMessages"
-                  :usingGlobal="isUsingGlobal()"
-                  name="joinMessages"
-                  @update:globalValue="settings.joinMessages = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'joinMessages', $event)
-                  "
-                />
-              </div>
-            </div>
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label
-                    class="control-label"
-                    for="horizonShowSigninNotifications"
-                  >
-                    {{ l('settings.showSigninNotifications') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.horizonShowSigninNotifications"
-                  :overrideValue="
-                    characterOverrides.horizonShowSigninNotifications
-                  "
-                  :usingGlobal="isUsingGlobal()"
-                  name="horizonShowSigninNotifications"
-                  @update:globalValue="
-                    settings.horizonShowSigninNotifications = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'horizonShowSigninNotifications',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label
-                    class="control-label"
-                    for="horizonShowDuplicateStatusNotifications"
-                  >
-                    {{ l('settings.showDuplicateStatusNotifications') }}
-                  </label>
-                  <div class="form-text text-muted">
-                    {{ l('settings.showDuplicateStatusNotifications.note') }}
-                  </div>
-                </div>
-                <settings-override
-                  :globalValue="
-                    settings.horizonShowDuplicateStatusNotifications
-                  "
-                  :overrideValue="
-                    characterOverrides.horizonShowDuplicateStatusNotifications
-                  "
-                  :usingGlobal="isUsingGlobal()"
-                  name="horizonShowDuplicateStatusNotifications"
-                  @update:globalValue="
-                    settings.horizonShowDuplicateStatusNotifications = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'horizonShowDuplicateStatusNotifications',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.eventMessages"
+              :overrideValue="characterOverrides.eventMessages"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.eventMessages')"
+              name="eventMessages"
+              @update:globalValue="settings.eventMessages = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'eventMessages', $event)
+              "
+            />
+            <settings-override
+              :globalValue="settings.joinMessages"
+              :overrideValue="characterOverrides.joinMessages"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.joinMessages')"
+              name="joinMessages"
+              @update:globalValue="settings.joinMessages = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'joinMessages', $event)
+              "
+            />
+            <settings-override
+              :globalValue="settings.horizonShowSigninNotifications"
+              :overrideValue="characterOverrides.horizonShowSigninNotifications"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.showSigninNotifications')"
+              name="horizonShowSigninNotifications"
+              @update:globalValue="
+                settings.horizonShowSigninNotifications = $event
+              "
+              @update:overrideValue="
+                $set(
+                  characterOverrides,
+                  'horizonShowSigninNotifications',
+                  $event
+                )
+              "
+            />
+            <settings-override
+              :globalValue="settings.horizonShowDuplicateStatusNotifications"
+              :overrideValue="
+                characterOverrides.horizonShowDuplicateStatusNotifications
+              "
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.showDuplicateStatusNotifications')"
+              :description="l('settings.showDuplicateStatusNotifications.note')"
+              name="horizonShowDuplicateStatusNotifications"
+              @update:globalValue="
+                settings.horizonShowDuplicateStatusNotifications = $event
+              "
+              @update:overrideValue="
+                $set(
+                  characterOverrides,
+                  'horizonShowDuplicateStatusNotifications',
+                  $event
+                )
+              "
+            />
           </div>
 
           <div v-show="selectedTab === 'profiles.hiddenAds'">
@@ -2401,128 +1981,71 @@
           <div v-show="selectedTab === 'profiles.matching'">
             <h5>{{ l('settings.matching') }}</h5>
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="risingAdScore">
-                    {{ l('settings.matching.adScore') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.risingAdScore"
-                  :overrideValue="characterOverrides.risingAdScore"
-                  :usingGlobal="isUsingGlobal()"
-                  name="risingAdScore"
-                  @update:globalValue="settings.risingAdScore = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'risingAdScore', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.risingAdScore"
+              :overrideValue="characterOverrides.risingAdScore"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.matching.adScore')"
+              name="risingAdScore"
+              @update:globalValue="settings.risingAdScore = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'risingAdScore', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="risingComparisonInUserMenu">
-                    {{ l('settings.matching.comparisonInUserMenu') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.risingComparisonInUserMenu"
-                  :overrideValue="characterOverrides.risingComparisonInUserMenu"
-                  :usingGlobal="isUsingGlobal()"
-                  name="risingComparisonInUserMenu"
-                  @update:globalValue="
-                    settings.risingComparisonInUserMenu = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'risingComparisonInUserMenu',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.risingComparisonInUserMenu"
+              :overrideValue="characterOverrides.risingComparisonInUserMenu"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.matching.comparisonInUserMenu')"
+              name="risingComparisonInUserMenu"
+              @update:globalValue="settings.risingComparisonInUserMenu = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'risingComparisonInUserMenu', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="risingComparisonInSearch">
-                    {{ l('settings.matching.comparisonInSearch') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.risingComparisonInSearch"
-                  :overrideValue="characterOverrides.risingComparisonInSearch"
-                  :usingGlobal="isUsingGlobal()"
-                  name="risingComparisonInSearch"
-                  @update:globalValue="
-                    settings.risingComparisonInSearch = $event
-                  "
-                  @update:overrideValue="
-                    $set(characterOverrides, 'risingComparisonInSearch', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.risingComparisonInSearch"
+              :overrideValue="characterOverrides.risingComparisonInSearch"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.matching.comparisonInSearch')"
+              name="risingComparisonInSearch"
+              @update:globalValue="settings.risingComparisonInSearch = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'risingComparisonInSearch', $event)
+              "
+            />
           </div>
 
           <div v-show="selectedTab === 'profiles.viewer'">
             <h5>{{ l('settings.profile.viewer') }}</h5>
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label class="control-label" for="risingAutoCompareKinks">
-                    {{ l('settings.profile.autoCompareKinks') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.risingAutoCompareKinks"
-                  :overrideValue="characterOverrides.risingAutoCompareKinks"
-                  :usingGlobal="isUsingGlobal()"
-                  name="risingAutoCompareKinks"
-                  @update:globalValue="settings.risingAutoCompareKinks = $event"
-                  @update:overrideValue="
-                    $set(characterOverrides, 'risingAutoCompareKinks', $event)
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.risingAutoCompareKinks"
+              :overrideValue="characterOverrides.risingAutoCompareKinks"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.profile.autoCompareKinks')"
+              name="risingAutoCompareKinks"
+              @update:globalValue="settings.risingAutoCompareKinks = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'risingAutoCompareKinks', $event)
+              "
+            />
 
-            <div class="mb-3">
-              <div class="d-flex p-2 justify-content-between align-items-start">
-                <div class="w-50">
-                  <label
-                    class="control-label"
-                    for="risingAutoExpandCustomKinks"
-                  >
-                    {{ l('settings.profile.autoExpandCustoms') }}
-                  </label>
-                </div>
-                <settings-override
-                  :globalValue="settings.risingAutoExpandCustomKinks"
-                  :overrideValue="
-                    characterOverrides.risingAutoExpandCustomKinks
-                  "
-                  :usingGlobal="isUsingGlobal()"
-                  name="risingAutoExpandCustomKinks"
-                  @update:globalValue="
-                    settings.risingAutoExpandCustomKinks = $event
-                  "
-                  @update:overrideValue="
-                    $set(
-                      characterOverrides,
-                      'risingAutoExpandCustomKinks',
-                      $event
-                    )
-                  "
-                />
-              </div>
-            </div>
+            <settings-override
+              :globalValue="settings.risingAutoExpandCustomKinks"
+              :overrideValue="characterOverrides.risingAutoExpandCustomKinks"
+              :usingGlobal="isUsingGlobal()"
+              :label="l('settings.profile.autoExpandCustoms')"
+              name="risingAutoExpandCustomKinks"
+              @update:globalValue="
+                settings.risingAutoExpandCustomKinks = $event
+              "
+              @update:overrideValue="
+                $set(characterOverrides, 'risingAutoExpandCustomKinks', $event)
+              "
+            />
           </div>
 
           <div v-show="selectedTab === 'profiles.ignoredList'">
@@ -2708,9 +2231,9 @@
             </div>
 
             <h5>{{ l('settings.ageMatch') }}</h5>
-            <div class="mb-3">{{ l('settings.leaveEmptyNoLimit') }}</div>
+            <div class="mb-3 p-2">{{ l('settings.leaveEmptyNoLimit') }}</div>
 
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               <label class="control-label" for="risingFilter.minAge">{{
                 l('settings.minAge')
               }}</label>
@@ -2801,11 +2324,11 @@
               </div>
             </div>
             <h5>{{ l('settings.exceptionList') }}</h5>
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               {{ l('settings.exceptionList.help') }}
             </div>
 
-            <div class="mb-3">
+            <div class="mb-3 p-2">
               <textarea
                 class="form-control"
                 :value="getExceptionList()"
@@ -2857,12 +2380,11 @@
   import Tabs from '../components/tabs';
   import { BBCodeView } from '../bbcode/view';
   import FilterableSelect from '../components/FilterableSelect.vue';
-  import SettingsTriState from '../components/SettingsTriState.vue';
-  import SettingsOverride from '../components/SettingsOverride.vue';
-  import SettingsInput from '../components/SettingsInput.vue';
-  import SettingsArray from '../components/SettingsArray.vue';
-  import SettingsCheckbox from '../components/SettingsCheckbox.vue';
-  import SettingsSelectOverride from '../components/SettingsSelectOverride.vue';
+  import SettingsOverride from '../components/settings/SettingsOverride.vue';
+  import SettingsInput from '../components/settings/SettingsInput.vue';
+  import SettingsArray from '../components/settings/SettingsArray.vue';
+  import SettingsCheckbox from '../components/settings/SettingsCheckbox.vue';
+  import SettingsSelectOverride from '../components/settings/SettingsSelectOverride.vue';
   import LocalizedText from '../components/localized_text';
   import { UserInterfaceBBCodeParser } from '../bbcode/user-interface';
   import { Settings as DefaultSettings } from './common';
@@ -2896,7 +2418,6 @@
       tabs: Tabs,
       bbcode: BBCodeView(bbcodeParser),
       'localized-text': LocalizedText,
-      'settings-tristate': SettingsTriState,
       'filterable-select': FilterableSelect,
       'user-view': UserView,
       'virtual-list': VirtualList,
