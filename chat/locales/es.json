@@ -747,7 +747,7 @@
   "settings.dataManager.section.vanilla": "Importar desde Vanilla",
   "settings.defaultHighlights": "Usar palabras resaltadas globales",
   "settings.disallowedTags": "Etiquetas BBCode no permitidas",
-  "settings.disallowedTags.placeholder": "Escribe las etiquetas sin corchetes, ej. {tagname}.",
+  "settings.disallowedTags.placeholder": "Escribe las etiquetas sin corchetes, ej. {tagName}.",
   "settings.displayLanguage": "Idioma de la interfaz",
   "settings.displayLanguage.note": "Es posible que algunos idiomas aún no estén completamente traducidos.\nContamos con una herramienta para hacer seguimiento del progreso, por lo que no es necesario que informes sobre traducciones faltantes.",
   "settings.enterAge": "Introducir edad",
