@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/1001 by @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/1021 by @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/1021 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/1027 by @freenutsxd
 
 ## [2.4.5] - 2026-10-28
 
