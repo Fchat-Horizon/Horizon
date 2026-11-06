@@ -457,8 +457,7 @@ class PrivateConversation
       );
       this.safeAddMessage(message);
 
-      if (core.state.settings.logMessages)
-        await core.logs.logMessage(this, message);
+      await this.logMessage(message, false);
     });
   }
 
@@ -1194,19 +1193,17 @@ export async function testSmartFilterForPrivateMessage(
         core.connection.send('PRI', message);
         core.cache.markLastPostTime();
 
-        if (core.state.settings.logMessages) {
-          const logMessage = createMessage(
-            Interfaces.Message.Type.Message,
-            core.characters.ownCharacter,
-            message.message,
-            new Date()
-          );
+        const logMessage = createMessage(
+          Interfaces.Message.Type.Message,
+          core.characters.ownCharacter,
+          message.message,
+          new Date()
+        );
 
-          await withNeutralVisibilityPrivateConversation(fromChar, async p => {
-            // core.logs.logMessage(p, logMessage)
-            await p.addMessage(logMessage);
-          });
-        }
+        await withNeutralVisibilityPrivateConversation(fromChar, async p => {
+          // core.logs.logMessage(p, logMessage)
+          await p.addMessage(logMessage);
+        });
       } else {
         const message = {
           recipient: fromChar.name,
@@ -1221,19 +1218,17 @@ export async function testSmartFilterForPrivateMessage(
         core.connection.send('PRI', message);
         core.cache.markLastPostTime();
 
-        if (core.state.settings.logMessages) {
-          const logMessage = createMessage(
-            Interfaces.Message.Type.Message,
-            core.characters.ownCharacter,
-            message.message,
-            new Date()
-          );
+        const logMessage = createMessage(
+          Interfaces.Message.Type.Message,
+          core.characters.ownCharacter,
+          message.message,
+          new Date()
+        );
 
-          await withNeutralVisibilityPrivateConversation(fromChar, async p => {
-            // core.logs.logMessage(p, logMessage)
-            await p.addMessage(logMessage);
-          });
-        }
+        await withNeutralVisibilityPrivateConversation(fromChar, async p => {
+          // core.logs.logMessage(p, logMessage)
+          await p.addMessage(logMessage);
+        });
       }
     });
   }
