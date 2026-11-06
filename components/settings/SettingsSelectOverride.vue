@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
   import { computed } from 'vue';
-  import l from '../chat/localize';
+  import l from '../../chat/localize';
 
   const fallbackValue = '__settings_select_override_global__';
 

@@ -201,6 +201,12 @@ input:checked {
   --bs-nav-tabs-link-active-color: var(--bs-body-color);
 }
 
+.form-check.form-switch .form-check-input:indeterminate {
+  background-position: center;
+  background-color: $secondary;
+  border-color: $secondary;
+}
+
 .nav-tabs li {
   a {
     border-top-left-radius: 0.4rem;

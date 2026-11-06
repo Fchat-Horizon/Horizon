@@ -2380,11 +2380,11 @@
   import Tabs from '../components/tabs';
   import { BBCodeView } from '../bbcode/view';
   import FilterableSelect from '../components/FilterableSelect.vue';
-  import SettingsOverride from '../components/SettingsOverride.vue';
-  import SettingsInput from '../components/SettingsInput.vue';
-  import SettingsArray from '../components/SettingsArray.vue';
-  import SettingsCheckbox from '../components/SettingsCheckbox.vue';
-  import SettingsSelectOverride from '../components/SettingsSelectOverride.vue';
+  import SettingsOverride from '../components/settings/SettingsOverride.vue';
+  import SettingsInput from '../components/settings/SettingsInput.vue';
+  import SettingsArray from '../components/settings/SettingsArray.vue';
+  import SettingsCheckbox from '../components/settings/SettingsCheckbox.vue';
+  import SettingsSelectOverride from '../components/settings/SettingsSelectOverride.vue';
   import LocalizedText from '../components/localized_text';
   import { UserInterfaceBBCodeParser } from '../bbcode/user-interface';
   import { Settings as DefaultSettings } from './common';

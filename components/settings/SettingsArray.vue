@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
   import InputTag from 'vue-input-tag';
-  import l from '../chat/localize';
+  import l from '../../chat/localize';
 
   const props = defineProps({
     usingGlobal: {
