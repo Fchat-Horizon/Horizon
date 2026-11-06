@@ -11,11 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Settings rework! Everything is now in a single menu, and you can set chat settings globally. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/725af0eb9acca4e48c4934c8bae64d2f7d7e972b)
 - Added a high-contrast mode setting. It's under "Accessibility" in the new settings menu. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d464c6c44d410f2ac6c30aff844b5ec04c3f62e5)
+- New colorblind settings for different types of color blindness. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b95ae133dc1ffa3856edb921ee629c66acff13f9)
+  - These are also found in the accessibility tab now.
 
 ### Changed
 
 - New app icons: Featuring a new version of the Windows/ Linux icon, the MacOS one, and the .dmg archive. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/359493d8ee924ce929b5b911bf1d45573bebd895)
 - MacOS versions of Horizon now use unstyled, floating scrollbars instead of static, custom ones. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3493ef0ecc9db29d41e37ef58768b912aa318b7c)
+
+### Fixed
+
+- Switching back and forth between the console tab and a channel now keeps the members list as the active user list tab again. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8031f4c015b4e27f9bdd2245658236ba87dbc0a5)
 
 ### Development
 
@@ -29,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - https://github.com/Fchat-Horizon/Horizon/pull/956 by @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/964 by @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/1001 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/1021 by @FatCatClient
+- https://github.com/Fchat-Horizon/Horizon/pull/1021 by @FatCatClient
 
 ## [2.4.5] - 2026-10-28
 
