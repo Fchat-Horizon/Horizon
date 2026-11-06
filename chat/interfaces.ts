@@ -95,7 +95,7 @@ export namespace Conversation {
     toggleAutomatedAds(): void;
     hasAutomatedAds(): boolean;
 
-    sendAd(text: string): Promise<void>;
+    sendAd(text: string, signal?: AbortSignal): Promise<void>;
   }
 
   export function isPrivate(
