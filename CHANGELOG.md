@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a high-contrast mode setting. It's under "Accessibility" in the new settings menu. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d464c6c44d410f2ac6c30aff844b5ec04c3f62e5)
 - New colorblind settings for different types of color blindness. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b95ae133dc1ffa3856edb921ee629c66acff13f9)
   - These are also found in the accessibility tab now.
+- Split the "Log messages" setting between one for PMs, and one for channel messages. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9ba9e46468f5d987a123b9fa35e86a0e061e4ddb)
+  - If you have previously disabled the log messages setting, you'll _also_ need to disable this new one. It's enabled by default.
 
 ### Changed
 
@@ -22,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Switching back and forth between the console tab and a channel now keeps the members list as the active user list tab again. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8031f4c015b4e27f9bdd2245658236ba87dbc0a5)
+- Fixed issues where having specific combinations for logging messages disabled per-character (but enabled for a conversation) would not save your own messages. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dd2478288372f026df7db4139057d994c3d40ad3)
 
 ### Development
 
