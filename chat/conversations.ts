@@ -1701,7 +1701,7 @@ export default function (this: any): Interfaces.State {
     if (conv === undefined) return core.channels.leave(data.channel);
     const logtext = l('events.ban', {
       channel: conv.name,
-      character: data.character,
+      character: `[user]${data.character}[/user]`,
       operator: `[user]${data.operator}[/user]`
     });
     conv.infoText = l('events.ban', {
@@ -1716,7 +1716,7 @@ export default function (this: any): Interfaces.State {
     if (conv === undefined) return core.channels.leave(data.channel);
     const logtext = l('events.kick', {
       channel: conv.name,
-      character: data.character,
+      character: `[user]${data.character}[/user]`,
       operator: `[user]${data.operator}[/user]`
     });
     conv.infoText = l('events.kick', {
@@ -1731,7 +1731,7 @@ export default function (this: any): Interfaces.State {
     if (conv === undefined) return core.channels.leave(data.channel);
     const logtext = l('events.timeout', {
       channel: conv.name,
-      character: data.character,
+      character: `[user]${data.character}[/user]`,
       operator: `[user]${data.operator}[/user]`,
       minutes: data.length.toString()
     });
