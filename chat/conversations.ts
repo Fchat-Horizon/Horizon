@@ -262,7 +262,9 @@ abstract class Conversation implements Interfaces.Conversation {
       shouldLog = true;
     } else {
       // Default: follow global message setting
-      shouldLog = core.state.settings.logMessages;
+      shouldLog = isChannel(this)
+        ? core.state.settings.horizonLogChannels
+        : core.state.settings.logMessages;
     }
 
     if (shouldLog) {

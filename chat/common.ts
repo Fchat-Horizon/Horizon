@@ -108,6 +108,7 @@ export class Settings implements ISettings {
   joinMessages = false;
   alwaysNotify = false;
   logMessages = true;
+  horizonLogChannels = true;
   logAds = false;
   fontSize = 14;
   showNeedsReply = false;

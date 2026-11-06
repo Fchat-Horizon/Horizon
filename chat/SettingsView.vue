@@ -1478,6 +1478,17 @@
               "
             />
             <settings-override
+              :label="l('settings.logChannels')"
+              :globalValue="settings.horizonLogChannels"
+              :overrideValue="characterOverrides.horizonLogChannels"
+              :usingGlobal="isUsingGlobal()"
+              name="horizonLogChannels"
+              @update:globalValue="settings.horizonLogChannels = $event"
+              @update:overrideValue="
+                $set(characterOverrides, 'horizonLogChannels', $event)
+              "
+            />
+            <settings-override
               :label="l('settings.logAds')"
               :globalValue="settings.logAds"
               :overrideValue="characterOverrides.logAds"
