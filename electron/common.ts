@@ -1,7 +1,10 @@
 import * as electron from 'electron';
 import * as path from 'path';
 import { ProfileViewerGalleryType } from '../site/utils';
-import { GeneralSettings as GeneralSettingsInterface } from '../chat/general-settings';
+import {
+  GeneralSettings as GeneralSettingsInterface,
+  ColorblindMode
+} from '../chat/general-settings';
 
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 
@@ -51,6 +54,7 @@ export class GeneralSettings implements GeneralSettingsInterface {
   hwAcceleration = true;
   reducedMotion = false;
   horizonHighContrast = false;
+  horizonColorblindMode: ColorblindMode = 'none';
   risingCacheExpiryDays = 30;
   horizonCacheMemoryCount = 350;
   risingSystemLogLevel: log.LevelOption = 'info';

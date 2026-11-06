@@ -127,7 +127,6 @@ export class Settings implements ISettings {
   risingComparisonInSearch = true;
 
   risingShowUnreadOfflineCount = true;
-  risingColorblindMode = false;
   risingShowPortraitNearInput = true;
   risingShowPortraitInMessage = true;
   risingShowHighQualityPortraits = true;

@@ -79,31 +79,8 @@ $text-background-color: $gray-100;
 $text-background-color-disabled: $gray-base;
 
 // F-List Rising
-$scorePerfectMatchBg: rgb(0, 173, 173);
-$scorePerfectMatchFg: rgb(29, 154, 154);
-$scoreMatchBg: rgb(0, 142, 0);
-$scoreMatchFg: rgb(0, 113, 0);
-$scoreWeakMatchBg: rgb(0, 80, 0);
-$scoreWeakMatchFg: rgb(0, 64, 0);
-$scoreWeakMismatchBg: rgb(152, 134, 0);
-$scoreWeakMismatchFg: rgb(142, 126, 0);
-$scoreMismatchBg: rgb(171, 0, 0);
-$scoreMismatchFg: rgb(128, 0, 0);
 $scoreTitleColor: white;
 $scoreMinimizeButtonFg: set-alpha($mocha-foreground, 0.7);
-$scoreMinimizeButtonBg: rgba(0, 0, 0, 0.2);
-$scoreReportBg: rgba(0, 0, 0, 0.2);
-
-$scoreFadedPerfectMatchBg: color.scale($scorePerfectMatchBg, $alpha: -60%);
-$scoreFadedPerfectMatchFg: color.scale($scorePerfectMatchFg, $alpha: -60%);
-$scoreFadedMatchBg: color.scale($scoreMatchBg, $alpha: -60%);
-$scoreFadedMatchFg: color.scale($scoreMatchFg, $alpha: -60%);
-$scoreFadedWeakMatchBg: color.scale($scoreWeakMatchBg, $alpha: -60%);
-$scoreFadedWeakMatchFg: color.scale($scoreWeakMatchFg, $alpha: -60%);
-$scoreFadedWeakMismatchBg: color.scale($scoreWeakMismatchBg, $alpha: -60%);
-$scoreFadedWeakMismatchFg: color.scale($scoreWeakMismatchFg, $alpha: -60%);
-$scoreFadedMismatchBg: color.scale($scoreMismatchBg, $alpha: -60%);
-$scoreFadedMismatchFg: color.scale($scoreMismatchFg, $alpha: -60%);
 
 $scoreStandoutMatchBorderColor: $mocha-green;
 $scoreStandoutMatchBgColor: set-alpha(

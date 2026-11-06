@@ -815,6 +815,26 @@
     padding: 5px;
   }
 
+  .character-kinks-block .character-kink.stock-kink.comparison-favorite {
+    --characterKinkStockColor: var(--scoreMatchFg);
+    --characterKinkStockHighlightedColor: var(--scoreMatchFg);
+  }
+
+  .character-kinks-block .character-kink.stock-kink.comparison-yes {
+    --characterKinkStockColor: var(--scoreWeakMatchFg);
+    --characterKinkStockHighlightedColor: var(--scoreWeakMatchFg);
+  }
+
+  .character-kinks-block .character-kink.stock-kink.comparison-maybe {
+    --characterKinkStockColor: var(--scoreWeakMismatchFg);
+    --characterKinkStockHighlightedColor: var(--scoreWeakMismatchFg);
+  }
+
+  .character-kinks-block .character-kink.stock-kink.comparison-no {
+    --characterKinkStockColor: var(--scoreMismatchFg);
+    --characterKinkStockHighlightedColor: var(--scoreMismatchFg);
+  }
+
   .stock-kink {
     .kink-name,
     i {
@@ -1097,6 +1117,7 @@
   .character-kinks-block .character-kink.comparison-favorite,
   .match-report .scores .match-score.match,
   .infotag.match {
+    color: var(--scoreMatchFg);
     background-color: var(--scoreMatchBg);
     border: solid 1px var(--scoreMatchFg);
   }
@@ -1104,6 +1125,7 @@
   .character-kinks-block .character-kink.comparison-yes,
   .match-report .scores .match-score.weak-match,
   .infotag.weak-match {
+    color: var(--scoreWeakMatchFg);
     background-color: var(--scoreWeakMatchBg);
     border: 1px solid var(--scoreWeakMatchFg);
   }
@@ -1111,6 +1133,7 @@
   .character-kinks-block .character-kink.comparison-maybe,
   .match-report .scores .match-score.weak-mismatch,
   .infotag.weak-mismatch {
+    color: var(--scoreWeakMismatchFg);
     background-color: var(--scoreWeakMismatchBg);
     border: 1px solid var(--scoreWeakMismatchFg);
   }
@@ -1118,6 +1141,7 @@
   .character-kinks-block .character-kink.comparison-no,
   .match-report .scores .match-score.mismatch,
   .infotag.mismatch {
+    color: var(--scoreMismatchFg);
     background-color: var(--scoreMismatchBg);
     border: 1px solid var(--scoreMismatchFg);
   }

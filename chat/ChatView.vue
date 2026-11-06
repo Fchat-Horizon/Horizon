@@ -1173,9 +1173,6 @@
           : unreadClasses[conversation.unread];
       },
 
-      isColorblindModeActive(): boolean {
-        return core.state.settings.risingColorblindMode;
-      },
       getImagePreview(): ImagePreview | undefined {
         return this.$refs['imagePreview'] as ImagePreview;
       },

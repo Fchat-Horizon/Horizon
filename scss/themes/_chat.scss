@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 @import '~bootstrap/scss/functions';
 @import '~bootstrap/scss/variables';
 @import '~bootstrap/scss/variables-dark';
@@ -28,6 +30,53 @@
 @import '~bootstrap/scss/utilities';
 @import '~bootstrap/scss/utilities/api';
 @import '~bootstrap/scss/helpers/color-bg';
+
+$scorePerfectMatchBg: rgb(0, 173, 173) !default;
+$scorePerfectMatchFg: rgb(29, 154, 154) !default;
+$scoreMatchBg: rgb(0, 142, 0) !default;
+$scoreMatchFg: rgb(0, 113, 0) !default;
+$scoreWeakMatchBg: rgb(0, 80, 0) !default;
+$scoreWeakMatchFg: rgb(0, 64, 0) !default;
+$scoreWeakMismatchBg: rgb(214, 146, 43) !default;
+$scoreWeakMismatchFg: rgb(142, 126, 0) !default;
+$scoreMismatchBg: rgb(171, 0, 0) !default;
+$scoreMismatchFg: rgb(128, 0, 0) !default;
+$scoreTitleColor: white !default;
+$scoreMinimizeButtonFg: rgba(255, 255, 255, 0.7) !default;
+$scoreMinimizeButtonBg: rgba(0, 0, 0, 0.2) !default;
+$scoreReportBg: rgba(0, 0, 0, 0.2) !default;
+
+$scoreFadedPerfectMatchBg: color.scale(
+  $scorePerfectMatchBg,
+  $alpha: -60%
+) !default;
+$scoreFadedPerfectMatchFg: color.scale(
+  $scorePerfectMatchFg,
+  $alpha: -60%
+) !default;
+$scoreFadedMatchBg: color.scale($scoreMatchBg, $alpha: -60%) !default;
+$scoreFadedMatchFg: color.scale($scoreMatchFg, $alpha: -60%) !default;
+$scoreFadedWeakMatchBg: color.scale($scoreWeakMatchBg, $alpha: -60%) !default;
+$scoreFadedWeakMatchFg: color.scale($scoreWeakMatchFg, $alpha: -60%) !default;
+$scoreFadedWeakMismatchBg: color.scale(
+  $scoreWeakMismatchBg,
+  $alpha: -60%
+) !default;
+$scoreFadedWeakMismatchFg: color.scale(
+  $scoreWeakMismatchFg,
+  $alpha: -60%
+) !default;
+$scoreFadedMismatchBg: color.scale($scoreMismatchBg, $alpha: -60%) !default;
+$scoreFadedMismatchFg: color.scale($scoreMismatchFg, $alpha: -60%) !default;
+
+$scoreStandoutMatchBorderColor: #048a04 !default;
+$scoreStandoutMatchBgColor: rgba(0, 110, 0, 0.47) !default;
+$scoreStandoutWeakMatchBorderColor: #014a01 !default;
+$scoreStandoutWeakMatchBgColor: rgba(0, 79, 0, 0.4) !default;
+$scoreStandoutNeutralBorderColor: #555 !default;
+$scoreStandoutWeakMismatchBorderColor: rgb(138, 123, 0) !default;
+$scoreStandoutWeakMismatchBgColor: rgba(208, 188, 0, 0) !default;
+$scoreStandoutMismatchBorderColor: #841a1a !default;
 
 @import '../core';
 @import '../chat';

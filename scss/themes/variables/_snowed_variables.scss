@@ -53,8 +53,6 @@ $dropdown-divider-bg: $gray-100;
 
 $modal-header-border-color: $gray-200;
 // F-List Rising
-$scorePerfectMatchBg: rgb(0, 173, 173);
-$scorePerfectMatchFg: rgb(29, 154, 154);
 $scoreMatchBg: rgba(0, 180, 0, 0.65);
 $scoreMatchFg: rgba(0, 133, 0, 0.4);
 $scoreWeakMatchBg: rgba(0, 180, 0, 0.22);
@@ -67,17 +65,6 @@ $scoreTitleColor: black;
 $scoreMinimizeButtonFg: rgba(255, 255, 255, 0.6);
 $scoreMinimizeButtonBg: rgba(0, 0, 0, 0.1);
 $scoreReportBg: rgba(0, 0, 0, 0.08);
-
-$scoreFadedPerfectMatchBg: adjust-color($scorePerfectMatchBg, $alpha: -0.6);
-$scoreFadedPerfectMatchFg: adjust-color($scorePerfectMatchFg, $alpha: -0.6);
-$scoreFadedMatchBg: adjust-color($scoreMatchBg, $alpha: -0.6);
-$scoreFadedMatchFg: adjust-color($scoreMatchFg, $alpha: -0.6);
-$scoreFadedWeakMatchBg: adjust-color($scoreWeakMatchBg, $alpha: -0.6);
-$scoreFadedWeakMatchFg: adjust-color($scoreWeakMatchFg, $alpha: -0.6);
-$scoreFadedWeakMismatchBg: adjust-color($scoreWeakMismatchBg, $alpha: -0.6);
-$scoreFadedWeakMismatchFg: adjust-color($scoreWeakMismatchFg, $alpha: -0.6);
-$scoreFadedMismatchBg: adjust-color($scoreMismatchBg, $alpha: -0.6);
-$scoreFadedMismatchFg: adjust-color($scoreMismatchFg, $alpha: -0.6);
 
 $scoreStandoutMatchBorderColor: #059e05;
 $scoreStandoutMatchBgColor: rgba(53, 225, 53, 0.4);
