@@ -132,22 +132,14 @@
               but we also don't fill this menu dynamically yet so this will have to do for now.
           -->
           <template v-if="selectedTab !== 'profiles.smartFilters'">
-            <div class="warning" v-if="settingsMode === '0'">
-              <h5>{{ l('warning.info') }}</h5>
-              <div>
-                {{ l('settings.mode.global') }}
-              </div>
-            </div>
-
-            <div class="warning" v-else>
-              <h5>{{ l('warning.info') }}</h5>
-              <div>
-                {{
-                  l('settings.mode.character', {
-                    characterName: currentCharacter || ''
-                  })
-                }}
-              </div>
+            <div class="alert alert-secondary">
+              {{
+                settingsMode === '0'
+                  ? l('settings.mode.global')
+                  : l('settings.mode.character', {
+                      characterName: currentCharacter || ''
+                    })
+              }}
             </div>
           </template>
         </div>
