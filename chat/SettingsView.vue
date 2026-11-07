@@ -2377,30 +2377,133 @@
           </div>
 
           <div v-show="selectedTab === 'import.main'">
-            <div style="display: flex; padding-top: 10px">
-              <select
-                id="import"
-                class="form-select"
-                v-model="importCharacter"
-                style="flex: 1; margin-right: 10px"
-              >
-                <option value="">
-                  {{ l('settings.import.selectCharacter') }}
-                </option>
-                <option
-                  v-for="character in availableImports"
-                  :value="character"
+            <div v-if="currentCharacter.length > 0">
+              <div style="display: flex; padding-top: 10px">
+                <select
+                  id="import"
+                  class="form-select"
+                  v-model="importCharacter"
+                  style="flex: 1; margin-right: 10px"
                 >
-                  {{ character }}
-                </option>
-              </select>
-              <button
-                class="btn btn-secondary"
-                @click="doImport"
-                :disabled="!importCharacter"
-              >
-                {{ l('settings.import') }}
-              </button>
+                  <option value="">
+                    {{ l('settings.import.selectCharacter') }}
+                  </option>
+                  <option
+                    v-for="character in availableImports"
+                    :value="character"
+                  >
+                    {{ character }}
+                  </option>
+                </select>
+                <button
+                  class="btn btn-primary"
+                  @click="doImport"
+                  :disabled="
+                    !importCharacter ||
+                    (!someImportTypesSelected && !allImportTypesSelected)
+                  "
+                >
+                  {{ l('settings.import') }}
+                </button>
+              </div>
+              <div class="m-3">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="ard-all-channels"
+                    :checked="allImportTypesSelected"
+                    :indeterminate.prop="
+                      someImportTypesSelected && !allImportTypesSelected
+                    "
+                    @change="selectAllImportTypes($event)"
+                  />
+                  <label class="form-check-label" for="ard-all-channels">
+                    <i>{{ l('admgr.channels.selectAll') }}</i>
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="importOverride"
+                    v-model="importSettings.settings"
+                  />
+                  <label class="form-check-label" for="importOverride">
+                    {{ l('settings.copyField.settings') }}
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="importOverrideChannelGroups"
+                    v-model="importSettings.channelGroups"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="importOverrideChannelGroups"
+                  >
+                    {{ l('settings.copyField.channelGroups') }}
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="importOverrideFavoriteEicons"
+                    v-model="importSettings.favoriteEicons"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="importOverrideFavoriteEicons"
+                  >
+                    {{ l('settings.copyField.favouriteEicons ') }}
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="importOverrideAds"
+                    v-model="importSettings.ads"
+                  />
+                  <label class="form-check-label" for="importOverrideAds">
+                    {{ l('settings.copyField.ads') }}
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="importOverrideHiddenUsers"
+                    v-model="importSettings.hiddenUsers"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="importOverrideHiddenUsers"
+                  >
+                    {{ l('settings.copyField.hiddenUsers') }}
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="importOverrideStatusHistory"
+                    v-model="importSettings.statusHistory"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="importOverrideStatusHistory"
+                  >
+                    {{ l('settings.copyField.statusHistory') }}
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div v-else class="alert alert-warning" role="alert">
+              {{ l('settings.import.noCharacter') }}
             </div>
           </div>
         </div>
@@ -2448,6 +2551,15 @@
   import VirtualList from '../components/VirtualList.vue';
 
   const bbcodeParser = new UserInterfaceBBCodeParser();
+
+  interface ImportSettings {
+    settings: boolean;
+    channelGroups: boolean;
+    favoriteEicons: boolean;
+    ads: boolean;
+    hiddenUsers: boolean;
+    statusHistory: boolean;
+  }
 
   export default CustomDialog.extend({
     components: {
@@ -2508,7 +2620,16 @@
         currentSoundThemeDetails: null as any | null,
         liveVolumeMap: {} as { [sound: string]: number },
         soundListCollapsed: true as boolean,
-        soundPreviewAudio: null as HTMLAudioElement | null
+        soundPreviewAudio: null as HTMLAudioElement | null,
+        importSettings: {
+          settings: true,
+          channelGroups: true,
+          favoriteEicons: true,
+          ads: true,
+          conversationSettings: true,
+          hiddenUsers: true,
+          statusHistory: true
+        } as ImportSettings
       };
     },
     computed: {
@@ -2555,6 +2676,13 @@
       },
       sortedLangs(): string[] {
         return this.spellcheckLanguages.map(language => language.code);
+      },
+      allImportTypesSelected(): boolean {
+        return Object.values(this.importSettings).every(x => x);
+      },
+      someImportTypesSelected(): boolean {
+        const values = Object.values(this.importSettings);
+        return values.some(x => x) && !values.every(x => x);
       }
     },
     watch: {
@@ -2661,13 +2789,36 @@
           if (settings !== undefined)
             await core.settingsStore.set(key, settings);
         };
-        await importKey('settings');
-        await importKey('pinned');
-        await importKey('modes');
-        await importKey('conversationSettings');
-        await importKey('hiddenUsers');
-        await importKey('favoriteEIcons');
+        if (this.importSettings.settings) {
+          await importKey('settings');
+          await importKey('modes');
+          await importKey('conversationSettings');
+        }
+        if (this.importSettings.channelGroups) {
+          await importKey('pinned');
+          await importKey('channelGroups');
+        }
+        if (this.importSettings.favoriteEicons) {
+          await importKey('favoriteEIcons');
+        }
+        if (this.importSettings.ads) {
+          await importKey('ads');
+        }
+        if (this.importSettings.hiddenUsers) {
+          await importKey('hiddenUsers');
+        }
+        if (this.importSettings.statusHistory) {
+          await importKey('statusHistory');
+        }
         core.connection.close(false);
+        (this.$refs['modal'] as InstanceType<typeof Modal>).hide();
+      },
+
+      selectAllImportTypes(event: Event): void {
+        const checked = (event.target as HTMLInputElement).checked;
+        for (const key of Object.keys(this.importSettings)) {
+          this.importSettings[key as keyof ImportSettings] = checked;
+        }
       },
       unignore(character: string): void {
         core.connection.send('IGN', { action: 'delete', character });
