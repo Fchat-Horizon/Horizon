@@ -8,43 +8,38 @@
     @input="onGlobalInput"
     v-if="usingGlobal"
   />
-  <input
-    type="number"
-    class="form-control"
-    :placeholder="globalValue.toString()"
-    :disabled="disabled"
-    :value="overrideValue"
-    @input="onOverrideInput"
-    v-else
-  />
+  <div class="input-group" v-else>
+    <input
+      type="number"
+      class="form-control"
+      :placeholder="globalValue.toString()"
+      :disabled="disabled"
+      :value="overrideValue"
+      @input="onOverrideInput"
+    />
+    <button class="btn btn-outline-secondary" type="button">
+      <i
+        class="fa fa-eraser"
+        aria-hidden="true"
+        @click="emit('update:overrideValue', undefined)"
+      >
+      </i>
+    </button>
+  </div>
 </template>
 <script setup lang="ts">
-  const props = defineProps({
-    usingGlobal: {
-      type: Boolean,
-      required: true
-    },
-    disabled: {
-      type: Boolean,
-      default: undefined
-    },
-    placeholder: {
-      type: String,
-      default: ''
-    },
-    globalValue: {
-      type: Number,
-      required: true
-    },
-    overrideValue: {
-      type: Number,
-      default: 0
-    }
-  });
+  interface Props {
+    usingGlobal: boolean;
+    disabled?: boolean;
+    placeholder?: string;
+    globalValue: number;
+    overrideValue?: number;
+  }
+  const props = defineProps<Props>();
 
   const emit = defineEmits<{
     (e: 'update:globalValue', value: number): void;
-    (e: 'update:overrideValue', value: number): void;
+    (e: 'update:overrideValue', value: number | undefined): void;
   }>();
 
   function toNumber(value: string): number {
@@ -59,6 +54,7 @@
 
   function onOverrideInput(event: Event): void {
     const target = event.target as HTMLInputElement | null;
-    emit('update:overrideValue', toNumber(target?.value ?? ''));
+    const value = target?.value ?? '';
+    emit('update:overrideValue', value === '' ? undefined : toNumber(value));
   }
 </script>

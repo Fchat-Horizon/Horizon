@@ -1374,7 +1374,7 @@
               <label class="control-label" for="idleTimer">{{
                 l('settings.idleTimer')
               }}</label>
-              <settings-input
+              <settings-number
                 id="idleTimer"
                 type="number"
                 :globalValue="settings.idleTimer"
@@ -1524,7 +1524,7 @@
               >
                 {{ l('settings.horizonSaveDraftMessagesToDiskTimer') }}
               </label>
-              <settings-input
+              <settings-number
                 id="horizonSaveDraftMessagesToDiskTimer"
                 type="number"
                 :globalValue="settings.horizonSaveDraftMessagesToDiskTimer"
@@ -1581,7 +1581,7 @@
               <label class="control-label" for="fontSize">{{
                 l('settings.experimental', { name: l('settings.fontSize') })
               }}</label>
-              <settings-input
+              <settings-number
                 id="fontSize"
                 type="number"
                 :globalValue="settings.fontSize"
@@ -2522,7 +2522,7 @@
   import { BBCodeView } from '../bbcode/view';
   import FilterableSelect from '../components/FilterableSelect.vue';
   import SettingsOverride from '../components/settings/SettingsOverride.vue';
-  import SettingsInput from '../components/settings/SettingsInput.vue';
+  import SettingsNumber from '../components/settings/SettingsNumber.vue';
   import SettingsArray from '../components/settings/SettingsArray.vue';
   import SettingsCheckbox from '../components/settings/SettingsCheckbox.vue';
   import SettingsSelectOverride from '../components/settings/SettingsSelectOverride.vue';
@@ -2572,7 +2572,7 @@
       'user-view': UserView,
       'virtual-list': VirtualList,
       'settings-override': SettingsOverride,
-      'settings-input': SettingsInput,
+      'settings-number': SettingsNumber,
       'settings-array': SettingsArray,
       'settings-checkbox': SettingsCheckbox,
       'settings-select-override': SettingsSelectOverride
