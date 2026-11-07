@@ -76,13 +76,13 @@
             label: l('settings.tabs.profiles'),
             iconClass: 'fas fa-id-card'
           },
-          { id: 'profiles.hiddenAds', label: l('settings.tabs.hideAds') },
           { id: 'profiles.matching', label: l('settings.matching') },
           {
             id: 'profiles.smartFilters',
             label: l('settings.tabs.smartFilters')
           },
           { id: 'profiles.viewer', label: l('settings.profile.viewer') },
+          { id: 'profiles.hiddenAds', label: l('settings.tabs.hideAds') },
           {
             id: 'profiles.ignoredList',
             label: l('settings.profile.ignoredList')
@@ -105,7 +105,10 @@
             selectedTab !== 'app.notifications' &&
             selectedTab !== 'app.behavior' &&
             selectedTab !== 'app.accessibility' &&
-            selectedTab !== 'app.advanced'
+            selectedTab !== 'app.advanced' &&
+            selectedTab !== 'import.main' &&
+            selectedTab !== 'profiles.hiddenAds' &&
+            selectedTab !== 'profiles.ignoredList'
           "
         >
           <tabs
