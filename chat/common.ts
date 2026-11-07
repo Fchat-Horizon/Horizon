@@ -21,6 +21,36 @@ export function profileLink(this: any | never, character: string): string {
 }
 
 /**
+ * Scores how well a target string matches a query, fuzzily.
+ * Returns -1 when the query does not match at all, otherwise a score where
+ * higher is better: exact matches rank highest, then substring matches
+ * (earlier is better), then subsequence matches with bonuses for consecutive
+ * and word-start characters.
+ */
+export function fuzzyScore(query: string, target: string): number {
+  const q = query.trim().toLowerCase();
+  const t = target.toLowerCase();
+  if (q.length === 0) return 0;
+  if (t === q) return 10000;
+  const substring = t.indexOf(q);
+  if (substring !== -1) return Math.max(1000, 5000 - substring);
+  let queryIndex = 0,
+    score = 0,
+    streak = 0,
+    lastMatch = -1;
+  for (let i = 0; i < t.length && queryIndex < q.length; i++) {
+    if (t.charAt(i) === q.charAt(queryIndex)) {
+      streak = i === lastMatch + 1 ? streak + 1 : 0;
+      score += 10 + streak * 15;
+      if (i === 0 || ' -_#'.indexOf(t.charAt(i - 1)) !== -1) score += 20;
+      lastMatch = i;
+      queryIndex++;
+    }
+  }
+  return queryIndex === q.length ? Math.max(1, score - t.length) : -1;
+}
+
+/**
  * A fast randomization algorithm.
  * @param arr An array to be randomized; will be modified in-place
  */
