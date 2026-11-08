@@ -178,6 +178,37 @@ function rebuildHiddenUsersSet(): void {
   for (const name of state.hiddenUsers) hiddenUsersSet.add(name);
 }
 
+function replaceHiddenUsers(users: string[]): void {
+  if (
+    users.length === state.hiddenUsers.length &&
+    users.every((name, index) => name === state.hiddenUsers[index])
+  )
+    return;
+
+  state.hiddenUsers = users;
+  rebuildHiddenUsersSet();
+}
+
+export function mergeHiddenUsers(
+  lists: ReadonlyArray<ReadonlyArray<string> | undefined>
+): string[] {
+  const seen = new Set<string>();
+  const merged: string[] = [];
+
+  for (const list of lists) {
+    if (!Array.isArray(list)) continue;
+    for (const name of list) {
+      if (typeof name !== 'string') continue;
+      const key = name.toLocaleLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push(name);
+    }
+  }
+
+  return merged;
+}
+
 const data = {
   platform: <PlatformServices | undefined>undefined,
   connection: <Connection | undefined>undefined,
@@ -244,6 +275,29 @@ const data = {
 
     return needsMigration;
   },
+  async loadHiddenUsers(): Promise<string[]> {
+    // Hidden users became global in 2.5. Keep them beside the other global
+    // settings, but merge every legacy per-character list the first time.
+    const shared = await core.settingsStore.get(
+      'hiddenUsers',
+      GLOBAL_SETTINGS_CHARACTER
+    );
+    if (shared !== undefined) return mergeHiddenUsers([shared]);
+
+    const characters = await core.settingsStore.getAvailableCharacters();
+    const characterLists = await Promise.all(
+      characters.map(character =>
+        core.settingsStore.get('hiddenUsers', character)
+      )
+    );
+    const merged = mergeHiddenUsers(characterLists);
+    await core.settingsStore.set(
+      'hiddenUsers',
+      merged,
+      GLOBAL_SETTINGS_CHARACTER
+    );
+    return merged;
+  },
   async reloadSettings(): Promise<void> {
     // Load global settings from '_' character
     const needsMigration = await data.loadGlobalSettings();
@@ -270,9 +324,7 @@ const data = {
       characterSettings
     );
 
-    const hiddenUsers = await core.settingsStore.get('hiddenUsers');
-    state.hiddenUsers = hiddenUsers !== undefined ? hiddenUsers : [];
-    rebuildHiddenUsersSet();
+    replaceHiddenUsers(await data.loadHiddenUsers());
 
     const favoriteEIcons = await core.settingsStore.get('favoriteEIcons');
     state.favoriteEIcons = toMap(favoriteEIcons);
@@ -374,10 +426,14 @@ export async function init(
   // ^ Debounced: rapid toggles (or bulk imports of large lists) used to kick off
   // a full JSON.stringify + fs.writeFileSync per mutation, which freezes the UI
   // when the list is tens of thousands of entries long.
-  const saveHiddenUsers = _.debounce((newValue: string[]) => {
+  const saveHiddenUsers = _.debounce(async (newValue: string[]) => {
     if (data.settingsStore !== undefined) {
-      // tslint:disable-next-line no-floating-promises
-      data.settingsStore.set('hiddenUsers', newValue);
+      await data.settingsStore.set(
+        'hiddenUsers',
+        newValue,
+        GLOBAL_SETTINGS_CHARACTER
+      );
+      await data.platform?.reloadSettings();
     }
   }, 500);
   data.watch(
