@@ -137,13 +137,23 @@
       line-height: 120%;
       border-radius: 3px;
       padding: 5px;
+      --recommendationColor: var(--bs-body-color);
+      color: var(--recommendationColor);
+
+      & a {
+        color: var(--recommendationColor);
+      }
 
       &.critical {
+        --recommendationColor: var(--scoreMismatchFg);
         background-color: var(--scoreMismatchBg);
+        border: 1px solid var(--scoreMismatchBorder);
       }
 
       &.note {
+        --recommendationColor: var(--scoreWeakMismatchFg);
         background-color: var(--scoreWeakMismatchBg);
+        border: 1px solid var(--scoreWeakMismatchBorder);
       }
     }
 

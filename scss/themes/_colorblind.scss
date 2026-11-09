@@ -1,15 +1,15 @@
 @use 'sass:color';
 
 $scorePerfectMatchBg: #e467b8;
-$scorePerfectMatchFg: #e467b8;
+$scorePerfectMatchFg: color-contrast($scorePerfectMatchBg, $black, $white);
 $scoreMatchBg: #6aa7ee;
-$scoreMatchFg: #317bd0;
+$scoreMatchFg: color-contrast($scoreMatchBg, $black, $white);
 $scoreWeakMatchBg: #38db06;
-$scoreWeakMatchFg: #38db06;
+$scoreWeakMatchFg: color-contrast($scoreWeakMatchBg, $black, $white);
 $scoreWeakMismatchBg: #d1d0d0;
-$scoreWeakMismatchFg: #d1d0d0;
+$scoreWeakMismatchFg: color-contrast($scoreWeakMismatchBg, $black, $white);
 $scoreMismatchBg: #ab0000;
-$scoreMismatchFg: #ab0000;
+$scoreMismatchFg: color-contrast($scoreMismatchBg, $black, $white);
 
 $scoreStandoutMatchBorderColor: #317bd0;
 $scoreStandoutMatchBgColor: rgba(49, 123, 208, 0.47);

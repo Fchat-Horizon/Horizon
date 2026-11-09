@@ -31,43 +31,55 @@
 @import '~bootstrap/scss/utilities/api';
 @import '~bootstrap/scss/helpers/color-bg';
 
-$scorePerfectMatchBg: rgb(0, 173, 173) !default;
-$scorePerfectMatchFg: rgb(29, 154, 154) !default;
-$scoreMatchBg: rgb(0, 142, 0) !default;
-$scoreMatchFg: rgb(0, 113, 0) !default;
-$scoreWeakMatchBg: rgb(0, 80, 0) !default;
-$scoreWeakMatchFg: rgb(0, 64, 0) !default;
-$scoreWeakMismatchBg: rgb(214, 146, 43) !default;
-$scoreWeakMismatchFg: rgb(142, 126, 0) !default;
-$scoreMismatchBg: rgb(171, 0, 0) !default;
-$scoreMismatchFg: rgb(128, 0, 0) !default;
-$scoreTitleColor: white !default;
+$scorePerfectMatchBg: var(--bs-primary-bg-subtle);
+$scorePerfectMatchFg: var(--bs-primary-text-emphasis);
+$scoreMatchBg: var(--bs-info-bg-subtle);
+$scoreMatchFg: var(--bs-info-text-emphasis);
+$scoreWeakMatchBg: var(--bs-success-bg-subtle);
+$scoreWeakMatchFg: var(--bs-success-text-emphasis);
+$scoreWeakMismatchBg: var(--bs-warning-bg-subtle);
+$scoreWeakMismatchFg: var(--bs-warning-text-emphasis);
+$scoreMismatchBg: var(--bs-danger-bg-subtle);
+$scoreMismatchFg: var(--bs-danger-text-emphasis);
+$scoreTitleColor: var(--bs-body-color);
 $scoreMinimizeButtonFg: rgba(255, 255, 255, 0.7) !default;
 $scoreMinimizeButtonBg: rgba(0, 0, 0, 0.2) !default;
 $scoreReportBg: rgba(0, 0, 0, 0.2) !default;
 
-$scoreFadedPerfectMatchBg: color.scale(
-  $scorePerfectMatchBg,
-  $alpha: -60%
-) !default;
-$scoreFadedPerfectMatchFg: color.scale(
-  $scorePerfectMatchFg,
-  $alpha: -60%
-) !default;
-$scoreFadedMatchBg: color.scale($scoreMatchBg, $alpha: -60%) !default;
-$scoreFadedMatchFg: color.scale($scoreMatchFg, $alpha: -60%) !default;
-$scoreFadedWeakMatchBg: color.scale($scoreWeakMatchBg, $alpha: -60%) !default;
-$scoreFadedWeakMatchFg: color.scale($scoreWeakMatchFg, $alpha: -60%) !default;
-$scoreFadedWeakMismatchBg: color.scale(
-  $scoreWeakMismatchBg,
-  $alpha: -60%
-) !default;
-$scoreFadedWeakMismatchFg: color.scale(
-  $scoreWeakMismatchFg,
-  $alpha: -60%
-) !default;
-$scoreFadedMismatchBg: color.scale($scoreMismatchBg, $alpha: -60%) !default;
-$scoreFadedMismatchFg: color.scale($scoreMismatchFg, $alpha: -60%) !default;
+$scoreFadedPerfectMatchBg: color-mix(
+  in srgb,
+  #{$scorePerfectMatchBg} 40%,
+  transparent
+);
+$scoreFadedPerfectMatchFg: color-mix(
+  in srgb,
+  #{$scorePerfectMatchFg} 40%,
+  transparent
+);
+$scoreFadedMatchBg: color-mix(in srgb, #{$scoreMatchBg} 40%, transparent);
+$scoreFadedMatchFg: color-mix(in srgb, #{$scoreMatchFg} 40%, transparent);
+$scoreFadedWeakMatchBg: color-mix(
+  in srgb,
+  #{$scoreWeakMatchBg} 40%,
+  transparent
+);
+$scoreFadedWeakMatchFg: color-mix(
+  in srgb,
+  #{$scoreWeakMatchFg} 40%,
+  transparent
+);
+$scoreFadedWeakMismatchBg: color-mix(
+  in srgb,
+  #{$scoreWeakMismatchBg} 40%,
+  transparent
+);
+$scoreFadedWeakMismatchFg: color-mix(
+  in srgb,
+  #{$scoreWeakMismatchFg} 40%,
+  transparent
+);
+$scoreFadedMismatchBg: color-mix(in srgb, #{$scoreMismatchBg} 40%, transparent);
+$scoreFadedMismatchFg: color-mix(in srgb, #{$scoreMismatchFg} 40%, transparent);
 
 $scoreStandoutMatchBorderColor: #048a04 !default;
 $scoreStandoutMatchBgColor: rgba(0, 110, 0, 0.47) !default;

@@ -49,25 +49,25 @@
       &.match {
         color: var(--scoreMatchFg);
         background-color: var(--scoreMatchBg);
-        border: solid 1px var(--scoreMatchFg);
+        border: solid 1px var(--scoreMatchBorder);
       }
 
       &.weak-match {
         color: var(--scoreWeakMatchFg);
         background-color: var(--scoreWeakMatchBg);
-        border: 1px solid var(--scoreWeakMatchFg);
+        border: 1px solid var(--scoreWeakMatchBorder);
       }
 
       &.weak-mismatch {
         color: var(--scoreWeakMismatchFg);
         background-color: var(--scoreWeakMismatchBg);
-        border: 1px solid var(--scoreWeakMismatchFg);
+        border: 1px solid var(--scoreWeakMismatchBorder);
       }
 
       &.mismatch {
         color: var(--scoreMismatchFg);
         background-color: var(--scoreMismatchBg);
-        border: 1px solid var(--scoreMismatchFg);
+        border: 1px solid var(--scoreMismatchBorder);
       }
     }
   }

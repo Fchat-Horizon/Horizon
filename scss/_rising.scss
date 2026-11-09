@@ -2,51 +2,37 @@ $scoreTextMinContrastRatio: 3;
 
 $risingVariables: (
   scorePerfectMatchBg: #{$scorePerfectMatchBg},
-  scorePerfectMatchFg: #{color-contrast(
-      $scorePerfectMatchBg,
-      $min-contrast-ratio: $scoreTextMinContrastRatio
-    )},
+  scorePerfectMatchFg: #{$scorePerfectMatchFg},
+  scorePerfectMatchBorder: color-mix(
+      in srgb,
+      #{$scorePerfectMatchBg} 75%,
+      black
+    ),
   scoreMatchBg: #{$scoreMatchBg},
-  scoreMatchFg: #{color-contrast(
-      $scoreMatchBg,
-      $min-contrast-ratio: $scoreTextMinContrastRatio
-    )},
+  scoreMatchFg: #{$scoreMatchFg},
+  scoreMatchBorder: color-mix(in srgb, #{$scoreMatchBg} 75%, black),
   scoreWeakMatchBg: #{$scoreWeakMatchBg},
-  scoreWeakMatchFg: #{color-contrast(
-      $scoreWeakMatchBg,
-      $min-contrast-ratio: $scoreTextMinContrastRatio
-    )},
+  scoreWeakMatchFg: #{$scoreWeakMatchFg},
+  scoreWeakMatchBorder: color-mix(in srgb, #{$scoreWeakMatchBg} 75%, black),
   scoreWeakMismatchBg: #{$scoreWeakMismatchBg},
-  scoreWeakMismatchFg: #{color-contrast(
-      $scoreWeakMismatchBg,
-      $min-contrast-ratio: $scoreTextMinContrastRatio
-    )},
+  scoreWeakMismatchFg: #{$scoreWeakMismatchFg},
+  scoreWeakMismatchBorder: color-mix(
+      in srgb,
+      #{$scoreWeakMismatchBg} 75%,
+      black
+    ),
   scoreMismatchBg: #{$scoreMismatchBg},
-  scoreMismatchFg: #{color-contrast(
-      $scoreMismatchBg,
-      $min-contrast-ratio: $scoreTextMinContrastRatio
-    )},
+  scoreMismatchFg: #{$scoreMismatchFg},
+  scoreMismatchBorder: color-mix(in srgb, #{$scoreMismatchBg} 75%, black),
   scoreTitleColor: #{$scoreTitleColor},
   scoreMinimizeButtonFg: #{$scoreMinimizeButtonFg},
   scoreMinimizeButtonBg: #{$scoreMinimizeButtonBg},
   scoreReportBg: #{$scoreReportBg},
 
-  scoreMatchBgFaint: change-color(
-      $color: $scoreMatchBg,
-      $alpha: 0.25
-    ),
-  scoreWeakMatchBgFaint: change-color(
-      $color: $scoreWeakMatchBg,
-      $alpha: 0.25
-    ),
-  scoreWeakMismatchBgFaint: change-color(
-      $color: $scoreWeakMismatchBg,
-      $alpha: 0.25
-    ),
-  scoreMismatchBgFaint: change-color(
-      $color: $scoreMismatchBg,
-      $alpha: 0.25
-    ),
+  scoreMatchBgFaint: #{$scoreFadedMatchBg},
+  scoreWeakMatchBgFaint: #{$scoreFadedWeakMatchBg},
+  scoreWeakMismatchBgFaint: #{$scoreFadedWeakMismatchBg},
+  scoreMismatchBgFaint: #{$scoreFadedMismatchBg},
   scoreFadedPerfectMatchBg: #{$scoreFadedPerfectMatchBg},
   scoreFadedPerfectMatchFg: #{$scoreFadedPerfectMatchFg},
   scoreFadedMatchBg: #{$scoreFadedMatchBg},

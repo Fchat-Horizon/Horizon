@@ -1030,6 +1030,10 @@
       .infotag-value {
         margin-bottom: 0;
       }
+
+      .infotag-label {
+        color: inherit;
+      }
     }
   }
 
@@ -1098,7 +1102,7 @@
         padding-right: 4px;
 
         span {
-          color: var(--scoreTitleColor);
+          //color: var(--scoreTitleColor);
           font-weight: bold;
         }
       }
@@ -1119,7 +1123,7 @@
   .infotag.match {
     color: var(--scoreMatchFg);
     background-color: var(--scoreMatchBg);
-    border: solid 1px var(--scoreMatchFg);
+    border: solid 1px var(--scoreMatchBorder);
   }
 
   .character-kinks-block .character-kink.comparison-yes,
@@ -1127,7 +1131,7 @@
   .infotag.weak-match {
     color: var(--scoreWeakMatchFg);
     background-color: var(--scoreWeakMatchBg);
-    border: 1px solid var(--scoreWeakMatchFg);
+    border: 1px solid var(--scoreWeakMatchBorder);
   }
 
   .character-kinks-block .character-kink.comparison-maybe,
@@ -1135,7 +1139,7 @@
   .infotag.weak-mismatch {
     color: var(--scoreWeakMismatchFg);
     background-color: var(--scoreWeakMismatchBg);
-    border: 1px solid var(--scoreWeakMismatchFg);
+    border: 1px solid var(--scoreWeakMismatchBorder);
   }
 
   .character-kinks-block .character-kink.comparison-no,
@@ -1143,51 +1147,55 @@
   .infotag.mismatch {
     color: var(--scoreMismatchFg);
     background-color: var(--scoreMismatchBg);
-    border: 1px solid var(--scoreMismatchFg);
+    border: 1px solid var(--scoreMismatchBorder);
   }
 
   .character-kinks-block .highlighting {
     .character-kink {
       &.comparison-favorite {
         background-color: var(--scoreFadedMatchBg);
-        border-color: var(--scoreFadedMatchFg);
+        border-color: var(--scoreMatchBorder);
 
         &.highlighted {
           background-color: var(--scoreMatchBg);
-          border-color: var(--scoreMatchFg);
+          border-color: var(--scoreMatchBorder);
         }
       }
 
       &.comparison-yes {
         background-color: var(--scoreWeakMatchBg);
-        border-color: var(--scoreWeakMatchFg);
+        border-color: var(--scoreWeakMatchBorder);
 
         &.highlighted {
           background-color: var(--scoreWeakMatchBg);
-          border-color: var(--scoreWeakMatchFg);
+          border-color: var(--scoreWeakMatchBorder);
         }
       }
 
       &.comparison-maybe {
         background-color: var(--scoreWeakMismatchBg);
-        border-color: var(--scoreWeakMismatchFg);
+        border-color: var(--scoreWeakMismatchBorder);
 
         &.highlighted {
           background-color: var(--scoreWeakMismatchBg);
-          border-color: var(--scoreWeakMismatchFg);
+          border-color: var(--scoreWeakMismatchBorder);
         }
       }
 
       &.comparison-no {
         background-color: var(--scoreMismatchBg);
-        border-color: var(--scoreMismatchFg);
+        border-color: var(--scoreMismatchBorder);
 
         &.highlighted {
           background-color: var(--scoreMismatchBg);
-          border-color: var(--scoreMismatchFg);
+          border-color: var(--scoreMismatchBorder);
         }
       }
     }
+  }
+
+  .character-kinks-block .character-kink .popover-header {
+    color: var(--bs-body-color);
   }
 
   .tab-count {
