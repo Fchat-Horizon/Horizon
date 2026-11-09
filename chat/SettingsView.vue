@@ -2755,13 +2755,13 @@
 
         console.log(this.availableThemes);
 
-        this.settings = { ...globalSettings };
+        this.settings = _.cloneDeep(globalSettings);
         await this.loadSelectedSoundThemeDetails();
         this.availableImports = (
           await core.settingsStore.getAvailableCharacters()
         ).filter(x => x !== core.connection.character);
 
-        this.characterOverrides = { ...core.state.characterSettings };
+        this.characterOverrides = _.cloneDeep(core.state.characterSettings);
       },
       async doImport(): Promise<void> {
         if (
@@ -2820,11 +2820,7 @@
       },
       async submit(): Promise<void> {
         await this.submitGeneralSettings();
-        if (this.settingsMode === '0') {
-          await this.submitGlobalSettings();
-          return;
-        }
-
+        await this.submitGlobalSettings();
         await this.submitCharacterOverrides();
       },
       async submitGeneralSettings(): Promise<void> {
@@ -2901,10 +2897,6 @@
         this.generalSettings.browserArgs = '%s';
       },
       async submitGlobalSettings(): Promise<void> {
-        const oldRisingFilter = JSON.parse(
-          JSON.stringify(core.state.settings.risingFilter)
-        );
-
         const minAge = this.getAsNumber(this.settings.risingFilter.minAge);
         const maxAge = this.getAsNumber(this.settings.risingFilter.maxAge);
 
@@ -2947,7 +2939,7 @@
         newSettings.risingCharacterTheme = newSettings.risingCharacterTheme
           ? newSettings.risingCharacterTheme
           : undefined;
-        core.state.globalSettings = {
+        const updatedSettings = {
           ...newSettings,
           risingFilter: {
             ...newSettings.risingFilter,
@@ -2955,43 +2947,40 @@
             maxAge
           }
         };
-        const newRisingFilter = JSON.parse(
-          JSON.stringify(core.state.settings.risingFilter)
-        );
+        if (_.isEqual(previousSettings, updatedSettings)) return;
 
-        if (!_.isEqual(oldRisingFilter, newRisingFilter)) {
-          this.rebuildFilters();
-        }
+        const oldRisingFilter = _.cloneDeep(core.state.settings.risingFilter);
+        core.state.globalSettings = updatedSettings;
 
         if (this.settings.notifications)
           await core.notifications.requestPermission();
+
+        if (!_.isEqual(oldRisingFilter, updatedSettings.risingFilter)) {
+          this.rebuildFilters();
+        }
 
         EventBus.$emit('configuration-update', core.state.settings);
         await core.platform.reloadSettings();
       },
       async submitCharacterOverrides(): Promise<void> {
-        const oldRisingFilter = _.cloneDeep(
-          core.state.characterSettings.risingFilter
-        );
-        const newCharacterOverrides = { ...this.characterOverrides };
+        const previousCharacterOverrides = core.state.characterSettings;
+        const oldRisingFilter = _.cloneDeep(core.state.settings.risingFilter);
+        const characterOverrides = _.cloneDeep(this.characterOverrides);
+        const newCharacterOverrides = _.isEqual(
+          characterOverrides.risingFilter,
+          this.settings.risingFilter
+        )
+          ? _.omit(characterOverrides, 'risingFilter')
+          : characterOverrides;
 
-        if (
-          _.isEqual(
-            newCharacterOverrides.risingFilter,
-            this.settings.risingFilter
-          )
-        ) {
-          delete newCharacterOverrides.risingFilter;
+        if (_.isEqual(previousCharacterOverrides, newCharacterOverrides)) {
+          return;
         }
 
         core.state.characterSettings = newCharacterOverrides;
         this.characterOverrides = newCharacterOverrides;
 
-        const newRisingFilter = _.cloneDeep(
-          core.state.characterSettings.risingFilter
-        );
-
-        if (!_.isEqual(oldRisingFilter, newRisingFilter)) {
+        if (!_.isEqual(oldRisingFilter, core.state.settings.risingFilter)) {
           this.rebuildFilters();
         }
 
