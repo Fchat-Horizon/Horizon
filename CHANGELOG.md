@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- When you copy over settings from one character to another, you can now individually select whether to copy over ads, settings, channel groups/ pins, favourite eicons, hidden users, and status history through checkboxes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f47fd38ca857370c99d81e861ae01d0e742c4028)
+
+### Fixed since last pre-release
+
+- Fixed nasty contrasts with matcher and matcher-related blocks. They now use theme-specific colours. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/538ced136109f4ea159397f8110f4b3b62e5ccf0)
+- Fixed being unable to save both global settings _and_ character overrides at the same time. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c98b87032aa2b0a16b8c1f96fd7954a5f7360c24)
+- Fixed the little box telling you which settings mode you're in clipping with the text below in narrow window modes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/87201bfa81f8803b74e975f95c5c6c90829b8a38)
+- Fixed number input setting fields (like font size, or the idle timer) acting jank in the character override tab when left empty. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/128a8321187abc93e10b7a95f8daef393b3bdd51)
+- Fixed the ignored/ hidden user tabs having global and character override tabs that do nothing. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1697c0cfcdde4257a6f93cb2bb71374e84bd2813)
+
+### Known issues
+
+- The colour values picked for the new colour blind modes might not be distinct enough for people. If you experience issues with a specific mode that you'd require, please [reach out](https://horizn.moe/contact.html) to us.
+
 ## [2.5.0-beta.0] - 2026-11-06
 
 ### Added
