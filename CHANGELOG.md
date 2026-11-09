@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0-beta.1] - 2026-11-09
+
 ### Added
 
 - When you copy over settings from one character to another, you can now individually select whether to copy over ads, settings, channel groups/ pins, favourite eicons, hidden users, and status history through checkboxes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f47fd38ca857370c99d81e861ae01d0e742c4028)
@@ -1838,7 +1840,8 @@ Non PR'd changes by @CodingWithAnxiety and @FatCatClient
 - IOS build removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/41261d1ba7043eb7dfd5a1a6331dc604ff338814)]
 - Webchat removed [[Commit](https://github.com/Fchat-Horizon/Horizon/commit/b894a180b9be31f68d1458aaa3c59f9c4470da89)]
 
-[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.5.0-beta.0...development
+[Unreleased]: https://github.com/Fchat-Horizon/Horizon/compare/v2.5.0-beta.1...development
+[2.5.0-beta.1]: https://github.com/Fchat-Horizon/Horizon/compare/v2.5.0-beta.0...v2.5.0-beta.1
 [2.5.0-beta.0]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.5...v2.5.0-beta.0
 [2.4.5]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.4...v2.4.5
 [2.4.4]: https://github.com/Fchat-Horizon/Horizon/compare/v2.4.3...v2.4.4
