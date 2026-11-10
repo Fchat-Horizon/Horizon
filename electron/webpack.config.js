@@ -373,7 +373,14 @@ module.exports = function (mode) {
 
   const cacheVersion = `${APP_VERSION}-${APP_COMMIT}`;
   const watchOptions = {
-    ignored: ['**/node_modules/**', '**/.git/**'],
+    ignored: [
+      '**/node_modules/**',
+      '**/.git/**',
+      '**/app/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/.pnpm-store/**'
+    ],
     aggregateTimeout: 300
   };
   for (const cfg of [mainConfig, rendererConfig, storeWorkerEndpointConfig]) {
