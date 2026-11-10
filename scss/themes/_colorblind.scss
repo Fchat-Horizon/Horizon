@@ -27,7 +27,7 @@ $cvd-light-theme: color.lightness($body-bg) > 50%;
 $red-green-genders: if(
   $cvd-light-theme,
   (
-    'shemale': #8b2500,
+    'shemale': #868b00,
     'herm': #6f3ac7,
     'none': $gray-500,
     'female': #8e0e56,
@@ -40,9 +40,9 @@ $red-green-genders: if(
     'shemale': #f0e442,
     'herm': #d55e00,
     'none': $gray-500,
-    'female': #efa8ce,
-    'male': #56b4e9,
-    'male-herm': #2e86d1,
+    'female': #db7093,
+    'male': #2e86d1,
+    'male-herm': #6495ed,
     'transgender': #e69f00,
     'cunt-boy': #0ac48a
   )
