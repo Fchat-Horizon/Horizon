@@ -299,6 +299,7 @@ const settingsFile = path.join(settingsDir, 'settings');
 const settings = new GeneralSettings();
 //We need this, since displaying the changelog is done through a child window instead of an external link
 let showChangelogOnBoot = false;
+let changelogFromVersion: string | undefined;
 // Reference count so overlapping update requests don't re-enable prompts early.
 let suppressAutoUpdaterPrompt = 0;
 let lastPromptedUpdateTag: string | undefined;
@@ -1121,6 +1122,7 @@ async function onReady(): Promise<void> {
   ) {
     if (settings.host === 'wss://chat.f-list.net:9799')
       settings.host = defaultHost;
+    changelogFromVersion = settings.version;
     settings.version = app.getVersion();
     setGeneralSettings(settings);
     showChangelogOnBoot = true;
@@ -1975,7 +1977,10 @@ async function onReady(): Promise<void> {
     browserWindows.createChangelogWindow(
       settings,
       shouldImportSettings ? 'auto' : 'none',
-      bootWindow
+      bootWindow,
+      undefined,
+      undefined,
+      changelogFromVersion
     );
     showChangelogOnBoot = false;
   }

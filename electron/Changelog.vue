@@ -14,7 +14,9 @@
               {{
                 updateVersion
                   ? l('action.updateTitle')
-                  : l('changelog.version', { version: currentVersion || '' })
+                  : fromVersion && sections.length > 1
+                    ? l('changelog.whatsNew', { version: fromVersion })
+                    : l('changelog.version', { version: currentVersion || '' })
               }}
             </h4>
             <button
@@ -87,11 +89,25 @@
               </div>
             </div>
             <div class="changelog-scroll pe-1 pb-2">
-              <div
-                class="logs-container border bg-light"
-                v-html="changeLogText"
-                ref="mdContainer"
-              ></div>
+              <div class="logs-container border bg-light" ref="mdContainer">
+                <div
+                  v-if="sections.length === 1"
+                  v-html="sections[0].html"
+                ></div>
+                <template v-else>
+                  <section
+                    v-for="section in sections"
+                    :key="section.version"
+                    class="changelog-section"
+                  >
+                    <h3 class="changelog-section__title">
+                      {{ section.version }}
+                      <small v-if="section.date">{{ section.date }}</small>
+                    </h3>
+                    <div v-html="section.html"></div>
+                  </section>
+                </template>
+              </div>
             </div>
             <div class="modal-footer">
               <template v-if="updateVersion && updateMode === 'auto'">
@@ -197,15 +213,14 @@
   import markdownit from 'markdown-it';
   import { alert } from '@mdit/plugin-alert';
   import electron from 'electron';
+  import {
+    ChangelogSection,
+    parseChangelog,
+    selectSections
+  } from './changelog-sections';
 
   // tslint:disable-next-line:no-require-imports
   const logoSrc = require('./build/icon.png').default;
-
-  type ReleaseInfo = {
-    html_url: string;
-    tag_name: string;
-    body: string;
-  };
 
   const browserWindow = remote.getCurrentWindow();
 
@@ -216,13 +231,14 @@
         osIsDark: remote.nativeTheme.shouldUseDarkColors,
         updateVersion: undefined as string | undefined,
         updateMode: 'auto' as 'auto' | 'manual',
+        fromVersion: undefined as string | undefined,
+        sections: [] as (ChangelogSection & { html: string })[],
         currentVersion: process.env.APP_VERSION,
         isMaximized: false,
         l,
         platform: process.platform,
         isMac: process.platform === 'darwin',
         hasCompletedUpgrades: false,
-        changeLogText: '' as string,
         logoSrc,
         autoDownloadChecked: false
       };
@@ -262,14 +278,7 @@
       if (container) {
         container.addEventListener('click', this.delegateLinkClick);
       }
-      let apiUrl =
-        'https://api.github.com/repos/Fchat-Horizon/Horizon/releases/tags/' +
-        (this.updateVersion
-          ? this.updateVersion!
-          : 'v' + process.env.APP_VERSION);
-      let releaseInfo: ReleaseInfo = (await Axios.get<ReleaseInfo>(apiUrl))
-        .data;
-      let md = markdownit({ html: true, linkify: true, typographer: true });
+      const md = markdownit({ html: true, linkify: true, typographer: true });
       md.use(alert);
 
       const defaultRender =
@@ -289,7 +298,35 @@
         token.attrPush(['data-action', 'openExternal']);
         return defaultRender(tokens, idx, options, _env, self);
       };
-      this.changeLogText = md.render(releaseInfo.body);
+      try {
+        const sections = parseChangelog(
+          this.updateVersion
+            ? (
+                await Axios.get<string>(
+                  `https://raw.githubusercontent.com/Fchat-Horizon/Horizon/${this.updateVersion}/CHANGELOG.md`,
+                  { responseType: 'text' }
+                )
+              ).data
+            : fs.readFileSync(path.join(__dirname, 'CHANGELOG.md'), 'utf8')
+        );
+        const selected =
+          !this.updateVersion && !this.fromVersion
+            ? sections
+            : selectSections(
+                sections,
+                this.fromVersion || this.currentVersion,
+                this.updateVersion || this.currentVersion!
+              );
+        if (!selected.length) throw new Error('No changelog sections found');
+        this.sections = selected.map(s => ({ ...s, html: md.render(s.body) }));
+      } catch (e) {
+        console.warn('Failed to load changelog', e);
+        const url = `https://github.com/Fchat-Horizon/Horizon/releases/tag/${this.updateVersion || 'v' + this.currentVersion}`;
+        const html = md.render(
+          `${l('changelog.loadError')}\n\n[${l('changelog.viewRelease')}](${url})`
+        );
+        this.sections = [{ version: '', body: '', html }];
+      }
     },
     methods: {
       getSyncedTheme() {
@@ -483,6 +520,18 @@
     a:hover {
       text-decoration: none;
     }
+  }
+
+  .changelog-section + .changelog-section {
+    margin-top: 1.5em;
+    padding-top: 1em;
+    border-top: 1px solid var(--bs-border-color);
+  }
+
+  .changelog-section__title small {
+    font-size: 0.6em;
+    opacity: 0.6;
+    margin-left: 0.5em;
   }
 
   .markdown-alert {
