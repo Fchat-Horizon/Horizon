@@ -18,7 +18,7 @@ export function parseChangelog(markdown: string): ChangelogSection[] {
     .filter(s => s.version && s.version !== 'Unreleased');
 }
 
-export function compareVersions(a: string, b: string): number {
+function compareVersions(a: string, b: string): number {
   const [coreA, preA] = a.replace(/^v/, '').split(/-(.*)/);
   const [coreB, preB] = b.replace(/^v/, '').split(/-(.*)/);
   const numeric = { numeric: true };

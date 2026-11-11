@@ -126,7 +126,7 @@
                     class="changelog-section"
                   >
                     <h2
-                      class="changelog-section__title position-sticky bg-light border-bottom pt-3 pb-2 mb-2"
+                      class="changelog-section__title position-sticky top-0 bg-light border-bottom pt-3 pb-2 mb-2"
                     >
                       {{ section.version }}
                       <small v-if="section.date">{{ section.date }}</small>
@@ -549,7 +549,6 @@
   }
 
   .logs-container {
-    position: relative;
     min-height: 0;
     width: 100%;
     box-sizing: border-box;
@@ -569,10 +568,6 @@
 
   .changelog-section:not(:last-child) {
     margin-bottom: 1.5em;
-  }
-
-  .changelog-section__title {
-    top: 0;
   }
 
   .changelog-section__title small {
