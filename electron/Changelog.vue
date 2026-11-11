@@ -89,7 +89,25 @@
               </div>
             </div>
             <div class="changelog-scroll pe-1 pb-2">
-              <div class="logs-container border bg-light" ref="mdContainer">
+              <nav
+                v-if="sections.length > 1"
+                class="nav nav-pills flex-column flex-nowrap flex-shrink-0 overflow-auto me-2"
+              >
+                <a
+                  v-for="(section, i) in sections"
+                  :key="section.version"
+                  href="#"
+                  class="nav-link text-nowrap flex-shrink-0"
+                  :class="{ active: i === activeSection }"
+                  @click.prevent="jumpTo(i)"
+                  >{{ section.version }}</a
+                >
+              </nav>
+              <div
+                class="logs-container border bg-light"
+                ref="mdContainer"
+                @scroll="onScroll"
+              >
                 <div
                   v-if="sections.length === 1"
                   v-html="sections[0].html"
@@ -99,11 +117,14 @@
                     v-for="section in sections"
                     :key="section.version"
                     class="changelog-section"
+                    ref="sectionEls"
                   >
-                    <h3 class="changelog-section__title">
+                    <h2
+                      class="changelog-section__title position-sticky bg-light pt-3 pb-2"
+                    >
                       {{ section.version }}
                       <small v-if="section.date">{{ section.date }}</small>
-                    </h3>
+                    </h2>
                     <div v-html="section.html"></div>
                   </section>
                 </template>
@@ -233,6 +254,7 @@
         updateMode: 'auto' as 'auto' | 'manual',
         fromVersion: undefined as string | undefined,
         sections: [] as (ChangelogSection & { html: string })[],
+        activeSection: 0,
         currentVersion: process.env.APP_VERSION,
         isMaximized: false,
         l,
@@ -329,6 +351,19 @@
       }
     },
     methods: {
+      jumpTo(i: number): void {
+        const sections = this.$refs['sectionEls'] as HTMLElement[];
+        (this.$refs['mdContainer'] as HTMLElement).scrollTop =
+          sections[i].offsetTop;
+      },
+      onScroll(e: Event): void {
+        const sections = (this.$refs['sectionEls'] as HTMLElement[]) || [];
+        const top = (e.target as HTMLElement).scrollTop;
+        this.activeSection = Math.max(
+          0,
+          sections.filter(s => s.offsetTop <= top + 1).length - 1
+        );
+      },
       getSyncedTheme() {
         if (!this.settings.themeSync) return this.settings.theme;
         return this.osIsDark
@@ -505,6 +540,7 @@
   }
 
   .logs-container {
+    position: relative;
     min-height: 0;
     width: 100%;
     box-sizing: border-box;
@@ -526,6 +562,14 @@
     margin-top: 1.5em;
     padding-top: 1em;
     border-top: 1px solid var(--bs-border-color);
+  }
+
+  .changelog-section:last-child {
+    min-height: 100%;
+  }
+
+  .changelog-section__title {
+    top: -1em;
   }
 
   .changelog-section__title small {
