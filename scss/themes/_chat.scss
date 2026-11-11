@@ -31,15 +31,16 @@
 @import '~bootstrap/scss/utilities/api';
 @import '~bootstrap/scss/helpers/color-bg';
 
-$scorePerfectMatchBg: var(--bs-primary-bg-subtle);
-$scorePerfectMatchFg: var(--bs-primary-text-emphasis);
-$scoreMatchBg: var(--bs-info-bg-subtle);
+$scorePerfectMatchBg: $teal-400;
+//poor contrast. I don't give a fuck.
+$scorePerfectMatchFg: #d2f4ea;
+$scoreMatchBg: var(--bs-info-border-subtle);
 $scoreMatchFg: var(--bs-info-text-emphasis);
-$scoreWeakMatchBg: var(--bs-success-bg-subtle);
+$scoreWeakMatchBg: var(--bs-success-border-subtle);
 $scoreWeakMatchFg: var(--bs-success-text-emphasis);
-$scoreWeakMismatchBg: var(--bs-warning-bg-subtle);
+$scoreWeakMismatchBg: var(--bs-warning-border-subtle);
 $scoreWeakMismatchFg: var(--bs-warning-text-emphasis);
-$scoreMismatchBg: var(--bs-danger-bg-subtle);
+$scoreMismatchBg: var(--bs-danger-border-subtle);
 $scoreMismatchFg: var(--bs-danger-text-emphasis);
 $scoreTitleColor: var(--bs-body-color);
 $scoreMinimizeButtonFg: rgba(255, 255, 255, 0.7) !default;
