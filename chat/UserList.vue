@@ -649,7 +649,10 @@
           : 'dropdown-toggle btn btn-primary';
       },
       shouldShowMarker(): boolean {
-        return core.state.settings.horizonShowGenderMarker;
+        return (
+          core.state.settings.horizonShowGenderMarker ||
+          core.state.generalSettings?.horizonColorblindMode === 'achromatopsia'
+        );
       },
       filterActive(): boolean {
         return (

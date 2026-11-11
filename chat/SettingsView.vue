@@ -967,27 +967,27 @@
                       <option value="protanopia">
                         {{ l('settings.colorblindMode.protanopia') }}
                       </option>
-                      <option value="protanomaly">
+                      <!-- <option value="protanomaly">
                         {{ l('settings.colorblindMode.protanomaly') }}
-                      </option>
+                      </option> -->
                       <option value="deuteranopia">
                         {{ l('settings.colorblindMode.deuteranopia') }}
                       </option>
-                      <option value="deuteranomaly">
+                      <!-- <option value="deuteranomaly">
                         {{ l('settings.colorblindMode.deuteranomaly') }}
-                      </option>
+                      </option> -->
                       <option value="tritanopia">
                         {{ l('settings.colorblindMode.tritanopia') }}
                       </option>
-                      <option value="tritanomaly">
+                      <!-- <option value="tritanomaly">
                         {{ l('settings.colorblindMode.tritanomaly') }}
-                      </option>
+                      </option> -->
                       <option value="achromatopsia">
                         {{ l('settings.colorblindMode.achromatopsia') }}
                       </option>
-                      <option value="achromatomaly">
+                      <!-- <option value="achromatomaly">
                         {{ l('settings.colorblindMode.achromatomaly') }}
-                      </option>
+                      </option> -->
                     </select>
                   </label>
                 </div>

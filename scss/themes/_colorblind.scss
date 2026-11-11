@@ -117,20 +117,12 @@ $achromatic-genders: if(
 @include gender-colors($red-green-genders);
 
 &.colorblind-protanopia,
-&.colorblind-protanomaly,
-&.colorblind-deuteranopia,
-&.colorblind-deuteranomaly {
+&.colorblind-deuteranopia {
   @include gender-colors($red-green-genders);
 }
 
-&.colorblind-tritanopia,
-&.colorblind-tritanomaly {
+&.colorblind-tritanopia {
   @include gender-colors($blue-yellow-genders);
-}
-
-&.colorblind-achromatopsia,
-&.colorblind-achromatomaly {
-  @include gender-colors($achromatic-genders);
 }
 
 // Highlights normally derive from the theme's green $success, the hue R/G

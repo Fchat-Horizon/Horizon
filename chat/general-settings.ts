@@ -3,13 +3,13 @@ import { ProfileViewerGalleryType } from '../site/utils';
 export type ColorblindMode =
   | 'none'
   | 'protanopia'
-  | 'protanomaly'
+  //  | 'protanomaly'
   | 'deuteranopia'
-  | 'deuteranomaly'
+  //  | 'deuteranomaly'
   | 'tritanopia'
-  | 'tritanomaly'
-  | 'achromatopsia'
-  | 'achromatomaly';
+  //  | 'tritanomaly'
+  | 'achromatopsia';
+//  | 'achromatomaly';
 
 export interface GeneralSettings {
   account: string;

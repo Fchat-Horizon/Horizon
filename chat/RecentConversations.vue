@@ -67,7 +67,10 @@
         return core.conversations.recentChannels;
       },
       shouldShowMarker(): boolean {
-        return core.state.settings.horizonShowGenderMarker;
+        return (
+          core.state.settings.horizonShowGenderMarker ||
+          core.state.generalSettings?.horizonColorblindMode === 'achromatopsia'
+        );
       }
     },
     methods: {

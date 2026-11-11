@@ -630,7 +630,9 @@
 
         this.shouldShowMatch = core.state.settings.risingComparisonInSearch;
         this.shouldShowAvatar = core.state.settings.risingShowPortraitInMessage;
-        this.shouldShowMarker = core.state.settings.horizonShowGenderMarker;
+        this.shouldShowMarker =
+          core.state.settings.horizonShowGenderMarker ||
+          core.state.generalSettings?.horizonColorblindMode === 'achromatopsia';
 
         this.results = [];
 

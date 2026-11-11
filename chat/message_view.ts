@@ -134,7 +134,9 @@ export default Vue.extend({
                 character: message.sender,
                 channel: this.channel,
                 isMarkerShown: core.connection.character
-                  ? core.state.settings.horizonShowGenderMarker
+                  ? core.state.settings.horizonShowGenderMarker ||
+                    core.state.generalSettings?.horizonColorblindMode ===
+                      'achromatopsia'
                   : false
               }
             })

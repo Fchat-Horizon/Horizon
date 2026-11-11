@@ -56,7 +56,9 @@ export default class BBCodeParser extends CoreBBCodeParser {
             character: core.characters.get(characterName),
             displayName: content, // added so that the non-normalized names are displayed
             isMarkerShown: core.connection.character
-              ? core.state.settings.horizonShowGenderMarker
+              ? core.state.settings.horizonShowGenderMarker ||
+                core.state.generalSettings?.horizonColorblindMode ===
+                  'achromatopsia'
               : false
           }
         });
