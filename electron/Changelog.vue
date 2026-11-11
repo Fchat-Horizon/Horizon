@@ -109,10 +109,11 @@
                   ></a
                 >
               </nav>
-              <div
+              <scroll-spy
                 class="logs-container border bg-light"
+                :class="{ 'pt-0': sections.length > 1 }"
                 ref="mdContainer"
-                @scroll="onScroll"
+                v-model="activeSection"
               >
                 <div
                   v-if="sections.length === 1"
@@ -123,10 +124,9 @@
                     v-for="section in sections"
                     :key="section.version"
                     class="changelog-section"
-                    ref="sectionEls"
                   >
                     <h2
-                      class="changelog-section__title position-sticky bg-light pt-3 pb-2"
+                      class="changelog-section__title position-sticky bg-light border-bottom pt-3 pb-2 mb-2"
                     >
                       {{ section.version }}
                       <small v-if="section.date">{{ section.date }}</small>
@@ -134,7 +134,7 @@
                     <div v-html="section.html"></div>
                   </section>
                 </template>
-              </div>
+              </scroll-spy>
             </div>
             <div class="modal-footer">
               <template v-if="updateVersion && updateMode === 'auto'">
@@ -245,6 +245,7 @@
     parseChangelog,
     selectSections
   } from './changelog-sections';
+  import ScrollSpy from '../components/ScrollSpy.vue';
 
   // tslint:disable-next-line:no-require-imports
   const logoSrc = require('./build/icon.png').default;
@@ -252,6 +253,7 @@
   const browserWindow = remote.getCurrentWindow();
 
   export default Vue.extend({
+    components: { scrollSpy: ScrollSpy },
     data() {
       return {
         settings: undefined as any as GeneralSettings,
@@ -305,7 +307,7 @@
       document.title = this.updateVersion
         ? l('action.updateAvailable')
         : l('help.changelog');
-      const container = <HTMLElement>this.$refs['mdContainer'];
+      const container = <HTMLElement>(<Vue>this.$refs['mdContainer']).$el;
       if (container) {
         container.addEventListener('click', this.delegateLinkClick);
       }
@@ -369,17 +371,7 @@
     },
     methods: {
       jumpTo(i: number): void {
-        const sections = this.$refs['sectionEls'] as HTMLElement[];
-        (this.$refs['mdContainer'] as HTMLElement).scrollTop =
-          sections[i].offsetTop;
-      },
-      onScroll(e: Event): void {
-        const sections = (this.$refs['sectionEls'] as HTMLElement[]) || [];
-        const top = (e.target as HTMLElement).scrollTop;
-        this.activeSection = Math.max(
-          0,
-          sections.filter(s => s.offsetTop <= top + 1).length - 1
-        );
+        (<InstanceType<typeof ScrollSpy>>this.$refs['mdContainer']).jumpTo(i);
       },
       getSyncedTheme() {
         if (!this.settings.themeSync) return this.settings.theme;
@@ -575,18 +567,12 @@
     }
   }
 
-  .changelog-section + .changelog-section {
-    margin-top: 1.5em;
-    padding-top: 1em;
-    border-top: 1px solid var(--bs-border-color);
-  }
-
-  .changelog-section:last-child {
-    min-height: 100%;
+  .changelog-section:not(:last-child) {
+    margin-bottom: 1.5em;
   }
 
   .changelog-section__title {
-    top: -1em;
+    top: 0;
   }
 
   .changelog-section__title small {
