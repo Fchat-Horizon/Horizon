@@ -113,6 +113,7 @@
   "changelog.download": "Download",
   "changelog.loadError": "Couldn't load the changelog.",
   "changelog.manualUpdate": "This install can’t auto-update. Update with your package manager or download the latest release.",
+  "changelog.newFeatures": "Adds new features",
   "changelog.openReleases": "Open latest release",
   "changelog.quitAndDownload": "Quit and download",
   "changelog.quitAndDownload.confirm": "You are still connected to chat. \nAre you sure you want to exit and download the update right now?",

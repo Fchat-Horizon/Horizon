@@ -100,7 +100,13 @@
                   class="nav-link text-nowrap flex-shrink-0"
                   :class="{ active: i === activeSection }"
                   @click.prevent="jumpTo(i)"
-                  >{{ section.version }}</a
+                  >{{ section.version
+                  }}<span
+                    v-if="section.added"
+                    :title="l('changelog.newFeatures')"
+                  >
+                    ✨</span
+                  ></a
                 >
               </nav>
               <div
@@ -253,7 +259,10 @@
         updateVersion: undefined as string | undefined,
         updateMode: 'auto' as 'auto' | 'manual',
         fromVersion: undefined as string | undefined,
-        sections: [] as (ChangelogSection & { html: string })[],
+        sections: [] as (ChangelogSection & {
+          html: string;
+          added?: boolean;
+        })[],
         activeSection: 0,
         currentVersion: process.env.APP_VERSION,
         isMaximized: false,
@@ -318,6 +327,10 @@
       ) {
         const token = tokens[idx];
         token.attrPush(['data-action', 'openExternal']);
+        const href = token.attrGet('href') || '';
+        const pull = /\/pull\/(\d+)$/.exec(href);
+        if (pull && tokens[idx + 1].content === href)
+          tokens[idx + 1].content = `#${pull[1]}`;
         return defaultRender(tokens, idx, options, _env, self);
       };
       try {
@@ -340,7 +353,11 @@
                 this.updateVersion || this.currentVersion!
               );
         if (!selected.length) throw new Error('No changelog sections found');
-        this.sections = selected.map(s => ({ ...s, html: md.render(s.body) }));
+        this.sections = selected.map(s => ({
+          ...s,
+          html: md.render(s.body),
+          added: /^### Added$/m.test(s.body)
+        }));
       } catch (e) {
         console.warn('Failed to load changelog', e);
         const url = `https://github.com/Fchat-Horizon/Horizon/releases/tag/${this.updateVersion || 'v' + this.currentVersion}`;
