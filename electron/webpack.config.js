@@ -261,6 +261,10 @@ const mainConfig = {
             context: path.resolve(__dirname, '..', 'chat', 'sound-themes')
           },
           {
+            from: path.resolve(__dirname, '..', 'CHANGELOG.md'),
+            to: 'CHANGELOG.md'
+          },
+          {
             from: path.join(__dirname, 'package.json'),
             to: 'package.json',
             transform(content) {

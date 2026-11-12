@@ -804,6 +804,9 @@ export function closeUpdaterSplash(): void {
  * @param updateVer
  * @optional
  * The update version string to display in the changelog window. If not defined, the window will be a regular changelog window for the current application version. If defined, it will be treated as a changelog for a new update.
+ * @param fromVer
+ * @optional
+ * The version the user is coming from. Every version after it, up to the target, is shown.
  * @returns
  * The created Electron BrowserWindow instance for the changelog, or `undefined` if creation fails.
  */
@@ -812,10 +815,11 @@ export function createChangelogWindow(
   ImporterHint: ImporterHint,
   parentWindow: electron.BrowserWindow,
   updateVer?: string,
-  updateMode?: 'auto' | 'manual'
+  updateMode?: 'auto' | 'manual',
+  fromVer?: string
 ): electron.BrowserWindow | undefined {
   let desiredHeight = updateVer ? 850 : 700;
-  let desiredWidth = updateVer ? 900 : 600;
+  let desiredWidth = 900;
 
   const windowProperties: electron.BrowserWindowConstructorOptions = {
     center: true,
@@ -856,7 +860,8 @@ export function createChangelogWindow(
       settings: JSON.stringify(settings),
       import: ImporterHint === 'none' ? '' : ImporterHint,
       updateVer: updateVer || '',
-      updateMode: updateMode || ''
+      updateMode: updateMode || '',
+      fromVer: fromVer || ''
     }
   });
 

@@ -13,6 +13,7 @@ const settings = <GeneralSettings>JSON.parse(params['settings']!);
 
 const updateVersion = params['updateVer'];
 const updateMode = params['updateMode'] || 'auto';
+const fromVersion = params['fromVer'] || undefined;
 
 const logLevel = process.env.NODE_ENV === 'production' ? 'info' : 'silly';
 
@@ -24,7 +25,7 @@ log.info('init.changelog.vue');
 
 new Changelog({
   el: '#changelog',
-  data: { settings, updateVersion, updateMode }
+  data: { settings, updateVersion, updateMode, fromVersion }
 });
 
 log.debug('init.changelog.vue.done');
