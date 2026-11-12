@@ -1,9 +1,9 @@
 <template>
   <div class="mb-3">
     <div class="d-flex p-2 justify-content-between align-items-start">
-      <div class="w-50">
-        <label class="control-label" :for="inputId">{{ label }}</label>
-        <div v-if="description" class="form-text text-muted">
+      <div class="w-100">
+        <label class="control-label w-100" :for="inputId">{{ label }}</label>
+        <div v-if="description" class="form-text text-muted w-50">
           {{ description }}
         </div>
       </div>
