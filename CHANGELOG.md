@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The changelog window (when updating, or when manually checking the version number) now also shows info about older versions of Horizon. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9cd63b554117da453ba613b1bb4f3c14a4b88aad)
+  - If you've skipped a certain amount of updates, the window will show exactly which ones you've missed. If you just open the window by clicking the version number in the app menu, it will show all versions.
+- For clarity's sake, data backups from the "Manage data" menu are now specifically refered to as "Backups". The word "export" is only used for exporting logs to .html or .txt, for reading purposes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dfdf092e4fb0b6e7fd3ec4740644614bebd432ef)
+
+### Changed since last pre-release
+
+- Colourblind mode adjustments: In-between colourblind modes have been removed. Pure colourblindness mode also now works by prefixing gender icons before character names, instead of trying to make a distinction with text brightness. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d59310d29ec6be612a62cac5a579becade52d95c)
+- Adjusted some colours in the red-green colourblind mode based on user feedback. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/889b198c46a718b06316d5321e06ec2fbe27f2b3)
+- Matcher-related blocks (like in the user context menu, or in the profile viewer) now use slightly less dull colours. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d2d896b7d407a2e4ecbc66a5f41769b990dd9cb2)
+
+### Fixed since last pre-release
+
+- Fixed some cases where extra dialog windows would use unstyled scrollbars on Windows and Linux. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/059b07748f6dc4384df1ad97323a3dac542ebf09)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/1031 by @freenutsxd
+
+Non-PR'd changes by @FatCatClient
+
+### Development
+
+- Added a Scrollspy component. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4ae63cfb745edb2fba40715e090a840639767088)
+- Fixed more issues where Webpack's watch command could fail due to watching files and folders in git-ignored directories (like `node_modules`) on macOS. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d9834b71f40675fa1448b508fee8c02fa730f2b6)
+
 ## [2.5.0-beta.1] - 2026-11-09
 
 ### Added
