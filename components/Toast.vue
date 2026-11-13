@@ -1,6 +1,10 @@
 <template>
-  <div class="horizon-toast" :class="'toast-' + variant">
-    <div class="toast-content">
+  <div
+    class="toast show horizon-toast shadow-sm position-fixed bottom-0 end-0 m-3 overflow-hidden"
+    :class="{ 'border-danger': variant === 'error' }"
+    role="status"
+  >
+    <div class="toast-body d-flex align-items-center gap-2 py-2">
       <span>
         <span
           v-if="icon"
@@ -9,19 +13,19 @@
         ></span>
         {{ message }}
       </span>
-      <a
-        href="#"
-        class="toast-dismiss"
-        @click.prevent="$emit('dismiss')"
+      <button
+        type="button"
+        class="btn btn-sm btn-link link-secondary p-0 ms-auto"
+        @click="$emit('dismiss')"
         aria-label="Dismiss"
       >
         <span class="fas fa-times"></span>
-      </a>
+      </button>
     </div>
     <div
       v-if="progress !== undefined"
-      class="progress"
-      style="height: 3px; border-radius: 0"
+      class="progress rounded-0"
+      style="height: 3px"
     >
       <div
         class="progress-bar bg-success"
@@ -56,40 +60,9 @@
 
 <style lang="scss">
   .horizon-toast {
-    position: fixed;
-    bottom: 16px;
-    right: 16px;
-    z-index: 9999;
-    background: var(--bs-body-bg, #212529);
-    color: var(--bs-body-color, #adb5bd);
-    border: 1px solid var(--bs-border-color, rgba(255, 255, 255, 0.1));
-    padding: 0;
-    border-radius: 6px;
-    font-size: 0.8rem;
+    z-index: 1090;
+    width: auto;
     min-width: 220px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    opacity: 0.85;
-    overflow: hidden;
-
-    &.toast-error {
-      border-color: var(--bs-danger, #dc3545);
-    }
-
-    .toast-content {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-    }
-
-    .toast-dismiss {
-      margin-left: auto;
-      color: inherit;
-      opacity: 0.5;
-      text-decoration: none;
-      &:hover {
-        opacity: 1;
-      }
-    }
+    font-size: 0.8rem;
   }
 </style>

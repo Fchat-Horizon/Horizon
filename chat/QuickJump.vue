@@ -2,7 +2,7 @@
   <div v-show="visible">
     <div class="quick-jump-overlay" @click="hide">
       <div class="quick-jump-container bg-light" @click.stop>
-        <div class="quick-jump-header">
+        <div class="d-flex align-items-center gap-2 px-3 py-2 fw-bold">
           <span class="fas fa-up-down"></span>
           <span>{{ l('quickJump.title') }}</span>
         </div>
@@ -10,26 +10,25 @@
           ref="searchInput"
           v-model="searchQuery"
           :placeholder="l('quickJump.placeholder')"
-          class="quick-jump-input form-control"
+          class="form-control form-control-lg border-0 rounded-0 p-3"
           @keydown="onKeyDown"
           @input="onInput"
         />
-        <div class="quick-jump-results" v-show="filteredResults.length > 0">
+        <div
+          class="list-group list-group-flush rounded-0 overflow-auto"
+          v-show="filteredResults.length > 0"
+        >
           <div
             v-for="(result, index) in filteredResults"
             :key="result.key"
-            :class="[
-              'quick-jump-result',
-              { 'selected border-left': index === selectedIndex }
-            ]"
+            class="quick-jump-result list-group-item list-group-item-action d-flex align-items-center gap-3 px-3 py-2"
+            :class="{ active: index === selectedIndex }"
             @click="selectResult(result)"
             @mouseenter="selectedIndex = index"
           >
-            <span class="result-icon">
-              <span :class="getResultIcon(result)"></span>
-            </span>
+            <span class="fa-fw" :class="getResultIcon(result)"></span>
 
-            <span class="result-name">{{ result.name }} </span>
+            <span class="fw-bold flex-shrink-0">{{ result.name }} </span>
             <span v-if="hasMentions(result)" class="badge text-bg-warning">
               <span v-if="showUnreadAmount()">
                 {{ result.conversation?.unreadCount }}
@@ -40,7 +39,10 @@
             <span v-else-if="isUnread(result)" class="badge text-bg-danger"
               ><i class="fa-fw fa-solid fa-ellipsis"></i
             ></span>
-            <span class="result-description" v-if="result.description">
+            <span
+              class="small text-truncate text-end ms-auto opacity-75"
+              v-if="result.description"
+            >
               {{
                 isMostRecent(result)
                   ? l('quickJump.lastConversation')
@@ -50,22 +52,24 @@
           </div>
         </div>
         <div
-          class="quick-jump-footer"
+          class="p-3 text-center"
           v-show="filteredResults.length === 0 && searchQuery.length > 0"
         >
-          <span>{{ l('quickJump.noResults') }}</span>
-          <div
-            class="quick-jump-new-conversation border"
-            :class="{ selected: selectedIndex === -1 }"
-            @click="openNewConversation"
-            @mouseenter="selectedIndex = -1"
-          >
-            <span class="result-icon">
-              <span class="fas fa-plus"></span>
-            </span>
-            <span class="result-name">{{
-              l('quickJump.openNewConversation', { character: searchQuery })
-            }}</span>
+          <span class="text-body-secondary">{{
+            l('quickJump.noResults')
+          }}</span>
+          <div class="list-group mt-3 text-start">
+            <div
+              class="quick-jump-result list-group-item list-group-item-action d-flex align-items-center gap-3 px-3 py-2"
+              :class="{ active: selectedIndex === -1 }"
+              @click="openNewConversation"
+              @mouseenter="selectedIndex = -1"
+            >
+              <span class="fas fa-fw fa-plus"></span>
+              <span class="fw-bold flex-shrink-0">{{
+                l('quickJump.openNewConversation', { character: searchQuery })
+              }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -462,128 +466,14 @@
       overflow: hidden;
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
+    }
 
-      .quick-jump-header {
-        padding: 12px 16px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
+    .quick-jump-result {
+      cursor: pointer;
 
-      .quick-jump-input {
-        width: 100%;
-        border: none;
-        padding: 16px;
-        font-size: 16px;
-        outline: none;
-
-        &::placeholder {
-          opacity: 0.8;
-        }
-      }
-
-      .quick-jump-results {
-        overflow-y: auto;
-        @media (prefers-reduced-motion: reduce) {
-          .quick-jump-result {
-            transition: none !important;
-          }
-        }
-
-        .quick-jump-result {
-          padding: 12px 16px;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          position: relative;
-
-          &:hover {
-            background-color: var(--bs-primary);
-          }
-
-          &.selected {
-            background-color: var(--bs-primary);
-            padding-left: 12px;
-            font-weight: 600;
-          }
-
-          .result-icon {
-            width: 20px;
-            text-align: center;
-            flex-shrink: 0;
-          }
-
-          .result-name {
-            font-weight: bold;
-            flex-shrink: 0;
-          }
-
-          .result-description {
-            opacity: 0.8;
-            font-size: 0.9em;
-            margin-left: auto;
-            text-align: right;
-            flex-shrink: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          }
-
-          &:hover .result-description,
-          &.selected .result-description {
-            opacity: 0.8;
-          }
-        }
-      }
-
-      .quick-jump-footer {
-        padding: 16px;
-        text-align: center;
-
-        opacity: 0.8;
-        @media (prefers-reduced-motion: reduce) {
-          .quick-jump-new-conversation {
-            transition: none !important;
-          }
-        }
-
-        .quick-jump-new-conversation {
-          margin-top: 12px;
-          padding: 12px 16px;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          cursor: pointer;
-          border-radius: 4px;
-          background-color: var(primary);
-          transition: all 0.2s ease;
-          position: relative;
-
-          &:hover {
-            opacity: 0.9;
-          }
-
-          &.selected {
-            padding-left: 12px;
-            font-weight: 600;
-            background-color: var(--bs-primary);
-            opacity: 1;
-          }
-
-          .result-icon {
-            width: 20px;
-            text-align: center;
-            flex-shrink: 0;
-          }
-
-          .result-name {
-            font-weight: bold;
-            flex-shrink: 0;
-          }
-        }
+      // borders are zeroed globally, so BS's -1px overlap on .active only jitters
+      & + .quick-jump-result.active {
+        margin-top: 0;
       }
     }
   }

@@ -4,28 +4,40 @@
     class="image-preview-wrapper"
     :class="{ interactive: sticky, visible: visible }"
   >
-    <div class="image-preview-toolbar" v-show="sticky || debug">
+    <div
+      class="image-preview-toolbar gap-2 p-2 rounded"
+      v-show="sticky || debug"
+    >
       <a
+        class="btn btn-sm btn-light flex-fill"
         @click="toggleDevMode()"
-        :class="{ toggled: debug, disabled: !debug && !canDebug }"
+        :class="{ active: debug, disabled: !debug && !canDebug }"
         :title="l('imagePreview.debug')"
         ><i class="fa fa-terminal"></i
       ></a>
       <a
+        class="btn btn-sm btn-light flex-fill"
         @click="toggleJsMode()"
-        :class="{ toggled: runJs }"
+        :class="{ active: runJs }"
         :title="l('imagePreview.expand')"
         ><i class="fa fa-magic"></i
       ></a>
-      <a @click="reloadUrl()" :title="l('imagePreview.reload')"
+      <a
+        class="btn btn-sm btn-light flex-fill"
+        @click="reloadUrl()"
+        :title="l('imagePreview.reload')"
         ><i class="fa fa-redo-alt"></i
       ></a>
-      <a @click="reset()" :title="l('imagePreview.reset')"
+      <a
+        class="btn btn-sm btn-light flex-fill"
+        @click="reset()"
+        :title="l('imagePreview.reset')"
         ><i class="fa fa-recycle"></i
       ></a>
       <a
+        class="btn btn-sm btn-light flex-fill"
         @click="toggleStickyMode()"
-        :class="{ toggled: sticky }"
+        :class="{ active: sticky }"
         :title="l('imagePreview.toggleSticky')"
         ><i class="fa fa-thumbtack"></i
       ></a>
@@ -1026,52 +1038,16 @@
     }
 
     .image-preview-toolbar {
+      display: flex;
       position: absolute;
-      /* background-color: green; */
       left: 0;
       top: 0;
       margin: 1rem;
-      height: 3.5rem;
-      display: flex;
+      width: 15rem;
       -webkit-backdrop-filter: blur(10px);
       backdrop-filter: blur(10px);
-      flex-direction: row;
-      width: 15rem;
-      flex-wrap: nowrap;
-      border-radius: 3px;
-      padding: 0.5rem;
-      box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.2);
+      box-shadow: var(--bs-box-shadow-sm);
       z-index: 1000;
-
-      a i.fa {
-        font-size: 1.25rem;
-        top: 50%;
-        position: relative;
-        transform: translateY(-50%);
-      }
-
-      a {
-        flex: 1;
-        text-align: center;
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        border-radius: 3px;
-        margin-right: 0.5rem;
-        background-color: rgba(0, 0, 0, 0.1);
-      }
-
-      a:last-child {
-        margin-right: 0;
-      }
-
-      .toggled {
-        background-color: rgba(255, 255, 255, 0.2);
-        box-shadow: 0 0 1px 0px rgba(255, 255, 255, 0.6);
-      }
-
-      .disabled {
-        opacity: 0.35;
-        pointer-events: none;
-      }
     }
 
     #preview-spinner {

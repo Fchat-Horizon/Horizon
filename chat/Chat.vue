@@ -108,7 +108,7 @@
                  hide the pin for the default character (star is sufficient) -->
             <span
               v-if="character.id !== defaultCharacter"
-              class="char-icon pin-icon"
+              class="char-icon pin-icon pin-toggle"
               :class="{ pinned: isPinned(character.id) }"
               @click.stop="togglePin(character)"
               :title="isPinned(character.id) ? l('chat.unpin') : l('chat.pin')"
@@ -646,7 +646,7 @@
       align-items: center;
       background: rgba(var(--bs-black-rgb), 0.02);
       border: none;
-      border-radius: 8px;
+      border-radius: var(--bs-border-radius-lg);
       padding: 8px;
       cursor: pointer;
       transition:
@@ -666,8 +666,7 @@
         }
 
         .char-icon.pin-icon {
-          opacity: 1;
-          pointer-events: auto;
+          visibility: visible;
         }
       }
       &:disabled {
@@ -712,46 +711,11 @@
           padding: 0;
           background: transparent;
           border: none;
-          opacity: 0;
-          pointer-events: none;
-          color: transparent;
-          -webkit-text-stroke: 1px var(--input-color);
-          -webkit-text-fill-color: transparent;
-          transition:
-            color 0.12s,
-            -webkit-text-stroke 0.12s,
-            opacity 0.12s,
-            transform 0.12s;
-          @media (prefers-reduced-motion: reduce) {
-            transition: none;
-          }
+          visibility: hidden;
           font-size: 14px;
-          transform: scale(1);
 
           &.pinned {
-            opacity: 1;
-            pointer-events: auto;
-            color: var(--bs-success);
-            -webkit-text-stroke: 0;
-            -webkit-text-fill-color: var(--bs-success);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-
-            &:hover {
-              color: color-mix(in srgb, var(--bs-success) 85%, black 15%);
-              -webkit-text-fill-color: color-mix(
-                in srgb,
-                var(--bs-success) 85%,
-                black 15%
-              );
-              transform: scale(1.08);
-            }
-          }
-
-          &:not(.pinned):hover {
-            color: var(--bs-primary);
-            -webkit-text-stroke: 0;
-            -webkit-text-fill-color: var(--bs-primary);
-            transform: scale(1.12);
+            visibility: visible;
           }
         }
       }
@@ -772,7 +736,7 @@
       bottom: 0;
       height: 100%;
       width: 100%;
-      border-radius: 8px;
+      border-radius: var(--bs-border-radius-lg);
       background: rgba(0, 0, 0, 0.08);
     }
 

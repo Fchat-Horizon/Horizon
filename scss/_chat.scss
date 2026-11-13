@@ -618,6 +618,44 @@ $bookmark-color: #66cc33 !default;
   color: theme-color('success');
 }
 
+.pin-toggle,
+.btn.pin-toggle {
+  color: inherit;
+  opacity: 0.5;
+  cursor: pointer;
+  transition:
+    color 0.12s,
+    opacity 0.12s;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--bs-link-hover-color);
+    opacity: 1;
+  }
+
+  &:active {
+    color: var(--bs-link-color);
+  }
+
+  &.pinned {
+    color: var(--bs-success);
+    opacity: 1;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--bs-success-text-emphasis);
+    }
+
+    &:active {
+      color: var(--bs-success);
+    }
+  }
+}
+
 $genders: (
   'shemale': #cc66ff,
   'herm': #9b30ff,

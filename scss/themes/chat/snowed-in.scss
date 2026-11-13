@@ -24,7 +24,7 @@ body,
 .list-group.conversation-nav
   .list-group-item-action.item-private.active
   .online-status,
-.quick-jump-result.selected {
+.quick-jump-result.active {
   color: color-contrast($primary);
 }
 

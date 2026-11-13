@@ -42,7 +42,7 @@ $orange-color: #ee8822;
 ),
 .list-group-item.active,
 .form-check-input:checked,
-.quick-jump-result.selected {
+.quick-jump-result.active {
   box-shadow:
     inset 0em 0.1em 0.1em 0 rgba(255, 255, 255, 0.5),
     inset -0.1em -0.1em 0.1em -0.1em rgba(0, 0, 0, 0.5);

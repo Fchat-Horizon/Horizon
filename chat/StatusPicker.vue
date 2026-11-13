@@ -43,7 +43,7 @@
 
           <button
             type="button"
-            class="status-action"
+            class="status-action pin-toggle"
             :class="{ pinned: entry.pinned }"
             :title="pinTitle(entry)"
             :aria-label="pinTitle(entry)"
@@ -308,8 +308,11 @@
         border: 0;
         background: none;
         border-radius: 4px;
-        color: inherit;
-        opacity: 0.5;
+
+        &:not(.pin-toggle) {
+          color: inherit;
+          opacity: 0.5;
+        }
 
         &:hover {
           opacity: 1;
@@ -320,11 +323,6 @@
           outline: 2px solid var(--bs-primary);
           outline-offset: -2px;
           opacity: 1;
-        }
-
-        &.pinned {
-          opacity: 1;
-          color: var(--bs-success);
         }
       }
     }

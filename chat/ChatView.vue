@@ -190,8 +190,8 @@
                 ></span>
                 <span style="flex: 1"></span>
                 <span
-                  class="pin fas fa-thumbtack"
-                  :class="{ active: conversation.isPinned }"
+                  class="pin pin-toggle fas fa-thumbtack"
+                  :class="{ pinned: conversation.isPinned }"
                   @click="conversation.isPinned = !conversation.isPinned"
                   :aria-label="l('chat.pinTab')"
                 ></span>
@@ -297,7 +297,7 @@
                 @click.stop="conversation.toggleAutomatedAds()"
               ></span>
               <span
-                class="pin fas fa-thumbtack"
+                class="pin pin-toggle fas fa-thumbtack"
                 @click="pinConversation(conversation)"
                 :aria-label="l('chat.pin')"
               ></span>
@@ -1267,7 +1267,6 @@
           --bs-badge-font-size: 0.75em;
         }
       }
-      .pin,
       .leave,
       .ads {
         &:hover,
