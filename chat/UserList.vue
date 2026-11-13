@@ -21,6 +21,7 @@
       :itemHeight="rowHeight"
       :overscan="overscan"
       :keyFunc="rowKey"
+      :preserveAnchor="true"
     >
       <template slot-scope="{ item: row }">
         <h4 v-if="row.kind === 'header'">{{ row.label }}</h4>
@@ -58,6 +59,7 @@
         :itemHeight="rowHeight"
         :overscan="overscan"
         :keyFunc="memberKey"
+        :preserveAnchor="true"
       >
         <template slot-scope="{ item: member }">
           <div
@@ -256,6 +258,7 @@
       :itemHeight="rowHeight"
       :overscan="overscan"
       :keyFunc="rowKey"
+      :preserveAnchor="true"
     >
       <template slot-scope="{ item: row }">
         <h4 v-if="row.kind === 'header'">{{ row.label }}</h4>
