@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The changelog window (when updating, or when manually checking the version number) now also shows info about older versions of Horizon. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9cd63b554117da453ba613b1bb4f3c14a4b88aad)
   - If you've skipped a certain amount of updates, the window will show exactly which ones you've missed. If you just open the window by clicking the version number in the app menu, it will show all versions.
 - For clarity's sake, data backups from the "Manage data" menu are now specifically refered to as "Backups". The word "export" is only used for exporting logs to .html or .txt, for reading purposes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dfdf092e4fb0b6e7fd3ec4740644614bebd432ef)
+- Moved all profile viewer-related settings (auto expand kinks, and auto compare kinks) to App > App Behaviour. Since that's where the other profile viewer settings also are. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/620d57e6e393a921dbf963c148cff58bee162708)
+- Made a whole bunch of components and menus more consistent with our Bootstrap themes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2c69bd14372feb055fb792c44ce3701c268cda66)
 
 ### Changed since last pre-release
 
