@@ -2521,7 +2521,7 @@
   import LocalizedText from '../components/localized_text';
   import { UserInterfaceBBCodeParser } from '../bbcode/user-interface';
   import { Settings as DefaultSettings } from './common';
-  import core from './core';
+  import core, { GLOBAL_SETTINGS_CHARACTER, mergeHiddenUsers } from './core';
   import {
     Settings as SettingsInterface,
     Character,
@@ -2797,7 +2797,17 @@
           await importKey('ads');
         }
         if (this.importSettings.hiddenUsers) {
-          await importKey('hiddenUsers');
+          const importedHiddenUsers = await core.settingsStore.get(
+            'hiddenUsers',
+            this.importCharacter
+          );
+          if (importedHiddenUsers !== undefined) {
+            await core.settingsStore.set(
+              'hiddenUsers',
+              mergeHiddenUsers([core.state.hiddenUsers, importedHiddenUsers]),
+              GLOBAL_SETTINGS_CHARACTER
+            );
+          }
         }
         if (this.importSettings.statusHistory) {
           await importKey('statusHistory');
