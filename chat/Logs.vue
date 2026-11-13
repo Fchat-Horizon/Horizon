@@ -161,7 +161,8 @@
         <div v-if="!isScrolling" class="message-container">
           <span
             v-if="pendingFilter.length > 0"
-            class="message-jump-icon"
+            class="message-jump-icon badge bg-danger-subtle text-danger-emphasis position-absolute top-0 end-0 m-1"
+            role="button"
             @click="jumpToMessage(item.id)"
             title="Jump to this message"
           >
@@ -177,19 +178,29 @@
             @toggle-select="onToggleSelect(item, index, $event)"
           ></message-view>
         </div>
-        <div v-else class="message-skeleton" :class="layoutClasses">
+        <div
+          v-else
+          class="d-flex align-items-start gap-2 px-2 py-1"
+          :class="layoutClasses"
+        >
           <div
             v-if="itemHeight > 40"
-            class="message-skeleton-avatar throbber"
+            class="message-skeleton-avatar rounded-circle flex-shrink-0 throbber"
           ></div>
-          <div class="message-skeleton-content">
-            <div class="message-skeleton-header">
-              <div class="skeleton-bone throbber" style="width: 28%"></div>
-              <div class="skeleton-bone throbber" style="width: 14%"></div>
-            </div>
-            <div class="message-skeleton-body">
+          <div class="d-flex flex-column flex-fill gap-1">
+            <div class="d-flex align-items-center gap-2">
               <div
-                class="skeleton-bone throbber"
+                class="skeleton-bone rounded-pill throbber"
+                style="width: 28%"
+              ></div>
+              <div
+                class="skeleton-bone rounded-pill throbber"
+                style="width: 14%"
+              ></div>
+            </div>
+            <div class="d-flex gap-1">
+              <div
+                class="skeleton-bone rounded-pill throbber"
                 :style="{ width: 50 + ((index * 37) % 45) + '%' }"
               ></div>
             </div>
@@ -990,25 +1001,14 @@
   }
 
   .message-jump-icon {
-    position: absolute;
-    right: 4px;
-    top: 4px;
     cursor: pointer;
     opacity: 0;
     z-index: 10;
-    padding: 2px 4px;
-    background-color: var(--bs-danger-bg-subtle);
-    border-radius: 3px;
     font-size: 1rem;
-    line-height: 1;
   }
 
   .message-container:hover .message-jump-icon {
     opacity: 1;
-  }
-
-  .message-jump-icon:hover {
-    background-color: var(--bs-danger-bg-subtle);
   }
 
   .message-selectable {
@@ -1022,41 +1022,12 @@
     align-self: center;
   }
 
-  .message-skeleton {
-    display: flex;
-    align-items: flex-start;
-    padding: 4px 10px;
-    gap: 10px;
-  }
-
   .message-skeleton-avatar {
     width: 36px;
     height: 36px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .message-skeleton-content {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .message-skeleton-header {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .message-skeleton-body {
-    display: flex;
-    gap: 6px;
   }
 
   .skeleton-bone {
     height: 12px;
-    border-radius: 6px;
   }
 </style>

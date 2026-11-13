@@ -81,7 +81,6 @@
             id: 'profiles.smartFilters',
             label: l('settings.tabs.smartFilters')
           },
-          { id: 'profiles.viewer', label: l('settings.profile.viewer') },
           { id: 'profiles.hiddenAds', label: l('settings.tabs.hideAds') },
           {
             id: 'profiles.ignoredList',
@@ -673,7 +672,7 @@
           </div>
 
           <div v-show="selectedTab === 'app.behavior'">
-            <h5>{{ l('user.profile') }}</h5>
+            <h5>{{ l('settings.profile.viewer') }}</h5>
             <div class="mb-3">
               <div class="d-flex p-2 justify-content-between align-items-start">
                 <div class="w-50">
@@ -758,7 +757,7 @@
               </div>
             </div>
 
-            <div class="mb-3">
+            <div class="mb-3" v-if="generalSettings.profileViewer">
               <div class="d-flex p-2 justify-content-between align-items-start">
                 <div class="w-50">
                   <label class="control-label" for="horizonForceAsciiProfiles">
@@ -770,8 +769,38 @@
                 </div>
                 <settings-checkbox
                   v-model="generalSettings.horizonForceAsciiProfiles"
-                  :disabled="!generalSettings.profileViewer"
                   name="horizonForceAsciiProfiles"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3" v-if="generalSettings.profileViewer">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label class="control-label" for="risingAutoCompareKinks">
+                    {{ l('settings.profile.autoCompareKinks') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="generalSettings.risingAutoCompareKinks"
+                  name="risingAutoCompareKinks"
+                ></settings-checkbox>
+              </div>
+            </div>
+
+            <div class="mb-3" v-if="generalSettings.profileViewer">
+              <div class="d-flex p-2 justify-content-between align-items-start">
+                <div class="w-50">
+                  <label
+                    class="control-label"
+                    for="risingAutoExpandCustomKinks"
+                  >
+                    {{ l('settings.profile.autoExpandCustoms') }}
+                  </label>
+                </div>
+                <settings-checkbox
+                  v-model="generalSettings.risingAutoExpandCustomKinks"
+                  name="risingAutoExpandCustomKinks"
                 ></settings-checkbox>
               </div>
             </div>
@@ -2044,36 +2073,6 @@
               @update:globalValue="settings.risingComparisonInSearch = $event"
               @update:overrideValue="
                 $set(characterOverrides, 'risingComparisonInSearch', $event)
-              "
-            />
-          </div>
-
-          <div v-show="selectedTab === 'profiles.viewer'">
-            <h5>{{ l('settings.profile.viewer') }}</h5>
-
-            <settings-override
-              :globalValue="settings.risingAutoCompareKinks"
-              :overrideValue="characterOverrides.risingAutoCompareKinks"
-              :usingGlobal="isUsingGlobal()"
-              :label="l('settings.profile.autoCompareKinks')"
-              name="risingAutoCompareKinks"
-              @update:globalValue="settings.risingAutoCompareKinks = $event"
-              @update:overrideValue="
-                $set(characterOverrides, 'risingAutoCompareKinks', $event)
-              "
-            />
-
-            <settings-override
-              :globalValue="settings.risingAutoExpandCustomKinks"
-              :overrideValue="characterOverrides.risingAutoExpandCustomKinks"
-              :usingGlobal="isUsingGlobal()"
-              :label="l('settings.profile.autoExpandCustoms')"
-              name="risingAutoExpandCustomKinks"
-              @update:globalValue="
-                settings.risingAutoExpandCustomKinks = $event
-              "
-              @update:overrideValue="
-                $set(characterOverrides, 'risingAutoExpandCustomKinks', $event)
               "
             />
           </div>

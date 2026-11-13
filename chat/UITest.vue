@@ -62,7 +62,7 @@
             <span class="conversation-actions"
               ><span
                 aria-label="Pin this tab"
-                class="pin fas fa-thumbtack"
+                class="pin pin-toggle fas fa-thumbtack"
               ></span
               ><span
                 aria-label="Close this tab"
@@ -76,7 +76,7 @@
             <span class="conversation-actions"
               ><span
                 aria-label="Pin this tab"
-                class="pin fas fa-thumbtack active"
+                class="pin pin-toggle fas fa-thumbtack pinned"
               ></span
               ><span
                 aria-label="Close this tab"
@@ -91,7 +91,7 @@
               ><span class="badge rounded-pill text-bg-danger">9</span>
               <span
                 aria-label="Pin this tab"
-                class="pin fas fa-thumbtack active"
+                class="pin pin-toggle fas fa-thumbtack pinned"
               ></span
               ><span
                 aria-label="Close this tab"
@@ -105,7 +105,7 @@
             <span class="conversation-actions"
               ><span
                 aria-label="Pin this tab"
-                class="pin fas fa-thumbtack"
+                class="pin pin-toggle fas fa-thumbtack"
               ></span
               ><span
                 aria-label="Close this tab"
@@ -119,7 +119,7 @@
             <span class="conversation-actions"
               ><span
                 aria-label="Pin this tab"
-                class="pin fas fa-thumbtack active"
+                class="pin pin-toggle fas fa-thumbtack pinned"
               ></span
               ><span
                 aria-label="Close this tab"
@@ -133,7 +133,7 @@
             <span class="conversation-actions"
               ><span
                 aria-label="Pin this tab"
-                class="pin fas fa-thumbtack"
+                class="pin pin-toggle fas fa-thumbtack"
               ></span
               ><span
                 aria-label="Close this tab"
@@ -148,7 +148,7 @@
               ><span class="badge rounded-pill text-bg-danger">3</span>
               <span
                 aria-label="Pin this tab"
-                class="pin fas fa-thumbtack active"
+                class="pin pin-toggle fas fa-thumbtack pinned"
               ></span
               ><span
                 aria-label="Close this tab"
@@ -163,7 +163,7 @@
               ><span class="badge rounded-pill text-bg-danger">18</span>
               <span
                 aria-label="Pin this tab"
-                class="pin fas fa-thumbtack"
+                class="pin pin-toggle fas fa-thumbtack"
               ></span
               ><span
                 aria-label="Close this tab"
@@ -177,7 +177,7 @@
             <span class="conversation-actions"
               ><span
                 aria-label="Pin this tab"
-                class="pin fas fa-thumbtack"
+                class="pin pin-toggle fas fa-thumbtack"
               ></span
               ><span
                 aria-label="Close this tab"
@@ -191,7 +191,7 @@
             <span class="conversation-actions"
               ><span
                 aria-label="Pin this tab"
-                class="pin fas fa-thumbtack active"
+                class="pin pin-toggle fas fa-thumbtack pinned"
               ></span
               ><span
                 aria-label="Close this tab"
@@ -220,7 +220,7 @@
                 ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
-                  class="pin fas fa-thumbtack"
+                  class="pin pin-toggle fas fa-thumbtack"
                 ></span
                 ><span
                   aria-label="Close this tab"
@@ -243,7 +243,7 @@
                 ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
-                  class="pin fas fa-thumbtack"
+                  class="pin pin-toggle fas fa-thumbtack"
                 ></span
                 ><span
                   aria-label="Close this tab"
@@ -266,7 +266,7 @@
                 ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
-                  class="pin fas fa-thumbtack"
+                  class="pin pin-toggle fas fa-thumbtack"
                 ></span
                 ><span
                   aria-label="Close this tab"
@@ -289,7 +289,7 @@
                 ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
-                  class="pin fas fa-thumbtack"
+                  class="pin pin-toggle fas fa-thumbtack"
                 ></span
                 ><span
                   aria-label="Close this tab"
@@ -312,7 +312,7 @@
                 ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
-                  class="pin fas fa-thumbtack"
+                  class="pin pin-toggle fas fa-thumbtack"
                 ></span
                 ><span
                   aria-label="Close this tab"
@@ -335,7 +335,7 @@
                 ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
-                  class="pin fas fa-thumbtack"
+                  class="pin pin-toggle fas fa-thumbtack"
                 ></span
                 ><span
                   aria-label="Close this tab"
@@ -358,7 +358,7 @@
                 ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
-                  class="pin fas fa-thumbtack"
+                  class="pin pin-toggle fas fa-thumbtack"
                 ></span
                 ><span
                   aria-label="Close this tab"
@@ -381,7 +381,7 @@
                 ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
-                  class="pin fas fa-thumbtack"
+                  class="pin pin-toggle fas fa-thumbtack"
                 ></span
                 ><span
                   aria-label="Close this tab"
@@ -404,7 +404,7 @@
                 ><span style="flex: 1"></span
                 ><span
                   aria-label="Pin this tab"
-                  class="pin fas fa-thumbtack"
+                  class="pin pin-toggle fas fa-thumbtack"
                 ></span
                 ><span
                   aria-label="Close this tab"

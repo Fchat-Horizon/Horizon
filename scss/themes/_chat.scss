@@ -22,6 +22,7 @@
 @import '~bootstrap/scss/progress';
 @import '~bootstrap/scss/list-group';
 @import '~bootstrap/scss/close';
+@import '~bootstrap/scss/toasts';
 @import '~bootstrap/scss/modal';
 @import '~bootstrap/scss/popover';
 @import '~bootstrap/scss/badge';
@@ -30,6 +31,8 @@
 @import '~bootstrap/scss/utilities';
 @import '~bootstrap/scss/utilities/api';
 @import '~bootstrap/scss/helpers/color-bg';
+@import '~bootstrap/scss/helpers/colored-links';
+@import '~bootstrap/scss/helpers/text-truncation';
 
 $scorePerfectMatchBg: $teal-400;
 //poor contrast. I don't give a fuck.
@@ -165,7 +168,7 @@ $selection-color: color-contrast($primary);
 
 .nav-pills .nav-link.active,
 .nav-pills .show > .nav-link,
-.quick-jump-result.selected {
+.quick-jump-result.active {
   color: color-contrast($primary);
 }
 

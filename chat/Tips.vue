@@ -2,11 +2,11 @@
   <div
     v-if="show"
     ref="tipContainer"
-    class="tip-container bg-body-tertiary"
+    class="tip-container d-flex align-items-center gap-2 px-2 py-2 rounded bg-body-tertiary overflow-hidden"
     :style="containerHeight && { height: containerHeight + 'px' }"
   >
-    <div ref="tipContent" class="tip-content">
-      <div class="tip-label text-info-emphasis">{{ l('tips') }}</div>
+    <div ref="tipContent" class="flex-fill" style="min-width: 0">
+      <div class="fw-semibold text-info-emphasis">{{ l('tips') }}</div>
       <div class="tip-text">
         <transition
           :name="transitionName"
@@ -18,18 +18,26 @@
         </transition>
       </div>
     </div>
-    <div class="tip-controls">
-      <div class="tip-nav">
-        <button type="button" class="tip-btn" @click="handlePrevious()">
+    <div class="d-flex align-items-center gap-1">
+      <div class="tip-nav d-flex flex-column">
+        <button
+          type="button"
+          class="btn btn-link tip-btn"
+          @click="handlePrevious()"
+        >
           <i class="fa-solid fa-chevron-up" />
         </button>
-        <button type="button" class="tip-btn" @click="handleNext()">
+        <button
+          type="button"
+          class="btn btn-link tip-btn"
+          @click="handleNext()"
+        >
           <i class="fa-solid fa-chevron-down" />
         </button>
       </div>
       <button
         type="button"
-        class="tip-btn tip-btn--dismiss"
+        class="btn btn-link tip-btn tip-btn--dismiss"
         @click="show = !show"
       >
         <i class="fa-solid fa-xmark" />
@@ -121,26 +129,11 @@ NOTE: dear god help me why is this so long?
 -->
 <style scoped lang="scss">
   .tip-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
     border: 1px solid var(--chat-tip-border, var(--bs-border-color));
-    border-radius: var(--bs-border-radius);
     color: var(--chat-tip-color, var(--bs-body-color));
     font-size: 13px;
     line-height: 1.4;
-    overflow: hidden;
     transition: height 0.2s ease;
-  }
-
-  .tip-content {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .tip-label {
-    font-weight: 600;
   }
 
   .tip-text {
@@ -150,49 +143,30 @@ NOTE: dear god help me why is this so long?
     );
   }
 
-  .tip-controls {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
   .tip-nav {
-    display: flex;
-    flex-direction: column;
     gap: 2px;
   }
 
   .tip-btn {
+    --bs-btn-padding-x: 0;
+    --bs-btn-padding-y: 0;
+    --bs-btn-border-width: 0;
+    --bs-btn-color: var(
+      --chat-tip-button-color,
+      var(--bs-secondary-color, var(--bs-body-color))
+    );
+    --bs-btn-hover-color: var(
+      --chat-tip-button-hover-color,
+      var(--bs-body-color)
+    );
+    --bs-btn-active-color: var(--bs-btn-hover-color);
+    --bs-btn-hover-bg: var(--bs-secondary-bg);
+    --bs-btn-line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 32px;
     height: 18px;
-    padding: 0;
-    background: transparent;
-    border: 0;
-    color: var(
-      --chat-tip-button-color,
-      var(--bs-secondary-color, var(--bs-body-color))
-    );
-    transition:
-      background-color 0.15s,
-      color 0.15s;
-
-    &:hover,
-    &:focus-visible {
-      background: color-mix(
-        in srgb,
-        var(--bs-secondary-bg, var(--bs-tertiary-bg)) 70%,
-        transparent
-      );
-      color: var(--chat-tip-button-hover-color, var(--bs-body-color));
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--bs-primary);
-      outline-offset: -2px;
-    }
 
     &--dismiss {
       height: 38px;

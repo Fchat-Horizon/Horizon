@@ -65,6 +65,8 @@ export interface GeneralSettings {
   forceNativeWindowControls: boolean;
   nativeWindowShowSingleTab: boolean;
   horizonForceAsciiProfiles: boolean;
+  risingAutoCompareKinks: boolean;
+  risingAutoExpandCustomKinks: boolean;
   hasImportedVanillaLogs: boolean;
   hasDismissedVanillaImport: boolean;
   vanillaCustomBaseDir: string | undefined;

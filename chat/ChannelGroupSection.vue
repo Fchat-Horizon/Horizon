@@ -1,24 +1,24 @@
 <template>
   <div class="channel-group" :class="{ collapsed: group.collapsed }">
     <div
-      class="channel-group-header"
+      class="channel-group-header align-items-center px-2 py-1 fw-semibold user-select-none"
       :data-group-id="group.id"
       @click="toggleCollapse"
     >
       <span
-        class="fas fa-fw fa-chevron-right channel-group-chevron"
+        class="fas fa-fw fa-chevron-right channel-group-chevron flex-shrink-0 me-1"
         :class="{ expanded: !group.collapsed }"
       ></span>
       <span
         v-if="!renaming"
-        class="channel-group-name"
+        class="flex-fill text-truncate"
         @dblclick.stop="startRename"
         >{{ group.name }}</span
       >
       <input
         v-else
         ref="renameInput"
-        class="channel-group-rename-input"
+        class="form-control form-control-sm channel-group-rename-input flex-fill bg-transparent py-0 px-1"
         v-model="renameValue"
         @keydown.enter.prevent="commitRename"
         @keydown.esc.prevent="cancelRename"
@@ -27,15 +27,18 @@
       />
       <span
         v-if="shouldShowCollapsedNotificationBadge()"
-        class="badge rounded-pill channel-group-badge"
+        class="badge rounded-pill channel-group-badge flex-shrink-0 me-1"
         :class="collapsedUnreadClass"
         >{{ collapsedUnreadCount }}</span
       >
-      <span
-        class="fas fa-fw fa-trash channel-group-delete"
+      <button
+        type="button"
+        class="btn btn-link link-danger p-0 ms-1 flex-shrink-0 channel-group-delete"
         @click.stop="deleteGroup"
         :aria-label="l('channel.group.delete')"
-      ></span>
+      >
+        <span class="fas fa-fw fa-trash"></span>
+      </button>
     </div>
     <div
       v-if="group.collapsed && activeConversation"
@@ -92,7 +95,7 @@
             role="button"
           ></span>
           <span
-            class="fas fa-thumbtack pin active"
+            class="fas fa-thumbtack pin pin-toggle pinned"
             @click="unpinConversation(conversation)"
             :aria-label="l('chat.pin.remove')"
             role="button"
@@ -320,59 +323,41 @@
   }
   .channel-group-header {
     display: flex;
-    align-items: center;
     cursor: pointer;
-    padding: 4px 8px;
     font-size: 0.8rem;
-    font-weight: 600;
     letter-spacing: 0.05em;
     opacity: 0.8;
-    user-select: none;
   }
   .channel-group-header:hover {
     opacity: 1;
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--bs-tertiary-bg);
   }
   .channel-group-chevron {
     transition: transform 0.15s;
-    margin-right: 4px;
-    flex-shrink: 0;
   }
   .channel-group-chevron.expanded {
     transform: rotate(90deg);
   }
-  .channel-group-name {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
   .channel-group-rename-input {
-    flex: 1;
+    min-height: 0;
+    line-height: inherit;
     font-size: inherit;
     font-weight: inherit;
-    padding: 0 2px;
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 3px;
-    background: transparent;
     color: inherit;
     min-width: 0;
   }
   .channel-group-badge {
-    margin-right: 4px;
-    flex-shrink: 0;
     font-size: 0.7em;
   }
   .channel-group-delete {
+    --bs-btn-font-size: inherit;
     opacity: 0;
-    margin-left: 4px;
-    flex-shrink: 0;
-    color: var(--bs-danger, #dc3545);
   }
   .channel-group-header:hover .channel-group-delete {
     opacity: 0.7;
   }
-  .channel-group-delete:hover {
+  .channel-group-delete:hover,
+  .channel-group-delete:focus-visible {
     opacity: 1 !important;
   }
 </style>

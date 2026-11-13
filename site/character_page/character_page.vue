@@ -377,7 +377,7 @@
       async name(): Promise<void> {
         this.tab = '0';
         this.autoExpandCustoms =
-          core.state.settings.risingAutoExpandCustomKinks;
+          core.state.generalSettings?.risingAutoExpandCustomKinks ?? true;
 
         await this.load();
 

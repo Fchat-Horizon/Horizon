@@ -165,8 +165,11 @@
               />
 
               <div
-                class="btn favorite-toggle"
-                :class="{ favorited: isFavorite(eicon) }"
+                class="btn favorite-toggle pin-toggle position-absolute top-0 end-0 m-0 p-1 border-0 rounded-0"
+                :class="{
+                  favorited: isFavorite(eicon),
+                  pinned: isFavorite(eicon)
+                }"
                 @click.prevent.stop="toggleFavorite(eicon)"
                 role="button"
                 :aria-label="
@@ -195,13 +198,13 @@
               tabindex="0"
             >
               <div
-                class="btn recent-delete"
+                class="btn recent-delete position-absolute top-0 start-0 m-0 p-1 border-0 rounded-0"
                 @click.prevent.stop="deleteRecent(eicon)"
                 role="button"
                 :aria-label="l('eicon.deleteRecent')"
                 v-if="search === 'category:recent'"
               >
-                <i class="fas fa-times"></i>
+                <i class="fas fa-times text-danger"></i>
               </div>
 
               <img
@@ -217,8 +220,11 @@
               />
 
               <div
-                class="btn favorite-toggle"
-                :class="{ favorited: isFavorite(eicon) }"
+                class="btn favorite-toggle pin-toggle position-absolute top-0 end-0 m-0 p-1 border-0 rounded-0"
+                :class="{
+                  favorited: isFavorite(eicon),
+                  pinned: isFavorite(eicon)
+                }"
                 @click.prevent.stop="toggleFavorite(eicon)"
                 role="button"
                 :aria-label="
@@ -997,61 +1003,22 @@
               }
             }
 
-            .recent-delete {
-              position: absolute;
-              left: 0;
-              top: 0;
-              border: none;
-              margin: 0;
-              padding: 4px;
-              border-radius: 0;
+            .recent-delete,
+            .favorite-toggle {
               visibility: hidden;
-
-              i {
-                color: var(--bs-danger);
-                opacity: 0.85;
-                -webkit-text-stroke-width: thin;
-                -webkit-text-stroke-color: var(--bs-secondary-color);
-
-                &:hover {
-                  opacity: 1;
-                  filter: brightness(1.1);
-                }
-              }
             }
 
-            .favorite-toggle {
-              position: absolute;
-              right: 0;
-              top: 0;
-              border: none;
-              margin: 0;
-              padding: 4px;
-              border-radius: 0;
-              visibility: hidden;
+            .favorite-toggle.favorited {
+              visibility: visible;
+            }
 
-              i {
-                color: var(--bs-secondary-text-emphasis);
-                opacity: 0.85;
-                -webkit-text-stroke-width: thin;
-                -webkit-text-stroke-color: var(--bs-secondary-color);
+            .recent-delete i {
+              opacity: 0.85;
+              -webkit-text-stroke-width: thin;
+              -webkit-text-stroke-color: var(--bs-secondary-color);
 
-                &:hover {
-                  opacity: 1;
-                }
-              }
-
-              &.favorited {
-                visibility: visible;
-
-                i {
-                  color: var(--bs-success);
-                  opacity: 1;
-
-                  &:hover {
-                    filter: brightness(1.1);
-                  }
-                }
+              &:hover {
+                opacity: 1;
               }
             }
 

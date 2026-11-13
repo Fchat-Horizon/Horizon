@@ -151,7 +151,7 @@
             <button
               v-for="mode in modes"
               class="dropdown-item"
-              :class="{ selected: conversation.mode == mode }"
+              :class="{ active: conversation.mode == mode }"
               type="button"
               @click="setMode(mode)"
             >
@@ -192,10 +192,13 @@
             <div class="dropdown-divider"></div>
             <button
               class="dropdown-item"
-              :class="{ selected: showNonMatchingAds }"
               type="button"
               @click="toggleNonMatchingAds()"
             >
+              <i
+                class="fas fa-fw"
+                :class="{ 'fa-check': showNonMatchingAds }"
+              ></i>
               {{ l('admgr.showIncompatibleAds') }}
             </button>
 
@@ -273,14 +276,19 @@
         <i class="fas fa-times"></i>
       </a>
     </div>
-    <div class="auto-ads" v-show="isAutopostingAds()">
-      <h4>{{ l('admgr.activeHeader') }}</h4>
-      <div class="update">{{ adAutoPostUpdate }}</div>
+    <div
+      class="alert alert-warning position-relative border-0 rounded-0 mt-1 mb-0 px-2 py-1"
+      v-show="isAutopostingAds()"
+    >
+      <h4 class="fs-6 fw-bold lh-1 m-0">{{ l('admgr.activeHeader') }}</h4>
+      <div class="small opacity-75 w-75">{{ adAutoPostUpdate }}</div>
 
-      <div v-show="adAutoPostNextAd" class="next">
-        <h5>
+      <div v-show="adAutoPostNextAd" class="small opacity-50 mt-2">
+        <h5 class="small fw-bold lh-1 m-0">
           {{ l('admgr.comingNext') }}
-          <a @click="skipAd()"><i class="adAction fas fa-arrow-right" /></a>
+          <a class="alert-link" role="button" @click="skipAd()"
+            ><i class="fas fa-arrow-right"
+          /></a>
         </h5>
         <div>
           {{ adAutoPostNextAd ? adAutoPostNextAd.substr(0, 100) : '' }}...
@@ -288,13 +296,13 @@
       </div>
 
       <a
-        class="btn btn-sm btn-outline-primary renew-autoposts"
+        class="btn btn-sm auto-ads-action position-absolute top-50 end-0 translate-middle-y me-2"
         @click="renewAutoPosting()"
         v-if="!adsRequireSetup"
         >{{ l('admgr.renew') }}</a
       >
       <a
-        class="btn btn-sm btn-outline-primary renew-autoposts"
+        class="btn btn-sm auto-ads-action position-absolute top-50 end-0 translate-middle-y me-2"
         @click="showAdSettings()"
         v-if="adsRequireSetup"
         >{{ l('admgr.setup') }}</a
@@ -1215,27 +1223,6 @@
             font-size: 90%;
           }
         }
-
-        button::before {
-          display: inline-block;
-          width: 1.3rem;
-          height: 1rem;
-          content: '';
-          margin-left: -1.3rem;
-          margin-right: 0.1rem;
-          padding-left: 0.3rem;
-          font-weight: bold;
-        }
-
-        button.selected::before {
-          content: '✓';
-        }
-
-        &.views {
-          button.selected::before {
-            content: '•';
-          }
-        }
       }
     }
 
@@ -1243,71 +1230,15 @@
       padding: 3px 10px;
     }
 
-    .auto-ads {
-      background-color: rgb(220, 113, 31);
-      padding-left: 10px;
-      padding-right: 10px;
-      padding-top: 5px;
-      padding-bottom: 5px;
-      margin: 0;
-      position: relative;
-      margin-top: 5px;
-
-      .adAction {
-        &:hover {
-          color: rgba(255, 255, 255, 0.8);
-        }
-
-        &:active {
-          color: rgba(255, 255, 255, 0.6);
-        }
-      }
-
-      .renew-autoposts {
-        display: block;
-        float: right;
-        /* margin-top: auto; */
-        /* margin-bottom: auto; */
-        position: absolute;
-        /* bottom: 1px; */
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        border-color: rgba(255, 255, 255, 0.5);
-        color: rgba(255, 255, 255, 0.9);
-
-        &:hover {
-          background-color: rgba(255, 255, 255, 0.3);
-        }
-
-        &:active {
-          background-color: rgba(255, 255, 255, 0.6);
-        }
-      }
-
-      h4 {
-        font-size: 1.1rem;
-        margin: 0;
-        line-height: 100%;
-      }
-
-      .update {
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 13px;
-        width: 75%;
-      }
-
-      .next {
-        margin-top: 0.5rem;
-        color: rgba(255, 255, 255, 0.4);
-        font-size: 11px;
-
-        h5 {
-          font-size: 0.8rem;
-          margin: 0;
-          line-height: 100%;
-        }
-      }
+    .auto-ads-action {
+      --bs-btn-color: var(--bs-alert-color);
+      --bs-btn-border-color: var(--bs-alert-color);
+      --bs-btn-hover-color: var(--bs-alert-bg);
+      --bs-btn-hover-bg: var(--bs-alert-color);
+      --bs-btn-hover-border-color: var(--bs-alert-color);
+      --bs-btn-active-color: var(--bs-alert-bg);
+      --bs-btn-active-bg: var(--bs-alert-color);
+      --bs-btn-active-border-color: var(--bs-alert-color);
     }
 
     @media (max-width: breakpoint-max(sm)) {
