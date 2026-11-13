@@ -81,6 +81,8 @@ export class GeneralSettings implements GeneralSettingsInterface {
   forceNativeWindowControls: boolean = false;
   nativeWindowShowSingleTab: boolean = false;
   horizonForceAsciiProfiles: boolean = false;
+  risingAutoCompareKinks: boolean = true;
+  risingAutoExpandCustomKinks: boolean = true;
   hasImportedVanillaLogs: boolean = false;
   hasDismissedVanillaImport: boolean = false;
   vanillaCustomBaseDir: string | undefined = undefined;

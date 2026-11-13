@@ -487,7 +487,7 @@
 
           expandedCustoms.value = props.autoExpandCustoms;
 
-          if (core.state.settings.risingAutoCompareKinks) {
+          if (core.state.generalSettings?.risingAutoCompareKinks ?? true) {
             await compareKinks(core.characters.ownProfile);
           }
         }
@@ -512,7 +512,7 @@
         expandedCustoms.value = props.autoExpandCustoms;
         if (props.character && props.character.is_self) return;
 
-        if (core.state.settings.risingAutoCompareKinks) {
+        if (core.state.generalSettings?.risingAutoCompareKinks ?? true) {
           await compareKinks(core.characters.ownProfile);
         }
       });

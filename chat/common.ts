@@ -120,9 +120,6 @@ export class Settings implements ISettings {
 
   risingAdScore = true;
   risingLinkPreview = true;
-  risingAutoCompareKinks = true;
-
-  risingAutoExpandCustomKinks = true;
   risingCharacterPreview = true;
   risingComparisonInUserMenu = true;
   risingComparisonInSearch = true;
