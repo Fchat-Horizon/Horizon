@@ -208,7 +208,7 @@
   "chat.setStatus": "Set status",
   "chat.setStatus.message": "Status message (optional)",
   "chat.setStatus.status": "Status",
-  "chat.stats": "Chat stats",
+  "chat.stats": "Chat Status",
   "chat.status": "Status:",
   "chat.toggleAds": "Toggle ads",
   "chat.toggleHighlight": "Toggle search highlighting",

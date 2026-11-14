@@ -41,15 +41,21 @@
         <h3 class="card-header" style="margin-top: 0; display: flex">
           {{ l(titleKey) }}
 
-          <a
-            href="#"
-            @click.prevent="showLogs()"
-            class="btn btn-link"
-            style="flex: 1; text-align: right"
-          >
-            <span class="fa fa-file-alt"></span>
-            <span class="btn-text">{{ l('logs.title') }}</span>
-          </a>
+          <span style="flex: 1; text-align: right">
+            <a
+              href="https://status.horizn.moe/"
+              target="_blank"
+              rel="noopener"
+              class="btn btn-link"
+            >
+              <span class="fa fa-chart-line"></span>
+              <span class="btn-text">{{ l('chat.stats') }}</span>
+            </a>
+            <a href="#" @click.prevent="showLogs()" class="btn btn-link">
+              <span class="fa fa-file-alt"></span>
+              <span class="btn-text">{{ l('logs.title') }}</span>
+            </a>
+          </span>
         </h3>
         <div class="card-body">
           <div class="alert alert-danger" v-show="error">

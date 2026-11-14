@@ -48,7 +48,7 @@
             <span class="fa fa-coffee"></span>
           </a>
           <a
-            href="https://chat.f-list.net/stats/"
+            href="https://status.horizn.moe/"
             target="_blank"
             rel="noopener"
             class="btn btn-link"
