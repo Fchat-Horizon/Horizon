@@ -209,7 +209,7 @@
   "chat.setStatus": "Poner estado",
   "chat.setStatus.message": "Mensaje de estado (Opcional)",
   "chat.setStatus.status": "Estado",
-  "chat.stats": "Estadísticas del chat",
+  "chat.stats": "Estado del chat",
   "chat.status": "Estado:",
   "chat.toggleAds": "Activar anuncios",
   "chat.toggleHighlight": "Resaltar resultados de búsqueda",
