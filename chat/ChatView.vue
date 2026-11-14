@@ -577,6 +577,9 @@
       this.mouseButtonListener = (e: MouseEvent) => this.onMouseButton(e);
       window.addEventListener('mouseup', this.mouseButtonListener);
 
+      // Views rendered outside ChatView (eg the settings modal in Index.vue) forward their events here
+      EventBus.$on('user-menu-event', this.externalUserMenuListener);
+
       //We do this because it's a massive pain in the 🫏 to read some monstrosity of
       //an if-else statement to compare our platforms and then pick a keyboard shortcut in our keyboard handle event
       this.historyNavigateHandleForward = !this.isMac
@@ -730,8 +733,12 @@
       window.removeEventListener('focus', this.focusListener);
       window.removeEventListener('blur', this.blurListener);
       window.removeEventListener('mouseup', this.mouseButtonListener);
+      EventBus.$off('user-menu-event', this.externalUserMenuListener);
     },
     methods: {
+      externalUserMenuListener(data: { event: MouseEvent | TouchEvent }): void {
+        this.userMenuHandle(data.event);
+      },
       openCharacterSettings(): void {
         EventBus.$emit('open-settings-menu', { mode: 'character' });
       },

@@ -2079,7 +2079,11 @@
 
           <div v-show="selectedTab === 'profiles.ignoredList'">
             <h5>{{ l('settings.profile.ignoredList') }}</h5>
-            <div class="mb-3 p-2">
+            <div
+              class="mb-3 p-2"
+              @click="forwardUserMenuEvent"
+              @contextmenu="forwardUserMenuEvent"
+            >
               <template v-if="ignored.length">
                 <div v-for="user in ignored">
                   <span
@@ -2810,6 +2814,11 @@
         for (const key of Object.keys(this.importSettings)) {
           this.importSettings[key as keyof ImportSettings] = checked;
         }
+      },
+      // The settings modal lives outside ChatView, so hand user clicks and
+      // right clicks to it for the user menu/profile handling.
+      forwardUserMenuEvent(event: MouseEvent): void {
+        EventBus.$emit('user-menu-event', { event });
       },
       unignore(character: string): void {
         core.connection.send('IGN', { action: 'delete', character });
