@@ -46,12 +46,12 @@
   function handleChange(event: Event) {
     let nextValue: boolean | undefined;
 
-    if (isChecked.value) {
+    if (props.value === false) {
       nextValue = undefined;
     } else if (isIntermediate.value) {
-      nextValue = false;
-    } else {
       nextValue = true;
+    } else {
+      nextValue = false;
     }
 
     const input = event.currentTarget as HTMLInputElement;

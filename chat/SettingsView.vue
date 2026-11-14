@@ -374,42 +374,45 @@
                 </filterable-select>
               </label>
             </div>
-            <div class="mb-3" v-else>
-              <label
-                class="control-label"
-                for="themeSyncLight"
-                style="width: 24ch"
-              >
-                {{ l('settings.theme.app.light') }}
-                <filterable-select
-                  v-model="generalSettings.themeSyncLight"
-                  :options="availableThemes"
-                  :placeholder="l('filter')"
-                  :title="l('settings.theme')"
+            <div class="mb-3 p-2 d-flex flex-wrap gap-3" v-else>
+              <div>
+                <label
+                  class="control-label"
+                  for="themeSyncLight"
+                  style="width: 24ch"
                 >
-                  <template v-slot="s">
-                    {{ capitalizeThemeName(s.option) }}
-                  </template>
-                </filterable-select>
-              </label>
-
-              <label
-                class="control-label"
-                for="themeSyncDark"
-                style="width: 24ch"
-              >
-                {{ l('settings.theme.app.dark') }}
-                <filterable-select
-                  v-model="generalSettings.themeSyncDark"
-                  :options="availableThemes"
-                  :placeholder="l('filter')"
-                  :title="l('settings.theme')"
+                  {{ l('settings.theme.app.light') }}
+                  <filterable-select
+                    v-model="generalSettings.themeSyncLight"
+                    :options="availableThemes"
+                    :placeholder="l('filter')"
+                    :title="l('settings.theme')"
+                  >
+                    <template v-slot="s">
+                      {{ capitalizeThemeName(s.option) }}
+                    </template>
+                  </filterable-select>
+                </label>
+              </div>
+              <div>
+                <label
+                  class="control-label"
+                  for="themeSyncDark"
+                  style="width: 24ch"
                 >
-                  <template v-slot="s">
-                    {{ capitalizeThemeName(s.option) }}
-                  </template>
-                </filterable-select>
-              </label>
+                  {{ l('settings.theme.app.dark') }}
+                  <filterable-select
+                    v-model="generalSettings.themeSyncDark"
+                    :options="availableThemes"
+                    :placeholder="l('filter')"
+                    :title="l('settings.theme')"
+                  >
+                    <template v-slot="s">
+                      {{ capitalizeThemeName(s.option) }}
+                    </template>
+                  </filterable-select>
+                </label>
+              </div>
             </div>
 
             <h5>
@@ -982,7 +985,7 @@
                   ></settings-checkbox>
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-3 p-2">
                   <label class="control-label" for="horizonColorblindMode">
                     {{ l('settings.colorblindMode') }}
                     <select
@@ -1462,6 +1465,7 @@
               :overrideValue="characterOverrides.hideNonCharacterFriends"
               :usingGlobal="isUsingGlobal()"
               name="hideNonCharacterFriends"
+              :disabled="!effectiveShowPerCharacterFriends"
               @update:globalValue="settings.hideNonCharacterFriends = $event"
               @update:overrideValue="
                 $set(characterOverrides, 'hideNonCharacterFriends', $event)
@@ -1649,6 +1653,7 @@
               :overrideValue="characterOverrides.risingShowHighQualityPortraits"
               :usingGlobal="isUsingGlobal()"
               name="risingShowHighQualityPortraits"
+              :disabled="!effectiveShowAvatars"
               @update:globalValue="
                 settings.risingShowHighQualityPortraits = $event
               "
@@ -1708,6 +1713,7 @@
               }}</small>
             </div>
             <settings-override
+              v-if="effectiveChatLayoutMode === 'modern'"
               :label="l('settings.messageGrouping')"
               :description="l('settings.messageGrouping.description')"
               :globalValue="settings.messageGrouping"
@@ -2639,6 +2645,23 @@
         return this.isUsingGlobal()
           ? [{ value: '', label: l('settings.useDefaultTheme') }, ...options]
           : options;
+      },
+      effectiveChatLayoutMode(): string {
+        return this.isUsingGlobal()
+          ? this.settings.chatLayoutMode
+          : this.characterOverrides.chatLayoutMode ||
+              this.settings.chatLayoutMode;
+      },
+      effectiveShowAvatars(): boolean {
+        return this.isUsingGlobal()
+          ? this.settings.showAvatars
+          : (this.characterOverrides.showAvatars ?? this.settings.showAvatars);
+      },
+      effectiveShowPerCharacterFriends(): boolean {
+        return this.isUsingGlobal()
+          ? this.settings.showPerCharacterFriends
+          : (this.characterOverrides.showPerCharacterFriends ??
+              this.settings.showPerCharacterFriends);
       },
       activeRisingFilter(): SmartFilterSettings {
         return (

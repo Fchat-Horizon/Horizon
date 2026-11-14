@@ -1,16 +1,19 @@
 <template>
   <div class="d-inline-block w-100">
     <label :for="name" class="form-label">{{ name }}</label>
-    <InputTag
-      v-model="globalValue"
-      :disabled="disabled"
-      :placeholder="placeholder"
-      @input="$emit('update:globalValue', globalValue)"
+    <div
       v-if="usingGlobal"
-      class="form-control form-tag"
-      :add-tag-on-blur="true"
-      :add-tag-on-keys="[13, 188, 9]"
-    />
+      class="settings-array-overrides form-control form-tag"
+    >
+      <InputTag
+        v-model="globalValue"
+        :disabled="disabled"
+        :placeholder="placeholder"
+        @input="$emit('update:globalValue', globalValue)"
+        :add-tag-on-blur="true"
+        :add-tag-on-keys="[13, 188, 9]"
+      />
+    </div>
     <div v-else class="settings-array-overrides form-control form-tag">
       <InputTag
         v-if="globalValue.length"
