@@ -144,6 +144,103 @@
         </button>
       </div>
     </div>
+    <div class="mb-3 row" style="flex-shrink: 0" v-show="showFilters">
+      <label for="reverse-search" class="col-sm-2 col-form-label">{{
+        l('logs.findByCharacter')
+      }}</label>
+      <div class="col-sm-8 col-10 col-xl-9">
+        <div class="input-group">
+          <input
+            class="form-control"
+            id="reverse-search"
+            v-model="reverseSearchTerm"
+            :placeholder="l('logs.findByCharacterPlaceholder')"
+            type="text"
+            @keydown.enter="runReverseSearch"
+          />
+          <button
+            class="btn btn-secondary"
+            @click="runReverseSearch"
+            :disabled="!canReverseSearch"
+            :title="l('logs.findByCharacter')"
+          >
+            <span
+              class="fas"
+              :class="reverseSearching ? 'fa-spinner fa-spin' : 'fa-search'"
+            ></span>
+          </button>
+        </div>
+      </div>
+      <div class="col-2 col-xl-1">
+        <button
+          v-if="reverseResults !== undefined"
+          @click="clearReverseSearch"
+          class="btn btn-secondary form-control"
+          :title="l('logs.clearSearch')"
+        >
+          <span class="fa fa-times"></span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="mb-3 row"
+      style="flex-shrink: 0"
+      v-if="reverseResults !== undefined"
+    >
+      <div class="col-sm-10 offset-sm-2">
+        <div v-if="reverseResults.length > 0" class="text-muted mb-1">
+          {{
+            lp('logs.matchCount', reverseResults.length, {
+              character: reverseSearchTerm.trim()
+            })
+          }}
+        </div>
+        <div class="reverse-search-results list-group">
+          <div
+            v-if="reverseResults.length === 0"
+            class="list-group-item text-muted"
+          >
+            {{ l('logs.noMatches') }}
+          </div>
+          <a
+            v-for="result in reverseResults"
+            :key="result.character + '/' + result.conversation.key"
+            href="#"
+            class="list-group-item list-group-item-action"
+            @click.prevent="openReverseResult(result)"
+          >
+            <img
+              :src="getAvatarUrl(result.character)"
+              class="reverse-search-avatar"
+              loading="lazy"
+            />
+            <strong>{{ result.character }}</strong>
+            <span class="fas fa-arrow-right mx-2" style="opacity: 0.5"></span>
+            <i
+              v-if="result.conversation.key === '_'"
+              class="fas fa-home fa-fw"
+              style="margin-right: 6px; opacity: 0.5"
+            ></i>
+            <i
+              v-else-if="result.conversation.key[0] === '#'"
+              class="fas fa-hashtag fa-fw"
+              style="margin-right: 6px; opacity: 0.5"
+            ></i>
+            <img
+              v-else
+              :src="getAvatarUrl(result.conversation.name)"
+              class="reverse-search-avatar"
+              loading="lazy"
+              @error="$event.target.style.display = 'none'"
+            />
+            {{
+              (result.conversation.key[0] == '#' ? '#' : '') +
+              result.conversation.name
+            }}
+          </a>
+        </div>
+      </div>
+    </div>
     <virtual-list
       class="messages messages-both hidden-scrollbar"
       :class="layoutClasses"
@@ -286,6 +383,7 @@
   }
 
   const SEARCH_BATCH_SIZE = 25;
+  const MIN_REVERSE_SEARCH_LENGTH = 3;
 
   function buildMessageFilter(pattern: string): RegExp {
     return new RegExp(pattern.replace(/[^\w]/gi, '\\$&'), 'i');
@@ -396,7 +494,15 @@
         nearTopDebounce: undefined as ReturnType<typeof setTimeout> | undefined,
         pendingFilter: '',
         searching: false,
-        highlightEnabled: true
+        highlightEnabled: true,
+        reverseSearchTerm: '',
+        reverseResults: undefined as
+          | ReadonlyArray<LogInterface.CharacterConversation>
+          | undefined,
+        reverseSearching: false,
+        reverseSearchDebounce: undefined as
+          | ReturnType<typeof setTimeout>
+          | undefined
       };
     },
     computed: {
@@ -417,6 +523,12 @@
         if (this.pendingFilter.length === 0) return this.messages;
         const filter = buildMessageFilter(this.pendingFilter);
         return this.messages.filter(x => messageMatches(filter, x));
+      },
+      canReverseSearch(): boolean {
+        return (
+          !this.reverseSearching &&
+          this.reverseSearchTerm.trim().length >= MIN_REVERSE_SEARCH_LENGTH
+        );
       }
     },
     watch: {
@@ -442,6 +554,9 @@
       },
       filter: {
         handler: 'onFilterChanged'
+      },
+      reverseSearchTerm: {
+        handler: 'onReverseSearchTermChanged'
       }
     },
     async mounted(): Promise<void> {
@@ -455,6 +570,8 @@
       if (this.filterDebounce !== undefined) clearTimeout(this.filterDebounce);
       if (this.nearTopDebounce !== undefined)
         clearTimeout(this.nearTopDebounce);
+      if (this.reverseSearchDebounce !== undefined)
+        clearTimeout(this.reverseSearchDebounce);
     },
     methods: {
       async loadCharacter(): Promise<void> {
@@ -472,6 +589,47 @@
           const yName = y.name.replace(/^#/, '').toLowerCase();
           return xName < yName ? -1 : xName > yName ? 1 : 0;
         });
+      },
+
+      onReverseSearchTermChanged(): void {
+        if (this.reverseSearchDebounce !== undefined)
+          clearTimeout(this.reverseSearchDebounce);
+        this.reverseSearchDebounce = setTimeout(() => {
+          if (this.reverseSearchTerm.trim().length >= MIN_REVERSE_SEARCH_LENGTH)
+            this.runReverseSearch();
+          else this.reverseResults = undefined;
+        }, 300);
+      },
+
+      async runReverseSearch(): Promise<void> {
+        const term = this.reverseSearchTerm.trim();
+        if (term.length < MIN_REVERSE_SEARCH_LENGTH || this.reverseSearching)
+          return;
+        this.reverseSearching = true;
+        try {
+          this.reverseResults = await core.logs.findConversationsWith(term);
+        } finally {
+          this.reverseSearching = false;
+        }
+      },
+
+      clearReverseSearch(): void {
+        this.reverseResults = undefined;
+        this.reverseSearchTerm = '';
+      },
+
+      async openReverseResult(
+        result: LogInterface.CharacterConversation
+      ): Promise<void> {
+        this.reverseResults = undefined;
+        if (this.selectedCharacter !== result.character) {
+          this.selectedCharacter = result.character;
+          await this.loadCharacter();
+        }
+        const match = this.conversations.find(
+          x => x.key === result.conversation.key
+        );
+        if (match !== undefined) this.selectedConversation = match;
       },
 
       async loadDates(): Promise<void> {
@@ -994,6 +1152,24 @@
   .logs-dialog .modal-body {
     display: flex;
     flex-direction: column;
+  }
+
+  .reverse-search-results {
+    max-height: 240px;
+    overflow-y: auto;
+
+    .list-group-item-action {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .reverse-search-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    margin-right: 6px;
+    object-fit: contain;
   }
 
   .message-container {

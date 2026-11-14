@@ -2,7 +2,7 @@ import * as remote from '@electron/remote';
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
-import { Message as MessageImpl } from '../chat/common';
+import { fuzzyScore, Message as MessageImpl } from '../chat/common';
 import core, { GLOBAL_SETTINGS_CHARACTER } from '../chat/core';
 import {
   Character,
@@ -380,6 +380,45 @@ export class Logs implements Logging {
     for (const key in index)
       conversations.push({ key, name: index[key]!.name });
     return conversations;
+  }
+
+  async findConversationsWith(
+    target: string
+  ): Promise<ReadonlyArray<Logging.CharacterConversation>> {
+    const needle = target.trim();
+    const matches: {
+      match: Logging.CharacterConversation;
+      score: number;
+    }[] = [];
+    if (needle.length === 0) return [];
+    for (const character of await this.getAvailableCharacters()) {
+      const index = this.getIndex(character);
+      for (const key in index) {
+        const item = index[key]!;
+        const score = Math.max(
+          fuzzyScore(needle, key),
+          fuzzyScore(needle, item.name)
+        );
+        if (score !== -1) {
+          matches.push({
+            match: { character, conversation: { key, name: item.name } },
+            score
+          });
+        }
+      }
+    }
+    matches.sort((a, b) => {
+      if (a.score !== b.score) return b.score - a.score;
+      const byCharacter = a.match.character
+        .toLowerCase()
+        .localeCompare(b.match.character.toLowerCase());
+      return byCharacter !== 0
+        ? byCharacter
+        : a.match.conversation.name
+            .toLowerCase()
+            .localeCompare(b.match.conversation.name.toLowerCase());
+    });
+    return matches.map(x => x.match);
   }
 
   async getAvailableCharacters(): Promise<ReadonlyArray<string>> {
