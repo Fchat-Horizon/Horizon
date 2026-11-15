@@ -7,56 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.5.0-beta.2] - 2026-11-13
-
-### Changed
-
-- The changelog window (when updating, or when manually checking the version number) now also shows info about older versions of Horizon. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9cd63b554117da453ba613b1bb4f3c14a4b88aad)
-  - If you've skipped a certain amount of updates, the window will show exactly which ones you've missed. If you just open the window by clicking the version number in the app menu, it will show all versions.
-- For clarity's sake, data backups from the "Manage data" menu are now specifically refered to as "Backups". The word "export" is only used for exporting logs to .html or .txt, for reading purposes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dfdf092e4fb0b6e7fd3ec4740644614bebd432ef)
-- Moved all profile viewer-related settings (auto expand kinks, and auto compare kinks) to App > App Behaviour. Since that's where the other profile viewer settings also are. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/620d57e6e393a921dbf963c148cff58bee162708)
-- Made a whole bunch of components and menus more consistent with our Bootstrap themes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2c69bd14372feb055fb792c44ce3701c268cda66)
-
-### Changed since last pre-release
-
-- Colourblind mode adjustments: In-between colourblind modes have been removed. Pure colourblindness mode also now works by prefixing gender icons before character names, instead of trying to make a distinction with text brightness. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d59310d29ec6be612a62cac5a579becade52d95c)
-- Adjusted some colours in the red-green colourblind mode based on user feedback. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/889b198c46a718b06316d5321e06ec2fbe27f2b3)
-- Matcher-related blocks (like in the user context menu, or in the profile viewer) now use slightly less dull colours. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d2d896b7d407a2e4ecbc66a5f41769b990dd9cb2)
-
-### Fixed since last pre-release
-
-- Fixed some cases where extra dialog windows would use unstyled scrollbars on Windows and Linux. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/059b07748f6dc4384df1ad97323a3dac542ebf09)
-
-### Merged Pull Requests
-
-- https://github.com/Fchat-Horizon/Horizon/pull/1031 by @freenutsxd
-
-Non-PR'd changes by @FatCatClient
-
-### Development
-
-- Added a Scrollspy component. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4ae63cfb745edb2fba40715e090a840639767088)
-- Fixed more issues where Webpack's watch command could fail due to watching files and folders in git-ignored directories (like `node_modules`) on macOS. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d9834b71f40675fa1448b508fee8c02fa730f2b6)
-
-## [2.5.0-beta.1] - 2026-11-09
-
-### Added
-
-- When you copy over settings from one character to another, you can now individually select whether to copy over ads, settings, channel groups/ pins, favourite eicons, hidden users, and status history through checkboxes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f47fd38ca857370c99d81e861ae01d0e742c4028)
-
-### Fixed since last pre-release
-
-- Fixed nasty contrasts with matcher and matcher-related blocks. They now use theme-specific colours. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/538ced136109f4ea159397f8110f4b3b62e5ccf0)
-- Fixed being unable to save both global settings _and_ character overrides at the same time. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c98b87032aa2b0a16b8c1f96fd7954a5f7360c24)
-- Fixed the little box telling you which settings mode you're in clipping with the text below in narrow window modes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/87201bfa81f8803b74e975f95c5c6c90829b8a38)
-- Fixed number input setting fields (like font size, or the idle timer) acting jank in the character override tab when left empty. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/128a8321187abc93e10b7a95f8daef393b3bdd51)
-- Fixed the ignored/ hidden user tabs having global and character override tabs that do nothing. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1697c0cfcdde4257a6f93cb2bb71374e84bd2813)
-
-### Known issues
-
-- The colour values picked for the new colour blind modes might not be distinct enough for people. If you experience issues with a specific mode that you'd require, please [reach out](https://horizn.moe/contact.html) to us.
-
-## [2.5.0-beta.0] - 2026-11-06
+> [!NOTE]  
+> We are planning on reworking the character matcher feature(s) considerably in the nearby future. If you have the time to, please fill in [this survey](https://forms.gle/YF4osawLApJXkmCF9) so we can take your opinions into consideration.
+> Thank you for your time.
 
 ### Added
 
@@ -66,11 +19,21 @@ Non-PR'd changes by @FatCatClient
   - These are also found in the accessibility tab now.
 - Split the "Log messages" setting between one for PMs, and one for channel messages. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9ba9e46468f5d987a123b9fa35e86a0e061e4ddb)
   - If you have previously disabled the log messages setting, you'll _also_ need to disable this new one. It's enabled by default.
+- When you copy over settings from one character to another, you can now individually select whether to copy over ads, settings, channel groups/ pins, favourite eicons, hidden users, and status history through checkboxes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f47fd38ca857370c99d81e861ae01d0e742c4028)
 
 ### Changed
 
 - New app icons: Featuring a new version of the Windows/ Linux icon, the MacOS one, and the .dmg archive. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/359493d8ee924ce929b5b911bf1d45573bebd895)
+- Changed matcher-related colours to a theme-based set of blue, green, yellow/ orange, and red. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d2d896b7d407a2e4ecbc66a5f41769b990dd9cb2)
+  - This makes the colours both more consistent with our themes, while also making it more consistent with the actual F-List website (which uses those same colours for the kink columns, and comparer).
+  - We also felt the old colours were too "authorative", while we personally think the matcher should be more of a suggestion, rather than directly telling you what's a good match or not. We hope that the more subtle colours will help get this across.
 - MacOS versions of Horizon now use unstyled, floating scrollbars instead of static, custom ones. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3493ef0ecc9db29d41e37ef58768b912aa318b7c)
+- The changelog window (when updating, or when manually checking the version number) now also shows info about older versions of Horizon. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9cd63b554117da453ba613b1bb4f3c14a4b88aad)
+  - If you've skipped a certain amount of updates, the window will show exactly which ones you've missed. If you just open the window by clicking the version number in the app menu, it will show all versions.
+- For clarity's sake, data backups from the "Manage data" menu are now specifically refered to as "Backups". The word "export" is only used for exporting logs to .html or .txt, for reading purposes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dfdf092e4fb0b6e7fd3ec4740644614bebd432ef)
+- The server status button in the sign-in now directs you to our own custom status page, instead of F-List's. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/eac4b0a9866605293c5c7239406ca81ed237d4b9)
+- Moved all profile viewer-related settings (auto expand kinks, and auto compare kinks) to App > App Behaviour. Since that's where the other profile viewer settings also are. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/620d57e6e393a921dbf963c148cff58bee162708)
+- Made a whole bunch of components and menus more consistent with our Bootstrap themes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2c69bd14372feb055fb792c44ce3701c268cda66)
 
 ### Fixed
 
@@ -82,6 +45,8 @@ Non-PR'd changes by @FatCatClient
 - Added a new member to `core` for platform-related functionality, to help decouple some Electron-specific code from the chat module. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8090bccd8f4fd0f91ccdb900d990cd73ae829505)
 - Spellcheck language settings are now decoupled from Electron, and are automatically hidden from the UI if the platform does not expose any available languages.. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/16834353e94bad55405850bb11669ce1dfc4d004)
 - Tab components now support a vertical mode, and allow you to prefix a title with icons. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d2a309af74c90e07881479e2eda33327c2a59f89)
+- Added a Scrollspy component. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4ae63cfb745edb2fba40715e090a840639767088)
+- Fixed more issues where Webpack's watch command could fail due to watching files and folders in git-ignored directories (like `node_modules`) on macOS. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d9834b71f40675fa1448b508fee8c02fa730f2b6)
 
 ### Merged Pull Requests
 
@@ -92,6 +57,7 @@ Non-PR'd changes by @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/1021 by @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/1021 by @FatCatClient
 - https://github.com/Fchat-Horizon/Horizon/pull/1027 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/1031 by @freenutsxd
 
 ## [2.4.5] - 2026-10-28
 
