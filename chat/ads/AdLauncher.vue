@@ -223,11 +223,34 @@
     },
     methods: {
       load() {
+        const assignments = core.conversations.channelGroupAssignments;
+        const groupOrder = new Map<string, number>(
+          core.conversations.channelGroups.map(g => [g.id, g.order])
+        );
+        const rank = (id: string): number => {
+          const groupId = assignments[id];
+          return groupId !== undefined
+            ? (groupOrder.get(groupId) ?? Number.MAX_SAFE_INTEGER - 1)
+            : Number.MAX_SAFE_INTEGER;
+        };
+        const conversationIndex = (id: string): number =>
+          core.conversations.channelConversations.findIndex(
+            c => c.channel.id === id
+          );
+
         this.channels = _.map(
           _.filter(
             core.channels.joinedChannels,
             c => c.mode === 'ads' || c.mode === 'both'
-          ),
+          )
+            .map((c, i) => ({ c, i }))
+            .sort(
+              (a, b) =>
+                rank(a.c.id) - rank(b.c.id) ||
+                conversationIndex(a.c.id) - conversationIndex(b.c.id) ||
+                a.i - b.i
+            )
+            .map(x => x.c),
           c => ({ value: false, title: c.name, id: c.id })
         );
 
