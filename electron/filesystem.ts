@@ -4,6 +4,7 @@ import * as path from 'path';
 import { promisify } from 'util';
 import { Message as MessageImpl } from '../chat/common';
 import core, { GLOBAL_SETTINGS_CHARACTER } from '../chat/core';
+import { emptyMap } from '../fchat/common';
 import {
   Character,
   Conversation,
@@ -225,7 +226,7 @@ export function fixLogs(character: string): void {
 }
 
 function loadIndex(name: string): Index {
-  const index: Index = {};
+  const index: Index = emptyMap();
   const dir = getLogDir(name);
   const files = fs.readdirSync(dir);
   for (const file of files)
@@ -253,7 +254,7 @@ function loadIndex(name: string): Index {
 
 export class Logs implements Logging {
   canZip = true;
-  private index: Index = {};
+  private index: Index = emptyMap();
   private loadedIndex?: Index;
   private loadedCharacter?: string;
 
