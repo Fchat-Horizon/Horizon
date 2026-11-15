@@ -35,7 +35,7 @@
             >
               {{ ownCharacter.name }}
             </h5>
-            <span>
+            <span class="sidebarUserInfo-statusLine">
               <i
                 class="fas fa-fw"
                 :class="getStatusIcon(ownCharacter.status)"

@@ -322,8 +322,15 @@ $bookmark-color: #66cc33 !default;
   overflow-x: hidden;
   overflow-y: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 
   font-weight: 600;
+}
+.sidebarUserInfo-statusLine {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 #sidebarUserInfo {
   padding-bottom: 7px;
