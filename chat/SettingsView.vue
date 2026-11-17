@@ -1211,9 +1211,9 @@
                   <label class="control-label" for="alwaysOpenIncognito">
                     {{ l('settings.alwaysOpenIncognito') }}
                   </label>
-                  <small class="form-text text-muted">{{
-                    l('settings.alwaysOpenIncognito.help')
-                  }}</small>
+                  <div class="form-text text-muted">
+                    {{ l('settings.alwaysOpenIncognito.help') }}
+                  </div>
                 </div>
                 <settings-checkbox
                   v-model="generalSettings.horizonAlwaysOpenIncognito"
