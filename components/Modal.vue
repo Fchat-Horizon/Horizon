@@ -199,11 +199,11 @@
     animation: slide-in reverse 0.15s;
   }
 
-  .profile-viewer .slide-leave-active {
+  .profile-viewer > .slide-leave-active {
     animation: spread-out 0.2s;
   }
 
-  .profile-viewer .slide-enter-active {
+  .profile-viewer > .slide-enter-active {
     animation: spread-out reverse 0.2s;
   }
   @keyframes slide-in {
@@ -242,7 +242,9 @@
 
   @media (prefers-reduced-motion: reduce) {
     .slide-enter-active,
-    .slide-leave-active {
+    .slide-leave-active,
+    .profile-viewer > .slide-enter-active,
+    .profile-viewer > .slide-leave-active {
       animation: none;
     }
     .dimmer-enter-active,
