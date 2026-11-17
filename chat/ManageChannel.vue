@@ -59,19 +59,20 @@
         </a>
         <user-view :character="getCharacter(mod)"></user-view>
       </div>
-      <div style="display: flex; margin-top: 5px">
+      <div class="input-group" style="margin-top: 5px">
         <input
           :placeholder="l('manageChannel.modAddName')"
           v-model="modAddName"
           class="form-control"
-          style="margin-right: 5px"
         />
         <button
           class="btn btn-secondary"
           @click="modAdd"
           :disabled="!modAddName"
+          :title="l('manageChannel.modAdd')"
+          :aria-label="l('manageChannel.modAdd')"
         >
-          {{ l('manageChannel.modAdd') }}
+          <i class="fas fa-fw fa-user-plus"></i>
         </button>
       </div>
     </template>
