@@ -109,6 +109,14 @@ const scoreClasses: ScoreClassMap = {
   [Scoring.MISMATCH]: 'mismatch'
 };
 
+const scoreBadgeClasses: ScoreClassMap = {
+  [Scoring.MATCH]: 'text-bg-info',
+  [Scoring.WEAK_MATCH]: 'text-bg-success',
+  [Scoring.NEUTRAL]: 'text-bg-secondary',
+  [Scoring.WEAK_MISMATCH]: 'text-bg-warning',
+  [Scoring.MISMATCH]: 'text-bg-danger'
+};
+
 const scoreIcons: ScoreClassMap = {
   [Scoring.MATCH]: 'fas fa-heart',
   [Scoring.WEAK_MATCH]: 'fas fa-thumbs-up',
@@ -139,12 +147,20 @@ export class Score {
     return Score.getClasses(this.score);
   }
 
+  getRecommendedBadgeClass(): string {
+    return Score.getBadgeClass(this.score);
+  }
+
   getRecommendedIcon(): string {
     return Score.getIcon(this.score);
   }
 
   static getClasses(score: Scoring): string {
     return scoreClasses[score];
+  }
+
+  static getBadgeClass(score: Scoring): string {
+    return scoreBadgeClasses[score];
   }
 
   static getIcon(score: Scoring): string {

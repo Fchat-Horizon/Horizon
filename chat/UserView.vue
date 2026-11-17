@@ -256,10 +256,10 @@
           cache.match.searchScore >= kinkMatchWeights.perfectThreshold &&
           cache.match.matchScore === Scoring.MATCH
         ) {
-          matchClass = 'match-found perfect';
+          matchClass = 'badge match-found perfect';
           matchScore = 'perfect';
         } else {
-          matchClass = `match-found ${Score.getClasses(cache.match.matchScore)}`;
+          matchClass = `badge match-found ${Score.getClasses(cache.match.matchScore)} ${Score.getBadgeClass(cache.match.matchScore)}`;
           matchScore = cache.match.matchScore;
         }
       }

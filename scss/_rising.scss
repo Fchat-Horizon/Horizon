@@ -3,27 +3,19 @@ $scoreTextMinContrastRatio: 3;
 $risingVariables: (
   scorePerfectMatchBg: #{$scorePerfectMatchBg},
   scorePerfectMatchFg: #{$scorePerfectMatchFg},
-  scorePerfectMatchBorder: color-mix(
-      in srgb,
-      #{$scorePerfectMatchBg} 75%,
-      black
-    ),
+  scorePerfectMatchBorder: #{$scorePerfectMatchBorder},
   scoreMatchBg: #{$scoreMatchBg},
   scoreMatchFg: #{$scoreMatchFg},
-  scoreMatchBorder: color-mix(in srgb, #{$scoreMatchBg} 75%, black),
+  scoreMatchBorder: #{$scoreMatchBorder},
   scoreWeakMatchBg: #{$scoreWeakMatchBg},
   scoreWeakMatchFg: #{$scoreWeakMatchFg},
-  scoreWeakMatchBorder: color-mix(in srgb, #{$scoreWeakMatchBg} 75%, black),
+  scoreWeakMatchBorder: #{$scoreWeakMatchBorder},
   scoreWeakMismatchBg: #{$scoreWeakMismatchBg},
   scoreWeakMismatchFg: #{$scoreWeakMismatchFg},
-  scoreWeakMismatchBorder: color-mix(
-      in srgb,
-      #{$scoreWeakMismatchBg} 75%,
-      black
-    ),
+  scoreWeakMismatchBorder: #{$scoreWeakMismatchBorder},
   scoreMismatchBg: #{$scoreMismatchBg},
   scoreMismatchFg: #{$scoreMismatchFg},
-  scoreMismatchBorder: color-mix(in srgb, #{$scoreMismatchBg} 75%, black),
+  scoreMismatchBorder: #{$scoreMismatchBorder},
   scoreTitleColor: #{$scoreTitleColor},
   scoreMinimizeButtonFg: #{$scoreMinimizeButtonFg},
   scoreMinimizeButtonBg: #{$scoreMinimizeButtonBg},

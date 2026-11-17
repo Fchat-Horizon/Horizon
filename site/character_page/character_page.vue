@@ -1163,7 +1163,7 @@
       }
 
       &.comparison-yes {
-        background-color: var(--scoreWeakMatchBg);
+        background-color: var(--scoreFadedWeakMatchBg);
         border-color: var(--scoreWeakMatchBorder);
 
         &.highlighted {
@@ -1173,7 +1173,7 @@
       }
 
       &.comparison-maybe {
-        background-color: var(--scoreWeakMismatchBg);
+        background-color: var(--scoreFadedWeakMismatchBg);
         border-color: var(--scoreWeakMismatchBorder);
 
         &.highlighted {
@@ -1183,7 +1183,7 @@
       }
 
       &.comparison-no {
-        background-color: var(--scoreMismatchBg);
+        background-color: var(--scoreFadedMismatchBg);
         border-color: var(--scoreMismatchBorder);
 
         &.highlighted {

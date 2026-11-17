@@ -1,6 +1,9 @@
 <template>
   <div class="matched-tags">
-    <span v-for="(score, key) in merged" :class="score.getRecommendedClass()"
+    <span
+      v-for="(score, key) in merged"
+      class="badge"
+      :class="[score.getRecommendedClass(), score.getRecommendedBadgeClass()]"
       ><i :class="score.getRecommendedIcon()"></i> {{ getTagDesc(key) }}</span
     >
   </div>
@@ -37,38 +40,9 @@
 
 <style lang="scss">
   .matched-tags {
-    span {
-      padding-left: 3px;
-      padding-right: 3px;
+    .badge {
       margin-bottom: 3px;
       margin-right: 3px;
-      display: inline-block;
-      border: 1px solid;
-      border-radius: 3px;
-
-      &.match {
-        color: var(--scoreMatchFg);
-        background-color: var(--scoreMatchBg);
-        border: solid 1px var(--scoreMatchBorder);
-      }
-
-      &.weak-match {
-        color: var(--scoreWeakMatchFg);
-        background-color: var(--scoreWeakMatchBg);
-        border: 1px solid var(--scoreWeakMatchBorder);
-      }
-
-      &.weak-mismatch {
-        color: var(--scoreWeakMismatchFg);
-        background-color: var(--scoreWeakMismatchBg);
-        border: 1px solid var(--scoreWeakMismatchBorder);
-      }
-
-      &.mismatch {
-        color: var(--scoreMismatchFg);
-        background-color: var(--scoreMismatchBg);
-        border: 1px solid var(--scoreMismatchBorder);
-      }
     }
   }
 </style>

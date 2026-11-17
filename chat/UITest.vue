@@ -558,7 +558,7 @@
             class="user-gender fa fa-fw fa-genderless gender-none"
           ></span
           ><span class="user-status fa-fw far fa-user"></span
-          ><!----><!---->None<span class="match-found perfect"
+          ><!----><!---->None<span class="badge match-found perfect"
             >Perfect</span
           ></span
         >
@@ -567,14 +567,17 @@
             class="user-gender fa fa-fw fa-genderless gender-none"
           ></span
           ><span class="user-status fa-fw far fa-user"></span
-          ><!----><!---->None<span class="match-found match">Great</span></span
+          ><!----><!---->None<span class="badge match-found match text-bg-info"
+            >Great</span
+          ></span
         >
         <span class="user-view gender-none"
           ><!----><span
             class="user-gender fa fa-fw fa-genderless gender-none"
           ></span
           ><span class="user-status fa-fw far fa-user"></span
-          ><!----><!---->None<span class="match-found weak-match"
+          ><!----><!---->None<span
+            class="badge match-found weak-match text-bg-success"
             >Good</span
           ></span
         >
@@ -583,7 +586,8 @@
             class="user-gender fa fa-fw fa-genderless gender-none"
           ></span
           ><span class="user-status fa-fw far fa-user"></span
-          ><!----><!---->None<span class="match-found weak-mismatch"
+          ><!----><!---->None<span
+            class="badge match-found weak-mismatch text-bg-warning"
             >Maybe</span
           ></span
         >
@@ -592,7 +596,10 @@
             class="user-gender fa fa-fw fa-genderless gender-none"
           ></span
           ><span class="user-status fa-fw far fa-user"></span
-          ><!----><!---->None<span class="match-found mismatch">No</span></span
+          ><!----><!---->None<span
+            class="badge match-found mismatch text-bg-danger"
+            >No</span
+          ></span
         >
         <span class="user-view gender-none"
           ><!----><span

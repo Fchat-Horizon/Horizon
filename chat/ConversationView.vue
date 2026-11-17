@@ -1340,17 +1340,8 @@
     }
     .match-found {
       margin-left: 3px;
-      padding-left: 2px;
-      padding-right: 2px;
-      border-radius: 3px;
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 75%;
-      text-align: center;
-      display: inline-block;
+      vertical-align: middle;
       text-transform: uppercase;
-      line-height: 100%;
-      padding-top: 2px;
-      padding-bottom: 2px;
       text-shadow: none;
 
       &.perfect {
@@ -1363,30 +1354,6 @@
           content: '✨';
           padding-right: 3px;
         }
-      }
-
-      &.match {
-        color: var(--scoreMatchFg);
-        background-color: var(--scoreMatchBg);
-        border: solid 1px var(--scoreMatchBorder);
-      }
-
-      &.weak-match {
-        color: var(--scoreWeakMatchFg);
-        background-color: var(--scoreWeakMatchBg);
-        border: 1px solid var(--scoreWeakMatchBorder);
-      }
-
-      &.weak-mismatch {
-        color: var(--scoreWeakMismatchFg);
-        background-color: var(--scoreWeakMismatchBg);
-        border: 1px solid var(--scoreWeakMismatchBorder);
-      }
-
-      &.mismatch {
-        color: var(--scoreMismatchFg);
-        background-color: var(--scoreMismatchBg);
-        border: 1px solid var(--scoreMismatchBorder);
       }
     }
   }
