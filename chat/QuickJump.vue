@@ -9,6 +9,7 @@
         <input
           ref="searchInput"
           v-model="searchQuery"
+          autocorrect="off"
           :placeholder="l('quickJump.placeholder')"
           class="form-control form-control-lg border-0 rounded-0 p-3"
           @keydown="onKeyDown"

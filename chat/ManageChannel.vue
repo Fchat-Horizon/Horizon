@@ -63,6 +63,7 @@
         <input
           :placeholder="l('manageChannel.modAddName')"
           v-model="modAddName"
+          autocorrect="off"
           class="form-control"
         />
         <button

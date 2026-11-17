@@ -82,6 +82,7 @@
               :placeholder="l('login.filterCharacters')"
               v-on:keyup.enter="connect"
               v-model="filterText"
+              autocorrect="off"
               autofocus
             />
           </div>

@@ -26,6 +26,7 @@
             class="form-control search"
             id="search"
             v-model="search"
+            autocorrect="off"
             ref="search"
             :placeholder="l('eicon.searchPlaceholder')"
             @input="searchUpdateDebounce()"

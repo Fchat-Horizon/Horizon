@@ -218,6 +218,7 @@
           <input
             class="form-control"
             v-model="filter"
+            autocorrect="off"
             :placeholder="l('filter')"
             type="text"
           />

@@ -14,6 +14,7 @@
         id="name"
         class="form-control"
         v-model="name"
+        autocorrect="off"
         :placeholder="l('common.name')"
         ref="nameRef"
         v-on:keyup.enter="onEnter"

@@ -70,6 +70,7 @@
         :id="'highlightWords' + conversation.key"
         class="form-control"
         v-model="highlightWords"
+        autocorrect="off"
       />
     </div>
     <div v-if="isChannel" class="mb-3 p-2">
@@ -80,6 +81,7 @@
         :id="'highlightUsers' + conversation.key"
         class="form-control"
         v-model="horizonHighlightUsers"
+        autocorrect="off"
       />
     </div>
 

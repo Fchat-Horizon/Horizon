@@ -29,7 +29,12 @@
       <span class="input-group-text">
         <span class="fas fa-search"></span>
       </span>
-      <input class="form-control" v-model="filter" :placeholder="l('filter')" />
+      <input
+        class="form-control"
+        v-model="filter"
+        autocorrect="off"
+        :placeholder="l('filter')"
+      />
     </div>
   </modal>
 </template>
