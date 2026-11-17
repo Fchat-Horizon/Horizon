@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> [!NOTE]  
+> We are planning on reworking the character matcher feature(s) considerably in the nearby future. If you have the time to, please fill in [this survey](https://forms.gle/YF4osawLApJXkmCF9) so we can take your opinions into consideration.
+> Thank you for your time.
+
+### Fixed
+
+- Fixed spoiler tags not working in exported HTML logs. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0252e83aa064f3be64fe17fdcd329d921c68aad1)
+- The ad launcher now respects channel group orders. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c8dad699e6c155c6627ad2328d903c38c5e8c55e)
+- Fixed characters with names matching certain Javascript prototypes breaking your conversations and 'Recent Conversations' list from loading. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/66fdca286ae6ad4505be9e580a86c745b8690a7d)
+- Fixed closing a PM while you're typing not resetting your typing status in that conversation. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1053e5c23453c41b5388467ae378d340a23676f8)
+- Fixed your status text in the sidebar wrapping over other elements with larger font sizes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/e5d02e6456d136a5a382cd09e716f1f8e8c6f4bf)
+- Fixed the per-character 'disallowed BBCode tags' setting replacing the global list, instead of adding to it. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d61300537a7a8b2ea485b866562f523c697bb96a)
+- Fixed the help text for the 'Always open in incognito' setting starting on the same line as its label. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/2a202d00d960c797a2130faabd83b437db24e4e4)
+- The add moderator field in channel management is a lot less fat, and now uses an input group with an icon button. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/168b5db1056d06778a17b17c0c7e2200c0bfc283)
+- Name, filter, and search fields no longer autocorrect what you type. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dcc1b0466a5a2686ec9dbe9bd0e315c801494cfb)
+  - This is mostly for downstream releases (Solstice).
+- Fixed dialogs opened from the profile viewer using its grow/ shrink animation, instead of sliding in/ out like every other dialog. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/a1e1331b839d5af422ec7727170c84a342c3ffd6)
+  - The profile viewer also respects your system's reduced motion setting now.
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/1032 by @pnoymnoy
+  - This is their first contribution! 🎉
+- https://github.com/Fchat-Horizon/Horizon/pull/1057 by @FatCatClient
+
 ## [2.5.0] - 2026-11-16
 
 > [!NOTE]  
