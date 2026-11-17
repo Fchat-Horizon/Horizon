@@ -1286,7 +1286,6 @@
             <div class="mb-3 p-2">
               <settings-array
                 id="disallowedTags"
-                v-model="settings.disallowedTags"
                 :placeholder="
                   l('settings.disallowedTags.placeholder', { tagName: 'eicon' })
                 "
@@ -1903,7 +1902,6 @@
             <div class="mb-3 p-2">
               <settings-array
                 id="highlightWords"
-                v-model="settings.highlightWords"
                 :globalValue="settings.highlightWords"
                 :overrideValue="characterOverrides.highlightWords"
                 :usingGlobal="isUsingGlobal()"
@@ -1917,7 +1915,6 @@
             <div class="mb-3 p-2">
               <settings-array
                 id="horizonHighlightUsers"
-                v-model="settings.horizonHighlightUsers"
                 :globalValue="settings.horizonHighlightUsers"
                 :overrideValue="characterOverrides.horizonHighlightUsers"
                 :usingGlobal="isUsingGlobal()"
@@ -2996,7 +2993,12 @@
       async submitCharacterOverrides(): Promise<void> {
         const previousCharacterOverrides = core.state.characterSettings;
         const oldRisingFilter = _.cloneDeep(core.state.settings.risingFilter);
-        const characterOverrides = _.cloneDeep(this.characterOverrides);
+        // Unset (undefined) overrides mean "inherit from global"; drop them so
+        // they aren't persisted and don't make otherwise-equal overrides differ.
+        const characterOverrides = _.omitBy(
+          _.cloneDeep(this.characterOverrides),
+          _.isUndefined
+        ) as PartialSettings;
         const newCharacterOverrides = _.isEqual(
           characterOverrides.risingFilter,
           this.settings.risingFilter
