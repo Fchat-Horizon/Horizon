@@ -202,7 +202,8 @@ export default function (this: void, connection: Connection): Interfaces.State {
   });
   connection.onEvent('connected', async isReconnect => {
     if (!isReconnect) return;
-    connection.send('STA', reconnectStatus);
+    if (reconnectStatus.status !== 'online' || reconnectStatus.statusmsg !== '')
+      connection.send('STA', reconnectStatus);
     for (const key in state.characters) {
       const char = state.characters[key]!;
       char.isIgnored = state.ignoreList.indexOf(key) !== -1;
