@@ -144,6 +144,7 @@ export class Settings implements ISettings {
   horizonShowDuplicateStatusNotifications = true;
   horizonShowSigninNotifications = true;
   horizonHighlightUsers: string[] = [];
+  horizonDisabledHighlightUsers: string[] = [];
 
   chatLayoutMode: 'classic' | 'modern' = 'classic';
   messageGrouping = true;

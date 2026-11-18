@@ -343,6 +343,7 @@ export namespace Settings {
     readonly horizonShowSigninNotifications: boolean;
     readonly horizonShowDuplicateStatusNotifications: boolean;
     readonly horizonHighlightUsers: ReadonlyArray<string>;
+    readonly horizonDisabledHighlightUsers: ReadonlyArray<string>;
 
     readonly chatLayoutMode: 'classic' | 'modern';
     readonly messageGrouping: boolean;

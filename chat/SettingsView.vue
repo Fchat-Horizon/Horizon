@@ -1927,10 +1927,20 @@
                 id="horizonHighlightUsers"
                 :globalValue="settings.horizonHighlightUsers"
                 :overrideValue="characterOverrides.horizonHighlightUsers"
+                :excludedValue="
+                  characterOverrides.horizonDisabledHighlightUsers ?? []
+                "
                 :usingGlobal="isUsingGlobal()"
                 @update:globalValue="settings.horizonHighlightUsers = $event"
                 @update:overrideValue="
                   $set(characterOverrides, 'horizonHighlightUsers', $event)
+                "
+                @update:excludedValue="
+                  $set(
+                    characterOverrides,
+                    'horizonDisabledHighlightUsers',
+                    $event
+                  )
                 "
                 :name="l('settings.highlightUsers')"
               />
