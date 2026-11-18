@@ -208,6 +208,8 @@ export class Matcher {
     'lolli',
     'pup',
     'brat',
+    '🚓',
+    '🚔',
     '🚨',
     '🔞',
     '👮',
@@ -1574,6 +1576,32 @@ export class Matcher {
     return _.values(m.you.scores).length + _.values(m.them.scores).length;
   }
 
+  /**
+   * Cleans up an age infotag for parsing. `ascii` runs through any-ascii so
+   * stylized digits (𝟚,𝟘𝟘𝟘, ２０００, ٢٠٠٠) and dashes (18–22) parse like plain ones.
+   * `raw` is kept because any-ascii turns emoji into text (🔞 -> :underage:),
+   * which would hide the emoji age markers
+   */
+  private static normalizeAgeStr(str: string): { raw: string; ascii: string } {
+    const clean = (s: string) => s.toLowerCase().replace(/[,.]/g, '').trim();
+
+    return { raw: clean(str), ascii: clean(anyAscii(str)) };
+  }
+
+  /**
+   * Checks both forms, so emoji markers are found in `raw` and stylized
+   * spellings (ʟᴏʟɪ, 𝓁𝑜𝓁𝒾) are found in `ascii`
+   */
+  private static hasAgeplayMarker(ageStr: {
+    raw: string;
+    ascii: string;
+  }): boolean {
+    return Matcher.ageplayAgeStrings.some(
+      keyword =>
+        ageStr.raw.indexOf(keyword) >= 0 || ageStr.ascii.indexOf(keyword) >= 0
+    );
+  }
+
   static age(c: Character): number | null {
     const rawAge = Matcher.getTagValue(TagId.Age, c);
 
@@ -1581,22 +1609,23 @@ export class Matcher {
       return null;
     }
 
-    const ageStr = rawAge.string.toLowerCase().replace(/[,.]/g, '').trim();
+    const normalized = Matcher.normalizeAgeStr(rawAge.string);
 
-    for (const ageKeyword of this.ageplayAgeStrings) {
-      if (ageStr.indexOf(ageKeyword) >= 0) {
-        return 10;
-      }
+    if (Matcher.hasAgeplayMarker(normalized)) {
+      return 10;
     }
 
+    const ageStr = normalized.ascii;
     let age: number | null = null;
 
     const exactMatch = /^[0-9]+$/.exec(ageStr);
-    const rangeMatch = exactMatch ? null : ageStr.match(/^([0-9]+)-([0-9]+)$/);
+    const rangeMatch = exactMatch
+      ? null
+      : ageStr.match(/^([0-9]+)\s*-\s*([0-9]+)$/);
 
     if (exactMatch) {
       // '18'
-      age = parseInt(rawAge.string, 10);
+      age = parseInt(ageStr, 10);
     } else if (rangeMatch) {
       // '18-22'
       const v1 = parseInt(rangeMatch[1], 10);
@@ -1615,7 +1644,8 @@ export class Matcher {
       return null;
     }
 
-    const ageStr = rawAge.string.toLowerCase().replace(/[,.]/g, '').trim();
+    const normalized = Matcher.normalizeAgeStr(rawAge.string);
+    const ageStr = normalized.ascii;
 
     if (ageStr === '') {
       return null;
@@ -1623,13 +1653,13 @@ export class Matcher {
 
     // '18'
     if (/^[0-9]+$/.exec(ageStr)) {
-      const val = parseInt(rawAge.string, 10);
+      const val = parseInt(ageStr, 10);
 
       return { min: val, max: val };
     }
 
     // '18-22'
-    const rangeMatch = ageStr.match(/^([0-9]+)-([0-9]+)$/);
+    const rangeMatch = ageStr.match(/^([0-9]+)\s*-\s*([0-9]+)$/);
 
     if (rangeMatch) {
       const v1 = parseInt(rangeMatch[1], 10);
@@ -1638,10 +1668,8 @@ export class Matcher {
       return { min: Math.min(v1, v2), max: Math.max(v1, v2) };
     }
 
-    for (const ageKeyword of this.ageplayAgeStrings) {
-      if (ageStr.indexOf(ageKeyword) >= 0) {
-        return { min: 10, max: 10 };
-      }
+    if (Matcher.hasAgeplayMarker(normalized)) {
+      return { min: 10, max: 10 };
     }
 
     return null;
