@@ -299,6 +299,7 @@ export namespace Settings {
     readonly notifications: boolean;
     readonly highlight: boolean;
     readonly highlightWords: ReadonlyArray<string>;
+    readonly horizonDisabledHighlightWords: ReadonlyArray<string>;
     readonly showAvatars: boolean;
     readonly animatedEicons: boolean;
     readonly smoothMosaics: boolean;

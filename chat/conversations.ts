@@ -1476,7 +1476,12 @@ export default function (this: any): Interfaces.State {
     const watchedCharacters =
       conversation.settings.horizonHighlightUsers.slice();
     if (conversation.settings.defaultHighlights) {
-      const globalHighlightWords = core.state.globalSettings.highlightWords;
+      const disabledWords =
+        core.state.characterSettings.horizonDisabledHighlightWords ?? [];
+      const globalHighlightWords =
+        core.state.globalSettings.highlightWords.filter(
+          w => !disabledWords.includes(w)
+        );
       const characterHighlightWords =
         core.state.characterSettings.highlightWords ?? [];
       words.push(...globalHighlightWords, ...characterHighlightWords);

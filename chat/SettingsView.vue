@@ -1904,10 +1904,20 @@
                 id="highlightWords"
                 :globalValue="settings.highlightWords"
                 :overrideValue="characterOverrides.highlightWords"
+                :excludedValue="
+                  characterOverrides.horizonDisabledHighlightWords ?? []
+                "
                 :usingGlobal="isUsingGlobal()"
                 @update:globalValue="settings.highlightWords = $event"
                 @update:overrideValue="
                   $set(characterOverrides, 'highlightWords', $event)
+                "
+                @update:excludedValue="
+                  $set(
+                    characterOverrides,
+                    'horizonDisabledHighlightWords',
+                    $event
+                  )
                 "
                 :name="l('settings.highlightWords')"
               />

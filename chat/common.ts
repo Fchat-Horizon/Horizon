@@ -99,6 +99,7 @@ export class Settings implements ISettings {
   notifications = true;
   highlight = true;
   highlightWords: string[] = [];
+  horizonDisabledHighlightWords: string[] = [];
   showAvatars = true;
   animatedEicons = true;
   smoothMosaics = true;
