@@ -11,8 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > We are planning on reworking the character matcher feature(s) considerably in the nearby future. If you have the time to, please fill in [this survey](https://forms.gle/YF4osawLApJXkmCF9) so we can take your opinions into consideration.
 > Thank you for your time.
 
-### Changed
-
 ### Fixed
 
 - Fixed a vanilla bug with spoiler tags not working in exported HTML logs. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0252e83aa064f3be64fe17fdcd329d921c68aad1)
