@@ -64,8 +64,10 @@ function createBBCodeParser(): BBCodeParser {
   // Character overrides add to the global list rather than replacing it, matching
   // how the settings UI presents them (and how highlightWords is handled).
   // Otherwise an empty override silently re-enables every globally disallowed tag.
-  const globalTags =
-    state._globalSettings?.disallowedTags ?? state.settings.disallowedTags;
+  const allowedTags = state._characterSettings.horizonAllowedTags ?? [];
+  const globalTags = (
+    state._globalSettings?.disallowedTags ?? state.settings.disallowedTags
+  ).filter(t => !allowedTags.includes(t));
   const characterTags = state._characterSettings.disallowedTags ?? [];
   for (const tag of [...globalTags, ...characterTags]) parser.removeTag(tag);
   return parser;

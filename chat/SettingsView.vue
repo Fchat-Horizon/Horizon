@@ -1291,10 +1291,14 @@
                 "
                 :globalValue="settings.disallowedTags"
                 :overrideValue="characterOverrides.disallowedTags"
+                :excludedValue="characterOverrides.horizonAllowedTags ?? []"
                 :usingGlobal="isUsingGlobal()"
                 @update:globalValue="settings.disallowedTags = $event"
                 @update:overrideValue="
                   $set(characterOverrides, 'disallowedTags', $event)
+                "
+                @update:excludedValue="
+                  $set(characterOverrides, 'horizonAllowedTags', $event)
                 "
                 :name="l('settings.disallowedTags')"
               />

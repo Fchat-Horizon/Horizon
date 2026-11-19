@@ -96,6 +96,7 @@ export class Settings implements ISettings {
   playSound = true;
   clickOpensMessage = false;
   disallowedTags: string[] = [];
+  horizonAllowedTags: string[] = [];
   notifications = true;
   highlight = true;
   highlightWords: string[] = [];

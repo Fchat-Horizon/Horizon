@@ -296,6 +296,7 @@ export namespace Settings {
     readonly playSound: boolean;
     readonly clickOpensMessage: boolean;
     readonly disallowedTags: ReadonlyArray<string>;
+    readonly horizonAllowedTags: ReadonlyArray<string>;
     readonly notifications: boolean;
     readonly highlight: boolean;
     readonly highlightWords: ReadonlyArray<string>;
