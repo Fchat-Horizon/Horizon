@@ -402,4 +402,5 @@ export interface State {
   hiddenUsers: string[];
   favoriteEIcons: Record<string, boolean>;
   recentEIcons: string[];
+  removedBBCodeTags: string;
 }

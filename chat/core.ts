@@ -69,7 +69,9 @@ function createBBCodeParser(): BBCodeParser {
     state._globalSettings?.disallowedTags ?? state.settings.disallowedTags
   ).filter(t => !allowedTags.includes(t));
   const characterTags = state._characterSettings.disallowedTags ?? [];
-  for (const tag of [...globalTags, ...characterTags]) parser.removeTag(tag);
+  const tags = [...globalTags, ...characterTags];
+  for (const tag of tags) parser.removeTag(tag);
+  state.removedBBCodeTags = tags.join();
   return parser;
 }
 
@@ -108,6 +110,7 @@ class State implements StateInterface {
   hiddenUsers: string[] = [];
   favoriteEIcons: Record<string, boolean> = emptyMap();
   recentEIcons: string[] = [];
+  removedBBCodeTags = '';
 
   get settings(): Settings {
     if (this._settings === undefined) throw new Error('Settings load failed.');
@@ -277,6 +280,7 @@ const data = {
       globalSettings,
       characterSettings
     );
+    data.bbCodeParser = createBBCodeParser();
 
     const hiddenUsers = await core.settingsStore.get('hiddenUsers');
     state.hiddenUsers = hiddenUsers !== undefined ? hiddenUsers : [];
@@ -395,7 +399,6 @@ export async function init(
 
   connection.onEvent('connecting', async () => {
     await data.reloadSettings();
-    data.bbCodeParser = createBBCodeParser();
     preloadTeamData().catch(() => {});
   });
 }
