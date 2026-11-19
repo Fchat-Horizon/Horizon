@@ -189,8 +189,16 @@ webContents.on('context-menu', (_, props) => {
       label: l('action.copyLink'),
       click(): void {
         if (process.platform === 'darwin')
-          electron.clipboard.writeBookmark(props.linkText, props.linkURL);
-        else electron.clipboard.writeText(props.linkURL);
+          void electron.clipboard.write([
+            new electron.ClipboardItem({
+              'electron application/bookmark': {
+                title: props.linkText,
+                url: props.linkURL
+              },
+              'text/plain': props.linkURL
+            })
+          ]);
+        else void electron.clipboard.writeText(props.linkURL);
       }
     });
 
