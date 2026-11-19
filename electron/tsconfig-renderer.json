@@ -17,6 +17,12 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
   },
-  "include": ["chat.ts", "window.ts", "../**/*.d.ts"],
+  "include": [
+    "chat.ts",
+    "window.ts",
+    "about.ts",
+    "about/preload.ts",
+    "../**/*.d.ts"
+  ],
   "exclude": ["../node_modules"]
 }
