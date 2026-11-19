@@ -310,6 +310,11 @@ const data = {
    *                          If false, start fresh with default settings.
    */
   async migrateToGlobalSettings(useCurrentAsGlobal: boolean): Promise<void> {
+    if (
+      (await core.settingsStore.get('settings', GLOBAL_SETTINGS_CHARACTER)) !==
+      undefined
+    )
+      return data.reloadSettings();
     if (useCurrentAsGlobal) {
       // Use current character's settings as the global settings
       const currentSettings = state._settings!;
@@ -346,6 +351,7 @@ const data = {
       state._globalSettings!,
       state._characterSettings
     );
+    await core.platform.reloadSettings();
   }
 };
 
