@@ -204,6 +204,10 @@ export type Conversation = Conversation.Conversation;
 
 export namespace Logs {
   export type Conversation = { readonly key: string; readonly name: string };
+  export type CharacterConversation = {
+    readonly character: string;
+    readonly conversation: Conversation;
+  };
 }
 
 export interface Logs {
@@ -224,6 +228,9 @@ export interface Logs {
   ): Promise<ReadonlyArray<Conversation.Message>>;
   getLogDates(character: string, key: string): Promise<ReadonlyArray<Date>>;
   getAvailableCharacters(): Promise<ReadonlyArray<string>>;
+  findConversationsWith(
+    target: string
+  ): Promise<ReadonlyArray<Logs.CharacterConversation>>;
   canZip: boolean;
 }
 
