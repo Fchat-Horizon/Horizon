@@ -1291,14 +1291,14 @@
                 "
                 :globalValue="settings.disallowedTags"
                 :overrideValue="characterOverrides.disallowedTags"
-                :excludedValue="characterOverrides.horizonAllowedTags ?? []"
+                :excludedValue="globalExclusions.disallowedTags ?? []"
                 :usingGlobal="isUsingGlobal()"
                 @update:globalValue="settings.disallowedTags = $event"
                 @update:overrideValue="
                   $set(characterOverrides, 'disallowedTags', $event)
                 "
                 @update:excludedValue="
-                  $set(characterOverrides, 'horizonAllowedTags', $event)
+                  $set(globalExclusions, 'disallowedTags', $event)
                 "
                 :name="l('settings.disallowedTags')"
               />
@@ -1908,20 +1908,14 @@
                 id="highlightWords"
                 :globalValue="settings.highlightWords"
                 :overrideValue="characterOverrides.highlightWords"
-                :excludedValue="
-                  characterOverrides.horizonDisabledHighlightWords ?? []
-                "
+                :excludedValue="globalExclusions.highlightWords ?? []"
                 :usingGlobal="isUsingGlobal()"
                 @update:globalValue="settings.highlightWords = $event"
                 @update:overrideValue="
                   $set(characterOverrides, 'highlightWords', $event)
                 "
                 @update:excludedValue="
-                  $set(
-                    characterOverrides,
-                    'horizonDisabledHighlightWords',
-                    $event
-                  )
+                  $set(globalExclusions, 'highlightWords', $event)
                 "
                 :name="l('settings.highlightWords')"
               />
@@ -1931,20 +1925,14 @@
                 id="horizonHighlightUsers"
                 :globalValue="settings.horizonHighlightUsers"
                 :overrideValue="characterOverrides.horizonHighlightUsers"
-                :excludedValue="
-                  characterOverrides.horizonDisabledHighlightUsers ?? []
-                "
+                :excludedValue="globalExclusions.horizonHighlightUsers ?? []"
                 :usingGlobal="isUsingGlobal()"
                 @update:globalValue="settings.horizonHighlightUsers = $event"
                 @update:overrideValue="
                   $set(characterOverrides, 'horizonHighlightUsers', $event)
                 "
                 @update:excludedValue="
-                  $set(
-                    characterOverrides,
-                    'horizonDisabledHighlightUsers',
-                    $event
-                  )
+                  $set(globalExclusions, 'horizonHighlightUsers', $event)
                 "
                 :name="l('settings.highlightUsers')"
               />
@@ -2555,6 +2543,7 @@
   import {
     Settings as SettingsInterface,
     Character,
+    GlobalExclusions,
     PartialSettings
   } from './interfaces';
   import { GeneralSettings } from './general-settings';
@@ -2627,6 +2616,7 @@
         settingsMode: '0',
         importCharacter: '',
         characterOverrides: {} as PartialSettings,
+        globalExclusions: {} as GlobalExclusions,
         generalSettings: null as GeneralSettings | null,
         availableDisplayLanguages,
         spellcheckLanguages: [] as ReadonlyArray<SpellcheckLanguage>,
@@ -2809,6 +2799,7 @@
         ).filter(x => x !== core.connection.character);
 
         this.characterOverrides = _.cloneDeep(core.state.characterSettings);
+        this.globalExclusions = _.cloneDeep(core.state.globalExclusions);
       },
       async doImport(): Promise<void> {
         if (
@@ -2830,6 +2821,7 @@
         };
         if (this.importSettings.settings) {
           await importKey('settings');
+          await importKey('globalExclusions');
           await importKey('modes');
           await importKey('conversationSettings');
         }
@@ -3015,6 +3007,13 @@
         await core.platform.reloadSettings();
       },
       async submitCharacterOverrides(): Promise<void> {
+        const globalExclusions = _.omitBy(
+          this.globalExclusions,
+          _.isUndefined
+        ) as GlobalExclusions;
+        if (!_.isEqual(core.state.globalExclusions, globalExclusions))
+          core.state.globalExclusions = globalExclusions;
+
         const previousCharacterOverrides = core.state.characterSettings;
         const oldRisingFilter = _.cloneDeep(core.state.settings.risingFilter);
         // Unset (undefined) overrides mean "inherit from global"; drop them so

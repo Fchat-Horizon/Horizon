@@ -21,6 +21,7 @@ import {
   Character,
   Connection,
   Conversation,
+  GlobalExclusions,
   Logs,
   Notifications,
   PartialSettings,
@@ -59,17 +60,11 @@ function convertToPartialSettings(
   return partialSettings;
 }
 
-const globalExclusions = {
-  highlightWords: 'horizonDisabledHighlightWords',
-  horizonHighlightUsers: 'horizonDisabledHighlightUsers',
-  disallowedTags: 'horizonAllowedTags'
-} as const;
-
 // Character overrides add to the global list rather than replacing it, matching
 // how the settings UI presents them (and how highlightWords is handled).
 // Otherwise an empty override silently re-enables every globally disallowed tag.
-export function effectiveList(key: keyof typeof globalExclusions): string[] {
-  const excluded = state._characterSettings[globalExclusions[key]] ?? [];
+export function effectiveList(key: keyof GlobalExclusions): string[] {
+  const excluded = state._globalExclusions[key] ?? [];
   return [
     ...(state._globalSettings?.[key] ?? state.settings[key]).filter(
       x => !excluded.includes(x)
@@ -117,6 +112,7 @@ class State implements StateInterface {
   _settings: Settings | undefined = undefined;
   _globalSettings: Settings | undefined = undefined;
   _characterSettings: PartialSettings = {};
+  _globalExclusions: GlobalExclusions = {};
   needsSettingsMigration: boolean = false;
   hiddenUsers: string[] = [];
   favoriteEIcons: Record<string, boolean> = emptyMap();
@@ -168,6 +164,18 @@ class State implements StateInterface {
     //tslint:disable-next-line:no-floating-promises
     if (data.settingsStore !== undefined)
       data.settingsStore.set('settings', value);
+    data.bbCodeParser = createBBCodeParser();
+  }
+
+  get globalExclusions(): GlobalExclusions {
+    return this._globalExclusions;
+  }
+
+  set globalExclusions(value: GlobalExclusions) {
+    this._globalExclusions = value;
+    //tslint:disable-next-line:no-floating-promises
+    if (data.settingsStore !== undefined)
+      data.settingsStore.set('globalExclusions', value);
     data.bbCodeParser = createBBCodeParser();
   }
 }
@@ -285,6 +293,8 @@ const data = {
       }
     }
     state._characterSettings = characterSettings;
+    state._globalExclusions =
+      (await core.settingsStore.get('globalExclusions')) ?? {};
 
     // Create merged settings proxy
     state._settings = createMergedSettingsProxy(

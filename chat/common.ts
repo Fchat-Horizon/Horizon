@@ -96,11 +96,9 @@ export class Settings implements ISettings {
   playSound = true;
   clickOpensMessage = false;
   disallowedTags: string[] = [];
-  horizonAllowedTags: string[] = [];
   notifications = true;
   highlight = true;
   highlightWords: string[] = [];
-  horizonDisabledHighlightWords: string[] = [];
   showAvatars = true;
   animatedEicons = true;
   smoothMosaics = true;
@@ -145,7 +143,6 @@ export class Settings implements ISettings {
   horizonShowDuplicateStatusNotifications = true;
   horizonShowSigninNotifications = true;
   horizonHighlightUsers: string[] = [];
-  horizonDisabledHighlightUsers: string[] = [];
 
   chatLayoutMode: 'classic' | 'modern' = 'classic';
   messageGrouping = true;

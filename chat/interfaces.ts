@@ -258,6 +258,7 @@ export namespace Settings {
     /** Global settings stored under '_' are of the type "Settings",character overrides are of the type "PartialSettings" */
     settings: Settings | PartialSettings;
     pinned: { channels: string[]; private: string[] };
+    globalExclusions: GlobalExclusions;
     conversationSettings: { [key: string]: Conversation.Settings | undefined };
     modes: { [key: string]: Channel.Mode | undefined };
     recent: Conversation.RecentPrivateConversation[];
@@ -296,11 +297,9 @@ export namespace Settings {
     readonly playSound: boolean;
     readonly clickOpensMessage: boolean;
     readonly disallowedTags: ReadonlyArray<string>;
-    readonly horizonAllowedTags: ReadonlyArray<string>;
     readonly notifications: boolean;
     readonly highlight: boolean;
     readonly highlightWords: ReadonlyArray<string>;
-    readonly horizonDisabledHighlightWords: ReadonlyArray<string>;
     readonly showAvatars: boolean;
     readonly animatedEicons: boolean;
     readonly smoothMosaics: boolean;
@@ -344,7 +343,6 @@ export namespace Settings {
     readonly horizonShowSigninNotifications: boolean;
     readonly horizonShowDuplicateStatusNotifications: boolean;
     readonly horizonHighlightUsers: ReadonlyArray<string>;
-    readonly horizonDisabledHighlightUsers: ReadonlyArray<string>;
 
     readonly chatLayoutMode: 'classic' | 'modern';
     readonly messageGrouping: boolean;
@@ -370,10 +368,18 @@ export namespace Settings {
   export type PartialSettings = {
     [K in keyof Settings]?: Settings[K] | undefined;
   };
+
+  // global list entries a character has opted out of, per list setting.
+  export type GlobalExclusions = {
+    [K in 'highlightWords' | 'horizonHighlightUsers' | 'disallowedTags']?:
+      | ReadonlyArray<string>
+      | undefined;
+  };
 }
 
 export type Settings = Settings.Settings;
 export type PartialSettings = Settings.PartialSettings;
+export type GlobalExclusions = Settings.GlobalExclusions;
 
 export interface Notifications {
   isInBackground: boolean;
@@ -398,6 +404,7 @@ export interface State {
   globalSettings: Settings;
   /** Character-specific overrides. Properties set to undefined use global value. */
   characterSettings: PartialSettings;
+  globalExclusions: GlobalExclusions;
   needsSettingsMigration: boolean;
   hiddenUsers: string[];
   favoriteEIcons: Record<string, boolean>;
