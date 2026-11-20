@@ -9,7 +9,7 @@ import {
   Message,
   messageToString
 } from './common';
-import core from './core';
+import core, { effectiveList } from './core';
 import { Channel, Character, Conversation as Interfaces } from './interfaces';
 import l, { LocaleKey } from './localize';
 import {
@@ -1475,29 +1475,9 @@ export default function (this: any): Interfaces.State {
     const words = conversation.settings.highlightWords.slice();
     const watchedCharacters =
       conversation.settings.horizonHighlightUsers.slice();
-    if (conversation.settings.defaultHighlights) {
-      const disabledWords =
-        core.state.characterSettings.horizonDisabledHighlightWords ?? [];
-      const globalHighlightWords =
-        core.state.globalSettings.highlightWords.filter(
-          w => !disabledWords.includes(w)
-        );
-      const characterHighlightWords =
-        core.state.characterSettings.highlightWords ?? [];
-      words.push(...globalHighlightWords, ...characterHighlightWords);
-    }
-    const disabledWatchedCharacters =
-      core.state.characterSettings.horizonDisabledHighlightUsers ?? [];
-    const globalWatchedCharacters =
-      core.state.globalSettings.horizonHighlightUsers.filter(
-        c => !disabledWatchedCharacters.includes(c)
-      );
-    const characterWatchedCharacters =
-      core.state.characterSettings.horizonHighlightUsers ?? [];
-    watchedCharacters.push(
-      ...globalWatchedCharacters,
-      ...characterWatchedCharacters
-    );
+    if (conversation.settings.defaultHighlights)
+      words.push(...effectiveList('highlightWords'));
+    watchedCharacters.push(...effectiveList('horizonHighlightUsers'));
     if (
       (conversation.settings.highlight === Interfaces.Setting.Default &&
         core.state.settings.highlight) ||

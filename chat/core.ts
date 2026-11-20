@@ -59,17 +59,28 @@ function convertToPartialSettings(
   return partialSettings;
 }
 
+const globalExclusions = {
+  highlightWords: 'horizonDisabledHighlightWords',
+  horizonHighlightUsers: 'horizonDisabledHighlightUsers',
+  disallowedTags: 'horizonAllowedTags'
+} as const;
+
+// Character overrides add to the global list rather than replacing it, matching
+// how the settings UI presents them (and how highlightWords is handled).
+// Otherwise an empty override silently re-enables every globally disallowed tag.
+export function effectiveList(key: keyof typeof globalExclusions): string[] {
+  const excluded = state._characterSettings[globalExclusions[key]] ?? [];
+  return [
+    ...(state._globalSettings?.[key] ?? state.settings[key]).filter(
+      x => !excluded.includes(x)
+    ),
+    ...(state._characterSettings[key] ?? [])
+  ];
+}
+
 function createBBCodeParser(): BBCodeParser {
   const parser = new BBCodeParser();
-  // Character overrides add to the global list rather than replacing it, matching
-  // how the settings UI presents them (and how highlightWords is handled).
-  // Otherwise an empty override silently re-enables every globally disallowed tag.
-  const allowedTags = state._characterSettings.horizonAllowedTags ?? [];
-  const globalTags = (
-    state._globalSettings?.disallowedTags ?? state.settings.disallowedTags
-  ).filter(t => !allowedTags.includes(t));
-  const characterTags = state._characterSettings.disallowedTags ?? [];
-  const tags = [...globalTags, ...characterTags];
+  const tags = effectiveList('disallowedTags');
   for (const tag of tags) parser.removeTag(tag);
   state.removedBBCodeTags = tags.join();
   return parser;
