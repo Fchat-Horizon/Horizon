@@ -37,14 +37,25 @@
 $scorePerfectMatchBg: $teal-400;
 //poor contrast. I don't give a fuck.
 $scorePerfectMatchFg: #d2f4ea;
-$scoreMatchBg: var(--bs-info-border-subtle);
-$scoreMatchFg: var(--bs-info-text-emphasis);
-$scoreWeakMatchBg: var(--bs-success-border-subtle);
-$scoreWeakMatchFg: var(--bs-success-text-emphasis);
-$scoreWeakMismatchBg: var(--bs-warning-border-subtle);
-$scoreWeakMismatchFg: var(--bs-warning-text-emphasis);
-$scoreMismatchBg: var(--bs-danger-border-subtle);
-$scoreMismatchFg: var(--bs-danger-text-emphasis);
+$scorePerfectMatchBorder: color-mix(
+  in srgb,
+  #{$scorePerfectMatchBg} 75%,
+  black
+);
+// Same colours as Bootstrap's text-bg-* helpers, with a slightly darker
+// border of the same hue.
+$scoreMatchBg: $info;
+$scoreMatchFg: color-contrast($info);
+$scoreMatchBorder: shade-color($info, 20%);
+$scoreWeakMatchBg: $success;
+$scoreWeakMatchFg: color-contrast($success);
+$scoreWeakMatchBorder: shade-color($success, 20%);
+$scoreWeakMismatchBg: $warning;
+$scoreWeakMismatchFg: color-contrast($warning);
+$scoreWeakMismatchBorder: shade-color($warning, 20%);
+$scoreMismatchBg: $danger;
+$scoreMismatchFg: color-contrast($danger);
+$scoreMismatchBorder: shade-color($danger, 20%);
 $scoreTitleColor: var(--bs-body-color);
 $scoreMinimizeButtonFg: rgba(255, 255, 255, 0.7) !default;
 $scoreMinimizeButtonBg: rgba(0, 0, 0, 0.2) !default;

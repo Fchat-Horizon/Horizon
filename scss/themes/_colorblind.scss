@@ -11,6 +11,20 @@ $scoreWeakMismatchFg: color-contrast($scoreWeakMismatchBg, $black, $white);
 $scoreMismatchBg: #ab0000;
 $scoreMismatchFg: color-contrast($scoreMismatchBg, $black, $white);
 
+$scorePerfectMatchBorder: color-mix(
+  in srgb,
+  #{$scorePerfectMatchBg} 75%,
+  black
+);
+$scoreMatchBorder: color-mix(in srgb, #{$scoreMatchBg} 75%, black);
+$scoreWeakMatchBorder: color-mix(in srgb, #{$scoreWeakMatchBg} 75%, black);
+$scoreWeakMismatchBorder: color-mix(
+  in srgb,
+  #{$scoreWeakMismatchBg} 75%,
+  black
+);
+$scoreMismatchBorder: color-mix(in srgb, #{$scoreMismatchBg} 75%, black);
+
 $scoreStandoutMatchBorderColor: #317bd0;
 $scoreStandoutMatchBgColor: rgba(49, 123, 208, 0.47);
 $scoreStandoutWeakMatchBorderColor: rgb(18, 72, 1);
@@ -202,4 +216,24 @@ $achromatic-highlight-accent: if($cvd-light-theme, #252525, #f0f0f0);
 .userlist-item.dimmed > .user-view::before {
   content: '\f05e';
   font-family: 'Font Awesome 7 Free';
+}
+
+// Match badges use Bootstrap's text-bg-* helpers, which set their colours
+// with !important; swap in the high-contrast score palette instead.
+$cvd-score-badges: (
+  'perfect': 'PerfectMatch',
+  'match': 'Match',
+  'weak-match': 'WeakMatch',
+  'weak-mismatch': 'WeakMismatch',
+  'mismatch': 'Mismatch'
+);
+
+.match-found,
+.matched-tags .badge {
+  @each $class, $name in $cvd-score-badges {
+    &.#{$class} {
+      color: var(--score#{$name}Fg) !important;
+      background-color: var(--score#{$name}Bg) !important;
+    }
+  }
 }
