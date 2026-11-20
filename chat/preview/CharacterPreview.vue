@@ -1,6 +1,6 @@
 <template>
   <div class="character-preview">
-    <div v-if="match && character" class="row">
+    <div v-if="character" class="row">
       <div class="col-2">
         <img :src="getAvatarUrl()" class="character-avatar" />
       </div>
@@ -140,12 +140,17 @@
   import core from '../core';
   import { methods } from '../../site/character_page/data_store';
   import { Character as ComplexCharacter } from '../../site/character_page/interfaces';
-  import { Matcher, MatchReport, Score } from '../../learn/matcher';
+  import {
+    CharacterAnalysis,
+    Matcher,
+    MatchReport,
+    Score
+  } from '../../learn/matcher';
   import { Character as CharacterStatus } from '../../fchat';
   import { getStatusClasses, StatusClasses } from '../UserView.vue';
   import * as _ from 'lodash';
   import { AdCachedPosting } from '../../learn/ad-cache';
-  import { formatTime } from '../common';
+  import { formatTime, isOwnCharacter } from '../common';
   import * as Utils from '../../site/utils';
   import MatchTags from './MatchTags.vue';
   import {
@@ -257,7 +262,6 @@
         if (
           this.characterName === characterName &&
           !force &&
-          this.match &&
           this.character &&
           this.ownCharacter &&
           this.ownCharacter.character.name ===
@@ -286,10 +290,12 @@
 
         setTimeout(async () => {
           this.character = await this.getCharacterData(characterName);
-          this.match = Matcher.identifyBestMatchReport(
-            this.ownCharacter!.character,
-            this.character!.character
-          );
+          this.match = isOwnCharacter(characterName)
+            ? undefined
+            : Matcher.identifyBestMatchReport(
+                this.ownCharacter!.character,
+                this.character!.character
+              );
 
           void this.updateConversationStatus();
 
@@ -419,7 +425,7 @@
         );
       },
       updateDetails(): void {
-        if (!this.match) {
+        if (!this.character) {
           this.age = undefined;
           this.species = undefined;
           this.gender = undefined;
@@ -429,8 +435,10 @@
           return;
         }
 
-        const a = this.match.them.yourAnalysis;
-        const c = this.match.them.you;
+        const a = this.match
+          ? this.match.them.yourAnalysis
+          : new CharacterAnalysis(this.character.character);
+        const c = a.character;
 
         const rawSpecies = Matcher.getTagValue(TagId.Species, c);
         const rawAge = Matcher.getTagValue(TagId.Age, c);

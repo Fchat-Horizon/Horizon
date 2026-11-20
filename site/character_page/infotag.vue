@@ -27,7 +27,7 @@
   const props = defineProps<{
     infotag: Infotag;
     data: CharacterInfotag;
-    characterMatch: MatchReport;
+    characterMatch?: MatchReport;
   }>();
 
   const contactGroupId = CONTACT_GROUP_ID;

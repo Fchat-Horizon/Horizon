@@ -28,13 +28,7 @@
 
     <div
       class="col-md-4 col-lg-3 col-xl-2"
-      v-if="
-        !loading &&
-        character &&
-        character.character &&
-        characterMatch &&
-        selfCharacter
-      "
+      v-if="!loading && character && character.character && selfCharacter"
     >
       <sidebar
         :character="character"
@@ -46,13 +40,7 @@
     </div>
     <div
       class="col-md-8 col-lg-9 col-xl-10 profile-body"
-      v-if="
-        !loading &&
-        character &&
-        character.character &&
-        characterMatch &&
-        selfCharacter
-      "
+      v-if="!loading && character && character.character && selfCharacter"
     >
       <div id="characterView">
         <div>
@@ -111,7 +99,7 @@
                     </profile-analysis>
                     <match-report
                       :characterMatch="characterMatch"
-                      v-else
+                      v-else-if="characterMatch"
                     ></match-report>
                   </template>
 
@@ -268,6 +256,7 @@
   import ReconView from './recon.vue';
   import Sidebar from './sidebar.vue';
   import core from '../../chat/core';
+  import { isOwnCharacter } from '../../chat/common';
   import { Matcher, MatchReport } from '../../learn/matcher';
   import MatchReportView from './match-report.vue';
   import ProfileAnalysis from '../../learn/recommend/ProfileAnalysis.vue';
@@ -705,6 +694,11 @@
       },
       updateMatches(): void {
         if (!this.selfCharacter || !this.character) return;
+
+        if (isOwnCharacter(this.character.character.name)) {
+          this.characterMatch = undefined;
+          return;
+        }
 
         this.characterMatch = Matcher.identifyBestMatchReport(
           this.selfCharacter.character,

@@ -109,6 +109,7 @@
     characterImage,
     errorToString,
     getByteLength,
+    isOwnCharacter,
     profileLink
   } from './common';
   import core from './core';
@@ -555,7 +556,10 @@
         };
         this.match = null;
 
-        if (core.state.settings.risingComparisonInUserMenu) {
+        if (
+          core.state.settings.risingComparisonInUserMenu &&
+          !isOwnCharacter(character.name)
+        ) {
           const myProfile = core.characters.ownProfile;
           const theirProfile = await core.cache.profileCache.get(
             this.character.name

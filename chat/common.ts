@@ -16,6 +16,11 @@ export function normalizeCharacterName(
   return character.replace(/[\r\n]/g, '');
 }
 
+export function isOwnCharacter(name: string | undefined | null): boolean {
+  const own = core.connection.character;
+  return !!name && !!own && name.toLowerCase() === own.toLowerCase();
+}
+
 export function profileLink(this: any | never, character: string): string {
   return `https://www.f-list.net/c/${normalizeCharacterName(character)}`;
 }
