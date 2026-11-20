@@ -4,7 +4,6 @@
  */
 
 import * as electron from 'electron';
-import * as windowState from './window_state';
 import * as remoteMain from '@electron/remote/main';
 import log from 'electron-log'; //tslint:disable-line:match-default-export-name
 import path from 'path';
@@ -48,6 +47,18 @@ const newMessagesMap: { [id: number]: number } = {};
  * @internal
  */
 const windowCssKeyMap: { [id: number]: string } = {};
+
+/**
+ * Name under which Electron persists the main window's state (bounds and
+ * display mode) across restarts. Window names must be unique among live
+ * windows, so only one main window can hold it at a time.
+ */
+const mainWindowStateName = 'main';
+
+/**
+ * The main window currently holding {@link mainWindowStateName}, if any.
+ */
+let persistedStateWindow: electron.BrowserWindow | undefined;
 
 /**
  * Tray icon path.
@@ -306,7 +317,9 @@ export function createMainWindow(
   if (tabCount >= maxTabCount) {
     return;
   }
-  const lastState = windowState.getSavedWindowState();
+  // Only one window can own the persisted state name at a time; additional
+  // windows opened while it is in use fall back to the default size.
+  const persistState = persistedStateWindow === undefined;
 
   let windowBackgroundColor: string;
 
@@ -329,11 +342,12 @@ export function createMainWindow(
       break;
   }
 
-  const windowProperties: electron.BrowserWindowConstructorOptions & {
-    maximized: boolean;
-  } = {
-    ...lastState,
-    center: lastState.x === undefined,
+  const windowProperties: electron.BrowserWindowConstructorOptions = {
+    width: 1024,
+    height: 768,
+    ...(persistState
+      ? { name: mainWindowStateName, windowStatePersistence: true }
+      : {}),
     show: false,
     icon: process.platform === 'win32' ? winIcon : pngIcon,
     backgroundColor: !settings.allowWindowTransparency
@@ -363,6 +377,13 @@ export function createMainWindow(
   }
 
   const window = new electron.BrowserWindow(windowProperties);
+
+  if (persistState) {
+    persistedStateWindow = window;
+    window.on('closed', () => {
+      if (persistedStateWindow === window) persistedStateWindow = undefined;
+    });
+  }
 
   newMessagesMap[window.id] = 0;
   remoteMain.enable(window.webContents);
@@ -440,15 +461,8 @@ export function createMainWindow(
 
   setUpWebContents(window.webContents, settings);
 
-  // Save window state when it is being closed.
-  window.on('close', () => windowState.setSavedWindowState(window));
   window.on('closed', () => windows.splice(windows.indexOf(window), 1));
-  window.once('ready-to-show', () => {
-    window.show();
-    if (lastState.maximized) {
-      window.maximize();
-    }
-  });
+  window.once('ready-to-show', () => window.show());
 
   //On MacOS, the app menu is not bound to any windows, so some options need to be manually toggled. An app can be "active" without any focused windows.
   if (process.platform === 'darwin') {
