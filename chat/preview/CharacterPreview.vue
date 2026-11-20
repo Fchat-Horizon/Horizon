@@ -150,7 +150,8 @@
   import { getStatusClasses, StatusClasses } from '../UserView.vue';
   import * as _ from 'lodash';
   import { AdCachedPosting } from '../../learn/ad-cache';
-  import { formatTime, isOwnCharacter } from '../common';
+  import { ProfileCache } from '../../learn/profile-cache';
+  import { formatTime } from '../common';
   import * as Utils from '../../site/utils';
   import MatchTags from './MatchTags.vue';
   import {
@@ -289,13 +290,12 @@
         this.updateAdStatus();
 
         setTimeout(async () => {
-          this.character = await this.getCharacterData(characterName);
-          this.match = isOwnCharacter(characterName)
-            ? undefined
-            : Matcher.identifyBestMatchReport(
-                this.ownCharacter!.character,
-                this.character!.character
-              );
+          const character = await this.getCharacterData(characterName);
+
+          if (this.characterName !== characterName) return;
+
+          this.character = character;
+          this.match = ProfileCache.match(character) ?? undefined;
 
           void this.updateConversationStatus();
 

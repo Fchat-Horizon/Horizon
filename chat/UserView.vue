@@ -231,10 +231,11 @@
       statusClass = `fa-fw ${getStatusIcon(character.status)}`;
 
     if (core.connection.character) {
-      if (isOwnCharacter(character.name)) showMatch = false;
+      const isSelf = isOwnCharacter(character.name);
+      if (isSelf) showMatch = false;
 
       const showFilterIcon =
-        !isOwnCharacter(character.name) &&
+        !isSelf &&
         core.state.settings.risingFilter.showFilterIcon &&
         hasActiveSmartFilters(core.state.settings.risingFilter);
       const cache =

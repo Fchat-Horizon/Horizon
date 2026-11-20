@@ -58,15 +58,7 @@
     // // console.log(`Infotag ${props.infotag.id}: ${props.infotag.name}`, core.state.settings.risingAdScore, props.characterMatch);
     const id = parseInt(props.infotag.id as any, 10);
 
-    if (
-      core.state.settings.risingAdScore &&
-      props.characterMatch &&
-      // We don't get passed a reference to the character this tag is for,
-      // so we just check if the MatchReport involves a match where both characters are the same.
-      // It's good that we don't use the is_self field from the API here, because we still might
-      // want to test matches with our own characters.
-      props.characterMatch.them.them.id != props.characterMatch.them.you.id
-    ) {
+    if (core.state.settings.risingAdScore && props.characterMatch) {
       const scores = theirInterestIsRelevant(id)
         ? props.characterMatch.them.scores
         : yourInterestIsRelevant(id)

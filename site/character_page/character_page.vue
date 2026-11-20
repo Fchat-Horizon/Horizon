@@ -236,7 +236,10 @@
 
   import { StandardBBCodeParser } from '../../bbcode/standard';
   import { BBCodeView } from '../../bbcode/view';
-  import { CharacterCacheRecord } from '../../learn/profile-cache';
+  import {
+    CharacterCacheRecord,
+    ProfileCache
+  } from '../../learn/profile-cache';
   import * as Utils from '../utils';
   import { methods, Store } from './data_store';
   import {
@@ -256,8 +259,7 @@
   import ReconView from './recon.vue';
   import Sidebar from './sidebar.vue';
   import core from '../../chat/core';
-  import { isOwnCharacter } from '../../chat/common';
-  import { Matcher, MatchReport } from '../../learn/matcher';
+  import { MatchReport } from '../../learn/matcher';
   import MatchReportView from './match-report.vue';
   import ProfileAnalysis from '../../learn/recommend/ProfileAnalysis.vue';
   import { CharacterImage, SimpleCharacter } from '../../interfaces';
@@ -695,15 +697,7 @@
       updateMatches(): void {
         if (!this.selfCharacter || !this.character) return;
 
-        if (isOwnCharacter(this.character.character.name)) {
-          this.characterMatch = undefined;
-          return;
-        }
-
-        this.characterMatch = Matcher.identifyBestMatchReport(
-          this.selfCharacter.character,
-          this.character.character
-        );
+        this.characterMatch = ProfileCache.match(this.character) ?? undefined;
 
         // console.log('Match', this.selfCharacter.character.name, this.character.character.name, this.characterMatch);
       },

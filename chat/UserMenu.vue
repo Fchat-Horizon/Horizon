@@ -117,7 +117,8 @@
   import { Channel, Character } from './interfaces';
   import l from './localize';
   import ReportDialog from './ReportDialog.vue';
-  import { Matcher, MatchReport } from '../learn/matcher';
+  import { MatchReport } from '../learn/matcher';
+  import { ProfileCache } from '../learn/profile-cache';
   import _ from 'lodash';
   import MatchTags from './preview/MatchTags.vue';
   import { MemoManager } from './character/memo';
@@ -560,20 +561,18 @@
           core.state.settings.risingComparisonInUserMenu &&
           !isOwnCharacter(character.name)
         ) {
-          const myProfile = core.characters.ownProfile;
           const theirProfile = await core.cache.profileCache.get(
-            this.character.name
+            character.name
           );
 
-          if (myProfile && theirProfile) {
-            const match = Matcher.identifyBestMatchReport(
-              myProfile.character,
-              theirProfile.character.character
-            );
+          if (this.character !== character) return;
 
-            if (_.keys(match.merged).length > 0) {
-              this.match = match;
-            }
+          const match = theirProfile
+            ? ProfileCache.match(theirProfile.character)
+            : null;
+
+          if (match && _.keys(match.merged).length > 0) {
+            this.match = match;
           }
         }
 
