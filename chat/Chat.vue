@@ -104,36 +104,40 @@
             :title="character.name"
             :disabled="connecting"
           >
-            <!-- Pin toggle (stop click propagation so clicking pin doesn't select)
+            <div class="tile-body">
+              <!-- Pin toggle (stop click propagation so clicking pin doesn't select)
                  pinned characters appear before non-pinned in ordering
                  hide the pin for the default character (star is sufficient) -->
-            <span
-              v-if="character.id !== defaultCharacter"
-              class="char-icon pin-icon pin-toggle"
-              :class="{ pinned: isPinned(character.id) }"
-              @click.stop="togglePin(character)"
-              :title="isPinned(character.id) ? l('chat.unpin') : l('chat.pin')"
-            >
-              <i class="fas fa-thumbtack"></i>
-            </span>
+              <span
+                v-if="character.id !== defaultCharacter"
+                class="char-icon pin-icon pin-toggle"
+                :class="{ pinned: isPinned(character.id) }"
+                @click.stop="togglePin(character)"
+                :title="
+                  isPinned(character.id) ? l('chat.unpin') : l('chat.pin')
+                "
+              >
+                <i class="fas fa-thumbtack"></i>
+              </span>
 
-            <span
-              v-if="character.id === defaultCharacter"
-              class="char-icon default-star"
-              :title="l('chat.defaultCharacter')"
-            >
-              <i class="fas fa-star"></i>
-            </span>
+              <span
+                v-if="character.id === defaultCharacter"
+                class="char-icon default-star"
+                :title="l('chat.defaultCharacter')"
+              >
+                <i class="fas fa-star"></i>
+              </span>
 
-            <div class="avatar-wrap">
-              <img
-                :src="characterImage(character.name)"
-                :alt="l('common.avatar')"
-                class="avatar"
-              />
-              <div class="avatar-bg"></div>
+              <div class="avatar-wrap">
+                <img
+                  :src="characterImage(character.name)"
+                  :alt="l('common.avatar')"
+                  class="avatar"
+                />
+                <div class="avatar-bg"></div>
+              </div>
+              <div class="char-name">{{ character.name }}</div>
             </div>
-            <div class="char-name">{{ character.name }}</div>
           </button>
         </div>
         <div
@@ -642,27 +646,38 @@
       width: 96px;
       min-width: 96px;
       height: 110px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: rgba(var(--bs-black-rgb), 0.02);
+      display: block;
+      background: transparent;
       border: none;
-      border-radius: var(--bs-border-radius-lg);
-      padding: 8px;
+      padding: 0;
       cursor: pointer;
-      transition:
-        box-shadow 0.08s,
-        transform 0.08s;
-      @media (prefers-reduced-motion: reduce) {
-        transition: none;
+      color: inherit;
+
+      .tile-body {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: rgba(var(--bs-black-rgb), 0.02);
+        border-radius: var(--bs-border-radius-lg);
+        padding: 8px;
+        transition:
+          box-shadow 0.08s,
+          transform 0.08s;
+        @media (prefers-reduced-motion: reduce) {
+          transition: none;
+        }
+        text-align: center;
+        position: relative;
       }
-      text-align: center;
-      position: relative;
 
       &:not(:disabled):hover {
-        border: none;
-        transform: translateY(-4px);
-        &:not(.selected) {
+        .tile-body {
+          transform: translateY(-4px);
+        }
+
+        &:not(.selected) .tile-body {
           box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
         }
 
@@ -675,7 +690,7 @@
         cursor: initial;
       }
 
-      &.selected {
+      &.selected .tile-body {
         outline: 2px solid var(--bs-primary);
         box-shadow:
           0 8px 22px rgba(var(--bs-primary-rgb), 0.25),
