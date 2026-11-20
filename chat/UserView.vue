@@ -55,7 +55,11 @@
   import core from './core';
   import { CharacterDataEvent, EventBus } from './preview/event-bus';
   import { kinkMatchWeights, Scoring } from '../learn/matcher-types';
-  import { characterImage, normalizeCharacterName } from './common';
+  import {
+    characterImage,
+    isOwnCharacter,
+    normalizeCharacterName
+  } from './common';
   import {
     getContributorAlias,
     getTranslatorAlias,
@@ -227,7 +231,11 @@
       statusClass = `fa-fw ${getStatusIcon(character.status)}`;
 
     if (core.connection.character) {
+      const isSelf = isOwnCharacter(character.name);
+      if (isSelf) showMatch = false;
+
       const showFilterIcon =
+        !isSelf &&
         core.state.settings.risingFilter.showFilterIcon &&
         hasActiveSmartFilters(core.state.settings.risingFilter);
       const cache =

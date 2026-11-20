@@ -12,6 +12,7 @@
 import * as _ from 'lodash';
 
 import core from '../chat/core';
+import { isOwnCharacter } from '../chat/common';
 import {
   Character as ComplexCharacter,
   CharacterGroup,
@@ -597,7 +598,7 @@ export class ProfileCache extends AsyncCache<CharacterCacheRecord> {
   static match(c: ComplexCharacter): MatchReport | null {
     const you = core.characters.ownProfile;
 
-    if (!you) {
+    if (!you || isOwnCharacter(c.character.name)) {
       return null;
     }
 

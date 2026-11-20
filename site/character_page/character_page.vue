@@ -28,13 +28,7 @@
 
     <div
       class="col-md-4 col-lg-3 col-xl-2"
-      v-if="
-        !loading &&
-        character &&
-        character.character &&
-        characterMatch &&
-        selfCharacter
-      "
+      v-if="!loading && character && character.character && selfCharacter"
     >
       <sidebar
         :character="character"
@@ -46,13 +40,7 @@
     </div>
     <div
       class="col-md-8 col-lg-9 col-xl-10 profile-body"
-      v-if="
-        !loading &&
-        character &&
-        character.character &&
-        characterMatch &&
-        selfCharacter
-      "
+      v-if="!loading && character && character.character && selfCharacter"
     >
       <div id="characterView">
         <div>
@@ -111,7 +99,7 @@
                     </profile-analysis>
                     <match-report
                       :characterMatch="characterMatch"
-                      v-else
+                      v-else-if="characterMatch"
                     ></match-report>
                   </template>
 
@@ -248,7 +236,10 @@
 
   import { StandardBBCodeParser } from '../../bbcode/standard';
   import { BBCodeView } from '../../bbcode/view';
-  import { CharacterCacheRecord } from '../../learn/profile-cache';
+  import {
+    CharacterCacheRecord,
+    ProfileCache
+  } from '../../learn/profile-cache';
   import * as Utils from '../utils';
   import { methods, Store } from './data_store';
   import {
@@ -268,7 +259,7 @@
   import ReconView from './recon.vue';
   import Sidebar from './sidebar.vue';
   import core from '../../chat/core';
-  import { Matcher, MatchReport } from '../../learn/matcher';
+  import { MatchReport } from '../../learn/matcher';
   import MatchReportView from './match-report.vue';
   import ProfileAnalysis from '../../learn/recommend/ProfileAnalysis.vue';
   import { CharacterImage, SimpleCharacter } from '../../interfaces';
@@ -706,10 +697,7 @@
       updateMatches(): void {
         if (!this.selfCharacter || !this.character) return;
 
-        this.characterMatch = Matcher.identifyBestMatchReport(
-          this.selfCharacter.character,
-          this.character.character
-        );
+        this.characterMatch = ProfileCache.match(this.character) ?? undefined;
 
         // console.log('Match', this.selfCharacter.character.name, this.character.character.name, this.characterMatch);
       },

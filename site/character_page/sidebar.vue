@@ -310,7 +310,10 @@
         required: true
       },
       oldApi: { type: Boolean },
-      characterMatch: { type: Object as PropType<MatchReport>, required: true }
+      characterMatch: {
+        type: Object as PropType<MatchReport | undefined>,
+        required: false
+      }
     },
     data() {
       return {

@@ -34,7 +34,10 @@
     components: { infotag: InfotagView },
     props: {
       character: { type: Object as PropType<Character>, required: true },
-      characterMatch: { type: Object as PropType<MatchReport>, required: true }
+      characterMatch: {
+        type: Object as PropType<MatchReport | undefined>,
+        required: false
+      }
     },
     data() {
       return {
