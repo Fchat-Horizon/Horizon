@@ -14,6 +14,12 @@
       ]"
     ></tabs>
     <div>
+      <button
+        class="btn btn-outline-secondary"
+        @click="clearRecents(selectedTab === '1')"
+      >
+        <i class="fa-solid fa-trash"></i>
+      </button>
       <div v-show="selectedTab === '0'" class="recent-conversations">
         <template v-for="recent in recentPrivate">
           <user-view
@@ -79,6 +85,13 @@
       },
       setTab(key: string) {
         this.selectedTab = key;
+      },
+      clearRecents(clearChannels: boolean) {
+        if (!clearChannels) {
+          core.conversations.clearRecent();
+          return;
+        }
+        core.conversations.clearRecentChannels();
       }
     }
   });

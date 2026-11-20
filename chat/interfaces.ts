@@ -131,6 +131,8 @@ export namespace Conversation {
     navigateForward(): boolean;
     navigateBack(): boolean;
     removeFromNavigationHistory(conversation: Conversation): void;
+    clearRecent(): void;
+    clearRecentChannels(): void;
 
     getPrivate(character: Character): PrivateConversation;
     getPrivate(

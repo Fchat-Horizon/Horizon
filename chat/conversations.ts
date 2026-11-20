@@ -1062,6 +1062,15 @@ class State implements Interfaces.State {
     return this.navigateHistory(1);
   }
 
+  clearRecent(): void {
+    state.recent = [];
+    core.settingsStore.set('recent', state.recent);
+  }
+  clearRecentChannels(): void {
+    state.recentChannels = [];
+    core.settingsStore.set('recentChannels', state.recentChannels);
+  }
+
   async reloadSettings(): Promise<void> {
     //tslint:disable:strict-boolean-expressions
     this.pinned = (await core.settingsStore.get('pinned')) || {
