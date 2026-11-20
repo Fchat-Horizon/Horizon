@@ -243,6 +243,11 @@ input:checked {
     background-color: $secondary;
     border-color: $secondary;
     color: color-contrast($secondary);
+
+    &.excluded {
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
   }
 }
 

@@ -650,6 +650,7 @@
   "settings.appearance.layout": "Page layout",
   "settings.appearance.messages": "Message appearance",
   "settings.appearance.users": "User appearance",
+  "settings.arrayExcludeInstructions": "Click a global value to disable it for this character.",
   "settings.arrayInstructions": "Split values with commas or tabs.",
   "settings.autoBackup.addTime": "Add time",
   "settings.autoBackup.chooseBackup": "Choose a backup...",
