@@ -62,9 +62,21 @@ $pagination-active-color: $link-color;
 $text-background-color: $gray-200;
 $text-background-color-disabled: $gray-100;
 
-$scoreWeakMismatchFg: rgb(121, 107, 0);
+$scorePerfectMatchBg: rgb(0, 173, 173);
+$scorePerfectMatchFg: rgba(255, 255, 255, 0.8);
+$scorePerfectMatchBorder: rgb(29, 154, 154);
+$scoreMatchBg: color.scale($moon-prism-blue, $lightness: -40%);
+$scoreMatchFg: rgba(255, 255, 255, 0.8);
+$scoreMatchBorder: color.scale($moon-prism-blue, $lightness: -55%);
+$scoreWeakMatchBg: rgb(0, 80, 0);
+$scoreWeakMatchFg: rgba(255, 255, 255, 0.8);
+$scoreWeakMatchBorder: rgb(0, 64, 0);
+$scoreWeakMismatchBg: rgb(152, 134, 0);
+$scoreWeakMismatchFg: rgba(255, 255, 255, 0.8);
+$scoreWeakMismatchBorder: rgb(121, 107, 0);
 $scoreMismatchBg: rgb(192, 0, 0);
-$scoreMismatchFg: rgb(148, 0, 0);
+$scoreMismatchFg: rgba(255, 255, 255, 0.8);
+$scoreMismatchBorder: rgb(148, 0, 0);
 $scoreTitleColor: rgb(255, 255, 255);
 $scoreMinimizeButtonFg: rgba(255, 255, 255, 0.6);
 

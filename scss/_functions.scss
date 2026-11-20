@@ -17,3 +17,10 @@
     $color 1px -1px,
     $color -1px -1px;
 }
+
+@function score-border($override, $bg) {
+  @if $override {
+    @return $override;
+  }
+  @return color-mix(in srgb, #{$bg} 75%, black);
+}

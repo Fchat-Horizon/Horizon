@@ -34,18 +34,18 @@
 @import '~bootstrap/scss/helpers/colored-links';
 @import '~bootstrap/scss/helpers/text-truncation';
 
-$scorePerfectMatchBg: $teal-400;
+$scorePerfectMatchBg: $teal-400 !default;
 //poor contrast. I don't give a fuck.
-$scorePerfectMatchFg: #d2f4ea;
-$scoreMatchBg: var(--bs-info-border-subtle);
-$scoreMatchFg: var(--bs-info-text-emphasis);
-$scoreWeakMatchBg: var(--bs-success-border-subtle);
-$scoreWeakMatchFg: var(--bs-success-text-emphasis);
-$scoreWeakMismatchBg: var(--bs-warning-border-subtle);
-$scoreWeakMismatchFg: var(--bs-warning-text-emphasis);
-$scoreMismatchBg: var(--bs-danger-border-subtle);
-$scoreMismatchFg: var(--bs-danger-text-emphasis);
-$scoreTitleColor: var(--bs-body-color);
+$scorePerfectMatchFg: #d2f4ea !default;
+$scoreMatchBg: var(--bs-info-border-subtle) !default;
+$scoreMatchFg: var(--bs-info-text-emphasis) !default;
+$scoreWeakMatchBg: var(--bs-success-border-subtle) !default;
+$scoreWeakMatchFg: var(--bs-success-text-emphasis) !default;
+$scoreWeakMismatchBg: var(--bs-warning-border-subtle) !default;
+$scoreWeakMismatchFg: var(--bs-warning-text-emphasis) !default;
+$scoreMismatchBg: var(--bs-danger-border-subtle) !default;
+$scoreMismatchFg: var(--bs-danger-text-emphasis) !default;
+$scoreTitleColor: var(--bs-body-color) !default;
 $scoreMinimizeButtonFg: rgba(255, 255, 255, 0.7) !default;
 $scoreMinimizeButtonBg: rgba(0, 0, 0, 0.2) !default;
 $scoreReportBg: rgba(0, 0, 0, 0.2) !default;

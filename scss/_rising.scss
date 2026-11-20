@@ -1,29 +1,33 @@
 $scoreTextMinContrastRatio: 3;
 
+$scorePerfectMatchBorder: null !default;
+$scoreMatchBorder: null !default;
+$scoreWeakMatchBorder: null !default;
+$scoreWeakMismatchBorder: null !default;
+$scoreMismatchBorder: null !default;
+
 $risingVariables: (
   scorePerfectMatchBg: #{$scorePerfectMatchBg},
   scorePerfectMatchFg: #{$scorePerfectMatchFg},
-  scorePerfectMatchBorder: color-mix(
-      in srgb,
-      #{$scorePerfectMatchBg} 75%,
-      black
+  scorePerfectMatchBorder: score-border(
+      $scorePerfectMatchBorder,
+      $scorePerfectMatchBg
     ),
   scoreMatchBg: #{$scoreMatchBg},
   scoreMatchFg: #{$scoreMatchFg},
-  scoreMatchBorder: color-mix(in srgb, #{$scoreMatchBg} 75%, black),
+  scoreMatchBorder: score-border($scoreMatchBorder, $scoreMatchBg),
   scoreWeakMatchBg: #{$scoreWeakMatchBg},
   scoreWeakMatchFg: #{$scoreWeakMatchFg},
-  scoreWeakMatchBorder: color-mix(in srgb, #{$scoreWeakMatchBg} 75%, black),
+  scoreWeakMatchBorder: score-border($scoreWeakMatchBorder, $scoreWeakMatchBg),
   scoreWeakMismatchBg: #{$scoreWeakMismatchBg},
   scoreWeakMismatchFg: #{$scoreWeakMismatchFg},
-  scoreWeakMismatchBorder: color-mix(
-      in srgb,
-      #{$scoreWeakMismatchBg} 75%,
-      black
+  scoreWeakMismatchBorder: score-border(
+      $scoreWeakMismatchBorder,
+      $scoreWeakMismatchBg
     ),
   scoreMismatchBg: #{$scoreMismatchBg},
   scoreMismatchFg: #{$scoreMismatchFg},
-  scoreMismatchBorder: color-mix(in srgb, #{$scoreMismatchBg} 75%, black),
+  scoreMismatchBorder: score-border($scoreMismatchBorder, $scoreMismatchBg),
   scoreTitleColor: #{$scoreTitleColor},
   scoreMinimizeButtonFg: #{$scoreMinimizeButtonFg},
   scoreMinimizeButtonBg: #{$scoreMinimizeButtonBg},

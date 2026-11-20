@@ -11,6 +11,12 @@ $scoreWeakMismatchFg: color-contrast($scoreWeakMismatchBg, $black, $white);
 $scoreMismatchBg: #ab0000;
 $scoreMismatchFg: color-contrast($scoreMismatchBg, $black, $white);
 
+$scorePerfectMatchBorder: null;
+$scoreMatchBorder: null;
+$scoreWeakMatchBorder: null;
+$scoreWeakMismatchBorder: null;
+$scoreMismatchBorder: null;
+
 $scoreStandoutMatchBorderColor: #317bd0;
 $scoreStandoutMatchBgColor: rgba(49, 123, 208, 0.47);
 $scoreStandoutWeakMatchBorderColor: rgb(18, 72, 1);
