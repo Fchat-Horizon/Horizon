@@ -69,6 +69,7 @@
             ><span class="fas fa-search"></span
           ></span>
           <input
+            ref="searchInput"
             class="form-control"
             v-model="search"
             :placeholder="l('filter')"
@@ -158,6 +159,8 @@
     computed,
     watch,
     onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
     PropType
   } from 'vue';
   import core from '../../chat/core';
@@ -167,6 +170,7 @@
   import { methods, Store } from './data_store';
   import { Character, CharacterKink, DisplayKink } from './interfaces';
   import KinkView from './kink.vue';
+  import { registerProfileKinkSearch } from './kink-search-focus';
   import l from '../../chat/localize';
   import anyAscii from 'any-ascii';
 
@@ -192,6 +196,11 @@
       const characterToCompare = ref(Utils.settings.defaultCharacter);
       const highlightGroup = ref<number | undefined>(undefined);
       const search = ref('');
+      const searchInput = ref<HTMLInputElement | null>(null);
+      const profilePage = getCurrentInstance()?.proxy.$parent as
+        | { tab: string }
+        | undefined;
+      let unregisterKinkSearch: (() => void) | undefined;
       const sortByViewerPriorities = ref(false);
       const loading = ref(false);
       const comparing = ref(false);
@@ -509,6 +518,17 @@
       });
 
       onMounted(async () => {
+        const input = searchInput.value;
+        // Check if this is the actual proile viewer or just a hover/channel/other view
+        // TODO: is there/should there be a better way to tell?
+        if (input?.closest('.profile-viewer'))
+          unregisterKinkSearch = registerProfileKinkSearch({
+            input,
+            showOverview(): void {
+              if (profilePage) profilePage.tab = '0';
+            }
+          });
+
         expandedCustoms.value = props.autoExpandCustoms;
         if (props.character && props.character.is_self) return;
 
@@ -516,12 +536,14 @@
           await compareKinks(core.characters.ownProfile);
         }
       });
+      onBeforeUnmount(() => unregisterKinkSearch?.());
 
       return {
         shared,
         characterToCompare,
         highlightGroup,
         search,
+        searchInput,
         sortByViewerPriorities,
         loading,
         comparing,
