@@ -42,6 +42,7 @@ export class AdManager {
 
   private adIndex = 0;
   private active = false;
+  private campaign?: AbortController;
   private nextPostDue?: Date;
   private expireDue?: Date;
   private firstPost?: Date;
@@ -69,11 +70,13 @@ export class AdManager {
   // This makes sure there is a 5s delay between channel posts
   private async sendAdToChannel(
     msg: string,
-    conv: Conversation.ChannelConversation
+    conv: Conversation.ChannelConversation,
+    signal: AbortSignal
   ): Promise<void> {
     const initTime = Date.now();
 
     await adManagerThroat(async () => {
+      if (signal.aborted) return;
       const throatTime = Date.now();
 
       const delta = Date.now() - core.cache.getLastPost().getTime();
@@ -81,6 +84,7 @@ export class AdManager {
       if (delta > 0 && delta < AdManager.POST_MANUAL_THRESHOLD) {
         await this.delay(delta);
       }
+      if (signal.aborted) return;
 
       const delayTime = Date.now();
 
@@ -93,7 +97,7 @@ export class AdManager {
         msg
       });
 
-      await conv.sendAd(msg);
+      await conv.sendAd(msg, signal);
     });
   }
 
@@ -125,7 +129,8 @@ export class AdManager {
     );
   }
 
-  private async sendNextPost(): Promise<void> {
+  private async sendNextPost(signal: AbortSignal): Promise<void> {
+    if (signal.aborted) return;
     const msg = this.getNextAd();
 
     if (!msg || (this.expireDue && this.expireDue.getTime() < Date.now())) {
@@ -135,7 +140,8 @@ export class AdManager {
 
     const chanConv = <Conversation.ChannelConversation>this.conversation;
 
-    await this.sendAdToChannel(msg, chanConv);
+    await this.sendAdToChannel(msg, chanConv, signal);
+    if (signal.aborted) return;
 
     // post next ad every 12 - 22 minutes
     const variance = Math.random() * AdManager.POST_VARIANCE;
@@ -162,7 +168,7 @@ export class AdManager {
     // tslint:disable-next-line: no-unnecessary-type-assertion
     this.interval = setTimeout(
       async () => {
-        await this.sendNextPost();
+        await this.sendNextPost(signal);
       },
       Math.max(0, this.nextPostDue.getTime() - Date.now())
     ) as Timer;
@@ -216,6 +222,8 @@ export class AdManager {
     timeoutMs = AdManager.POSTING_PERIOD,
     minPostDelaySeconds = core.connection.vars.lfrp_flood
   ): void {
+    this.stop();
+    const signal = (this.campaign = new AbortController()).signal;
     const chanConv = <Conversation.ChannelConversation>this.conversation;
     log.debug('adManager.start.delaySecs', minPostDelaySeconds);
     log.debug('adManager.start.timeoutMs', timeoutMs);
@@ -247,27 +255,32 @@ export class AdManager {
     // tslint:disable-next-line: no-unnecessary-type-assertion
     this.interval = setTimeout(
       async () => {
+        if (signal.aborted) return;
         this.firstPost = new Date();
 
-        await this.sendNextPost();
+        await this.sendNextPost(signal);
       },
       Math.max(0, this.nextPostDue.getTime() - Date.now())
     ) as Timer;
   }
 
   protected forceTimeout(waitTime: number): void {
+    const signal = this.campaign?.signal;
+    if (!signal || signal.aborted) return;
     if (this.interval) {
       clearTimeout(this.interval);
     }
 
     // tslint:disable-next-line: no-unnecessary-type-assertion
     this.interval = setTimeout(async () => {
-      await this.sendNextPost();
+      await this.sendNextPost(signal);
     }, waitTime) as Timer;
   }
 
   stop(): void {
     if (this.interval) clearTimeout(this.interval);
+    this.campaign?.abort();
+    this.campaign = undefined;
 
     delete this.interval;
     delete this.nextPostDue;
