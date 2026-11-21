@@ -11,6 +11,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > We are planning on reworking the character matcher feature(s) considerably in the nearby future. If you have the time to, please fill in [this survey](https://forms.gle/YF4osawLApJXkmCF9) so we can take your opinions into consideration.
 > Thank you for your time.
 
+### Added
+
+- You can now clear out your recent conversations (both private and channels individually) right from the 'Recent conversations' dialog. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b26ba378640bf9b36d1ede3783c1f16f2b41295d)
+
+### Fixed
+
+- Fixed the matcher running on your own character, wasting resources and showing useless match reports. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/051b15d60e44406e80c2ff2786d06eef1178a2e9)
+- Fixed the global settings migration prompt overwriting data if called from a second tab by logging into two characters quickly at the same time. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/153fc7d920bf7bf0f26e948f4037b5704c892943)
+- Fixed clicking outside of the settings migration prompt closing the dialog (which was treated as if you selected the "Start fresh" option). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c248c36522aa687bc70c68a5c8703831b21fcb3d)
+- Fixed stray `settings/` folders being created in your logs directory if you save settings while not being connecting in one of your opened tabs. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3f9290938038f524abfc2bafe6a813644755eb1e)
+  - You're free to delete this folder if you still have it in your logs. It doesn't do anything.
+- Fixed the Wilted Rose and Moon Prims themes having matcher colours that don't fit their themes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c64226aa1e610ef24a3160193314acd60c29550e)
+- Fixed tiles on the character select screen freaking out if you hover your mouse right underneath them. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9ee8f6d8b72f279633139bc1c2123f0775ad6e6f)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/1066 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/1068 by @FatCatClient
+
 ## [2.5.1] - 2026-11-18
 
 ### Fixed
