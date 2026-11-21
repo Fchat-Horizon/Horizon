@@ -392,7 +392,10 @@ export class Logs implements Logging {
   }
 }
 
-function getSettingsDir(character: string = core.connection.character): string {
+function getSettingsDir(
+  character: string = core.connection.character
+): string | undefined {
+  if (!character) return undefined;
   const dir = path.join(
     core.state.generalSettings!.logDirectory,
     character,
@@ -408,7 +411,9 @@ export class SettingsStore implements Settings.Store {
     character?: string
   ): Promise<Settings.Keys[K] | undefined> {
     try {
-      const file = path.join(getSettingsDir(character), key);
+      const dir = getSettingsDir(character);
+      if (dir === undefined) return undefined;
+      const file = path.join(dir, key);
 
       if (!fs.existsSync(file)) {
         return undefined;
@@ -434,7 +439,9 @@ export class SettingsStore implements Settings.Store {
     value: Settings.Keys[K],
     character?: string
   ): Promise<void> {
-    writeFile(path.join(getSettingsDir(character), key), JSON.stringify(value));
+    const dir = getSettingsDir(character);
+    if (dir !== undefined)
+      writeFile(path.join(dir, key), JSON.stringify(value));
   }
 }
 

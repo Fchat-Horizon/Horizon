@@ -511,6 +511,15 @@
             });
         }
       );
+      core.watch(
+        () => core.state.needsSettingsMigration,
+        needed => {
+          const modal = this.$refs['settingsMigration'] as InstanceType<
+            typeof Modal
+          >;
+          if (!needed && modal.isShown) modal.hide();
+        }
+      );
       core.connection.onError(e => {
         log.debug('connection.error', {
           error: errorToString(e),
@@ -541,7 +550,6 @@
 
       async migrateSettings(useCurrentAsGlobal: boolean): Promise<void> {
         await core.migrateToGlobalSettings(useCurrentAsGlobal);
-        (this.$refs['settingsMigration'] as InstanceType<typeof Modal>).hide();
       },
       handleCharacterDoubleClick(character: SimpleCharacter): void {
         this.selectCharacter(character);
