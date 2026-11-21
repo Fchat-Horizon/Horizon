@@ -2,7 +2,7 @@
   <span v-show="!hasFinishedHiding">
     <div
       class="modal"
-      @mousedown.self="cancel"
+      @mousedown.self="backdropCancel"
       style="display: flex; justify-content: center"
     >
       <div
@@ -165,6 +165,12 @@
         this.$emit('close');
         dialogStack.pop();
         if (dialogStack.length === 0) isShowing = false;
+      },
+      backdropCancel(e: Event): void {
+        // Modals opened with show(true) can't be dismissed, so a stray click on the backdrop
+        // shouldn't trigger their cancel action either.
+        if (this.keepOpen) return;
+        this.cancel(e);
       },
       hideWithCheck(): void {
         if (this.keepOpen) return;
