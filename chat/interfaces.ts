@@ -260,6 +260,7 @@ export namespace Settings {
     /** Global settings stored under '_' are of the type "Settings",character overrides are of the type "PartialSettings" */
     settings: Settings | PartialSettings;
     pinned: { channels: string[]; private: string[] };
+    globalExclusions: GlobalExclusions;
     conversationSettings: { [key: string]: Conversation.Settings | undefined };
     modes: { [key: string]: Channel.Mode | undefined };
     recent: Conversation.RecentPrivateConversation[];
@@ -369,10 +370,18 @@ export namespace Settings {
   export type PartialSettings = {
     [K in keyof Settings]?: Settings[K] | undefined;
   };
+
+  // global list entries a character has opted out of, per list setting.
+  export type GlobalExclusions = {
+    [K in 'highlightWords' | 'horizonHighlightUsers' | 'disallowedTags']?:
+      | ReadonlyArray<string>
+      | undefined;
+  };
 }
 
 export type Settings = Settings.Settings;
 export type PartialSettings = Settings.PartialSettings;
+export type GlobalExclusions = Settings.GlobalExclusions;
 
 export interface Notifications {
   isInBackground: boolean;
@@ -397,8 +406,10 @@ export interface State {
   globalSettings: Settings;
   /** Character-specific overrides. Properties set to undefined use global value. */
   characterSettings: PartialSettings;
+  globalExclusions: GlobalExclusions;
   needsSettingsMigration: boolean;
   hiddenUsers: string[];
   favoriteEIcons: Record<string, boolean>;
   recentEIcons: string[];
+  removedBBCodeTags: string;
 }

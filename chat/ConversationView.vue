@@ -319,7 +319,7 @@
         <message-view
           :message="message"
           :channel="isChannel(conversation) ? conversation.channel : undefined"
-          :key="message.id"
+          :key="message.id + '-' + removedBBCodeTags"
           :classes="message == conversation.lastRead ? 'last-read' : ''"
           :highlight="highlightEnabled ? search : ''"
           :previous="messages[i - 1]"
@@ -654,6 +654,9 @@
       },
       settings(): Settings {
         return core.state.settings;
+      },
+      removedBBCodeTags(): string {
+        return core.state.removedBBCodeTags;
       },
       isConsoleTab(): boolean {
         return this.conversation === core.conversations.consoleTab;

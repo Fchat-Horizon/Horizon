@@ -21,6 +21,7 @@ import {
   Character,
   Connection,
   Conversation,
+  GlobalExclusions,
   Logs,
   Notifications,
   PartialSettings,
@@ -59,15 +60,24 @@ function convertToPartialSettings(
   return partialSettings;
 }
 
+// Character overrides add to the global list rather than replacing it, matching
+// how the settings UI presents them (and how highlightWords is handled).
+// Otherwise an empty override silently re-enables every globally disallowed tag.
+export function effectiveList(key: keyof GlobalExclusions): string[] {
+  const excluded = state._globalExclusions[key] ?? [];
+  return [
+    ...(state._globalSettings?.[key] ?? state.settings[key]).filter(
+      x => !excluded.includes(x)
+    ),
+    ...(state._characterSettings[key] ?? [])
+  ];
+}
+
 function createBBCodeParser(): BBCodeParser {
   const parser = new BBCodeParser();
-  // Character overrides add to the global list rather than replacing it, matching
-  // how the settings UI presents them (and how highlightWords is handled).
-  // Otherwise an empty override silently re-enables every globally disallowed tag.
-  const globalTags =
-    state._globalSettings?.disallowedTags ?? state.settings.disallowedTags;
-  const characterTags = state._characterSettings.disallowedTags ?? [];
-  for (const tag of [...globalTags, ...characterTags]) parser.removeTag(tag);
+  const tags = effectiveList('disallowedTags');
+  for (const tag of tags) parser.removeTag(tag);
+  state.removedBBCodeTags = tags.join();
   return parser;
 }
 
@@ -102,10 +112,12 @@ class State implements StateInterface {
   _settings: Settings | undefined = undefined;
   _globalSettings: Settings | undefined = undefined;
   _characterSettings: PartialSettings = {};
+  _globalExclusions: GlobalExclusions = {};
   needsSettingsMigration: boolean = false;
   hiddenUsers: string[] = [];
   favoriteEIcons: Record<string, boolean> = emptyMap();
   recentEIcons: string[] = [];
+  removedBBCodeTags = '';
 
   get settings(): Settings {
     if (this._settings === undefined) throw new Error('Settings load failed.');
@@ -152,6 +164,18 @@ class State implements StateInterface {
     //tslint:disable-next-line:no-floating-promises
     if (data.settingsStore !== undefined)
       data.settingsStore.set('settings', value);
+    data.bbCodeParser = createBBCodeParser();
+  }
+
+  get globalExclusions(): GlobalExclusions {
+    return this._globalExclusions;
+  }
+
+  set globalExclusions(value: GlobalExclusions) {
+    this._globalExclusions = value;
+    //tslint:disable-next-line:no-floating-promises
+    if (data.settingsStore !== undefined)
+      data.settingsStore.set('globalExclusions', value);
     data.bbCodeParser = createBBCodeParser();
   }
 }
@@ -269,12 +293,15 @@ const data = {
       }
     }
     state._characterSettings = characterSettings;
+    state._globalExclusions =
+      (await core.settingsStore.get('globalExclusions')) ?? {};
 
     // Create merged settings proxy
     state._settings = createMergedSettingsProxy(
       globalSettings,
       characterSettings
     );
+    data.bbCodeParser = createBBCodeParser();
 
     const hiddenUsers = await core.settingsStore.get('hiddenUsers');
     state.hiddenUsers = hiddenUsers !== undefined ? hiddenUsers : [];
@@ -399,7 +426,6 @@ export async function init(
 
   connection.onEvent('connecting', async () => {
     await data.reloadSettings();
-    data.bbCodeParser = createBBCodeParser();
     preloadTeamData().catch(() => {});
   });
 }
