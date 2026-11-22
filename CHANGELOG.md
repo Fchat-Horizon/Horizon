@@ -14,21 +14,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - You can now clear out your recent conversations (both private and channels individually) right from the 'Recent conversations' dialog. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b26ba378640bf9b36d1ede3783c1f16f2b41295d)
+- Clicking a global value for a setting that uses lists (like ping words, disallowed BBCode tags, etc.) now lets you disable it for that specific character, while keeping it available for other characters.. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ba4b234996b3dbd3116065df6e099f2f00e7999d)
+
+### Changed
+
+- Scrolling through the members list in a channel now keeps individual names in place if new members join/ leave, instead of moving them around right underneath your cursor. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0bee7f5caf11771b73450f04a081d25c69cf577b)
 
 ### Fixed
 
 - Fixed the matcher running on your own character, wasting resources and showing useless match reports. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/051b15d60e44406e80c2ff2786d06eef1178a2e9)
 - Fixed the global settings migration prompt overwriting data if called from a second tab by logging into two characters quickly at the same time. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/153fc7d920bf7bf0f26e948f4037b5704c892943)
 - Fixed clicking outside of the settings migration prompt closing the dialog (which was treated as if you selected the "Start fresh" option). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c248c36522aa687bc70c68a5c8703831b21fcb3d)
-- Fixed stray `settings/` folders being created in your logs directory if you save settings while not being connecting in one of your opened tabs. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3f9290938038f524abfc2bafe6a813644755eb1e)
+- Fixed stray `settings/` folders being created in your logs directory if you save settings while not being connected in one of your opened tabs. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/3f9290938038f524abfc2bafe6a813644755eb1e)
   - You're free to delete this folder if you still have it in your logs. It doesn't do anything.
 - Fixed the Wilted Rose and Moon Prims themes having matcher colours that don't fit their themes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c64226aa1e610ef24a3160193314acd60c29550e)
 - Fixed tiles on the character select screen freaking out if you hover your mouse right underneath them. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9ee8f6d8b72f279633139bc1c2123f0775ad6e6f)
 
 ### Merged Pull Requests
 
+- https://github.com/Fchat-Horizon/Horizon/pull/1064 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/1014 by @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/1066 by @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/1068 by @FatCatClient
+
+Non PR'd changes by @FatCatClient.
 
 ## [2.5.1] - 2026-11-18
 
