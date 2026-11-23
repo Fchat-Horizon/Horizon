@@ -655,6 +655,7 @@
   "settings.appearance.layout": "Impaginazione",
   "settings.appearance.messages": "Aspetto messaggi",
   "settings.appearance.users": "Aspetto utente",
+  "settings.arrayExcludeInstructions": "Clicca su un valore globale per disattivarlo su questo personaggio.",
   "settings.arrayInstructions": "Dividi i valori con virgole o tab.",
   "settings.autoBackup.addTime": "Aggiungi tempo",
   "settings.autoBackup.chooseBackup": "Scegli un backup...",
