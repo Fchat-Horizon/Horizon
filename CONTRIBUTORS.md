@@ -33,4 +33,5 @@ The original F-Chat 3.0 project was released under the MIT License. You can read
 ## Acknowledgements
 
 - Some emojis designed by [OpenMoji](https://openmoji.org/) – the open-source emoji and icon project. License: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/#)
+- [Fredoka](https://github.com/hafontia/Fredoka-One) font by The Fredoka Project Authors. License: [SIL OFL 1.1](./assets/fonts/Fredoka-OFL.txt)
 - _You!_ Ya' cutie patootie you. ♥

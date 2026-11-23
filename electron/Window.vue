@@ -15,7 +15,7 @@
       `"
       id="window-tabs"
     >
-      <h4 class="window-title" v-if="!hideWindowControls">
+      <h4 class="window-title title-font" v-if="!hideWindowControls">
         {{ l(windowTitleKey) }}
       </h4>
       <div

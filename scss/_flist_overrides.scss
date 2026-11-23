@@ -343,6 +343,15 @@ input:checked {
   src: url('../../../assets/fonts/HorizonIcons.woff2') format('woff2');
 }
 
+@font-face {
+  font-family: 'Fredoka';
+  src: url('../../../assets/fonts/Fredoka.ttf') format('truetype');
+}
+
+.title-font {
+  font-family: 'Fredoka', sans-serif;
+}
+
 i.fa-horizon {
   font-family: 'Horizon Icons';
   min-width: 1.25em;

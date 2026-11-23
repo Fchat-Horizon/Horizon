@@ -39,7 +39,7 @@
     >
       <div class="card bg-light" style="width: 400px">
         <h3 class="card-header" style="margin-top: 0; display: flex">
-          {{ l(titleKey) }}
+          <span class="title-font">{{ l(titleKey) }}</span>
 
           <span style="flex: 1; text-align: right">
             <a
