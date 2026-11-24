@@ -92,6 +92,7 @@
     "lint": "pnpm prettier --write .",
     "check": "pnpm prettier --check .",
     "i18n:check": "node scripts/i18n-check.js",
+    "imports:check": "node scripts/check-shared-imports.js",
     "typecheck": "pnpm --filter horizon-electron typecheck",
     "prepare": "husky"
   },
