@@ -14,11 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - You can now clear out your recent conversations (both private and channels individually) right from the 'Recent conversations' dialog. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b26ba378640bf9b36d1ede3783c1f16f2b41295d)
-- Clicking a global value for a setting that uses lists (like ping words, disallowed BBCode tags, etc.) now lets you disable it for that specific character, while keeping it available for other characters.. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ba4b234996b3dbd3116065df6e099f2f00e7999d)
+- Clicking a global value for a setting that uses lists (like ping words, disallowed BBCode tags, etc.) now lets you disable it for that specific character, while keeping it available for other characters. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ba4b234996b3dbd3116065df6e099f2f00e7999d)
 
 ### Changed
 
 - Scrolling through the members list in a channel now keeps individual names in place if new members join/ leave, instead of moving them around right underneath your cursor. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0bee7f5caf11771b73450f04a081d25c69cf577b)
+- Swapping between sending chat/ ad messages in a channel now shows both ads and chat messages if you were viewing the other mode. [[Comiit]](https://github.com/Fchat-Horizon/Horizon/commit/31aba3bc2f8467cd68ff677fddd2cedc0c607b9b)
+  - This also gets rid of the mode toggle button in channels that only have a single mode.
 
 ### Fixed
 
@@ -29,9 +31,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - You're free to delete this folder if you still have it in your logs. It doesn't do anything.
 - Fixed the Wilted Rose and Moon Prims themes having matcher colours that don't fit their themes. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/c64226aa1e610ef24a3160193314acd60c29550e)
 - Fixed tiles on the character select screen freaking out if you hover your mouse right underneath them. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/9ee8f6d8b72f279633139bc1c2123f0775ad6e6f)
+- Fixed issues where not all F-List API requests were handled through an HTTP proxy, if you had one set. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/8b78371c8c83c43486c6efa7e2190d3cec25f25a)
+- Fixed a niche case where repairing logs for messages over 60K characters would fail. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4d86452e608a4b6d1cd7631e4f5a42193a95f501)
+  - This is a niche case, since the F-Chat server itself rejects these messages, but in theory you could attempt to send these and have them in your local logs still.
 
 ### Merged Pull Requests
 
+- https://github.com/Fchat-Horizon/Horizon/pull/1008 by @CentralSmith
+- https://github.com/Fchat-Horizon/Horizon/pull/1009 by @CentralSmith
+  - These are their first pull requests! 🎉
 - https://github.com/Fchat-Horizon/Horizon/pull/1064 by @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/1014 by @freenutsxd
 - https://github.com/Fchat-Horizon/Horizon/pull/1066 by @freenutsxd
