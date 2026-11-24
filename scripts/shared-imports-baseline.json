@@ -1,0 +1,60 @@
+{
+  "bbcode/Editor.vue": ["global:process.platform"],
+  "chat/Chat.vue": ["module:electron-log"],
+  "chat/ChatView.vue": ["global:process.platform", "module:console"],
+  "chat/Logs.vue": ["module:adm-zip"],
+  "chat/SettingsView.vue": [
+    "global:__dirname",
+    "global:process.platform",
+    "module:fs",
+    "module:path"
+  ],
+  "chat/WebSocket.ts": ["module:electron-log"],
+  "chat/ads/ad-coordinator-guest.ts": [
+    "module:electron",
+    "module:electron-log"
+  ],
+  "chat/ads/ad-coordinator-host.ts": ["module:electron", "module:electron-log"],
+  "chat/ads/ad-manager.ts": ["module:electron-log"],
+  "chat/conversations.ts": ["module:electron-log"],
+  "chat/notifications.ts": [
+    "global:__dirname",
+    "global:window.require",
+    "module:fs",
+    "module:path"
+  ],
+  "chat/preview/ImagePreview.vue": ["tag:webview", "type:Electron"],
+  "chat/preview/assets/browser.pre.js": ["module:electron"],
+  "chat/preview/image-dom-mutator.ts": ["module:url"],
+  "chat/tips.ts": ["global:process.platform"],
+  "components/Modal.vue": ["global:process.platform"],
+  "fchat/connection.ts": ["module:electron-log"],
+  "helpers/dialog.ts": ["module:@electron/remote"],
+  "learn/cache-manager.ts": [
+    "local:electron/common",
+    "module:electron-log",
+    "module:path"
+  ],
+  "learn/conversation-draft-cache.ts": ["local:electron/filesystem"],
+  "learn/dictionary/WordDefinition.vue": [
+    "module:electron-log",
+    "tag:webview",
+    "type:Electron"
+  ],
+  "learn/eicon/store.ts": [
+    "module:@electron/remote",
+    "module:electron-log",
+    "module:fs",
+    "module:path"
+  ],
+  "learn/filter/smart-filter.ts": ["module:electron-log"],
+  "learn/matcher.ts": ["module:electron-log"],
+  "learn/profile-cache.ts": ["module:@electron/remote", "module:electron-log"],
+  "learn/store/indexed.ts": ["module:electron-log"],
+  "learn/store/worker.ts": ["module:electron-log"],
+  "learn/store/worker/client.ts": ["module:electron-log"],
+  "site/character_page/character_page.vue": ["module:electron-log"],
+  "site/character_page/images.vue": ["module:electron-log"],
+  "site/note-checker.ts": ["module:electron-log"],
+  "site/site-session.ts": ["module:electron-log", "module:request-promise"]
+}
