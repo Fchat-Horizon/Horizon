@@ -423,43 +423,27 @@
         </div>
         <ul
           class="nav nav-pills send-ads-switcher"
-          v-if="isChannel(conversation)"
+          v-if="isChannel(conversation) && conversation.channel.mode === 'both'"
           style="position: relative; z-index: 10; margin-right: 5px"
         >
-          <li
-            class="nav-item"
-            v-show="
-              conversation.channel.mode === 'both' ||
-              conversation.channel.mode === 'chat'
-            "
-          >
+          <li class="nav-item">
             <a
               href="#"
               :class="{
                 active: !conversation.isSendingAds,
-                disabled:
-                  conversation.channel.mode != 'both' ||
-                  conversation.adManager.isActive()
+                disabled: conversation.adManager.isActive()
               }"
               class="nav-link"
               @click.prevent="setSendingAds(false)"
               >{{ l('channel.mode.chat') }}</a
             >
           </li>
-          <li
-            class="nav-item"
-            v-show="
-              conversation.channel.mode === 'both' ||
-              conversation.channel.mode === 'ads'
-            "
-          >
+          <li class="nav-item">
             <a
               href="#"
               :class="{
                 active: conversation.isSendingAds,
-                disabled:
-                  conversation.channel.mode != 'both' ||
-                  conversation.adManager.isActive()
+                disabled: conversation.adManager.isActive()
               }"
               class="nav-link"
               @click.prevent="setSendingAds(true)"
@@ -1039,10 +1023,11 @@
 
       setSendingAds(is: boolean): void {
         const conv = <Conversation.ChannelConversation>this.conversation;
-        if (conv.channel.mode === 'both') {
-          conv.isSendingAds = is;
-          (<Editor>this.$refs['textBox']).focus();
-        }
+        if (conv.channel.mode !== 'both') return;
+        conv.isSendingAds = is;
+        if (conv.mode !== 'both' && conv.mode !== (is ? 'ads' : 'chat'))
+          conv.mode = 'both';
+        (<Editor>this.$refs['textBox']).focus();
       },
 
       showLogs(): void {

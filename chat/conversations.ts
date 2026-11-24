@@ -554,6 +554,7 @@ class ChannelConversation
       channel.mode === 'both' && channel.id in state.modes
         ? state.modes[channel.id]!
         : channel.mode;
+    this.isSendingAds = this.mode === 'ads';
 
     initConversationCache.call(this);
   }
