@@ -35,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed a niche case where repairing logs for messages over 60K characters would fail. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/4d86452e608a4b6d1cd7631e4f5a42193a95f501)
   - This is a niche case, since the F-Chat server itself rejects these messages, but in theory you could attempt to send these and have them in your local logs still.
 
+### Development
+
+- Added a CI job and script that checks for Electron and Node imports in shared modules, so we can begin decoupling them later on. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/036db3467e543a81442f02a203fb84756f15183d)
+
 ### Merged Pull Requests
 
 - https://github.com/Fchat-Horizon/Horizon/pull/1008 by @CentralSmith
