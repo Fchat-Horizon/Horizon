@@ -423,10 +423,14 @@
         </div>
         <ul
           class="nav nav-pills send-ads-switcher"
-          v-if="isChannel(conversation) && conversation.channel.mode === 'both'"
+          v-if="
+            isChannel(conversation) &&
+            (conversation.channel.mode === 'both' ||
+              (conversation.channel.mode === 'ads' && adCountdown !== 0))
+          "
           style="position: relative; z-index: 10; margin-right: 5px"
         >
-          <li class="nav-item">
+          <li class="nav-item" v-if="conversation.channel.mode === 'both'">
             <a
               href="#"
               :class="{
@@ -443,7 +447,9 @@
               href="#"
               :class="{
                 active: conversation.isSendingAds,
-                disabled: conversation.adManager.isActive()
+                disabled:
+                  conversation.channel.mode === 'both' &&
+                  conversation.adManager.isActive()
               }"
               class="nav-link"
               @click.prevent="setSendingAds(true)"
