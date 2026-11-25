@@ -59,18 +59,24 @@
           <span class="text-body-secondary">{{
             l('quickJump.noResults')
           }}</span>
-          <div class="list-group mt-3 text-start">
-            <div
-              class="quick-jump-result list-group-item list-group-item-action d-flex align-items-center gap-3 px-3 py-2"
-              :class="{ active: selectedIndex === -1 }"
-              @click="openNewConversation"
-              @mouseenter="selectedIndex = -1"
-            >
-              <span class="fas fa-fw fa-plus"></span>
-              <span class="fw-bold flex-shrink-0">{{
-                l('quickJump.openNewConversation', { character: searchQuery })
-              }}</span>
-            </div>
+        </div>
+        <div
+          class="list-group list-group-flush rounded-0"
+          :class="{ 'px-3 pb-3': filteredResults.length === 0 }"
+          v-show="showOpenNewConversation"
+        >
+          <div
+            class="quick-jump-result list-group-item list-group-item-action d-flex align-items-center gap-3 px-3 py-2"
+            :class="{ active: selectedIndex === -1 }"
+            @click="openNewConversation"
+            @mouseenter="selectedIndex = -1"
+          >
+            <span class="fas fa-fw fa-plus"></span>
+            <span class="fw-bold flex-shrink-0">{{
+              l('quickJump.openNewConversation', {
+                character: searchQuery.trim()
+              })
+            }}</span>
           </div>
         </div>
       </div>
@@ -115,6 +121,18 @@
         return this.allResults
           .filter(result => result.name.toLowerCase().includes(query))
           .slice(0, 10); // Limit to 10 results
+      },
+      showOpenNewConversation(): boolean {
+        //We want to be able to open a DM with an entered name, even if we have search results.
+        //Ie entering "Jim" when one of our bookmarks is called "Jimmy"
+        const query = this.searchQuery.trim().toLowerCase();
+        if (query.length === 0) return false;
+        return !this.filteredResults.some(
+          result =>
+            result.type !== 'channel' &&
+            result.type !== 'console' &&
+            result.name.toLowerCase() === query
+        );
       }
     },
     watch: {
@@ -302,7 +320,7 @@
         this.$nextTick(() => {
           if (
             this.filteredResults.length === 0 &&
-            this.searchQuery.length > 0
+            this.showOpenNewConversation
           ) {
             this.selectedIndex = -1;
           }
@@ -319,12 +337,9 @@
 
           case Keys.ArrowUp:
             e.preventDefault();
-            if (
-              this.filteredResults.length === 0 &&
-              this.searchQuery.length > 0
-            ) {
-              // Only the "open new conversation" option is available
-              this.selectedIndex = -1;
+            if (this.filteredResults.length === 0) {
+              // Only the "open new conversation" option (if any) is available
+              this.selectedIndex = this.showOpenNewConversation ? -1 : 0;
             } else if (this.selectedIndex === -1) {
               // From "open new conversation" to last result
               this.selectedIndex = this.filteredResults.length - 1;
@@ -332,7 +347,7 @@
               this.selectedIndex--;
             } else {
               // From first result, go to "open new conversation" if available, otherwise wrap to last
-              if (this.searchQuery.length > 0) {
+              if (this.showOpenNewConversation) {
                 this.selectedIndex = -1;
               } else {
                 this.selectedIndex = this.filteredResults.length - 1;
@@ -342,12 +357,9 @@
 
           case Keys.ArrowDown:
             e.preventDefault();
-            if (
-              this.filteredResults.length === 0 &&
-              this.searchQuery.length > 0
-            ) {
-              // Only the "open new conversation" option is available
-              this.selectedIndex = -1;
+            if (this.filteredResults.length === 0) {
+              // Only the "open new conversation" option (if any) is available
+              this.selectedIndex = this.showOpenNewConversation ? -1 : 0;
             } else if (this.selectedIndex === -1) {
               // From "open new conversation" to first result
               this.selectedIndex = 0;
@@ -355,7 +367,7 @@
               this.selectedIndex++;
             } else {
               // From last result, go to "open new conversation" if available, otherwise wrap to first
-              if (this.searchQuery.length > 0) {
+              if (this.showOpenNewConversation) {
                 this.selectedIndex = -1;
               } else {
                 this.selectedIndex = 0;
@@ -365,14 +377,10 @@
 
           case Keys.Enter:
             e.preventDefault();
-            if (
-              this.selectedIndex === -1 &&
-              this.filteredResults.length === 0 &&
-              this.searchQuery.length > 0
-            ) {
+            if (this.selectedIndex === -1 && this.showOpenNewConversation) {
               // Open new conversation
               this.openNewConversation();
-            } else if (this.filteredResults.length > 0) {
+            } else if (this.filteredResults[this.selectedIndex]) {
               this.selectResult(this.filteredResults[this.selectedIndex]);
             }
             break;
