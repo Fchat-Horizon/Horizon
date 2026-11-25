@@ -73,14 +73,16 @@ class State implements Interfaces.State {
   friendList: string[] = [];
   characterFriendList: string[] = [];
   bookmarkList: string[] = [];
+  friendKeys = new Set<string>();
+  bookmarkKeys = new Set<string>();
 
   get(name: string): Character {
     const key = name.toLowerCase();
     let char = this.characters[key];
     if (char === undefined) {
       char = new Character(name);
-      char.isFriend = this.friendList.some(f => f.toLowerCase() === key);
-      char.isBookmarked = this.bookmarkList.some(b => b.toLowerCase() === key);
+      char.isFriend = this.friendKeys.has(key);
+      char.isBookmarked = this.bookmarkKeys.has(key);
       char.isChatOp = this.opList.indexOf(name) !== -1;
       char.isIgnored = this.ignoreList.indexOf(key) !== -1;
       this.characters[key] = char;
@@ -183,6 +185,8 @@ export default function (this: void, connection: Connection): Interfaces.State {
       friends: { source: string; dest: string; last_online: number }[];
     }>('friend-list.php');
     state.friendList = friendResponse.friends.map(x => x.dest);
+    state.bookmarkKeys = new Set(state.bookmarkList.map(x => x.toLowerCase()));
+    state.friendKeys = new Set(state.friendList.map(x => x.toLowerCase()));
     state.characterFriendList = [];
     if (isReconnect && <Character | undefined>state.ownCharacter !== undefined)
       reconnectStatus = {
@@ -191,10 +195,8 @@ export default function (this: void, connection: Connection): Interfaces.State {
       };
     for (const key in state.characters) {
       const character = state.characters[key]!;
-      character.isFriend = state.friendList.some(f => f.toLowerCase() === key);
-      character.isBookmarked = state.bookmarkList.some(
-        b => b.toLowerCase() === key
-      );
+      character.isFriend = state.friendKeys.has(key);
+      character.isBookmarked = state.bookmarkKeys.has(key);
       character.isCharacterFriend = false;
       character.status = 'offline';
       character.statusText = '';
@@ -323,6 +325,7 @@ export default function (this: void, connection: Connection): Interfaces.State {
     switch (data.type) {
       case 'trackadd':
         state.bookmarkList.push(data.name);
+        state.bookmarkKeys.add(data.name.toLowerCase());
         character.isBookmarked = true;
         if (
           character.status !== 'offline' &&
@@ -332,6 +335,7 @@ export default function (this: void, connection: Connection): Interfaces.State {
         break;
       case 'trackrem':
         state.bookmarkList.splice(state.bookmarkList.indexOf(data.name), 1);
+        state.bookmarkKeys.delete(data.name.toLowerCase());
         character.isBookmarked = false;
         if (character.status !== 'offline')
           state.bookmarks.splice(state.bookmarks.indexOf(character), 1);
@@ -341,6 +345,7 @@ export default function (this: void, connection: Connection): Interfaces.State {
         if (state.friendList.indexOf(data.name) === -1) {
           state.friendList.push(data.name);
         }
+        state.friendKeys.add(data.name.toLowerCase());
         character.isFriend = true;
         if (
           character.status !== 'offline' &&
@@ -376,6 +381,7 @@ export default function (this: void, connection: Connection): Interfaces.State {
       case 'friendremove':
         // Always remove from global friends
         state.friendList.splice(state.friendList.indexOf(data.name), 1);
+        state.friendKeys.delete(data.name.toLowerCase());
         character.isFriend = false;
         if (character.status !== 'offline') {
           state.friends.splice(state.friends.indexOf(character), 1);
