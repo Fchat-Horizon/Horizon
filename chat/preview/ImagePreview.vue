@@ -9,16 +9,19 @@
       v-show="sticky || debug"
     >
       <a
-        class="btn btn-sm btn-light flex-fill"
+        class="btn btn-sm flex-fill"
         @click="toggleDevMode()"
-        :class="{ active: debug, disabled: !debug && !canDebug }"
+        :class="[
+          debug ? 'btn-primary' : 'btn-light',
+          { disabled: !debug && !canDebug }
+        ]"
         :title="l('imagePreview.debug')"
         ><i class="fa fa-terminal"></i
       ></a>
       <a
-        class="btn btn-sm btn-light flex-fill"
+        class="btn btn-sm flex-fill"
         @click="toggleJsMode()"
-        :class="{ active: runJs }"
+        :class="runJs ? 'btn-primary' : 'btn-light'"
         :title="l('imagePreview.expand')"
         ><i class="fa fa-magic"></i
       ></a>
@@ -35,9 +38,9 @@
         ><i class="fa fa-recycle"></i
       ></a>
       <a
-        class="btn btn-sm btn-light flex-fill"
+        class="btn btn-sm flex-fill"
         @click="toggleStickyMode()"
-        :class="{ active: sticky }"
+        :class="sticky ? 'btn-primary' : 'btn-light'"
         :title="l('imagePreview.toggleSticky')"
         ><i class="fa fa-thumbtack"></i
       ></a>
