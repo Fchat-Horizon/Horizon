@@ -187,6 +187,31 @@ $genders: (
   }
 }
 
+// Profile comparison rows also read the score tokens. Override them on those rows.
+.character-kinks-block .character-kink:where(:not(.colorblindMode *)) {
+  $comparison-backgrounds: (
+    ('favorite', 'Match', $quick-compare-favorite-bg),
+    ('yes', 'WeakMatch', $quick-compare-yes-bg),
+    ('maybe', 'WeakMismatch', $quick-compare-maybe-bg),
+    ('no', 'Mismatch', $quick-compare-no-bg)
+  );
+
+  @each $preference, $score, $background in $comparison-backgrounds {
+    &.comparison-#{$preference} {
+      --score#{$score}Bg: #{$background};
+      --score#{$score}Fg: #{color-contrast($background, #000, $white-color)};
+    }
+  }
+
+  &.comparison-favorite {
+    --scoreFadedMatchBg: color-mix(
+      in srgb,
+      var(--scoreMatchBg) 40%,
+      transparent
+    );
+  }
+}
+
 .colorblindMode {
   @import '../colorblind';
   @import '../../rising';
