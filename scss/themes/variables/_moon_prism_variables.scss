@@ -19,6 +19,7 @@ $component-active-color: $dark-color; // Use dark color for light primary
 
 $moon-prism-silver: #c8d5e8;
 $moon-prism-blue: #4c4cff;
+$moon-prism-pastel-blue: #8585ff;
 $moon-prism-purple: #a685ff;
 $moon-prism-pink: #ff85c7;
 $moon-prism-cyan: #85ffff;
@@ -31,7 +32,7 @@ $moon-prism-orange: #ffb785;
 $primary: #8ba4d9;
 $secondary: $gray-300;
 $success: $moon-prism-green;
-$info: color.scale($moon-prism-blue, $lightness: -30%);
+$info: $moon-prism-pastel-blue;
 $warning: $moon-prism-gold;
 $danger: $moon-prism-red;
 $light: $gray-200;
@@ -48,12 +49,10 @@ $modal-backdrop-bg: $white;
 $modal-content-bg: $gray-200;
 $modal-header-border-color: $gray-300;
 
-$component-active-color: $dark-color;
 $grid-gutter-width: 20px;
 
 $input-bg: $gray-200;
 $input-color: $black;
-$custom-select-bg: $gray-200;
 
 $list-group-bg: $gray-200;
 
@@ -62,32 +61,7 @@ $pagination-active-color: $link-color;
 $text-background-color: $gray-200;
 $text-background-color-disabled: $gray-100;
 
-$scorePerfectMatchBg: rgb(0, 173, 173);
-$scorePerfectMatchFg: rgba(255, 255, 255, 0.8);
-$scorePerfectMatchBorder: rgb(29, 154, 154);
-$scoreMatchBg: color.scale($moon-prism-blue, $lightness: -40%);
-$scoreMatchFg: rgba(255, 255, 255, 0.8);
-$scoreMatchBorder: color.scale($moon-prism-blue, $lightness: -55%);
-$scoreWeakMatchBg: rgb(0, 80, 0);
-$scoreWeakMatchFg: rgba(255, 255, 255, 0.8);
-$scoreWeakMatchBorder: rgb(0, 64, 0);
-$scoreWeakMismatchBg: rgb(152, 134, 0);
-$scoreWeakMismatchFg: rgba(255, 255, 255, 0.8);
-$scoreWeakMismatchBorder: rgb(121, 107, 0);
-$scoreMismatchBg: rgb(192, 0, 0);
-$scoreMismatchFg: rgba(255, 255, 255, 0.8);
-$scoreMismatchBorder: rgb(148, 0, 0);
-$scoreTitleColor: rgb(255, 255, 255);
-$scoreMinimizeButtonFg: rgba(255, 255, 255, 0.6);
-
-$scoreStandoutMatchBorderColor: #04a604;
-$scoreStandoutMatchBgColor: rgba(0, 166, 0, 0.47);
-$scoreStandoutWeakMatchBorderColor: #026502;
-$scoreStandoutWeakMatchBgColor: rgba(0, 101, 0, 0.4);
-$scoreStandoutNeutralBorderColor: #8ba4d9;
-$scoreStandoutWeakMismatchBorderColor: rgb(166, 148, 0);
-$scoreStandoutWeakMismatchBgColor: rgba(255, 215, 0, 0.2);
-$scoreStandoutMismatchBorderColor: #a41a1a;
+$scoreMatchBg: color.mix($gray-base, $info, 48%);
 
 $characterImageWrapperBg: rgba(13, 14, 26, 0.3);
 $characterGuestbookPostBg: rgba(13, 14, 26, 0.25);

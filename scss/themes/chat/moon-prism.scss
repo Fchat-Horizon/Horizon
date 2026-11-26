@@ -24,7 +24,6 @@ $bookmark-color: color.scale($green-color, $lightness: -20%);
 
 body,
 .modal-body {
-  background: #1a1b2e;
   background: linear-gradient(
     135deg,
     rgba(26, 27, 46, 1) 0%,
@@ -71,8 +70,7 @@ $genders: (
     --gender-color: #{$color};
   }
 
-  .gender-icon-#{$gender},
-  .message-event .gender-icon-#{gender} {
+  .gender-icon-#{$gender} {
     color: var(--gender-color);
   }
 
@@ -107,7 +105,7 @@ $genders: (
     color: #b3ccff;
   }
   .grayText,
-  .grayNametext {
+  .grayNameText {
     color: #e6ecff;
   }
   .yellowText,
@@ -135,10 +133,6 @@ $genders: (
   .whiteText,
   .whiteNameText {
     color: $white;
-  }
-  .brownText,
-  .brownNameText {
-    color: #332d1a;
   }
   .blueText,
   .blueNameText,
@@ -177,7 +171,7 @@ $genders: (
     color: #66ffff;
   }
   .grayText,
-  .grayNametext {
+  .grayNameText {
     color: #cccccc;
   }
   .blackText,
