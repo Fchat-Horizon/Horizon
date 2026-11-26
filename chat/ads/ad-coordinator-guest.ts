@@ -7,7 +7,6 @@ interface PendingAd {
   resolve(): void;
   reject(err: Error): void;
   from: number;
-  cleanup(): void;
 }
 
 export class AdCoordinatorGuest {
@@ -34,25 +33,16 @@ export class AdCoordinatorGuest {
       character: core.characters.ownCharacter?.name
     });
 
-    this.pendingAds[adId].cleanup();
     this.pendingAds[adId].resolve();
 
     delete this.pendingAds[adId];
   }
 
-  async requestTurnToPostAd(signal?: AbortSignal): Promise<void> {
-    if (signal?.aborted) return;
+  async requestTurnToPostAd(): Promise<void> {
     return new Promise((resolve, reject) => {
       const adId = `${Math.round(Math.random() * 1000000)}-${this.adCounter++}-${Date.now()}`;
 
-      const cleanup = () => signal?.removeEventListener('abort', cancel);
-      const cancel = () => {
-        delete this.pendingAds[adId];
-        cleanup();
-        resolve();
-      };
-      this.pendingAds[adId] = { resolve, reject, from: Date.now(), cleanup };
-      signal?.addEventListener('abort', cancel, { once: true });
+      this.pendingAds[adId] = { resolve, reject, from: Date.now() };
 
       log.debug('adid.request', {
         adId,
@@ -64,10 +54,7 @@ export class AdCoordinatorGuest {
   }
 
   clear(): void {
-    _.each(this.pendingAds, pa => {
-      pa.cleanup();
-      pa.reject(new Error('Pending ad cleared'));
-    });
+    _.each(this.pendingAds, pa => pa.reject(new Error('Pending ad cleared')));
 
     console.debug(
       'adid.clear',

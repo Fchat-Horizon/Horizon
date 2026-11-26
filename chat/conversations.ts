@@ -736,7 +736,7 @@ class ChannelConversation
 
       await Conversation.testPostDelay();
       if (signal?.aborted) return;
-      await core.adCoordinator.requestTurnToPostAd(signal);
+      await core.adCoordinator.requestTurnToPostAd();
       if (signal?.aborted) return;
 
       const delayTime = Date.now();
