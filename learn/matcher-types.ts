@@ -2085,19 +2085,15 @@ export const kinkComparisonExclusions = {
   [Kink.FacialHairBeards]: true,
   [Kink.Femboys]: true,
   [Kink.Femininity]: true,
-  [Kink.OlderCharacters]: true,
-  [Kink.ShorterCharacters]: true,
   [Kink.SkinnyCharacters]: true,
   [Kink.SlimeGooCharacters]: true,
   [Kink.SuperheroesVillains]: true,
-  [Kink.TallerCharacters]: true,
   [Kink.Tomboys]: true,
   [Kink.Toons]: true,
   [Kink.Twinks]: true,
   [Kink.VeryFatCharacters]: true,
   [Kink.VeryLitheCharacters]: true,
-  [Kink.VeryMuscularCharacters]: true,
-  [Kink.YoungerCharacters]: true
+  [Kink.VeryMuscularCharacters]: true
 };
 
 export enum KinkGroupId {
@@ -2126,7 +2122,11 @@ export const kinkComparisonSwaps: Record<any, number> = {
   [Kink.VoreBeingPredator]: Kink.VoreBeingPrey, // vore predator -> prey
   [Kink.VoreBeingPrey]: Kink.VoreBeingPredator, // vore prey -> predator
   [Kink.StorytellingNarrator]: Kink.StorytellingPlayer, // storytelling narrator -> player
-  [Kink.StorytellingPlayer]: Kink.StorytellingNarrator // storytelling player -> narrator
+  [Kink.StorytellingPlayer]: Kink.StorytellingNarrator, // storytelling player -> narrator
+  [Kink.TallerCharacters]: Kink.ShorterCharacters, // taller characters -> shorter characters
+  [Kink.ShorterCharacters]: Kink.TallerCharacters, // shorter characters -> taller characters
+  [Kink.OlderCharacters]: Kink.YoungerCharacters, // older characters -> younger characters
+  [Kink.YoungerCharacters]: Kink.OlderCharacters // younger characters -> older characters
 };
 
 export interface KinkBucketScore {
