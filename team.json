@@ -42,6 +42,10 @@
       "Moon Burst": {
         "alias": "Moon Burst",
         "characters": ["Moon Burst"]
+      },
+      "CentralSmith": {
+        "alias": "CentralSmith",
+        "characters": ["T a b i", "Sebastian SoIace", "Central"]
       }
     },
     "translators": {
