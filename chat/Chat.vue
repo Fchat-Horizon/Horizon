@@ -20,7 +20,7 @@
         class="card-header"
         style="margin-top: 0; display: flex; align-items: center"
       >
-        {{ l(titleKey) }}
+        <span class="title-font">{{ l(titleKey) }}</span>
         <div
           style="
             margin-left: auto;
