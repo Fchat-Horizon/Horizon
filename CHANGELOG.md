@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Cleaned up the Moon Prism theme's jank snowflake rules and gave it a proper `info` colour. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1f4cbbbc631cd9ba2f99c930c11b7b8952231570)
+- Improved toggle colors for pinned image/ character preview buttons. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/59c3cf7b91c875e9e3a94ee7272c9e97140e77f1)
+
+### Fixed
+
+- Fixed the ad timer being invisible in channels that only allow ads. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/ac237a1976394e8fbb58b34f6f8e5c2d46f0ebf5)
+- Fixed the quick switcher (Ctrl+T) not showing the 'Open conversation with X' option if one of the search results starts with your search query (Ie. "Jimmy McGill" being a recent conversation wouldn't let you use this to open one with just "Jim"). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/6f6d417fef602ea49b32147de6c52ecca4fdf45e)
+- Fixed massive (40,000+) bookmark/ friend lists freezing the 'All' tab. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/74ebb4ee4688ca87528a4d6e192f2c6e21b2cec5)
+- Fixed the 'Clear recent conversations' button being oddly positioned. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b5691d093b8885a6702b9f79f1a8c83617a3cbcd)
+- Fixed a 3.0 bug with non-ASCII characters not working for ping words. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0c45ba3a6be907dcdf347f3eb3db517a3862eb8d)
+- Fixed being kicked or banned from a channel keeping it in your mouse navigation history (back/ forward buttons). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/965928c8357bc4438820ed8222bb41aee16ddb38)
+
+### Merged Pull Requests
+
+- https://github.com/Fchat-Horizon/Horizon/pull/1088 by @freenutsxd
+- https://github.com/Fchat-Horizon/Horizon/pull/1089 by @freenutsxd
+
+Non PR'd changes by @FatCatClient.
+
 ## [2.5.2] - 2026-11-24
 
 > [!NOTE]  
