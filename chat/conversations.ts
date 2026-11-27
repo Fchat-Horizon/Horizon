@@ -654,6 +654,10 @@ class ChannelConversation
 
   close(): void {
     core.connection.send('LCH', { channel: this.channel.id });
+    this.onLeft();
+  }
+
+  onLeft(): void {
     clearInterval(this.cacheInterval);
     state.removeFromNavigationHistory(this);
   }
@@ -1046,13 +1050,16 @@ class State implements Interfaces.State {
     return true;
   }
 
-  removeFromNavigationHistory(conversation: Conversation) {
-    state.navigationHistory = state.navigationHistory.filter(
-      c => c !== conversation
-    );
-    state.navigationHistoryIndex = state.navigationHistory.indexOf(
-      state.selectedConversation
-    );
+  removeFromNavigationHistory(conversation: Conversation): void {
+    const history: Conversation[] = [];
+    let index = -1;
+    this.navigationHistory.forEach((c, i) => {
+      if (c !== conversation && c !== history[history.length - 1])
+        history.push(c);
+      if (i === this.navigationHistoryIndex) index = history.length - 1;
+    });
+    this.navigationHistory = history;
+    this.navigationHistoryIndex = index;
   }
 
   navigateBack(): boolean {
@@ -1424,6 +1431,7 @@ export default function (this: any): Interfaces.State {
       delete state.channelMap[channel.id];
       await state.savePinned();
       if (state.selectedConversation === conv) state.show(state.consoleTab);
+      conv.onLeft();
     } else {
       const conv = state.channelMap[channel.id];
       if (conv === undefined) return;
