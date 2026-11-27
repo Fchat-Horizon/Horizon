@@ -1495,11 +1495,16 @@ export default function (this: any): Interfaces.State {
     )
       words.push(core.connection.character);
     for (let i = 0; i < words.length; ++i)
-      words[i] = words[i].replace(/[^\w]/gi, '\\$&');
+      words[i] = words[i].replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&');
     //tslint:disable-next-line:no-null-keyword
     const results =
       words.length > 0
-        ? message.text.match(new RegExp(`\\b(${words.join('|')})\\b`, 'i'))
+        ? message.text.match(
+            new RegExp(
+              `(?<![\\p{L}\\p{N}_])(${words.join('|')})(?![\\p{L}\\p{N}_])`,
+              'iu'
+            )
+          )
         : null;
     if (results !== null) {
       await core.notifications.notify(
