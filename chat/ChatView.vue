@@ -470,7 +470,6 @@
   import Modal from '../components/Modal.vue';
   import QuickJump from './QuickJump.vue';
   import { EventBus } from './preview/event-bus';
-  import { group, log } from 'node:console';
 
   const unreadClasses = {
     [Conversation.UnreadState.None]: '',

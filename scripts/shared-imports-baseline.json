@@ -1,7 +1,7 @@
 {
   "bbcode/Editor.vue": ["global:process.platform"],
   "chat/Chat.vue": ["module:electron-log"],
-  "chat/ChatView.vue": ["global:process.platform", "module:console"],
+  "chat/ChatView.vue": ["global:process.platform"],
   "chat/Logs.vue": ["module:adm-zip"],
   "chat/SettingsView.vue": [
     "global:__dirname",
