@@ -15,7 +15,7 @@
     ></tabs>
     <div>
       <button
-        class="btn btn-outline-secondary"
+        class="btn btn-outline-secondary position-absolute top-0 end-0 me-3 mt-2"
         @click="clearRecents(selectedTab === '1')"
       >
         <i class="fa-solid fa-trash"></i>
