@@ -433,10 +433,7 @@
           <li class="nav-item" v-if="conversation.channel.mode === 'both'">
             <a
               href="#"
-              :class="{
-                active: !conversation.isSendingAds,
-                disabled: conversation.adManager.isActive()
-              }"
+              :class="{ active: !conversation.isSendingAds }"
               class="nav-link"
               @click.prevent="setSendingAds(false)"
               >{{ l('channel.mode.chat') }}</a
@@ -445,12 +442,7 @@
           <li class="nav-item">
             <a
               href="#"
-              :class="{
-                active: conversation.isSendingAds,
-                disabled:
-                  conversation.channel.mode === 'both' &&
-                  conversation.adManager.isActive()
-              }"
+              :class="{ active: conversation.isSendingAds }"
               class="nav-link"
               @click.prevent="setSendingAds(true)"
               >{{ adsMode }}</a
