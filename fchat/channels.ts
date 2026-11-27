@@ -7,10 +7,15 @@ interface SortableMember extends Interfaces.Member {
   key: string;
 }
 
+// only one join queue at a time; cancelled when the connection closes
+let joinTimer: ReturnType<typeof setInterval> | undefined;
+
 export function queuedJoin(this: void, channels: string[]): void {
-  const timer: ReturnType<typeof setInterval> = setInterval(() => {
+  clearInterval(joinTimer);
+  joinTimer = setInterval(() => {
     const channel = channels.shift();
-    if (channel === undefined) return clearInterval(timer);
+    if (channel === undefined) return clearInterval(joinTimer);
+    if (state.joinedMap[channel.toLowerCase()] !== undefined) return;
     state.join(channel);
   }, 100);
 }
@@ -149,18 +154,21 @@ export default function (
   characters: Character.State
 ): Interfaces.State {
   state = new State(connection);
-  let rejoin: string[] | undefined;
+  let rejoin: string[] = [];
   connection.onEvent('connecting', isReconnect => {
-    if (isReconnect && rejoin === undefined)
-      rejoin = Object.keys(state.joinedMap);
+    if (isReconnect) {
+      for (const id of Object.keys(state.joinedMap))
+        if (rejoin.indexOf(id) === -1) rejoin.push(id); // Merge state with rejoin list in case previous reconnect did not succeed in joining.
+    } else rejoin = [];
     state.joinedChannels = [];
     state.joinedMap = emptyMap();
   });
   connection.onEvent('connected', () => {
-    if (rejoin !== undefined) {
-      queuedJoin(rejoin);
-      rejoin = undefined;
-    }
+    // keep `rejoin` until the server confirms each join
+    if (rejoin.length > 0) queuedJoin(rejoin.slice());
+  });
+  connection.onEvent('closed', () => {
+    clearInterval(joinTimer);
   });
 
   connection.onMessage('CHA', data => {
@@ -191,6 +199,7 @@ export default function (
     const item = state.getChannelItem(data.channel);
     if (data.character.identity === connection.character) {
       const id = data.channel.toLowerCase();
+      rejoin = rejoin.filter(c => c !== id); //Delete channel from rejoin list.
       if (state.joinedMap[id] !== undefined) return;
       const channel = (state.joinedMap[id] = new Channel(
         id,
