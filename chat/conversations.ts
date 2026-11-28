@@ -1767,8 +1767,13 @@ export default function (this: any): Interfaces.State {
         time
       );
       await state.consoleTab.addMessage(message);
-      state.consoleTab.unread = Interfaces.UnreadState.Mention;
-      state.consoleTab.unreadCount++;
+      if (
+        state.consoleTab !== state.selectedConversation ||
+        !state.windowFocused
+      ) {
+        state.consoleTab.unread = Interfaces.UnreadState.Mention;
+        state.consoleTab.unreadCount++;
+      }
       await core.notifications.notify(
         state.consoleTab,
         l('events.broadcast.notification', { character: data.character }),
