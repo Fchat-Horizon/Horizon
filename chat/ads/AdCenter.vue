@@ -23,6 +23,9 @@
           :title="l('action.move.down')"
           ><i class="fa fa-arrow-down"></i
         ></a>
+        <a @click="duplicateAd(index)" :title="l('action.duplicate')">
+          <i class="fa-solid fa-copy"></i>
+        </a>
         <a @click="removeAd(index)" :title="l('admgr.removeAd')"
           ><i class="fas fa-times-circle"></i
         ></a>
@@ -130,6 +133,14 @@
         const ad = this.ads.splice(index, 1);
 
         this.ads.splice(index + 1, 0, ad[0]);
+      },
+      duplicateAd(index: number): void {
+        const original = this.ads[index];
+        this.ads.push({
+          content: original.content,
+          disabled: original.disabled,
+          tags: original.tags
+        });
       }
     }
   });
