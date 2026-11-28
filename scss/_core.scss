@@ -99,3 +99,20 @@ label:not(.input-group-text) {
     }
   }
 }
+
+.btn,
+.btn-check + .btn,
+.form-control,
+.form-select,
+.form-check-input,
+.nav-link,
+.page-link,
+.accordion-button {
+  --bs-btn-focus-box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.5);
+  --bs-focus-ring-color: rgba(var(--bs-primary-rgb), 0.5);
+}
+
+:focus-visible {
+  outline: 2px solid rgba(var(--bs-primary-rgb), 0.6);
+  outline-offset: 1px;
+}
