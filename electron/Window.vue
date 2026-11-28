@@ -99,7 +99,7 @@
                 v-if="tab.user || tab.avatarUrl"
                 :src="getAvatarImage(tab)"
               />
-              <span class="d-sm-inline d-none">{{
+              <span class="d-md-inline d-none">{{
                 tab.user || l('window.newTab')
               }}</span>
               <span
