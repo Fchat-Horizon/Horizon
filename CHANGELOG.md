@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> [!NOTE]  
+> We are planning on reworking the character matcher feature(s) considerably in the nearby future. If you have the time to, please fill in [this survey](https://forms.gle/YF4osawLApJXkmCF9) so we can take your opinions into consideration.
+> Thank you for your time.
+
+### Added
+
+- You can now duplicate ads in the Ad Editor menu. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/d0e61766d05daab6d1632c03b5fa227e7e1e1053)
+
 ### Changed
 
 - Cleaned up the Moon Prism theme's jank snowflake rules and gave it a proper `info` colour. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1f4cbbbc631cd9ba2f99c930c11b7b8952231570)
@@ -34,10 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Non PR'd changes by @FatCatClient.
 
 ## [2.5.2] - 2026-11-24
-
-> [!NOTE]  
-> We are planning on reworking the character matcher feature(s) considerably in the nearby future. If you have the time to, please fill in [this survey](https://forms.gle/YF4osawLApJXkmCF9) so we can take your opinions into consideration.
-> Thank you for your time.
 
 ### Added
 
