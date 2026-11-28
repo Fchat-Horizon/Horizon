@@ -146,11 +146,16 @@ export class IndexedStore implements PermanentIndexedStore {
       // groupCount: null
     };
 
+    // Replace, don't _.merge: merging keeps whatever the fresh data no longer
+    // has (removed kinks/ customs/ linked characters, a deleted memo, the tail
+    // of a shrunk list), which then comes back every time the profile is
+    // loaded from disk. Only the meta fields are carried over from `existing`,
+    // since those are saved separately through updateProfileMeta().
     return existing
-      ? _.merge(
-          existing,
-          data,
-          _.pick(existing, [
+      ? {
+          ...existing,
+          ...data,
+          ..._.pick(existing, [
             'firstSeen',
             'lastMetaFetched',
             'guestbook',
@@ -158,7 +163,7 @@ export class IndexedStore implements PermanentIndexedStore {
             'friends',
             'groups'
           ])
-        )
+        }
       : data;
   }
 
@@ -220,13 +225,16 @@ export class IndexedStore implements PermanentIndexedStore {
       return;
     }
 
-    const data = _.merge(existing, {
+    // Replace, don't _.merge: merging lists by index would keep the tail of a
+    // list that got shorter (unfriended friends, deleted images/ posts)
+    const data: ProfileRecord = {
+      ...existing,
       lastMetaFetched: Math.round(Date.now() / 1000),
       guestbook,
       friends,
       groups,
       images
-    });
+    };
 
     const tx = this.db.transaction(IndexedStore.STORE_NAME, 'readwrite');
     const store = tx.objectStore(IndexedStore.STORE_NAME);
