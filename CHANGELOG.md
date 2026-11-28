@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Cleaned up the Moon Prism theme's jank snowflake rules and gave it a proper `info` colour. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/1f4cbbbc631cd9ba2f99c930c11b7b8952231570)
 - Improved toggle colors for pinned image/ character preview buttons. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/59c3cf7b91c875e9e3a94ee7272c9e97140e77f1)
+- The default focus outline is no longer a harsh pure white. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/95ac4db74a2d8bbef08cd12d1a326969e9162784)
 
 ### Fixed
 
@@ -20,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the 'Clear recent conversations' button being oddly positioned. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/b5691d093b8885a6702b9f79f1a8c83617a3cbcd)
 - Fixed a 3.0 bug with non-ASCII characters not working for ping words. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/0c45ba3a6be907dcdf347f3eb3db517a3862eb8d)
 - Fixed being kicked or banned from a channel keeping it in your mouse navigation history (back/ forward buttons). [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/965928c8357bc4438820ed8222bb41aee16ddb38)
+- Fixed an F-Chat Rising bug that made the Chat/ Ads switcher locked while ads are auto-posting. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/5e788cc9b5f83eeb9d58d2511f88cb995d518c36)
+- Fixed the profile cache bringing back removed kinks, memos, linked characters, friends and images after a restart. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/f7d67cef2ea8aaa84bb3c7dd5335099adb022557)
+- Fixed window tabs overlapping the control buttons when the window is narrow and tabs have longer names. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/dceea1e597664c03a021951876fa34d5652c0ed6)
+- Fixed staff broadcast messages marking the console as having an unread mention while it's in focus. [[Commit]](https://github.com/Fchat-Horizon/Horizon/commit/bf64598e442f940e2ed003d6d09ea634c65c48b4)
 
 ### Merged Pull Requests
 
